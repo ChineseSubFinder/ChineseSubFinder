@@ -9,6 +9,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"math"
 	"os"
+	"path/filepath"
 )
 
 
@@ -26,7 +27,7 @@ func (s Supplier) GetSubListFromFile(filePath string, httpProxy string) ([]sub_s
 	var jsonList SublistSliceXunLei
 	var outSubList []sub_supplier.SubInfo
 	if len(cid) == 0 {
-		return outSubList, common.CIdIsEmpty
+		return outSubList, common.XunLeiCIdIsEmpty
 	}
 	httpClient := resty.New()
 	httpClient.SetTimeout(common.HTMLTimeOut)
@@ -37,7 +38,7 @@ func (s Supplier) GetSubListFromFile(filePath string, httpProxy string) ([]sub_s
 		"Content-Type": "application/json",
 		"User-Agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50",
 	})
-	resp, err := httpClient.R().Get(fmt.Sprintf(common.SubXunleiRootUrl, cid))
+	resp, err := httpClient.R().Get(fmt.Sprintf(common.SubXunLeiRootUrl, cid))
 	if err != nil {
 		return outSubList, err
 	}
@@ -49,7 +50,7 @@ func (s Supplier) GetSubListFromFile(filePath string, httpProxy string) ([]sub_s
 	// 剔除空的
 	for _, v := range jsonList.Sublist {
 		if len(v.Scid) > 0 {
-			outSubList = append(outSubList, *sub_supplier.NewSubInfo(v.Sname, v.Language, v.Rate, v.Surl, v.Svote, v.Roffset))
+			outSubList = append(outSubList, *sub_supplier.NewSubInfo(v.Sname, v.Language, v.Rate, v.Surl, v.Svote, v.Roffset, filepath.Ext(v.Surl)))
 		}
 	}
 	return outSubList, nil
