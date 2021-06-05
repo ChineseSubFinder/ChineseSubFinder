@@ -38,3 +38,9 @@
   * shooter（通过视频文件的唯一ID）
 
   * 迅雷（通过视频文件的唯一ID）
+
+## 感谢
+
+感谢下面项目的帮助
+
+* [Andyfoo/GoSubTitleSearcher: 字幕搜索查询(go语言版)，支持4k 2160p,1080p,720p视频字幕搜索，集合了字幕库、迅雷、射手、SubHD查询接口。 (github.com)](https://github.com/Andyfoo/GoSubTitleSearcher)
