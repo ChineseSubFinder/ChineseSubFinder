@@ -6,7 +6,7 @@ import (
 
 func TestGetList(t *testing.T) {
 
-	xunlie := NewSupplierXunLei()
+	xunlie := NewSupplier()
 	outList, err := xunlie.GetSubListFromFile("X:\\电影\\Spiral From the Book of Saw (2021)\\Spiral From the Book of Saw (2021) WEBDL-1080p.mkv", "")
 	if err != nil {
 		t.Error(err)

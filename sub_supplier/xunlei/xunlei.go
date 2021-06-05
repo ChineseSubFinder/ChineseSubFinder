@@ -13,15 +13,15 @@ import (
 
 
 
-type SupplierXunLei struct {
+type Supplier struct {
 
 }
 
-func NewSupplierXunLei() *SupplierXunLei {
-	return &SupplierXunLei{}
+func NewSupplier() *Supplier {
+	return &Supplier{}
 }
 
-func (s SupplierXunLei) GetSubListFromFile(filePath string, httpProxy string) ([]sub_supplier.SubInfo, error) {
+func (s Supplier) GetSubListFromFile(filePath string, httpProxy string) ([]sub_supplier.SubInfo, error) {
 	cid, err := s.getCid(filePath)
 	var jsonList SublistSliceXunLei
 	var outSubList []sub_supplier.SubInfo
@@ -56,7 +56,7 @@ func (s SupplierXunLei) GetSubListFromFile(filePath string, httpProxy string) ([
 }
 
 //getCid 获取指定文件的唯一 cid
-func (s SupplierXunLei) getCid(filePath string) (string, error) {
+func (s Supplier) getCid(filePath string) (string, error) {
 	hash := ""
 	sha1Ctx := sha1.New()
 
