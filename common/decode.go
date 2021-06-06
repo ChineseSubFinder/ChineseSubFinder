@@ -2,12 +2,15 @@ package common
 
 import (
 	"github.com/beevik/etree"
+	PTN "github.com/middelink/go-parse-torrent-name"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 )
 
-func get_IMDB_movie_xml(movieFilePath string) (string, error) {
+func getImdbMovieXml(movieFilePath string) (string, error) {
 	doc := etree.NewDocument()
 	if err := doc.ReadFromFile(movieFilePath); err != nil {
 		return "", err
@@ -19,7 +22,7 @@ func get_IMDB_movie_xml(movieFilePath string) (string, error) {
 	return "", CanNotFindIMDBID
 }
 
-func get_IMDB_nfo(nfoFilePath string) (string, error) {
+func getImdbNfo(nfoFilePath string) (string, error) {
 	doc := etree.NewDocument()
 	if err := doc.ReadFromFile(nfoFilePath); err != nil {
 		return "", err
@@ -31,7 +34,7 @@ func get_IMDB_nfo(nfoFilePath string) (string, error) {
 	return "", CanNotFindIMDBID
 }
 
-func Get_IMDB_Id(dirPth string) (string ,error) {
+func GetImdbId(dirPth string) (string ,error) {
 	dir, err := ioutil.ReadDir(dirPth)
 	if err != nil {
 		return "", err
@@ -63,7 +66,7 @@ func Get_IMDB_Id(dirPth string) (string ,error) {
 	}
 
 	if movieFilePath != "" {
-		outId, err := get_IMDB_movie_xml(movieFilePath)
+		outId, err := getImdbMovieXml(movieFilePath)
 		if err != nil {
 			println(err)
 		} else {
@@ -72,7 +75,7 @@ func Get_IMDB_Id(dirPth string) (string ,error) {
 	}
 
 	if nfoFilePath != "" {
-		outId, err := get_IMDB_nfo(nfoFilePath)
+		outId, err := getImdbNfo(nfoFilePath)
 		if err != nil {
 			return "", err
 		} else {
@@ -83,8 +86,29 @@ func Get_IMDB_Id(dirPth string) (string ,error) {
 	return "", CanNotFindIMDBID
 }
 
+//GetVideoInfo 从文件名推断视频文件的信息
+func GetVideoInfo(videoFileName string) (*PTN.TorrentInfo, error) {
+
+	parse, err := PTN.Parse(filepath.Base(videoFileName))
+	if err != nil {
+		return nil, err
+	}
+	compile, err := regexp.Compile(regFixTitle2)
+	if err != nil {
+		return nil, err
+	}
+	match := compile.ReplaceAllString(parse.Title, "")
+	match = strings.TrimRight(match, "")
+	parse.Title = match
+	return parse, nil
+}
+
 const (
 	metadataFileEmby = "movie.xml"
 	suffixNameXml    = ".xml"
 	suffixNameNfo    = ".nfo"
+	// 去除特殊字符，仅仅之有中文
+	regFixTitle = "[^\u4e00-\u9fa5a-zA-Z0-9\\s]"
+	// 去除特殊字符，把特殊字符都写进去
+	regFixTitle2 = "[`~!@#$%^&*()+-=|{}';'\\[\\].<>/?~！@#￥%……&*（）——+|{}【】'；”“’。、？]"
 )

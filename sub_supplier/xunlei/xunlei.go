@@ -56,6 +56,10 @@ func (s Supplier) GetSubListFromFile(filePath string, httpProxy string) ([]sub_s
 	return outSubList, nil
 }
 
+func (s Supplier) GetSubListFromKeyword(keyword string, httpProxy string) ([]sub_supplier.SubInfo, error) {
+	panic("not implemented")
+}
+
 //getCid 获取指定文件的唯一 cid
 func (s Supplier) getCid(filePath string) (string, error) {
 	hash := ""

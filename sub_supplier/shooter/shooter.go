@@ -69,6 +69,10 @@ func (s Supplier) GetSubListFromFile(filePath string, httpProxy string) ([]sub_s
 	return outSubInfoList, nil
 }
 
+func (s Supplier) GetSubListFromKeyword(keyword string, httpProxy string) ([]sub_supplier.SubInfo, error) {
+	panic("not implemented")
+}
+
 func (s Supplier) computeFileHash(filePath string) (string, error) {
 	hash := ""
 	fp, err := os.Open(filePath)
