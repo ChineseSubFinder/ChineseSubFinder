@@ -1,16 +1,18 @@
 package zimuku
 
 import (
+	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
-	"github.com/go-resty/resty/v2"
 	"path/filepath"
+	"regexp"
+	"sort"
 	"strings"
 )
 
 type Supplier struct {
-
+	_reqParam common.ReqParam
 }
 
 func NewSupplier() *Supplier {
@@ -63,12 +65,12 @@ func (s Supplier) GetSubListFromKeyword(keyword string, httpProxy string) ([]sub
 		return nil, err
 	}
 	// 第二级界面，单个字幕详情
-	err = s.Step2(&subResult)
+	err = s.Step2(&subResult, httpProxy)
 	if err != nil {
 		return nil, err
 	}
 	// 第三级界面，具体字幕下载
-	err = s.Step3(&subResult)
+	err = s.Step3(&subResult, httpProxy)
 	if err != nil {
 		return nil, err
 	}
@@ -78,16 +80,8 @@ func (s Supplier) GetSubListFromKeyword(keyword string, httpProxy string) ([]sub
 }
 
 // Step1 第一级界面，有多少个字幕
-func (s Supplier) Step1(keyword string, httpProxy string) (SubResult, error) {
-	httpClient := resty.New()
-	httpClient.SetTimeout(common.HTMLTimeOut)
-	if httpProxy != "" {
-		httpClient.SetProxy(httpProxy)
-	}
-	httpClient.SetHeaders(map[string]string{
-		"Content-Type": "application/json",
-		"User-Agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50",
-	})
+func (s Supplier) Step1(keyword string, _reqParam ...common.ReqParam) (SubResult, error) {
+	httpClient := common.NewHttpClient()
 	// 第一级界面，有多少个字幕
 	resp, err := httpClient.R().
 		SetQueryParams(map[string]string{
@@ -104,7 +98,7 @@ func (s Supplier) Step1(keyword string, httpProxy string) (SubResult, error) {
 	}
 	// 具体解析这个页面
 	var subResult SubResult
-	subResult.SubList = []SubInfo{}
+	subResult.SubInfos = SubInfos{}
 	// 这一级找到的是这个关键词出来的所有的影片的信息，可能有多个 Title，但是仅仅处理第一个
 	doc.Find("div[class=title]").EachWithBreak(func(i int, selectionTitleRoot *goquery.Selection) bool {
 
@@ -149,7 +143,7 @@ func (s Supplier) Step1(keyword string, httpProxy string) (SubResult, error) {
 				// 计算优先级
 				subInfo.Priority = subInfo.Score * float32(subInfo.DownloadTimes)
 				// 加入列表
-				subResult.SubList = append(subResult.SubList, subInfo)
+				subResult.SubInfos = append(subResult.SubInfos, subInfo)
 			}
 
 		})
@@ -157,36 +151,95 @@ func (s Supplier) Step1(keyword string, httpProxy string) (SubResult, error) {
 		return false
 	})
 	// 这里要判断，一级界面是否OK 了，不行就返回
-	if subResult.Title == "" || len(subResult.SubList) == 0 {
+	if subResult.Title == "" || len(subResult.SubInfos) == 0 {
 		return SubResult{}, common.ZiMuKuSearchKeyWordStep1NotFound
 	}
 	return subResult, nil
 }
 
 // Step2 第二级界面，单个字幕详情
-func (s Supplier) Step2(subResult *SubResult) error {
-
-
+func (s Supplier) Step2(subResult *SubResult, httpProxy string) error {
+	// 找到最大的优先级的字幕下载
+	sort.Sort(SortByPriority{subResult.SubInfos})
+	// 排序后的第一个
+	httpClient := common.NewHttpClient(httpProxy)
+	resp, err := httpClient.R().
+		Get(common.SubZiMuKuRootUrl + subResult.SubInfos[0].DetailUrl)
+	if err != nil {
+		return err
+	}
+	// 找到下载地址
+	re := regexp.MustCompile(`<a\s+id="down1"\s+href="([^"]*/dld/[\w]+\.html)"`)
+	matched := re.FindAllStringSubmatch(resp.String(), -1)
+	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
+		return common.ZiMuKuDownloadUrlStep2NotFound
+	}
+	if strings.Contains(matched[0][1], "://") {
+		subResult.SubInfos[0].SubDownloadPageUrl = matched[0][1]
+	} else {
+		subResult.SubInfos[0].SubDownloadPageUrl = fmt.Sprintf("%s%s", common.SubZiMuKuRootUrl, matched[0][1])
+	}
 	return nil
 }
 
 // Step3 第三级界面，具体字幕下载
-func (s Supplier) Step3(subResult *SubResult) error {
+func (s Supplier) Step3(subResult *SubResult, httpProxy string) error {
 
+	subDownloadPageUrl := common.AddBaseUrl(common.SubZiMuKuRootUrl, subResult.SubInfos[0].SubDownloadPageUrl)
+	httpClient := common.NewHttpClient(httpProxy)
+	resp, err := httpClient.R().
+		Get(subDownloadPageUrl)
+	if err != nil {
+		return err
+	}
+	re := regexp.MustCompile(`<li><a\s+rel="nofollow"\s+href="([^"]*/download/[^"]+)"`)
+	matched := re.FindAllStringSubmatch(resp.String(), -1)
+	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
+		return nil
+	}
+	var filename string
+	var data []byte
+	for i := 0; i < len(matched); i++ {
 
+		data, filename, err = common.DownFile(common.AddBaseUrl(common.SubZiMuKuRootUrl, matched[i][1]), common.ReqParam{
+			HttpProxy: httpProxy,
+			Referer:   subDownloadPageUrl,
+		})
+		if err != nil {
+			println("ZiMuKu Step3 DownloadFile", err)
+			continue
+		}
+	}
 	return nil
 }
 
 type SubResult struct {
 	Title string			// 字幕的标题
 	OtherName string		// 影片又名
-	SubList []SubInfo		// 字幕的列表
+	SubInfos SubInfos		// 字幕的列表
 }
 
 type SubInfo struct {
-	Score			float32	// 评分
-	DownloadTimes 	int		// 下载的次数
-	Priority		float32	// 优先级，使用评分和次数乘积而来
-	DetailUrl		string	// 字幕的详情界面，需要再次分析具体的下载地址，地址需要拼接网站的根地址上去
-	DownloadUrl		string	// 字幕的下载地址
+	Score				float32	// 评分
+	DownloadTimes 		int		// 下载的次数
+	Priority			float32	// 优先级，使用评分和次数乘积而来
+	DetailUrl			string	// 字幕的详情界面，需要再次分析具体的下载地址，地址需要拼接网站的根地址上去
+	SubDownloadPageUrl 	string	// 字幕的具体的下载页面，会有多个下载可用的链接
+	DownloadUrl			string	// 字幕的下载地址
+}
+
+// SubInfos 实现自定义排序
+type SubInfos []SubInfo
+func (s SubInfos) Len() int {
+	return len(s)
+}
+func (s SubInfos) Less(i, j int) bool {
+	return s[i].Priority > s[j].Priority
+}
+func (s SubInfos) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+
+type SortByPriority struct{ SubInfos }
+// Less 根据元素的优先级降序排序
+func (s SortByPriority) Less(i, j int) bool {
+	return s.SubInfos[i].Priority > s.SubInfos[j].Priority
 }

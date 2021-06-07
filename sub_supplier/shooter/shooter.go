@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
-	"github.com/go-resty/resty/v2"
 	"math"
 	"os"
 	"path/filepath"
@@ -36,15 +35,8 @@ func (s Supplier) GetSubListFromFile(filePath string, httpProxy string) ([]sub_s
 
 	fileName := filepath.Base(filePath)
 
-	httpClient := resty.New()
-	httpClient.SetTimeout(common.HTMLTimeOut)
-	if httpProxy != "" {
-		httpClient.SetProxy(httpProxy)
-	}
-	httpClient.SetHeaders(map[string]string{
-		"Content-Type": "application/json",
-		"User-Agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50",
-	})
+	httpClient := common.NewHttpClient(httpProxy)
+
 	_, err = httpClient.R().
 		SetFormData(map[string]string{
 			"filehash": hash,

@@ -1,1 +1,107 @@
 package common
+
+import (
+	"compress/gzip"
+	"fmt"
+	"github.com/go-resty/resty/v2"
+	"io/ioutil"
+	"net/http"
+	"regexp"
+	"strings"
+)
+
+// NewHttpClient 新建一个 resty 的对象
+func NewHttpClient(_reqParam ...ReqParam) *resty.Client {
+	const defUserAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"
+
+	var reqParam ReqParam
+	var HttpProxy, UserAgent, Referer string
+
+	if len(_reqParam) > 0 {
+		reqParam = _reqParam[0]
+	}
+	if len(reqParam.HttpProxy) > 0 {
+		HttpProxy = reqParam.HttpProxy
+	}
+	if len(reqParam.UserAgent) > 0 {
+		UserAgent = reqParam.UserAgent
+	} else {
+		UserAgent = defUserAgent
+	}
+	if len(reqParam.Referer) > 0 {
+		Referer = reqParam.Referer
+	}
+
+	httpClient := resty.New()
+	httpClient.SetTimeout(HTMLTimeOut)
+	if HttpProxy != "" {
+		httpClient.SetProxy(HttpProxy)
+	}
+
+	httpClient.SetHeaders(map[string]string{
+		"Content-Type": "application/json",
+		"User-Agent": UserAgent,
+	})
+	if len(Referer) > 0 {
+		httpClient.SetHeader("Referer", Referer)
+	}
+
+	return httpClient
+}
+
+// DownFile 从指定的 Url 下载文件
+func DownFile(urlStr string, _reqParam ...ReqParam) ([]byte, string, error)  {
+	var reqParam ReqParam
+	if len(_reqParam) > 0 {
+		reqParam = _reqParam[0]
+	}
+	httpClient := NewHttpClient(reqParam)
+	resp, err := httpClient.R().Get(urlStr)
+	if err != nil {
+		return nil, "", err
+	}
+	body := resp.RawResponse.Body
+	if resp.RawResponse.Header.Get("Content-Encoding") == "gzip" {
+		body, err = gzip.NewReader(body)
+		if err != nil {
+			return nil, "", err
+		}
+	}
+	data, err := ioutil.ReadAll(body)
+	if err != nil {
+		return nil, "", err
+	}
+	filename := GetFileName(resp.RawResponse)
+	return data, filename, nil
+}
+
+// GetFileName 获取下载文件的文件名
+func GetFileName(resp *http.Response) string {
+	contentDisposition := resp.Header.Get("Content-Disposition")
+	if len(contentDisposition) == 0 {
+		return ""
+	}
+	re := regexp.MustCompile(`filename=["]*([^"]+)["]*`)
+	matched := re.FindStringSubmatch(contentDisposition)
+	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
+		//fmt.Println("######")
+		return ""
+	}
+	return matched[1]
+}
+
+// AddBaseUrl 判断驶入的 url 是否需要拼接 baseUrl
+func AddBaseUrl(baseUrl, url string) string {
+	if strings.Contains(url, "://") {
+		return url
+	}
+	return fmt.Sprintf("%s%s", baseUrl, url)
+}
+
+type ReqParam struct {
+	HttpProxy string
+	UserAgent string
+	Referer   string
+	MediaType string
+	Charset   string
+}
