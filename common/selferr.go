@@ -8,4 +8,5 @@ var(
 	XunLeiCIdIsEmpty       = errors.New("cid is empty")
 	VideoFileIsTooSmall    = errors.New("video file is too small")
 	ShooterFileHashIsEmpty = errors.New("filehash is empty")
+	ZiMuKuSearchKeyWordStep1NotFound = errors.New("zimuku search keyword step1 not found")
 )

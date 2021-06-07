@@ -57,6 +57,28 @@ func (s Supplier) GetSubListFromFile(filePath string, httpProxy string) ([]sub_s
 
 func (s Supplier) GetSubListFromKeyword(keyword string, httpProxy string) ([]sub_supplier.SubInfo, error) {
 
+	// 第一级界面，有多少个字幕
+	subResult, err := s.Step1(keyword, httpProxy)
+	if err != nil {
+		return nil, err
+	}
+	// 第二级界面，单个字幕详情
+	err = s.Step2(&subResult)
+	if err != nil {
+		return nil, err
+	}
+	// 第三级界面，具体字幕下载
+	err = s.Step3(&subResult)
+	if err != nil {
+		return nil, err
+	}
+	// TODO 需要把查询到的信息转换到 []sub_supplier.SubInfo 再输出
+	// 注意要做一次排序，根据优先级
+	return nil, nil
+}
+
+// Step1 第一级界面，有多少个字幕
+func (s Supplier) Step1(keyword string, httpProxy string) (SubResult, error) {
 	httpClient := resty.New()
 	httpClient.SetTimeout(common.HTMLTimeOut)
 	if httpProxy != "" {
@@ -71,40 +93,100 @@ func (s Supplier) GetSubListFromKeyword(keyword string, httpProxy string) ([]sub
 		SetQueryParams(map[string]string{
 			"q": keyword,
 		}).
-		Get(common.SubZimukuRootUrl)
+		Get(common.SubZiMuKuSearchUrl)
 	if err != nil {
-		return nil, err
+		return SubResult{}, err
 	}
-	//println(resp.String())
 	// 解析 html
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(resp.String()))
 	if err != nil {
-		return nil, err
+		return SubResult{}, err
 	}
-	doc.Find("div div table tbody tr").Each(func(i int, s *goquery.Selection) {
-		// For each item found, get the band and title
-		aa := s.Find("a[href]")
-		//comicPicEpisode := aa.Text()
-		println(aa.Text())
+	// 具体解析这个页面
+	var subResult SubResult
+	subResult.SubList = []SubInfo{}
+	// 这一级找到的是这个关键词出来的所有的影片的信息，可能有多个 Title，但是仅仅处理第一个
+	doc.Find("div[class=title]").EachWithBreak(func(i int, selectionTitleRoot *goquery.Selection) bool {
+
+		// 找到"又名"，是第二个 P
+		selectionTitleRoot.Find("p").Each(func(i int, s *goquery.Selection) {
+			if i == 1 {
+				subResult.OtherName = s.Text()
+			}
+		})
+		// 找到字幕的列表，读取相应的信息
+		selectionTitleRoot.Find("div table tbody tr").Each(func(i int, sTr *goquery.Selection) {
+			aa := sTr.Find("a[href]")
+			subDetailUrl, ok := aa.Attr("href")
+			var subInfo SubInfo
+			if ok {
+				// 字幕的标题
+				subResult.Title = aa.Text()
+				// 字幕的详情界面
+				subInfo.DetailUrl = subDetailUrl
+				// 找到这个 tr 下面的第二个和第三个 td
+				sTr.Find("td").Each(func(i int, sTd *goquery.Selection) {
+					if i == 1 {
+						// 评分
+						vote, ok := sTd.Find("i").Attr("title")
+						if ok == false {
+							return
+						}
+						number, err := common.GetNumber2Folat(vote)
+						if err != nil {
+							return
+						}
+						subInfo.Score = number
+					} else if i == 2{
+						// 下载量
+						number, err := common.GetNumber2int(sTd.Text())
+						if err != nil {
+							return
+						}
+						subInfo.DownloadTimes = number
+					}
+				})
+				// 计算优先级
+				subInfo.Priority = subInfo.Score * float32(subInfo.DownloadTimes)
+				// 加入列表
+				subResult.SubList = append(subResult.SubList, subInfo)
+			}
+
+		})
+		// EachWithBreak 使用这个，就能阻断继续遍历
+		return false
 	})
+	// 这里要判断，一级界面是否OK 了，不行就返回
+	if subResult.Title == "" || len(subResult.SubList) == 0 {
+		return SubResult{}, common.ZiMuKuSearchKeyWordStep1NotFound
+	}
+	return subResult, nil
+}
 
-	// 第二级界面，单个字幕详情
+// Step2 第二级界面，单个字幕详情
+func (s Supplier) Step2(subResult *SubResult) error {
 
-	// 第三级界面，具体字幕下载
+
+	return nil
+}
+
+// Step3 第三级界面，具体字幕下载
+func (s Supplier) Step3(subResult *SubResult) error {
 
 
-	return nil, nil
+	return nil
 }
 
 type SubResult struct {
-	Title string
-	OtherName string
-	SubList []SubInfo
+	Title string			// 字幕的标题
+	OtherName string		// 影片又名
+	SubList []SubInfo		// 字幕的列表
 }
 
 type SubInfo struct {
-	Score			float32
-	DownloadTimes 	int
-	Url				string
-
+	Score			float32	// 评分
+	DownloadTimes 	int		// 下载的次数
+	Priority		float32	// 优先级，使用评分和次数乘积而来
+	DetailUrl		string	// 字幕的详情界面，需要再次分析具体的下载地址，地址需要拼接网站的根地址上去
+	DownloadUrl		string	// 字幕的下载地址
 }

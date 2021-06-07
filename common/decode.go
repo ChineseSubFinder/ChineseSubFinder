@@ -1,12 +1,14 @@
 package common
 
 import (
+	"errors"
 	"github.com/beevik/etree"
 	PTN "github.com/middelink/go-parse-torrent-name"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -103,6 +105,32 @@ func GetVideoInfo(videoFileName string) (*PTN.TorrentInfo, error) {
 	return parse, nil
 }
 
+func GetNumber2Folat(input string) (float32, error) {
+	compile := regexp.MustCompile(regGetNumber)
+	params := compile.FindStringSubmatch(input)
+	if len(params) == 0 {
+		return 0, errors.New("get number not match")
+	}
+	fNum, err := strconv.ParseFloat(params[0],32)
+	if err != nil {
+		return 0, errors.New("get number ParseFloat error")
+	}
+	return float32(fNum), nil
+}
+
+func GetNumber2int(input string) (int, error) {
+	compile := regexp.MustCompile(regGetNumber)
+	params := compile.FindStringSubmatch(input)
+	if len(params) == 0 {
+		return 0, errors.New("get number not match")
+	}
+	fNum, err := strconv.Atoi(params[0])
+	if err != nil {
+		return 0, errors.New("get number ParseFloat error")
+	}
+	return fNum, nil
+}
+
 const (
 	metadataFileEmby = "movie.xml"
 	suffixNameXml    = ".xml"
@@ -111,4 +139,6 @@ const (
 	regFixTitle = "[^\u4e00-\u9fa5a-zA-Z0-9\\s]"
 	// 去除特殊字符，把特殊字符都写进去
 	regFixTitle2 = "[`~!@#$%^&*()+-=|{}';'\\[\\].<>/?~！@#￥%……&*（）——+|{}【】'；”“’。、？]"
+	// 获取数字
+	regGetNumber = "(?:\\-)?\\d{1,}(?:\\.\\d{1,})?"
 )
