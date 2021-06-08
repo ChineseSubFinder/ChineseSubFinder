@@ -105,7 +105,7 @@ func GetVideoInfo(videoFileName string) (*PTN.TorrentInfo, error) {
 	return parse, nil
 }
 
-func GetNumber2Folat(input string) (float32, error) {
+func GetNumber2Float(input string) (float32, error) {
 	compile := regexp.MustCompile(regGetNumber)
 	params := compile.FindStringSubmatch(input)
 	if len(params) == 0 {

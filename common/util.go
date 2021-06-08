@@ -48,7 +48,7 @@ func NewHttpClient(_reqParam ...ReqParam) *resty.Client {
 	return httpClient
 }
 
-// DownFile 从指定的 Url 下载文件
+// DownFile 从指定的 url 下载文件
 func DownFile(urlStr string, _reqParam ...ReqParam) ([]byte, string, error)  {
 	var reqParam ReqParam
 	if len(_reqParam) > 0 {

@@ -191,7 +191,7 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 		if !exists {
 			rate = ""
 		}
-		vote, err := common.GetNumber2Folat(rate)
+		vote, err := common.GetNumber2Float(rate)
 		if err != nil {
 			return
 		}
@@ -199,7 +199,7 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 		downCountNub := 0
 		downCount := tr.Find("td").Eq(3).Text()
 		if strings.Contains(downCount, "万") {
-			fNumb, err := common.GetNumber2Folat(downCount)
+			fNumb, err := common.GetNumber2Float(downCount)
 			if err != nil {
 				return
 			}
@@ -271,11 +271,10 @@ func (s Supplier) Step3(subDownloadPageUrl string) (string, []byte, error) {
 	}
 	var filename string
 	var data []byte
+
+	s.reqParam.Referer = subDownloadPageUrl
 	for i := 0; i < len(matched); i++ {
-		data, filename, err = common.DownFile(common.AddBaseUrl(common.SubZiMuKuRootUrl, matched[i][1]), common.ReqParam{
-			HttpProxy: s.reqParam.HttpProxy,
-			Referer:   subDownloadPageUrl,
-		})
+		data, filename, err = common.DownFile(common.AddBaseUrl(common.SubZiMuKuRootUrl, matched[i][1]), s.reqParam)
 		if err != nil {
 			println("ZiMuKu Step3 DownloadFile", err)
 			continue
@@ -333,7 +332,7 @@ func (s Supplier) Step1Discard(keyword string) (SubResult, error) {
 						if ok == false {
 							return
 						}
-						number, err := common.GetNumber2Folat(vote)
+						number, err := common.GetNumber2Float(vote)
 						if err != nil {
 							return
 						}
