@@ -6,8 +6,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
-	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/devices"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/nfnt/resize"
 	"image/jpeg"
@@ -275,41 +273,13 @@ func (s Supplier) httpPost(url string, postData map[string]string, referer strin
 }
 
 // Simulation 模拟滑动过防水墙
-func (s Supplier) Simulation() {
+func (s Supplier) SimulationTest() {
 	// 感谢 https://www.bigs3.com/article/gorod-crack-slider-captcha/
-	//設定設備參數
-	screen := devices.Device{
-		Title:          "Laptop with MDPI screen",
-		Capabilities:   []string{"touch", "mobile"},
-		UserAgent:      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
-		Screen: devices.Screen{
-			DevicePixelRatio: 1,
-			Horizontal: devices.ScreenSize{
-				Width:  1280,
-				Height: 720,
-			},
-		},
+	page, err := common.NewBrowserLoadPage("https://007.qq.com/online.html", "", 10*time.Second, 5)
+	if err != nil {
+		println(err.Error())
+		return
 	}
-	//設定啓動器
-	s.rodlauncher = launcher.New().
-		Set("mute-audio").
-		Set("default-browser-check").
-		Set("disable-gpu").
-		Set("disable-web-security").
-		Set("no-sandbox").
-		//關閉無頭模式，顯示瀏覽器窗體
-		Delete("headless")
-
-	//debug url
-	launchers := s.rodlauncher.MustLaunch()
-	fmt.Printf("debug url: %s\n", launchers)
-	//連接到瀏覽器
-	browser := rod.New().ControlURL(launchers).MustConnect()
-	//新開一個Pages
-	page := browser.DefaultDevice(screen).MustPage("")
-	//跳轉到目標網域
-	page.MustNavigate("https://007.qq.com/online.html").MustWaitLoad()
-
 	// 切换到可疑用户
 	page.MustElement("#app > section.wp-on-online > div > div > div > div.wp-on-box.col-md-5.col-md-offset-1 > div.wp-onb-tit > a:nth-child(2)").MustClick()
 	//模擬Click點擊 "體驗驗證碼" 按鈕
