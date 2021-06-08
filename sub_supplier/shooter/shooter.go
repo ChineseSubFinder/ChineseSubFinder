@@ -12,15 +12,26 @@ import (
 )
 
 type Supplier struct {
-
+	reqParam common.ReqParam
+	topic int
 }
 
-func NewSupplier() *Supplier {
-	return &Supplier{}
+func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
+
+	sup := Supplier{}
+	sup.topic = common.DownloadSubsPerSite
+	if len(_reqParam) > 0 {
+		sup.reqParam = _reqParam[0]
+		if sup.reqParam.Topic > 0 && sup.reqParam.Topic != sup.topic {
+			sup.topic = sup.reqParam.Topic
+		}
+	}
+	return &sup
 }
 
-func (s Supplier) GetSubListFromFile(filePath string, httpProxy string) ([]sub_supplier.SubInfo, error) {
+func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, error) {
 
+	// 可以提供的字幕查询 eng或者chn
 	const qLan = "Chn"
 	var outSubInfoList []sub_supplier.SubInfo
 	var jsonList []SublistShooter
@@ -35,7 +46,7 @@ func (s Supplier) GetSubListFromFile(filePath string, httpProxy string) ([]sub_s
 
 	fileName := filepath.Base(filePath)
 
-	httpClient := common.NewHttpClient(httpProxy)
+	httpClient := common.NewHttpClient(s.reqParam)
 
 	_, err = httpClient.R().
 		SetFormData(map[string]string{
@@ -55,13 +66,23 @@ func (s Supplier) GetSubListFromFile(filePath string, httpProxy string) ([]sub_s
 			if strings.Contains(file.Ext, ".") == false {
 				subExt = "." + subExt
 			}
-			outSubInfoList = append(outSubInfoList, *sub_supplier.NewSubInfo(fileName, qLan, "", file.Link, 0, shooter.Delay, subExt))
+
+			data, _, err := common.DownFile(file.Link)
+			if err != nil {
+				println(err.Error())
+				continue
+			}
+			outSubInfoList = append(outSubInfoList, *sub_supplier.NewSubInfo(fileName, common.ChineseSimple, file.Link, 0, shooter.Delay, subExt, data))
+			// 如果够了那么多个字幕就返回
+			if len(outSubInfoList) >= s.topic {
+				return outSubInfoList, nil
+			}
 		}
 	}
 	return outSubInfoList, nil
 }
 
-func (s Supplier) GetSubListFromKeyword(keyword string, httpProxy string) ([]sub_supplier.SubInfo, error) {
+func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo, error) {
 	panic("not implemented")
 }
 

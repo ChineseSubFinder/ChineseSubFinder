@@ -1,10 +1,8 @@
 package common
 
 import (
-	"compress/gzip"
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strings"
@@ -12,7 +10,8 @@ import (
 
 // NewHttpClient 新建一个 resty 的对象
 func NewHttpClient(_reqParam ...ReqParam) *resty.Client {
-	const defUserAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"
+	//const defUserAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"
+	const defUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41"
 
 	var reqParam ReqParam
 	var HttpProxy, UserAgent, Referer string
@@ -60,19 +59,8 @@ func DownFile(urlStr string, _reqParam ...ReqParam) ([]byte, string, error)  {
 	if err != nil {
 		return nil, "", err
 	}
-	body := resp.RawResponse.Body
-	if resp.RawResponse.Header.Get("Content-Encoding") == "gzip" {
-		body, err = gzip.NewReader(body)
-		if err != nil {
-			return nil, "", err
-		}
-	}
-	data, err := ioutil.ReadAll(body)
-	if err != nil {
-		return nil, "", err
-	}
 	filename := GetFileName(resp.RawResponse)
-	return data, filename, nil
+	return resp.Body(), filename, nil
 }
 
 // GetFileName 获取下载文件的文件名
@@ -98,10 +86,12 @@ func AddBaseUrl(baseUrl, url string) string {
 	return fmt.Sprintf("%s%s", baseUrl, url)
 }
 
+// ReqParam 可选择传入的参数
 type ReqParam struct {
-	HttpProxy string
-	UserAgent string
-	Referer   string
-	MediaType string
-	Charset   string
+	HttpProxy string		// HttpClient 相关
+	UserAgent string		// HttpClient 相关
+	Referer   string		// HttpClient 相关
+	MediaType string		// HttpClient 相关
+	Charset   string		// HttpClient 相关
+	Topic	  int			// 搜索结果的时候，返回 Topic N 以内的
 }

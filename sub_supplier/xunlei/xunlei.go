@@ -2,7 +2,6 @@ package xunlei
 
 import (
 	"crypto/sha1"
-	"encoding/json"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
@@ -11,43 +10,66 @@ import (
 	"path/filepath"
 )
 
-
-
 type Supplier struct {
-
+	reqParam common.ReqParam
+	topic int
 }
 
-func NewSupplier() *Supplier {
-	return &Supplier{}
+func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
+
+	sup := Supplier{}
+	sup.topic = common.DownloadSubsPerSite
+	if len(_reqParam) > 0 {
+		sup.reqParam = _reqParam[0]
+		if sup.reqParam.Topic > 0 && sup.reqParam.Topic != sup.topic {
+			sup.topic = sup.reqParam.Topic
+		}
+	}
+	return &sup
 }
 
-func (s Supplier) GetSubListFromFile(filePath string, httpProxy string) ([]sub_supplier.SubInfo, error) {
+func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, error) {
+
 	cid, err := s.getCid(filePath)
 	var jsonList SublistSliceXunLei
 	var outSubList []sub_supplier.SubInfo
 	if len(cid) == 0 {
 		return outSubList, common.XunLeiCIdIsEmpty
 	}
-	httpClient := common.NewHttpClient(httpProxy)
-	resp, err := httpClient.R().Get(fmt.Sprintf(common.SubXunLeiRootUrl, cid))
-	if err != nil {
-		return outSubList, err
-	}
-	// 解析
-	err = json.Unmarshal([]byte(resp.String()), &jsonList)
+	httpClient := common.NewHttpClient(s.reqParam)
+	_, err = httpClient.R().
+		SetResult(&jsonList).
+		Get(fmt.Sprintf(common.SubXunLeiRootUrl, cid))
 	if err != nil {
 		return outSubList, err
 	}
 	// 剔除空的
 	for _, v := range jsonList.Sublist {
 		if len(v.Scid) > 0 {
-			outSubList = append(outSubList, *sub_supplier.NewSubInfo(v.Sname, v.Language, v.Rate, v.Surl, v.Svote, v.Roffset, filepath.Ext(v.Surl)))
+
+			data, filename, err := common.DownFile(v.Surl)
+			if err != nil {
+				println(err.Error())
+				continue
+			}
+			ext := ""
+			if filename == "" {
+				ext = filepath.Ext(v.Surl)
+			} else {
+				ext = filepath.Ext(filename)
+			}
+			tmpLang := common.LangConverter(v.Language)
+			outSubList = append(outSubList, *sub_supplier.NewSubInfo(v.Sname, tmpLang, v.Surl, v.Svote, v.Roffset, ext, data))
+			// 如果够了那么多个字幕就返回
+			if len(outSubList) >= s.topic {
+				return outSubList, nil
+			}
 		}
 	}
 	return outSubList, nil
 }
 
-func (s Supplier) GetSubListFromKeyword(keyword string, httpProxy string) ([]sub_supplier.SubInfo, error) {
+func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo, error) {
 	panic("not implemented")
 }
 
@@ -101,3 +123,5 @@ type SublistXunLei struct {
 type SublistSliceXunLei struct {
 	Sublist []SublistXunLei
 }
+
+const LangUnknow = "未知语言"
