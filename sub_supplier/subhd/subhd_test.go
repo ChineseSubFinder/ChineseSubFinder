@@ -21,3 +21,8 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Vote, sublist.FileUrl, len(sublist.Data))
 	}
 }
+
+func TestSupplier_Simulation(t *testing.T) {
+	shooter := NewSupplier()
+	shooter.Simulation()
+}
