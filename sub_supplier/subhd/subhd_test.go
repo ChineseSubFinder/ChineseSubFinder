@@ -24,5 +24,5 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 
 func TestSupplier_Simulation(t *testing.T) {
 	shooter := NewSupplier()
-	shooter.Simulation()
+	shooter.SimulationTest()
 }
