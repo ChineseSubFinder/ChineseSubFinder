@@ -14,6 +14,7 @@ import (
 	"math"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -431,7 +432,12 @@ search:
 
 	if s.reqParam.DebugMode == true {
 		//截圖保存
-		page.MustScreenshot("result.png")
+		nowProcessRoot, err := common.GetDebugFolder()
+		if err == nil {
+			page.MustScreenshot(path.Join(nowProcessRoot, "result.png"))
+		} else {
+			println(err.Error())
+		}
 	}
 }
 

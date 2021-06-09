@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"net/http"
+	"os"
+	"path"
 	"regexp"
 	"strings"
 )
@@ -84,6 +86,16 @@ func AddBaseUrl(baseUrl, url string) string {
 		return url
 	}
 	return fmt.Sprintf("%s%s", baseUrl, url)
+}
+
+func GetDebugFolder() (string, error) {
+	nowProcessRoot, _ := os.Getwd()
+	nowProcessRoot = path.Join(nowProcessRoot, DebugFolder)
+	err := os.MkdirAll(nowProcessRoot, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	return nowProcessRoot, err
 }
 
 // ReqParam 可选择传入的参数
