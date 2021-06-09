@@ -104,16 +104,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo,
 		if err != nil {
 			return nil, err
 		}
-		var subInfo sub_supplier.SubInfo
-		subInfo.Name = hdContent.Filename
-		subInfo.Ext = hdContent.Ext
-		subInfo.Language = common.ChineseSimple
-		subInfo.Vote = 0
-		subInfo.FileUrl = common.AddBaseUrl(common.SubSubHDRootUrl, item.Url)
-		subInfo.Offset = 0
-		subInfo.Data = hdContent.Data
-
-		subInfos = append(subInfos, subInfo)
+		subInfos = append(subInfos, *sub_supplier.NewSubInfo(hdContent.Filename, common.ChineseSimple, common.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
 	}
 
 	return subInfos, nil
