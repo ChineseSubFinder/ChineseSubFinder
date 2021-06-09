@@ -15,6 +15,7 @@ var(
 	ZiMuKuDownloadUrlStep3NotFound = errors.New("zimuku download url step3 not found")
 	ZiMuKuDownloadUrlStep3AllFailed = errors.New("zimuku download url step3 all failed")
 
+	SubHDStep0SubCountNotFound = errors.New("subhd step0 sub count not found")
 	SubHDStep0HrefIsNull = errors.New("subhd step0 href is Null")
 	SubHDStep2SidIsNull = errors.New("subhd step2 sid is null")
 	SubHDStep2DTokenIsNull = errors.New("subhd step2 dToken is null")

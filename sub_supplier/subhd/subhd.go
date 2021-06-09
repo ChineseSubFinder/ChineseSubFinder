@@ -97,6 +97,10 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo,
 	if err != nil {
 		return nil, err
 	}
+	// 没有搜索到字幕
+	if detailPageUrl == "" {
+		return nil, nil
+	}
 	subList, err := s.Step1(detailPageUrl)
 	if err != nil {
 		return nil, err
@@ -127,11 +131,22 @@ func (s Supplier) Step0(keyword string) (string, error) {
 		return "", err
 	}
 	// 是否有查找到的结果，至少要有结果。根据这里这样下面才能判断是分析失效了，还是就是没有结果而已
-	// TODO 1 更新这个理，注意，调试模式缓存字幕的输出位置错了，变成当前项目了，需要修复
-	re := regexp.MustCompile(`<a\shref="(/d/[\w]+)">\s?<img`)
-	// 这里是确认能继续分析的详细连接
-	re := regexp.MustCompile(`”总共\shref="(/d/[\w]+)">\s?<img`)
+	re := regexp.MustCompile(`总共\s?<b>(\d+)</b>\s?条`)
 	matched := re.FindAllStringSubmatch(result, -1)
+	if len(matched) < 1 {
+		return "",  common.SubHDStep0SubCountNotFound
+	}
+	subCount, err := common.GetNumber2int(matched[0][0])
+	if err != nil {
+		return "", err
+	}
+	// 如果所搜没有找到字幕，就要返回
+	if subCount < 1 {
+		return "", nil
+	}
+	// 这里是确认能继续分析的详细连接
+	re = regexp.MustCompile(`<a\shref="(/d/[\w]+)">\s?<img`)
+	matched = re.FindAllStringSubmatch(result, -1)
 	if len(matched) < 1 || len(matched[0]) < 2{
 		return "",  common.SubHDStep0HrefIsNull
 	}
@@ -295,8 +310,6 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWater
 	fileName := ""
 	fileByte := []byte{0}
 	err = rod.Try(func() {
-		//wait := browser.MustWaitDownload()
-
 		tmpDir := filepath.Join(os.TempDir(), "rod", "downloads")
 		wait := browser.WaitDownload(tmpDir)
 		getDownloadFile:= func() ([]byte, string, error) {
@@ -415,8 +428,11 @@ search:
 	mouse.Move(dragbtnbox.X+distance, dragbtnbox.Y+(dragbtnbox.Height/2), 20)
 	//鬆開滑鼠左鍵, 拖动完毕
 	mouse.MustUp("left")
-	//截圖保存
-	page.MustScreenshot("result.png")
+
+	if s.reqParam.DebugMode == true {
+		//截圖保存
+		page.MustScreenshot("result.png")
+	}
 }
 
 func (s Supplier) httpGet(url string) (string, error) {

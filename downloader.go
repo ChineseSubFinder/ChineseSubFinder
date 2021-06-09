@@ -77,54 +77,67 @@ func (d Downloader) DownloadSub(dir string) error {
 	// TODO 后续再改为每个视频以上的流程都是一个 channel 来做，并且需要控制在一个并发量之下（很可能没必要，毕竟要在弱鸡机器上挂机用的）
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
 	for i, oneVideoFullPath := range nowVideoList {
-		ontVideoRootPath := filepath.Base(oneVideoFullPath)
-		// 同时进行查询
-		wg := sync.WaitGroup{}
-		wg.Add(len(suppliers))
-		println("DlSub Start", oneVideoFullPath)
-		for _, supplier := range suppliers {
-			println(i, supplier.GetSupplierName(), "Start...")
-			subInfos, err := supplier.GetSubListFromFile(oneVideoFullPath)
-			if err != nil {
-				println(supplier.GetSupplierName(), "GetSubListFromFile", err.Error())
-				wg.Done()
-				continue
-			}
-
-			if d.reqParam.DebugMode == true {
-				// 需要进行字幕文件的缓存
-				// 把缓存的文件夹新建出来
-				desFolderFullPath := path.Join(ontVideoRootPath, SubTmpFolderName)
-				err = os.MkdirAll(desFolderFullPath, os.ModePerm)
-				if err != nil{
-					println(supplier.GetSupplierName(), "MkdirAll", err.Error())
-					wg.Done()
-					continue
-				}
-				for x, info := range subInfos {
-					tmpSubFileName := info.Name
-					if strings.Contains(tmpSubFileName, info.Ext) == false {
-						tmpSubFileName = tmpSubFileName + info.Ext
-					}
-					desSubFileFullPath := path.Join(desFolderFullPath, strconv.Itoa(x) + "_" + tmpSubFileName)
-					err = utils.OutputFile(desSubFileFullPath, info.Data)
-					if err != nil {
-						println(supplier.GetSupplierName(), "WriteSubFile", info.Name, err.Error())
-						continue
-					}
-				}
-			}
-
-			println(supplier.GetSupplierName(), "End...")
-			wg.Done()
-		}
-		println(i, "DlSub End", oneVideoFullPath)
-		wg.Wait()
+		d.downloadSub4OneVideo(oneVideoFullPath, suppliers, i)
 	}
 
 	return nil
 }
 
+// downloadSub4OneVideo 为这个视频下载字幕
+func (d Downloader) downloadSub4OneVideo(oneVideoFullPath string, suppliers []sub_supplier.ISupplier, i int) {
+	ontVideoRootPath := filepath.Dir(oneVideoFullPath)
+	// 同时进行查询
+	wg := sync.WaitGroup{}
+	wg.Add(len(suppliers))
+	println("DlSub Start", oneVideoFullPath)
+	for _, supplier := range suppliers {
+		supplier := supplier
+		go func() {
+			err := d.downloadSub4OneSite(oneVideoFullPath, i, supplier, &wg, ontVideoRootPath)
+			if err != nil {
+				println(err.Error())
+				return
+			}
+		}()
+	}
+	wg.Wait()
+	println(i, "DlSub End", oneVideoFullPath)
+}
+
+// downloadSub4OneSite 在一个站点下载这个视频的字幕
+func (d Downloader) downloadSub4OneSite(oneVideoFullPath string, i int, supplier sub_supplier.ISupplier, wg *sync.WaitGroup, ontVideoRootPath string) error {
+	defer wg.Done()
+	println(i, supplier.GetSupplierName(), "Start...")
+	subInfos, err := supplier.GetSubListFromFile(oneVideoFullPath)
+	if err != nil {
+		return err
+	}
+
+	if d.reqParam.DebugMode == true {
+		// 需要进行字幕文件的缓存
+		// 把缓存的文件夹新建出来
+		desFolderFullPath := path.Join(ontVideoRootPath, SubTmpFolderName)
+		err = os.MkdirAll(desFolderFullPath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+		for x, info := range subInfos {
+			tmpSubFileName := info.Name
+			if strings.Contains(tmpSubFileName, info.Ext) == false {
+				tmpSubFileName = tmpSubFileName + info.Ext
+			}
+			desSubFileFullPath := path.Join(desFolderFullPath, supplier.GetSupplierName() + "_" + strconv.Itoa(x)+"_"+tmpSubFileName)
+			err = utils.OutputFile(desSubFileFullPath, info.Data)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	println(i, supplier.GetSupplierName(), "End...")
+	return nil
+}
+
+// searchFile 搜索符合后缀名的视频文件
 func (d Downloader)searchFile(dir string) ([]string, error) {
 
 	var fileFullPathList = make([]string, 0)
@@ -150,7 +163,7 @@ func (d Downloader)searchFile(dir string) ([]string, error) {
 	}
 	return fileFullPathList, nil
 }
-
+// isWantedExtDef 后缀名是否符合规则
 func (d Downloader) isWantedExtDef(fileName string) bool {
 	fileName = strings.ToLower(filepath.Ext(fileName))
 	for _, s := range d.wantedExtList {

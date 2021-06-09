@@ -18,6 +18,10 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 	}
 	println(outList)
 
+	if len(outList) == 0 {
+		println("now sub found")
+	}
+
 	for i, sublist := range outList {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Vote, sublist.FileUrl, len(sublist.Data))
 	}
