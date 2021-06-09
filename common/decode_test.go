@@ -95,3 +95,26 @@ func Test_VideoInfo(t *testing.T) {
 
 
 }
+
+func TestGetNumber2Float(t *testing.T) {
+	testString := "asd&^%1998.2jh aweo "
+	outNumber, err := GetNumber2Float(testString)
+	if err != nil {
+		t.Error(err)
+	}
+	if outNumber != 1998.2 {
+		t.Error("not the same")
+	}
+}
+
+func TestGetNumber2int(t *testing.T) {
+
+	testString := "asd&^%1998jh aweo "
+	outNumber, err := GetNumber2int(testString)
+	if err != nil {
+		t.Error(err)
+	}
+	if outNumber != 1998 {
+		t.Error("not the same")
+	}
+}
