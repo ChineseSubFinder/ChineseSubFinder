@@ -7,6 +7,6 @@ const (
 	SubZiMuKuRootUrl  = "http://zmk.pw"
 	SubZiMuKuSearchUrl  = SubZiMuKuRootUrl + "/search"
 
-	SubSubHDRootUrl  = "https://subhd.tv"
+	SubSubHDRootUrl  = "https://subhd.cc"
 	SubSubHDSearchUrl  = SubSubHDRootUrl + "/search/%s"
 )

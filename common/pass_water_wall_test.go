@@ -1,8 +1,9 @@
 package common
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestSimulationTest(t *testing.T) {
-
 	SimulationTest()
 }

@@ -12,6 +12,7 @@ import (
 
 // SimulationTest 模拟滑动过防水墙
 func SimulationTest() {
+	// 具体的应用见 subhd 的解析器
 	// 感谢 https://www.bigs3.com/article/gorod-crack-slider-captcha/
 	page, err := NewBrowserLoadPage("https://007.qq.com/online.html", "", 10*time.Second, 5)
 	if err != nil {

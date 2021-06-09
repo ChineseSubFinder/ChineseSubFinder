@@ -20,4 +20,5 @@ var(
 	SubHDStep2DTokenIsNull = errors.New("subhd step2 dToken is null")
 	SubHDStep2ResultIsNullOrNotTrue = errors.New("subhd step2 result is null or not true")
 	SubHDStep2PostResultGetUrlNotFound= errors.New("subhd step2 post result get url not found")
+	SubHDStep2ExCannotFindDownloadBtn= errors.New("subhd step2ex can not find download btn")
 )
