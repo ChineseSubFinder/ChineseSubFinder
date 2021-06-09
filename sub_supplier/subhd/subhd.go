@@ -93,8 +93,14 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo,
 		return nil, err
 	}
 
+	// TODO 后面如果用 docker 部署，需要允许改位远程 browser 启动
+	browser, err := common.NewBrowser(s.reqParam.HttpProxy)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, item := range subList {
-		hdContent, err := s.Step2Ex(item.Url)
+		hdContent, err := s.Step2Ex(browser, item.Url)
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +126,7 @@ func (s Supplier) Step0(keyword string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	re := regexp.MustCompile(`<a\shref="(/d/[\w]+)">\s?<div`)
+	re := regexp.MustCompile(`<a\shref="(/d/[\w]+)">\s?<img`)
 	matched := re.FindAllStringSubmatch(result, -1)
 	if len(matched) < 1 || len(matched[0]) < 2{
 		return "",  common.SubHDStep0HrefIsNull
@@ -139,17 +145,22 @@ func (s Supplier) Step1(detailPageUrl string) ([]HdListItem, error) {
 		return nil, err
 	}
 	var lists []HdListItem
-	doc.Find("div.bg-white div.row").EachWithBreak(func(i int, tr *goquery.Selection) bool {
-		if tr.Find("a.link-dark").Size() == 0 {
+
+	const subTableKeyword = ".table-sm tr"
+	const oneSubTrTitleKeyword = "a.text-dark"
+	const oneSubTrDownloadCountKeyword = "td.p-3"
+
+	doc.Find(subTableKeyword).EachWithBreak(func(i int, tr *goquery.Selection) bool {
+		if tr.Find(oneSubTrTitleKeyword).Size() == 0 {
 			return true
 		}
-		downUrl, exists := tr.Find("a.link-dark").Eq(0).Attr("href")
+		downUrl, exists := tr.Find(oneSubTrTitleKeyword).Eq(0).Attr("href")
 		if !exists {
 			return true
 		}
-		title := strings.TrimSpace(tr.Find("a.link-dark").Text())
+		title := strings.TrimSpace(tr.Find(oneSubTrTitleKeyword).Text())
 
-		downCount, err := common.GetNumber2int(tr.Find("div.px-3").Eq(1).Text())
+		downCount, err := common.GetNumber2int(tr.Find(oneSubTrDownloadCountKeyword).Eq(1).Text())
 		if err != nil {
 			return true
 		}
@@ -231,16 +242,10 @@ func (s Supplier) Step2(subDownloadPageUrl string) (*HdContent, error) {
 }
 
 // Step2Ex 下载字幕 过防水墙
-func (s Supplier) Step2Ex(subDownloadPageUrl string) (*HdContent, error)  {
+func (s Supplier) Step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdContent, error)  {
 	subDownloadPageUrl = common.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
-
-	// TODO 后面如果用 docker 部署，需要允许改位远程 browser 启动
-	browser, err := common.NewBrowser(s.reqParam.HttpProxy)
-	if err != nil {
-		return nil, err
-	}
-	// TODO 需要提取出 rod 的超时时间和重试次数
-	page, err := common.NewPageNavigate(browser, subDownloadPageUrl, 10*time.Second, 5)
+	// TODO 需要提取出 rod 的超时时间和重试次数，注意，这里的超时时间，在调试的时候也算进去的，所以···
+	page, err := common.NewPageNavigate(browser, subDownloadPageUrl, 300*time.Second, 5)
 	if err != nil {
 		return nil, err
 	}
@@ -273,12 +278,12 @@ func (s Supplier) Step2Ex(subDownloadPageUrl string) (*HdContent, error)  {
 		return nil, common.SubHDStep2ExCannotFindDownloadBtn
 	}
 	// 下载字幕
-	content, err2 := s.downloadSubFile(browser, page, hasWaterWall)
-	if err2 != nil {
-		return content, err2
+	content, err := s.downloadSubFile(browser, page, hasWaterWall)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, nil
+	return content, nil
 }
 
 func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWaterWall bool) (*HdContent, error) {
@@ -302,7 +307,11 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWater
 		}
 
 		// 点击下载按钮
-		page.MustElement("#down").MustClick()
+		if hasWaterWall == true {
+			page.MustElement("#TencentCaptcha").MustClick()
+		} else {
+			page.MustElement("#down").MustClick()
+		}
 		// 过墙
 		if hasWaterWall == true {
 			s.passWaterWall(page)
@@ -330,22 +339,24 @@ func (s Supplier) passWaterWall(page *rod.Page)  {
 	//進入到iframe
 	iframe := page.MustElement("#tcaptcha_iframe").MustFrame()
 	//等待拖動條加載, 延遲500秒檢測變化, 以確認加載完畢
-	err := iframe.MustElement("#tcaptcha_drag_button").WaitStable(500 * time.Millisecond)
-	if err != nil {
-		panic(err)
-	}
+	iframe.MustElement("#tcaptcha_drag_button").MustWaitStable()
 	//等待缺口圖像載入
-	iframe.MustElement("#slideBg").MustWaitLoad()
+	slideBgEl := iframe.MustElement("#slideBg").MustWaitLoad()
+	slideBgEl = slideBgEl.MustWaitStable()
 	//取得帶缺口圖像
-	shadowbg := iframe.MustElement("#slideBg").MustResource()
-	//取得原始圖像
-	src := iframe.MustElement("#slideBg").MustProperty("src")
+	shadowbg := slideBgEl.MustResource()
+	// 取得原始圖像
+	src := slideBgEl.MustProperty("src")
 	fullbg, _, err := common.DownFile(strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
 	if err != nil {
 		panic(err)
 	}
 	//取得img展示的真實尺寸
-	bgbox := iframe.MustElement("#slideBg").MustShape().Box()
+	shape, err := slideBgEl.Shape()
+	if err != nil {
+		panic(err)
+	}
+	bgbox := shape.Box()
 	height, width := uint(math.Round(bgbox.Height)), uint(math.Round(bgbox.Width))
 	//裁剪圖像
 	shadowbg_img, _ := jpeg.Decode(bytes.NewReader(shadowbg))
@@ -397,10 +408,7 @@ search:
 	//按下滑鼠左鍵
 	mouse.MustDown("left")
 	//開始拖動
-	err = mouse.Move(dragbtnbox.X+distance, dragbtnbox.Y+(dragbtnbox.Height/2), 20)
-	if err != nil {
-		panic(err)
-	}
+	mouse.Move(dragbtnbox.X+distance, dragbtnbox.Y+(dragbtnbox.Height/2), 20)
 	//鬆開滑鼠左鍵, 拖动完毕
 	mouse.MustUp("left")
 	//截圖保存
