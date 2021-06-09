@@ -12,6 +12,15 @@
 
 首先，明确一点，因为搞定了 sonarr 和 raddarr 以及 Emby，同时部分手动下载的视频也会使用 tinyMediaManager 去处理，所以可以认为所有的视频是都有 IMDB ID 的。那么就可以取巧，用 IMDB ID 去搜索（最差也能用标准的视频文件名称去搜索嘛）。
 
+## 功能
+
+支持的字幕下载站点：
+
+* zimuku
+* subhd
+* shooter
+* xunlei
+
 ## 限定条件
 
 * 电影（暂时做这个类型，后续会考虑：连续剧、动画）
@@ -44,3 +53,5 @@
 感谢下面项目的帮助
 
 * [Andyfoo/GoSubTitleSearcher: 字幕搜索查询(go语言版)，支持4k 2160p,1080p,720p视频字幕搜索，集合了字幕库、迅雷、射手、SubHD查询接口。 (github.com)](https://github.com/Andyfoo/GoSubTitleSearcher)
+* [go-rod/rod: A Devtools driver for web automation and scraping (github.com)](https://github.com/go-rod/rod)
+* [ausaki/subfinder: 字幕查找器 (github.com)](https://github.com/ausaki/subfinder)

@@ -394,7 +394,7 @@ search:
 				abs(int(color_a_G)-int(color_b_G)) > threshold ||
 				abs(int(color_a_B)-int(color_b_B)) > threshold {
 				distance += float64(i)
-				fmt.Printf("info: 對比完畢, 偏移量: %v\n", distance)
+				//fmt.Printf("info: 對比完畢, 偏移量: %v\n", distance)
 				break search
 			}
 		}
