@@ -29,6 +29,10 @@ func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
 	return &sup
 }
 
+func (s Supplier) GetSupplierName() string {
+	return "shooter"
+}
+
 func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, error) {
 
 	// 可以提供的字幕查询 eng或者chn
@@ -36,7 +40,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 	var outSubInfoList []sub_supplier.SubInfo
 	var jsonList []SublistShooter
 
-	hash, err := s.computeFileHash(filePath)
+	hash, err := s.ComputeFileHash(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +90,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo,
 	panic("not implemented")
 }
 
-func (s Supplier) computeFileHash(filePath string) (string, error) {
+func (s Supplier) ComputeFileHash(filePath string) (string, error) {
 	hash := ""
 	fp, err := os.Open(filePath)
 	if err != nil {

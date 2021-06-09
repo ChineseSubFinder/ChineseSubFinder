@@ -28,6 +28,10 @@ func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
 	return &sup
 }
 
+func (s Supplier) GetSupplierName() string {
+	return "xunlei"
+}
+
 func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, error) {
 
 	cid, err := s.getCid(filePath)

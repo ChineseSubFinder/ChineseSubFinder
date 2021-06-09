@@ -29,6 +29,10 @@ func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
 	return &sup
 }
 
+func (s Supplier) GetSupplierName() string {
+	return "zimuku"
+}
+
 func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, error) {
 
 	/*

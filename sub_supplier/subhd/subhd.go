@@ -39,6 +39,10 @@ func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
 	return &sup
 }
 
+func (s Supplier) GetSupplierName() string {
+	return "subhd"
+}
+
 func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, error) {
 	/*
 		虽然是传入视频文件路径，但是其实需要读取对应的视频文件目录下的
@@ -122,7 +126,11 @@ func (s Supplier) Step0(keyword string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// 是否有查找到的结果，至少要有结果。根据这里这样下面才能判断是分析失效了，还是就是没有结果而已
+	// TODO 1 更新这个理，注意，调试模式缓存字幕的输出位置错了，变成当前项目了，需要修复
 	re := regexp.MustCompile(`<a\shref="(/d/[\w]+)">\s?<img`)
+	// 这里是确认能继续分析的详细连接
+	re := regexp.MustCompile(`”总共\shref="(/d/[\w]+)">\s?<img`)
 	matched := re.FindAllStringSubmatch(result, -1)
 	if len(matched) < 1 || len(matched[0]) < 2{
 		return "",  common.SubHDStep0HrefIsNull

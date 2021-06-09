@@ -1,6 +1,8 @@
 package sub_supplier
 
-type iSupplier interface {
+type ISupplier interface {
+
+	GetSupplierName() string
 
 	GetSubListFromFile(filePath string) ([]SubInfo, error)
 
