@@ -97,10 +97,6 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo,
 	// 第三级界面，单个字幕详情
 	// 找到最大的优先级的字幕下载
 	sort.Sort(SortByPriority{subResult.SubInfos})
-	// 移除多出来的字幕
-	if len(subResult.SubInfos) >= s.topic {
-		subResult.SubInfos = subResult.SubInfos[:s.topic]
-	}
 
 	for i := range subResult.SubInfos {
 		err = s.Step2(&subResult.SubInfos[i])
@@ -109,8 +105,31 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo,
 			continue
 		}
 	}
-	// 第四级界面，具体字幕下载
+
+	// TODO 这里需要考虑，可以设置为高级选项，不够就用 unknow 来补充
+	// 首先过滤出中文的字幕，同时需要满足是支持的字幕
+	var tmpSubInfo = make([]SubInfo, 0)
 	for _, subInfo := range subResult.SubInfos {
+		tmpLang := common.LangConverter(subInfo.Lang)
+		if common.HasChineseLang(tmpLang) == true && common.IsSubTypeWanted(subInfo.Ext) == true {
+			tmpSubInfo = append(tmpSubInfo, subInfo)
+		}
+	}
+	// 看字幕够不够
+	if len(tmpSubInfo) < s.topic {
+		for _, subInfo := range subResult.SubInfos {
+			if len(tmpSubInfo) >= s.topic {
+				break
+			}
+			tmpLang := common.LangConverter(subInfo.Lang)
+			if common.HasChineseLang(tmpLang) == false {
+				tmpSubInfo = append(tmpSubInfo, subInfo)
+			}
+		}
+	}
+
+	// 第四级界面，具体字幕下载
+	for _, subInfo := range tmpSubInfo {
 		fileName, data, err := s.Step3(subInfo.SubDownloadPageUrl)
 		if err != nil {
 			println(err.Error())
@@ -139,16 +158,6 @@ func (s Supplier) Step0(keyword string) (string, error) {
 	// 找到对应影片的详情界面
 	re := regexp.MustCompile(`<p\s+class="tt\s+clearfix"><a\s+href="(/subs/[\w]+\.html)"\s+target="_blank"><b>(.*?)</b></a></p>`)
 	matched := re.FindAllStringSubmatch(resp.String(), -1)
-	//lists := make([]string, 0)
-	//for _, match := range matched {
-	//	// 去重
-	//	for _, list := range lists {
-	//		if list != match[1] {
-	//			lists = append(lists, match[1])
-	//		}
-	//	}
-	//	lists = append(lists, match[1])
-	//}
 	if len(matched) < 1 {
 		return "", common.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound
 	}
@@ -173,15 +182,19 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 	var subResult SubResult
 	subResult.SubInfos = SubInfos{}
 	doc.Find("#subtb tbody tr").Each(func(i int, tr *goquery.Selection) {
+		// 字幕下载页面地址
 		href, exists := tr.Find("a").Attr("href")
 		if !exists {
 			return
 		}
+		// 标题
 		title, exists := tr.Find("a").Attr("title")
 		if !exists {
 			return
 		}
+		// 扩展名
 		ext := tr.Find(".label-info").Text()
+		// 作者信息
 		authorInfos := tr.Find(".gray")
 		authorInfo := ""
 		authorInfos.Each(func(a_i int, a_lb *goquery.Selection) {
@@ -191,11 +204,12 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 		if authorInfoLen > 0 {
 			authorInfo = authorInfo[0 : authorInfoLen-3]
 		}
-
+		// 语言
 		lang, exists := tr.Find("img").First().Attr("alt")
 		if !exists {
 			lang = ""
 		}
+		// 投票
 		rate, exists := tr.Find(".rating-star").First().Attr("title")
 		if !exists {
 			rate = ""
@@ -204,7 +218,7 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 		if err != nil {
 			return
 		}
-
+		// 下载次数统计
 		downCountNub := 0
 		downCount := tr.Find("td").Eq(3).Text()
 		if strings.Contains(downCount, "万") {

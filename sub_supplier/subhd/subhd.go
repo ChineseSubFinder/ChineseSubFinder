@@ -169,17 +169,25 @@ func (s Supplier) Step1(detailPageUrl string) ([]HdListItem, error) {
 	const subTableKeyword = ".table-sm tr"
 	const oneSubTrTitleKeyword = "a.text-dark"
 	const oneSubTrDownloadCountKeyword = "td.p-3"
+	const oneSubLangAndTypeKetword = ".text-secondary"
 
 	doc.Find(subTableKeyword).EachWithBreak(func(i int, tr *goquery.Selection) bool {
 		if tr.Find(oneSubTrTitleKeyword).Size() == 0 {
 			return true
 		}
+		// 文件的下载页面，还需要分析
 		downUrl, exists := tr.Find(oneSubTrTitleKeyword).Eq(0).Attr("href")
 		if !exists {
 			return true
 		}
+		// 文件名
 		title := strings.TrimSpace(tr.Find(oneSubTrTitleKeyword).Text())
-
+		// 字幕类型
+		insideSubType := tr.Find(oneSubLangAndTypeKetword).Text()
+		if common.IsSubTypeWanted(insideSubType) == false {
+			return true
+		}
+		// 下载的次数
 		downCount, err := common.GetNumber2int(tr.Find(oneSubTrDownloadCountKeyword).Eq(1).Text())
 		if err != nil {
 			return true

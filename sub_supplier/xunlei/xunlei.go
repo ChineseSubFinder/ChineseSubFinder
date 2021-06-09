@@ -36,6 +36,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 
 	cid, err := s.getCid(filePath)
 	var jsonList SublistSliceXunLei
+	var tmpXunLeiSubListChinese = make([]SublistXunLei, 0)
 	var outSubList []sub_supplier.SubInfo
 	if len(cid) == 0 {
 		return outSubList, common.XunLeiCIdIsEmpty
@@ -50,26 +51,45 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 	// 剔除空的
 	for _, v := range jsonList.Sublist {
 		if len(v.Scid) > 0 {
-
-			data, filename, err := common.DownFile(v.Surl)
-			if err != nil {
-				println(err.Error())
-				continue
-			}
-			ext := ""
-			if filename == "" {
-				ext = filepath.Ext(v.Surl)
-			} else {
-				ext = filepath.Ext(filename)
-			}
+			// 符合中文语言的先加入列表
 			tmpLang := common.LangConverter(v.Language)
-			outSubList = append(outSubList, *sub_supplier.NewSubInfo(v.Sname, tmpLang, v.Surl, v.Svote, v.Roffset, ext, data))
-			// 如果够了那么多个字幕就返回
-			if len(outSubList) >= s.topic {
-				return outSubList, nil
+			if common.HasChineseLang(tmpLang) == true && common.IsSubTypeWanted(v.Sname) == true {
+				tmpXunLeiSubListChinese = append(tmpXunLeiSubListChinese, v)
 			}
 		}
 	}
+	// TODO 这里需要考虑，可以设置为高级选项，不够就用 unknow 来补充
+	// 如果不够，再补 unknow
+	if len(tmpXunLeiSubListChinese) < s.topic {
+		for _, v := range jsonList.Sublist {
+			if len(tmpXunLeiSubListChinese) >= s.topic {
+				break
+			}
+			tmpLang := common.LangConverter(v.Language)
+			if common.HasChineseLang(tmpLang) == false {
+				tmpXunLeiSubListChinese = append(tmpXunLeiSubListChinese, v)
+			}
+		}
+	}
+	// 再开始下载字幕
+	for _, v := range tmpXunLeiSubListChinese {
+		tmpLang := common.LangConverter(v.Language)
+		data, filename, err := common.DownFile(v.Surl)
+		if err != nil {
+			println(err.Error())
+			continue
+		}
+		ext := ""
+		if filename == "" {
+			ext = filepath.Ext(v.Surl)
+		} else {
+			ext = filepath.Ext(filename)
+		}
+
+		outSubList = append(outSubList, *sub_supplier.NewSubInfo(v.Sname, tmpLang, v.Surl, v.Svote, v.Roffset, ext, data))
+	}
+
+
 	return outSubList, nil
 }
 

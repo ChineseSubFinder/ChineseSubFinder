@@ -50,6 +50,21 @@ func LangConverter(subLang string) Language {
 	}
 }
 
+func HasChineseLang(lan Language) bool {
+	switch lan {
+	case ChineseSimple:
+	case ChineseTraditional:
+	case ChineseSimpleEnglish:
+	case ChineseTraditionalEnglish:
+	case ChineseSimpleJapanese:
+	case ChineseTraditionalJapanese:
+	case ChineseSimpleKorean:
+	case ChineseTraditionalKorean:
+		return true
+	}
+	return false
+}
+
 // Language 语言类型，注意，这里默认还是查找的是中文字幕，只不过下载的时候可能附带了其他的
 type Language int
 const (
