@@ -45,8 +45,13 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 	// 找到这个视频文件，然后读取它目录下的文件，尝试得到 IMDB ID
 	fileRootDirPath := filepath.Dir(filePath)
 	imdbId, err := common.GetImdbId(fileRootDirPath)
-	if err != nil && err != common.CanNotFindIMDBID {
-		return nil, err
+	if err != nil {
+		// 允许的错误，跳过，继续进行文件名的搜索
+		if err == common.CanNotFindIMDBID {
+			println(err.Error())
+		} else {
+			return nil, err
+		}
 	}
 
 	var subInfoList []sub_supplier.SubInfo
