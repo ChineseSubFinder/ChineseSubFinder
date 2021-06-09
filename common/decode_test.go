@@ -62,6 +62,8 @@ func Test_VideoInfo(t *testing.T) {
 	movieFile3 := "機動戦士Zガンダム WEBDL-1080p.mkv"
 	movieFile4 := "机动战士Z高达：星之继承者 (2005) 1080p TrueHD.mkv"
 	standard1 := "X:\\连续剧\\The Bad Batch\\Season 1\\The Bad Batch - S01E01 - Aftermath WEBDL-1080p.mkv"
+	sub1 := "Spiral.From.the.Book.of.Saw.2021.1080p.WEBRip.x264-RARBG.chi.srt"
+	sub2 := "Spiral.From.the.Book.of.Saw.2021.1080p.WEBRip.x264-RARBG.eng.srt"
 
 	m1, err := GetVideoInfo(movieFile1)
 	if err != nil {
@@ -93,7 +95,17 @@ func Test_VideoInfo(t *testing.T) {
 	}
 	println(s1.Title, s1.Season, s1.Episode, s1.Quality, s1.Codec, s1.Hardcoded)
 
+	osub1, err := GetVideoInfo(sub1)
+	if err != nil {
+		t.Error(err)
+	}
+	println(osub1.Title, osub1.Language)
 
+	osub2, err := GetVideoInfo(sub2)
+	if err != nil {
+		t.Error(err)
+	}
+	println(osub2.Title, osub2.Language)
 }
 
 func TestGetNumber2Float(t *testing.T) {
