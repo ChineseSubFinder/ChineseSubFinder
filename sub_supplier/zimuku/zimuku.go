@@ -94,7 +94,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo,
 	// 找到最大的优先级的字幕下载
 	sort.Sort(SortByPriority{subResult.SubInfos})
 	// 移除多出来的字幕
-	if len(subResult.SubInfos) > s.topic {
+	if len(subResult.SubInfos) >= s.topic {
 		subResult.SubInfos = subResult.SubInfos[:s.topic]
 	}
 

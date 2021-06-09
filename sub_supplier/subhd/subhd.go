@@ -167,7 +167,7 @@ func (s Supplier) Step1(detailPageUrl string) ([]HdListItem, error) {
 		listItem.Title = title
 		listItem.DownCount = downCount
 
-		if len(lists) > s.topic {
+		if len(lists) >= s.topic {
 			return false
 		}
 
