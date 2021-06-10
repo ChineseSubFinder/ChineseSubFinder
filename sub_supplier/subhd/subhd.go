@@ -9,6 +9,7 @@ import (
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/nfnt/resize"
+	"github.com/sirupsen/logrus"
 	"image/jpeg"
 	"io/ioutil"
 	"math"
@@ -23,6 +24,7 @@ import (
 
 type Supplier struct {
 	reqParam common.ReqParam
+	log *logrus.Logger
 	topic int
 	rodlauncher *launcher.Launcher
 }
@@ -30,6 +32,7 @@ type Supplier struct {
 func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
 
 	sup := Supplier{}
+	sup.log = common.GetLogger()
 	sup.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		sup.reqParam = _reqParam[0]
@@ -62,7 +65,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
 		if err == common.CanNotFindIMDBID {
-			println(err.Error())
+			s.log.Error(err.Error())
 		} else {
 			return nil, err
 		}
@@ -224,7 +227,7 @@ func (s Supplier) Step2(subDownloadPageUrl string) (*HdContent, error) {
 	// 是否有腾讯的防水墙
 	matchList := doc.Find("#TencentCaptcha")
 	if len(matchList.Nodes) < 1 {
-		println("qiang")
+		s.log.Debug("find fang shui qiang")
 	}
 	//matchList = doc.Find("#down")
 	//if len(matchList.Nodes) < 1 {
@@ -420,7 +423,7 @@ search:
 				abs(int(color_a_G)-int(color_b_G)) > threshold ||
 				abs(int(color_a_B)-int(color_b_B)) > threshold {
 				distance += float64(i)
-				//fmt.Printf("info: 對比完畢, 偏移量: %v\n", distance)
+				s.log.Debug("對比完畢, 偏移量: %v", distance)
 				break search
 			}
 		}
@@ -444,7 +447,7 @@ search:
 		if err == nil {
 			page.MustScreenshot(path.Join(nowProcessRoot, "result.png"))
 		} else {
-			println(err.Error())
+			s.log.Error(err)
 		}
 	}
 }
@@ -458,7 +461,7 @@ func (s Supplier) httpGet(url string) (string, error) {
 	}
 	//搜索验证 点击继续搜索
 	if strings.Contains(resp.String(), "搜索验证") {
-		println("搜索验证 reload", url)
+		s.log.Debug("搜索验证 reload", url)
 		return s.httpGet(url)
 	}
 	return resp.String(), nil

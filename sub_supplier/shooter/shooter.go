@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
+	"github.com/sirupsen/logrus"
 	"math"
 	"os"
 	"path/filepath"
@@ -13,12 +14,14 @@ import (
 
 type Supplier struct {
 	reqParam common.ReqParam
+	log *logrus.Logger
 	topic int
 }
 
 func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
 
 	sup := Supplier{}
+	sup.log = common.GetLogger()
 	sup.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		sup.reqParam = _reqParam[0]
@@ -73,7 +76,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 
 			data, _, err := common.DownFile(file.Link)
 			if err != nil {
-				println(err.Error())
+				s.log.Error(err.Error())
 				continue
 			}
 			outSubInfoList = append(outSubInfoList, *sub_supplier.NewSubInfo(fileName, common.ChineseSimple, file.Link, 0, shooter.Delay, subExt, data))

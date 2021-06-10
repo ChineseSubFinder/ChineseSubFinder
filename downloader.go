@@ -8,6 +8,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier/zimuku"
 	"github.com/go-rod/rod/lib/utils"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path"
@@ -19,6 +20,7 @@ import (
 
 type Downloader struct {
 	reqParam common.ReqParam
+	log *logrus.Logger
 	topic int					// 最多能够下载 Top 几的字幕，每一个网站
 	wantedExtList []string		// 人工确认的需要监控的视频后缀名
 	defExtList []string			// 内置支持的视频后缀名列表
@@ -27,6 +29,7 @@ type Downloader struct {
 func NewDownloader(_reqParam ... common.ReqParam) *Downloader {
 
 	var downloader Downloader
+	downloader.log = common.GetLogger()
 	downloader.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		downloader.reqParam = _reqParam[0]
@@ -89,25 +92,25 @@ func (d Downloader) downloadSub4OneVideo(oneVideoFullPath string, suppliers []su
 	// 同时进行查询
 	wg := sync.WaitGroup{}
 	wg.Add(len(suppliers))
-	println("DlSub Start", oneVideoFullPath)
+	d.log.Infoln("DlSub Start", oneVideoFullPath)
 	for _, supplier := range suppliers {
 		supplier := supplier
 		go func() {
 			err := d.downloadSub4OneSite(oneVideoFullPath, i, supplier, &wg, ontVideoRootPath)
 			if err != nil {
-				println(err.Error())
+				d.log.Error(err)
 				return
 			}
 		}()
 	}
 	wg.Wait()
-	println(i, "DlSub End", oneVideoFullPath)
+	d.log.Infoln(i, "DlSub End", oneVideoFullPath)
 }
 
 // downloadSub4OneSite 在一个站点下载这个视频的字幕
 func (d Downloader) downloadSub4OneSite(oneVideoFullPath string, i int, supplier sub_supplier.ISupplier, wg *sync.WaitGroup, ontVideoRootPath string) error {
 	defer wg.Done()
-	println(i, supplier.GetSupplierName(), "Start...")
+	d.log.Infoln(i, supplier.GetSupplierName(), "Start...")
 	subInfos, err := supplier.GetSubListFromFile(oneVideoFullPath)
 	if err != nil {
 		return err
@@ -133,7 +136,7 @@ func (d Downloader) downloadSub4OneSite(oneVideoFullPath string, i int, supplier
 			}
 		}
 	}
-	println(i, supplier.GetSupplierName(), "End...")
+	d.log.Infoln(i, supplier.GetSupplierName(), "End...")
 	return nil
 }
 

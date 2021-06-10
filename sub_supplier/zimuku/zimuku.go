@@ -5,6 +5,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
+	"github.com/sirupsen/logrus"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -13,12 +14,14 @@ import (
 
 type Supplier struct {
 	reqParam common.ReqParam
+	log *logrus.Logger
 	topic int
 }
 
 func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
 
 	sup := Supplier{}
+	sup.log = common.GetLogger()
 	sup.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		sup.reqParam = _reqParam[0]
@@ -52,7 +55,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
 		if err == common.CanNotFindIMDBID {
-			println(err.Error())
+			s.log.Error(err.Error())
 		} else {
 			return nil, err
 		}
@@ -101,7 +104,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo,
 	for i := range subResult.SubInfos {
 		err = s.Step2(&subResult.SubInfos[i])
 		if err != nil {
-			println(err.Error())
+			s.log.Error(err.Error())
 			continue
 		}
 	}
@@ -132,7 +135,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo,
 	for _, subInfo := range tmpSubInfo {
 		fileName, data, err := s.Step3(subInfo.SubDownloadPageUrl)
 		if err != nil {
-			println(err.Error())
+			s.log.Error(err.Error())
 			continue
 		}
 		// 默认都是包含中文字幕的，然后具体使用的时候再进行区分
@@ -265,7 +268,7 @@ func (s Supplier) Step2(subInfo *SubInfo) error {
 	re := regexp.MustCompile(`<a\s+id="down1"\s+href="([^"]*/dld/[\w]+\.html)"`)
 	matched := re.FindAllStringSubmatch(resp.String(), -1)
 	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
-		println(detailUrl)
+		s.log.Debug(detailUrl)
 		return common.ZiMuKuDownloadUrlStep2NotFound
 	}
 	if strings.Contains(matched[0][1], "://") {
@@ -289,7 +292,7 @@ func (s Supplier) Step3(subDownloadPageUrl string) (string, []byte, error) {
 	re := regexp.MustCompile(`<li><a\s+rel="nofollow"\s+href="([^"]*/download/[^"]+)"`)
 	matched := re.FindAllStringSubmatch(resp.String(), -1)
 	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
-		println(subDownloadPageUrl)
+		s.log.Debug(subDownloadPageUrl)
 		return "", nil, common.ZiMuKuDownloadUrlStep3NotFound
 	}
 	var filename string
@@ -299,12 +302,12 @@ func (s Supplier) Step3(subDownloadPageUrl string) (string, []byte, error) {
 	for i := 0; i < len(matched); i++ {
 		data, filename, err = common.DownFile(common.AddBaseUrl(common.SubZiMuKuRootUrl, matched[i][1]), s.reqParam)
 		if err != nil {
-			println("ZiMuKu Step3 DownloadFile", err)
+			s.log.Error("ZiMuKu Step3 DownloadFile", err)
 			continue
 		}
 		return filename, data, nil
 	}
-	println(subDownloadPageUrl)
+	s.log.Debug(subDownloadPageUrl)
 	return "", nil, common.ZiMuKuDownloadUrlStep3AllFailed
 }
 
