@@ -70,7 +70,7 @@ func GetImdbId(dirPth string) (string ,error) {
 	if movieFilePath != "" {
 		outId, err := getImdbMovieXml(movieFilePath)
 		if err != nil {
-			println(err)
+			GetLogger().Errorln("getImdbMovieXml error, move on:", err)
 		} else {
 			return outId, nil
 		}
