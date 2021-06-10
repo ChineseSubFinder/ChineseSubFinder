@@ -159,15 +159,16 @@ func (d Downloader)searchFile(dir string) ([]string, error) {
 			}
 		} else {
 			// 这里就是文件了
-			if d.isWantedExtDef(curFile.Name()) == true {
+			if d.isWantedVideoExtDef(curFile.Name()) == true {
 				fileFullPathList = append(fileFullPathList, fullPath)
 			}
 		}
 	}
 	return fileFullPathList, nil
 }
-// isWantedExtDef 后缀名是否符合规则
-func (d Downloader) isWantedExtDef(fileName string) bool {
+
+// isWantedVideoExtDef 后缀名是否符合规则
+func (d Downloader) isWantedVideoExtDef(fileName string) bool {
 	fileName = strings.ToLower(filepath.Ext(fileName))
 	for _, s := range d.wantedExtList {
 		if s == fileName {
