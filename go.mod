@@ -6,6 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/abadojack/whatlanggo v1.0.1
 	github.com/beevik/etree v1.1.0
+	github.com/gen2brain/go-unarr v0.1.1 // indirect
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/go-rod/rod v0.97.2
 	github.com/jonboulle/clockwork v0.2.2 // indirect

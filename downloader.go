@@ -89,6 +89,9 @@ func (d Downloader) DownloadSub(dir string) error {
 
 func (d Downloader) chooseAndSaveSubFile(oneVideoFullPath string, suppliers []sub_supplier.ISupplier) {
 	// 判断下载的文件是什么，可能需要解压
+	for i, info := range suppliers {
+		
+	}
 }
 
 // downloadSub4OneVideo 为这个视频下载字幕
