@@ -81,9 +81,14 @@ func (d Downloader) DownloadSub(dir string) error {
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
 	for i, oneVideoFullPath := range nowVideoList {
 		d.downloadSub4OneVideo(oneVideoFullPath, suppliers, i)
+		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
+		d.chooseAndSaveSubFile(oneVideoFullPath, suppliers)
 	}
-
 	return nil
+}
+
+func (d Downloader) chooseAndSaveSubFile(oneVideoFullPath string, suppliers []sub_supplier.ISupplier) {
+	// 判断下载的文件是什么，可能需要解压
 }
 
 // downloadSub4OneVideo 为这个视频下载字幕
@@ -115,7 +120,13 @@ func (d Downloader) downloadSub4OneSite(oneVideoFullPath string, i int, supplier
 	if err != nil {
 		return err
 	}
-
+	// 把后缀名给改好
+	for x, info := range subInfos {
+		tmpSubFileName := info.Name
+		if strings.Contains(tmpSubFileName, info.Ext) == false {
+			subInfos[x].Name = tmpSubFileName + info.Ext
+		}
+	}
 	if d.reqParam.DebugMode == true {
 		// 需要进行字幕文件的缓存
 		// 把缓存的文件夹新建出来
@@ -125,11 +136,7 @@ func (d Downloader) downloadSub4OneSite(oneVideoFullPath string, i int, supplier
 			return err
 		}
 		for x, info := range subInfos {
-			tmpSubFileName := info.Name
-			if strings.Contains(tmpSubFileName, info.Ext) == false {
-				tmpSubFileName = tmpSubFileName + info.Ext
-			}
-			desSubFileFullPath := path.Join(desFolderFullPath, supplier.GetSupplierName() + "_" + strconv.Itoa(x)+"_"+tmpSubFileName)
+			desSubFileFullPath := path.Join(desFolderFullPath, supplier.GetSupplierName() + "_" + strconv.Itoa(x)+"_"+info.Name)
 			err = utils.OutputFile(desSubFileFullPath, info.Data)
 			if err != nil {
 				return err

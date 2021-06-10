@@ -17,7 +17,8 @@ func NewParser() *Parser {
 	return &Parser{}
 }
 
-func (a Parser) DetermineFileType(filePath string) (*sub_parser.SubFileInfo, error) {
+// DetermineFileTypeFromFile 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
+func (p Parser) DetermineFileTypeFromFile(filePath string) (*sub_parser.SubFileInfo, error) {
 	nowExt := filepath.Ext(filePath)
 	if strings.ToLower(nowExt) != common.SubExtSRT {
 		return nil ,nil
@@ -27,7 +28,13 @@ func (a Parser) DetermineFileType(filePath string) (*sub_parser.SubFileInfo, err
 		return nil ,err
 	}
 
-	allString := string(fBytes)
+	return p.DetermineFileTypeFromBytes(fBytes, nowExt)
+}
+
+// DetermineFileTypeFromBytes 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
+func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*sub_parser.SubFileInfo, error){
+
+	allString := string(inBytes)
 	// 注意，需要替换掉 \r 不然正则表达式会有问题
 	allString = strings.ReplaceAll(allString, "\r", "")
 	re := regexp.MustCompile(regString)
