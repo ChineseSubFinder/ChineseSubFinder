@@ -1,7 +1,6 @@
 package ass
 
 import (
-	"github.com/abadojack/whatlanggo"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/sub_parser"
 	"io/ioutil"
@@ -11,37 +10,27 @@ import (
 )
 
 type Parser struct {
-	langOptions whatlanggo.Options 	// Whitelist
 }
 
 func NewParser() *Parser {
-	p := Parser{}
-	p.langOptions = whatlanggo.Options{
-		Whitelist: map[whatlanggo.Lang]bool{
-			whatlanggo.Cmn: true,	// 中文
-			whatlanggo.Eng: true,	// 英文
-			whatlanggo.Jpn: true,	// 日文
-			whatlanggo.Kor: true,	// 韩文
-		},
-	}
 	return &Parser{}
 }
 
 // DetermineFileType 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
-func (p Parser) DetermineFileType(filePath string) (common.Language, *sub_parser.SubFileInfo, error) {
+func (p Parser) DetermineFileType(filePath string) (*sub_parser.SubFileInfo, error) {
 	nowExt := filepath.Ext(filePath)
 	if strings.ToLower(nowExt) != common.SubExtASS && strings.ToLower(nowExt) != common.SubExtSSA {
-		return common.Unknow, nil ,nil
+		return nil ,nil
 	}
 	fBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return common.Unknow, nil ,err
+		return nil ,err
 	}
 	re := regexp.MustCompile(regString)
 	// 找到 start end text
 	matched := re.FindAllStringSubmatch(string(fBytes), -1)
 	if len(matched) < 1 {
-		return common.Unknow, nil ,nil
+		return nil ,nil
 	}
 	subFileInfo := sub_parser.SubFileInfo{}
 	subFileInfo.Ext = nowExt
@@ -91,21 +80,17 @@ func (p Parser) DetermineFileType(filePath string) (common.Language, *sub_parser
 	if perLines > 0.8 {
 		isDouble = true
 	}
-	println(isDouble)
-	// 需要判断每一个 Line 是啥语言
+	// 需要判断每一个 Line 是啥语言，[语言的code]次数
+	var langDict map[int]int
+	langDict = make(map[int]int)
 	for _, dialogue := range subFileInfo.Dialogues {
-		for i, line := range dialogue.Lines {
-			println(line)
-			info := whatlanggo.DetectWithOptions(line, p.langOptions)
-			// 补是语言是 info.Lang -1
-			println(i, "Language:", info.Lang, info.Lang.String())
-		}
+		common.DetectSubLangAndStatistics(dialogue.Lines, langDict)
 	}
-
-
-	return common.Unknow, &subFileInfo ,nil
+	// 从统计出来的字典，找出 Top 1 或者 2 的出来，然后计算出是什么语言的字幕
+	detectLang := common.SubLangStatistics2SubLangType(isDouble, langDict)
+	subFileInfo.Lang = detectLang
+	return &subFileInfo, nil
 }
-
 
 const (
 	// 字幕文件对话的每一行

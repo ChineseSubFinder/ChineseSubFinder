@@ -1,6 +1,9 @@
 package common
 
-import "strings"
+import (
+	"github.com/abadojack/whatlanggo"
+	"strings"
+)
 
 // LangConverter 语言转换器
 func LangConverter(subLang string) Language {
@@ -50,19 +53,102 @@ func LangConverter(subLang string) Language {
 	}
 }
 
+// HasChineseLang 是否包含中文
 func HasChineseLang(lan Language) bool {
 	switch lan {
-	case ChineseSimple:
-	case ChineseTraditional:
-	case ChineseSimpleEnglish:
-	case ChineseTraditionalEnglish:
-	case ChineseSimpleJapanese:
-	case ChineseTraditionalJapanese:
-	case ChineseSimpleKorean:
-	case ChineseTraditionalKorean:
+	case ChineseSimple,
+	ChineseTraditional,
+
+	ChineseSimpleEnglish,
+	ChineseTraditionalEnglish,
+
+	ChineseSimpleJapanese,
+	ChineseTraditionalJapanese,
+
+	ChineseSimpleKorean,
+	ChineseTraditionalKorean:
 		return true
+	default:
+		return false
 	}
-	return false
+}
+
+// GetLangOptions 语言识别的 Options Whitelist
+func GetLangOptions() whatlanggo.Options {
+	return whatlanggo.Options{
+		Whitelist: map[whatlanggo.Lang]bool{
+			whatlanggo.Cmn: true,	// 中文	11
+			whatlanggo.Eng: true,	// 英文	15
+			whatlanggo.Jpn: true,	// 日文	32
+			whatlanggo.Kor: true,	// 韩文	37
+		},
+	}
+}
+// IsWhiteListLang 是否是白名单语言
+func IsWhiteListLang(lang whatlanggo.Lang) bool {
+	switch lang {
+	// 中文 英文 日文 韩文
+	case whatlanggo.Cmn, whatlanggo.Eng,whatlanggo.Jpn,whatlanggo.Kor:
+		return true
+	default:
+		return false
+	}
+}
+
+// DetectSubLangAndStatistics 检测语言然后统计
+func DetectSubLangAndStatistics(lines []string, langDict map[int]int) {
+	for _, line := range lines {
+		info := whatlanggo.DetectWithOptions(line, GetLangOptions())
+		tmpLang := -1
+		if IsWhiteListLang(info.Lang) == true {
+			tmpLang = (int)(info.Lang)
+		}
+		// 这一种语言的 key 是否存在，不存在则新建，存在再数值 +1
+		value, ok := langDict[tmpLang]
+		if ok == true {
+			// 累加
+			value++
+			langDict[tmpLang] = value
+		} else {
+			langDict[tmpLang] = 1
+		}
+	}
+}
+
+
+// SubLangStatistics2SubLangType 由分析的信息转换为具体是什么字幕的语言类型
+func SubLangStatistics2SubLangType(isDouble bool, langDict map[int]int) Language {
+	// TODO 现在是没有很好的办法去识别是简体还是繁体中文的，所以···
+	// 中文
+	_, hasChinese := langDict[int(whatlanggo.Cmn)]
+	// 英文
+	_, hasEnglish := langDict[int(whatlanggo.Eng)]
+	// 日文
+	_, hasJapanese := langDict[int(whatlanggo.Jpn)]
+	// 韩文
+	_, hasKorean := langDict[int(whatlanggo.Kor)]
+
+	// 优先判断双语
+	if hasChinese && hasEnglish {
+		// 简体	英文
+		return ChineseSimpleEnglish
+	} else if hasChinese && hasJapanese {
+		// 简体 日文
+		return ChineseSimpleJapanese
+	} else if hasChinese && hasKorean {
+		// 简体 韩文
+		return ChineseSimpleKorean
+	} else if hasChinese {
+		return ChineseSimple
+	} else if hasEnglish {
+		return English
+	} else if hasJapanese {
+		return Japanese
+	} else if hasKorean {
+		return Korean
+	} else {
+		return Unknow
+	}
 }
 
 // Language 语言类型，注意，这里默认还是查找的是中文字幕，只不过下载的时候可能附带了其他的
@@ -121,7 +207,7 @@ func (l Language) String() string {
 		return MatchLangChsKr
 	case ChineseTraditionalKorean:
 		return MatchLangChtKr
+	default:
+		return MathLangChnUnknow
 	}
-
-	return MathLangChnUnknow
 }

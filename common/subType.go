@@ -20,15 +20,11 @@ func IsSubTypeWanted(subName string) bool {
 func IsSubExtWanted(subName string) bool {
 	inExt := filepath.Ext(subName)
 	switch inExt {
-	case SubExtSSA:
-	case SubExtASS:
-	case SubExtSRT:
+	case SubExtSSA,SubExtASS,SubExtSRT:
 		return true
 	default:
 		return false
 	}
-
-	return false
 }
 
 const (
