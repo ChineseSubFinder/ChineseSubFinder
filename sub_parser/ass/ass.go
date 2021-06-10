@@ -26,9 +26,12 @@ func (p Parser) DetermineFileType(filePath string) (*sub_parser.SubFileInfo, err
 	if err != nil {
 		return nil ,err
 	}
+	allString :=string(fBytes)
+	// 注意，需要替换掉 \r 不然正则表达式会有问题
+	allString = strings.ReplaceAll(allString, "\r", "")
 	re := regexp.MustCompile(regString)
 	// 找到 start end text
-	matched := re.FindAllStringSubmatch(string(fBytes), -1)
+	matched := re.FindAllStringSubmatch(allString, -1)
 	if len(matched) < 1 {
 		return nil ,nil
 	}
