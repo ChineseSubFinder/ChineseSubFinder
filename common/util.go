@@ -98,19 +98,6 @@ func GetDebugFolder() (string, error) {
 	return nowProcessRoot, err
 }
 
-func IsSubTypeWanted(subName string) bool {
-	const subTypeASS = "ass"
-	const subTypeSSA = "ssa"
-	const subTypeSRT = "srt"
-	if strings.Contains(strings.ToLower(subName), subTypeASS) ||
-		strings.Contains(strings.ToLower(subName), subTypeSSA) ||
-		strings.Contains(strings.ToLower(subName), subTypeSRT) {
-		return true
-	}
-
-	return false
-}
-
 // ReqParam 可选择传入的参数
 type ReqParam struct {
 	UserExtList []string	// 用户确认的视频后缀名支持列表

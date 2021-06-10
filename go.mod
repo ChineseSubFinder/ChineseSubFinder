@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/PuerkitoBio/goquery v1.6.1
+	github.com/abadojack/whatlanggo v1.0.1 // indirect
 	github.com/beevik/etree v1.1.0
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/go-rod/rod v0.97.2
