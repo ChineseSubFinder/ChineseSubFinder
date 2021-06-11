@@ -4,11 +4,11 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/mark_system"
 	"github.com/allanpk716/ChineseSubFinder/model"
-	sub_supplier2 "github.com/allanpk716/ChineseSubFinder/sub_supplier"
-	shooter2 "github.com/allanpk716/ChineseSubFinder/sub_supplier/shooter"
-	subhd2 "github.com/allanpk716/ChineseSubFinder/sub_supplier/subhd"
-	xunlei2 "github.com/allanpk716/ChineseSubFinder/sub_supplier/xunlei"
-	zimuku2 "github.com/allanpk716/ChineseSubFinder/sub_supplier/zimuku"
+	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
+	"github.com/allanpk716/ChineseSubFinder/sub_supplier/shooter"
+	"github.com/allanpk716/ChineseSubFinder/sub_supplier/subhd"
+	"github.com/allanpk716/ChineseSubFinder/sub_supplier/xunlei"
+	"github.com/allanpk716/ChineseSubFinder/sub_supplier/zimuku"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -39,10 +39,10 @@ func NewDownloader(_reqParam ...model.ReqParam) *Downloader {
 		}
 	}
 	downloader.defExtList = make([]string, 0)
-	downloader.defExtList = append(downloader.defExtList, VideoExtMp4)
-	downloader.defExtList = append(downloader.defExtList, VideoExtMkv)
-	downloader.defExtList = append(downloader.defExtList, VideoExtRmvb)
-	downloader.defExtList = append(downloader.defExtList, VideoExtIso)
+	downloader.defExtList = append(downloader.defExtList, common.VideoExtMp4)
+	downloader.defExtList = append(downloader.defExtList, common.VideoExtMkv)
+	downloader.defExtList = append(downloader.defExtList, common.VideoExtRmvb)
+	downloader.defExtList = append(downloader.defExtList, common.VideoExtIso)
 
 	var sitesSequence = make([]string, 0)
 	sitesSequence = append(sitesSequence, common.SubSiteShooter)
@@ -87,10 +87,10 @@ func (d Downloader) DownloadSub(dir string) error {
 		return err
 	}
 	// 构建每个字幕站点下载者的实例
-	subSupplierHub := sub_supplier2.NewSubSupplierHub(shooter2.NewSupplier(d.reqParam),
-									subhd2.NewSupplier(d.reqParam),
-									xunlei2.NewSupplier(d.reqParam),
-									zimuku2.NewSupplier(d.reqParam),
+	subSupplierHub := sub_supplier.NewSubSupplierHub(shooter.NewSupplier(d.reqParam),
+									subhd.NewSupplier(d.reqParam),
+									xunlei.NewSupplier(d.reqParam),
+									zimuku.NewSupplier(d.reqParam),
 	)
 	// TODO 后续再改为每个视频以上的流程都是一个 channel 来做，并且需要控制在一个并发量之下（很可能没必要，毕竟要在弱鸡机器上挂机用的）
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
@@ -199,7 +199,7 @@ func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) e
 
 	// 需要进行字幕文件的缓存
 	// 把缓存的文件夹新建出来
-	desFolderFullPath := path.Join(desFolder, SubTmpFolderName)
+	desFolderFullPath := path.Join(desFolder, common.SubTmpFolderName)
 	err := os.MkdirAll(desFolderFullPath, os.ModePerm)
 	if err != nil {
 		return err
@@ -216,11 +216,3 @@ func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) e
 	return nil
 }
 
-const (
-	VideoExtMp4 = ".mp4"
-	VideoExtMkv = ".mkv"
-	VideoExtRmvb = ".rmvb"
-	VideoExtIso = ".iso"
-
-	SubTmpFolderName = "subtmp"
-)

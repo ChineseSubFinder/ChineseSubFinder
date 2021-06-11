@@ -16,3 +16,12 @@ const (
 	SubSiteShooter = "shooter"
 	SubSiteXunLei  = "xunlei"
 )
+
+const (
+	VideoExtMp4 = ".mp4"
+	VideoExtMkv = ".mkv"
+	VideoExtRmvb = ".rmvb"
+	VideoExtIso = ".iso"
+
+	SubTmpFolderName = "subtmp"
+)
