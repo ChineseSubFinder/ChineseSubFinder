@@ -39,6 +39,7 @@ func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*sub_parser.Su
 			newLang := common.IsChineseSimpleOrTraditional(filePath, subFileInfo.Lang)
 			subFileInfo.Name = filepath.Base(filePath)
 			subFileInfo.Lang = newLang
+			subFileInfo.FileFullPath = filePath
 			subFileInfo.FromWhereSite = p.getFromWhereSite(filePath)
 			return subFileInfo, nil
 		}

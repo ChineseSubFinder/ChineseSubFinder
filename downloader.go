@@ -10,6 +10,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier/zimuku"
+	"github.com/go-rod/rod/lib/utils"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -67,6 +68,13 @@ func (d Downloader) GetDefSupportExtList() []string {
 }
 
 func (d Downloader) DownloadSub(dir string) error {
+	defer func() {
+		// 抉择完毕，需要清理缓存目录
+		err := common.ClearTmpFolder()
+		if err != nil {
+			d.log.Error(err)
+		}
+	}()
 	nowVideoList, err := d.searchMatchedVideoFile(dir)
 	if err != nil {
 		return err
@@ -83,7 +91,7 @@ func (d Downloader) DownloadSub(dir string) error {
 		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
 		organizeSubFiles, err := subSupplierHub.DownloadSub(oneVideoFullPath, i)
 		if err != nil {
-			d.log.Error(oneVideoFullPath, "Download Sub Error",err)
+			d.log.Error("oneVideoFullPath", "Download Sub Error",err)
 			continue
 		}
 		// 得到目标视频文件的根目录
@@ -115,7 +123,7 @@ func (d Downloader) DownloadSub(dir string) error {
 				continue
 			}
 
-			value, ok := subInfoDict[subFileInfo.FromWhereSite]
+			_, ok := subInfoDict[subFileInfo.FromWhereSite]
 			if ok == true {
 				// 添加
 				subInfoDict[subFileInfo.FromWhereSite] = append(subInfoDict[subFileInfo.FromWhereSite], *subFileInfo)
@@ -126,15 +134,127 @@ func (d Downloader) DownloadSub(dir string) error {
 			}
 		}
 		// 优先级别暂定 zimuku -> subhd -> xunlei -> shooter
-		if
-
-		println(videoRootPath)
-		// 抉择完毕，需要清理缓存目录
-		err = common.ClearTmpFolder()
-		if err != nil {
-			return err
+		foundOne := false
+		var finalSubFile sub_parser.SubFileInfo
+		// -----------------------------------------------------
+		// TODO 需要重构，这些写的冲忙，太恶心了
+		value, ok := subInfoDict["zimuku"]
+		if ok == true {
+			for _, info := range value {
+				if common.HasChineseLang(info.Lang) == true {
+					finalSubFile = info
+					foundOne = true
+					break
+				}
+			}
 		}
+		if foundOne {
+			// 找到了
+			err := d.writeSubFile2VideoPath(oneVideoFullPath, finalSubFile)
+			if err != nil {
+				d.log.Error("writeSubFile2VideoPath",err)
+				// 不行继续
+				foundOne = false
+			} else {
+				continue
+			}
+		}
+		// -----------------------------------------------------
+		value, ok = subInfoDict["subhd"]
+		if ok == true {
+			for _, info := range value {
+				if common.HasChineseLang(info.Lang) == true {
+					finalSubFile = info
+					foundOne = true
+					break
+				}
+			}
+		}
+		if foundOne {
+			// 找到了
+			err := d.writeSubFile2VideoPath(oneVideoFullPath, finalSubFile)
+			if err != nil {
+				d.log.Error("writeSubFile2VideoPath",err)
+				// 不行继续
+				foundOne = false
+			} else {
+				continue
+			}
+		}
+		// -----------------------------------------------------
+		value, ok = subInfoDict["xunlei"]
+		if ok == true {
+			for _, info := range value {
+				if common.HasChineseLang(info.Lang) == true {
+					finalSubFile = info
+					foundOne = true
+					break
+				} else {
+					continue
+				}
+			}
+		}
+		if foundOne {
+			// 找到了
+			err := d.writeSubFile2VideoPath(oneVideoFullPath, finalSubFile)
+			if err != nil {
+				d.log.Error("writeSubFile2VideoPath",err)
+				// 不行继续
+				foundOne = false
+			}
+		}
+		// -----------------------------------------------------
+		value, ok = subInfoDict["shooter"]
+		if ok == true {
+			for _, info := range value {
+				if common.HasChineseLang(info.Lang) == true {
+					finalSubFile = info
+					foundOne = true
+					break
+				} else {
+					continue
+				}
+			}
+		}
+		if foundOne {
+			// 找到了
+			err := d.writeSubFile2VideoPath(oneVideoFullPath, finalSubFile)
+			if err != nil {
+				d.log.Error("writeSubFile2VideoPath",err)
+				// 不行继续
+				foundOne = false
+			}
+		}
+		// -----------------------------------------------------
 	}
+	return nil
+}
+
+func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile sub_parser.SubFileInfo) error {
+	videoRootPath := filepath.Dir(videoFileFullPath)
+	// 需要符合 emby 的格式要求，在后缀名前面
+	const emby_zh = ".zh"
+	const emby_en = ".en"
+	//TODO 日文 韩文 emby 字幕格式要求，瞎猜的，有需要再改（目标应该是中文字幕查找，所以···应该不需要）
+	const emby_jp = ".jp"
+	const emby_kr = ".kr"
+	lan := ""
+	if common.HasChineseLang(finalSubFile.Lang) == true {
+		lan = emby_zh
+	} else if finalSubFile.Lang == common.English {
+		lan = emby_en
+	}
+	// 构建视频文件加 emby 的字幕预研要求名称
+	videoFileNameWithOutExt := strings.ReplaceAll(filepath.Base(videoFileFullPath),
+		filepath.Ext(videoFileFullPath), "")
+	subNewName := videoFileNameWithOutExt + lan + finalSubFile.Ext
+	desSubFullPath := path.Join(videoRootPath, subNewName)
+	// 最后写入字幕
+	err := utils.OutputFile(desSubFullPath, finalSubFile.Data)
+	if err != nil {
+		return err
+	}
+	d.log.Infoln("SubDownAt:", desSubFullPath)
 	return nil
 }
 

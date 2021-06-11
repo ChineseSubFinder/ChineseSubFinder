@@ -91,6 +91,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*sub_
 	// 从统计出来的字典，找出 Top 1 或者 2 的出来，然后计算出是什么语言的字幕
 	detectLang := common.SubLangStatistics2SubLangType(float32(countLineFeed), float32(len(matched)), langDict)
 	subFileInfo.Lang = detectLang
+	subFileInfo.Data = inBytes
 	return &subFileInfo, nil
 }
 
