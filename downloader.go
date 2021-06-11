@@ -98,9 +98,11 @@ func (d Downloader) DownloadSub(dir string) error {
 		}
 		// -------------------------------------------------
 		// TODO 这里先处理 Top1 的字幕，后续再考虑怎么觉得 Top N 选择哪一个，很可能选择每个网站 Top 1就行了，具体的过滤逻辑在其内部实现
+		// 一个网站可能就算取了 Top1 字幕，也可能是返回一个压缩包，然后解压完就是多个字幕，所以
+		var subInfoDict = make(map[string][]sub_parser.SubFileInfo)
 		// 拿到现有的字幕列表，开始抉择
 		// 先判断当前字幕是什么语言（如果是简体，还需要考虑，判断这个字幕是简体还是繁体）
-		subParserHub := sub_parser.NewSubParserHub(ass.NewParser(), srt.NewParser())
+		subParserHub := NewSubParserHub(ass.NewParser(), srt.NewParser())
 		for _, oneSubFileFullPath := range organizeSubFiles {
 			subFileInfo, err := subParserHub.DetermineFileTypeFromFile(oneSubFileFullPath)
 			if err != nil {
@@ -112,7 +114,20 @@ func (d Downloader) DownloadSub(dir string) error {
 				d.log.Warning(oneSubFileFullPath, "DetermineFileTypeFromFile is nill")
 				continue
 			}
+
+			value, ok := subInfoDict[subFileInfo.FromWhereSite]
+			if ok == true {
+				// 添加
+				subInfoDict[subFileInfo.FromWhereSite] = append(subInfoDict[subFileInfo.FromWhereSite], *subFileInfo)
+			} else {
+				// 新建
+				subInfoDict[subFileInfo.FromWhereSite] = make([]sub_parser.SubFileInfo, 0)
+				subInfoDict[subFileInfo.FromWhereSite] = append(subInfoDict[subFileInfo.FromWhereSite], *subFileInfo)
+			}
 		}
+		// 优先级别暂定 zimuku -> subhd -> xunlei -> shooter
+		if
+
 		println(videoRootPath)
 		// 抉择完毕，需要清理缓存目录
 		err = common.ClearTmpFolder()

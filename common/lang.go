@@ -196,14 +196,32 @@ func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map
 }
 
 // IsChineseSimpleOrTraditional 从字幕的文件名称中尝试确认是简体还是繁体，不需要判断双语问题，有额外的解析器完成。只可能出现 ChineseSimple ChineseTraditional Unknow 三种情况
-func IsChineseSimpleOrTraditional(inputFileName string) Language {
+func IsChineseSimpleOrTraditional(inputFileName string, orgLang Language) Language {
 
 	if strings.Contains(inputFileName, SubNameKeywordChineseSimple) || strings.Contains(inputFileName, MatchLangChs) {
-		return ChineseSimple
+		// 简体中文关键词的匹配
+		return orgLang
 	} else if strings.Contains(inputFileName, SubNameKeywordTraditional) || strings.Contains(inputFileName, MatchLangCht) {
-		return ChineseTraditional
+		// 繁体中文关键词的匹配
+		if orgLang == ChineseSimple {
+			// 简体 -> 繁体
+			return ChineseTraditional
+		} else if orgLang == ChineseSimpleEnglish {
+			// 简体英文 -> 繁体英文
+			return ChineseTraditionalEnglish
+		} else if orgLang == ChineseSimpleJapanese {
+			// 简体日文 -> 繁体日文
+			return ChineseTraditionalJapanese
+		} else if orgLang == ChineseSimpleKorean {
+			// 简体韩文 -> 繁体韩文
+			return ChineseTraditionalKorean
+		}
+		// 进来了都不是，那么就返回原来的语言
+		return orgLang
+	} else {
+		// 都没有匹配上，返回原来识别出来的类型即可
+		return orgLang
 	}
-	return Unknow
 }
 
 const (
