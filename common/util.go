@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -89,14 +90,67 @@ func AddBaseUrl(baseUrl, url string) string {
 }
 
 func GetDebugFolder() (string, error) {
-	nowProcessRoot, _ := os.Getwd()
-	nowProcessRoot = path.Join(nowProcessRoot, DebugFolder)
-	err := os.MkdirAll(nowProcessRoot, os.ModePerm)
-	if err != nil {
-		return "", err
+	if defDebugFolder == "" {
+		nowProcessRoot, _ := os.Getwd()
+		nowProcessRoot = path.Join(nowProcessRoot, DebugFolder)
+		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
+		if err != nil {
+			return "", err
+		}
+		defDebugFolder = nowProcessRoot
+		return nowProcessRoot, err
 	}
-	return nowProcessRoot, err
+	return defDebugFolder, nil
 }
+
+func GetTmpFolder() (string, error) {
+	if defTmpFolder == "" {
+		nowProcessRoot, _ := os.Getwd()
+		nowProcessRoot = path.Join(nowProcessRoot, TmpFolder)
+		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
+		if err != nil {
+			return "", err
+		}
+		defTmpFolder = nowProcessRoot
+		return nowProcessRoot, err
+	}
+	return defTmpFolder, nil
+}
+
+func ClearTmpFolder() error {
+	nowTmpFolder, err := GetTmpFolder()
+	if err != nil {
+		return err
+	}
+
+	pathSep := string(os.PathSeparator)
+	files, err := ioutil.ReadDir(nowTmpFolder)
+	if err != nil {
+		return err
+	}
+	for _, curFile := range files {
+		fullPath := nowTmpFolder + pathSep + curFile.Name()
+		if curFile.IsDir() {
+			err = os.RemoveAll(fullPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			// 这里就是文件了
+			err = os.Remove(fullPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+var (
+	defDebugFolder = ""
+	defTmpFolder = ""
+)
 
 // ReqParam 可选择传入的参数
 type ReqParam struct {

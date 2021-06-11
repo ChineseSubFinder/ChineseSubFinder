@@ -75,7 +75,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 		}
 	}
 	// 再开始下载字幕
-	for _, v := range tmpXunLeiSubListChinese {
+	for i, v := range tmpXunLeiSubListChinese {
 		tmpLang := common.LangConverter(v.Language)
 		data, filename, err := common.DownFile(v.Surl)
 		if err != nil {
@@ -89,7 +89,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 			ext = filepath.Ext(filename)
 		}
 
-		outSubList = append(outSubList, *sub_supplier.NewSubInfo(v.Sname, tmpLang, v.Surl, v.Svote, v.Roffset, ext, data))
+		outSubList = append(outSubList, *sub_supplier.NewSubInfo(s.GetSupplierName(), int64(i), v.Sname, tmpLang, v.Surl, v.Svote, v.Roffset, ext, data))
 	}
 
 

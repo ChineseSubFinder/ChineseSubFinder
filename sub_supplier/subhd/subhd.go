@@ -116,12 +116,12 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo,
 		return nil, err
 	}
 
-	for _, item := range subList {
+	for i, item := range subList {
 		hdContent, err := s.Step2Ex(browser, item.Url)
 		if err != nil {
 			return nil, err
 		}
-		subInfos = append(subInfos, *sub_supplier.NewSubInfo(hdContent.Filename, common.ChineseSimple, common.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
+		subInfos = append(subInfos, *sub_supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, common.ChineseSimple, common.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
 	}
 
 	return subInfos, nil
@@ -423,7 +423,7 @@ search:
 				abs(int(color_a_G)-int(color_b_G)) > threshold ||
 				abs(int(color_a_B)-int(color_b_B)) > threshold {
 				distance += float64(i)
-				s.log.Debug("對比完畢, 偏移量: %v", distance)
+				s.log.Debug("對比完畢, 偏移量:", distance)
 				break search
 			}
 		}

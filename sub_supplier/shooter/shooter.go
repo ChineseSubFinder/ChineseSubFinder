@@ -67,7 +67,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 	if err != nil {
 		return nil, err
 	}
-	for _, shooter := range jsonList {
+	for i, shooter := range jsonList {
 		for _, file := range shooter.Files {
 			subExt := file.Ext
 			if strings.Contains(file.Ext, ".") == false {
@@ -79,11 +79,13 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 				s.log.Error(err.Error())
 				continue
 			}
-			outSubInfoList = append(outSubInfoList, *sub_supplier.NewSubInfo(fileName, common.ChineseSimple, file.Link, 0, shooter.Delay, subExt, data))
+			outSubInfoList = append(outSubInfoList, *sub_supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, file.Link, 0, shooter.Delay, subExt, data))
 			// 如果够了那么多个字幕就返回
 			if len(outSubInfoList) >= s.topic {
 				return outSubInfoList, nil
 			}
+			// 一层里面，下载一个文件就行了
+			break
 		}
 	}
 	return outSubInfoList, nil

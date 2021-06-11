@@ -115,40 +115,89 @@ func DetectSubLangAndStatistics(lines []string, langDict map[int]int) {
 	}
 }
 
-
 // SubLangStatistics2SubLangType 由分析的信息转换为具体是什么字幕的语言类型
-func SubLangStatistics2SubLangType(isDouble bool, langDict map[int]int) Language {
+func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map[int]int) Language {
+	const basePer = 0.8
+	// 是否是双语？
+	isDouble := false
+	perLines := countLineFeed / AllLines
+	// 第二行字幕出现的概率大于 80% 应该稳了吧，不然还能三语？
+	if perLines > basePer {
+		isDouble = true
+	}
 	// TODO 现在是没有很好的办法去识别是简体还是繁体中文的，所以···
 	// 中文
-	_, hasChinese := langDict[int(whatlanggo.Cmn)]
+	countChinese, hasChinese := langDict[int(whatlanggo.Cmn)]
 	// 英文
-	_, hasEnglish := langDict[int(whatlanggo.Eng)]
+	countEnglish, hasEnglish := langDict[int(whatlanggo.Eng)]
 	// 日文
-	_, hasJapanese := langDict[int(whatlanggo.Jpn)]
+	countJapanese, hasJapanese := langDict[int(whatlanggo.Jpn)]
 	// 韩文
-	_, hasKorean := langDict[int(whatlanggo.Kor)]
+	countKorean, hasKorean := langDict[int(whatlanggo.Kor)]
 
 	// 优先判断双语
-	if hasChinese && hasEnglish {
-		// 简体	英文
-		return ChineseSimpleEnglish
-	} else if hasChinese && hasJapanese {
-		// 简体 日文
-		return ChineseSimpleJapanese
-	} else if hasChinese && hasKorean {
-		// 简体 韩文
-		return ChineseSimpleKorean
-	} else if hasChinese {
-		return ChineseSimple
-	} else if hasEnglish {
-		return English
-	} else if hasJapanese {
-		return Japanese
-	} else if hasKorean {
-		return Korean
+	if isDouble == true {
+		// 首先得在外面统计就知道是双语
+		if hasChinese && hasEnglish {
+			// 简体	英文
+			return ChineseSimpleEnglish
+		} else if hasChinese && hasJapanese {
+			// 简体 日文
+			return ChineseSimpleJapanese
+		} else if hasChinese && hasKorean {
+			// 简体 韩文
+			return ChineseSimpleKorean
+		} else if hasChinese {
+			return ChineseSimple
+		} else if hasEnglish {
+			return English
+		} else if hasJapanese {
+			return Japanese
+		} else if hasKorean {
+			return Korean
+		} else {
+			return Unknow
+		}
 	} else {
+		// 如果比例达不到，那么就是单语言，所以最多的那个就是当前的语言
+		// 这里的字典是有可能出现
+		if hasChinese {
+			// 那么起码要占比 80% 对吧
+			perLines = float32(countChinese) / AllLines
+			if perLines > basePer {
+				return ChineseSimple
+			}
+		}
+		if hasEnglish {
+			// 那么起码要占比 80% 对吧
+			perLines = float32(countEnglish) / AllLines
+			if perLines > basePer {
+				return English
+			}
+		}
+		if hasJapanese {
+			// 那么起码要占比 80% 对吧
+			perLines = float32(countJapanese) / AllLines
+			if perLines > basePer {
+				return Japanese
+			}
+		}
+		if hasKorean {
+			// 那么起码要占比 80% 对吧
+			perLines = float32(countKorean) / AllLines
+			if perLines > basePer {
+				return Korean
+			}
+		}
+
 		return Unknow
 	}
+
+}
+
+// IsChineseSimpleOrTraditional 从字幕的名称中尝试确认是简体还是繁体
+func IsChineseSimpleOrTraditional(inputFileName string) bool {
+	return true
 }
 
 // Language 语言类型，注意，这里默认还是查找的是中文字幕，只不过下载的时候可能附带了其他的

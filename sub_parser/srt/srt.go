@@ -69,12 +69,6 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*sub_
 		subFileInfo.Dialogues = append(subFileInfo.Dialogues, odl)
 	}
 	// 再分析
-	// 是不是双语字幕，定义，超过 80% 就一定是了（不可能三语吧···）
-	isDouble := false
-	perLines := float32(countLineFeed) / float32(len(matched))
-	if perLines > 0.8 {
-		isDouble = true
-	}
 	// 需要判断每一个 Line 是啥语言，[语言的code]次数
 	var langDict map[int]int
 	langDict = make(map[int]int)
@@ -82,7 +76,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*sub_
 		common.DetectSubLangAndStatistics(dialogue.Lines, langDict)
 	}
 	// 从统计出来的字典，找出 Top 1 或者 2 的出来，然后计算出是什么语言的字幕
-	detectLang := common.SubLangStatistics2SubLangType(isDouble, langDict)
+	detectLang := common.SubLangStatistics2SubLangType(float32(countLineFeed), float32(len(matched)), langDict)
 	subFileInfo.Lang = detectLang
 	return &subFileInfo, nil
 }

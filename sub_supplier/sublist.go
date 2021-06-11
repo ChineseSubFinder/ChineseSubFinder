@@ -3,6 +3,8 @@ package sub_supplier
 import "github.com/allanpk716/ChineseSubFinder/common"
 
 type SubInfo struct {
+	FromWhere	string `json:"from_where"`	// 从哪个网站下载来的
+	TopN		int64  `json:"top_n"`		// 是 Top 几？
 	Name 		string `json:"name"`		// 字幕的名称，这个比较随意，优先是影片的名称，然后才是从网上下载字幕的对应名称
 	Language 	common.Language `json:"language"`	// 字幕的语言
 	FileUrl     string `json:"file-url"`	// 字幕文件下载的路径
@@ -12,7 +14,7 @@ type SubInfo struct {
 	Data		[]byte	`json:"data"`		// 字幕文件的二进制数据
 }
 
-func NewSubInfo(name string, language common.Language, fileUrl string, vote int64, offset int64, ext string, data []byte) *SubInfo {
-	return &SubInfo{Name: name, Language: language, FileUrl: fileUrl, Vote: vote, Offset: offset, Ext: ext, Data: data}
+func NewSubInfo(fromWhere string, topn int64, name string, language common.Language, fileUrl string, vote int64, offset int64, ext string, data []byte) *SubInfo {
+	return &SubInfo{FromWhere: fromWhere, TopN: topn,Name: name, Language: language, FileUrl: fileUrl, Vote: vote, Offset: offset, Ext: ext, Data: data}
 }
 

@@ -12,7 +12,7 @@ func TestDownloader_searchFile(t *testing.T) {
 	dirRoot := "X:\\电影\\Spiral From the Book of Saw (2021)"
 
 	dl := NewDownloader()
-	files, err := dl.searchFile(dirRoot)
+	files, err := dl.searchMatchedVideoFile(dirRoot)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -27,10 +27,11 @@ func TestDownloader_searchFile(t *testing.T) {
 }
 
 func TestDownloader_DownloadSub(t *testing.T) {
+	var err error
 	dirRoot := "X:\\电影\\Spiral From the Book of Saw (2021)"
 
 	dl := NewDownloader(common.ReqParam{DebugMode: true})
-	err := dl.DownloadSub(dirRoot)
+	err = dl.DownloadSub(dirRoot)
 	if err != nil {
 		t.Fatal(err)
 	}

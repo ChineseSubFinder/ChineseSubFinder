@@ -132,14 +132,14 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo,
 	}
 
 	// 第四级界面，具体字幕下载
-	for _, subInfo := range tmpSubInfo {
+	for i, subInfo := range tmpSubInfo {
 		fileName, data, err := s.Step3(subInfo.SubDownloadPageUrl)
 		if err != nil {
 			s.log.Error(err.Error())
 			continue
 		}
 		// 默认都是包含中文字幕的，然后具体使用的时候再进行区分
-		outSubInfoList = append(outSubInfoList, *sub_supplier.NewSubInfo(fileName, common.ChineseSimple, common.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
+		outSubInfoList = append(outSubInfoList, *sub_supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, common.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
 			0, filepath.Ext(fileName), data))
 	}
 
