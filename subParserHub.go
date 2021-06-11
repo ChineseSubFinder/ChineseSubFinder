@@ -3,7 +3,6 @@ package ChineseSubFinder
 import (
 	"github.com/allanpk716/ChineseSubFinder/InterFace"
 	"github.com/allanpk716/ChineseSubFinder/common"
-	"github.com/allanpk716/ChineseSubFinder/sub_parser"
 	"path/filepath"
 	"regexp"
 )
@@ -26,7 +25,7 @@ func NewSubParserHub(parser InterFace.ISubParser, _parser ...InterFace.ISubParse
 }
 
 // DetermineFileTypeFromFile 确定字幕文件的类型，是双语字幕或者某一种语言等等信息，如果返回 nil ，那么就说明都没有字幕的格式匹配上
-func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*sub_parser.SubFileInfo, error){
+func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*common.SubFileInfo, error){
 	for _, parser := range p.Parser {
 		subFileInfo, err := parser.DetermineFileTypeFromFile(filePath)
 		if err != nil {

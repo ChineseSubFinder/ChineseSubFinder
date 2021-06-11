@@ -1,10 +1,12 @@
 package InterFace
 
-import "github.com/allanpk716/ChineseSubFinder/sub_parser"
+import (
+	"github.com/allanpk716/ChineseSubFinder/common"
+)
 
 type ISubParser interface {
 
-	DetermineFileTypeFromFile(filePath string) (*sub_parser.SubFileInfo, error)
+	DetermineFileTypeFromFile(filePath string) (*common.SubFileInfo, error)
 
-	DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*sub_parser.SubFileInfo, error)
+	DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*common.SubFileInfo, error)
 }

@@ -2,7 +2,6 @@ package srt
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/common"
-	"github.com/allanpk716/ChineseSubFinder/sub_parser"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
@@ -18,7 +17,7 @@ func NewParser() *Parser {
 }
 
 // DetermineFileTypeFromFile 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
-func (p Parser) DetermineFileTypeFromFile(filePath string) (*sub_parser.SubFileInfo, error) {
+func (p Parser) DetermineFileTypeFromFile(filePath string) (*common.SubFileInfo, error) {
 	nowExt := filepath.Ext(filePath)
 	if strings.ToLower(nowExt) != common.SubExtSRT {
 		return nil ,nil
@@ -32,7 +31,7 @@ func (p Parser) DetermineFileTypeFromFile(filePath string) (*sub_parser.SubFileI
 }
 
 // DetermineFileTypeFromBytes 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
-func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*sub_parser.SubFileInfo, error){
+func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*common.SubFileInfo, error){
 
 	allString := string(inBytes)
 	// 注意，需要替换掉 \r 不然正则表达式会有问题
@@ -43,16 +42,16 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*sub_
 	if len(matched) < 1 {
 		return nil ,nil
 	}
-	subFileInfo := sub_parser.SubFileInfo{}
+	subFileInfo := common.SubFileInfo{}
 	subFileInfo.Ext = nowExt
-	subFileInfo.Dialogues = make([]sub_parser.OneDialogue, 0)
+	subFileInfo.Dialogues = make([]common.OneDialogue, 0)
 	// 这里需要统计一共有几个 \N，以及这个数量在整体行数中的比例，这样就知道是不是双语字幕了
 	countLineFeed := 0
 	for _, oneDial := range matched {
 		startTime := oneDial[2]
 		endTime := oneDial[3]
 		nowText := oneDial[4]
-		odl := sub_parser.OneDialogue{
+		odl := common.OneDialogue{
 			StartTime: startTime,
 			EndTime: endTime,
 		}
