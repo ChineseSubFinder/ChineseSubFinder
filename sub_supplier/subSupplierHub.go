@@ -1,6 +1,7 @@
 package sub_supplier
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/InterFace"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/mholt/archiver/v3"
@@ -14,14 +15,14 @@ import (
 )
 
 type SubSupplierHub struct {
-	Suppliers []ISupplier
+	Suppliers []InterFace.ISupplier
 	log *logrus.Logger
 }
 
-func NewSubSupplierHub(one ISupplier,_inSupplier ... ISupplier) *SubSupplierHub {
+func NewSubSupplierHub(one InterFace.ISupplier,_inSupplier ...InterFace.ISupplier) *SubSupplierHub {
 	s := SubSupplierHub{}
 	s.log = common.GetLogger()
-	s.Suppliers = make([]ISupplier, 0)
+	s.Suppliers = make([]InterFace.ISupplier, 0)
 	s.Suppliers = append(s.Suppliers, one)
 	if len(_inSupplier) > 0 {
 		for _, supplier := range _inSupplier {
@@ -42,10 +43,10 @@ func (d SubSupplierHub) DownloadSub(videoFullPath string, index int) ([]string, 
 }
 
 // downloadSub4OneVideo 为这个视频下载字幕，所有网站找到的字幕都会汇总输出
-func (d SubSupplierHub) downloadSub4OneVideo(oneVideoFullPath string, i int) []SubInfo {
-	var outSUbInfos = make([]SubInfo, 0)
+func (d SubSupplierHub) downloadSub4OneVideo(oneVideoFullPath string, i int) []common.SupplierSubInfo {
+	var outSUbInfos = make([]common.SupplierSubInfo, 0)
 	// 同时进行查询
-	subInfosChannel := make(chan []SubInfo)
+	subInfosChannel := make(chan []common.SupplierSubInfo)
 	d.log.Infoln("DlSub Start", oneVideoFullPath)
 	for _, supplier := range d.Suppliers {
 		supplier := supplier
@@ -63,12 +64,12 @@ func (d SubSupplierHub) downloadSub4OneVideo(oneVideoFullPath string, i int) []S
 			outSUbInfos = append(outSUbInfos, v...)
 		}
 	}
-	d.log.Infoln(i, "DlSub End", oneVideoFullPath)
+	d.log.Infoln("DlSub End", oneVideoFullPath)
 	return outSUbInfos
 }
 
 // downloadSub4OneSite 在一个站点下载这个视频的字幕
-func (d SubSupplierHub) downloadSub4OneSite(oneVideoFullPath string, i int, supplier ISupplier) ([]SubInfo, error) {
+func (d SubSupplierHub) downloadSub4OneSite(oneVideoFullPath string, i int, supplier InterFace.ISupplier) ([]common.SupplierSubInfo, error) {
 	d.log.Infoln(i, supplier.GetSupplierName(), "Start...")
 	subInfos, err := supplier.GetSubListFromFile(oneVideoFullPath)
 	if err != nil {
@@ -86,7 +87,7 @@ func (d SubSupplierHub) downloadSub4OneSite(oneVideoFullPath string, i int, supp
 }
 
 // organizeDlSubFiles 需要从汇总来是网站字幕中，找到合适的
-func (d SubSupplierHub) organizeDlSubFiles(subInfos []SubInfo) ([]string, error) {
+func (d SubSupplierHub) organizeDlSubFiles(subInfos []common.SupplierSubInfo) ([]string, error) {
 
 	// 缓存列表，整理后的字幕列表
 	var siteSubInfoDict = make([]string, 0)
@@ -184,28 +185,14 @@ func (d SubSupplierHub) searchMatchedSubFile(dir string) ([]string, error) {
 }
 
 // 返回的名称包含，那个网站下载的，这个网站中排名第几，文件名
-func (d SubSupplierHub) getFrontNameAndOrgName(info SubInfo) string {
+func (d SubSupplierHub) getFrontNameAndOrgName(info common.SupplierSubInfo) string {
 	return "[" + info.FromWhere + "]_" + strconv.FormatInt(info.TopN,10) + "_" + info.Name
 }
 
 // addFrontName 添加文件的前缀
-func (d SubSupplierHub) addFrontName(info SubInfo, orgName string) string {
+func (d SubSupplierHub) addFrontName(info common.SupplierSubInfo, orgName string) string {
 	return "[" + info.FromWhere + "]_" + strconv.FormatInt(info.TopN,10) + "_" + orgName
 }
 
-type SubInfo struct {
-	FromWhere string          `json:"from_where"` // 从哪个网站下载来的
-	TopN      int64           `json:"top_n"`      // 是 Top 几？
-	Name      string          `json:"name"`       // 字幕的名称，这个比较随意，优先是影片的名称，然后才是从网上下载字幕的对应名称
-	Language  common.Language `json:"language"`   // 字幕的语言
-	FileUrl   string          `json:"file-url"`   // 字幕文件下载的路径
-	Score     int64           `json:"score"`      // TODO 字幕的评分，需要有一个独立的评价体系
-	Offset    int64           `json:"offset"`     // 字幕的偏移
-	Ext       string          `json:"ext"`        // 字幕文件的后缀名带点，有可能是直接能用的字幕文件，也可能是压缩包
-	Data      []byte          `json:"data"`       // 字幕文件的二进制数据
-}
 
-func NewSubInfo(fromWhere string, topN int64, name string, language common.Language, fileUrl string, score int64, offset int64, ext string, data []byte) *SubInfo {
-	return &SubInfo{FromWhere: fromWhere, TopN: topN,Name: name, Language: language, FileUrl: fileUrl, Score: score, Offset: offset, Ext: ext, Data: data}
-}
 

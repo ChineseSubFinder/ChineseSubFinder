@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/allanpk716/ChineseSubFinder/common"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/nfnt/resize"
@@ -47,7 +46,7 @@ func (s Supplier) GetSupplierName() string {
 	return common.SubSiteSubHd
 }
 
-func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, error) {
+func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
 	/*
 		虽然是传入视频文件路径，但是其实需要读取对应的视频文件目录下的
 		movie.xml 以及 *.nfo，找到 IMDB id
@@ -71,7 +70,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 		}
 	}
 
-	var subInfoList []sub_supplier.SubInfo
+	var subInfoList []common.SupplierSubInfo
 
 	if imdbId != "" {
 		// 先用 imdb id 找
@@ -94,9 +93,9 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 	return subInfoList, nil
 }
 
-func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo, error) {
+func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error) {
 
-	var subInfos  []sub_supplier.SubInfo
+	var subInfos  []common.SupplierSubInfo
 	detailPageUrl, err := s.Step0(keyword)
 	if err != nil {
 		return nil, err
@@ -121,7 +120,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo,
 		if err != nil {
 			return nil, err
 		}
-		subInfos = append(subInfos, *sub_supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, common.ChineseSimple, common.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
+		subInfos = append(subInfos, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, common.ChineseSimple, common.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
 	}
 
 	return subInfos, nil

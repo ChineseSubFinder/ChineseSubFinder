@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/common"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
 	"github.com/sirupsen/logrus"
 	"math"
 	"os"
@@ -36,11 +35,11 @@ func (s Supplier) GetSupplierName() string {
 	return common.SubSiteShooter
 }
 
-func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, error) {
+func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
 
 	// 可以提供的字幕查询 eng或者chn
 	const qLan = "Chn"
-	var outSubInfoList []sub_supplier.SubInfo
+	var outSubInfoList []common.SupplierSubInfo
 	var jsonList []SublistShooter
 
 	hash, err := s.ComputeFileHash(filePath)
@@ -79,7 +78,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 				s.log.Error(err.Error())
 				continue
 			}
-			outSubInfoList = append(outSubInfoList, *sub_supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, file.Link, 0, shooter.Delay, subExt, data))
+			outSubInfoList = append(outSubInfoList, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, file.Link, 0, shooter.Delay, subExt, data))
 			// 如果够了那么多个字幕就返回
 			if len(outSubInfoList) >= s.topic {
 				return outSubInfoList, nil
@@ -91,7 +90,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 	return outSubInfoList, nil
 }
 
-func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo, error) {
+func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error) {
 	panic("not implemented")
 }
 

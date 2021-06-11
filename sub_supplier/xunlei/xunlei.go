@@ -4,7 +4,6 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/common"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
 	"github.com/sirupsen/logrus"
 	"math"
 	"os"
@@ -35,12 +34,12 @@ func (s Supplier) GetSupplierName() string {
 	return common.SubSiteXunLei
 }
 
-func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, error) {
+func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
 
 	cid, err := s.getCid(filePath)
 	var jsonList SublistSliceXunLei
 	var tmpXunLeiSubListChinese = make([]SublistXunLei, 0)
-	var outSubList []sub_supplier.SubInfo
+	var outSubList []common.SupplierSubInfo
 	if len(cid) == 0 {
 		return outSubList, common.XunLeiCIdIsEmpty
 	}
@@ -89,14 +88,14 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 			ext = filepath.Ext(filename)
 		}
 
-		outSubList = append(outSubList, *sub_supplier.NewSubInfo(s.GetSupplierName(), int64(i), v.Sname, tmpLang, v.Surl, v.Svote, v.Roffset, ext, data))
+		outSubList = append(outSubList, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), v.Sname, tmpLang, v.Surl, v.Svote, v.Roffset, ext, data))
 	}
 
 
 	return outSubList, nil
 }
 
-func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo, error) {
+func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error) {
 	panic("not implemented")
 }
 

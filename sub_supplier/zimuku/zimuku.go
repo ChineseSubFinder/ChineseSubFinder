@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/allanpk716/ChineseSubFinder/common"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
 	"github.com/sirupsen/logrus"
 	"path/filepath"
 	"regexp"
@@ -36,7 +35,7 @@ func (s Supplier) GetSupplierName() string {
 	return common.SubSiteZiMuKu
 }
 
-func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, error) {
+func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
 
 	/*
 		虽然是传入视频文件路径，但是其实需要读取对应的视频文件目录下的
@@ -61,7 +60,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 		}
 	}
 
-	var subInfoList []sub_supplier.SubInfo
+	var subInfoList []common.SupplierSubInfo
 
 	if imdbId != "" {
 		// 先用 imdb id 找
@@ -84,9 +83,9 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, e
 	return subInfoList, nil
 }
 
-func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo, error) {
+func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error) {
 
-	var outSubInfoList []sub_supplier.SubInfo
+	var outSubInfoList []common.SupplierSubInfo
 	// 第一级界面，找到影片的详情界面
 	filmDetailPageUrl, err := s.Step0(keyword)
 	if err != nil {
@@ -139,7 +138,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]sub_supplier.SubInfo,
 			continue
 		}
 		// 默认都是包含中文字幕的，然后具体使用的时候再进行区分
-		outSubInfoList = append(outSubInfoList, *sub_supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, common.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
+		outSubInfoList = append(outSubInfoList, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, common.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
 			0, filepath.Ext(fileName), data))
 	}
 

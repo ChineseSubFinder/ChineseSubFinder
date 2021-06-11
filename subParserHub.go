@@ -1,6 +1,7 @@
 package ChineseSubFinder
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/InterFace"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/sub_parser"
 	"path/filepath"
@@ -8,13 +9,13 @@ import (
 )
 
 type SubParserHub struct {
-	Parser []sub_parser.ISubParser
+	Parser []InterFace.ISubParser
 }
 
 // NewSubParserHub 处理的字幕文件需要符合 [siteName]_ 的前缀描述，是本程序专用的
-func NewSubParserHub(parser sub_parser.ISubParser, _parser ...sub_parser.ISubParser) *SubParserHub {
+func NewSubParserHub(parser InterFace.ISubParser, _parser ...InterFace.ISubParser) *SubParserHub {
 	s := SubParserHub{}
-	s.Parser = make([]sub_parser.ISubParser, 0)
+	s.Parser = make([]InterFace.ISubParser, 0)
 	s.Parser = append(s.Parser, parser)
 	if len(_parser) > 0 {
 		for _, one := range _parser {
