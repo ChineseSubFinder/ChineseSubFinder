@@ -12,12 +12,12 @@ import (
 )
 
 type Supplier struct {
-	reqParam model.ReqParam
+	reqParam common.ReqParam
 	log      *logrus.Logger
 	topic    int
 }
 
-func NewSupplier(_reqParam ...model.ReqParam) *Supplier {
+func NewSupplier(_reqParam ...common.ReqParam) *Supplier {
 
 	sup := Supplier{}
 	sup.log = model.GetLogger()

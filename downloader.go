@@ -19,7 +19,7 @@ import (
 )
 
 type Downloader struct {
-	reqParam      model.ReqParam
+	reqParam      common.ReqParam
 	log           *logrus.Logger
 	topic         int                        // 最多能够下载 Top 几的字幕，每一个网站
 	wantedExtList []string                   // 人工确认的需要监控的视频后缀名
@@ -27,7 +27,7 @@ type Downloader struct {
 	mk            *mark_system.MarkingSystem // MarkingSystem
 }
 
-func NewDownloader(_reqParam ...model.ReqParam) *Downloader {
+func NewDownloader(_reqParam ...common.ReqParam) *Downloader {
 
 	var downloader Downloader
 	downloader.log = model.GetLogger()

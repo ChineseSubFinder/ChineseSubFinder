@@ -1,7 +1,7 @@
 package ChineseSubFinder
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/model"
+	"github.com/allanpk716/ChineseSubFinder/common"
 	shooter2 "github.com/allanpk716/ChineseSubFinder/sub_supplier/shooter"
 	"testing"
 )
@@ -30,7 +30,7 @@ func TestDownloader_DownloadSub(t *testing.T) {
 	var err error
 	dirRoot := "X:\\电影\\Spiral From the Book of Saw (2021)"
 
-	dl := NewDownloader(model.ReqParam{DebugMode: true})
+	dl := NewDownloader(common.ReqParam{DebugMode: true})
 	err = dl.DownloadSub(dirRoot)
 	if err != nil {
 		t.Fatal(err)

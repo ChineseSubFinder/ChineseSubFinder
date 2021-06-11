@@ -14,11 +14,11 @@ import (
 )
 
 // NewHttpClient 新建一个 resty 的对象
-func NewHttpClient(_reqParam ...ReqParam) *resty.Client {
+func NewHttpClient(_reqParam ...common.ReqParam) *resty.Client {
 	//const defUserAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"
 	const defUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41"
 
-	var reqParam ReqParam
+	var reqParam common.ReqParam
 	var HttpProxy, UserAgent, Referer string
 
 	if len(_reqParam) > 0 {
@@ -54,8 +54,8 @@ func NewHttpClient(_reqParam ...ReqParam) *resty.Client {
 }
 
 // DownFile 从指定的 url 下载文件
-func DownFile(urlStr string, _reqParam ...ReqParam) ([]byte, string, error)  {
-	var reqParam ReqParam
+func DownFile(urlStr string, _reqParam ...common.ReqParam) ([]byte, string, error)  {
+	var reqParam common.ReqParam
 	if len(_reqParam) > 0 {
 		reqParam = _reqParam[0]
 	}
@@ -168,15 +168,3 @@ var (
 	defDebugFolder = ""
 	defTmpFolder = ""
 )
-
-// ReqParam 可选择传入的参数
-type ReqParam struct {
-	UserExtList []string	// 用户确认的视频后缀名支持列表
-	DebugMode bool			// 调试标志位
-	HttpProxy string		// HttpClient 相关
-	UserAgent string		// HttpClient 相关
-	Referer   string		// HttpClient 相关
-	MediaType string		// HttpClient 相关
-	Charset   string		// HttpClient 相关
-	Topic	  int			// 搜索结果的时候，返回 Topic N 以内的
-}
