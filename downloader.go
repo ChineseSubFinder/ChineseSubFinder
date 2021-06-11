@@ -98,7 +98,7 @@ func (d Downloader) DownloadSub(dir string) error {
 		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
 		organizeSubFiles, err := subSupplierHub.DownloadSub(oneVideoFullPath, i)
 		if err != nil {
-			d.log.Error("oneVideoFullPath", "Download Sub Error",err)
+			d.log.Errorln("oneVideoFullPath", "Download Sub Error",err)
 			continue
 		}
 		// 得到目标视频文件的根目录
@@ -108,20 +108,20 @@ func (d Downloader) DownloadSub(dir string) error {
 		if d.reqParam.DebugMode == true {
 			err = d.copySubFile2DesFolder(videoRootPath, organizeSubFiles)
 			if err != nil {
-				d.log.Error(err)
+				d.log.Errorln(err)
 			}
 		}
 		// -------------------------------------------------
 		var finalSubFile *common.SubParserFileInfo
 		finalSubFile = d.mk.SelectOneSubFile(organizeSubFiles)
 		if finalSubFile == nil {
-			d.log.Warn("Found", len(organizeSubFiles), " subtitles but not one fit:", oneVideoFullPath)
+			d.log.Warnln("Found", len(organizeSubFiles), " subtitles but not one fit:", oneVideoFullPath)
 			continue
 		}
 		// 找到了，写入文件
 		err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile)
 		if err != nil {
-			d.log.Error("writeSubFile2VideoPath",err)
+			d.log.Errorln("writeSubFile2VideoPath", err)
 			continue
 		}
 		// -----------------------------------------------------

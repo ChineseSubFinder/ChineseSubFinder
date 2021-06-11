@@ -28,7 +28,8 @@ func TestDownloader_searchFile(t *testing.T) {
 
 func TestDownloader_DownloadSub(t *testing.T) {
 	var err error
-	dirRoot := "X:\\电影\\Spiral From the Book of Saw (2021)"
+	//dirRoot := "X:\\电影\\Spiral From the Book of Saw (2021)"
+	dirRoot := "X:\\电影\\Oslo (2021)"
 
 	dl := NewDownloader(common.ReqParam{DebugMode: true})
 	err = dl.DownloadSub(dirRoot)

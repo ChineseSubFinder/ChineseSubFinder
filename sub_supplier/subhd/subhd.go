@@ -65,7 +65,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
 		if err == common.CanNotFindIMDBID {
-			s.log.Error(err.Error())
+			s.log.Error(err)
 		} else {
 			return nil, err
 		}

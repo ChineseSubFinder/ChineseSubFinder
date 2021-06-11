@@ -55,7 +55,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
 		if err == common.CanNotFindIMDBID {
-			s.log.Error(err.Error())
+			s.log.Error(err)
 		} else {
 			return nil, err
 		}
@@ -104,7 +104,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	for i := range subResult.SubInfos {
 		err = s.Step2(&subResult.SubInfos[i])
 		if err != nil {
-			s.log.Error(err.Error())
+			s.log.Error(err)
 			continue
 		}
 	}
@@ -135,7 +135,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	for i, subInfo := range tmpSubInfo {
 		fileName, data, err := s.Step3(subInfo.SubDownloadPageUrl)
 		if err != nil {
-			s.log.Error(err.Error())
+			s.log.Error(err)
 			continue
 		}
 		// 默认都是包含中文字幕的，然后具体使用的时候再进行区分
@@ -302,7 +302,7 @@ func (s Supplier) Step3(subDownloadPageUrl string) (string, []byte, error) {
 	for i := 0; i < len(matched); i++ {
 		data, filename, err = model.DownFile(model.AddBaseUrl(common.SubZiMuKuRootUrl, matched[i][1]), s.reqParam)
 		if err != nil {
-			s.log.Error("ZiMuKu Step3 DownloadFile", err)
+			s.log.Errorln("ZiMuKu Step3 DownloadFile", err)
 			continue
 		}
 		return filename, data, nil

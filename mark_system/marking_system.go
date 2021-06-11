@@ -36,7 +36,7 @@ func (m MarkingSystem) SelectOneSubFile(organizeSubFiles []string) *common.SubPa
 		}
 		if subFileInfo == nil {
 			// 说明这个字幕无法解析
-			m.log.Warning(oneSubFileFullPath, "DetermineFileTypeFromFile is nill")
+			m.log.Warnln(oneSubFileFullPath, "DetermineFileTypeFromFile is nill")
 			continue
 		}
 
