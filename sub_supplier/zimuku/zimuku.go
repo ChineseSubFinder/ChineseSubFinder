@@ -401,7 +401,7 @@ type SubInfo struct {
 	Ext					string	// 后缀名
 	Score				float32	// 评分
 	DownloadTimes 		int		// 下载的次数
-	Priority			float32	// 优先级，使用评分和次数乘积而来，类似于 Vote 投票
+	Priority			float32	// 优先级，使用评分和次数乘积而来，类似于 Score 投票
 	DetailUrl			string	// 字幕的详情界面，需要再次分析具体的下载地址，地址需要拼接网站的根地址上去
 	SubDownloadPageUrl 	string	// 字幕的具体的下载页面，会有多个下载可用的链接
 	DownloadUrl			string	// 字幕的下载地址

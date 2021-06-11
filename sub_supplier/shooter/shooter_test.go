@@ -18,6 +18,6 @@ func TestNewSupplier(t *testing.T) {
 	println(outList)
 
 	for i, sublist := range outList {
-		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Vote, sublist.FileUrl, len(sublist.Data))
+		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, sublist.FileUrl, len(sublist.Data))
 	}
 }

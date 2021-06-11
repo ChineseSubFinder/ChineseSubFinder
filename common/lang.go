@@ -195,10 +195,21 @@ func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map
 
 }
 
-// IsChineseSimpleOrTraditional 从字幕的名称中尝试确认是简体还是繁体
-func IsChineseSimpleOrTraditional(inputFileName string) bool {
-	return true
+// IsChineseSimpleOrTraditional 从字幕的文件名称中尝试确认是简体还是繁体，不需要判断双语问题，有额外的解析器完成。只可能出现 ChineseSimple ChineseTraditional Unknow 三种情况
+func IsChineseSimpleOrTraditional(inputFileName string) Language {
+
+	if strings.Contains(inputFileName, SubNameKeywordChineseSimple) || strings.Contains(inputFileName, MatchLangChs) {
+		return ChineseSimple
+	} else if strings.Contains(inputFileName, SubNameKeywordTraditional) || strings.Contains(inputFileName, MatchLangCht) {
+		return ChineseTraditional
+	}
+	return Unknow
 }
+
+const (
+	SubNameKeywordChineseSimple = "chs"
+	SubNameKeywordTraditional	 = "cht"
+)
 
 // Language 语言类型，注意，这里默认还是查找的是中文字幕，只不过下载的时候可能附带了其他的
 type Language int

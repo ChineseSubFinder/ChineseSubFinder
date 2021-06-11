@@ -15,7 +15,7 @@ func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 	}
 	println(outList)
 	for i, sublist := range outList {
-		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Vote, len(sublist.Data))
+		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, len(sublist.Data))
 	}
 }
 
@@ -33,6 +33,6 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 	}
 	println(outList)
 	for i, sublist := range outList {
-		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Vote, len(sublist.Data))
+		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, len(sublist.Data))
 	}
 }
