@@ -1,7 +1,6 @@
 package sub_supplier
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/InterFace"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/mholt/archiver/v3"
@@ -15,14 +14,14 @@ import (
 )
 
 type SubSupplierHub struct {
-	Suppliers []InterFace.ISupplier
+	Suppliers []common.ISupplier
 	log *logrus.Logger
 }
 
-func NewSubSupplierHub(one InterFace.ISupplier,_inSupplier ...InterFace.ISupplier) *SubSupplierHub {
+func NewSubSupplierHub(one common.ISupplier,_inSupplier ...common.ISupplier) *SubSupplierHub {
 	s := SubSupplierHub{}
 	s.log = common.GetLogger()
-	s.Suppliers = make([]InterFace.ISupplier, 0)
+	s.Suppliers = make([]common.ISupplier, 0)
 	s.Suppliers = append(s.Suppliers, one)
 	if len(_inSupplier) > 0 {
 		for _, supplier := range _inSupplier {
@@ -69,7 +68,7 @@ func (d SubSupplierHub) downloadSub4OneVideo(oneVideoFullPath string, i int) []c
 }
 
 // downloadSub4OneSite 在一个站点下载这个视频的字幕
-func (d SubSupplierHub) downloadSub4OneSite(oneVideoFullPath string, i int, supplier InterFace.ISupplier) ([]common.SupplierSubInfo, error) {
+func (d SubSupplierHub) downloadSub4OneSite(oneVideoFullPath string, i int, supplier common.ISupplier) ([]common.SupplierSubInfo, error) {
 	d.log.Infoln(i, supplier.GetSupplierName(), "Start...")
 	subInfos, err := supplier.GetSubListFromFile(oneVideoFullPath)
 	if err != nil {

@@ -2,8 +2,7 @@ package ChineseSubFinder
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/common"
-	"github.com/allanpk716/ChineseSubFinder/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/sub_parser/srt"
+	"github.com/allanpk716/ChineseSubFinder/marking_system"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier/subhd"
@@ -21,9 +20,10 @@ import (
 type Downloader struct {
 	reqParam common.ReqParam
 	log *logrus.Logger
-	topic int					// 最多能够下载 Top 几的字幕，每一个网站
-	wantedExtList []string		// 人工确认的需要监控的视频后缀名
-	defExtList []string			// 内置支持的视频后缀名列表
+	topic int						// 最多能够下载 Top 几的字幕，每一个网站
+	wantedExtList []string			// 人工确认的需要监控的视频后缀名
+	defExtList []string				// 内置支持的视频后缀名列表
+	mk *marking_system.MarkingSystem	// MarkingSystem
 }
 
 func NewDownloader(_reqParam ... common.ReqParam) *Downloader {
@@ -42,6 +42,13 @@ func NewDownloader(_reqParam ... common.ReqParam) *Downloader {
 	downloader.defExtList = append(downloader.defExtList, VideoExtMkv)
 	downloader.defExtList = append(downloader.defExtList, VideoExtRmvb)
 	downloader.defExtList = append(downloader.defExtList, VideoExtIso)
+
+	var sitesSequence = make([]string, 0)
+	sitesSequence = append(sitesSequence, common.SubSiteShooter)
+	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
+	sitesSequence = append(sitesSequence, common.SubSiteZiMuKu)
+	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
+	downloader.mk = marking_system.NewMarkingSystem(sitesSequence)
 
 	if len(_reqParam) > 0 {
 		// 如果用户设置了关注的视频后缀名列表，则用ta的
@@ -104,130 +111,24 @@ func (d Downloader) DownloadSub(dir string) error {
 			}
 		}
 		// -------------------------------------------------
-		// TODO 这里先处理 Top1 的字幕，后续再考虑怎么觉得 Top N 选择哪一个，很可能选择每个网站 Top 1就行了，具体的过滤逻辑在其内部实现
-		// 一个网站可能就算取了 Top1 字幕，也可能是返回一个压缩包，然后解压完就是多个字幕，所以
-		var subInfoDict = make(map[string][]common.SubFileInfo)
-		// 拿到现有的字幕列表，开始抉择
-		// 先判断当前字幕是什么语言（如果是简体，还需要考虑，判断这个字幕是简体还是繁体）
-		subParserHub := NewSubParserHub(ass.NewParser(), srt.NewParser())
-		for _, oneSubFileFullPath := range organizeSubFiles {
-			subFileInfo, err := subParserHub.DetermineFileTypeFromFile(oneSubFileFullPath)
-			if err != nil {
-				d.log.Error(err)
-				continue
-			}
-			if subFileInfo == nil {
-				// 说明这个字幕无法解析
-				d.log.Warning(oneSubFileFullPath, "DetermineFileTypeFromFile is nill")
-				continue
-			}
-
-			_, ok := subInfoDict[subFileInfo.FromWhereSite]
-			if ok == false {
-				// 新建
-				subInfoDict[subFileInfo.FromWhereSite] = make([]common.SubFileInfo, 0)
-			}
-			// 添加
-			subInfoDict[subFileInfo.FromWhereSite] = append(subInfoDict[subFileInfo.FromWhereSite], *subFileInfo)
+		var finalSubFile *common.SubParserFileInfo
+		finalSubFile = d.mk.SelectOneSubFile(organizeSubFiles)
+		if finalSubFile == nil {
+			d.log.Warn("Found", len(organizeSubFiles), " subtitles but not one fit:", oneVideoFullPath)
+			continue
 		}
-		// 优先级别暂定 zimuku -> subhd -> xunlei -> shooter
-		foundOne := false
-		var finalSubFile common.SubFileInfo
-		// -----------------------------------------------------
-		// TODO 需要重构，这些写的冲忙，太恶心了
-		value, ok := subInfoDict["zimuku"]
-		if ok == true {
-			for _, info := range value {
-				if common.HasChineseLang(info.Lang) == true {
-					finalSubFile = info
-					foundOne = true
-					break
-				}
-			}
-		}
-		if foundOne {
-			// 找到了
-			err := d.writeSubFile2VideoPath(oneVideoFullPath, finalSubFile)
-			if err != nil {
-				d.log.Error("writeSubFile2VideoPath",err)
-				// 不行继续
-				foundOne = false
-			} else {
-				continue
-			}
-		}
-		// -----------------------------------------------------
-		value, ok = subInfoDict["subhd"]
-		if ok == true {
-			for _, info := range value {
-				if common.HasChineseLang(info.Lang) == true {
-					finalSubFile = info
-					foundOne = true
-					break
-				}
-			}
-		}
-		if foundOne {
-			// 找到了
-			err := d.writeSubFile2VideoPath(oneVideoFullPath, finalSubFile)
-			if err != nil {
-				d.log.Error("writeSubFile2VideoPath",err)
-				// 不行继续
-				foundOne = false
-			} else {
-				continue
-			}
-		}
-		// -----------------------------------------------------
-		value, ok = subInfoDict["xunlei"]
-		if ok == true {
-			for _, info := range value {
-				if common.HasChineseLang(info.Lang) == true {
-					finalSubFile = info
-					foundOne = true
-					break
-				} else {
-					continue
-				}
-			}
-		}
-		if foundOne {
-			// 找到了
-			err := d.writeSubFile2VideoPath(oneVideoFullPath, finalSubFile)
-			if err != nil {
-				d.log.Error("writeSubFile2VideoPath",err)
-				// 不行继续
-				foundOne = false
-			}
-		}
-		// -----------------------------------------------------
-		value, ok = subInfoDict["shooter"]
-		if ok == true {
-			for _, info := range value {
-				if common.HasChineseLang(info.Lang) == true {
-					finalSubFile = info
-					foundOne = true
-					break
-				} else {
-					continue
-				}
-			}
-		}
-		if foundOne {
-			// 找到了
-			err := d.writeSubFile2VideoPath(oneVideoFullPath, finalSubFile)
-			if err != nil {
-				d.log.Error("writeSubFile2VideoPath",err)
-				// 不行继续
-				foundOne = false
-			}
+		// 找到了，写入文件
+		err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile)
+		if err != nil {
+			d.log.Error("writeSubFile2VideoPath",err)
+			continue
 		}
 		// -----------------------------------------------------
 	}
 	return nil
 }
 
-func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile common.SubFileInfo) error {
+func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile common.SubParserFileInfo) error {
 	videoRootPath := filepath.Dir(videoFileFullPath)
 	// 需要符合 emby 的格式要求，在后缀名前面
 	const emby_zh = ".zh"

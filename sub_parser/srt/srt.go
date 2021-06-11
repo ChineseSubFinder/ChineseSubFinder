@@ -17,7 +17,7 @@ func NewParser() *Parser {
 }
 
 // DetermineFileTypeFromFile 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
-func (p Parser) DetermineFileTypeFromFile(filePath string) (*common.SubFileInfo, error) {
+func (p Parser) DetermineFileTypeFromFile(filePath string) (*common.SubParserFileInfo, error) {
 	nowExt := filepath.Ext(filePath)
 	if strings.ToLower(nowExt) != common.SubExtSRT {
 		return nil ,nil
@@ -31,7 +31,7 @@ func (p Parser) DetermineFileTypeFromFile(filePath string) (*common.SubFileInfo,
 }
 
 // DetermineFileTypeFromBytes 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
-func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*common.SubFileInfo, error){
+func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*common.SubParserFileInfo, error){
 
 	allString := string(inBytes)
 	// 注意，需要替换掉 \r 不然正则表达式会有问题
@@ -42,7 +42,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*comm
 	if len(matched) < 1 {
 		return nil ,nil
 	}
-	subFileInfo := common.SubFileInfo{}
+	subFileInfo := common.SubParserFileInfo{}
 	subFileInfo.Ext = nowExt
 	subFileInfo.Dialogues = make([]common.OneDialogue, 0)
 	// 这里需要统计一共有几个 \N，以及这个数量在整体行数中的比例，这样就知道是不是双语字幕了

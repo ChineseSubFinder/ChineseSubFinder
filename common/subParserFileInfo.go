@@ -1,6 +1,6 @@
 package common
 
-type SubFileInfo struct {
+type SubParserFileInfo struct {
 	FromWhereSite string        // 从那个网站下载的
 	Name          string        // 字幕的名称，注意，这里需要额外的赋值，不会自动检测
 	Ext           string        // 字幕的后缀名

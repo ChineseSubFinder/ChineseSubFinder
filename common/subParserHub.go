@@ -1,20 +1,18 @@
-package ChineseSubFinder
+package common
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/InterFace"
-	"github.com/allanpk716/ChineseSubFinder/common"
 	"path/filepath"
 	"regexp"
 )
 
 type SubParserHub struct {
-	Parser []InterFace.ISubParser
+	Parser []ISubParser
 }
 
 // NewSubParserHub 处理的字幕文件需要符合 [siteName]_ 的前缀描述，是本程序专用的
-func NewSubParserHub(parser InterFace.ISubParser, _parser ...InterFace.ISubParser) *SubParserHub {
+func NewSubParserHub(parser ISubParser, _parser ...ISubParser) *SubParserHub {
 	s := SubParserHub{}
-	s.Parser = make([]InterFace.ISubParser, 0)
+	s.Parser = make([]ISubParser, 0)
 	s.Parser = append(s.Parser, parser)
 	if len(_parser) > 0 {
 		for _, one := range _parser {
@@ -25,7 +23,7 @@ func NewSubParserHub(parser InterFace.ISubParser, _parser ...InterFace.ISubParse
 }
 
 // DetermineFileTypeFromFile 确定字幕文件的类型，是双语字幕或者某一种语言等等信息，如果返回 nil ，那么就说明都没有字幕的格式匹配上
-func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*common.SubFileInfo, error){
+func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*SubParserFileInfo, error){
 	for _, parser := range p.Parser {
 		subFileInfo, err := parser.DetermineFileTypeFromFile(filePath)
 		if err != nil {
@@ -37,7 +35,7 @@ func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*common.SubFil
 		} else {
 			// 正常至少应该匹配一个吧，不然就是最外层继续返回 nil 出去了
 			// 简体和繁体字幕的判断，通过文件名来做到的，基本就算个补判而已
-			newLang := common.IsChineseSimpleOrTraditional(filePath, subFileInfo.Lang)
+			newLang := IsChineseSimpleOrTraditional(filePath, subFileInfo.Lang)
 			subFileInfo.Name = filepath.Base(filePath)
 			subFileInfo.Lang = newLang
 			subFileInfo.FileFullPath = filePath

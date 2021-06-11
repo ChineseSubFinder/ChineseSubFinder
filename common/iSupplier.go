@@ -1,8 +1,4 @@
-package InterFace
-
-import (
-	"github.com/allanpk716/ChineseSubFinder/common"
-)
+package common
 
 type ISupplier interface {
 	// TODO 这里需要考虑是什么类型的视频文件，可能是 电影、连续剧、动画，这三类应该有细节上的差异
@@ -11,7 +7,7 @@ type ISupplier interface {
 	// 动画，嗯···还没啥经验，额外粗略看来，很多坑
 	GetSupplierName() string
 
-	GetSubListFromFile(filePath string) ([]common.SupplierSubInfo, error)
+	GetSubListFromFile(filePath string) ([]SupplierSubInfo, error)
 
-	GetSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error)
+	GetSubListFromKeyword(keyword string) ([]SupplierSubInfo, error)
 }

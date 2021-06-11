@@ -1,4 +1,4 @@
-package ChineseSubFinder
+package common
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/ass"
