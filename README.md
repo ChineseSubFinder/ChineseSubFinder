@@ -7,7 +7,6 @@
 > 开发中的效果，可以尝试运行以下几个测试用例
 >
 > * [downloader_test.go](https://github.com/allanpk716/ChineseSubFinder/blob/master/downloader_test.go)
-> * [subParserHub_test.go](https://github.com/allanpk716/ChineseSubFinder/blob/master/subParserHub_test.go)
 
 ## Why？
 

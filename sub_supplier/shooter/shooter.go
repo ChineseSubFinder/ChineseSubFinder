@@ -33,7 +33,7 @@ func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
 }
 
 func (s Supplier) GetSupplierName() string {
-	return "shooter"
+	return common.SubSiteShooter
 }
 
 func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, error) {

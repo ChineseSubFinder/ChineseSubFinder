@@ -44,7 +44,7 @@ func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
 }
 
 func (s Supplier) GetSupplierName() string {
-	return "subhd"
+	return common.SubSiteSubHd
 }
 
 func (s Supplier) GetSubListFromFile(filePath string) ([]sub_supplier.SubInfo, error) {

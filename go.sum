@@ -14,8 +14,6 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/dsnet/compress v0.0.1 h1:PlZu0n3Tuv04TzpfPbrnI0HW/YwodEXDS+oPKahKF0Q=
 github.com/dsnet/compress v0.0.1/go.mod h1:Aw8dCMJ7RioblQeTqt88akK31OvO8Dhf5JflhBbQEHo=
 github.com/dsnet/golib v0.0.0-20171103203638-1ea166775780/go.mod h1:Lj+Z9rebOhdfkVLjJ8T6VcRQv3SXugXy999NBtR9aFY=
-github.com/gen2brain/go-unarr v0.1.1 h1:wZl53oYzEN1PEIA/dPa/FjBq9rRqPmS/Gzul8BdKYK4=
-github.com/gen2brain/go-unarr v0.1.1/go.mod h1:P05CsEe8jVEXhxqXqp9mFKUKFV0BKpFmtgNWf8Mcoos=
 github.com/go-resty/resty/v2 v2.6.0 h1:joIR5PNLM2EFqqESUjCMGXrWmXNHEU9CEiK813oKYS4=
 github.com/go-resty/resty/v2 v2.6.0/go.mod h1:PwvJS6hvaPkjtjNg9ph+VrSD92bi5Zq73w/BIH7cC3Q=
 github.com/go-rod/rod v0.97.2 h1:4AWtucf0fXKbdaEjNNhjIcdYXQyc4+yx8YYI73jyP5A=

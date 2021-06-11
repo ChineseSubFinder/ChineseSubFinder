@@ -124,14 +124,12 @@ func (d Downloader) DownloadSub(dir string) error {
 			}
 
 			_, ok := subInfoDict[subFileInfo.FromWhereSite]
-			if ok == true {
-				// 添加
-				subInfoDict[subFileInfo.FromWhereSite] = append(subInfoDict[subFileInfo.FromWhereSite], *subFileInfo)
-			} else {
+			if ok == false {
 				// 新建
 				subInfoDict[subFileInfo.FromWhereSite] = make([]sub_parser.SubFileInfo, 0)
-				subInfoDict[subFileInfo.FromWhereSite] = append(subInfoDict[subFileInfo.FromWhereSite], *subFileInfo)
 			}
+			// 添加
+			subInfoDict[subFileInfo.FromWhereSite] = append(subInfoDict[subFileInfo.FromWhereSite], *subFileInfo)
 		}
 		// 优先级别暂定 zimuku -> subhd -> xunlei -> shooter
 		foundOne := false
