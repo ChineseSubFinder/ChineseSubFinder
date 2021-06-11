@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/allanpk716/ChineseSubFinder/common"
+	"github.com/allanpk716/ChineseSubFinder/model"
 	"github.com/sirupsen/logrus"
 	"path/filepath"
 	"regexp"
@@ -12,15 +13,15 @@ import (
 )
 
 type Supplier struct {
-	reqParam common.ReqParam
-	log *logrus.Logger
-	topic int
+	reqParam model.ReqParam
+	log      *logrus.Logger
+	topic    int
 }
 
-func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
+func NewSupplier(_reqParam ...model.ReqParam) *Supplier {
 
 	sup := Supplier{}
-	sup.log = common.GetLogger()
+	sup.log = model.GetLogger()
 	sup.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		sup.reqParam = _reqParam[0]
@@ -44,13 +45,13 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 		如果找不到，再靠文件名提取影片名称去查找
 	*/
 	// 得到这个视频文件名中的信息
-	info, err := common.GetVideoInfo(filePath)
+	info, err := model.GetVideoInfo(filePath)
 	if err != nil {
 		return nil, err
 	}
 	// 找到这个视频文件，然后读取它目录下的文件，尝试得到 IMDB ID
 	fileRootDirPath := filepath.Dir(filePath)
-	imdbId, err := common.GetImdbId(fileRootDirPath)
+	imdbId, err := model.GetImdbId(fileRootDirPath)
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
 		if err == common.CanNotFindIMDBID {
@@ -112,8 +113,8 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	// 首先过滤出中文的字幕，同时需要满足是支持的字幕
 	var tmpSubInfo = make([]SubInfo, 0)
 	for _, subInfo := range subResult.SubInfos {
-		tmpLang := common.LangConverter(subInfo.Lang)
-		if common.HasChineseLang(tmpLang) == true && common.IsSubTypeWanted(subInfo.Ext) == true {
+		tmpLang := model.LangConverter(subInfo.Lang)
+		if model.HasChineseLang(tmpLang) == true && model.IsSubTypeWanted(subInfo.Ext) == true {
 			tmpSubInfo = append(tmpSubInfo, subInfo)
 		}
 	}
@@ -123,8 +124,8 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 			if len(tmpSubInfo) >= s.topic {
 				break
 			}
-			tmpLang := common.LangConverter(subInfo.Lang)
-			if common.HasChineseLang(tmpLang) == false {
+			tmpLang := model.LangConverter(subInfo.Lang)
+			if model.HasChineseLang(tmpLang) == false {
 				tmpSubInfo = append(tmpSubInfo, subInfo)
 			}
 		}
@@ -138,7 +139,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 			continue
 		}
 		// 默认都是包含中文字幕的，然后具体使用的时候再进行区分
-		outSubInfoList = append(outSubInfoList, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, common.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
+		outSubInfoList = append(outSubInfoList, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, model.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
 			0, filepath.Ext(fileName), data))
 	}
 
@@ -147,7 +148,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 
 // Step0 先在查询界面找到字幕对应第一个影片的详情界面
 func (s Supplier) Step0(keyword string) (string, error) {
-	httpClient := common.NewHttpClient(s.reqParam)
+	httpClient := model.NewHttpClient(s.reqParam)
 	// 第一级界面，有多少个字幕
 	resp, err := httpClient.R().
 		SetQueryParams(map[string]string{
@@ -170,8 +171,8 @@ func (s Supplier) Step0(keyword string) (string, error) {
 
 // Step1 分析详情界面，找到有多少个字幕
 func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
-	filmDetailPageUrl = common.AddBaseUrl(common.SubZiMuKuRootUrl, filmDetailPageUrl)
-	httpClient := common.NewHttpClient(s.reqParam)
+	filmDetailPageUrl = model.AddBaseUrl(common.SubZiMuKuRootUrl, filmDetailPageUrl)
+	httpClient := model.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
 		Get(filmDetailPageUrl)
 	if err != nil {
@@ -216,7 +217,7 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 		if !exists {
 			rate = ""
 		}
-		vote, err := common.GetNumber2Float(rate)
+		vote, err := model.GetNumber2Float(rate)
 		if err != nil {
 			return
 		}
@@ -224,13 +225,13 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 		downCountNub := 0
 		downCount := tr.Find("td").Eq(3).Text()
 		if strings.Contains(downCount, "万") {
-			fNumb, err := common.GetNumber2Float(downCount)
+			fNumb, err := model.GetNumber2Float(downCount)
 			if err != nil {
 				return
 			}
 			downCountNub = int(fNumb * 10000)
 		} else {
-			downCountNub, err = common.GetNumber2int(downCount)
+			downCountNub, err = model.GetNumber2int(downCount)
 			if err != nil {
 				return
 			}
@@ -256,8 +257,8 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 // Step2 第二级界面，单个字幕详情
 func (s Supplier) Step2(subInfo *SubInfo) error {
 
-	detailUrl := common.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.DetailUrl)
-	httpClient := common.NewHttpClient(s.reqParam)
+	detailUrl := model.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.DetailUrl)
+	httpClient := model.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
 		Get(detailUrl)
 	if err != nil {
@@ -281,8 +282,8 @@ func (s Supplier) Step2(subInfo *SubInfo) error {
 // Step3 第三级界面，具体字幕下载
 func (s Supplier) Step3(subDownloadPageUrl string) (string, []byte, error) {
 
-	subDownloadPageUrl = common.AddBaseUrl(common.SubZiMuKuRootUrl, subDownloadPageUrl)
-	httpClient := common.NewHttpClient(s.reqParam)
+	subDownloadPageUrl = model.AddBaseUrl(common.SubZiMuKuRootUrl, subDownloadPageUrl)
+	httpClient := model.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
 		Get(subDownloadPageUrl)
 	if err != nil {
@@ -299,7 +300,7 @@ func (s Supplier) Step3(subDownloadPageUrl string) (string, []byte, error) {
 
 	s.reqParam.Referer = subDownloadPageUrl
 	for i := 0; i < len(matched); i++ {
-		data, filename, err = common.DownFile(common.AddBaseUrl(common.SubZiMuKuRootUrl, matched[i][1]), s.reqParam)
+		data, filename, err = model.DownFile(model.AddBaseUrl(common.SubZiMuKuRootUrl, matched[i][1]), s.reqParam)
 		if err != nil {
 			s.log.Error("ZiMuKu Step3 DownloadFile", err)
 			continue
@@ -312,7 +313,7 @@ func (s Supplier) Step3(subDownloadPageUrl string) (string, []byte, error) {
 
 // Step1Discard 第一级界面，有多少个字幕，弃用，直接再搜索出来的结果界面匹配会遇到一个问题，就是 “还有8个字幕，点击查看” 类似此问题
 func (s Supplier) Step1Discard(keyword string) (SubResult, error) {
-	httpClient := common.NewHttpClient(s.reqParam)
+	httpClient := model.NewHttpClient(s.reqParam)
 	// 第一级界面，有多少个字幕
 	resp, err := httpClient.R().
 		SetQueryParams(map[string]string{
@@ -357,14 +358,14 @@ func (s Supplier) Step1Discard(keyword string) (SubResult, error) {
 						if ok == false {
 							return
 						}
-						number, err := common.GetNumber2Float(vote)
+						number, err := model.GetNumber2Float(vote)
 						if err != nil {
 							return
 						}
 						subInfo.Score = number
 					} else if i == 2{
 						// 下载量
-						number, err := common.GetNumber2int(sTd.Text())
+						number, err := model.GetNumber2int(sTd.Text())
 						if err != nil {
 							return
 						}
@@ -389,9 +390,9 @@ func (s Supplier) Step1Discard(keyword string) (SubResult, error) {
 }
 
 type SubResult struct {
-	Title string			// 字幕的标题
-	OtherName string		// 影片又名
-	SubInfos SubInfos		// 字幕的列表
+	Title     string   // 字幕的标题
+	OtherName string   // 影片又名
+	SubInfos  SubInfos // 字幕的列表
 }
 
 type SubInfo struct {

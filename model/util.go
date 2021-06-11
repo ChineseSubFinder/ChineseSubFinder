@@ -1,7 +1,8 @@
-package common
+package model
 
 import (
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/go-resty/resty/v2"
 	"io"
 	"io/ioutil"
@@ -36,7 +37,7 @@ func NewHttpClient(_reqParam ...ReqParam) *resty.Client {
 	}
 
 	httpClient := resty.New()
-	httpClient.SetTimeout(HTMLTimeOut)
+	httpClient.SetTimeout(common.HTMLTimeOut)
 	if HttpProxy != "" {
 		httpClient.SetProxy(HttpProxy)
 	}
@@ -93,7 +94,7 @@ func AddBaseUrl(baseUrl, url string) string {
 func GetDebugFolder() (string, error) {
 	if defDebugFolder == "" {
 		nowProcessRoot, _ := os.Getwd()
-		nowProcessRoot = path.Join(nowProcessRoot, DebugFolder)
+		nowProcessRoot = path.Join(nowProcessRoot, common.DebugFolder)
 		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err
@@ -107,7 +108,7 @@ func GetDebugFolder() (string, error) {
 func GetTmpFolder() (string, error) {
 	if defTmpFolder == "" {
 		nowProcessRoot, _ := os.Getwd()
-		nowProcessRoot = path.Join(nowProcessRoot, TmpFolder)
+		nowProcessRoot = path.Join(nowProcessRoot, common.TmpFolder)
 		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err

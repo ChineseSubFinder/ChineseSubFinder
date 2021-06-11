@@ -1,4 +1,4 @@
-package common
+package model
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/ass"

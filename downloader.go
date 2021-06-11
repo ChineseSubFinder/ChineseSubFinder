@@ -2,12 +2,13 @@ package ChineseSubFinder
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/common"
-	"github.com/allanpk716/ChineseSubFinder/marking_system"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier/shooter"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier/subhd"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier/xunlei"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier/zimuku"
+	"github.com/allanpk716/ChineseSubFinder/mark_system"
+	"github.com/allanpk716/ChineseSubFinder/model"
+	sub_supplier2 "github.com/allanpk716/ChineseSubFinder/sub_supplier"
+	shooter2 "github.com/allanpk716/ChineseSubFinder/sub_supplier/shooter"
+	subhd2 "github.com/allanpk716/ChineseSubFinder/sub_supplier/subhd"
+	xunlei2 "github.com/allanpk716/ChineseSubFinder/sub_supplier/xunlei"
+	zimuku2 "github.com/allanpk716/ChineseSubFinder/sub_supplier/zimuku"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -18,18 +19,18 @@ import (
 )
 
 type Downloader struct {
-	reqParam common.ReqParam
-	log *logrus.Logger
-	topic int						// 最多能够下载 Top 几的字幕，每一个网站
-	wantedExtList []string			// 人工确认的需要监控的视频后缀名
-	defExtList []string				// 内置支持的视频后缀名列表
-	mk *marking_system.MarkingSystem	// MarkingSystem
+	reqParam      model.ReqParam
+	log           *logrus.Logger
+	topic         int                        // 最多能够下载 Top 几的字幕，每一个网站
+	wantedExtList []string                   // 人工确认的需要监控的视频后缀名
+	defExtList    []string                   // 内置支持的视频后缀名列表
+	mk            *mark_system.MarkingSystem // MarkingSystem
 }
 
-func NewDownloader(_reqParam ... common.ReqParam) *Downloader {
+func NewDownloader(_reqParam ...model.ReqParam) *Downloader {
 
 	var downloader Downloader
-	downloader.log = common.GetLogger()
+	downloader.log = model.GetLogger()
 	downloader.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		downloader.reqParam = _reqParam[0]
@@ -48,7 +49,7 @@ func NewDownloader(_reqParam ... common.ReqParam) *Downloader {
 	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
 	sitesSequence = append(sitesSequence, common.SubSiteZiMuKu)
 	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
-	downloader.mk = marking_system.NewMarkingSystem(sitesSequence)
+	downloader.mk = mark_system.NewMarkingSystem(sitesSequence)
 
 	if len(_reqParam) > 0 {
 		// 如果用户设置了关注的视频后缀名列表，则用ta的
@@ -76,7 +77,7 @@ func (d Downloader) GetDefSupportExtList() []string {
 func (d Downloader) DownloadSub(dir string) error {
 	defer func() {
 		// 抉择完毕，需要清理缓存目录
-		err := common.ClearTmpFolder()
+		err := model.ClearTmpFolder()
 		if err != nil {
 			d.log.Error(err)
 		}
@@ -86,10 +87,10 @@ func (d Downloader) DownloadSub(dir string) error {
 		return err
 	}
 	// 构建每个字幕站点下载者的实例
-	subSupplierHub := sub_supplier.NewSubSupplierHub(shooter.NewSupplier(d.reqParam),
-									subhd.NewSupplier(d.reqParam),
-									xunlei.NewSupplier(d.reqParam),
-									zimuku.NewSupplier(d.reqParam),
+	subSupplierHub := sub_supplier2.NewSubSupplierHub(shooter2.NewSupplier(d.reqParam),
+									subhd2.NewSupplier(d.reqParam),
+									xunlei2.NewSupplier(d.reqParam),
+									zimuku2.NewSupplier(d.reqParam),
 	)
 	// TODO 后续再改为每个视频以上的流程都是一个 channel 来做，并且需要控制在一个并发量之下（很可能没必要，毕竟要在弱鸡机器上挂机用的）
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
@@ -137,7 +138,7 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	const emby_jp = ".jp"
 	const emby_kr = ".kr"
 	lan := ""
-	if common.HasChineseLang(finalSubFile.Lang) == true {
+	if model.HasChineseLang(finalSubFile.Lang) == true {
 		lan = emby_zh
 	} else if finalSubFile.Lang == common.English {
 		lan = emby_en
@@ -206,7 +207,7 @@ func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) e
 	// 复制下载在 tmp 文件夹中的字幕文件到视频文件夹下面
 	for _, subFile := range subFiles {
 		newFn := path.Join(desFolderFullPath, filepath.Base(subFile))
-		_, err = common.CopyFile(newFn, subFile)
+		_, err = model.CopyFile(newFn, subFile)
 		if err != nil {
 			return err
 		}

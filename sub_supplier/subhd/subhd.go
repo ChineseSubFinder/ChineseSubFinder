@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/allanpk716/ChineseSubFinder/common"
+	"github.com/allanpk716/ChineseSubFinder/model"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/nfnt/resize"
@@ -22,16 +23,16 @@ import (
 )
 
 type Supplier struct {
-	reqParam common.ReqParam
-	log *logrus.Logger
-	topic int
+	reqParam    model.ReqParam
+	log         *logrus.Logger
+	topic       int
 	rodlauncher *launcher.Launcher
 }
 
-func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
+func NewSupplier(_reqParam ...model.ReqParam) *Supplier {
 
 	sup := Supplier{}
-	sup.log = common.GetLogger()
+	sup.log = model.GetLogger()
 	sup.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		sup.reqParam = _reqParam[0]
@@ -54,13 +55,13 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 		如果找不到，再靠文件名提取影片名称去查找
 	*/
 	// 得到这个视频文件名中的信息
-	info, err := common.GetVideoInfo(filePath)
+	info, err := model.GetVideoInfo(filePath)
 	if err != nil {
 		return nil, err
 	}
 	// 找到这个视频文件，然后读取它目录下的文件，尝试得到 IMDB ID
 	fileRootDirPath := filepath.Dir(filePath)
-	imdbId, err := common.GetImdbId(fileRootDirPath)
+	imdbId, err := model.GetImdbId(fileRootDirPath)
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
 		if err == common.CanNotFindIMDBID {
@@ -110,7 +111,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	}
 
 	// TODO 后面如果用 docker 部署，需要允许改位远程 browser 启动
-	browser, err := common.NewBrowser(s.reqParam.HttpProxy)
+	browser, err := model.NewBrowser(s.reqParam.HttpProxy)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +121,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 		if err != nil {
 			return nil, err
 		}
-		subInfos = append(subInfos, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, common.ChineseSimple, common.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
+		subInfos = append(subInfos, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, common.ChineseSimple, model.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
 	}
 
 	return subInfos, nil
@@ -139,7 +140,7 @@ func (s Supplier) Step0(keyword string) (string, error) {
 	if len(matched) < 1 {
 		return "",  common.SubHDStep0SubCountNotFound
 	}
-	subCount, err := common.GetNumber2int(matched[0][0])
+	subCount, err := model.GetNumber2int(matched[0][0])
 	if err != nil {
 		return "", err
 	}
@@ -157,7 +158,7 @@ func (s Supplier) Step0(keyword string) (string, error) {
 }
 // Step1 获取影片的详情字幕列表
 func (s Supplier) Step1(detailPageUrl string) ([]HdListItem, error) {
-	detailPageUrl = common.AddBaseUrl(common.SubSubHDRootUrl, detailPageUrl)
+	detailPageUrl = model.AddBaseUrl(common.SubSubHDRootUrl, detailPageUrl)
 	result, err := s.httpGet(detailPageUrl)
 	if err != nil {
 		return nil, err
@@ -186,11 +187,11 @@ func (s Supplier) Step1(detailPageUrl string) ([]HdListItem, error) {
 		title := strings.TrimSpace(tr.Find(oneSubTrTitleKeyword).Text())
 		// 字幕类型
 		insideSubType := tr.Find(oneSubLangAndTypeKetword).Text()
-		if common.IsSubTypeWanted(insideSubType) == false {
+		if model.IsSubTypeWanted(insideSubType) == false {
 			return true
 		}
 		// 下载的次数
-		downCount, err := common.GetNumber2int(tr.Find(oneSubTrDownloadCountKeyword).Eq(1).Text())
+		downCount, err := model.GetNumber2int(tr.Find(oneSubTrDownloadCountKeyword).Eq(1).Text())
 		if err != nil {
 			return true
 		}
@@ -214,7 +215,7 @@ func (s Supplier) Step1(detailPageUrl string) ([]HdListItem, error) {
 }
 // Step2 下载字幕，没用了，弃了
 func (s Supplier) Step2(subDownloadPageUrl string) (*HdContent, error) {
-	subDownloadPageUrl = common.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
+	subDownloadPageUrl = model.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
 	result, err := s.httpGet(subDownloadPageUrl)
 	if err != nil {
 		return nil, err
@@ -260,7 +261,7 @@ func (s Supplier) Step2(subDownloadPageUrl string) (*HdContent, error) {
 	downUrl = strings.ReplaceAll(downUrl, "\\", "")
 	var filename = filepath.Base(downUrl)
 	var data []byte
-	data, filename, err = common.DownFile(downUrl, s.reqParam)
+	data, filename, err = model.DownFile(downUrl, s.reqParam)
 	if err != nil {
 		return nil, err
 	}
@@ -273,9 +274,9 @@ func (s Supplier) Step2(subDownloadPageUrl string) (*HdContent, error) {
 
 // Step2Ex 下载字幕 过防水墙
 func (s Supplier) Step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdContent, error)  {
-	subDownloadPageUrl = common.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
+	subDownloadPageUrl = model.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
 	// TODO 需要提取出 rod 的超时时间和重试次数，注意，这里的超时时间，在调试的时候也算进去的，所以···
-	page, err := common.NewPageNavigate(browser, subDownloadPageUrl, 300*time.Second, 5)
+	page, err := model.NewPageNavigate(browser, subDownloadPageUrl, 300*time.Second, 5)
 	if err != nil {
 		return nil, err
 	}
@@ -375,7 +376,7 @@ func (s Supplier) passWaterWall(page *rod.Page)  {
 	shadowbg := slideBgEl.MustResource()
 	// 取得原始圖像
 	src := slideBgEl.MustProperty("src")
-	fullbg, _, err := common.DownFile(strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
+	fullbg, _, err := model.DownFile(strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
 	if err != nil {
 		panic(err)
 	}
@@ -442,7 +443,7 @@ search:
 
 	if s.reqParam.DebugMode == true {
 		//截圖保存
-		nowProcessRoot, err := common.GetDebugFolder()
+		nowProcessRoot, err := model.GetDebugFolder()
 		if err == nil {
 			page.MustScreenshot(path.Join(nowProcessRoot, "result.png"))
 		} else {
@@ -453,7 +454,7 @@ search:
 
 func (s Supplier) httpGet(url string) (string, error) {
 	s.reqParam.Referer = url
-	httpClient := common.NewHttpClient(s.reqParam)
+	httpClient := model.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().Get(url)
 	if err != nil {
 		return "", err
@@ -470,7 +471,7 @@ func (s Supplier) httpGet(url string) (string, error) {
 func (s Supplier) httpPost(url string, postData map[string]string, referer string) (string, error) {
 
 	s.reqParam.Referer = referer
-	httpClient := common.NewHttpClient(s.reqParam)
+	httpClient := model.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
 		SetFormData(postData).
 		Post(url)

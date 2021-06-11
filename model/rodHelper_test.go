@@ -1,4 +1,4 @@
-package common
+package model
 
 import (
 	"github.com/go-rod/rod/lib/proto"

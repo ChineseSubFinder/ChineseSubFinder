@@ -1,18 +1,21 @@
-package common
+package model
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/common"
+	"github.com/allanpk716/ChineseSubFinder/interface"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 type SubParserHub struct {
-	Parser []ISubParser
+	Parser []_interface.ISubParser
 }
 
 // NewSubParserHub 处理的字幕文件需要符合 [siteName]_ 的前缀描述，是本程序专用的
-func NewSubParserHub(parser ISubParser, _parser ...ISubParser) *SubParserHub {
+func NewSubParserHub(parser _interface.ISubParser, _parser ..._interface.ISubParser) *SubParserHub {
 	s := SubParserHub{}
-	s.Parser = make([]ISubParser, 0)
+	s.Parser = make([]_interface.ISubParser, 0)
 	s.Parser = append(s.Parser, parser)
 	if len(_parser) > 0 {
 		for _, one := range _parser {
@@ -23,7 +26,7 @@ func NewSubParserHub(parser ISubParser, _parser ...ISubParser) *SubParserHub {
 }
 
 // DetermineFileTypeFromFile 确定字幕文件的类型，是双语字幕或者某一种语言等等信息，如果返回 nil ，那么就说明都没有字幕的格式匹配上
-func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*SubParserFileInfo, error){
+func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*common.SubParserFileInfo, error){
 	for _, parser := range p.Parser {
 		subFileInfo, err := parser.DetermineFileTypeFromFile(filePath)
 		if err != nil {
@@ -55,4 +58,28 @@ func (p SubParserHub) getFromWhereSite(filePath string) string {
 		return ""
 	}
 	return matched[1]
+}
+
+
+// IsSubTypeWanted 这里匹配的字幕的格式，不包含 Ext 的 . 小数点，注意，仅仅是包含关系
+func IsSubTypeWanted(subName string) bool {
+	nowLowerName := strings.ToLower(subName)
+	if strings.Contains(nowLowerName, common.SubTypeASS) ||
+		strings.Contains(nowLowerName, common.SubTypeSSA) ||
+		strings.Contains(nowLowerName, common.SubTypeSRT) {
+		return true
+	}
+
+	return false
+}
+
+// IsSubExtWanted 输入的字幕文件名，判断后缀名是否符合期望的字幕后缀名列表
+func IsSubExtWanted(subName string) bool {
+	inExt := filepath.Ext(subName)
+	switch strings.ToLower(inExt) {
+	case common.SubExtSSA,common.SubExtASS,common.SubExtSRT:
+		return true
+	default:
+		return false
+	}
 }

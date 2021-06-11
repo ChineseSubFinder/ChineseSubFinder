@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/common"
+	"github.com/allanpk716/ChineseSubFinder/model"
 	"github.com/sirupsen/logrus"
 	"math"
 	"os"
@@ -12,15 +13,15 @@ import (
 )
 
 type Supplier struct {
-	reqParam common.ReqParam
-	log *logrus.Logger
-	topic int
+	reqParam model.ReqParam
+	log      *logrus.Logger
+	topic    int
 }
 
-func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
+func NewSupplier(_reqParam ...model.ReqParam) *Supplier {
 
 	sup := Supplier{}
-	sup.log = common.GetLogger()
+	sup.log = model.GetLogger()
 	sup.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		sup.reqParam = _reqParam[0]
@@ -52,7 +53,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 
 	fileName := filepath.Base(filePath)
 
-	httpClient := common.NewHttpClient(s.reqParam)
+	httpClient := model.NewHttpClient(s.reqParam)
 
 	_, err = httpClient.R().
 		SetFormData(map[string]string{
@@ -73,7 +74,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 				subExt = "." + subExt
 			}
 
-			data, _, err := common.DownFile(file.Link)
+			data, _, err := model.DownFile(file.Link)
 			if err != nil {
 				s.log.Error(err.Error())
 				continue

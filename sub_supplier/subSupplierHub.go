@@ -2,6 +2,8 @@ package sub_supplier
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/common"
+	"github.com/allanpk716/ChineseSubFinder/interface"
+	"github.com/allanpk716/ChineseSubFinder/model"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
@@ -14,14 +16,14 @@ import (
 )
 
 type SubSupplierHub struct {
-	Suppliers []common.ISupplier
+	Suppliers []_interface.ISupplier
 	log *logrus.Logger
 }
 
-func NewSubSupplierHub(one common.ISupplier,_inSupplier ...common.ISupplier) *SubSupplierHub {
+func NewSubSupplierHub(one _interface.ISupplier,_inSupplier ..._interface.ISupplier) *SubSupplierHub {
 	s := SubSupplierHub{}
-	s.log = common.GetLogger()
-	s.Suppliers = make([]common.ISupplier, 0)
+	s.log = model.GetLogger()
+	s.Suppliers = make([]_interface.ISupplier, 0)
 	s.Suppliers = append(s.Suppliers, one)
 	if len(_inSupplier) > 0 {
 		for _, supplier := range _inSupplier {
@@ -68,7 +70,7 @@ func (d SubSupplierHub) downloadSub4OneVideo(oneVideoFullPath string, i int) []c
 }
 
 // downloadSub4OneSite 在一个站点下载这个视频的字幕
-func (d SubSupplierHub) downloadSub4OneSite(oneVideoFullPath string, i int, supplier common.ISupplier) ([]common.SupplierSubInfo, error) {
+func (d SubSupplierHub) downloadSub4OneSite(oneVideoFullPath string, i int, supplier _interface.ISupplier) ([]common.SupplierSubInfo, error) {
 	d.log.Infoln(i, supplier.GetSupplierName(), "Start...")
 	subInfos, err := supplier.GetSubListFromFile(oneVideoFullPath)
 	if err != nil {
@@ -90,12 +92,12 @@ func (d SubSupplierHub) organizeDlSubFiles(subInfos []common.SupplierSubInfo) ([
 
 	// 缓存列表，整理后的字幕列表
 	var siteSubInfoDict = make([]string, 0)
-	tmpFolderFullPath, err := common.GetTmpFolder()
+	tmpFolderFullPath, err := model.GetTmpFolder()
 	if err != nil {
 		return nil, err
 	}
 	// 先清理缓存目录
-	err = common.ClearTmpFolder()
+	err = model.ClearTmpFolder()
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +115,7 @@ func (d SubSupplierHub) organizeDlSubFiles(subInfos []common.SupplierSubInfo) ([
 		nowExt := strings.ToLower(subInfo.Ext)
 		if nowExt != ".zip" && nowExt != ".tar" && nowExt != ".rar" && nowExt != ".7z" {
 			// 是否是受支持的字幕类型
-			if common.IsSubExtWanted(nowExt) == false {
+			if model.IsSubExtWanted(nowExt) == false {
 				continue
 			}
 			// 加入缓存列表
@@ -175,7 +177,7 @@ func (d SubSupplierHub) searchMatchedSubFile(dir string) ([]string, error) {
 			if curFile.Size() < 1000 {
 				continue
 			}
-			if common.IsSubExtWanted(filepath.Ext(curFile.Name())) == true {
+			if model.IsSubExtWanted(filepath.Ext(curFile.Name())) == true {
 				fileFullPathList = append(fileFullPathList, fullPath)
 			}
 		}

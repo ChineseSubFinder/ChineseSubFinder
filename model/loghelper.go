@@ -1,4 +1,4 @@
-package common
+package model
 
 import (
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"

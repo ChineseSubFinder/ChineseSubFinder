@@ -2,6 +2,7 @@ package srt
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/common"
+	"github.com/allanpk716/ChineseSubFinder/model"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
@@ -72,10 +73,10 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*comm
 	var langDict map[int]int
 	langDict = make(map[int]int)
 	for _, dialogue := range subFileInfo.Dialogues {
-		common.DetectSubLangAndStatistics(dialogue.Lines, langDict)
+		model.DetectSubLangAndStatistics(dialogue.Lines, langDict)
 	}
 	// 从统计出来的字典，找出 Top 1 或者 2 的出来，然后计算出是什么语言的字幕
-	detectLang := common.SubLangStatistics2SubLangType(float32(countLineFeed), float32(len(matched)), langDict)
+	detectLang := model.SubLangStatistics2SubLangType(float32(countLineFeed), float32(len(matched)), langDict)
 	subFileInfo.Lang = detectLang
 	subFileInfo.Data = inBytes
 	return &subFileInfo, nil

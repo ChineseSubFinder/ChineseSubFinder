@@ -1,7 +1,8 @@
-package common
+package model
 
 import (
 	"errors"
+	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/beevik/etree"
 	PTN "github.com/middelink/go-parse-torrent-name"
 	"io/ioutil"
@@ -21,7 +22,7 @@ func getImdbMovieXml(movieFilePath string) (string, error) {
 		return t.Text(), nil
 	}
 
-	return "", CanNotFindIMDBID
+	return "", common.CanNotFindIMDBID
 }
 
 func getImdbNfo(nfoFilePath string) (string, error) {
@@ -33,7 +34,7 @@ func getImdbNfo(nfoFilePath string) (string, error) {
 		return t.Text(), nil
 	}
 
-	return "", CanNotFindIMDBID
+	return "", common.CanNotFindIMDBID
 }
 
 func GetImdbId(dirPth string) (string ,error) {
@@ -64,7 +65,7 @@ func GetImdbId(dirPth string) (string ,error) {
 	}
 	// 根据找到的开始解析
 	if movieFilePath == "" && nfoFilePath == "" {
-		return "", NoMetadataFile
+		return "", common.NoMetadataFile
 	}
 
 	if movieFilePath != "" {
@@ -85,7 +86,7 @@ func GetImdbId(dirPth string) (string ,error) {
 		}
 	}
 
-	return "", CanNotFindIMDBID
+	return "", common.CanNotFindIMDBID
 }
 
 //GetVideoInfo 从文件名推断视频文件的信息

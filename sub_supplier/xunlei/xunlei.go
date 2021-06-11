@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/common"
+	"github.com/allanpk716/ChineseSubFinder/model"
 	"github.com/sirupsen/logrus"
 	"math"
 	"os"
@@ -11,15 +12,15 @@ import (
 )
 
 type Supplier struct {
-	reqParam common.ReqParam
-	log *logrus.Logger
-	topic int
+	reqParam model.ReqParam
+	log      *logrus.Logger
+	topic    int
 }
 
-func NewSupplier(_reqParam ... common.ReqParam) *Supplier {
+func NewSupplier(_reqParam ...model.ReqParam) *Supplier {
 
 	sup := Supplier{}
-	sup.log = common.GetLogger()
+	sup.log = model.GetLogger()
 	sup.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		sup.reqParam = _reqParam[0]
@@ -43,7 +44,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	if len(cid) == 0 {
 		return outSubList, common.XunLeiCIdIsEmpty
 	}
-	httpClient := common.NewHttpClient(s.reqParam)
+	httpClient := model.NewHttpClient(s.reqParam)
 	_, err = httpClient.R().
 		SetResult(&jsonList).
 		Get(fmt.Sprintf(common.SubXunLeiRootUrl, cid))
@@ -54,8 +55,8 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	for _, v := range jsonList.Sublist {
 		if len(v.Scid) > 0 {
 			// 符合中文语言的先加入列表
-			tmpLang := common.LangConverter(v.Language)
-			if common.HasChineseLang(tmpLang) == true && common.IsSubTypeWanted(v.Sname) == true {
+			tmpLang := model.LangConverter(v.Language)
+			if model.HasChineseLang(tmpLang) == true && model.IsSubTypeWanted(v.Sname) == true {
 				tmpXunLeiSubListChinese = append(tmpXunLeiSubListChinese, v)
 			}
 		}
@@ -67,16 +68,16 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 			if len(tmpXunLeiSubListChinese) >= s.topic {
 				break
 			}
-			tmpLang := common.LangConverter(v.Language)
-			if common.HasChineseLang(tmpLang) == false {
+			tmpLang := model.LangConverter(v.Language)
+			if model.HasChineseLang(tmpLang) == false {
 				tmpXunLeiSubListChinese = append(tmpXunLeiSubListChinese, v)
 			}
 		}
 	}
 	// 再开始下载字幕
 	for i, v := range tmpXunLeiSubListChinese {
-		tmpLang := common.LangConverter(v.Language)
-		data, filename, err := common.DownFile(v.Surl)
+		tmpLang := model.LangConverter(v.Language)
+		data, filename, err := model.DownFile(v.Surl)
 		if err != nil {
 			s.log.Error(err)
 			continue

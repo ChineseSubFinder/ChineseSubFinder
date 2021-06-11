@@ -1,72 +1,73 @@
-package common
+package model
 
 import (
 	"github.com/abadojack/whatlanggo"
+	"github.com/allanpk716/ChineseSubFinder/common"
 	"strings"
 )
 
 // LangConverter 语言转换器
-func LangConverter(subLang string) Language {
+func LangConverter(subLang string) common.Language {
 	/*
 		xunlei:未知语言、简体&英语、繁体&英语、简体、繁体、英语
 	*/
-	if strings.Contains(subLang, MatchLangChs) {
+	if strings.Contains(subLang, common.MatchLangChs) {
 		// 优先简体
-		if strings.Contains(subLang, MatchLangEn) {
+		if strings.Contains(subLang, common.MatchLangEn) {
 			// 简英
-			return ChineseSimpleEnglish
-		} else if strings.Contains(subLang, MatchLangJp) {
+			return common.ChineseSimpleEnglish
+		} else if strings.Contains(subLang, common.MatchLangJp) {
 			// 简日
-			return ChineseSimpleJapanese
-		} else if strings.Contains(subLang, MatchLangKr) {
+			return common.ChineseSimpleJapanese
+		} else if strings.Contains(subLang, common.MatchLangKr) {
 			// 简韩
-			return ChineseSimpleKorean
+			return common.ChineseSimpleKorean
 		}
 		// 默认简体中文
-		return ChineseSimple
-	} else if strings.Contains(subLang, MatchLangCht) {
+		return common.ChineseSimple
+	} else if strings.Contains(subLang, common.MatchLangCht) {
 		// 然后是繁体
-		if strings.Contains(subLang, MatchLangEn) {
+		if strings.Contains(subLang, common.MatchLangEn) {
 			// 繁英
-			return ChineseTraditionalEnglish
-		} else if strings.Contains(subLang, MatchLangJp) {
+			return common.ChineseTraditionalEnglish
+		} else if strings.Contains(subLang, common.MatchLangJp) {
 			// 繁日
-			return ChineseTraditionalJapanese
-		} else if strings.Contains(subLang, MatchLangKr) {
+			return common.ChineseTraditionalJapanese
+		} else if strings.Contains(subLang, common.MatchLangKr) {
 			// 繁韩
-			return ChineseTraditionalKorean
+			return common.ChineseTraditionalKorean
 		}
 		// 默认繁体中文
-		return ChineseTraditional
-	} else if strings.Contains(subLang, MatchLangEn) {
+		return common.ChineseTraditional
+	} else if strings.Contains(subLang, common.MatchLangEn) {
 		// 英文
-		return English
-	} else if strings.Contains(subLang, MatchLangJp) {
+		return common.English
+	} else if strings.Contains(subLang, common.MatchLangJp) {
 		// 日文
-		return Japanese
-	} else if strings.Contains(subLang, MatchLangKr) {
+		return common.Japanese
+	} else if strings.Contains(subLang, common.MatchLangKr) {
 		// 韩文
-		return Korean
+		return common.Korean
 	} else {
 		// 都没有，则标记未知
-		return Unknow
+		return common.Unknow
 	}
 }
 
 // HasChineseLang 是否包含中文
-func HasChineseLang(lan Language) bool {
+func HasChineseLang(lan common.Language) bool {
 	switch lan {
-	case ChineseSimple,
-	ChineseTraditional,
+	case common.ChineseSimple,
+		common.ChineseTraditional,
 
-	ChineseSimpleEnglish,
-	ChineseTraditionalEnglish,
+		common.ChineseSimpleEnglish,
+		common.ChineseTraditionalEnglish,
 
-	ChineseSimpleJapanese,
-	ChineseTraditionalJapanese,
+		common.ChineseSimpleJapanese,
+		common.ChineseTraditionalJapanese,
 
-	ChineseSimpleKorean,
-	ChineseTraditionalKorean:
+		common.ChineseSimpleKorean,
+		common.ChineseTraditionalKorean:
 		return true
 	default:
 		return false
@@ -116,7 +117,7 @@ func DetectSubLangAndStatistics(lines []string, langDict map[int]int) {
 }
 
 // SubLangStatistics2SubLangType 由分析的信息转换为具体是什么字幕的语言类型
-func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map[int]int) Language {
+func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map[int]int) common.Language {
 	const basePer = 0.8
 	// 是否是双语？
 	isDouble := false
@@ -140,23 +141,23 @@ func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map
 		// 首先得在外面统计就知道是双语
 		if hasChinese && hasEnglish {
 			// 简体	英文
-			return ChineseSimpleEnglish
+			return common.ChineseSimpleEnglish
 		} else if hasChinese && hasJapanese {
 			// 简体 日文
-			return ChineseSimpleJapanese
+			return common.ChineseSimpleJapanese
 		} else if hasChinese && hasKorean {
 			// 简体 韩文
-			return ChineseSimpleKorean
+			return common.ChineseSimpleKorean
 		} else if hasChinese {
-			return ChineseSimple
+			return common.ChineseSimple
 		} else if hasEnglish {
-			return English
+			return common.English
 		} else if hasJapanese {
-			return Japanese
+			return common.Japanese
 		} else if hasKorean {
-			return Korean
+			return common.Korean
 		} else {
-			return Unknow
+			return common.Unknow
 		}
 	} else {
 		// 如果比例达不到，那么就是单语言，所以最多的那个就是当前的语言
@@ -165,56 +166,56 @@ func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map
 			// 那么起码要占比 80% 对吧
 			perLines = float32(countChinese) / AllLines
 			if perLines > basePer {
-				return ChineseSimple
+				return common.ChineseSimple
 			}
 		}
 		if hasEnglish {
 			// 那么起码要占比 80% 对吧
 			perLines = float32(countEnglish) / AllLines
 			if perLines > basePer {
-				return English
+				return common.English
 			}
 		}
 		if hasJapanese {
 			// 那么起码要占比 80% 对吧
 			perLines = float32(countJapanese) / AllLines
 			if perLines > basePer {
-				return Japanese
+				return common.Japanese
 			}
 		}
 		if hasKorean {
 			// 那么起码要占比 80% 对吧
 			perLines = float32(countKorean) / AllLines
 			if perLines > basePer {
-				return Korean
+				return common.Korean
 			}
 		}
 
-		return Unknow
+		return common.Unknow
 	}
 
 }
 
 // IsChineseSimpleOrTraditional 从字幕的文件名称中尝试确认是简体还是繁体，不需要判断双语问题，有额外的解析器完成。只可能出现 ChineseSimple ChineseTraditional Unknow 三种情况
-func IsChineseSimpleOrTraditional(inputFileName string, orgLang Language) Language {
+func IsChineseSimpleOrTraditional(inputFileName string, orgLang common.Language) common.Language {
 
-	if strings.Contains(inputFileName, SubNameKeywordChineseSimple) || strings.Contains(inputFileName, MatchLangChs) {
+	if strings.Contains(inputFileName, common.SubNameKeywordChineseSimple) || strings.Contains(inputFileName, common.MatchLangChs) {
 		// 简体中文关键词的匹配
 		return orgLang
-	} else if strings.Contains(inputFileName, SubNameKeywordTraditional) || strings.Contains(inputFileName, MatchLangCht) {
+	} else if strings.Contains(inputFileName, common.SubNameKeywordTraditional) || strings.Contains(inputFileName, common.MatchLangCht) {
 		// 繁体中文关键词的匹配
-		if orgLang == ChineseSimple {
+		if orgLang == common.ChineseSimple {
 			// 简体 -> 繁体
-			return ChineseTraditional
-		} else if orgLang == ChineseSimpleEnglish {
+			return common.ChineseTraditional
+		} else if orgLang == common.ChineseSimpleEnglish {
 			// 简体英文 -> 繁体英文
-			return ChineseTraditionalEnglish
-		} else if orgLang == ChineseSimpleJapanese {
+			return common.ChineseTraditionalEnglish
+		} else if orgLang == common.ChineseSimpleJapanese {
 			// 简体日文 -> 繁体日文
-			return ChineseTraditionalJapanese
-		} else if orgLang == ChineseSimpleKorean {
+			return common.ChineseTraditionalJapanese
+		} else if orgLang == common.ChineseSimpleKorean {
 			// 简体韩文 -> 繁体韩文
-			return ChineseTraditionalKorean
+			return common.ChineseTraditionalKorean
 		}
 		// 进来了都不是，那么就返回原来的语言
 		return orgLang
@@ -224,68 +225,4 @@ func IsChineseSimpleOrTraditional(inputFileName string, orgLang Language) Langua
 	}
 }
 
-const (
-	SubNameKeywordChineseSimple = "chs"
-	SubNameKeywordTraditional	 = "cht"
-)
 
-// Language 语言类型，注意，这里默认还是查找的是中文字幕，只不过下载的时候可能附带了其他的
-type Language int
-const (
-	Unknow	Language = iota				// 未知语言
-	ChineseSimple    					// 简体中文
-	ChineseTraditional					// 繁体中文
-	ChineseSimpleEnglish				// 简英双语字幕
-	ChineseTraditionalEnglish			// 繁英双语字幕
-	English								// 英文
-	Japanese							// 日语
-	ChineseSimpleJapanese				// 简日双语字幕
-	ChineseTraditionalJapanese			// 繁日双语字幕
-	Korean								// 韩语
-	ChineseSimpleKorean					// 简韩双语字幕
-	ChineseTraditionalKorean			// 繁韩双语字幕
-)
-
-const (
-	MathLangChnUnknow = "未知语言"
-	MatchLangChs      = "简"
-	MatchLangCht      = "繁"
-	MatchLangChsEn    = "简英"
-	MatchLangChtEn    = "繁英"
-	MatchLangEn       = "英"
-	MatchLangJp       = "日"
-	MatchLangChsJp    = "简日"
-	MatchLangChtJp    = "繁日"
-	MatchLangKr       = "韩"
-	MatchLangChsKr    = "简韩"
-	MatchLangChtKr    = "繁韩"
-)
-
-func (l Language) String() string {
-	switch l {
-	case ChineseSimple:
-		return MatchLangChs
-	case ChineseTraditional:
-		return MatchLangCht
-	case ChineseSimpleEnglish:
-		return MatchLangChsEn
-	case ChineseTraditionalEnglish:
-		return MatchLangChtEn
-	case English:
-		return MatchLangEn
-	case Japanese:
-		return MatchLangJp
-	case ChineseSimpleJapanese:
-		return MatchLangChsJp
-	case ChineseTraditionalJapanese:
-		return MatchLangChtJp
-	case Korean:
-		return MatchLangKr
-	case ChineseSimpleKorean:
-		return MatchLangChsKr
-	case ChineseTraditionalKorean:
-		return MatchLangChtKr
-	default:
-		return MathLangChnUnknow
-	}
-}

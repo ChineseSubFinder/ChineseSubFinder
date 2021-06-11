@@ -1,7 +1,8 @@
-package marking_system
+package mark_system
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/common"
+	"github.com/allanpk716/ChineseSubFinder/model"
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/srt"
 	"github.com/sirupsen/logrus"
@@ -14,8 +15,8 @@ type MarkingSystem struct {
 }
 
 func NewMarkingSystem(subSiteSequence []string) *MarkingSystem {
-	mk :=MarkingSystem{subSiteSequence: subSiteSequence,
-		log: common.GetLogger()}
+	mk := MarkingSystem{subSiteSequence: subSiteSequence,
+		log: model.GetLogger()}
 	return &mk
 }
 
@@ -26,7 +27,7 @@ func (m MarkingSystem) SelectOneSubFile(organizeSubFiles []string) *common.SubPa
 	var subInfoDict = make(map[string][]common.SubParserFileInfo)
 	// 拿到现有的字幕列表，开始抉择
 	// 先判断当前字幕是什么语言（如果是简体，还需要考虑，判断这个字幕是简体还是繁体）
-	subParserHub := common.NewSubParserHub(ass.NewParser(), srt.NewParser())
+	subParserHub := model.NewSubParserHub(ass.NewParser(), srt.NewParser())
 	for _, oneSubFileFullPath := range organizeSubFiles {
 		subFileInfo, err := subParserHub.DetermineFileTypeFromFile(oneSubFileFullPath)
 		if err != nil {
@@ -53,7 +54,7 @@ func (m MarkingSystem) SelectOneSubFile(organizeSubFiles []string) *common.SubPa
 		if ok == true {
 			for _, info := range value {
 				// 找到了中文字幕
-				if common.HasChineseLang(info.Lang) == true {
+				if model.HasChineseLang(info.Lang) == true {
 					finalSubFile = info
 					return &finalSubFile
 				}
