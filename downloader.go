@@ -131,17 +131,11 @@ func (d Downloader) DownloadSub(dir string) error {
 
 func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile common.SubParserFileInfo) error {
 	videoRootPath := filepath.Dir(videoFileFullPath)
-	// 需要符合 emby 的格式要求，在后缀名前面
-	const emby_zh = ".zh"
-	const emby_en = ".en"
-	//TODO 日文 韩文 emby 字幕格式要求，瞎猜的，有需要再改（目标应该是中文字幕查找，所以···应该不需要）
-	const emby_jp = ".jp"
-	const emby_kr = ".kr"
 	lan := ""
 	if model.HasChineseLang(finalSubFile.Lang) == true {
-		lan = emby_zh
+		lan = common.Emby_zh
 	} else if finalSubFile.Lang == common.English {
-		lan = emby_en
+		lan = common.Emby_en
 	}
 	// 构建视频文件加 emby 的字幕预研要求名称
 	videoFileNameWithOutExt := strings.ReplaceAll(filepath.Base(videoFileFullPath),
