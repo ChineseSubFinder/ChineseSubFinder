@@ -3,6 +3,11 @@
 本项目的初衷仅仅是想自动化搞定限定条件下中文字幕下载。
 
 > 开发中，会制作 Docker 镜像挂机用
+>
+> 开发中的效果，可以尝试运行以下几个测试用例
+>
+> * [downloader_test.go](https://github.com/allanpk716/ChineseSubFinder/blob/master/downloader_test.go)
+> * [subParserHub_test.go](https://github.com/allanpk716/ChineseSubFinder/blob/master/subParserHub_test.go)
 
 ## Why？
 
