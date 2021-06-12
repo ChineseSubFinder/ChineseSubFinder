@@ -54,11 +54,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	imdbId, err := model.GetImdbId(fileRootDirPath)
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
-		if err == common.CanNotFindIMDBID {
-			s.log.Error(err)
-		} else {
-			return nil, err
-		}
+		s.log.Error(err)
 	}
 
 	var subInfoList []common.SupplierSubInfo
@@ -67,7 +63,8 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 		// 先用 imdb id 找
 		subInfoList, err = s.GetSubListFromKeyword(imdbId)
 		if err != nil {
-			return nil, err
+			// 允许的错误，跳过，继续进行文件名的搜索
+			s.log.Error(err)
 		}
 		// 如果有就优先返回
 		if len(subInfoList) >0 {
@@ -146,7 +143,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	return outSubInfoList, nil
 }
 
-// Step0 先在查询界面找到字幕对应第一个影片的详情界面
+// Step0 先在查询界面找到字幕对应第一个影片的详情界面，需要解决自定义错误 ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound
 func (s Supplier) Step0(keyword string) (string, error) {
 	httpClient := model.NewHttpClient(s.reqParam)
 	// 第一级界面，有多少个字幕
@@ -254,7 +251,7 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 	return subResult, nil
 }
 
-// Step2 第二级界面，单个字幕详情
+// Step2 第二级界面，单个字幕详情，需要判断 ZiMuKuDownloadUrlStep2NotFound 这个自定义错误
 func (s Supplier) Step2(subInfo *SubInfo) error {
 
 	detailUrl := model.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.DetailUrl)
@@ -279,7 +276,7 @@ func (s Supplier) Step2(subInfo *SubInfo) error {
 	return nil
 }
 
-// Step3 第三级界面，具体字幕下载
+// Step3 第三级界面，具体字幕下载 ZiMuKuDownloadUrlStep3NotFound ZiMuKuDownloadUrlStep3AllFailed
 func (s Supplier) Step3(subDownloadPageUrl string) (string, []byte, error) {
 
 	subDownloadPageUrl = model.AddBaseUrl(common.SubZiMuKuRootUrl, subDownloadPageUrl)

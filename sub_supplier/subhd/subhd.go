@@ -64,11 +64,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	imdbId, err := model.GetImdbId(fileRootDirPath)
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
-		if err == common.CanNotFindIMDBID {
-			s.log.Error(err)
-		} else {
-			return nil, err
-		}
+		s.log.Error(err)
 	}
 
 	var subInfoList []common.SupplierSubInfo
@@ -77,7 +73,8 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 		// 先用 imdb id 找
 		subInfoList, err = s.GetSubListFromKeyword(imdbId)
 		if err != nil {
-			return nil, err
+			// 允许的错误，跳过，继续进行文件名的搜索
+			s.log.Error(err)
 		}
 		// 如果有就优先返回
 		if len(subInfoList) >0 {
@@ -169,9 +166,9 @@ func (s Supplier) Step1(detailPageUrl string) ([]HdListItem, error) {
 	}
 	var lists []HdListItem
 
-	const subTableKeyword = ".table-sm tr"
-	const oneSubTrTitleKeyword = "a.text-dark"
-	const oneSubTrDownloadCountKeyword = "td.p-3"
+	const subTableKeyword = ".pt-2"
+	const oneSubTrTitleKeyword = "a.link-dark"
+	const oneSubTrDownloadCountKeyword = "div.px-3"
 	const oneSubLangAndTypeKetword = ".text-secondary"
 
 	doc.Find(subTableKeyword).EachWithBreak(func(i int, tr *goquery.Selection) bool {
@@ -212,64 +209,6 @@ func (s Supplier) Step1(detailPageUrl string) ([]HdListItem, error) {
 	})
 
 	return lists, nil
-}
-// Step2 下载字幕，没用了，弃了
-func (s Supplier) Step2(subDownloadPageUrl string) (*HdContent, error) {
-	subDownloadPageUrl = model.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
-	result, err := s.httpGet(subDownloadPageUrl)
-	if err != nil {
-		return nil, err
-	}
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(result))
-	if err != nil {
-		return nil, err
-	}
-	// 是否有腾讯的防水墙
-	matchList := doc.Find("#TencentCaptcha")
-	if len(matchList.Nodes) < 1 {
-		s.log.Debug("find fang shui qiang")
-	}
-	//matchList = doc.Find("#down")
-	//if len(matchList.Nodes) < 1 {
-	//	println("not found down")
-	//}
-	postData := make(map[string]string)
-	sid, exists := matchList.Attr("sid")
-	if !exists {
-		return nil, common.SubHDStep2SidIsNull
-	}
-	postData["sub_id"] = sid
-	dToken, exists := matchList.Attr("dtoken1")
-	if !exists {
-		return nil, common.SubHDStep2DTokenIsNull
-	}
-	postData["dtoken1"] = dToken
-	url2 := fmt.Sprintf("%s%s", common.SubSubHDRootUrl, "/ajax/down_ajax")
-	result, err = s.httpPost(url2, postData, subDownloadPageUrl)
-	if err != nil {
-		return nil, err
-	}
-	if result == "" || strings.Contains(result, "true") == false {
-		return nil, common.SubHDStep2ResultIsNullOrNotTrue
-	}
-	reg := regexp.MustCompile(`"url":"([^"]+)"`)
-	arr := reg.FindStringSubmatch(result)
-	if len(arr) == 0 {
-		return nil, common.SubHDStep2PostResultGetUrlNotFound
-	}
-	downUrl := arr[1]
-	downUrl = strings.ReplaceAll(downUrl, "\\", "")
-	var filename = filepath.Base(downUrl)
-	var data []byte
-	data, filename, err = model.DownFile(downUrl, s.reqParam)
-	if err != nil {
-		return nil, err
-	}
-	return &HdContent{
-		Filename: filename,
-		Ext:      strings.ToLower(filepath.Ext(filename)),
-		Data:     data,
-	}, nil
 }
 
 // Step2Ex 下载字幕 过防水墙

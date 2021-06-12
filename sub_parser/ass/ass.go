@@ -16,6 +16,10 @@ func NewParser() *Parser {
 	return &Parser{}
 }
 
+func (p Parser) GetParserName() string {
+	return "ass"
+}
+
 // DetermineFileTypeFromFile 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
 func (p Parser) DetermineFileTypeFromFile(filePath string) (*common.SubParserFileInfo, error) {
 	nowExt := filepath.Ext(filePath)
@@ -26,7 +30,11 @@ func (p Parser) DetermineFileTypeFromFile(filePath string) (*common.SubParserFil
 	if err != nil {
 		return nil ,err
 	}
-	return p.DetermineFileTypeFromBytes(fBytes, nowExt)
+	inBytes, err := model.ChangeFileCoding2UTF8(fBytes)
+	if err != nil {
+		return nil, err
+	}
+	return p.DetermineFileTypeFromBytes(inBytes, nowExt)
 }
 
 // DetermineFileTypeFromBytes 确定字幕文件的类型，是双语字幕或者某一种语言等等信息

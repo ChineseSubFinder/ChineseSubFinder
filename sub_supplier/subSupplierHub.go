@@ -5,7 +5,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/interface"
 	"github.com/allanpk716/ChineseSubFinder/model"
 	"github.com/go-rod/rod/lib/utils"
-	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -124,7 +123,7 @@ func (d SubSupplierHub) organizeDlSubFiles(subInfos []common.SupplierSubInfo) ([
 			// 那么就是需要解压的文件了
 			// 解压，给一个单独的文件夹
 			unzipTmpFolder := path.Join(tmpFolderFullPath, subInfo.FromWhere)
-			err = archiver.Unarchive(nowFileSaveFullPath, unzipTmpFolder)
+			err = model.UnArchiveFile(nowFileSaveFullPath, unzipTmpFolder)
 			// 解压完成后，遍历受支持的字幕列表，加入缓存列表
 			if err != nil {
 				d.log.Errorln("archiver.Unarchive", subInfo.FromWhere, subInfo.Name, subInfo.TopN, err)

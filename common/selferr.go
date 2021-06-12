@@ -10,7 +10,6 @@ var(
 	ShooterFileHashIsEmpty = errors.New("filehash is empty")
 
 	ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound = errors.New("zimuku search keyword step0 not found, detail page url")
-	ZiMuKuSearchKeyWordStep1NotFound = errors.New("zimuku search keyword step1 not found")
 	ZiMuKuDownloadUrlStep2NotFound = errors.New("zimuku download url step2 not found")
 	ZiMuKuDownloadUrlStep3NotFound = errors.New("zimuku download url step3 not found")
 	ZiMuKuDownloadUrlStep3AllFailed = errors.New("zimuku download url step3 all failed")

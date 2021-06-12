@@ -147,6 +147,7 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	if err != nil {
 		return err
 	}
+	d.log.Infoln("OrgSubName:", finalSubFile.Name)
 	d.log.Infoln("SubDownAt:", desSubFullPath)
 	return nil
 }

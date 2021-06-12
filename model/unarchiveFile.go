@@ -4,23 +4,24 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"bytes"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
+	"io/ioutil"
+
 	"compress/flate"
 	"errors"
-	"fmt"
 	"github.com/gen2brain/go-unarr"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/mholt/archiver/v3"
-	"github.com/saintfish/chardet"
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/transform"
 	"io"
-	"io/ioutil"
 	"path"
 	"path/filepath"
 	"strings"
 	"unicode/utf8"
 )
 
+// UnArchiveFile 7z 以外的都能搞定中文编码的问题，但是 7z 有梗，需要单独的库去解析，且编码是解决不了的，以后他们搞定了再测试
+// 所以效果就是，7z 外的压缩包文件解压ok，字幕可以正常从名称解析出是简体还是繁体，但是7z就没办法了，一定乱码
 func UnArchiveFile(fileFullPath, desRootPath string) error {
 	switch filepath.Ext(strings.ToLower(fileFullPath)) {
 	case ".zip":
@@ -38,13 +39,6 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 			}
 			zfh, ok := f.Header.(zip.FileHeader)
 			if ok {
-				isUTF8 := utf8.Valid([]byte(zfh.Name))
-				if isUTF8 != zfh.NonUTF8 {
-					println("the same")
-				} else {
-					println("not the same")
-				}
-
 				err := processOneFile(f, zfh.NonUTF8, desRootPath)
 				if err != nil {
 					return err
@@ -55,7 +49,6 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 		if err != nil {
 			return err
 		}
-
 	case ".tar":
 		z := archiver.Tar{
 			MkdirAll:               true,
@@ -102,6 +95,8 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 		if err != nil {
 			return err
 		}
+	case ".7z":
+		return unArr7z(fileFullPath, desRootPath)
 	default:
 		return errors.New("not support un archive file ext")
 	}
@@ -110,21 +105,18 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 }
 
 func processOneFile(f archiver.File, notUTF8 bool, desRootPath string) error {
-	detector := chardet.NewTextDetector()
 	decodeName := f.Name()
-	result, err := detector.DetectBest([]byte(decodeName))
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Detected charset is %s, language is %s",
-		result.Charset,
-		result.Language)
-
 	if notUTF8 == true {
+
+		//ouBytes, err := ChangeFileCoding2UTF8([]byte(f.Name()))
+		//if err != nil {
+		//	return err
+		//}
 		i := bytes.NewReader([]byte(f.Name()))
 		decoder := transform.NewReader(i, simplifiedchinese.GB18030.NewDecoder())
 		content, _ := ioutil.ReadAll(decoder)
 		decodeName = string(content)
+		//decodeName = string(ouBytes)
 	}
 	var chunk []byte
 	buf := make([]byte, 1024)
@@ -140,14 +132,14 @@ func processOneFile(f archiver.File, notUTF8 bool, desRootPath string) error {
 		//读取到最终的缓冲区中
 		chunk = append(chunk, buf[:n]...)
 	}
-	err = utils.OutputFile(path.Join(desRootPath, decodeName), chunk)
+	err := utils.OutputFile(path.Join(desRootPath, decodeName), chunk)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func UnArr(fileFullPath, desRootPath string) error {
+func unArr7z(fileFullPath, desRootPath string) error {
 	a, err := unarr.NewArchive(fileFullPath)
 	if err != nil {
 		return err

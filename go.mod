@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/abadojack/whatlanggo v1.0.1
+	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
 	github.com/beevik/etree v1.1.0
 	github.com/gen2brain/go-unarr v0.1.1
 	github.com/go-resty/resty/v2 v2.6.0

@@ -28,7 +28,7 @@ func TestUnArr(t *testing.T) {
 	file := "C:\\Tmp\\123.zip"
 	//file := "C:\\Tmp\\Tmp.7z"
 	//file := "C:\\Tmp\\[zimuku]_0_[zmk.pw]奥斯陆.Oslo.[WEB.1080P]中英文字幕.zip"
-	err := UnArr(file, desRoot)
+	err := unArr7z(file, desRoot)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -3,6 +3,8 @@ package model
 import (
 	"github.com/abadojack/whatlanggo"
 	"github.com/allanpk716/ChineseSubFinder/common"
+	"github.com/axgle/mahonia"
+	"github.com/saintfish/chardet"
 	"strings"
 )
 
@@ -225,4 +227,27 @@ func IsChineseSimpleOrTraditional(inputFileName string, orgLang common.Language)
 	}
 }
 
+// ConvertToString 将字符串从原始编码转换到目标编码，需要配合字符串检测编码库使用 chardet.NewTextDetector()
+func ConvertToString(src string, srcCode string, tagCode string) string {
+	srcCoder := mahonia.NewDecoder(srcCode)
+	srcResult := srcCoder.ConvertString(src)
+	tagCoder := mahonia.NewDecoder(tagCode)
+	_, cdata, _ := tagCoder.Translate([]byte(srcResult), true)
+	result := string(cdata)
+	return result
+}
 
+// ChangeFileCoding2UTF8 自动检测文件的编码，然后转换到 UTF-8
+func ChangeFileCoding2UTF8(inBytes []byte) ([]byte, error) {
+	detector := chardet.NewTextDetector()
+	result, err := detector.DetectBest(inBytes)
+	if err != nil {
+		return nil ,err
+	}
+	ouBytes := inBytes
+	if result.Charset != "UTF-8" {
+		ouString := ConvertToString(string(inBytes), result.Charset, "UTF-8")
+		ouBytes = []byte(ouString)
+	}
+	return ouBytes, nil
+}
