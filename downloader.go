@@ -98,7 +98,7 @@ func (d Downloader) DownloadSub(dir string) error {
 		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
 		organizeSubFiles, err := subSupplierHub.DownloadSub(oneVideoFullPath, i)
 		if err != nil {
-			d.log.Errorln("oneVideoFullPath", "Download Sub Error",err)
+			d.log.Errorln(oneVideoFullPath, "DownloadSub",err)
 			continue
 		}
 		// 得到目标视频文件的根目录
@@ -108,7 +108,7 @@ func (d Downloader) DownloadSub(dir string) error {
 		if d.reqParam.DebugMode == true {
 			err = d.copySubFile2DesFolder(videoRootPath, organizeSubFiles)
 			if err != nil {
-				d.log.Errorln(err)
+				d.log.Errorln("copySubFile2DesFolder", err)
 			}
 		}
 		// -------------------------------------------------

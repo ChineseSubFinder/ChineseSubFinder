@@ -54,7 +54,7 @@ func (d SubSupplierHub) downloadSub4OneVideo(oneVideoFullPath string, i int) []c
 		go func() {
 			subInfos, err := d.downloadSub4OneSite(oneVideoFullPath, i, supplier)
 			if err != nil {
-				d.log.Error(err)
+				d.log.Errorln("downloadSub4OneSite", err)
 			}
 			subInfosChannel <- subInfos
 		}()
@@ -109,7 +109,7 @@ func (d SubSupplierHub) organizeDlSubFiles(subInfos []common.SupplierSubInfo) ([
 		nowFileSaveFullPath := path.Join(tmpFolderFullPath, d.getFrontNameAndOrgName(subInfo))
 		err = utils.OutputFile(nowFileSaveFullPath, subInfo.Data)
 		if err != nil {
-			d.log.Errorln(subInfo.FromWhere, subInfo.Name, subInfo.TopN, err)
+			d.log.Errorln("getFrontNameAndOrgName - OutputFile",subInfo.FromWhere, subInfo.Name, subInfo.TopN, err)
 			continue
 		}
 		nowExt := strings.ToLower(subInfo.Ext)
@@ -127,13 +127,13 @@ func (d SubSupplierHub) organizeDlSubFiles(subInfos []common.SupplierSubInfo) ([
 			err = archiver.Unarchive(nowFileSaveFullPath, unzipTmpFolder)
 			// 解压完成后，遍历受支持的字幕列表，加入缓存列表
 			if err != nil {
-				d.log.Errorln(subInfo.FromWhere, subInfo.Name, subInfo.TopN, err)
+				d.log.Errorln("archiver.Unarchive", subInfo.FromWhere, subInfo.Name, subInfo.TopN, err)
 				continue
 			}
 			// 搜索这个目录下的所有符合字幕格式的文件
 			subFileFullPaths, err := d.searchMatchedSubFile(unzipTmpFolder)
 			if err != nil {
-				d.log.Errorln(subInfo.FromWhere, subInfo.Name, subInfo.TopN, err)
+				d.log.Errorln("searchMatchedSubFile", subInfo.FromWhere, subInfo.Name, subInfo.TopN, err)
 				continue
 			}
 			// 这里需要给这些下载到的文件进行改名，加是从那个网站来的前缀，后续好查找
@@ -143,7 +143,7 @@ func (d SubSupplierHub) organizeDlSubFiles(subInfos []common.SupplierSubInfo) ([
 				// 改名
 				err = os.Rename(fileFullPath, newSubNameFullPath)
 				if err != nil {
-					d.log.Errorln(subInfo.FromWhere, subInfo.Name, subInfo.TopN, err)
+					d.log.Errorln("os.Rename", subInfo.FromWhere, subInfo.Name, subInfo.TopN, err)
 					continue
 				}
 				// 加入缓存列表
