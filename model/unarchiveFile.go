@@ -1,7 +1,6 @@
 package model
 
 import (
-	"archive/tar"
 	"archive/zip"
 	"bytes"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -17,7 +16,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"unicode/utf8"
 )
 
 // UnArchiveFile 7z 以外的都能搞定中文编码的问题，但是 7z 有梗，需要单独的库去解析，且编码是解决不了的，以后他们搞定了再测试
@@ -61,13 +59,10 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 			if f.IsDir() == true {
 				return nil
 			}
-			zfh, ok := f.Header.(tar.Header)
-			if ok {
-				err := processOneFile(f, utf8.Valid([]byte(zfh.Name)), desRootPath)
-				if err != nil {
+			err := processOneFile(f, false, desRootPath)
+			if err != nil {
 					return err
 				}
-			}
 			return nil
 		})
 		if err != nil {
