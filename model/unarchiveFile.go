@@ -55,6 +55,7 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 			ContinueOnError:        false,
 			OverwriteExisting:      false,
 			ImplicitTopLevelFolder: false,
+			StripComponents: 1,
 		}
 		err := z.Walk(fileFullPath, func(f archiver.File) error {
 			if f.IsDir() == true {
@@ -78,18 +79,17 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 			ContinueOnError:        false,
 			OverwriteExisting:      false,
 			ImplicitTopLevelFolder: false,
+			StripComponents: 1,
 		}
 		err := z.Walk(fileFullPath, func(f archiver.File) error {
 			if f.IsDir() == true {
 				return nil
 			}
-			zfh, ok := f.Header.(tar.Header)
-			if ok {
-				err := processOneFile(f, utf8.Valid([]byte(zfh.Name)), desRootPath)
-				if err != nil {
-					return err
-				}
+			err := processOneFile(f, false, desRootPath)
+			if err != nil {
+				return err
 			}
+
 			return nil
 		})
 		if err != nil {
