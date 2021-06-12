@@ -123,6 +123,10 @@ func (d SubSupplierHub) organizeDlSubFiles(subInfos []common.SupplierSubInfo) ([
 			// 那么就是需要解压的文件了
 			// 解压，给一个单独的文件夹
 			unzipTmpFolder := path.Join(tmpFolderFullPath, subInfo.FromWhere)
+			err = os.MkdirAll(unzipTmpFolder, os.ModePerm)
+			if err != nil {
+				return nil, err
+			}
 			err = model.UnArchiveFile(nowFileSaveFullPath, unzipTmpFolder)
 			// 解压完成后，遍历受支持的字幕列表，加入缓存列表
 			if err != nil {

@@ -45,10 +45,11 @@ func NewDownloader(_reqParam ...common.ReqParam) *Downloader {
 	downloader.defExtList = append(downloader.defExtList, common.VideoExtIso)
 
 	var sitesSequence = make([]string, 0)
-	sitesSequence = append(sitesSequence, common.SubSiteShooter)
-	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
+	// TODO 这里写固定了抉择字幕的顺序
 	sitesSequence = append(sitesSequence, common.SubSiteZiMuKu)
+	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
 	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
+	sitesSequence = append(sitesSequence, common.SubSiteShooter)
 	downloader.mk = mark_system.NewMarkingSystem(sitesSequence)
 
 	if len(_reqParam) > 0 {
