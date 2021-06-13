@@ -76,6 +76,55 @@ func HasChineseLang(lan common.Language) bool {
 	}
 }
 
+// IsBilingualSubtitle 是否是双语字幕
+func IsBilingualSubtitle(lan common.Language) bool {
+	switch lan {
+	case common.ChineseSimpleEnglish,
+	common.ChineseTraditionalEnglish,
+
+	common.ChineseSimpleJapanese,
+	common.ChineseTraditionalJapanese,
+
+	common.ChineseSimpleKorean,
+	common.ChineseTraditionalKorean:
+		return true
+	default:
+		return false
+	}
+}
+
+// Lang2EmbyName 从语言转换到 Emby 能够识别的字幕命名
+func Lang2EmbyName(lan common.Language) string {
+	switch lan {
+	case common.Unknow:                     				// 未知语言
+		return common.Emby_unknow
+	case common.ChineseSimple:                              // 简体中文
+		return common.Emby_chs
+	case common.ChineseTraditional:                         // 繁体中文
+		return common.Emby_cht
+	case common.ChineseSimpleEnglish:                       // 简英双语字幕
+		return common.Emby_chs_en
+	case common.ChineseTraditionalEnglish:                  // 繁英双语字幕
+		return common.Emby_cht_en
+	case common.English:                                    // 英文
+		return common.Emby_en
+	case common.Japanese:                                   // 日语
+		return common.Emby_jp
+	case common.ChineseSimpleJapanese:                      // 简日双语字幕
+		return common.Emby_chs_jp
+	case common.ChineseTraditionalJapanese:                 // 繁日双语字幕
+		return common.Emby_cht_jp
+	case common.Korean:                                     // 韩语
+		return common.Emby_kr
+	case common.ChineseSimpleKorean:                        // 简韩双语字幕
+		return common.Emby_chs_kr
+	case common.ChineseTraditionalKorean:                   // 繁韩双语字幕
+		return common.Emby_cht_kr
+	default:
+		return common.Emby_unknow
+	}
+}
+
 // GetLangOptions 语言识别的 Options Whitelist
 func GetLangOptions() whatlanggo.Options {
 	return whatlanggo.Options{
@@ -250,4 +299,19 @@ func ChangeFileCoding2UTF8(inBytes []byte) ([]byte, error) {
 		ouBytes = []byte(ouString)
 	}
 	return ouBytes, nil
+}
+
+// FindChineseBestSubtitle 找到合适的中文字幕，优先简体双语，简体->繁体
+func FindChineseBestSubtitle(subs []common.SubParserFileInfo) *common.SubParserFileInfo {
+	for _, info := range subs {
+		// 找到了中文字幕
+		if HasChineseLang(info.Lang) == true {
+			// 优先双语
+			if IsBilingualSubtitle(info.Lang) == true {
+				return &info
+			}
+			return &info
+		}
+	}
+	return nil
 }

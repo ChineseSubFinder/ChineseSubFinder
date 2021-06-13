@@ -52,12 +52,10 @@ func (m MarkingSystem) SelectOneSubFile(organizeSubFiles []string) *common.SubPa
 	for _, subSite := range m.subSiteSequence {
 		value, ok := subInfoDict[subSite]
 		if ok == true {
-			for _, info := range value {
-				// 找到了中文字幕
-				if model.HasChineseLang(info.Lang) == true {
-					finalSubFile = info
-					return &finalSubFile
-				}
+			info := model.FindChineseBestSubtitle(value)
+			if info != nil {
+				finalSubFile = *info
+				return &finalSubFile
 			}
 		}
 	}

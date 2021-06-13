@@ -113,6 +113,7 @@ func (d Downloader) DownloadSub(dir string) error {
 			}
 		}
 		// -------------------------------------------------
+		// TODO 这里可以选择是保持一个字幕，还是把排名较高的几个都保存下来，这个得考虑字幕的命名问题
 		var finalSubFile *common.SubParserFileInfo
 		finalSubFile = d.mk.SelectOneSubFile(organizeSubFiles)
 		if finalSubFile == nil {
@@ -130,18 +131,14 @@ func (d Downloader) DownloadSub(dir string) error {
 	return nil
 }
 
+// 在前面需要进行语言的筛选、排序，这里仅仅是存储
 func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile common.SubParserFileInfo) error {
 	videoRootPath := filepath.Dir(videoFileFullPath)
-	lan := ""
-	if model.HasChineseLang(finalSubFile.Lang) == true {
-		lan = common.Emby_zh
-	} else if finalSubFile.Lang == common.English {
-		lan = common.Emby_en
-	}
+	embyLanExtName := model.Lang2EmbyName(finalSubFile.Lang)
 	// 构建视频文件加 emby 的字幕预研要求名称
 	videoFileNameWithOutExt := strings.ReplaceAll(filepath.Base(videoFileFullPath),
 		filepath.Ext(videoFileFullPath), "")
-	subNewName := videoFileNameWithOutExt + lan + finalSubFile.Ext
+	subNewName := videoFileNameWithOutExt + embyLanExtName + finalSubFile.Ext
 	desSubFullPath := path.Join(videoRootPath, subNewName)
 	// 最后写入字幕
 	err := utils.OutputFile(desSubFullPath, finalSubFile.Data)
