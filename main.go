@@ -47,8 +47,11 @@ func main() {
 	// 下载实例
 	downloader := NewDownloader(common.ReqParam{
 		HttpProxy: httpProxy,
-		SaveMultiSub: config.SaveMultiSub,
 		DebugMode: config.DebugMode,
+		SaveMultiSub: config.SaveMultiSub,
+		UserRemoteBrowser: config.UserRemoteBrowser,
+		RemoteBrowserDockerURL: config.RemoteBrowserDockerURL,
+		FoundExistSubFileThanSkip: config.FoundExistSubFileThanSkip,
 		})
 	//任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
@@ -77,7 +80,7 @@ func main() {
 
 	c.Start()
 
-	log.Infoln("Download Timer Started")
+	log.Infoln("Download Timer Started...")
 	// 阻塞
 	select {}
 }

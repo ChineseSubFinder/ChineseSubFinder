@@ -107,8 +107,13 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 		return nil, err
 	}
 
-	// TODO 后面如果用 docker 部署，需要允许改位远程 browser 启动
-	browser, err := model.NewBrowser(s.reqParam.HttpProxy)
+	var browser *rod.Browser
+	// 是用本地的 Browser 还是远程的，推荐是远程的
+	if s.reqParam.RemoteBrowserDockerURL != "" {
+		browser, err = model.NewBrowserFromDocker(s.reqParam.HttpProxy, s.reqParam.RemoteBrowserDockerURL)
+	} else {
+		browser, err = model.NewBrowser(s.reqParam.HttpProxy)
+	}
 	if err != nil {
 		return nil, err
 	}

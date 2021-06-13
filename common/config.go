@@ -7,4 +7,8 @@ type Config struct {
 	DebugMode bool
 	SaveMultiSub bool
 	MovieFolder string
+	UserRemoteBrowser bool
+	RemoteBrowserDockerURL string
+	FoundExistSubFileThanSkip bool
+
 }

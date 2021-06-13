@@ -48,10 +48,12 @@
 
 编写以下的配置文件，注意 docker-compose 文件需要与本程序的 config.yaml 配套，特别是 MovieFolder 这个。
 
+同时，为了解决 subhd 下载的问题（模拟浏览器点击做到的，具体看代码），使用了 go-rod，同时需要用他们的 rod-browser 这个镜像。
+
 ```yaml
 version: "3"
 services:
-  mikanarr:
+  chinesesubfinder:
     image: allanpk716/chinesesubfinder:latest
     volumes:
       - /volume1/docker/chinesesubfinder/config.yaml:/app/config.yaml
@@ -59,16 +61,32 @@ services:
     environment:
       TZ: Asia/Shanghai
     restart: unless-stopped
+  rod-browser:
+    image: rodorg/rod:latest
+    ports:
+      - 9222:9222
+    environment:
+      TZ: Asia/Shanghai
+    restart: unless-stopped
 ```
 
-然后把 config.yaml.sample 复制一份，重命名为 config.yaml，内容如下（每个配置啥意思见《配置文件解析》）：
+然后把 config.yaml.sample 复制一份，重命名为 config.yaml，内容如下（每个配置啥意思见《配置文件解析》）
+
+注意，RemoteBrowserDockerURL 这里就是上面 rod-browser 的地址，写你自己的。
 
 ```yaml
 UseProxy: false
 HttpProxy: http://127.0.0.1:10809
+
 EveryTime: 6h
 DebugMode: false
 SaveMultiSub: false
+
+UserRemoteBrowser: true
+RemoteBrowserDockerURL: ws://192.168.50.135:9222
+
+FoundExistSubFileThanSkip: true
+
 MovieFolder: /app/videofolder
 ```
 
@@ -83,9 +101,16 @@ MovieFolder: /app/videofolder
 ```yaml
 UseProxy: false
 HttpProxy: http://127.0.0.1:10809
+
 EveryTime: 6h
 DebugMode: false
 SaveMultiSub: false
+
+UserRemoteBrowser: true
+RemoteBrowserDockerURL: ws://192.168.50.135:9222
+
+FoundExistSubFileThanSkip: true
+
 MovieFolder: X:\电影
 ```
 
@@ -94,6 +119,9 @@ MovieFolder: X:\电影
 * EveryTime，，默认 6h。每隔多久触发一次下载逻辑。怎么用参考，[robfig/cron: a cron library for go (github.com)](https://github.com/robfig/cron)
 * DebugMode，默认 false。调试模式，会在每个视频的文件夹下，新建一个  subtmp 文件夹，把所有匹配到的字幕都缓存到这个目录，没啥事可以不开。开的话就可以让你手动选择一堆的字幕啦。
 * SaveMultiSub，默认值 false。true 会在每个视频下面保存每个网站找到的最佳字幕（见下面《如何手动刷新 emby 加载字幕》，会举例）。false ，那么每个视频下面就一个最优字幕。
+* UserRemoteBrowser，默认 false。是否使用远程的浏览器去爬取 subhd 的字幕。
+* RemoteBrowserDockerURL，远程 rod-browser 的 ws 地址
+* FoundExistSubFileThanSkip，默认 true。是否跳过已经下载过 sub 的视频。
 * MovieFolder，填写你的电影的目录（暂时只支持电影，后续会支持其他的类型）
 
 ### 如何手动刷新 emby 加载字幕

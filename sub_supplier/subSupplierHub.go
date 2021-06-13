@@ -33,11 +33,22 @@ func NewSubSupplierHub(one _interface.ISupplier,_inSupplier ..._interface.ISuppl
 }
 
 // DownloadSub 某一个视频的字幕下载，下载完毕后，返回下载缓存每个字幕的位置
-func (d SubSupplierHub) DownloadSub(videoFullPath string, index int) ([]string, error) {
+func (d SubSupplierHub) DownloadSub(videoFullPath string, index int, foundExistSubFileThanSkip bool) ([]string, error) {
 	// 先清理缓存文件夹
 	err := model.ClearTmpFolder()
 	if err != nil {
 		d.log.Error(err)
+	}
+
+	// 是否需要跳过有字幕文件的视频
+	if foundExistSubFileThanSkip == true {
+		found, err := d.videoHasSub(videoFullPath)
+		if err != nil {
+			return nil, err
+		}
+		if found == true {
+			return nil, nil
+		}
 	}
 	subInfos := d.downloadSub4OneVideo(videoFullPath, index)
 	organizeSubFiles, err := d.organizeDlSubFiles(subInfos)
@@ -201,6 +212,27 @@ func (d SubSupplierHub) getFrontNameAndOrgName(info common.SupplierSubInfo) stri
 // addFrontName 添加文件的前缀
 func (d SubSupplierHub) addFrontName(info common.SupplierSubInfo, orgName string) string {
 	return "[" + info.FromWhere + "]_" + strconv.FormatInt(info.TopN,10) + "_" + orgName
+}
+
+// videoHasSub 这个视频文件的目录下面有字幕文件了没有
+func (d SubSupplierHub) videoHasSub(videoFilePath string) (bool, error) {
+	dir := filepath.Dir(videoFilePath)
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return false, err
+	}
+	for _, curFile := range files {
+		if curFile.IsDir() {
+			continue
+		} else {
+			// 文件
+			if model.IsSubExtWanted(curFile.Name()) == true {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }
 
 
