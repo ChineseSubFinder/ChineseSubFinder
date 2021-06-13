@@ -1,14 +1,8 @@
 UseProxy: false
 HttpProxy: http://127.0.0.1:10809
-
 EveryTime: 6h
-
 DebugMode: false
 SaveMultiSub: false
-
-UserRemoteBrowser: true
-RemoteBrowserDockerURL: ws://192.168.50.135:9222
-
 FoundExistSubFileThanSkip: true
-
+UseUnderDocker: true
 MovieFolder: X:\电影

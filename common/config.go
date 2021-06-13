@@ -6,8 +6,8 @@ type Config struct {
 	EveryTime string
 	DebugMode bool
 	SaveMultiSub bool
-	MovieFolder string
-	UserRemoteBrowser bool
-	RemoteBrowserDockerURL string
 	FoundExistSubFileThanSkip bool
+	UseUnderDocker	bool	// 是否在 docker 下使用
+	MovieFolder string
+
 }
