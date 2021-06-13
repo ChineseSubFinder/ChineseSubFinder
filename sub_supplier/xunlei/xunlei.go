@@ -68,9 +68,11 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 			if len(tmpXunLeiSubListChinese) >= s.topic {
 				break
 			}
-			tmpLang := model.LangConverter(v.Language)
-			if model.HasChineseLang(tmpLang) == false {
-				tmpXunLeiSubListChinese = append(tmpXunLeiSubListChinese, v)
+			if len(v.Scid) > 0 && v.Scid != "" {
+				tmpLang := model.LangConverter(v.Language)
+				if model.HasChineseLang(tmpLang) == false {
+					tmpXunLeiSubListChinese = append(tmpXunLeiSubListChinese, v)
+				}
 			}
 		}
 	}
