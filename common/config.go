@@ -10,5 +10,4 @@ type Config struct {
 	UserRemoteBrowser bool
 	RemoteBrowserDockerURL string
 	FoundExistSubFileThanSkip bool
-
 }
