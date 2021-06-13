@@ -278,6 +278,11 @@ func IsChineseSimpleOrTraditional(inputFileName string, orgLang common.Language)
 
 // ConvertToString 将字符串从原始编码转换到目标编码，需要配合字符串检测编码库使用 chardet.NewTextDetector()
 func ConvertToString(src string, srcCode string, tagCode string) string {
+	defer func() {
+		if err := recover(); err != nil {
+			GetLogger().Errorln("ConvertToString panic:", err)
+		}
+	}()
 	srcCoder := mahonia.NewDecoder(srcCode)
 	srcResult := srcCoder.ConvertString(src)
 	tagCoder := mahonia.NewDecoder(tagCode)
