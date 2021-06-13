@@ -60,7 +60,6 @@ func (p SubParserHub) getFromWhereSite(filePath string) string {
 	return matched[1]
 }
 
-
 // IsSubTypeWanted 这里匹配的字幕的格式，不包含 Ext 的 . 小数点，注意，仅仅是包含关系
 func IsSubTypeWanted(subName string) bool {
 	nowLowerName := strings.ToLower(subName)

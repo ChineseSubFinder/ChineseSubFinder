@@ -34,6 +34,11 @@ func NewSubSupplierHub(one _interface.ISupplier,_inSupplier ..._interface.ISuppl
 
 // DownloadSub 某一个视频的字幕下载，下载完毕后，返回下载缓存每个字幕的位置
 func (d SubSupplierHub) DownloadSub(videoFullPath string, index int) ([]string, error) {
+	// 先清理缓存文件夹
+	err := model.ClearTmpFolder()
+	if err != nil {
+		d.log.Error(err)
+	}
 	subInfos := d.downloadSub4OneVideo(videoFullPath, index)
 	organizeSubFiles, err := d.organizeDlSubFiles(subInfos)
 	if err != nil {

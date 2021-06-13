@@ -32,7 +32,9 @@ func TestDownloader_DownloadSub(t *testing.T) {
 	//dirRoot := "X:\\电影\\Oslo (2021)"
 	dirRoot := "X:\\电影\\The Devil All the Time (2020)"
 
-	dl := NewDownloader(common.ReqParam{DebugMode: true})
+	dl := NewDownloader(common.ReqParam{
+		SaveMultiSub: true,
+	})
 	err = dl.DownloadSub(dirRoot)
 	if err != nil {
 		t.Fatal(err)

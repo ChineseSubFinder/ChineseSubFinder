@@ -99,7 +99,7 @@ func (d Downloader) DownloadSub(dir string) error {
 		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
 		organizeSubFiles, err := subSupplierHub.DownloadSub(oneVideoFullPath, i)
 		if err != nil {
-			d.log.Errorln(oneVideoFullPath, "DownloadSub",err)
+			d.log.Errorln("subSupplierHub.DownloadSub", oneVideoFullPath ,err)
 			continue
 		}
 		// 得到目标视频文件的根目录
@@ -113,18 +113,35 @@ func (d Downloader) DownloadSub(dir string) error {
 			}
 		}
 		// -------------------------------------------------
-		// TODO 这里可以选择是保持一个字幕，还是把排名较高的几个都保存下来，这个得考虑字幕的命名问题
-		var finalSubFile *common.SubParserFileInfo
-		finalSubFile = d.mk.SelectOneSubFile(organizeSubFiles)
-		if finalSubFile == nil {
-			d.log.Warnln("Found", len(organizeSubFiles), " subtitles but not one fit:", oneVideoFullPath)
-			continue
-		}
-		// 找到了，写入文件
-		err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile)
-		if err != nil {
-			d.log.Errorln("writeSubFile2VideoPath", err)
-			continue
+		if d.reqParam.SaveMultiSub == false {
+			// 选择最优的一个字幕
+			var finalSubFile *common.SubParserFileInfo
+			finalSubFile = d.mk.SelectOneSubFile(organizeSubFiles)
+			if finalSubFile == nil {
+				d.log.Warnln("Found", len(organizeSubFiles), " subtitles but not one fit:", oneVideoFullPath)
+				continue
+			}
+			// 找到了，写入文件
+			err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile, "")
+			if err != nil {
+				d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub ,"writeSubFile2VideoPath:", err)
+				continue
+			}
+		} else {
+			// 每个网站 Top1 的字幕
+			siteNames, finalSubFiles := d.mk.SelectEachSiteTop1SubFile(organizeSubFiles)
+			if len(siteNames) < 0 {
+				d.log.Warnln("SelectEachSiteTop1SubFile found none sub file")
+				continue
+			}
+
+			for i, file := range finalSubFiles {
+				err = d.writeSubFile2VideoPath(oneVideoFullPath, file, siteNames[i])
+				if err != nil {
+					d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub ,"writeSubFile2VideoPath:", err)
+					continue
+				}
+			}
 		}
 		// -----------------------------------------------------
 	}
@@ -132,13 +149,16 @@ func (d Downloader) DownloadSub(dir string) error {
 }
 
 // 在前面需要进行语言的筛选、排序，这里仅仅是存储
-func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile common.SubParserFileInfo) error {
+func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile common.SubParserFileInfo, extraSubPreName string) error {
 	videoRootPath := filepath.Dir(videoFileFullPath)
 	embyLanExtName := model.Lang2EmbyName(finalSubFile.Lang)
 	// 构建视频文件加 emby 的字幕预研要求名称
 	videoFileNameWithOutExt := strings.ReplaceAll(filepath.Base(videoFileFullPath),
 		filepath.Ext(videoFileFullPath), "")
-	subNewName := videoFileNameWithOutExt + embyLanExtName + finalSubFile.Ext
+	if extraSubPreName != "" {
+		extraSubPreName = "[" + extraSubPreName +"]"
+	}
+	subNewName := videoFileNameWithOutExt + embyLanExtName + extraSubPreName + finalSubFile.Ext
 	desSubFullPath := path.Join(videoRootPath, subNewName)
 	// 最后写入字幕
 	err := utils.OutputFile(desSubFullPath, finalSubFile.Data)
