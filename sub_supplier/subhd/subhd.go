@@ -26,7 +26,7 @@ type Supplier struct {
 	reqParam    common.ReqParam
 	log         *logrus.Logger
 	topic       int
-	rodlauncher *launcher.Launcher
+	rodLauncher *launcher.Launcher
 }
 
 func NewSupplier(_reqParam ...common.ReqParam) *Supplier {
@@ -45,6 +45,18 @@ func NewSupplier(_reqParam ...common.ReqParam) *Supplier {
 
 func (s Supplier) GetSupplierName() string {
 	return common.SubSiteSubHd
+}
+
+func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSubInfo, error){
+	return s.GetSubListFromFile(filePath)
+}
+
+func (s Supplier) GetSubListFromFile4Series(filePath string) ([]common.SupplierSubInfo, error) {
+
+}
+
+func (s Supplier) GetSubListFromFile4Anime(filePath string) ([]common.SupplierSubInfo, error){
+
 }
 
 func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {

@@ -35,7 +35,7 @@ func TestDownloader_DownloadSub(t *testing.T) {
 	dl := NewDownloader(common.ReqParam{
 		SaveMultiSub: true,
 	})
-	err = dl.DownloadSub(dirRoot)
+	err = dl.DownloadSub4Movie(dirRoot)
 	if err != nil {
 		t.Fatal(err)
 	}

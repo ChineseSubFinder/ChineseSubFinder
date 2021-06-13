@@ -58,9 +58,9 @@ func main() {
 	// 定时器
 	entryID, err := c.AddFunc("@every " + config.EveryTime, func() {
 		// 开始下载
-		err := downloader.DownloadSub(config.MovieFolder)
+		err := downloader.DownloadSub4Movie(config.MovieFolder)
 		if err != nil {
-			log.Errorln("DownloadSub", err)
+			log.Errorln("DownloadSub4Movie", err)
 			return
 		}
 	})
@@ -71,9 +71,9 @@ func main() {
 	log.Infoln("First Time Download Start")
 	// 立即触发第一次的更新
 	// 开始下载
-	err = downloader.DownloadSub(config.MovieFolder)
+	err = downloader.DownloadSub4Movie(config.MovieFolder)
 	if err != nil {
-		log.Errorln("DownloadSub", err)
+		log.Errorln("DownloadSub4Movie", err)
 		return
 	}
 	log.Infoln("First Time Download End")

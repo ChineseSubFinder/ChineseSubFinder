@@ -75,7 +75,7 @@ func (d Downloader) GetDefSupportExtList() []string {
 	return d.defExtList
 }
 
-func (d Downloader) DownloadSub(dir string) error {
+func (d Downloader) DownloadSub4Movie(dir string) error {
 	defer func() {
 		// 抉择完毕，需要清理缓存目录
 		err := model.ClearTmpFolder()
@@ -109,7 +109,7 @@ func (d Downloader) DownloadSub(dir string) error {
 		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
 		organizeSubFiles, err := subSupplierHub.DownloadSub(oneVideoFullPath, i, d.reqParam.FoundExistSubFileThanSkip)
 		if err != nil {
-			d.log.Errorln("subSupplierHub.DownloadSub", oneVideoFullPath ,err)
+			d.log.Errorln("subSupplierHub.DownloadSub4Movie", oneVideoFullPath ,err)
 			continue
 		}
 		// 得到目标视频文件的根目录
