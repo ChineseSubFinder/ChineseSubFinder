@@ -53,7 +53,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	}
 	// 剔除空的
 	for _, v := range jsonList.Sublist {
-		if len(v.Scid) > 0 {
+		if len(v.Scid) > 0 && v.Scid != "" {
 			// 符合中文语言的先加入列表
 			tmpLang := model.LangConverter(v.Language)
 			if model.HasChineseLang(tmpLang) == true && model.IsSubTypeWanted(v.Sname) == true {

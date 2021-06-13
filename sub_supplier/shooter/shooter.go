@@ -76,7 +76,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 
 			data, _, err := model.DownFile(file.Link)
 			if err != nil {
-				s.log.Error(err.Error())
+				s.log.Error(err)
 				continue
 			}
 			outSubInfoList = append(outSubInfoList, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, file.Link, 0, shooter.Delay, subExt, data))
