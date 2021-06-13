@@ -1,12 +1,6 @@
 # ChineseSubFinder
 
-本项目的初衷仅仅是想自动化搞定**限定条件**下中文字幕下载。
-
-> 开发中，会制作 Docker 镜像挂机用
->
-> 开发中的效果，可以尝试运行以下几个测试用例
->
-> * [downloader_test.go](https://github.com/allanpk716/ChineseSubFinder/blob/master/downloader_test.go)
+本项目的初衷仅仅是想自动化搞定**限定条件**下 **中文** 字幕下载。
 
 ## Why？
 
@@ -25,15 +19,41 @@
 * shooter
 * xunlei
 
+优先级：
+
+优先级别暂定 ：zimuku -> subhd -> xunlei -> shooter
+
+字幕格式没有优先级：暂时没打算实现
+
+字幕语言类型优先级：
+
+* 双语 -> 单语种
+* 简体 -> 繁体
+
+
 ## How to use
 
-注意，使用本程序前，强烈推荐使用 emby 或者 tinyMediaManager 对你的视频进行基础的削刮，整理好视频的命名。
-
-。。。待完成
+注意，使用本程序前，**强烈推荐**使用 emby 或者 tinyMediaManager 对你的视频进行基础的削刮，整理好视频的命名。
 
 ### 设置本程序的配置文件
 
-。。。待完成
+把 config.yaml.sample 复制一份，重命名为 config.yaml，内容如下：
+
+```yaml
+UseProxy: false
+HttpProxy: http://127.0.0.1:10809
+EveryTime: 6h
+DebugMode: false
+SaveMultiSub: false
+MovieFolder: X:\电影
+```
+
+* UseProxy，默认false。是否使用代理，需要配合 HttpProxy 设置
+* HttpProxy，默认 http://127.0.0.1:10809。http 代理这里不要留空，不适应就设置 UseProxy 为 false
+* EveryTime，，默认 6h。每隔多久触发一次下载逻辑。怎么用参考，[robfig/cron: a cron library for go (github.com)](https://github.com/robfig/cron)
+* DebugMode，默认 false。调试模式，会在每个视频的文件夹下，新建一个  subtmp 文件夹，把所有匹配到的字幕都缓存到这个目录，没啥事可以不开。开的话就可以让你手动选择一堆的字幕啦。
+* SaveMultiSub，默认值 false。true 会在每个视频下面保存每个网站找到的最佳字幕（见下面《如何手动刷新 emby 加载字幕》，会举例）。false ，那么每个视频下面就一个最优字幕。
+* MovieFolder，填写你的电影的目录（暂时只支持电影，后续会支持其他的类型）
 
 ### 如何手动刷新 emby 加载字幕
 
@@ -65,7 +85,7 @@
 
 * 完成初版自动下载
 
-  * 配置文件支持
+  * ~~配置文件支持~~
 * 编写使用教程
 * 字幕的风评（有些字幕太差了，需要进行过滤，考虑排除，字幕组，关键词，机翻，以及评分等条件
 * 加入 Web 设置界面

@@ -2,4 +2,5 @@ UseProxy: false
 HttpProxy: http://127.0.0.1:10809
 EveryTime: 6h
 DebugMode: false
+SaveMultiSub: false
 MovieFolder: X:\电影

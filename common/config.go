@@ -5,5 +5,6 @@ type Config struct {
 	HttpProxy string
 	EveryTime string
 	DebugMode bool
+	SaveMultiSub bool
 	MovieFolder string
 }
