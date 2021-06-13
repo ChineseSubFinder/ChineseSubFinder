@@ -55,7 +55,7 @@ services:
     image: allanpk716/chinesesubfinder:latest
     volumes:
       - /volume1/docker/chinesesubfinder/config.yaml:/app/config.yaml
-      - /volume1/Video/电影/机动战士高达 剧场版Ⅰ：高达站立在大地上 (1981):/app/videofolder
+      - /volume1/Video/电影:/app/videofolder
     environment:
       TZ: Asia/Shanghai
     restart: unless-stopped
@@ -74,7 +74,7 @@ MovieFolder: /app/videofolder
 
 ### 直接运行
 
-
+直接配置 config.xaml 就可以用啦
 
 ### 配置文件解析
 
