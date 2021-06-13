@@ -37,6 +37,13 @@ func main() {
 	if config.UseProxy == false {
 		httpProxy = ""
 	}
+	// 判断文件夹是否存在
+	if model.IsDir(config.MovieFolder) == false {
+		log.Errorln("MovieFolder not found")
+		return
+	}
+	log.Infoln("MovieFolder:", config.MovieFolder)
+
 	// 下载实例
 	downloader := NewDownloader(common.ReqParam{
 		HttpProxy: httpProxy,

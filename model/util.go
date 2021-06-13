@@ -164,6 +164,14 @@ func CopyFile(dstName, srcName string) (written int64, err error) {
 	return io.Copy(dst, src)
 }
 
+func IsDir(path string) bool {
+	s, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return s.IsDir()
+}
+
 var (
 	defDebugFolder = ""
 	defTmpFolder = ""

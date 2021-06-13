@@ -21,7 +21,14 @@
 
 ### 优先级
 
-优先级别暂定 ：zimuku -> subhd -> xunlei -> shooter
+网站字幕优先级别暂定 ：zimuku -> subhd -> xunlei -> shooter
+
+### 支持的视频格式
+
+* mp4
+* mkv
+* rmvb
+* iso
 
 ### 字幕格式优先级
 
@@ -37,7 +44,39 @@
 
 注意，使用本程序前，**强烈推荐**使用 emby 或者 tinyMediaManager 对你的视频进行基础的削刮，整理好视频的命名。
 
-### 设置本程序的配置文件
+### 使用 docker-compose 部署
+
+编写以下的配置文件，注意 docker-compose 文件需要与本程序的 config.yaml 配套，特别是 MovieFolder 这个。
+
+```yaml
+version: "3"
+services:
+  mikanarr:
+    image: allanpk716/chinesesubfinder:latest
+    volumes:
+      - /volume1/docker/chinesesubfinder/config.yaml:/app/config.yaml
+      - /volume1/Video/电影/机动战士高达 剧场版Ⅰ：高达站立在大地上 (1981):/app/videofolder
+    environment:
+      TZ: Asia/Shanghai
+    restart: unless-stopped
+```
+
+然后把 config.yaml.sample 复制一份，重命名为 config.yaml，内容如下（每个配置啥意思见《配置文件解析》）：
+
+```yaml
+UseProxy: false
+HttpProxy: http://127.0.0.1:10809
+EveryTime: 6h
+DebugMode: false
+SaveMultiSub: false
+MovieFolder: /app/videofolder
+```
+
+### 直接运行
+
+
+
+### 配置文件解析
 
 把 config.yaml.sample 复制一份，重命名为 config.yaml，内容如下：
 
@@ -82,6 +121,10 @@ MovieFolder: X:\电影
 直接播放影片，点击 “CC” 这个按钮是不是看到对应的字幕列表了。
 
 ![04](DesignFile/pics/04.png)
+
+## 版本
+
+* 完成初版，仅仅支持电影的字幕下载 -- 2021年6月13日
 
 ## TODO
 
