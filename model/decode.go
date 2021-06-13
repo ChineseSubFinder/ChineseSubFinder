@@ -36,6 +36,9 @@ func getImdbNfo(nfoFilePath string) (string, error) {
 	for _, t := range doc.FindElements("//uniqueid[@type='imdb']") {
 		return t.Text(), nil
 	}
+	for _, t := range doc.FindElements("//uniqueid[@type='IMDB']") {
+		return t.Text(), nil
+	}
 
 	return "", common.CanNotFindIMDBID
 }
