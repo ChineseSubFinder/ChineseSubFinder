@@ -47,6 +47,7 @@ func (d SubSupplierHub) DownloadSub(videoFullPath string, index int, foundExistS
 			return nil, err
 		}
 		if found == true {
+			d.log.Infoln("Skip", videoFullPath, "Sub Download, because sub file found")
 			return nil, nil
 		}
 	}
