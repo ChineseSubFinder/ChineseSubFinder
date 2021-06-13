@@ -1,6 +1,5 @@
 UseProxy: false
 HttpProxy: http://127.0.0.1:10809
-EveryTime: 30m
+EveryTime: 6h
 DebugMode: false
-Movie:
-  - X:\电影\The Devil All the Time (2020)
+MovieFolder: X:\电影

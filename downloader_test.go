@@ -1,4 +1,4 @@
-package ChineseSubFinder
+package main
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/common"
