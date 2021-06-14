@@ -89,19 +89,11 @@ func (d Downloader) DownloadSub(dir string) error {
 	}
 	// 构建每个字幕站点下载者的实例
 	var subSupplierHub *sub_supplier.SubSupplierHub
-	// 因为在 docker 下 rod 的模拟浏览器点击无效，所以···
-	if d.reqParam.UseUnderDocker == true {
-		subSupplierHub = sub_supplier.NewSubSupplierHub(shooter.NewSupplier(d.reqParam),
-			xunlei.NewSupplier(d.reqParam),
-			zimuku.NewSupplier(d.reqParam),
-		)
-	} else {
-		subSupplierHub = sub_supplier.NewSubSupplierHub(shooter.NewSupplier(d.reqParam),
-			subhd.NewSupplier(d.reqParam),
-			xunlei.NewSupplier(d.reqParam),
-			zimuku.NewSupplier(d.reqParam),
-		)
-	}
+	subSupplierHub = sub_supplier.NewSubSupplierHub(shooter.NewSupplier(d.reqParam),
+		subhd.NewSupplier(d.reqParam),
+		xunlei.NewSupplier(d.reqParam),
+		zimuku.NewSupplier(d.reqParam),
+	)
 
 	// TODO 后续再改为每个视频以上的流程都是一个 channel 来做，并且需要控制在一个并发量之下（很可能没必要，毕竟要在弱鸡机器上挂机用的）
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个

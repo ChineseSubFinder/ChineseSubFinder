@@ -7,7 +7,5 @@ type Config struct {
 	DebugMode bool
 	SaveMultiSub bool
 	FoundExistSubFileThanSkip bool
-	UseUnderDocker	bool	// 是否在 docker 下使用
 	MovieFolder string
-
 }
