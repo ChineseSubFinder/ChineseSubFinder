@@ -12,6 +12,11 @@
 
 ## 功能
 
+### 支持的部署方式
+
+* docker，见 How to use
+* Windows，需要去 Release 下载，见 How to use
+
 ### 支持的视频分类
 
 |  类型  | 是否支持 |                  备注                   |
@@ -25,7 +30,7 @@
 ### 支持的字幕下载站点
 
 * zimuku
-* subhd （注意，docker 下无法下载，原因看下面）
+* subhd
 * shooter
 * xunlei
 
@@ -56,8 +61,6 @@
 
 ### 使用 docker-compose 部署
 
-> 尝试后发现，目前无法用 docker 中的 browser 去模拟点击操作，所以，docker 部署，无法支持 subhd 的字幕下载
-
 编写以下的配置文件，注意 docker-compose 文件需要与本程序的 config.yaml 配套，特别是 MovieFolder 这个。
 
 ```yaml
@@ -82,17 +85,10 @@ EveryTime: 6h
 DebugMode: false
 SaveMultiSub: false
 FoundExistSubFileThanSkip: true
-UseUnderDocker: true
 MovieFolder: /app/videofolder
 ```
 
 ### 有图形界面的操作系统下直接运行
-
-> 注意，如果你是在 Windows（类似 Llinux MAC OS 有图形化界面的系统）上使用
->
-> 那么是可以支持在 subhd 的字幕下载的
->
-> 那么 config.yaml 中的 UseUnderDocker可以设置为 fasle
 
 举例，在 Windows 下运行。
 
@@ -103,7 +99,6 @@ EveryTime: 6h
 DebugMode: false
 SaveMultiSub: false
 FoundExistSubFileThanSkip: true
-UseUnderDocker: false
 MovieFolder: X:\电影
 ```
 
@@ -118,7 +113,6 @@ EveryTime: 6h
 DebugMode: false
 SaveMultiSub: false
 FoundExistSubFileThanSkip: true
-UseUnderDocker: true
 MovieFolder: X:\电影
 ```
 
@@ -128,7 +122,6 @@ MovieFolder: X:\电影
 * DebugMode，默认 false。调试模式，会在每个视频的文件夹下，新建一个  subtmp 文件夹，把所有匹配到的字幕都缓存到这个目录，没啥事可以不开。开的话就可以让你手动选择一堆的字幕啦。
 * SaveMultiSub，默认值 false。true 会在每个视频下面保存每个网站找到的最佳字幕（见下面《如何手动刷新 emby 加载字幕》，会举例）。false ，那么每个视频下面就一个最优字幕。
 * FoundExistSubFileThanSkip，默认 true。是否跳过已经下载过 sub 的视频。
-* UseUnderDocker，默认值 true。如果是 ture，那么就不行启用 subhd 的下载（原因见《使用 docker-compose 部署》）
 * MovieFolder，填写你的电影的目录（暂时只支持电影，后续会支持其他的类型）
 
 ### 如何手动刷新 emby 加载字幕
@@ -159,6 +152,7 @@ MovieFolder: X:\电影
 
 ## 版本
 
+* v0.2.0 docker 版本支持 subhd 的下载了，镜像体积也变大了 -- 2021年6月14日
 * 完成初版，仅仅支持电影的字幕下载 -- 2021年6月13日
 
 ## TODO

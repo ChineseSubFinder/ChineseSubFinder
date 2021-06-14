@@ -4,5 +4,4 @@ EveryTime: 6h
 DebugMode: false
 SaveMultiSub: false
 FoundExistSubFileThanSkip: true
-UseUnderDocker: true
 MovieFolder: X:\电影
