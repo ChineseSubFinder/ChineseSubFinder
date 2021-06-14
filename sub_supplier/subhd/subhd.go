@@ -81,22 +81,11 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 		// 允许的错误，跳过，继续进行文件名的搜索
 		s.log.Errorln("model.GetImdbIdAndYear", err)
 	}
-	iYear, err := strconv.Atoi(year)
-	if err != nil {
-		// 允许的错误
-		s.log.Errorln("GetImdbIdAndYear", "year to int",err)
-		iYear = 0
-	}
-
 	var subInfoList []common.SupplierSubInfo
 
 	if imdbId != "" {
-		searchKeyword := imdbId
-		if iYear >= 2020 {
-			searchKeyword = searchKeyword + year
-		}
 		// 先用 imdb id 找
-		subInfoList, err = s.GetSubListFromKeyword(searchKeyword)
+		subInfoList, err = s.GetSubListFromKeyword(imdbId)
 		if err != nil {
 			// 允许的错误，跳过，继续进行文件名的搜索
 			s.log.Errorln("GetSubListFromKeyword", "IMDBID can not found sub", filePath, err)
@@ -106,9 +95,9 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 			return subInfoList, nil
 		}
 	}
-
 	// 如果没有，那么就用文件名查找
-	subInfoList, err = s.GetSubListFromKeyword(info.Title)
+	searchKeyword := model.VideoNameSearchKeywordMaker(info.Title, year)
+	subInfoList, err = s.GetSubListFromKeyword(searchKeyword)
 	if err != nil {
 		return nil, err
 	}

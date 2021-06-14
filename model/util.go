@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -170,6 +171,21 @@ func IsDir(path string) bool {
 		return false
 	}
 	return s.IsDir()
+}
+
+func VideoNameSearchKeywordMaker(title string, year string) string {
+	iYear, err := strconv.Atoi(year)
+	if err != nil {
+		// 允许的错误
+		GetLogger().Errorln("VideoNameSearchKeywordMaker", "year to int", err)
+		iYear = 0
+	}
+	searchKeyword := title
+	if iYear >= 2020 {
+		searchKeyword = searchKeyword + year
+	}
+
+	return searchKeyword
 }
 
 var (
