@@ -51,12 +51,12 @@ func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSu
 	return s.GetSubListFromFile(filePath)
 }
 
-func (s Supplier) GetSubListFromFile4Series(filePath string) ([]common.SupplierSubInfo, error) {
-
+func (s Supplier) GetSubListFromFile4Series(seriesPath string) ([]common.SupplierSubInfo, error) {
+	panic("not implemented")
 }
 
-func (s Supplier) GetSubListFromFile4Anime(filePath string) ([]common.SupplierSubInfo, error){
-
+func (s Supplier) GetSubListFromFile4Anime(animePath string) ([]common.SupplierSubInfo, error){
+	panic("not implemented")
 }
 
 func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
@@ -122,10 +122,10 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	var browser *rod.Browser
 	// 是用本地的 Browser 还是远程的，推荐是远程的
 	//if s.reqParam.RemoteBrowserDockerURL != "" {
-	//	browser, err = model.NewBrowserFromDocker(s.reqParam.HttpProxy, s.reqParam.RemoteBrowserDockerURL)
+		browser, err = model.NewBrowserFromDocker(s.reqParam.HttpProxy, "ws://192.168.50.135:9222")
 	//} else {
-	browser, err = model.NewBrowser(s.reqParam.HttpProxy)
-	//}
+	//browser, err = model.NewBrowser(s.reqParam.HttpProxy)
+	////}
 	if err != nil {
 		return nil, err
 	}
