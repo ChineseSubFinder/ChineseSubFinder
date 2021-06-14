@@ -18,6 +18,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -73,20 +74,32 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	}
 	// 找到这个视频文件，然后读取它目录下的文件，尝试得到 IMDB ID
 	fileRootDirPath := filepath.Dir(filePath)
-	imdbId, err := model.GetImdbId(fileRootDirPath)
+	// 目前测试来看，加入 年 这个关键词去搜索，对 2020 年后的影片有利，因为网站有统一的详细页面了，而之前的，没有，会影响识别
+	// 所以，year >= 2020 年，则可以多加一个关键词（年）去搜索影片
+	imdbId, year, err := model.GetImdbIdAndYear(fileRootDirPath)
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
-		s.log.Error(err)
+		s.log.Errorln("model.GetImdbIdAndYear", err)
+	}
+	iYear, err := strconv.Atoi(year)
+	if err != nil {
+		// 允许的错误
+		s.log.Errorln("GetImdbIdAndYear", "year to int",err)
+		iYear = 0
 	}
 
 	var subInfoList []common.SupplierSubInfo
 
 	if imdbId != "" {
+		searchKeyword := imdbId
+		if iYear >= 2020 {
+			searchKeyword = searchKeyword + year
+		}
 		// 先用 imdb id 找
-		subInfoList, err = s.GetSubListFromKeyword(imdbId)
+		subInfoList, err = s.GetSubListFromKeyword(searchKeyword)
 		if err != nil {
 			// 允许的错误，跳过，继续进行文件名的搜索
-			s.log.Error(err)
+			s.log.Errorln("GetSubListFromKeyword", "IMDBID can not found sub", filePath, err)
 		}
 		// 如果有就优先返回
 		if len(subInfoList) >0 {

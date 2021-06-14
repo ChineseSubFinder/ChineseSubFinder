@@ -4,64 +4,45 @@ import (
 	"testing"
 )
 
-func TestGet_IMDB_Id(t *testing.T) {
-	type args struct {
-		dirPth string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
-	}{
-		{name: "have", args: args{dirPth: "x:\\电影\\Army of the Dead (2021)"}, want: "tt0993840", wantErr: false},
-		{name: "want error", args: args{dirPth: "x:\\电影\\"}, want: "", wantErr: true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetImdbId(tt.args.dirPth)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetImdbId() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("GetImdbId() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_GetIMDB_ID(t *testing.T)  {
 
 	serPath := "X:\\连续剧\\The Bad Batch"
-	id, err := GetImdbId(serPath)
+	id, year, err := GetImdbIdAndYear(serPath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	println(id)
+	println(id, year)
 }
 
 func Test_get_IMDB_movie_xml(t *testing.T) {
-    want := "tt0993840"
+    wantid := "tt0993840"
+    wantyear:= "2021"
 	dirPth := "x:\\电影\\Army of the Dead (2021)\\movie.xml"
-	got, err := getImdbMovieXml(dirPth)
+	id, year, err := getImdbAndYearMovieXml(dirPth)
 	if err != nil {
 		t.Error(err)
 	}
-	if got != want {
-		t.Errorf("Test_get_IMDB_movie_xml() got = %v, want %v", got, want)
+	if id != wantid {
+		t.Errorf("Test_get_IMDB_movie_xml() got = %v, want %v", id, wantid)
+	}
+	if year != wantyear {
+		t.Errorf("Test_get_IMDB_movie_xml() got = %v, want %v", year, wantyear)
 	}
 }
 
 func Test_get_IMDB_nfo(t *testing.T) {
-	want := "tt0993840"
+	wantid := "tt0993840"
+	wantyear:= "2021"
 	dirPth := "X:\\电影\\Army of the Dead (2021)\\Army of the Dead (2021) WEBDL-1080p.nfo"
-	got, err := getImdbNfo(dirPth)
+	id, year, err := getImdbAndYearNfo(dirPth)
 	if err != nil {
 		t.Error(err)
 	}
-	if got != want {
-		t.Errorf("Test_get_IMDB_movie_xml() got = %v, want %v", got, want)
+	if id != wantid {
+		t.Errorf("Test_get_IMDB_movie_xml() id = %v, wantid %v", id, wantid)
+	}
+	if year != wantyear {
+		t.Errorf("Test_get_IMDB_movie_xml() year = %v, wantyear %v", id, wantyear)
 	}
 }
 
