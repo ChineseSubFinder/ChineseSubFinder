@@ -11,12 +11,12 @@ import (
 func init() {
 	var err error
 	log = model.GetLogger()
-	configViper, err = InitConfigure()
+	configViper, err = model.InitConfigure()
 	if err != nil {
 		log.Errorln("InitConfigure", err)
 		return 
 	}
-	config, err = ReadConfig(configViper)
+	config, err = model.ReadConfig(configViper)
 	if err != nil {
 		log.Errorln("ReadConfig", err)
 		return 

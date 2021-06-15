@@ -13,9 +13,9 @@ import (
 	"strings"
 )
 
-func getImdbAndYearMovieXml(movieFilePath string) (common.ImdbInfo, error) {
+func getImdbAndYearMovieXml(movieFilePath string) (common.VideoInfo, error) {
 
-	videoInfo := common.ImdbInfo{}
+	videoInfo := common.VideoInfo{}
 	doc := etree.NewDocument()
 	if err := doc.ReadFromFile(movieFilePath); err != nil {
 		return videoInfo, err
@@ -34,9 +34,9 @@ func getImdbAndYearMovieXml(movieFilePath string) (common.ImdbInfo, error) {
 	return videoInfo, common.CanNotFindIMDBID
 }
 
-func getImdbAndYearNfo(nfoFilePath string) (common.ImdbInfo, error) {
-
-	imdbInfo := common.ImdbInfo{}
+func getImdbAndYearNfo(nfoFilePath string) (common.VideoInfo, error) {
+	// TODO 新增 TVDB ID 的读取
+	imdbInfo := common.VideoInfo{}
 	doc := etree.NewDocument()
 	// 这里会遇到一个梗，下面的关键词，可能是小写、大写、首字母大写
 	// 读取文件转换为全部的小写，然后在解析 xml ？ etree 在转换为小写后，某些类型的文件的内容会崩溃···
@@ -67,9 +67,9 @@ func getImdbAndYearNfo(nfoFilePath string) (common.ImdbInfo, error) {
 	return imdbInfo, common.CanNotFindIMDBID
 }
 
-func GetImdbInfo(dirPth string) (common.ImdbInfo, error) {
+func GetImdbInfo(dirPth string) (common.VideoInfo, error) {
 
-	imdbInfo := common.ImdbInfo{}
+	imdbInfo := common.VideoInfo{}
 	dir, err := ioutil.ReadDir(dirPth)
 	if err != nil {
 		return imdbInfo, err

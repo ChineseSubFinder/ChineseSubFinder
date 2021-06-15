@@ -1,4 +1,4 @@
-package main
+package model
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/common"

@@ -1,7 +1,8 @@
 package common
 
-type ImdbInfo struct {
+type VideoInfo struct {
 	ImdbId string
+	TVdbId string
 	Year string
 	Title string
 	OriginalTitle string

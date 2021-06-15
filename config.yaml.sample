@@ -5,3 +5,4 @@ DebugMode: false
 SaveMultiSub: false
 FoundExistSubFileThanSkip: true
 MovieFolder: X:\电影
+TVdbApiKey: 123456
