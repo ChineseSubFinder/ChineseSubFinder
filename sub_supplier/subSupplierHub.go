@@ -40,6 +40,7 @@ func (d SubSupplierHub) DownloadSub(videoFullPath string, index int, foundExistS
 		d.log.Error(err)
 	}
 
+	// TODO 这里可以考虑改为，要么就是视频内封有字幕（得研究下怎么判断） 。要么，就是在视频上线（影片上映时间，电影院时间 or DVD 时间，资源能够下载的时间？）后的多少天内都进行字幕的自动下载，替换原有的字幕
 	// 是否需要跳过有字幕文件的视频
 	if foundExistSubFileThanSkip == true {
 		found, err := d.videoHasSub(videoFullPath)
