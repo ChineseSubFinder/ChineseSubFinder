@@ -18,7 +18,6 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -68,7 +67,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 		如果找不到，再靠文件名提取影片名称去查找
 	*/
 	// 得到这个视频文件名中的信息
-	info, err := model.GetVideoInfo(filePath)
+	info, err := model.GetVideoInfoFromFileName(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -76,16 +75,16 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	fileRootDirPath := filepath.Dir(filePath)
 	// 目前测试来看，加入 年 这个关键词去搜索，对 2020 年后的影片有利，因为网站有统一的详细页面了，而之前的，没有，会影响识别
 	// 所以，year >= 2020 年，则可以多加一个关键词（年）去搜索影片
-	imdbId, year, err := model.GetImdbIdAndYear(fileRootDirPath)
+	imdbInfo, err := model.GetImdbInfo(fileRootDirPath)
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
-		s.log.Errorln("model.GetImdbIdAndYear", err)
+		s.log.Errorln("model.GetImdbInfo", err)
 	}
 	var subInfoList []common.SupplierSubInfo
 
-	if imdbId != "" {
+	if imdbInfo.ImdbId != "" {
 		// 先用 imdb id 找
-		subInfoList, err = s.GetSubListFromKeyword(imdbId)
+		subInfoList, err = s.GetSubListFromKeyword(imdbInfo.ImdbId)
 		if err != nil {
 			// 允许的错误，跳过，继续进行文件名的搜索
 			s.log.Errorln("GetSubListFromKeyword", "IMDBID can not found sub", filePath, err)
@@ -96,7 +95,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 		}
 	}
 	// 如果没有，那么就用文件名查找
-	searchKeyword := model.VideoNameSearchKeywordMaker(info.Title, year)
+	searchKeyword := model.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
 	subInfoList, err = s.GetSubListFromKeyword(searchKeyword)
 	if err != nil {
 		return nil, err
@@ -284,9 +283,9 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWater
 		wait := browser.WaitDownload(tmpDir)
 		getDownloadFile:= func() ([]byte, string, error) {
 			info := wait()
-			path := filepath.Join(tmpDir, info.GUID)
-			defer func() { _ = os.Remove(path) }()
-			b, err := ioutil.ReadFile(path)
+			downloadPath := filepath.Join(tmpDir, info.GUID)
+			defer func() { _ = os.Remove(downloadPath) }()
+			b, err := ioutil.ReadFile(downloadPath)
 			if err != nil {
 				return nil, "", err
 			}
@@ -346,19 +345,19 @@ func (s Supplier) passWaterWall(page *rod.Page)  {
 	bgbox := shape.Box()
 	height, width := uint(math.Round(bgbox.Height)), uint(math.Round(bgbox.Width))
 	//裁剪圖像
-	shadowbg_img, _ := jpeg.Decode(bytes.NewReader(shadowbg))
-	shadowbg_img = resize.Resize(width, height, shadowbg_img, resize.Lanczos3)
-	fullbg_img, _ := jpeg.Decode(bytes.NewReader(fullbg))
-	fullbg_img = resize.Resize(width, height, fullbg_img, resize.Lanczos3)
+	shadowbgImg, _ := jpeg.Decode(bytes.NewReader(shadowbg))
+	shadowbgImg = resize.Resize(width, height, shadowbgImg, resize.Lanczos3)
+	fullbgImg, _ := jpeg.Decode(bytes.NewReader(fullbg))
+	fullbgImg = resize.Resize(width, height, fullbgImg, resize.Lanczos3)
 
 	//啓始left，排除干擾部份，所以右移10個像素
-	left := fullbg_img.Bounds().Min.X + 10
+	left := fullbgImg.Bounds().Min.X + 10
 	//啓始top, 排除干擾部份, 所以下移10個像素
-	top := fullbg_img.Bounds().Min.Y + 10
+	top := fullbgImg.Bounds().Min.Y + 10
 	//最大left, 排除干擾部份, 所以左移10個像素
-	maxleft := fullbg_img.Bounds().Max.X - 10
+	maxleft := fullbgImg.Bounds().Max.X - 10
 	//最大top, 排除干擾部份, 所以上移10個像素
-	maxtop := fullbg_img.Bounds().Max.Y - 10
+	maxtop := fullbgImg.Bounds().Max.Y - 10
 	//rgb比较阈值, 超出此阈值及代表找到缺口位置
 	threshold := 20
 	//缺口偏移, 拖動按鈕初始會偏移27.5
@@ -373,13 +372,13 @@ func (s Supplier) passWaterWall(page *rod.Page)  {
 search:
 	for i := left; i <= maxleft; i++ {
 		for j := top; j <= maxtop; j++ {
-			color_a_R, color_a_G, color_a_B, _ := fullbg_img.At(i, j).RGBA()
-			color_b_R, color_b_G, color_b_B, _ := shadowbg_img.At(i, j).RGBA()
-			color_a_R, color_a_G, color_a_B = color_a_R>>8, color_a_G>>8, color_a_B>>8
-			color_b_R, color_b_G, color_b_B = color_b_R>>8, color_b_G>>8, color_b_B>>8
-			if abs(int(color_a_R)-int(color_b_R)) > threshold ||
-				abs(int(color_a_G)-int(color_b_G)) > threshold ||
-				abs(int(color_a_B)-int(color_b_B)) > threshold {
+			colorAR, colorAG, colorAB, _ := fullbgImg.At(i, j).RGBA()
+			colorBR, colorBG, colorBB, _ := shadowbgImg.At(i, j).RGBA()
+			colorAR, colorAG, colorAB = colorAR>>8, colorAG>>8, colorAB>>8
+			colorBR, colorBG, colorBB = colorBR>>8, colorBG>>8, colorBB>>8
+			if abs(int(colorAR)-int(colorBR)) > threshold ||
+				abs(int(colorAG)-int(colorBG)) > threshold ||
+				abs(int(colorAB)-int(colorBB)) > threshold {
 				distance += float64(i)
 				s.log.Debug("對比完畢, 偏移量:", distance)
 				break search
@@ -387,15 +386,18 @@ search:
 		}
 	}
 	//獲取拖動按鈕形狀
-	dragbtnbox := iframe.MustElement("#tcaptcha_drag_thumb").MustShape().Box()
+	dragBtnBox := iframe.MustElement("#tcaptcha_drag_thumb").MustShape().Box()
 	//启用滑鼠功能
 	mouse := page.Mouse
 	//模擬滑鼠移動至拖動按鈕處, 右移3的原因: 拖動按鈕比滑塊圖大3個像素
-	mouse.MustMove(dragbtnbox.X+3, dragbtnbox.Y+(dragbtnbox.Height/2))
+	mouse.MustMove(dragBtnBox.X+3, dragBtnBox.Y+(dragBtnBox.Height/2))
 	//按下滑鼠左鍵
 	mouse.MustDown("left")
 	//開始拖動
-	mouse.Move(dragbtnbox.X+distance, dragbtnbox.Y+(dragbtnbox.Height/2), 20)
+	err = mouse.Move(dragBtnBox.X+distance, dragBtnBox.Y+(dragBtnBox.Height/2), 20)
+	if err != nil {
+		s.log.Errorln("mouse.Move", err)
+	}
 	//鬆開滑鼠左鍵, 拖动完毕
 	mouse.MustUp("left")
 
@@ -405,7 +407,7 @@ search:
 		if err == nil {
 			page.MustScreenshot(path.Join(nowProcessRoot, "result.png"))
 		} else {
-			s.log.Error(err)
+			s.log.Errorln("model.GetDebugFolder", err)
 		}
 	}
 }

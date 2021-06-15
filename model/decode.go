@@ -13,64 +13,66 @@ import (
 	"strings"
 )
 
-func getImdbAndYearMovieXml(movieFilePath string) (string, string, error) {
+func getImdbAndYearMovieXml(movieFilePath string) (common.ImdbInfo, error) {
+
+	videoInfo := common.ImdbInfo{}
 	doc := etree.NewDocument()
 	if err := doc.ReadFromFile(movieFilePath); err != nil {
-		return "", "", err
+		return videoInfo, err
 	}
-	imdbId := ""
 	for _, t := range doc.FindElements("//IMDB") {
-		imdbId = t.Text()
+		videoInfo.ImdbId = t.Text()
 		break
 	}
-	year := ""
 	for _, t := range doc.FindElements("//ProductionYear") {
-		year = t.Text()
+		videoInfo.Year = t.Text()
 		break
 	}
-	if imdbId != "" {
-		return imdbId, year, nil
+	if videoInfo.ImdbId != "" {
+		return videoInfo, nil
 	}
-	return "", "", common.CanNotFindIMDBID
+	return videoInfo, common.CanNotFindIMDBID
 }
 
-func getImdbAndYearNfo(nfoFilePath string) (string, string, error) {
+func getImdbAndYearNfo(nfoFilePath string) (common.ImdbInfo, error) {
+
+	imdbInfo := common.ImdbInfo{}
 	doc := etree.NewDocument()
 	// 这里会遇到一个梗，下面的关键词，可能是小写、大写、首字母大写
 	// 读取文件转换为全部的小写，然后在解析 xml ？ etree 在转换为小写后，某些类型的文件的内容会崩溃···
 	// 所以这里很傻的方式解决
 	err := doc.ReadFromFile(nfoFilePath)
 	if err != nil {
-		return "", "", err
+		return imdbInfo, err
 	}
-	imdbId := ""
 	for _, t := range doc.FindElements("//uniqueid[@type='imdb']") {
-		imdbId = t.Text()
+		imdbInfo.ImdbId = t.Text()
 		break
 	}
 	for _, t := range doc.FindElements("//uniqueid[@type='Imdb']") {
-		imdbId = t.Text()
+		imdbInfo.ImdbId = t.Text()
 		break
 	}
 	for _, t := range doc.FindElements("//uniqueid[@type='IMDB']") {
-		imdbId = t.Text()
+		imdbInfo.ImdbId = t.Text()
 		break
 	}
-	year := ""
 	for _, t := range doc.FindElements("./movie/year") {
-		year = t.Text()
+		imdbInfo.Year = t.Text()
 		break
 	}
-	if imdbId != "" {
-		return imdbId, year, nil
+	if imdbInfo.ImdbId != "" {
+		return imdbInfo, nil
 	}
-	return "",  "", common.CanNotFindIMDBID
+	return imdbInfo, common.CanNotFindIMDBID
 }
 
-func GetImdbIdAndYear(dirPth string) (string, string, error) {
+func GetImdbInfo(dirPth string) (common.ImdbInfo, error) {
+
+	imdbInfo := common.ImdbInfo{}
 	dir, err := ioutil.ReadDir(dirPth)
 	if err != nil {
-		return "", "", err
+		return imdbInfo, err
 	}
 	pathSep := string(os.PathSeparator)
 	// 优先找 movie.xml 这个是 raddarr 下载的电影会存下来的，可以在 Metadata 设置 Emby
@@ -95,32 +97,32 @@ func GetImdbIdAndYear(dirPth string) (string, string, error) {
 	}
 	// 根据找到的开始解析
 	if movieFilePath == "" && nfoFilePath == "" {
-		return "", "", common.NoMetadataFile
+		return imdbInfo, common.NoMetadataFile
 	}
 
 	if movieFilePath != "" {
-		outId, outYear, err := getImdbAndYearMovieXml(movieFilePath)
+		imdbInfo, err = getImdbAndYearMovieXml(movieFilePath)
 		if err != nil {
 			GetLogger().Errorln("getImdbAndYearMovieXml error, move on:", err)
 		} else {
-			return outId, outYear, nil
+			return imdbInfo, nil
 		}
 	}
 
 	if nfoFilePath != "" {
-		outId, outYear, err := getImdbAndYearNfo(nfoFilePath)
+		imdbInfo, err = getImdbAndYearNfo(nfoFilePath)
 		if err != nil {
-			return "","", err
+			return imdbInfo, err
 		} else {
-			return outId, outYear, nil
+			return imdbInfo, nil
 		}
 	}
 
-	return "", "", common.CanNotFindIMDBID
+	return imdbInfo, common.CanNotFindIMDBID
 }
 
-//GetVideoInfo 从文件名推断视频文件的信息
-func GetVideoInfo(videoFileName string) (*PTN.TorrentInfo, error) {
+//GetVideoInfoFromFileName 从文件名推断视频文件的信息
+func GetVideoInfoFromFileName(videoFileName string) (*PTN.TorrentInfo, error) {
 
 	parse, err := PTN.Parse(filepath.Base(videoFileName))
 	if err != nil {

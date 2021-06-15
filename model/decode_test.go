@@ -7,26 +7,26 @@ import (
 func Test_GetIMDB_ID(t *testing.T)  {
 
 	serPath := "X:\\连续剧\\The Bad Batch"
-	id, year, err := GetImdbIdAndYear(serPath)
+	imdbInfo, err := GetImdbInfo(serPath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	println(id, year)
+	println(imdbInfo.ImdbId, imdbInfo.Year)
 }
 
 func Test_get_IMDB_movie_xml(t *testing.T) {
     wantid := "tt0993840"
     wantyear:= "2021"
 	dirPth := "x:\\电影\\Army of the Dead (2021)\\movie.xml"
-	id, year, err := getImdbAndYearMovieXml(dirPth)
+	imdbInfo, err := getImdbAndYearMovieXml(dirPth)
 	if err != nil {
 		t.Error(err)
 	}
-	if id != wantid {
-		t.Errorf("Test_get_IMDB_movie_xml() got = %v, want %v", id, wantid)
+	if imdbInfo.ImdbId != wantid {
+		t.Errorf("Test_get_IMDB_movie_xml() got = %v, want %v", imdbInfo.ImdbId, wantid)
 	}
-	if year != wantyear {
-		t.Errorf("Test_get_IMDB_movie_xml() got = %v, want %v", year, wantyear)
+	if imdbInfo.Year != wantyear {
+		t.Errorf("Test_get_IMDB_movie_xml() got = %v, want %v", imdbInfo.Year, wantyear)
 	}
 }
 
@@ -34,15 +34,15 @@ func Test_get_IMDB_nfo(t *testing.T) {
 	wantid := "tt0993840"
 	wantyear:= "2021"
 	dirPth := "X:\\电影\\Army of the Dead (2021)\\Army of the Dead (2021) WEBDL-1080p.nfo"
-	id, year, err := getImdbAndYearNfo(dirPth)
+	imdbInfo, err := getImdbAndYearNfo(dirPth)
 	if err != nil {
 		t.Error(err)
 	}
-	if id != wantid {
-		t.Errorf("Test_get_IMDB_movie_xml() id = %v, wantid %v", id, wantid)
+	if imdbInfo.ImdbId != wantid {
+		t.Errorf("Test_get_IMDB_movie_xml() id = %v, wantid %v", imdbInfo.ImdbId, wantid)
 	}
-	if year != wantyear {
-		t.Errorf("Test_get_IMDB_movie_xml() year = %v, wantyear %v", id, wantyear)
+	if imdbInfo.Year != wantyear {
+		t.Errorf("Test_get_IMDB_movie_xml() year = %v, wantyear %v", imdbInfo.Year, wantyear)
 	}
 }
 
@@ -56,7 +56,7 @@ func Test_VideoInfo(t *testing.T) {
 	//subTitle := "Spiral.From.the.Book.of.Saw.2021.1080p.WEBRip.x264-RARBG.chi.srt"
 	//subTitle := "Spiral.From.the.Book.of.Saw.2021.1080p.WEBRip.x264-RARBG.eng.srt"
 	subTitle := "东城梅尔 第一季第一集【YYeTs字幕组 简繁英双语字幕】Mare.of.Easttown.S01E01.Miss.Lady.Hawk.Herself.720p/1080p.AMZN.WEB-DL.DDP5.1.H.264-TEPES"
-	info, err := GetVideoInfo(subTitle)
+	info, err := GetVideoInfoFromFileName(subTitle)
 	if err != nil {
 		t.Error(err)
 	}
