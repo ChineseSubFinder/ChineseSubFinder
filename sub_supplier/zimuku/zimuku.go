@@ -3,8 +3,10 @@ package zimuku
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/model"
+	"github.com/allanpk716/ChineseSubFinder/series_helper"
 	"github.com/sirupsen/logrus"
 	"path/filepath"
 	"regexp"
@@ -44,15 +46,35 @@ func (s Supplier) GetSubListFromFile4Series(seriesPath string) ([]common.Supplie
 
 	/*
 		去网站搜索的时候，有个比较由意思的逻辑，有些剧集，哪怕只有一季，sonarr 也会给它命名为 Season 1
-		但是在 zimuku 搜索的时候，如果你加上 XXX 第一季 就搜索不出来
+		但是在 zimuku 搜索的时候，如果你加上 XXX 第一季 就搜索不出来，那么目前比较可行的办法是查询两次
+		第一次优先查询 XXX 第一季 ，如果返回的列表是空的，那么再查询 XXX
 	*/
-
-	subInfoList, err := s.GetSubListFromKeyword(seriesPath)
+	// 读取本地的视频和字幕信息
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(seriesPath)
 	if err != nil {
 		return nil, err
 	}
+	// 这里打算牺牲效率，提高代码的复用度，不然后续得维护一套电影的查询逻辑，一套剧集的查询逻辑
+	// 比如，其实可以搜索剧集名称，应该可以得到多个季的列表，然后分析再继续
+	// 现在粗暴点，直接一季搜索一次，跟电影的搜索一样，在首个影片就停止，然后继续往下
 
-	return subInfoList, nil
+	for value := range seriesInfo.SeasonDict {
+		// 第一级界面，找到影片的详情界面
+		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
+		filmDetailPageUrl, err := s.Step0(keyword)
+		if err != nil {
+			return nil, err
+		}
+		// 第二级界面，有多少个字幕
+		subResult, err := s.Step1(filmDetailPageUrl)
+		if err != nil {
+			return nil, err
+		}
+		println(subResult.SubInfos.Len())
+	}
+
+
+	return nil, nil
 }
 
 func (s Supplier) GetSubListFromFile4Anime(animePath string) ([]common.SupplierSubInfo, error){
@@ -206,6 +228,15 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 	}
 	var subResult SubResult
 	subResult.SubInfos = SubInfos{}
+
+	counterIndex := 3
+	// 先找到页面”下载“关键词是第几列，然后下面的下载量才能正确的解析。否则，电影是[3]，而在剧集中，因为多了字幕组的筛选，则为[4]
+	doc.Find("#subtb thead tr th").Each(func(i int, th *goquery.Selection) {
+		if th.Text() == "下载" {
+			counterIndex = i
+		}
+	})
+
 	doc.Find("#subtb tbody tr").Each(func(i int, tr *goquery.Selection) {
 		// 字幕下载页面地址
 		href, exists := tr.Find("a").Attr("href")
@@ -245,7 +276,7 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 		}
 		// 下载次数统计
 		downCountNub := 0
-		downCount := tr.Find("td").Eq(3).Text()
+		downCount := tr.Find("td").Eq(counterIndex).Text()
 		if strings.Contains(downCount, "万") {
 			fNumb, err := model.GetNumber2Float(downCount)
 			if err != nil {
@@ -261,6 +292,7 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 
 		var subInfo SubInfo
 		subResult.Title = title
+		subInfo.Name = title
 		subInfo.DetailUrl = href
 		subInfo.Ext = ext
 		subInfo.AuthorInfo = authorInfo
@@ -340,6 +372,7 @@ type SubResult struct {
 }
 
 type SubInfo struct {
+	Name				string	// 字幕的名称
 	Lang				string	// 语言
 	AuthorInfo			string	// 作者
 	Ext					string	// 后缀名

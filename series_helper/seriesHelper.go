@@ -1,4 +1,4 @@
-package main
+package series_helper
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/common"
@@ -30,6 +30,7 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 	seriesInfo.Year = imdbInfo.Year
 	seriesInfo.DirPath = seriesDir
 	seriesInfo.EpList = make([]common.EpisodeInfo, 0)
+	seriesInfo.SeasonDict = make(map[int]int)
 	// 搜索所有的视频
 	videoFiles, err := model.SearchMatchedVideoFile(seriesDir)
 	if err != nil {
@@ -106,6 +107,7 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 
 	for _, episodeInfo := range EpisodeDict {
 		seriesInfo.EpList = append(seriesInfo.EpList, episodeInfo)
+		seriesInfo.SeasonDict[episodeInfo.Season] = episodeInfo.Season
 	}
 
 	return &seriesInfo, nil

@@ -1,4 +1,4 @@
-package main
+package series_helper
 
 import (
 	"testing"
@@ -6,7 +6,9 @@ import (
 
 func TestReadSeriesInfoFromDir(t *testing.T) {
 
-	series := "X:\\连续剧\\Money.Heist"
+	series := "X:\\连续剧\\杀死伊芙 (2018)"
+	//series := "X:\\连续剧\\Money.Heist"
+
 	seriesInfo, err := ReadSeriesInfoFromDir(series)
 	if err != nil {
 		t.Fatal(err)

@@ -9,6 +9,7 @@ type SeriesInfo struct {
 	Year	   int
 	EpList	   []EpisodeInfo
 	DirPath    string
+	SeasonDict map[int]int
 }
 
 type EpisodeInfo struct {

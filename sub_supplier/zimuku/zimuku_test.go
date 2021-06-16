@@ -52,3 +52,17 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, len(sublist.Data))
 	}
 }
+
+func TestSupplier_GetSubListFromFile4Series1(t *testing.T) {
+
+	series := "X:\\连续剧\\杀死伊芙 (2018)"
+	//series := "X:\\连续剧\\Money.Heist"
+
+	s := NewSupplier()
+	file4Series, err := s.GetSubListFromFile4Series(series)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	println(file4Series)
+}
