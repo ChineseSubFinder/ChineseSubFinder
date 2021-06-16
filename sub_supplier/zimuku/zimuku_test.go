@@ -1,6 +1,7 @@
 package zimuku
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/series_helper"
 	"testing"
 )
 
@@ -42,8 +43,15 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 
 	//ser := "X:\\连续剧\\The Bad Batch"	// tt12708542
 	ser := "X:\\连续剧\\杀死伊芙 (2018)"	// tt12708542
+	//ser := "X:\\连续剧\\Money.Heist"
+
+	// 读取本地的视频和字幕信息
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(ser)
+	if err != nil {
+		t.Fatal(err)
+	}
 	s := NewSupplier()
-	outList, err := s.GetSubListFromFile4Series(ser)
+	outList, err := s.GetSubListFromFile4Series(seriesInfo)
 	if err != nil {
 		t.Error(err)
 	}
@@ -53,16 +61,3 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	}
 }
 
-func TestSupplier_GetSubListFromFile4Series1(t *testing.T) {
-
-	series := "X:\\连续剧\\杀死伊芙 (2018)"
-	//series := "X:\\连续剧\\Money.Heist"
-
-	s := NewSupplier()
-	file4Series, err := s.GetSubListFromFile4Series(series)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	println(file4Series)
-}

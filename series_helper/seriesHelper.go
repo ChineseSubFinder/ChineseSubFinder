@@ -44,7 +44,7 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 	SubDict := make(map[string][]common.SubInfo)
 	for _, subFile := range subFiles {
 
-		info, _, err := model.GetVideoInfoFromFileName(subFile)
+		info, _, err := model.GetVideoInfoFromFileFullPath(subFile)
 		if err != nil {
 			model.GetLogger().Errorln(err)
 			continue
@@ -74,7 +74,7 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 	EpisodeDict := make(map[string]common.EpisodeInfo)
 	for _, videoFile := range videoFiles {
 		// 正常来说，一集只有一个格式的视频，也就是 S01E01 只有一个，如果有多个则会只保存第一个
-		info, modifyTime, err := model.GetVideoInfoFromFileName(videoFile)
+		info, modifyTime, err := model.GetVideoInfoFromFileFullPath(videoFile)
 		if err != nil {
 			model.GetLogger().Errorln(err)
 			continue

@@ -6,7 +6,6 @@ import (
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/model"
-	"github.com/allanpk716/ChineseSubFinder/series_helper"
 	"github.com/sirupsen/logrus"
 	"path/filepath"
 	"regexp"
@@ -47,18 +46,13 @@ func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSu
 	return s.GetSubListFromFile(filePath)
 }
 
-func (s Supplier) GetSubListFromFile4Series(seriesPath string) ([]common.SupplierSubInfo, error) {
-
+func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error) {
+	var err error
 	/*
 		去网站搜索的时候，有个比较由意思的逻辑，有些剧集，哪怕只有一季，sonarr 也会给它命名为 Season 1
 		但是在 zimuku 搜索的时候，如果你加上 XXX 第一季 就搜索不出来，那么目前比较可行的办法是查询两次
 		第一次优先查询 XXX 第一季 ，如果返回的列表是空的，那么再查询 XXX
 	*/
-	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(seriesPath)
-	if err != nil {
-		return nil, err
-	}
 	// 这里打算牺牲效率，提高代码的复用度，不然后续得维护一套电影的查询逻辑，一套剧集的查询逻辑
 	// 比如，其实可以搜索剧集名称，应该可以得到多个季的列表，然后分析再继续
 	// 现在粗暴点，直接一季搜索一次，跟电影的搜索一样，在首个影片就停止，然后继续往下
@@ -88,13 +82,13 @@ func (s Supplier) GetSubListFromFile4Series(seriesPath string) ([]common.Supplie
 	// key SxEx - SubInfos
 	var allSubDict = make(map[string]SubInfos)
 	for _, subInfo := range AllSeasonSubResult.SubInfos {
-
-		info, _, err := model.GetVideoInfoFromFileName(subInfo.Name)
+		_, season, episode, err := model.GetSeasonAndEpisodeFromSubFileName(subInfo.Name)
 		if err != nil {
-			s.log.Errorln("GetSubListFromFile4Series.GetVideoInfoFromFileName", subInfo.Name, err)
+			s.log.Errorln("SubInfos GetSubListFromFile4Series.GetVideoInfoFromFileFullPath", subInfo.Name, err)
 			continue
 		}
-		epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
+		// 这里的 episode 为 0，则是全季
+		epsKey := model.GetEpisodeKeyName(season, episode)
 		_, ok := allSubDict[epsKey]
 		if ok == false {
 			// 初始化
@@ -114,17 +108,20 @@ func (s Supplier) GetSubListFromFile4Series(seriesPath string) ([]common.Supplie
 		// 这一集下载后的30天内，都进行字幕的下载
 		if len(epsInfo.SubList) < 1 || epsInfo.ModifyTime.Add(dayRange).After(currentTime) == true {
 			// 添加
-			info, _, err := model.GetVideoInfoFromFileName(epsInfo.Title)
-			if err != nil {
-				s.log.Errorln("GetSubListFromFile4Series.GetVideoInfoFromFileName", epsInfo.Title, err)
-				continue
-			}
-			epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
+			epsKey := model.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
 			// 从一堆字幕里面找合适的
 			value, ok := allSubDict[epsKey]
 			// 是否有
 			if ok == true && len(value) > 0 {
 				subInfoNeedDownload = append(subInfoNeedDownload, value[0])
+			} else {
+				s.log.Infoln("Not Find Sub can be download", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+			}
+		} else {
+			if len(epsInfo.SubList) > 0 {
+				s.log.Infoln("Skip because find sub file", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+			} else if epsInfo.ModifyTime.Add(dayRange).After(currentTime) == false {
+				s.log.Infoln("Skip because 30 days pass", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 			}
 		}
 	}
@@ -147,7 +144,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 		如果找不到，再靠文件名提取影片名称去查找
 	*/
 	// 得到这个视频文件名中的信息
-	info, _, err := model.GetVideoInfoFromFileName(filePath)
+	info, _, err := model.GetVideoInfoFromFileFullPath(filePath)
 	if err != nil {
 		return nil, err
 	}

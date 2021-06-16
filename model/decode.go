@@ -128,10 +128,10 @@ func GetImdbInfo(dirPth string) (common.VideoInfo, error) {
 	return imdbInfo, common.CanNotFindIMDBID
 }
 
-//GetVideoInfoFromFileName 从文件名推断视频文件的信息
-func GetVideoInfoFromFileName(videoFileName string) (*PTN.TorrentInfo, time.Time, error) {
+//GetVideoInfoFromFileFullPath 从全文件路径推断文件信息
+func GetVideoInfoFromFileFullPath(videoFileFullPath string) (*PTN.TorrentInfo, time.Time, error) {
 
-	parse, err := PTN.Parse(filepath.Base(videoFileName))
+	parse, err := PTN.Parse(filepath.Base(videoFileFullPath))
 	if err != nil {
 		return nil, time.Time{}, err
 	}
@@ -143,12 +143,46 @@ func GetVideoInfoFromFileName(videoFileName string) (*PTN.TorrentInfo, time.Time
 	match = strings.TrimRight(match, "")
 	parse.Title = match
 
-	fInfo, err := os.Stat(videoFileName)
+	fInfo, err := os.Stat(videoFileFullPath)
 	if err != nil {
 		return nil, time.Time{}, err
 	}
 
 	return parse, fInfo.ModTime(), nil
+}
+
+// GetSeasonAndEpisodeFromSubFileName 从文件名推断 季 和 集 的信息 Season Episode
+func GetSeasonAndEpisodeFromSubFileName(videoFileName string) (bool, int, int, error) {
+	// 先进行单个 Episode 的匹配
+	// Killing.Eve.S02E01.Do.You.Know.How
+	var re = regexp.MustCompile(`(?m)\.S(\d+)E(\d+)\.`)
+	matched := re.FindAllStringSubmatch(videoFileName, -1)
+	if len(matched) < 1 {
+		// Killing.Eve.S02.Do.You.Know.How
+		// 看看是不是季度字幕打包
+		re = regexp.MustCompile(`(?m)\.S(\d+)\.`)
+		matched = re.FindAllStringSubmatch(videoFileName, -1)
+		if len(matched) < 1 {
+			return false, 0, 0, nil
+		}
+		season, err := GetNumber2int(matched[0][1])
+		if err != nil {
+			return false,0, 0, err
+		}
+		return true, season, 0, nil
+	} else {
+		// 一集的字幕
+		season, err := GetNumber2int(matched[0][1])
+		if err != nil {
+			return false,0, 0, err
+		}
+		episode, err := GetNumber2int(matched[0][2])
+		if err != nil {
+			return false, 0, 0, err
+		}
+
+		return false, season, episode, nil
+	}
 }
 
 func SkipChineseMovie(videoFullPath string, _reqParam ...common.ReqParam) (bool, error) {

@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/interface"
 	"github.com/allanpk716/ChineseSubFinder/model"
+	"github.com/allanpk716/ChineseSubFinder/series_helper"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -41,10 +42,10 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 		d.log.Error(err)
 	}
 
-	// 跳过中文的电影
+	// 跳过中文的电影，不是一定要跳过的
 	skip, err := model.SkipChineseMovie(videoFullPath, d.Suppliers[0].GetReqParam())
 	if err != nil {
-		return nil, err
+		d.log.Error("SkipChineseMovie", err)
 	}
 	if skip == true {
 		return nil, nil
@@ -54,7 +55,7 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 	// 30 天
 	currentTime := time.Now()
 	dayRange, _ := time.ParseDuration(common.DownloadSubDuring30Days)
-	_, modifyTime, err := model.GetVideoInfoFromFileName(videoFullPath)
+	_, modifyTime, err := model.GetVideoInfoFromFileFullPath(videoFullPath)
 	if err != nil {
 		return nil, err
 	}
@@ -95,13 +96,19 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) ([]s
 	if err != nil {
 		d.log.Error(err)
 	}
-	// 跳过中文的连续剧
+	// 跳过中文的连续剧，不是一定要跳过的
 	skip, err := model.SkipChineseSeries(seriesDirPath, d.Suppliers[0].GetReqParam())
 	if err != nil {
-		return nil, err
+		d.log.Error("SkipChineseSeries", err)
 	}
 	if skip == true {
 		return nil, nil
+	}
+
+	// 读取本地的视频和字幕信息
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(seriesDirPath)
+	if err != nil {
+		return nil, err
 	}
 
 

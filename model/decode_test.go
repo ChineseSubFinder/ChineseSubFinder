@@ -46,7 +46,7 @@ func Test_get_IMDB_nfo(t *testing.T) {
 	}
 }
 
-func Test_VideoInfo(t *testing.T) {
+func Test_GetVideoInfoFromFileFullPath(t *testing.T) {
 
 	subTitle := "X:\\电影\\Spiral From the Book of Saw (2021)\\Spiral From the Book of Saw (2021) WEBDL-1080p.mkv"
 	//subTitle := "人之怒 WEBDL-1080p.mkv"
@@ -57,11 +57,21 @@ func Test_VideoInfo(t *testing.T) {
 	//subTitle := "Spiral.From.the.Book.of.Saw.2021.1080p.WEBRip.x264-RARBG.chi.srt"
 	//subTitle := "Spiral.From.the.Book.of.Saw.2021.1080p.WEBRip.x264-RARBG.eng.srt"
 	//subTitle := "东城梅尔 第一季第一集【YYeTs字幕组 简繁英双语字幕】Mare.of.Easttown.S01E01.Miss.Lady.Hawk.Herself.720p/1080p.AMZN.WEB-DL.DDP5.1.H.264-TEPES"
-	info, modifyTime, err := GetVideoInfoFromFileName(subTitle)
+	info, modifyTime, err := GetVideoInfoFromFileFullPath(subTitle)
 	if err != nil {
 		t.Error(err)
 	}
 	println("Title:", info.Title, "Season:", info.Season, "Episode:", info.Episode, modifyTime.String())
+}
+
+func Test_GetSeasonAndEpisodeFromFileName(t *testing.T) {
+	//str := `杀死伊芙 第二季(第1集-简繁英双语字幕-FIX字幕侠)Killing.Eve.S02E01.Do.You.Know.How.to.Dispose.of.a.Body.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb.rar`
+	str := `杀死伊芙 第二季(-简繁英双语字幕-FIX字幕侠)Killing.Eve.S02.Do.You.Know.How.to.Dispose.of.a.Body.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb.rar`
+	b, s, e, err := GetSeasonAndEpisodeFromSubFileName(str)
+	if err != nil {
+		t.Fatal(err)
+	}
+	println(b, s, e)
 }
 
 func TestGetNumber2Float(t *testing.T) {

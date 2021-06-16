@@ -71,7 +71,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 		如果找不到，再靠文件名提取影片名称去查找
 	*/
 	// 得到这个视频文件名中的信息
-	info, _, err := model.GetVideoInfoFromFileName(filePath)
+	info, _, err := model.GetVideoInfoFromFileFullPath(filePath)
 	if err != nil {
 		return nil, err
 	}
