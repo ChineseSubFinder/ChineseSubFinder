@@ -35,6 +35,10 @@ func (s Supplier) GetSupplierName() string {
 	return common.SubSiteXunLei
 }
 
+func (s Supplier) GetReqParam() common.ReqParam{
+	return s.reqParam
+}
+
 func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSubInfo, error){
 	return s.GetSubListFromFile(filePath)
 }

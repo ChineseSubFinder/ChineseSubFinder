@@ -6,6 +6,8 @@ type ISupplier interface {
 
 	GetSupplierName() string
 
+	GetReqParam() common.ReqParam
+
 	GetSubListFromFile4Movie(filePath string) ([]common.SupplierSubInfo, error)
 
 	GetSubListFromFile4Series(seriesPath string) ([]common.SupplierSubInfo, error)

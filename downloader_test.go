@@ -10,7 +10,8 @@ func TestDownloader_DownloadSub(t *testing.T) {
 	//dirRoot := "X:\\电影\\Spiral From the Book of Saw (2021)"
 	//dirRoot := "X:\\电影\\Oslo (2021)"
 	//dirRoot := "X:\\电影\\The Devil All the Time (2020)"
-	dirRoot := "X:\\电影\\21座桥 (2019)"
+	//dirRoot := "X:\\电影\\21座桥 (2019)"
+	dirRoot := "X:\\电影\\送你一朵小红花 (2020)"
 	//dirRoot := "X:\\电影\\冰海陷落 (2018)"
 
 	dl := NewDownloader(common.ReqParam{

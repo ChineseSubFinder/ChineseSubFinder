@@ -41,6 +41,15 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 		d.log.Error(err)
 	}
 
+	// 跳过中文的电影
+	skip, err := model.SkipChineseMovie(videoFullPath, d.Suppliers[0].GetReqParam())
+	if err != nil {
+		return nil, err
+	}
+	if skip == true {
+		return nil, nil
+	}
+
 	// 资源下载的时间后的多少天内都进行字幕的自动下载，替换原有的字幕
 	// 30 天
 	currentTime := time.Now()
@@ -55,7 +64,7 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 		return nil, err
 	}
 	var organizeSubFiles []string
-	// 30 天内，或者没有字幕都要进行下载（ TODO 但是如果是中文电影就无需下载，这个需要额外的判断）
+	// 30 天内，或者没有字幕都要进行下载
 	if modifyTime.Add(dayRange).After(currentTime) == true || found == false {
 		// 需要下载更新
 		subInfos := d.downloadSub4OneVideo(videoFullPath, index)
