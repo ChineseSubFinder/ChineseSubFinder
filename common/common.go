@@ -8,6 +8,7 @@ const DownloadSubsPerSite = 1 // 默认，每个网站下载一个字幕，允�
 const (
 	DebugFolder = "debugthings"
 	TmpFolder = "tmpthings"
+	DownloadSubDuring30Days = "720h"
 )
 
 const (

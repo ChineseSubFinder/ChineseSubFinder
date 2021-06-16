@@ -70,7 +70,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
 	for i, oneVideoFullPath := range nowVideoList {
 		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
-		organizeSubFiles, err := subSupplierHub.DownloadSub4Movie(oneVideoFullPath, i, d.reqParam.FoundExistSubFileThanSkip)
+		organizeSubFiles, err := subSupplierHub.DownloadSub4Movie(oneVideoFullPath, i)
 		if err != nil {
 			d.log.Errorln("subSupplierHub.DownloadSub4Movie", oneVideoFullPath ,err)
 			continue
