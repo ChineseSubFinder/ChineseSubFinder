@@ -104,11 +104,11 @@ func (s Supplier) GetSubListFromFile4Series(seriesPath string) ([]common.Supplie
 	var subInfoNeedDownload = make([]SubInfo, 0)
 	currentTime := time.Now()
 	// 30 天
-	dayRange, _ := time.ParseDuration("720h")
+	dayRange, _ := time.ParseDuration(common.DownloadSubDuring30Days)
 	for _, epsInfo := range seriesInfo.EpList {
 		// 如果没有字幕，则加入下载列表
 		// 这一集下载后的30天内，都进行字幕的下载
-		if len(epsInfo.SubList) < 1 || epsInfo.ModifyTime.Add(dayRange).Before(currentTime) == true {
+		if len(epsInfo.SubList) < 1 || epsInfo.ModifyTime.Add(dayRange).After(currentTime) == true {
 			// 添加
 			info, _, err := model.GetVideoInfoFromFileName(epsInfo.Title)
 			if err != nil {

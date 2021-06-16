@@ -55,6 +55,11 @@ func main() {
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
 	entryID, err := c.AddFunc("@every " + config.EveryTime, func() {
+		defer func() {
+			log.Infoln("Download Timer End...")
+		}()
+
+		log.Infoln("Download Timer Started...")
 		// 开始下载
 		err := downloader.DownloadSub4Movie(config.MovieFolder)
 		if err != nil {
@@ -78,7 +83,6 @@ func main() {
 
 	c.Start()
 
-	log.Infoln("Download Timer Started...")
 	// 阻塞
 	select {}
 }

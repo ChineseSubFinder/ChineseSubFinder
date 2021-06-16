@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type SubSupplierHub struct {
@@ -32,32 +33,61 @@ func NewSubSupplierHub(one _interface.ISupplier,_inSupplier ..._interface.ISuppl
 	return &s
 }
 
-// DownloadSub4Movie 某一个视频的字幕下载，下载完毕后，返回下载缓存每个字幕的位置
-func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, foundExistSubFileThanSkip bool) ([]string, error) {
+// DownloadSub4Movie 某一个电影字幕下载，下载完毕后，返回下载缓存每个字幕的位置
+func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]string, error) {
 	// 先清理缓存文件夹
 	err := model.ClearTmpFolder()
 	if err != nil {
 		d.log.Error(err)
 	}
 
-	// TODO 这里可以考虑改为，要么就是视频内封有字幕（得研究下怎么判断） 。要么，就是在视频上线（影片上映时间，电影院时间 or DVD 时间，资源能够下载的时间？）后的多少天内都进行字幕的自动下载，替换原有的字幕
-	// 是否需要跳过有字幕文件的视频
-	if foundExistSubFileThanSkip == true {
-		found, err := d.videoHasSub(videoFullPath)
+	// 资源下载的时间后的多少天内都进行字幕的自动下载，替换原有的字幕
+	// 30 天
+	currentTime := time.Now()
+	dayRange, _ := time.ParseDuration(common.DownloadSubDuring30Days)
+	_, modifyTime, err := model.GetVideoInfoFromFileName(videoFullPath)
+	if err != nil {
+		return nil, err
+	}
+	// 视频下面有不有字幕
+	found, err := d.videoHasSub(videoFullPath)
+	if err != nil {
+		return nil, err
+	}
+	var organizeSubFiles []string
+	// 30 天内，或者没有字幕都要进行下载（ TODO 但是如果是中文电影就无需下载，这个需要额外的判断）
+	if modifyTime.Add(dayRange).After(currentTime) == true || found == false {
+		// 需要下载更新
+		subInfos := d.downloadSub4OneVideo(videoFullPath, index)
+		organizeSubFiles, err = d.organizeDlSubFiles(subInfos)
 		if err != nil {
 			return nil, err
+		}
+	} else {
+		if modifyTime.Add(dayRange).After(currentTime) == false {
+			d.log.Infoln("Skip", videoFullPath, "Sub Download, because movie has sub and downloaded more than 30 days")
+			return nil, nil
 		}
 		if found == true {
 			d.log.Infoln("Skip", videoFullPath, "Sub Download, because sub file found")
 			return nil, nil
 		}
+
+		return nil, nil
 	}
-	subInfos := d.downloadSub4OneVideo(videoFullPath, index)
-	organizeSubFiles, err := d.organizeDlSubFiles(subInfos)
-	if err != nil {
-		return nil, err
-	}
+
 	return organizeSubFiles, nil
+}
+
+// DownloadSub4Series 某一个视频的字幕下载，下载完毕后，返回下载缓存每个字幕的位置
+func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) ([]string, error) {
+	// 先清理缓存文件夹
+	err := model.ClearTmpFolder()
+	if err != nil {
+		d.log.Error(err)
+	}
+
+	return nil, nil
 }
 
 // downloadSub4OneVideo 为这个视频下载字幕，所有网站找到的字幕都会汇总输出
