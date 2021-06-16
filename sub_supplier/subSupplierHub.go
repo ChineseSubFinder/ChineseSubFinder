@@ -152,7 +152,7 @@ func (d SubSupplierHub) organizeDlSubFiles(subInfos []common.SupplierSubInfo) ([
 				continue
 			}
 			// 搜索这个目录下的所有符合字幕格式的文件
-			subFileFullPaths, err := d.searchMatchedSubFile(unzipTmpFolder)
+			subFileFullPaths, err := model.SearchMatchedSubFile(unzipTmpFolder)
 			if err != nil {
 				d.log.Errorln("searchMatchedSubFile", subInfo.FromWhere, subInfo.Name, subInfo.TopN, err)
 				continue
@@ -176,35 +176,7 @@ func (d SubSupplierHub) organizeDlSubFiles(subInfos []common.SupplierSubInfo) ([
 	return siteSubInfoDict, nil
 }
 
-// searchMatchedSubFile 搜索符合后缀名的视频文件
-func (d SubSupplierHub) searchMatchedSubFile(dir string) ([]string, error) {
-	// 这里有个梗，会出现 __MACOSX 这类文件夹，那么里面会有一样的文件，需要用文件大小排除一下，至少大于 1 kb 吧
-	var fileFullPathList = make([]string, 0)
-	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	for _, curFile := range files {
-		fullPath := dir + pathSep + curFile.Name()
-		if curFile.IsDir() {
-			// 内层的错误就无视了
-			oneList, _ := d.searchMatchedSubFile(fullPath)
-			if oneList != nil {
-				fileFullPathList = append(fileFullPathList, oneList...)
-			}
-		} else {
-			// 这里就是文件了
-			if curFile.Size() < 1000 {
-				continue
-			}
-			if model.IsSubExtWanted(filepath.Ext(curFile.Name())) == true {
-				fileFullPathList = append(fileFullPathList, fullPath)
-			}
-		}
-	}
-	return fileFullPathList, nil
-}
+
 
 // 返回的名称包含，那个网站下载的，这个网站中排名第几，文件名
 func (d SubSupplierHub) getFrontNameAndOrgName(info common.SupplierSubInfo) string {

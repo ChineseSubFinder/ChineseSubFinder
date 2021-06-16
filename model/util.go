@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -84,7 +85,7 @@ func GetFileName(resp *http.Response) string {
 	return matched[1]
 }
 
-// AddBaseUrl 判断驶入的 url 是否需要拼接 baseUrl
+// AddBaseUrl 判断传入的 url 是否需要拼接 baseUrl
 func AddBaseUrl(baseUrl, url string) string {
 	if strings.Contains(url, "://") {
 		return url
@@ -173,6 +174,7 @@ func IsDir(path string) bool {
 	return s.IsDir()
 }
 
+// VideoNameSearchKeywordMaker 拼接视频搜索的 title 和 年份
 func VideoNameSearchKeywordMaker(title string, year string) string {
 	iYear, err := strconv.Atoi(year)
 	if err != nil {
@@ -188,7 +190,90 @@ func VideoNameSearchKeywordMaker(title string, year string) string {
 	return searchKeyword
 }
 
+// SearchMatchedVideoFile 搜索符合后缀名的视频文件
+func SearchMatchedVideoFile(dir string) ([]string, error) {
+
+	var fileFullPathList = make([]string, 0)
+	pathSep := string(os.PathSeparator)
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	for _, curFile := range files {
+		fullPath := dir + pathSep + curFile.Name()
+		if curFile.IsDir() {
+			// 内层的错误就无视了
+			oneList, _ := SearchMatchedVideoFile(fullPath)
+			if oneList != nil {
+				fileFullPathList = append(fileFullPathList, oneList...)
+			}
+		} else {
+			// 这里就是文件了
+			if IsWantedVideoExtDef(curFile.Name()) == true {
+				fileFullPathList = append(fileFullPathList, fullPath)
+			}
+		}
+	}
+	return fileFullPathList, nil
+}
+
+// SearchMatchedSubFile 搜索符合后缀名的视频文件
+func SearchMatchedSubFile(dir string) ([]string, error) {
+	// 这里有个梗，会出现 __MACOSX 这类文件夹，那么里面会有一样的文件，需要用文件大小排除一下，至少大于 1 kb 吧
+	var fileFullPathList = make([]string, 0)
+	pathSep := string(os.PathSeparator)
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	for _, curFile := range files {
+		fullPath := dir + pathSep + curFile.Name()
+		if curFile.IsDir() {
+			// 内层的错误就无视了
+			oneList, _ := SearchMatchedSubFile(fullPath)
+			if oneList != nil {
+				fileFullPathList = append(fileFullPathList, oneList...)
+			}
+		} else {
+			// 这里就是文件了
+			if curFile.Size() < 1000 {
+				continue
+			}
+			if IsSubExtWanted(filepath.Ext(curFile.Name())) == true {
+				fileFullPathList = append(fileFullPathList, fullPath)
+			}
+		}
+	}
+	return fileFullPathList, nil
+}
+
+// IsWantedVideoExtDef 后缀名是否符合规则
+func IsWantedVideoExtDef(fileName string) bool {
+	// TODO 强制使用固定的视频后缀名匹配列表，后续有需求再考虑额实现外部可配置的列表
+
+	if len(wantedExtList) < 1 {
+		defExtList = append(defExtList, common.VideoExtMp4)
+		defExtList = append(defExtList, common.VideoExtMkv)
+		defExtList = append(defExtList, common.VideoExtRmvb)
+		defExtList = append(defExtList, common.VideoExtIso)
+
+		wantedExtList = append(defExtList, common.VideoExtMp4)
+		wantedExtList = append(defExtList, common.VideoExtMkv)
+		wantedExtList = append(defExtList, common.VideoExtRmvb)
+		wantedExtList = append(defExtList, common.VideoExtIso)
+	}
+	fileName = strings.ToLower(filepath.Ext(fileName))
+	for _, s := range wantedExtList {
+		if s == fileName {
+			return true
+		}
+	}
+	return false
+}
+
 var (
 	defDebugFolder = ""
 	defTmpFolder = ""
+	wantedExtList = make([]string, 0)                   // 人工确认的需要监控的视频后缀名
+	defExtList    = make([]string, 0)                  // 内置支持的视频后缀名列表
 )

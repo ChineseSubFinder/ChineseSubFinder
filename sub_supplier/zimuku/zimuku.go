@@ -41,18 +41,13 @@ func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSu
 }
 
 func (s Supplier) GetSubListFromFile4Series(seriesPath string) ([]common.SupplierSubInfo, error) {
-	// 只考虑 IMDB 去查询，文件名目前发现可能会跟电影重复，导致很麻烦，本来也有前置要求要削刮器处理的
-	// TODO ！GetImdbInfo 需要输出 title 以及 originaltitle
-	imdbId, _, err := model.GetImdbInfo(seriesPath)
-	if err != nil {
-		return nil, err
-	}
-	// 使用 IMDB 去
-	imdbInfo, err := model.GetVideoInfoFromIMDB(imdbId)
-	if err != nil {
-		return nil, err
-	}
-	subInfoList, err := s.GetSubListFromKeyword(imdbInfo.Name)
+
+	/*
+		去网站搜索的时候，有个比较由意思的逻辑，有些剧集，哪怕只有一季，sonarr 也会给它命名为 Season 1
+		但是在 zimuku 搜索的时候，如果你加上 XXX 第一季 就搜索不出来
+	*/
+
+	subInfoList, err := s.GetSubListFromKeyword(seriesPath)
 	if err != nil {
 		return nil, err
 	}
@@ -336,84 +331,6 @@ func (s Supplier) Step3(subDownloadPageUrl string) (string, []byte, error) {
 	}
 	s.log.Debug(subDownloadPageUrl)
 	return "", nil, common.ZiMuKuDownloadUrlStep3AllFailed
-}
-
-// Step1Discard 第一级界面，有多少个字幕，弃用，直接再搜索出来的结果界面匹配会遇到一个问题，就是 “还有8个字幕，点击查看” 类似此问题
-func (s Supplier) Step1Discard(keyword string) (SubResult, error) {
-	httpClient := model.NewHttpClient(s.reqParam)
-	// 第一级界面，有多少个字幕
-	resp, err := httpClient.R().
-		SetQueryParams(map[string]string{
-			"q": keyword,
-		}).
-		Get(common.SubZiMuKuSearchUrl)
-	if err != nil {
-		return SubResult{}, err
-	}
-	// 解析 html
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(resp.String()))
-	if err != nil {
-		return SubResult{}, err
-	}
-	// 具体解析这个页面
-	var subResult SubResult
-	subResult.SubInfos = SubInfos{}
-	// 这一级找到的是这个关键词出来的所有的影片的信息，可能有多个 Title，但是仅仅处理第一个
-	doc.Find("div[class=title]").EachWithBreak(func(i int, selectionTitleRoot *goquery.Selection) bool {
-
-		// 找到"又名"，是第二个 P
-		selectionTitleRoot.Find("p").Each(func(i int, s *goquery.Selection) {
-			if i == 1 {
-				subResult.OtherName = s.Text()
-			}
-		})
-		// 找到字幕的列表，读取相应的信息
-		selectionTitleRoot.Find("div table tbody tr").Each(func(i int, sTr *goquery.Selection) {
-			aa := sTr.Find("a[href]")
-			subDetailUrl, ok := aa.Attr("href")
-			var subInfo SubInfo
-			if ok {
-				// 字幕的标题
-				subResult.Title = aa.Text()
-				// 字幕的详情界面
-				subInfo.DetailUrl = subDetailUrl
-				// 找到这个 tr 下面的第二个和第三个 td
-				sTr.Find("td").Each(func(i int, sTd *goquery.Selection) {
-					if i == 1 {
-						// 评分
-						vote, ok := sTd.Find("i").Attr("title")
-						if ok == false {
-							return
-						}
-						number, err := model.GetNumber2Float(vote)
-						if err != nil {
-							return
-						}
-						subInfo.Score = number
-					} else if i == 2{
-						// 下载量
-						number, err := model.GetNumber2int(sTd.Text())
-						if err != nil {
-							return
-						}
-						subInfo.DownloadTimes = number
-					}
-				})
-				// 计算优先级
-				subInfo.Priority = subInfo.Score * float32(subInfo.DownloadTimes)
-				// 加入列表
-				subResult.SubInfos = append(subResult.SubInfos, subInfo)
-			}
-
-		})
-		// EachWithBreak 使用这个，就能阻断继续遍历
-		return false
-	})
-	// 这里要判断，一级界面是否OK 了，不行就返回
-	if subResult.Title == "" || len(subResult.SubInfos) == 0 {
-		return SubResult{}, nil
-	}
-	return subResult, nil
 }
 
 type SubResult struct {

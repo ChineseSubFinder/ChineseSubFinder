@@ -11,7 +11,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier/zimuku"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/sirupsen/logrus"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -22,8 +21,6 @@ type Downloader struct {
 	reqParam      common.ReqParam
 	log           *logrus.Logger
 	topic         int                        // 最多能够下载 Top 几的字幕，每一个网站
-	wantedExtList []string                   // 人工确认的需要监控的视频后缀名
-	defExtList    []string                   // 内置支持的视频后缀名列表
 	mk            *mark_system.MarkingSystem // MarkingSystem
 }
 
@@ -38,12 +35,6 @@ func NewDownloader(_reqParam ...common.ReqParam) *Downloader {
 			downloader.topic = downloader.reqParam.Topic
 		}
 	}
-	downloader.defExtList = make([]string, 0)
-	downloader.defExtList = append(downloader.defExtList, common.VideoExtMp4)
-	downloader.defExtList = append(downloader.defExtList, common.VideoExtMkv)
-	downloader.defExtList = append(downloader.defExtList, common.VideoExtRmvb)
-	downloader.defExtList = append(downloader.defExtList, common.VideoExtIso)
-
 	var sitesSequence = make([]string, 0)
 	// TODO 这里写固定了抉择字幕的顺序
 	sitesSequence = append(sitesSequence, common.SubSiteZiMuKu)
@@ -52,27 +43,7 @@ func NewDownloader(_reqParam ...common.ReqParam) *Downloader {
 	sitesSequence = append(sitesSequence, common.SubSiteShooter)
 	downloader.mk = mark_system.NewMarkingSystem(sitesSequence)
 
-	if len(_reqParam) > 0 {
-		// 如果用户设置了关注的视频后缀名列表，则用ta的
-		if len(downloader.reqParam.UserExtList) > 0 {
-			downloader.wantedExtList = downloader.reqParam.UserExtList
-		} else {
-			// 不然就是内置默认的
-			downloader.wantedExtList = downloader.defExtList
-		}
-	} else {
-		// 不然就是内置默认的
-		downloader.wantedExtList = downloader.defExtList
-	}
 	return &downloader
-}
-
-func (d Downloader) GetNowSupportExtList() []string {
-	return d.wantedExtList
-}
-
-func (d Downloader) GetDefSupportExtList() []string {
-	return d.defExtList
 }
 
 func (d Downloader) DownloadSub4Movie(dir string) error {
@@ -83,7 +54,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 			d.log.Error(err)
 		}
 	}()
-	nowVideoList, err := d.searchMatchedVideoFile(dir)
+	nowVideoList, err := model.SearchMatchedVideoFile(dir)
 	if err != nil {
 		return err
 	}
@@ -172,43 +143,9 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	return nil
 }
 
-// searchMatchedVideoFile 搜索符合后缀名的视频文件
-func (d Downloader) searchMatchedVideoFile(dir string) ([]string, error) {
 
-	var fileFullPathList = make([]string, 0)
-	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	for _, curFile := range files {
-		fullPath := dir + pathSep + curFile.Name()
-		if curFile.IsDir() {
-			// 内层的错误就无视了
-			oneList, _ := d.searchMatchedVideoFile(fullPath)
-			if oneList != nil {
-				fileFullPathList = append(fileFullPathList, oneList...)
-			}
-		} else {
-			// 这里就是文件了
-			if d.isWantedVideoExtDef(curFile.Name()) == true {
-				fileFullPathList = append(fileFullPathList, fullPath)
-			}
-		}
-	}
-	return fileFullPathList, nil
-}
 
-// isWantedVideoExtDef 后缀名是否符合规则
-func (d Downloader) isWantedVideoExtDef(fileName string) bool {
-	fileName = strings.ToLower(filepath.Ext(fileName))
-	for _, s := range d.wantedExtList {
-		if s == fileName {
-			return true
-		}
-	}
-	return false
-}
+
 
 func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) error {
 
