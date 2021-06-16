@@ -88,6 +88,9 @@ func (d SubSupplierHub) downloadSub4OneVideo(oneVideoFullPath string, i int) []c
 
 // downloadSub4OneSite 在一个站点下载这个视频的字幕
 func (d SubSupplierHub) downloadSub4OneSite(oneVideoFullPath string, i int, supplier _interface.ISupplier) ([]common.SupplierSubInfo, error) {
+	defer func() {
+		d.log.Infoln(i, supplier.GetSupplierName(), "End...")
+	}()
 	d.log.Infoln(i, supplier.GetSupplierName(), "Start...")
 	subInfos, err := supplier.GetSubListFromFile(oneVideoFullPath)
 	if err != nil {
@@ -100,7 +103,7 @@ func (d SubSupplierHub) downloadSub4OneSite(oneVideoFullPath string, i int, supp
 			subInfos[x].Name = tmpSubFileName + info.Ext
 		}
 	}
-	d.log.Infoln(i, supplier.GetSupplierName(), "End...")
+
 	return subInfos, nil
 }
 

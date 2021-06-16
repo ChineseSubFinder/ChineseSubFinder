@@ -184,7 +184,7 @@ func VideoNameSearchKeywordMaker(title string, year string) string {
 	}
 	searchKeyword := title
 	if iYear >= 2020 {
-		searchKeyword = searchKeyword + year
+		searchKeyword = searchKeyword + " " + year
 	}
 
 	return searchKeyword
@@ -269,6 +269,10 @@ func IsWantedVideoExtDef(fileName string) bool {
 		}
 	}
 	return false
+}
+
+func GetEpisodeKeyName(season, eps int) string {
+	return "S" + strconv.Itoa(season) + "E" +strconv.Itoa(eps)
 }
 
 var (

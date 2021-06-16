@@ -67,7 +67,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 		如果找不到，再靠文件名提取影片名称去查找
 	*/
 	// 得到这个视频文件名中的信息
-	info, err := model.GetVideoInfoFromFileName(filePath)
+	info, _, err := model.GetVideoInfoFromFileName(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (s Supplier) Step0(keyword string) (string, error) {
 		return "", err
 	}
 	// 是否有查找到的结果，至少要有结果。根据这里这样下面才能判断是分析失效了，还是就是没有结果而已
-	re := regexp.MustCompile(`总共\s?<b>(\d+)</b>\s?条`)
+	re := regexp.MustCompile(`共\s*(\d+)\s*条`)
 	matched := re.FindAllStringSubmatch(result, -1)
 	if len(matched) < 1 {
 		return "",  common.SubHDStep0SubCountNotFound
@@ -164,12 +164,30 @@ func (s Supplier) Step0(keyword string) (string, error) {
 		return "", nil
 	}
 	// 这里是确认能继续分析的详细连接
-	re = regexp.MustCompile(`<a\shref="(/d/[\w]+)">\s?<img`)
-	matched = re.FindAllStringSubmatch(result, -1)
-	if len(matched) < 1 || len(matched[0]) < 2{
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(result))
+	if err != nil {
+		return "", err
+	}
+	imgSelection := doc.Find("img.rounded-start")
+	imgUrl, ok := imgSelection.Attr("src")
+	if ok == true{
+		imgName := filepath.Base(imgUrl)
+		imgExt := filepath.Ext(imgUrl)
+		if strings.Contains(imgName, "_") == true {
+			items := strings.Split(imgName, "_")
+			return "/d/" + items[0], nil
+		} else {
+			return "/d/" + strings.ReplaceAll(imgName, imgExt, ""), nil
+		}
+	} else{
 		return "",  common.SubHDStep0HrefIsNull
 	}
-	return matched[0][1], nil
+	//re = regexp.MustCompile(`<a\shref="(/d/[\w]+)">\s?<img`)
+	//matched = re.FindAllStringSubmatch(result, -1)
+	//if len(matched) < 1 || len(matched[0]) < 2{
+	//	return "",  common.SubHDStep0HrefIsNull
+	//}
+	//return matched[0][1], nil
 }
 // Step1 获取影片的详情字幕列表
 func (s Supplier) Step1(detailPageUrl string) ([]HdListItem, error) {
@@ -187,7 +205,7 @@ func (s Supplier) Step1(detailPageUrl string) ([]HdListItem, error) {
 	const subTableKeyword = ".pt-2"
 	const oneSubTrTitleKeyword = "a.link-dark"
 	const oneSubTrDownloadCountKeyword = "div.px-3"
-	const oneSubLangAndTypeKetword = ".text-secondary"
+	const oneSubLangAndTypeKeyword = ".text-secondary"
 
 	doc.Find(subTableKeyword).EachWithBreak(func(i int, tr *goquery.Selection) bool {
 		if tr.Find(oneSubTrTitleKeyword).Size() == 0 {
@@ -201,7 +219,7 @@ func (s Supplier) Step1(detailPageUrl string) ([]HdListItem, error) {
 		// 文件名
 		title := strings.TrimSpace(tr.Find(oneSubTrTitleKeyword).Text())
 		// 字幕类型
-		insideSubType := tr.Find(oneSubLangAndTypeKetword).Text()
+		insideSubType := tr.Find(oneSubLangAndTypeKeyword).Text()
 		if model.IsSubTypeWanted(insideSubType) == false {
 			return true
 		}

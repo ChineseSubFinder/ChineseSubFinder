@@ -48,20 +48,20 @@ func Test_get_IMDB_nfo(t *testing.T) {
 
 func Test_VideoInfo(t *testing.T) {
 
-	//subTitle := "X:\\电影\\Spiral From the Book of Saw (2021)\\Spiral From the Book of Saw (2021) WEBDL-1080p.mkv"
+	subTitle := "X:\\电影\\Spiral From the Book of Saw (2021)\\Spiral From the Book of Saw (2021) WEBDL-1080p.mkv"
 	//subTitle := "人之怒 WEBDL-1080p.mkv"
 	//subTitle := "機動戦士Zガンダム WEBDL-1080p.mkv"
 	//subTitle := "机动战士Z高达：星之继承者 (2005) 1080p TrueHD.mkv"
 	//subTitle := "X:\\连续剧\\The Bad Batch\\Season 1\\The Bad Batch - S01E01 - Aftermath WEBDL-1080p.mkv"
-	subTitle := "X:\\连续剧\\Money.Heist\\Season 1\\Money.Heist.S01E01.SPANISH.WEBRip.x264-ION10.zh-cn.ssa"
+	//subTitle := "X:\\连续剧\\Money.Heist\\Season 1\\Money.Heist.S01E01.SPANISH.WEBRip.x264-ION10.zh-cn.ssa"
 	//subTitle := "Spiral.From.the.Book.of.Saw.2021.1080p.WEBRip.x264-RARBG.chi.srt"
 	//subTitle := "Spiral.From.the.Book.of.Saw.2021.1080p.WEBRip.x264-RARBG.eng.srt"
 	//subTitle := "东城梅尔 第一季第一集【YYeTs字幕组 简繁英双语字幕】Mare.of.Easttown.S01E01.Miss.Lady.Hawk.Herself.720p/1080p.AMZN.WEB-DL.DDP5.1.H.264-TEPES"
-	info, err := GetVideoInfoFromFileName(subTitle)
+	info, modifyTime, err := GetVideoInfoFromFileName(subTitle)
 	if err != nil {
 		t.Error(err)
 	}
-	println("Title:", info.Title, "Season:", info.Season, "Episode:", info.Episode)
+	println("Title:", info.Title, "Season:", info.Season, "Episode:", info.Episode, modifyTime.String())
 }
 
 func TestGetNumber2Float(t *testing.T) {

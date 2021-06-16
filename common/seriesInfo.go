@@ -1,4 +1,7 @@
 package common
+
+import "time"
+
 /*
 	这里只需要分为三层结构，因为有 sonarr 和 TMM 整理过
 	所以命名很标注，使用 GetVideoInfoFromFileName 读取 SxxExx 问题不大
@@ -18,7 +21,8 @@ type EpisodeInfo struct {
 	Episode    int
 	SubList	   []SubInfo
 	Dir		   string	// 这里需要记录字幕的位置，因为需要在同级目录匹配相应的字幕才行
-	FileFullPath string 	// 视频文件的全路径
+	FileFullPath string // 视频文件的全路径
+	ModifyTime  time.Time	// 创建时间
 }
 
 type SubInfo struct {

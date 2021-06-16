@@ -6,7 +6,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/srt"
 	"path/filepath"
-	"strconv"
 )
 
 // ReadSeriesInfoFromDir 读取剧集的信息
@@ -45,7 +44,7 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 	SubDict := make(map[string][]common.SubInfo)
 	for _, subFile := range subFiles {
 
-		info, err := model.GetVideoInfoFromFileName(subFile)
+		info, _, err := model.GetVideoInfoFromFileName(subFile)
 		if err != nil {
 			model.GetLogger().Errorln(err)
 			continue
@@ -55,7 +54,7 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 			model.GetLogger().Errorln(err)
 			continue
 		}
-		epsKey := "S" + strconv.Itoa(info.Season) + "E" +strconv.Itoa(info.Episode)
+		epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
 		oneFileSubInfo := common.SubInfo{
 			Title: info.Title,
 			Season: info.Season,
@@ -75,12 +74,12 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 	EpisodeDict := make(map[string]common.EpisodeInfo)
 	for _, videoFile := range videoFiles {
 		// 正常来说，一集只有一个格式的视频，也就是 S01E01 只有一个，如果有多个则会只保存第一个
-		info, err := model.GetVideoInfoFromFileName(videoFile)
+		info, modifyTime, err := model.GetVideoInfoFromFileName(videoFile)
 		if err != nil {
 			model.GetLogger().Errorln(err)
 			continue
 		}
-		epsKey := "S" + strconv.Itoa(info.Season) + "E" +strconv.Itoa(info.Episode)
+		epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
 		_, ok := EpisodeDict[epsKey]
 		if ok == false {
 			// 初始化
@@ -90,6 +89,7 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 				Episode: info.Episode,
 				Dir: filepath.Dir(videoFile),
 				FileFullPath: videoFile,
+				ModifyTime: modifyTime,
 			}
 			// 需要匹配同级目录下的字幕
 			oneFileEpInfo.SubList = make([]common.SubInfo, 0)

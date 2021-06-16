@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func getImdbAndYearMovieXml(movieFilePath string) (common.VideoInfo, error) {
@@ -122,20 +123,26 @@ func GetImdbInfo(dirPth string) (common.VideoInfo, error) {
 }
 
 //GetVideoInfoFromFileName 从文件名推断视频文件的信息
-func GetVideoInfoFromFileName(videoFileName string) (*PTN.TorrentInfo, error) {
+func GetVideoInfoFromFileName(videoFileName string) (*PTN.TorrentInfo, time.Time, error) {
 
 	parse, err := PTN.Parse(filepath.Base(videoFileName))
 	if err != nil {
-		return nil, err
+		return nil, time.Time{}, err
 	}
 	compile, err := regexp.Compile(regFixTitle2)
 	if err != nil {
-		return nil, err
+		return nil, time.Time{}, err
 	}
 	match := compile.ReplaceAllString(parse.Title, "")
 	match = strings.TrimRight(match, "")
 	parse.Title = match
-	return parse, nil
+
+	fInfo, err := os.Stat(videoFileName)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+
+	return parse, fInfo.ModTime(), nil
 }
 
 func GetNumber2Float(input string) (float32, error) {

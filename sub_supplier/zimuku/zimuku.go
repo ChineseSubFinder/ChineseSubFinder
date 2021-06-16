@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 )
 
 type Supplier struct {
@@ -57,7 +58,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesPath string) ([]common.Supplie
 	// 这里打算牺牲效率，提高代码的复用度，不然后续得维护一套电影的查询逻辑，一套剧集的查询逻辑
 	// 比如，其实可以搜索剧集名称，应该可以得到多个季的列表，然后分析再继续
 	// 现在粗暴点，直接一季搜索一次，跟电影的搜索一样，在首个影片就停止，然后继续往下
-
+	AllSeasonSubResult := SubResult{}
 	for value := range seriesInfo.SeasonDict {
 		// 第一级界面，找到影片的详情界面
 		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
@@ -70,11 +71,63 @@ func (s Supplier) GetSubListFromFile4Series(seriesPath string) ([]common.Supplie
 		if err != nil {
 			return nil, err
 		}
-		println(subResult.SubInfos.Len())
+
+		if AllSeasonSubResult.Title == "" {
+			AllSeasonSubResult = subResult
+		} else {
+			AllSeasonSubResult.SubInfos = append(AllSeasonSubResult.SubInfos, subResult.SubInfos...)
+		}
 	}
+	// 找到最大的优先级的字幕下载
+	sort.Sort(SortByPriority{AllSeasonSubResult.SubInfos})
+	// 字幕很多，考虑效率，需要做成字典
+	// key SxEx - SubInfos
+	var allSubDict = make(map[string]SubInfos)
+	for _, subInfo := range AllSeasonSubResult.SubInfos {
 
+		info, _, err := model.GetVideoInfoFromFileName(subInfo.Name)
+		if err != nil {
+			s.log.Errorln("GetSubListFromFile4Series.GetVideoInfoFromFileName", subInfo.Name, err)
+			continue
+		}
+		epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
+		_, ok := allSubDict[epsKey]
+		if ok == false {
+			// 初始化
+			allSubDict[epsKey] = SubInfos{}
+		}
+		// 添加
+		allSubDict[epsKey] = append(allSubDict[epsKey], subInfo)
+	}
+	// 本地的视频列表，找到没有字幕的
+	// 需要进行下载字幕的列表
+	var subInfoNeedDownload = make([]SubInfo, 0)
+	currentTime := time.Now()
+	// 30 天
+	dayRange, _ := time.ParseDuration("720h")
+	for _, epsInfo := range seriesInfo.EpList {
+		// 如果没有字幕，则加入下载列表
+		// 这一集下载后的30天内，都进行字幕的下载
+		if len(epsInfo.SubList) < 1 || epsInfo.ModifyTime.Add(dayRange).Before(currentTime) == true {
+			// 添加
+			info, _, err := model.GetVideoInfoFromFileName(epsInfo.Title)
+			if err != nil {
+				s.log.Errorln("GetSubListFromFile4Series.GetVideoInfoFromFileName", epsInfo.Title, err)
+				continue
+			}
+			epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
+			// 从一堆字幕里面找合适的
+			value, ok := allSubDict[epsKey]
+			// 是否有
+			if ok == true && len(value) > 0 {
+				subInfoNeedDownload = append(subInfoNeedDownload, value[0])
+			}
+		}
+	}
+	// 剩下的部分跟 GetSubListFroKeyword 一样，就是去下载了
+	outSubInfoList := s.whichSubInfoNeedDownload(subInfoNeedDownload, err)
 
-	return nil, nil
+	return outSubInfoList, nil
 }
 
 func (s Supplier) GetSubListFromFile4Anime(animePath string) ([]common.SupplierSubInfo, error){
@@ -90,7 +143,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 		如果找不到，再靠文件名提取影片名称去查找
 	*/
 	// 得到这个视频文件名中的信息
-	info, err := model.GetVideoInfoFromFileName(filePath)
+	info, _, err := model.GetVideoInfoFromFileName(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -145,8 +198,16 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	// 找到最大的优先级的字幕下载
 	sort.Sort(SortByPriority{subResult.SubInfos})
 
-	for i := range subResult.SubInfos {
-		err = s.Step2(&subResult.SubInfos[i])
+	outSubInfoList = s.whichSubInfoNeedDownload(subResult.SubInfos, err)
+
+	return outSubInfoList, nil
+}
+
+func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []common.SupplierSubInfo {
+
+	var outSubInfoList = make([]common.SupplierSubInfo, 0)
+	for i := range subInfos {
+		err = s.Step2(&subInfos[i])
 		if err != nil {
 			s.log.Error(err)
 			continue
@@ -156,7 +217,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	// TODO 这里需要考虑，可以设置为高级选项，不够就用 unknow 来补充
 	// 首先过滤出中文的字幕，同时需要满足是支持的字幕
 	var tmpSubInfo = make([]SubInfo, 0)
-	for _, subInfo := range subResult.SubInfos {
+	for _, subInfo := range subInfos {
 		tmpLang := model.LangConverter(subInfo.Lang)
 		if model.HasChineseLang(tmpLang) == true && model.IsSubTypeWanted(subInfo.Ext) == true {
 			tmpSubInfo = append(tmpSubInfo, subInfo)
@@ -164,7 +225,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	}
 	// 看字幕够不够
 	if len(tmpSubInfo) < s.topic {
-		for _, subInfo := range subResult.SubInfos {
+		for _, subInfo := range subInfos {
 			if len(tmpSubInfo) >= s.topic {
 				break
 			}
@@ -186,8 +247,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 		outSubInfoList = append(outSubInfoList, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, model.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
 			0, filepath.Ext(fileName), data))
 	}
-
-	return outSubInfoList, nil
+	return outSubInfoList
 }
 
 // Step0 先在查询界面找到字幕对应第一个影片的详情界面，需要解决自定义错误 ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound
