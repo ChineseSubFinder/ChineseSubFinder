@@ -25,7 +25,6 @@ func NewMarkingSystem(subSiteSequence []string) *MarkingSystem {
 // SelectOneSubFile 选择最优的一个字幕文件
 func (m MarkingSystem) SelectOneSubFile(organizeSubFiles []string) *common.SubParserFileInfo {
 	var finalSubFile common.SubParserFileInfo
-	// TODO 这里先处理 Top1 的字幕，后续再考虑怎么觉得 Top N 选择哪一个，很可能选择每个网站 Top 1就行了，具体的过滤逻辑在其内部实现
 	subInfoDict := m.parseSubFileInfo(organizeSubFiles)
 	// 优先级别暂定 subSiteSequence: zimuku -> subhd -> xunlei -> shooter
 	for _, subSite := range m.subSiteSequence {

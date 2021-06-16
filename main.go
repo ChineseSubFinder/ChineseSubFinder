@@ -11,12 +11,12 @@ import (
 func init() {
 	var err error
 	log = model.GetLogger()
-	configViper, err = InitConfigure()
+	configViper, err = model.InitConfigure()
 	if err != nil {
 		log.Errorln("InitConfigure", err)
 		return 
 	}
-	config, err = ReadConfig(configViper)
+	config, err = model.ReadConfig(configViper)
 	if err != nil {
 		log.Errorln("ReadConfig", err)
 		return 
@@ -56,9 +56,9 @@ func main() {
 	// 定时器
 	entryID, err := c.AddFunc("@every " + config.EveryTime, func() {
 		// 开始下载
-		err := downloader.DownloadSub(config.MovieFolder)
+		err := downloader.DownloadSub4Movie(config.MovieFolder)
 		if err != nil {
-			log.Errorln("DownloadSub", err)
+			log.Errorln("DownloadSub4Movie", err)
 			return
 		}
 	})
@@ -69,9 +69,9 @@ func main() {
 	log.Infoln("First Time Download Start")
 	// 立即触发第一次的更新
 	// 开始下载
-	err = downloader.DownloadSub(config.MovieFolder)
+	err = downloader.DownloadSub4Movie(config.MovieFolder)
 	if err != nil {
-		log.Errorln("DownloadSub", err)
+		log.Errorln("DownloadSub4Movie", err)
 		return
 	}
 	log.Infoln("First Time Download End")

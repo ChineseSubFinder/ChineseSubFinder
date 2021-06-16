@@ -9,4 +9,7 @@ const (
 
 	SubSubHDRootUrl  = "https://subhd.tv"
 	SubSubHDSearchUrl  = SubSubHDRootUrl + "/search/%s"
+
+	TVDBRootUrl = "https://thetvdb.com"
+	TVDBSearchUrl = TVDBRootUrl + "/search"
 )

@@ -11,4 +11,5 @@
 /ChineseSubFinder.exe
 /*.zip
 /*.rar
-/sub_supplier/subhd/Logs/*.log
+/sub_supplier/subhd/Logs
+/model/config.yaml

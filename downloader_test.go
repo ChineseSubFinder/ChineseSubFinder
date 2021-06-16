@@ -2,41 +2,20 @@ package main
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/common"
-	shooter2 "github.com/allanpk716/ChineseSubFinder/sub_supplier/shooter"
 	"testing"
 )
-
-func TestDownloader_searchFile(t *testing.T) {
-
-	//dirRoot := "X:\\动漫\\EVA"
-	dirRoot := "X:\\电影\\Spiral From the Book of Saw (2021)"
-
-	dl := NewDownloader()
-	files, err := dl.searchMatchedVideoFile(dirRoot)
-	if err != nil {
-		t.Fatal(err)
-	}
-	sp := shooter2.NewSupplier()
-	for i, file := range files {
-		println(i, file)
-		_, err := sp.ComputeFileHash(file)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-}
 
 func TestDownloader_DownloadSub(t *testing.T) {
 	var err error
 	//dirRoot := "X:\\电影\\Spiral From the Book of Saw (2021)"
 	//dirRoot := "X:\\电影\\Oslo (2021)"
-	//dirRoot := "X:\\电影\\The Devil All the Time (2020)"
-	dirRoot := "X:\\电影\\冰海陷落 (2018)"
+	dirRoot := "X:\\电影\\The Devil All the Time (2020)"
+	//dirRoot := "X:\\电影\\冰海陷落 (2018)"
 
 	dl := NewDownloader(common.ReqParam{
 		SaveMultiSub: true,
 	})
-	err = dl.DownloadSub(dirRoot)
+	err = dl.DownloadSub4Movie(dirRoot)
 	if err != nil {
 		t.Fatal(err)
 	}

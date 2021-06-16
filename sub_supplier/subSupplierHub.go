@@ -32,14 +32,15 @@ func NewSubSupplierHub(one _interface.ISupplier,_inSupplier ..._interface.ISuppl
 	return &s
 }
 
-// DownloadSub 某一个视频的字幕下载，下载完毕后，返回下载缓存每个字幕的位置
-func (d SubSupplierHub) DownloadSub(videoFullPath string, index int, foundExistSubFileThanSkip bool) ([]string, error) {
+// DownloadSub4Movie 某一个视频的字幕下载，下载完毕后，返回下载缓存每个字幕的位置
+func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, foundExistSubFileThanSkip bool) ([]string, error) {
 	// 先清理缓存文件夹
 	err := model.ClearTmpFolder()
 	if err != nil {
 		d.log.Error(err)
 	}
 
+	// TODO 这里可以考虑改为，要么就是视频内封有字幕（得研究下怎么判断） 。要么，就是在视频上线（影片上映时间，电影院时间 or DVD 时间，资源能够下载的时间？）后的多少天内都进行字幕的自动下载，替换原有的字幕
 	// 是否需要跳过有字幕文件的视频
 	if foundExistSubFileThanSkip == true {
 		found, err := d.videoHasSub(videoFullPath)
@@ -87,6 +88,9 @@ func (d SubSupplierHub) downloadSub4OneVideo(oneVideoFullPath string, i int) []c
 
 // downloadSub4OneSite 在一个站点下载这个视频的字幕
 func (d SubSupplierHub) downloadSub4OneSite(oneVideoFullPath string, i int, supplier _interface.ISupplier) ([]common.SupplierSubInfo, error) {
+	defer func() {
+		d.log.Infoln(i, supplier.GetSupplierName(), "End...")
+	}()
 	d.log.Infoln(i, supplier.GetSupplierName(), "Start...")
 	subInfos, err := supplier.GetSubListFromFile(oneVideoFullPath)
 	if err != nil {
@@ -99,7 +103,7 @@ func (d SubSupplierHub) downloadSub4OneSite(oneVideoFullPath string, i int, supp
 			subInfos[x].Name = tmpSubFileName + info.Ext
 		}
 	}
-	d.log.Infoln(i, supplier.GetSupplierName(), "End...")
+
 	return subInfos, nil
 }
 
@@ -151,7 +155,7 @@ func (d SubSupplierHub) organizeDlSubFiles(subInfos []common.SupplierSubInfo) ([
 				continue
 			}
 			// 搜索这个目录下的所有符合字幕格式的文件
-			subFileFullPaths, err := d.searchMatchedSubFile(unzipTmpFolder)
+			subFileFullPaths, err := model.SearchMatchedSubFile(unzipTmpFolder)
 			if err != nil {
 				d.log.Errorln("searchMatchedSubFile", subInfo.FromWhere, subInfo.Name, subInfo.TopN, err)
 				continue
@@ -173,36 +177,6 @@ func (d SubSupplierHub) organizeDlSubFiles(subInfos []common.SupplierSubInfo) ([
 	}
 
 	return siteSubInfoDict, nil
-}
-
-// searchMatchedSubFile 搜索符合后缀名的视频文件
-func (d SubSupplierHub) searchMatchedSubFile(dir string) ([]string, error) {
-	// 这里有个梗，会出现 __MACOSX 这类文件夹，那么里面会有一样的文件，需要用文件大小排除一下，至少大于 1 kb 吧
-	var fileFullPathList = make([]string, 0)
-	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	for _, curFile := range files {
-		fullPath := dir + pathSep + curFile.Name()
-		if curFile.IsDir() {
-			// 内层的错误就无视了
-			oneList, _ := d.searchMatchedSubFile(fullPath)
-			if oneList != nil {
-				fileFullPathList = append(fileFullPathList, oneList...)
-			}
-		} else {
-			// 这里就是文件了
-			if curFile.Size() < 1000 {
-				continue
-			}
-			if model.IsSubExtWanted(filepath.Ext(curFile.Name())) == true {
-				fileFullPathList = append(fileFullPathList, fullPath)
-			}
-		}
-	}
-	return fileFullPathList, nil
 }
 
 // 返回的名称包含，那个网站下载的，这个网站中排名第几，文件名

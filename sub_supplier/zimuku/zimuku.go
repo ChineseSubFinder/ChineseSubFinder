@@ -3,13 +3,16 @@ package zimuku
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/model"
+	"github.com/allanpk716/ChineseSubFinder/series_helper"
 	"github.com/sirupsen/logrus"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 )
 
 type Supplier struct {
@@ -36,6 +39,101 @@ func (s Supplier) GetSupplierName() string {
 	return common.SubSiteZiMuKu
 }
 
+func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSubInfo, error){
+	return s.GetSubListFromFile(filePath)
+}
+
+func (s Supplier) GetSubListFromFile4Series(seriesPath string) ([]common.SupplierSubInfo, error) {
+
+	/*
+		去网站搜索的时候，有个比较由意思的逻辑，有些剧集，哪怕只有一季，sonarr 也会给它命名为 Season 1
+		但是在 zimuku 搜索的时候，如果你加上 XXX 第一季 就搜索不出来，那么目前比较可行的办法是查询两次
+		第一次优先查询 XXX 第一季 ，如果返回的列表是空的，那么再查询 XXX
+	*/
+	// 读取本地的视频和字幕信息
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(seriesPath)
+	if err != nil {
+		return nil, err
+	}
+	// 这里打算牺牲效率，提高代码的复用度，不然后续得维护一套电影的查询逻辑，一套剧集的查询逻辑
+	// 比如，其实可以搜索剧集名称，应该可以得到多个季的列表，然后分析再继续
+	// 现在粗暴点，直接一季搜索一次，跟电影的搜索一样，在首个影片就停止，然后继续往下
+	AllSeasonSubResult := SubResult{}
+	for value := range seriesInfo.SeasonDict {
+		// 第一级界面，找到影片的详情界面
+		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
+		filmDetailPageUrl, err := s.Step0(keyword)
+		if err != nil {
+			return nil, err
+		}
+		// 第二级界面，有多少个字幕
+		subResult, err := s.Step1(filmDetailPageUrl)
+		if err != nil {
+			return nil, err
+		}
+
+		if AllSeasonSubResult.Title == "" {
+			AllSeasonSubResult = subResult
+		} else {
+			AllSeasonSubResult.SubInfos = append(AllSeasonSubResult.SubInfos, subResult.SubInfos...)
+		}
+	}
+	// 找到最大的优先级的字幕下载
+	sort.Sort(SortByPriority{AllSeasonSubResult.SubInfos})
+	// 字幕很多，考虑效率，需要做成字典
+	// key SxEx - SubInfos
+	var allSubDict = make(map[string]SubInfos)
+	for _, subInfo := range AllSeasonSubResult.SubInfos {
+
+		info, _, err := model.GetVideoInfoFromFileName(subInfo.Name)
+		if err != nil {
+			s.log.Errorln("GetSubListFromFile4Series.GetVideoInfoFromFileName", subInfo.Name, err)
+			continue
+		}
+		epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
+		_, ok := allSubDict[epsKey]
+		if ok == false {
+			// 初始化
+			allSubDict[epsKey] = SubInfos{}
+		}
+		// 添加
+		allSubDict[epsKey] = append(allSubDict[epsKey], subInfo)
+	}
+	// 本地的视频列表，找到没有字幕的
+	// 需要进行下载字幕的列表
+	var subInfoNeedDownload = make([]SubInfo, 0)
+	currentTime := time.Now()
+	// 30 天
+	dayRange, _ := time.ParseDuration("720h")
+	for _, epsInfo := range seriesInfo.EpList {
+		// 如果没有字幕，则加入下载列表
+		// 这一集下载后的30天内，都进行字幕的下载
+		if len(epsInfo.SubList) < 1 || epsInfo.ModifyTime.Add(dayRange).Before(currentTime) == true {
+			// 添加
+			info, _, err := model.GetVideoInfoFromFileName(epsInfo.Title)
+			if err != nil {
+				s.log.Errorln("GetSubListFromFile4Series.GetVideoInfoFromFileName", epsInfo.Title, err)
+				continue
+			}
+			epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
+			// 从一堆字幕里面找合适的
+			value, ok := allSubDict[epsKey]
+			// 是否有
+			if ok == true && len(value) > 0 {
+				subInfoNeedDownload = append(subInfoNeedDownload, value[0])
+			}
+		}
+	}
+	// 剩下的部分跟 GetSubListFroKeyword 一样，就是去下载了
+	outSubInfoList := s.whichSubInfoNeedDownload(subInfoNeedDownload, err)
+
+	return outSubInfoList, nil
+}
+
+func (s Supplier) GetSubListFromFile4Anime(animePath string) ([]common.SupplierSubInfo, error){
+	panic("not implemented")
+}
+
 func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
 
 	/*
@@ -45,26 +143,27 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 		如果找不到，再靠文件名提取影片名称去查找
 	*/
 	// 得到这个视频文件名中的信息
-	info, err := model.GetVideoInfo(filePath)
+	info, _, err := model.GetVideoInfoFromFileName(filePath)
 	if err != nil {
 		return nil, err
 	}
 	// 找到这个视频文件，然后读取它目录下的文件，尝试得到 IMDB ID
 	fileRootDirPath := filepath.Dir(filePath)
-	imdbId, err := model.GetImdbId(fileRootDirPath)
+	// 目前测试来看，加入 年 这个关键词去搜索，对 2020 年后的影片有利，因为网站有统一的详细页面了，而之前的，没有，会影响识别
+	// 所以，year >= 2020 年，则可以多加一个关键词（年）去搜索影片
+	imdbInfo, err := model.GetImdbInfo(fileRootDirPath)
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
-		s.log.Error(err)
+		s.log.Errorln("model.GetImdbInfo", err)
 	}
-
 	var subInfoList []common.SupplierSubInfo
 
-	if imdbId != "" {
+	if imdbInfo.ImdbId != "" {
 		// 先用 imdb id 找
-		subInfoList, err = s.GetSubListFromKeyword(imdbId)
+		subInfoList, err = s.GetSubListFromKeyword(imdbInfo.ImdbId)
 		if err != nil {
 			// 允许的错误，跳过，继续进行文件名的搜索
-			s.log.Error("GetSubListFromKeyword", "IMDBID can not found sub", filePath, err)
+			s.log.Errorln("GetSubListFromKeyword", "IMDBID can not found sub", filePath, err)
 		}
 		// 如果有就优先返回
 		if len(subInfoList) >0 {
@@ -73,7 +172,8 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	}
 
 	// 如果没有，那么就用文件名查找
-	subInfoList, err = s.GetSubListFromKeyword(info.Title)
+	searchKeyword := model.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
+	subInfoList, err = s.GetSubListFromKeyword(searchKeyword)
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +198,16 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	// 找到最大的优先级的字幕下载
 	sort.Sort(SortByPriority{subResult.SubInfos})
 
-	for i := range subResult.SubInfos {
-		err = s.Step2(&subResult.SubInfos[i])
+	outSubInfoList = s.whichSubInfoNeedDownload(subResult.SubInfos, err)
+
+	return outSubInfoList, nil
+}
+
+func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []common.SupplierSubInfo {
+
+	var outSubInfoList = make([]common.SupplierSubInfo, 0)
+	for i := range subInfos {
+		err = s.Step2(&subInfos[i])
 		if err != nil {
 			s.log.Error(err)
 			continue
@@ -109,7 +217,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	// TODO 这里需要考虑，可以设置为高级选项，不够就用 unknow 来补充
 	// 首先过滤出中文的字幕，同时需要满足是支持的字幕
 	var tmpSubInfo = make([]SubInfo, 0)
-	for _, subInfo := range subResult.SubInfos {
+	for _, subInfo := range subInfos {
 		tmpLang := model.LangConverter(subInfo.Lang)
 		if model.HasChineseLang(tmpLang) == true && model.IsSubTypeWanted(subInfo.Ext) == true {
 			tmpSubInfo = append(tmpSubInfo, subInfo)
@@ -117,7 +225,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	}
 	// 看字幕够不够
 	if len(tmpSubInfo) < s.topic {
-		for _, subInfo := range subResult.SubInfos {
+		for _, subInfo := range subInfos {
 			if len(tmpSubInfo) >= s.topic {
 				break
 			}
@@ -139,8 +247,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 		outSubInfoList = append(outSubInfoList, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, model.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
 			0, filepath.Ext(fileName), data))
 	}
-
-	return outSubInfoList, nil
+	return outSubInfoList
 }
 
 // Step0 先在查询界面找到字幕对应第一个影片的详情界面，需要解决自定义错误 ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound
@@ -181,6 +288,15 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 	}
 	var subResult SubResult
 	subResult.SubInfos = SubInfos{}
+
+	counterIndex := 3
+	// 先找到页面”下载“关键词是第几列，然后下面的下载量才能正确的解析。否则，电影是[3]，而在剧集中，因为多了字幕组的筛选，则为[4]
+	doc.Find("#subtb thead tr th").Each(func(i int, th *goquery.Selection) {
+		if th.Text() == "下载" {
+			counterIndex = i
+		}
+	})
+
 	doc.Find("#subtb tbody tr").Each(func(i int, tr *goquery.Selection) {
 		// 字幕下载页面地址
 		href, exists := tr.Find("a").Attr("href")
@@ -220,7 +336,7 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 		}
 		// 下载次数统计
 		downCountNub := 0
-		downCount := tr.Find("td").Eq(3).Text()
+		downCount := tr.Find("td").Eq(counterIndex).Text()
 		if strings.Contains(downCount, "万") {
 			fNumb, err := model.GetNumber2Float(downCount)
 			if err != nil {
@@ -236,6 +352,7 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 
 		var subInfo SubInfo
 		subResult.Title = title
+		subInfo.Name = title
 		subInfo.DetailUrl = href
 		subInfo.Ext = ext
 		subInfo.AuthorInfo = authorInfo
@@ -308,84 +425,6 @@ func (s Supplier) Step3(subDownloadPageUrl string) (string, []byte, error) {
 	return "", nil, common.ZiMuKuDownloadUrlStep3AllFailed
 }
 
-// Step1Discard 第一级界面，有多少个字幕，弃用，直接再搜索出来的结果界面匹配会遇到一个问题，就是 “还有8个字幕，点击查看” 类似此问题
-func (s Supplier) Step1Discard(keyword string) (SubResult, error) {
-	httpClient := model.NewHttpClient(s.reqParam)
-	// 第一级界面，有多少个字幕
-	resp, err := httpClient.R().
-		SetQueryParams(map[string]string{
-			"q": keyword,
-		}).
-		Get(common.SubZiMuKuSearchUrl)
-	if err != nil {
-		return SubResult{}, err
-	}
-	// 解析 html
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(resp.String()))
-	if err != nil {
-		return SubResult{}, err
-	}
-	// 具体解析这个页面
-	var subResult SubResult
-	subResult.SubInfos = SubInfos{}
-	// 这一级找到的是这个关键词出来的所有的影片的信息，可能有多个 Title，但是仅仅处理第一个
-	doc.Find("div[class=title]").EachWithBreak(func(i int, selectionTitleRoot *goquery.Selection) bool {
-
-		// 找到"又名"，是第二个 P
-		selectionTitleRoot.Find("p").Each(func(i int, s *goquery.Selection) {
-			if i == 1 {
-				subResult.OtherName = s.Text()
-			}
-		})
-		// 找到字幕的列表，读取相应的信息
-		selectionTitleRoot.Find("div table tbody tr").Each(func(i int, sTr *goquery.Selection) {
-			aa := sTr.Find("a[href]")
-			subDetailUrl, ok := aa.Attr("href")
-			var subInfo SubInfo
-			if ok {
-				// 字幕的标题
-				subResult.Title = aa.Text()
-				// 字幕的详情界面
-				subInfo.DetailUrl = subDetailUrl
-				// 找到这个 tr 下面的第二个和第三个 td
-				sTr.Find("td").Each(func(i int, sTd *goquery.Selection) {
-					if i == 1 {
-						// 评分
-						vote, ok := sTd.Find("i").Attr("title")
-						if ok == false {
-							return
-						}
-						number, err := model.GetNumber2Float(vote)
-						if err != nil {
-							return
-						}
-						subInfo.Score = number
-					} else if i == 2{
-						// 下载量
-						number, err := model.GetNumber2int(sTd.Text())
-						if err != nil {
-							return
-						}
-						subInfo.DownloadTimes = number
-					}
-				})
-				// 计算优先级
-				subInfo.Priority = subInfo.Score * float32(subInfo.DownloadTimes)
-				// 加入列表
-				subResult.SubInfos = append(subResult.SubInfos, subInfo)
-			}
-
-		})
-		// EachWithBreak 使用这个，就能阻断继续遍历
-		return false
-	})
-	// 这里要判断，一级界面是否OK 了，不行就返回
-	if subResult.Title == "" || len(subResult.SubInfos) == 0 {
-		return SubResult{}, nil
-	}
-	return subResult, nil
-}
-
 type SubResult struct {
 	Title     string   // 字幕的标题
 	OtherName string   // 影片又名
@@ -393,6 +432,7 @@ type SubResult struct {
 }
 
 type SubInfo struct {
+	Name				string	// 字幕的名称
 	Lang				string	// 语言
 	AuthorInfo			string	// 作者
 	Ext					string	// 后缀名

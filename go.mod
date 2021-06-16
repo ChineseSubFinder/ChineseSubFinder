@@ -4,6 +4,8 @@ go 1.15
 
 require (
 	github.com/PuerkitoBio/goquery v1.6.1
+	github.com/StalkR/imdb v1.0.7
+	github.com/Tnze/go.num/v2 v2.0.0-20191006170829-cb483d4c9152 // indirect
 	github.com/abadojack/whatlanggo v1.0.1
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
 	github.com/beevik/etree v1.1.0
@@ -16,6 +18,7 @@ require (
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/middelink/go-parse-torrent-name v0.0.0-20190301154245-3ff4efacd4c4
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
+	github.com/pioz/tvdb v0.0.0-20200804122320-6d5b1ef61c13 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca
