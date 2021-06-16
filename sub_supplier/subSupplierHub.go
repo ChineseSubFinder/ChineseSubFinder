@@ -32,8 +32,8 @@ func NewSubSupplierHub(one _interface.ISupplier,_inSupplier ..._interface.ISuppl
 	return &s
 }
 
-// DownloadSub 某一个视频的字幕下载，下载完毕后，返回下载缓存每个字幕的位置
-func (d SubSupplierHub) DownloadSub(videoFullPath string, index int, foundExistSubFileThanSkip bool) ([]string, error) {
+// DownloadSub4Movie 某一个视频的字幕下载，下载完毕后，返回下载缓存每个字幕的位置
+func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, foundExistSubFileThanSkip bool) ([]string, error) {
 	// 先清理缓存文件夹
 	err := model.ClearTmpFolder()
 	if err != nil {
@@ -178,8 +178,6 @@ func (d SubSupplierHub) organizeDlSubFiles(subInfos []common.SupplierSubInfo) ([
 
 	return siteSubInfoDict, nil
 }
-
-
 
 // 返回的名称包含，那个网站下载的，这个网站中排名第几，文件名
 func (d SubSupplierHub) getFrontNameAndOrgName(info common.SupplierSubInfo) string {
