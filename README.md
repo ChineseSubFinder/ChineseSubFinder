@@ -15,7 +15,7 @@
 ### 支持的部署方式
 
 * docker，见 How to use
-* Windows，需要去 Release 下载，见 How to use
+* ~~Windows，需要去 Release 下载，见 How to use~~b Windows 可以自行编译即可
 
 ### 支持的视频分类
 
@@ -86,20 +86,6 @@ DebugMode: false
 SaveMultiSub: false
 FoundExistSubFileThanSkip: true
 MovieFolder: /app/videofolder
-```
-
-### 有图形界面的操作系统下直接运行
-
-举例，在 Windows 下运行。
-
-```yaml
-UseProxy: false
-HttpProxy: http://127.0.0.1:10809
-EveryTime: 6h
-DebugMode: false
-SaveMultiSub: false
-FoundExistSubFileThanSkip: true
-MovieFolder: X:\电影
 ```
 
 ### 配置文件解析
