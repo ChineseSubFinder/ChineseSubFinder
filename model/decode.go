@@ -89,11 +89,17 @@ func GetImdbInfo(dirPth string) (common.VideoInfo, error) {
 		// 找 movie.xml
 		if upperName == strings.ToUpper(metadataFileEmby) {
 			movieFilePath = dirPth + pathSep + fi.Name()
-		}
-		// 找 *.nfo
-		ok := strings.HasSuffix(fi.Name(), suffixNameNfo)
-		if ok {
+			break
+		} else if upperName == strings.ToUpper(metadateTVNfo) {
+			// 连续剧的 nfo 文件
 			nfoFilePath = dirPth + pathSep + fi.Name()
+			break
+		} else {
+			// 找 *.nfo
+			ok := strings.HasSuffix(fi.Name(), suffixNameNfo)
+			if ok {
+				nfoFilePath = dirPth + pathSep + fi.Name()
+			}
 		}
 	}
 	// 根据找到的开始解析
@@ -165,6 +171,26 @@ func SkipChineseMovie(videoFullPath string, _reqParam ...common.ReqParam) (bool,
 	return false, nil
 }
 
+func SkipChineseSeries(videoRootPath string, _reqParam ...common.ReqParam) (bool, error) {
+	var reqParam common.ReqParam
+	if len(_reqParam) > 0 {
+		reqParam = _reqParam[0]
+	}
+	imdbInfo, err := GetImdbInfo(videoRootPath)
+	if err != nil {
+		return false, err
+	}
+	t, err := GetVideoInfoFromIMDB(imdbInfo.ImdbId, reqParam)
+	if err != nil {
+		return false, err
+	}
+	if len(t.Languages) > 0 && strings.ToLower(t.Languages[0]) == "chinese" {
+		GetLogger().Infoln("Skip", filepath.Base(videoRootPath), "Sub Download, because series is Chinese")
+		return true, nil
+	}
+	return false, nil
+}
+
 func GetNumber2Float(input string) (float32, error) {
 	compile := regexp.MustCompile(regGetNumber)
 	params := compile.FindStringSubmatch(input)
@@ -195,6 +221,7 @@ const (
 	metadataFileEmby = "movie.xml"
 	suffixNameXml    = ".xml"
 	suffixNameNfo    = ".nfo"
+	metadateTVNfo    = "tvshow.nfo"
 	// 去除特殊字符，仅仅之有中文
 	regFixTitle = "[^\u4e00-\u9fa5a-zA-Z0-9\\s]"
 	// 去除特殊字符，把特殊字符都写进去

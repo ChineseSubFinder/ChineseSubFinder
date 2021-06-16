@@ -95,6 +95,15 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) ([]s
 	if err != nil {
 		d.log.Error(err)
 	}
+	// 跳过中文的连续剧
+	skip, err := model.SkipChineseSeries(seriesDirPath, d.Suppliers[0].GetReqParam())
+	if err != nil {
+		return nil, err
+	}
+	if skip == true {
+		return nil, nil
+	}
+
 
 	return nil, nil
 }

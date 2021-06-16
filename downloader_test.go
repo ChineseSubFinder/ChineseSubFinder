@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestDownloader_DownloadSub(t *testing.T) {
+func TestDownloader_DownloadSub4Movie(t *testing.T) {
 	var err error
 	//dirRoot := "X:\\电影\\Spiral From the Book of Saw (2021)"
 	//dirRoot := "X:\\电影\\Oslo (2021)"
@@ -18,6 +18,19 @@ func TestDownloader_DownloadSub(t *testing.T) {
 		SaveMultiSub: true,
 	})
 	err = dl.DownloadSub4Movie(dirRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDownloader_DownloadSub4Series(t *testing.T) {
+	var err error
+	dirRoot := "X:\\连续剧\\隐秘的角落 (2020)"
+
+	dl := NewDownloader(common.ReqParam{
+		SaveMultiSub: true,
+	})
+	err = dl.DownloadSub4Series(dirRoot)
 	if err != nil {
 		t.Fatal(err)
 	}

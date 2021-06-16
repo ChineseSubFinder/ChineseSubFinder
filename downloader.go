@@ -121,6 +121,33 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	return nil
 }
 
+func (d Downloader) DownloadSub4Series(dir string) error {
+	defer func() {
+		// 抉择完毕，需要清理缓存目录
+		err := model.ClearTmpFolder()
+		if err != nil {
+			d.log.Error(err)
+		}
+	}()
+	// 构建每个字幕站点下载者的实例
+	var subSupplierHub *sub_supplier.SubSupplierHub
+	subSupplierHub = sub_supplier.NewSubSupplierHub(shooter.NewSupplier(d.reqParam),
+		subhd.NewSupplier(d.reqParam),
+		xunlei.NewSupplier(d.reqParam),
+		zimuku.NewSupplier(d.reqParam),
+	)
+
+	organizeSubFiles, err := subSupplierHub.DownloadSub4Series(dir, 0)
+	if err != nil {
+		d.log.Errorln("subSupplierHub.DownloadSub4Series", dir ,err)
+		return err
+	}
+
+	println(organizeSubFiles)
+
+	return nil
+}
+
 // 在前面需要进行语言的筛选、排序，这里仅仅是存储
 func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile common.SubParserFileInfo, extraSubPreName string) error {
 	videoRootPath := filepath.Dir(videoFileFullPath)
