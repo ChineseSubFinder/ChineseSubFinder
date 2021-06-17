@@ -49,8 +49,10 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 	}
 	if needDlSub == true {
 		// 需要下载字幕
+		// 下载所有字幕
 		subInfos := movie_helper.OneMovieDlSubInAllSite(d.Suppliers, videoFullPath, index)
-		organizeSubFiles, err = movie_helper.OrganizeMovieDlSubFiles(subInfos)
+		// 整理字幕，比如解压什么的
+		organizeSubFiles, err = model.OrganizeDlSubFiles(subInfos)
 		if err != nil {
 			return nil, err
 		}
@@ -69,7 +71,7 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) ([]s
 		d.log.Error(err)
 	}
 	// 跳过中文的连续剧，不是一定要跳过的
-	skip, err := model.SkipChineseSeries(seriesDirPath, d.Suppliers[0].GetReqParam())
+	skip, err := series_helper.SkipChineseSeries(seriesDirPath, d.Suppliers[0].GetReqParam())
 	if err != nil {
 		d.log.Error("SkipChineseSeries", err)
 	}
@@ -81,8 +83,10 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) ([]s
 	if err != nil {
 		return nil, err
 	}
+	// 下载好的字幕
+	subInfos := series_helper.OneSeriesDlSubInAllSite(d.Suppliers, seriesInfo)
+	// 整理字幕，比如解压什么的
+	organizeSubFiles, err := model.OrganizeDlSubFiles(subInfos)
 
-	println(seriesInfo)
-
-	return nil, nil
+	return organizeSubFiles, nil
 }

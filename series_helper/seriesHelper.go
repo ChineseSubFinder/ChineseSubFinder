@@ -2,10 +2,12 @@ package series_helper
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/common"
+	_interface "github.com/allanpk716/ChineseSubFinder/interface"
 	"github.com/allanpk716/ChineseSubFinder/model"
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/srt"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -114,6 +116,53 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 	seriesInfo.NeedDlEpsKeyList = whichEpsNeedDownloadSub(&seriesInfo)
 
 	return &seriesInfo, nil
+}
+
+// SkipChineseSeries 跳过中文连续剧
+func SkipChineseSeries(seriesRootPath string, _reqParam ...common.ReqParam) (bool, error) {
+	var reqParam common.ReqParam
+	if len(_reqParam) > 0 {
+		reqParam = _reqParam[0]
+	}
+	imdbInfo, err := model.GetImdbInfo(seriesRootPath)
+	if err != nil {
+		return false, err
+	}
+	t, err := model.GetVideoInfoFromIMDB(imdbInfo.ImdbId, reqParam)
+	if err != nil {
+		return false, err
+	}
+	if len(t.Languages) > 0 && strings.ToLower(t.Languages[0]) == "chinese" {
+		model.GetLogger().Infoln("Skip", filepath.Base(seriesRootPath), "Sub Download, because series is Chinese")
+		return true, nil
+	}
+	return false, nil
+}
+
+// OneSeriesDlSubInAllSite 一部连续剧在所有的网站下载相应的字幕
+func OneSeriesDlSubInAllSite(Suppliers []_interface.ISupplier, seriesInfo *common.SeriesInfo) []common.SupplierSubInfo {
+	var outSUbInfos = make([]common.SupplierSubInfo, 0)
+	// 同时进行查询
+	subInfosChannel := make(chan []common.SupplierSubInfo)
+	model.GetLogger().Infoln("DlSub Start", seriesInfo.DirPath)
+	for _, supplier := range Suppliers {
+		supplier := supplier
+		go func() {
+			subInfos, err := supplier.GetSubListFromFile4Series(seriesInfo)
+			if err != nil {
+				model.GetLogger().Errorln("GetSubListFromFile4Series", err)
+			}
+			subInfosChannel <- subInfos
+		}()
+	}
+	for i := 0; i < len(Suppliers); i++ {
+		v, ok := <-subInfosChannel
+		if ok == true {
+			outSUbInfos = append(outSUbInfos, v...)
+		}
+	}
+	model.GetLogger().Infoln("DlSub End", seriesInfo.DirPath)
+	return outSUbInfos
 }
 
 // whichEpsNeedDownloadSub 有那些 Eps 需要下载的，按 SxEx 反回 epsKey
