@@ -202,8 +202,8 @@ func GetSeriesList(dir string) ([]string, error) {
 func whichEpsNeedDownloadSub(seriesInfo *common.SeriesInfo) map[string]common.EpisodeInfo {
 	var needDlSubEpsList = make(map[string]common.EpisodeInfo, 0)
 	currentTime := time.Now()
-	// 30 天
-	dayRange, _ := time.ParseDuration(common.DownloadSubDuring30Days)
+	// 3个月
+	dayRange, _ := time.ParseDuration(common.DownloadSubDuring3Months)
 	for _, epsInfo := range seriesInfo.EpList {
 		// 如果没有字幕，则加入下载列表
 		// 这一集下载后的30天内，都进行字幕的下载
@@ -213,9 +213,9 @@ func whichEpsNeedDownloadSub(seriesInfo *common.SeriesInfo) map[string]common.Ep
 			needDlSubEpsList[epsKey] = epsInfo
 		} else {
 			if len(epsInfo.SubAlreadyDownloadedList) > 0 {
-				model.GetLogger().Infoln("Skip because find sub file", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+				model.GetLogger().Infoln("Skip because find sub file and over 30 days,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 			} else if epsInfo.ModifyTime.Add(dayRange).After(currentTime) == false {
-				model.GetLogger().Infoln("Skip because 30 days pass", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+				model.GetLogger().Infoln("Skip because 30 days pass,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 			}
 		}
 	}

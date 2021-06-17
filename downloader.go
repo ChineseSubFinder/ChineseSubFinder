@@ -108,14 +108,19 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 			d.log.Errorln("subSupplierHub.DownloadSub4Series", oneSeriesPath ,err)
 			return err
 		}
-
 		// 只针对需要下载字幕的视频进行字幕的选择保存
 		for epsKey, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 			// 匹配对应的 Eps 去处理
 			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, organizeSubFiles[epsKey])
 		}
-		// 这里会拿到一份季度字幕的列表比如，S1E0 S2E0 S3E0
-		d.saveFullSeasonSub(seriesInfo, organizeSubFiles)
+		// 这里会拿到一份季度字幕的列表比如，Key 是 S1E0 S2E0 S3E0，value 是新的存储位置
+		fullSeasonSubDict := d.saveFullSeasonSub(seriesInfo, organizeSubFiles)
+		// TODO 季度的字幕包，应该优先于零散的字幕吧，暂定就这样了，注意是全部都替换
+		for _, episodeInfo := range seriesInfo.EpList {
+			// 匹配对应的 Eps 去处理
+			seasonEpsKey := model.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
+			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, fullSeasonSubDict[seasonEpsKey])
+		}
 	}
 	return nil
 }
@@ -167,26 +172,43 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 }
 
 // saveFullSeasonSub 这里就需要单独存储到连续剧每一季的文件夹的特殊文件夹中
-func (d Downloader) saveFullSeasonSub(seriesInfo *common.SeriesInfo, organizeSubFiles map[string][]string) {
+func (d Downloader) saveFullSeasonSub(seriesInfo *common.SeriesInfo, organizeSubFiles map[string][]string) map[string][]string {
+
+	var fullSeasonSubDict = make(map[string][]string)
 
 	for _, season := range seriesInfo.SeasonDict {
-		epsKey := model.GetEpisodeKeyName(season, 0)
-		subs, ok := organizeSubFiles[epsKey]
+		seasonKey := model.GetEpisodeKeyName(season, 0)
+		subs, ok := organizeSubFiles[seasonKey]
 		if ok == false {
 			continue
 		}
 		for _, sub := range subs {
 			subFileName := filepath.Base(sub)
-			newSeasonSubRootPath := path.Join(seriesInfo.DirPath, epsKey)
+			newSeasonSubRootPath := path.Join(seriesInfo.DirPath, "Sub_"+seasonKey)
 			_ = os.MkdirAll(newSeasonSubRootPath, os.ModePerm)
 			newSubFullPath := path.Join(newSeasonSubRootPath, subFileName)
-			err := os.Rename(sub, newSubFullPath)
+			_, err := model.CopyFile(newSubFullPath, sub)
 			if err != nil {
 				d.log.Errorln("saveFullSeasonSub", subFileName, err)
 				continue
 			}
+			// 从字幕的文件名推断是 哪一季 的 那一集
+			_, gusSeason, gusEpisode, err := model.GetSeasonAndEpisodeFromSubFileName(subFileName)
+			if err != nil {
+				return nil
+			}
+			// 把整季的字幕缓存位置也提供出去，如果之前没有下载到的，这里返回出来的可以补上
+			seasonEpsKey := model.GetEpisodeKeyName(gusSeason, gusEpisode)
+			_, ok := fullSeasonSubDict[seasonEpsKey]
+			if ok == false {
+				// 初始化
+				fullSeasonSubDict[seasonEpsKey] = make([]string, 0)
+			}
+			fullSeasonSubDict[seasonEpsKey] = append(fullSeasonSubDict[seasonEpsKey], sub)
 		}
 	}
+
+	return fullSeasonSubDict
 }
 
 // 在前面需要进行语言的筛选、排序，这里仅仅是存储

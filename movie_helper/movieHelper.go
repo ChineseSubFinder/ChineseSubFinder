@@ -106,12 +106,12 @@ func MovieNeedDlSub(videoFullPath string) (bool, error) {
 	}
 	// 资源下载的时间后的多少天内都进行字幕的自动下载，替换原有的字幕
 	currentTime := time.Now()
-	dayRange, _ := time.ParseDuration(common.DownloadSubDuring30Days)
+	dayRange, _ := time.ParseDuration(common.DownloadSubDuring3Months)
 	_, modifyTime, err := model.GetVideoInfoFromFileFullPath(videoFullPath)
 	if err != nil {
 		return false, err
 	}
-	// 30 天内，或者没有字幕都要进行下载
+	// 3个月内，或者没有字幕都要进行下载
 	if modifyTime.Add(dayRange).After(currentTime) == true || found == false {
 		// 需要下载的
 		return true, nil

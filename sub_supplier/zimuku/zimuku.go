@@ -182,7 +182,7 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *common.SeriesInfo, All
 	for _, subInfo := range AllSeasonSubResult.SubInfos {
 		_, season, episode, err := model.GetSeasonAndEpisodeFromSubFileName(subInfo.Name)
 		if err != nil {
-			s.log.Errorln("SubInfos GetSubListFromFile4Series.GetVideoInfoFromFileFullPath", subInfo.Name, err)
+			s.log.Errorln("whichEpisodeNeedDownloadSub.GetVideoInfoFromFileFullPath", subInfo.Name, err)
 			continue
 		}
 		subInfo.Season = season
