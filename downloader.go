@@ -65,8 +65,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		xunlei.NewSupplier(d.reqParam),
 		zimuku.NewSupplier(d.reqParam),
 	)
-
-	// TODO 后续再改为每个视频以上的流程都是一个 channel 来做，并且需要控制在一个并发量之下（很可能没必要，毕竟要在弱鸡机器上挂机用的）
+	// TODO 后续再改为每个视频以上的流程都是一个 channel 来做（目前做不了，得重构缓存字幕的方式，不然会出问题），并且需要控制在一个并发量之下（很可能没必要，毕竟要在弱鸡机器上挂机用的）
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
 	for i, oneVideoFullPath := range nowVideoList {
 		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文

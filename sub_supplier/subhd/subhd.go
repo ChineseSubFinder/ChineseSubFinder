@@ -55,11 +55,11 @@ func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSu
 	return s.getSubListFromFile(filePath)
 }
 
-func (s Supplier) GetSubListFromFile4Series(seriesPath string) ([]common.SupplierSubInfo, error) {
+func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error) {
 	panic("not implemented")
 }
 
-func (s Supplier) GetSubListFromFile4Anime(animePath string) ([]common.SupplierSubInfo, error){
+func (s Supplier) GetSubListFromFile4Anime(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error){
 	panic("not implemented")
 }
 
