@@ -153,15 +153,16 @@ func GetVideoInfoFromFileFullPath(videoFileFullPath string) (*PTN.TorrentInfo, t
 
 // GetSeasonAndEpisodeFromSubFileName 从文件名推断 季 和 集 的信息 Season Episode
 func GetSeasonAndEpisodeFromSubFileName(videoFileName string) (bool, int, int, error) {
+	upperName := strings.ToUpper(videoFileName)
 	// 先进行单个 Episode 的匹配
 	// Killing.Eve.S02E01.Do.You.Know.How
 	var re = regexp.MustCompile(`(?m)\.S(\d+)E(\d+)\.`)
-	matched := re.FindAllStringSubmatch(videoFileName, -1)
+	matched := re.FindAllStringSubmatch(upperName, -1)
 	if len(matched) < 1 {
 		// Killing.Eve.S02.Do.You.Know.How
 		// 看看是不是季度字幕打包
 		re = regexp.MustCompile(`(?m)\.S(\d+)\.`)
-		matched = re.FindAllStringSubmatch(videoFileName, -1)
+		matched = re.FindAllStringSubmatch(upperName, -1)
 		if len(matched) < 1 {
 			return false, 0, 0, nil
 		}
