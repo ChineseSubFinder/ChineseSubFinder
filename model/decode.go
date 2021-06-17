@@ -185,26 +185,6 @@ func GetSeasonAndEpisodeFromSubFileName(videoFileName string) (bool, int, int, e
 	}
 }
 
-func SkipChineseMovie(videoFullPath string, _reqParam ...common.ReqParam) (bool, error) {
-	var reqParam common.ReqParam
-	if len(_reqParam) > 0 {
-		reqParam = _reqParam[0]
-	}
-	imdbInfo, err := GetImdbInfo(filepath.Dir(videoFullPath))
-	if err != nil {
-		return false, err
-	}
-	t, err := GetVideoInfoFromIMDB(imdbInfo.ImdbId, reqParam)
-	if err != nil {
-		return false, err
-	}
-	if len(t.Languages) > 0 && strings.ToLower(t.Languages[0]) == "chinese" {
-		GetLogger().Infoln("Skip", videoFullPath, "Sub Download, because movie is Chinese")
-		return true, nil
-	}
-	return false, nil
-}
-
 func SkipChineseSeries(videoRootPath string, _reqParam ...common.ReqParam) (bool, error) {
 	var reqParam common.ReqParam
 	if len(_reqParam) > 0 {
