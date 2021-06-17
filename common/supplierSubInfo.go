@@ -12,6 +12,7 @@ type SupplierSubInfo struct {
 	Data      []byte         `json:"data"`       // 字幕文件的二进制数据
 	Season    int			 `json:"season"`     // 第几季，默认-1
 	Episode   int			 `json:"episode"`    // 第几集，默认-1
+	IsFullSeason bool		 `json:"is_full_season"`    // 是否是全季的字幕
 }
 
 func NewSupplierSubInfo(fromWhere string, topN int64, name string, language Language, fileUrl string,
@@ -22,6 +23,6 @@ func NewSupplierSubInfo(fromWhere string, topN int64, name string, language Lang
 
 	s.Season = -1
 	s.Episode = -1
-	
+
 	return &s
 }

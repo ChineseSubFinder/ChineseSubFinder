@@ -177,21 +177,30 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *common.SeriesInfo, All
 	// 字幕很多，考虑效率，需要做成字典
 	// key SxEx - SubInfos
 	var allSubDict = make(map[string]SubInfos)
+	// 全季的字幕列表
+	var oneSeasonSubDict  = make(map[string]SubInfos)
 	for _, subInfo := range AllSeasonSubResult.SubInfos {
 		_, season, episode, err := model.GetSeasonAndEpisodeFromSubFileName(subInfo.Name)
 		if err != nil {
 			s.log.Errorln("SubInfos GetSubListFromFile4Series.GetVideoInfoFromFileFullPath", subInfo.Name, err)
 			continue
 		}
-		// TODO 这里的 episode 为 0，则是全季
+		subInfo.Season = season
+		subInfo.Episode = episode
 		epsKey := model.GetEpisodeKeyName(season, episode)
 		_, ok := allSubDict[epsKey]
 		if ok == false {
 			// 初始化
 			allSubDict[epsKey] = SubInfos{}
+			if season != 0 && episode == 0 {
+				oneSeasonSubDict[epsKey] = SubInfos{}
+			}
 		}
 		// 添加
 		allSubDict[epsKey] = append(allSubDict[epsKey], subInfo)
+		if season != 0 && episode == 0 {
+			oneSeasonSubDict[epsKey] = append(oneSeasonSubDict[epsKey], subInfo)
+		}
 	}
 	// 本地的视频列表，找到没有字幕的
 	// 需要进行下载字幕的列表
@@ -208,6 +217,10 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *common.SeriesInfo, All
 		} else {
 			s.log.Infoln("Not Find Sub can be download", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 		}
+	}
+	// 全季的字幕列表，也拼进去，后面进行下载
+	for _, infos := range oneSeasonSubDict {
+		subInfoNeedDownload = append(subInfoNeedDownload, infos[0])
 	}
 
 	// 返回前，需要把每一个 Eps 的 Season Episode 信息填充到每个 SubInfo 中

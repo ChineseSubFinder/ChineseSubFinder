@@ -109,10 +109,13 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 			return err
 		}
 
+		// 只针对需要下载字幕的视频进行字幕的选择保存
 		for epsKey, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 			// 匹配对应的 Eps 去处理
 			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, organizeSubFiles[epsKey])
 		}
+		// 这里会拿到一份季度字幕的列表比如，S1E0 S2E0 S3E0
+		d.saveFullSeasonSub(seriesInfo, organizeSubFiles)
 	}
 	return nil
 }
@@ -158,6 +161,29 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 			if err != nil {
 				d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub, "writeSubFile2VideoPath:", err)
 				return
+			}
+		}
+	}
+}
+
+// saveFullSeasonSub 这里就需要单独存储到连续剧每一季的文件夹的特殊文件夹中
+func (d Downloader) saveFullSeasonSub(seriesInfo *common.SeriesInfo, organizeSubFiles map[string][]string) {
+
+	for _, season := range seriesInfo.SeasonDict {
+		epsKey := model.GetEpisodeKeyName(season, 0)
+		subs, ok := organizeSubFiles[epsKey]
+		if ok == false {
+			continue
+		}
+		for _, sub := range subs {
+			subFileName := filepath.Base(sub)
+			newSeasonSubRootPath := path.Join(seriesInfo.DirPath, epsKey)
+			_ = os.MkdirAll(newSeasonSubRootPath, os.ModePerm)
+			newSubFullPath := path.Join(newSeasonSubRootPath, subFileName)
+			err := os.Rename(sub, newSubFullPath)
+			if err != nil {
+				d.log.Errorln("saveFullSeasonSub", subFileName, err)
+				continue
 			}
 		}
 	}
