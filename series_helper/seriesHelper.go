@@ -159,6 +159,9 @@ func OneSeriesDlSubInAllSite(Suppliers []_interface.ISupplier, seriesInfo *commo
 			if err != nil {
 				model.GetLogger().Errorln("GetSubListFromFile4Series", err)
 			}
+			// 把后缀名给改好
+			model.ChangeVideoExt2SubExt(subInfos)
+
 			subInfosChannel <- subInfos
 		}()
 	}

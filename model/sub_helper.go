@@ -87,3 +87,13 @@ func OrganizeDlSubFiles(subInfos []common.SupplierSubInfo) (map[string][]string,
 
 	return siteSubInfoDict, nil
 }
+
+// ChangeVideoExt2SubExt 检测 Name，如果是视频的后缀名就改为字幕的后缀名
+func ChangeVideoExt2SubExt(subInfos []common.SupplierSubInfo) {
+	for x, info := range subInfos {
+		tmpSubFileName := info.Name
+		if strings.Contains(tmpSubFileName, info.Ext) == false {
+			subInfos[x].Name = tmpSubFileName + info.Ext
+		}
+	}
+}

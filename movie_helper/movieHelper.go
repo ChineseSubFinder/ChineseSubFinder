@@ -47,12 +47,7 @@ func OneMovieDlSubInOneSite(oneVideoFullPath string, i int, supplier _interface.
 		return nil, err
 	}
 	// 把后缀名给改好
-	for x, info := range subInfos {
-		tmpSubFileName := info.Name
-		if strings.Contains(tmpSubFileName, info.Ext) == false {
-			subInfos[x].Name = tmpSubFileName + info.Ext
-		}
-	}
+	model.ChangeVideoExt2SubExt(subInfos)
 
 	return subInfos, nil
 }
