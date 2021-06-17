@@ -59,13 +59,13 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 	for value := range seriesInfo.SeasonDict {
 		// 第一级界面，找到影片的详情界面
 		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
-		filmDetailPageUrl, err := s.Step0(keyword)
+		filmDetailPageUrl, err := s.step0(keyword)
 		if err != nil {
 			s.log.Errorln(keyword)
 			return nil, err
 		}
 		// 第二级界面，有多少个字幕
-		subResult, err := s.Step1(filmDetailPageUrl)
+		subResult, err := s.step1(filmDetailPageUrl)
 		if err != nil {
 			s.log.Errorln(filmDetailPageUrl)
 			return nil, err
@@ -144,12 +144,12 @@ func (s Supplier) getSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 
 	var outSubInfoList []common.SupplierSubInfo
 	// 第一级界面，找到影片的详情界面
-	filmDetailPageUrl, err := s.Step0(keyword)
+	filmDetailPageUrl, err := s.step0(keyword)
 	if err != nil {
 		return nil, err
 	}
 	// 第二级界面，有多少个字幕
-	subResult, err := s.Step1(filmDetailPageUrl)
+	subResult, err := s.step1(filmDetailPageUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []commo
 
 	var outSubInfoList = make([]common.SupplierSubInfo, 0)
 	for i := range subInfos {
-		err = s.Step2(&subInfos[i])
+		err = s.step2(&subInfos[i])
 		if err != nil {
 			s.log.Error(err)
 			continue
@@ -235,7 +235,7 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []commo
 
 	// 第四级界面，具体字幕下载
 	for i, subInfo := range tmpSubInfo {
-		fileName, data, err := s.Step3(subInfo.SubDownloadPageUrl)
+		fileName, data, err := s.step3(subInfo.SubDownloadPageUrl)
 		if err != nil {
 			s.log.Error(err)
 			continue
@@ -247,8 +247,8 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []commo
 	return outSubInfoList
 }
 
-// Step0 先在查询界面找到字幕对应第一个影片的详情界面，需要解决自定义错误 ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound
-func (s Supplier) Step0(keyword string) (string, error) {
+// step0 先在查询界面找到字幕对应第一个影片的详情界面，需要解决自定义错误 ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound
+func (s Supplier) step0(keyword string) (string, error) {
 	httpClient := model.NewHttpClient(s.reqParam)
 	// 第一级界面，有多少个字幕
 	resp, err := httpClient.R().
@@ -270,8 +270,8 @@ func (s Supplier) Step0(keyword string) (string, error) {
 	return filmDetailPageUrl, nil
 }
 
-// Step1 分析详情界面，找到有多少个字幕
-func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
+// step1 分析详情界面，找到有多少个字幕
+func (s Supplier) step1(filmDetailPageUrl string) (SubResult, error) {
 	filmDetailPageUrl = model.AddBaseUrl(common.SubZiMuKuRootUrl, filmDetailPageUrl)
 	httpClient := model.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
@@ -365,8 +365,8 @@ func (s Supplier) Step1(filmDetailPageUrl string) (SubResult, error) {
 	return subResult, nil
 }
 
-// Step2 第二级界面，单个字幕详情，需要判断 ZiMuKuDownloadUrlStep2NotFound 这个自定义错误
-func (s Supplier) Step2(subInfo *SubInfo) error {
+// step2 第二级界面，单个字幕详情，需要判断 ZiMuKuDownloadUrlStep2NotFound 这个自定义错误
+func (s Supplier) step2(subInfo *SubInfo) error {
 
 	detailUrl := model.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.DetailUrl)
 	httpClient := model.NewHttpClient(s.reqParam)
@@ -390,8 +390,8 @@ func (s Supplier) Step2(subInfo *SubInfo) error {
 	return nil
 }
 
-// Step3 第三级界面，具体字幕下载 ZiMuKuDownloadUrlStep3NotFound ZiMuKuDownloadUrlStep3AllFailed
-func (s Supplier) Step3(subDownloadPageUrl string) (string, []byte, error) {
+// step3 第三级界面，具体字幕下载 ZiMuKuDownloadUrlStep3NotFound ZiMuKuDownloadUrlStep3AllFailed
+func (s Supplier) step3(subDownloadPageUrl string) (string, []byte, error) {
 
 	subDownloadPageUrl = model.AddBaseUrl(common.SubZiMuKuRootUrl, subDownloadPageUrl)
 	httpClient := model.NewHttpClient(s.reqParam)
@@ -413,7 +413,7 @@ func (s Supplier) Step3(subDownloadPageUrl string) (string, []byte, error) {
 	for i := 0; i < len(matched); i++ {
 		data, filename, err = model.DownFile(model.AddBaseUrl(common.SubZiMuKuRootUrl, matched[i][1]), s.reqParam)
 		if err != nil {
-			s.log.Errorln("ZiMuKu Step3 DownloadFile", err)
+			s.log.Errorln("ZiMuKu step3 DownloadFile", err)
 			continue
 		}
 		return filename, data, nil

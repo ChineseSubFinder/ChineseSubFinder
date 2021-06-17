@@ -52,7 +52,7 @@ func (s Supplier) GetReqParam() common.ReqParam{
 }
 
 func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSubInfo, error){
-	return s.GetSubListFromFile(filePath)
+	return s.getSubListFromFile(filePath)
 }
 
 func (s Supplier) GetSubListFromFile4Series(seriesPath string) ([]common.SupplierSubInfo, error) {
@@ -63,7 +63,7 @@ func (s Supplier) GetSubListFromFile4Anime(animePath string) ([]common.SupplierS
 	panic("not implemented")
 }
 
-func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
+func (s Supplier) getSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
 	/*
 		虽然是传入视频文件路径，但是其实需要读取对应的视频文件目录下的
 		movie.xml 以及 *.nfo，找到 IMDB id
@@ -88,7 +88,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 
 	if imdbInfo.ImdbId != "" {
 		// 先用 imdb id 找
-		subInfoList, err = s.GetSubListFromKeyword(imdbInfo.ImdbId)
+		subInfoList, err = s.getSubListFromKeyword(imdbInfo.ImdbId)
 		if err != nil {
 			// 允许的错误，跳过，继续进行文件名的搜索
 			s.log.Errorln(s.GetSupplierName(), "keyword:", imdbInfo.ImdbId)
@@ -101,7 +101,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	}
 	// 如果没有，那么就用文件名查找
 	searchKeyword := model.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
-	subInfoList, err = s.GetSubListFromKeyword(searchKeyword)
+	subInfoList, err = s.getSubListFromKeyword(searchKeyword)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "keyword:", searchKeyword)
 		return nil, err
@@ -110,10 +110,10 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	return subInfoList, nil
 }
 
-func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error) {
+func (s Supplier) getSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error) {
 
 	var subInfos  []common.SupplierSubInfo
-	detailPageUrl, err := s.Step0(keyword)
+	detailPageUrl, err := s.step0(keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	if detailPageUrl == "" {
 		return nil, nil
 	}
-	subList, err := s.Step1(detailPageUrl)
+	subList, err := s.step1(detailPageUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	}
 
 	for i, item := range subList {
-		hdContent, err := s.Step2Ex(browser, item.Url)
+		hdContent, err := s.step2Ex(browser, item.Url)
 		if err != nil {
 			return nil, err
 		}
@@ -148,8 +148,8 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	return subInfos, nil
 }
 
-// Step0 找到这个影片的详情列表
-func (s Supplier) Step0(keyword string) (string, error) {
+// step0 找到这个影片的详情列表
+func (s Supplier) step0(keyword string) (string, error) {
 
 	result, err := s.httpGet(fmt.Sprintf(common.SubSubHDSearchUrl, url.QueryEscape(keyword)))
 	if err != nil {
@@ -195,8 +195,9 @@ func (s Supplier) Step0(keyword string) (string, error) {
 	//}
 	//return matched[0][1], nil
 }
-// Step1 获取影片的详情字幕列表
-func (s Supplier) Step1(detailPageUrl string) ([]HdListItem, error) {
+
+// step1 获取影片的详情字幕列表
+func (s Supplier) step1(detailPageUrl string) ([]HdListItem, error) {
 	detailPageUrl = model.AddBaseUrl(common.SubSubHDRootUrl, detailPageUrl)
 	result, err := s.httpGet(detailPageUrl)
 	if err != nil {
@@ -253,8 +254,8 @@ func (s Supplier) Step1(detailPageUrl string) ([]HdListItem, error) {
 	return lists, nil
 }
 
-// Step2Ex 下载字幕 过防水墙
-func (s Supplier) Step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdContent, error)  {
+// step2Ex 下载字幕 过防水墙
+func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdContent, error)  {
 	subDownloadPageUrl = model.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
 	// TODO 需要提取出 rod 的超时时间和重试次数，注意，这里的超时时间，在调试的时候也算进去的，所以···
 	page, err := model.NewPageNavigate(browser, subDownloadPageUrl, 300*time.Second, 5)
@@ -447,20 +448,6 @@ func (s Supplier) httpGet(url string) (string, error) {
 	if strings.Contains(resp.String(), "搜索验证") {
 		s.log.Debug("搜索验证 reload", url)
 		return s.httpGet(url)
-	}
-	return resp.String(), nil
-}
-
-//httpPost  没用了，弃了
-func (s Supplier) httpPost(url string, postData map[string]string, referer string) (string, error) {
-
-	s.reqParam.Referer = referer
-	httpClient := model.NewHttpClient(s.reqParam)
-	resp, err := httpClient.R().
-		SetFormData(postData).
-		Post(url)
-	if err != nil {
-		return "", err
 	}
 	return resp.String(), nil
 }
