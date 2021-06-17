@@ -8,4 +8,6 @@ type Config struct {
 	SaveMultiSub bool
 	FoundExistSubFileThanSkip bool
 	MovieFolder string
+	SeriesFolder string
+	AnimeFolder string
 }

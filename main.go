@@ -56,29 +56,51 @@ func main() {
 	// 定时器
 	entryID, err := c.AddFunc("@every " + config.EveryTime, func() {
 		defer func() {
-			log.Infoln("Download Timer End...")
+			log.Infoln("Download One End...")
 		}()
 
-		log.Infoln("Download Timer Started...")
+		log.Infoln("Download One Started...")
+		log.Infoln("Download Movie Sub Started...")
 		// 开始下载
 		err := downloader.DownloadSub4Movie(config.MovieFolder)
 		if err != nil {
 			log.Errorln("DownloadSub4Movie", err)
 			return
 		}
+		log.Infoln("Download Movie Sub End...")
+
+		log.Infoln("Download Series Sub Started...")
+		err = downloader.DownloadSub4Series(config.SeriesFolder)
+		if err != nil {
+			log.Errorln("DownloadSub4Series", err)
+			return
+		}
+		log.Infoln("Download Series Sub End...")
 	})
 	if err != nil {
 		log.Errorln("cron entryID:", entryID, "Error:", err)
 		return
 	}
+
 	log.Infoln("First Time Download Start")
 	// 立即触发第一次的更新
 	// 开始下载
+	log.Infoln("Download Movie Sub Started...")
 	err = downloader.DownloadSub4Movie(config.MovieFolder)
 	if err != nil {
 		log.Errorln("DownloadSub4Movie", err)
 		return
 	}
+	log.Infoln("Download Movie Sub End...")
+
+	log.Infoln("Download Series Sub Started...")
+	err = downloader.DownloadSub4Series(config.SeriesFolder)
+	if err != nil {
+		log.Errorln("DownloadSub4Series", err)
+		return
+	}
+	log.Infoln("Download Series Sub End...")
+
 	log.Infoln("First Time Download End")
 
 	c.Start()

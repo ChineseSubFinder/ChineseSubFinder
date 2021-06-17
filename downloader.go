@@ -7,6 +7,9 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/series_helper"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier/shooter"
+	"github.com/allanpk716/ChineseSubFinder/sub_supplier/subhd"
+	"github.com/allanpk716/ChineseSubFinder/sub_supplier/xunlei"
+	"github.com/allanpk716/ChineseSubFinder/sub_supplier/zimuku"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -59,9 +62,9 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	// 构建每个字幕站点下载者的实例
 	var subSupplierHub *sub_supplier.SubSupplierHub
 	subSupplierHub = sub_supplier.NewSubSupplierHub(shooter.NewSupplier(d.reqParam),
-		//subhd.NewSupplier(d.reqParam),
-		//xunlei.NewSupplier(d.reqParam),
-		//zimuku.NewSupplier(d.reqParam),
+		subhd.NewSupplier(d.reqParam),
+		xunlei.NewSupplier(d.reqParam),
+		zimuku.NewSupplier(d.reqParam),
 	)
 	// TODO 后续再改为每个视频以上的流程都是一个 channel 来做（目前做不了，得重构缓存字幕的方式，不然会出问题），并且需要控制在一个并发量之下（很可能没必要，毕竟要在弱鸡机器上挂机用的）
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
@@ -88,10 +91,10 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	}()
 	// 构建每个字幕站点下载者的实例
 	var subSupplierHub *sub_supplier.SubSupplierHub
-	subSupplierHub = sub_supplier.NewSubSupplierHub(//zimuku.NewSupplier(d.reqParam),
+	subSupplierHub = sub_supplier.NewSubSupplierHub(zimuku.NewSupplier(d.reqParam),
 		shooter.NewSupplier(d.reqParam),
 		//subhd.NewSupplier(d.reqParam),
-		//xunlei.NewSupplier(d.reqParam),
+		xunlei.NewSupplier(d.reqParam),
 	)
 	// 遍历连续剧总目录下的第一层目录
 	seriesDirList, err := series_helper.GetSeriesList(dir)

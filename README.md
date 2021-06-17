@@ -2,6 +2,10 @@
 
 本项目的初衷仅仅是想自动化搞定**限定条件**下 **中文** 字幕下载。
 
+> 开发中，可能有不兼容性的调整（配置文件字段变更）
+>
+> 最新版本 v0.3.x 支持连续剧字幕下载（暂时部支持 subhd）
+
 ## Why？
 
 注意，因为近期参考《[高阶教程-追剧全流程自动化 | sleele的博客](https://sleele.com/tag/高阶教程-追剧全流程自动化/)》搞定了自动下载，美剧、电影没啥问题。但是遇到字幕下载的困难，里面推荐的都不好用，能下载一部分，大部分都不行。当然有可能是个人的问题。为此就打算自己整一个专用的下载器。
@@ -15,15 +19,15 @@
 ### 支持的部署方式
 
 * docker，见 How to use
-* ~~Windows，需要去 Release 下载，见 How to use~~b Windows 可以自行编译即可
+* ~~Windows，需要去 Release 下载，见 How to use~~ Windows 可以自行编译即可
 
 ### 支持的视频分类
 
-|  类型  | 是否支持 |                  备注                   |
-| :----: | :------: | :-------------------------------------: |
-|  电影  |    ✔     | 已经支持，通过 IMDB、或者文件名进行搜索 |
-| 连续剧 |    -     |               正在开发中                |
-|  动画  |    -     |                  待定                   |
+|  类型  | 是否支持 |                             备注                             |
+| :----: | :------: | :----------------------------------------------------------: |
+|  电影  |    ✔     |           已经支持，通过 IMDB、或者文件名进行搜索            |
+| 连续剧 |    ✔     | 正在开发中（v0.3.x 欢迎试用）。连续剧只支持有 *.nfo 文件能够读取到 IMDB ID 才能够进行自动化下载，否则跳过。 |
+|  动画  |    -     |                             待定                             |
 
 
 
@@ -67,10 +71,11 @@
 version: "3"
 services:
   chinesesubfinder:
-    image: allanpk716/chinesesubfinder:latest
+    image: allanpk716/chinesesubfinder:v0.3.0
     volumes:
       - /volume1/docker/chinesesubfinder/config.yaml:/app/config.yaml
-      - /volume1/Video/电影:/app/videofolder
+      - /volume1/Video/电影:/app/MovieFolder
+      - /volume1/Video/连续剧:/app/SeriesFolder
     environment:
       TZ: Asia/Shanghai
     restart: unless-stopped
@@ -81,11 +86,11 @@ services:
 ```yaml
 UseProxy: false
 HttpProxy: http://127.0.0.1:10809
-EveryTime: 6h
+EveryTime: 12h
 DebugMode: false
 SaveMultiSub: false
-FoundExistSubFileThanSkip: true
-MovieFolder: /app/videofolder
+MovieFolder: /app/MovieFolder
+SeriesFolder: /app/SeriesFolder
 ```
 
 ### 配置文件解析
@@ -98,8 +103,8 @@ HttpProxy: http://127.0.0.1:10809
 EveryTime: 6h
 DebugMode: false
 SaveMultiSub: false
-FoundExistSubFileThanSkip: true
 MovieFolder: X:\电影
+SeriesFolder: X:\连续剧
 ```
 
 * UseProxy，默认false。是否使用代理，需要配合 HttpProxy 设置
@@ -107,8 +112,8 @@ MovieFolder: X:\电影
 * EveryTime，，默认 6h。每隔多久触发一次下载逻辑。怎么用参考，[robfig/cron: a cron library for go (github.com)](https://github.com/robfig/cron)
 * DebugMode，默认 false。调试模式，会在每个视频的文件夹下，新建一个  subtmp 文件夹，把所有匹配到的字幕都缓存到这个目录，没啥事可以不开。开的话就可以让你手动选择一堆的字幕啦。
 * SaveMultiSub，默认值 false。true 会在每个视频下面保存每个网站找到的最佳字幕（见下面《如何手动刷新 emby 加载字幕》，会举例）。false ，那么每个视频下面就一个最优字幕。
-* FoundExistSubFileThanSkip，默认 true。是否跳过已经下载过 sub 的视频。
-* MovieFolder，填写你的电影的目录（暂时只支持电影，后续会支持其他的类型）
+* MovieFolder，填写你的电影的目录
+* SeriesFolder，填写你的连续剧的目录
 
 ### 如何手动刷新 emby 加载字幕
 

@@ -1,8 +1,8 @@
 UseProxy: false
 HttpProxy: http://127.0.0.1:10809
-EveryTime: 6h
+EveryTime: 12h
 DebugMode: false
-SaveMultiSub: false
-FoundExistSubFileThanSkip: true
+SaveMultiSub: true
 MovieFolder: X:\电影
-TVdbApiKey: 123456
+SeriesFolder: X:\连续剧
+AnimeFolder: X:\动画
