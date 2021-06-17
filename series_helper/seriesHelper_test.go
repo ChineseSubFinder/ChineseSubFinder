@@ -17,7 +17,7 @@ func TestReadSeriesInfoFromDir(t *testing.T) {
 	println(seriesInfo.Name, seriesInfo.Year, seriesInfo.ImdbId)
 	for i, info := range seriesInfo.EpList {
 		println("Video:", i, info.Season, info.Episode)
-		for j, subInfo := range info.SubList {
+		for j, subInfo := range info.SubAlreadyDownloadedList {
 			println("Sub:", j, subInfo.Title, subInfo.Season, subInfo.Episode, subInfo.Language.String())
 		}
 	}

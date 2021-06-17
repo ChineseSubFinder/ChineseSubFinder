@@ -56,7 +56,7 @@ func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSu
 }
 
 func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error) {
-	panic("not implemented")
+	return nil, nil
 }
 
 func (s Supplier) GetSubListFromFile4Anime(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error){

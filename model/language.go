@@ -13,7 +13,10 @@ func LangConverter(subLang string) common.Language {
 	/*
 		xunlei:未知语言、简体&英语、繁体&英语、简体、繁体、英语
 	*/
-	if strings.Contains(subLang, common.MatchLangChs) {
+	if strings.Contains(subLang, common.MatchLangDouble) {
+		// 双语 - 简英
+		return common.ChineseSimpleEnglish
+	} else if strings.Contains(subLang, common.MatchLangChs) {
 		// 优先简体
 		if strings.Contains(subLang, common.MatchLangEn) {
 			// 简英

@@ -25,7 +25,8 @@ func TestDownloader_DownloadSub4Movie(t *testing.T) {
 
 func TestDownloader_DownloadSub4Series(t *testing.T) {
 	var err error
-	dirRoot := "X:\\连续剧\\隐秘的角落 (2020)"
+	//dirRoot := "X:\\连续剧\\隐秘的角落 (2020)"
+	dirRoot := "X:\\连续剧\\The Bad Batch"
 
 	dl := NewDownloader(common.ReqParam{
 		SaveMultiSub: true,

@@ -41,6 +41,7 @@ const (
 
 const (
 	MathLangChnUnknow = "未知语言"
+	MatchLangDouble   = "双语"
 	MatchLangChs      = "简"
 	MatchLangCht      = "繁"
 	MatchLangChsEn    = "简英"

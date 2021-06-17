@@ -95,7 +95,9 @@ func (s Supplier) getSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 				s.log.Error(err)
 				continue
 			}
-			outSubInfoList = append(outSubInfoList, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, file.Link, 0, shooter.Delay, subExt, data))
+
+			onSub := common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, file.Link, 0, shooter.Delay, subExt, data)
+			outSubInfoList = append(outSubInfoList, *onSub)
 			// 如果够了那么多个字幕就返回
 			if len(outSubInfoList) >= s.topic {
 				return outSubInfoList, nil
@@ -157,8 +159,14 @@ func (s Supplier) downloadSub4Series(seriesInfo *common.SeriesInfo) ([]common.Su
 		if err != nil {
 			return nil, err
 		}
+		// 需要赋值给字幕结构
+		for i, _ := range one {
+			one[i].Season = episodeInfo.Season
+			one[i].Episode = episodeInfo.Episode
+		}
 		allSupplierSubInfo = append(allSupplierSubInfo, one...)
 	}
+	// 返回前，需要把每一个 Eps 的 Season Episode 信息填充到每个 SupplierSubInfo 中
 	return allSupplierSubInfo, nil
 }
 

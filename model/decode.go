@@ -87,10 +87,10 @@ func GetImdbInfo(dirPth string) (common.VideoInfo, error) {
 		}
 		upperName := strings.ToUpper(fi.Name())
 		// 找 movie.xml
-		if upperName == strings.ToUpper(metadataFileEmby) {
+		if upperName == strings.ToUpper(MetadataFileEmby) {
 			movieFilePath = dirPth + pathSep + fi.Name()
 			break
-		} else if upperName == strings.ToUpper(metadateTVNfo) {
+		} else if upperName == strings.ToUpper(MetadateTVNfo) {
 			// 连续剧的 nfo 文件
 			nfoFilePath = dirPth + pathSep + fi.Name()
 			break
@@ -212,10 +212,10 @@ func GetNumber2int(input string) (int, error) {
 }
 
 const (
-	metadataFileEmby = "movie.xml"
+	MetadataFileEmby = "movie.xml"
 	suffixNameXml    = ".xml"
 	suffixNameNfo    = ".nfo"
-	metadateTVNfo    = "tvshow.nfo"
+	MetadateTVNfo    = "tvshow.nfo"
 	// 去除特殊字符，仅仅之有中文
 	regFixTitle = "[^\u4e00-\u9fa5a-zA-Z0-9\\s]"
 	// 去除特殊字符，把特殊字符都写进去

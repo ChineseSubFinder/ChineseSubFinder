@@ -17,13 +17,13 @@ type SeriesInfo struct {
 }
 
 type EpisodeInfo struct {
-	Title      string
-	Season     int
-	Episode    int
-	SubList	   []SubInfo
-	Dir		   string	// 这里需要记录字幕的位置，因为需要在同级目录匹配相应的字幕才行
-	FileFullPath string // 视频文件的全路径
-	ModifyTime  time.Time	// 创建时间
+	Title                    string
+	Season                   int
+	Episode                  int
+	SubAlreadyDownloadedList []SubInfo // 已经下载在当前视频目录下的字幕列表
+	Dir                      string    // 这里需要记录字幕的位置，因为需要在同级目录匹配相应的字幕才行
+	FileFullPath             string    // 视频文件的全路径
+	ModifyTime               time.Time // 创建时间
 }
 
 type SubInfo struct {

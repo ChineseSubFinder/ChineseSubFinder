@@ -62,7 +62,17 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 		filmDetailPageUrl, err := s.step0(keyword)
 		if err != nil {
 			s.log.Errorln(keyword)
-			return nil, err
+			// 如果只是搜索不到，则继续换关键词
+			if err != common.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
+				return nil, err
+			}
+			s.log.Infoln("Retry", keyword)
+			keyword := seriesInfo.Name
+			filmDetailPageUrl, err = s.step0(keyword)
+			if err != nil {
+				s.log.Errorln(keyword)
+				return nil, err
+			}
 		}
 		// 第二级界面，有多少个字幕
 		subResult, err := s.step1(filmDetailPageUrl)
@@ -84,6 +94,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 	// 剩下的部分跟 GetSubListFroKeyword 一样，就是去下载了
 	outSubInfoList := s.whichSubInfoNeedDownload(subInfoNeedDownload, err)
 
+	// 返回前，需要把每一个 Eps 的 Season Episode 信息填充到每个 SupplierSubInfo 中
 	return outSubInfoList, nil
 }
 
@@ -172,7 +183,7 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *common.SeriesInfo, All
 			s.log.Errorln("SubInfos GetSubListFromFile4Series.GetVideoInfoFromFileFullPath", subInfo.Name, err)
 			continue
 		}
-		// 这里的 episode 为 0，则是全季
+		// TODO 这里的 episode 为 0，则是全季
 		epsKey := model.GetEpisodeKeyName(season, episode)
 		_, ok := allSubDict[epsKey]
 		if ok == false {
@@ -191,12 +202,15 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *common.SeriesInfo, All
 		value, ok := allSubDict[epsKey]
 		// 是否有
 		if ok == true && len(value) > 0 {
+			value[0].Season = epsInfo.Season
+			value[0].Episode = epsInfo.Episode
 			subInfoNeedDownload = append(subInfoNeedDownload, value[0])
 		} else {
 			s.log.Infoln("Not Find Sub can be download", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 		}
 	}
 
+	// 返回前，需要把每一个 Eps 的 Season Episode 信息填充到每个 SubInfo 中
 	return subInfoNeedDownload
 }
 
@@ -241,9 +255,16 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []commo
 			continue
 		}
 		// 默认都是包含中文字幕的，然后具体使用的时候再进行区分
-		outSubInfoList = append(outSubInfoList, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, model.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
-			0, filepath.Ext(fileName), data))
+
+		oneSubInfo := common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), fileName, common.ChineseSimple, model.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
+			0, filepath.Ext(fileName), data)
+
+		oneSubInfo.Season = subInfo.Season
+		oneSubInfo.Episode = subInfo.Episode
+		outSubInfoList = append(outSubInfoList, *oneSubInfo)
 	}
+
+	// 返回前，需要把每一个 Eps 的 Season Episode 信息填充到每个 SupplierSubInfo 中
 	return outSubInfoList
 }
 
@@ -439,6 +460,8 @@ type SubInfo struct {
 	DetailUrl			string	// 字幕的详情界面，需要再次分析具体的下载地址，地址需要拼接网站的根地址上去
 	SubDownloadPageUrl 	string	// 字幕的具体的下载页面，会有多个下载可用的链接
 	DownloadUrl			string	// 字幕的下载地址
+	Season    			int		// 第几季，默认-1
+	Episode   			int		// 第几集，默认-1
 }
 
 // SubInfos 实现自定义排序

@@ -6,12 +6,14 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/model"
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/srt"
+	"io/ioutil"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
 )
 
-// ReadSeriesInfoFromDir 读取剧集的信息
+// ReadSeriesInfoFromDir 读取剧集的信息，只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList
 func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 	seriesInfo := common.SeriesInfo{}
 
@@ -95,10 +97,10 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 				ModifyTime: modifyTime,
 			}
 			// 需要匹配同级目录下的字幕
-			oneFileEpInfo.SubList = make([]common.SubInfo, 0)
+			oneFileEpInfo.SubAlreadyDownloadedList = make([]common.SubInfo, 0)
 			for _, subInfo := range SubDict[epsKey] {
 				if subInfo.Dir == oneFileEpInfo.Dir {
-					oneFileEpInfo.SubList = append(oneFileEpInfo.SubList, subInfo)
+					oneFileEpInfo.SubAlreadyDownloadedList = append(oneFileEpInfo.SubAlreadyDownloadedList, subInfo)
 				}
 			}
 			EpisodeDict[epsKey] = oneFileEpInfo
@@ -140,7 +142,7 @@ func SkipChineseSeries(seriesRootPath string, _reqParam ...common.ReqParam) (boo
 }
 
 // OneSeriesDlSubInAllSite 一部连续剧在所有的网站下载相应的字幕
-func OneSeriesDlSubInAllSite(Suppliers []_interface.ISupplier, seriesInfo *common.SeriesInfo) []common.SupplierSubInfo {
+func OneSeriesDlSubInAllSite(Suppliers []_interface.ISupplier, seriesInfo *common.SeriesInfo, i int) []common.SupplierSubInfo {
 	var outSUbInfos = make([]common.SupplierSubInfo, 0)
 	// 同时进行查询
 	subInfosChannel := make(chan []common.SupplierSubInfo)
@@ -148,6 +150,11 @@ func OneSeriesDlSubInAllSite(Suppliers []_interface.ISupplier, seriesInfo *commo
 	for _, supplier := range Suppliers {
 		supplier := supplier
 		go func() {
+			defer func() {
+				model.GetLogger().Infoln(i, supplier.GetSupplierName(), "End...")
+			}()
+			model.GetLogger().Infoln(i, supplier.GetSupplierName(), "Start...")
+			// 一次性把这一部连续剧的所有字幕下载完
 			subInfos, err := supplier.GetSubListFromFile4Series(seriesInfo)
 			if err != nil {
 				model.GetLogger().Errorln("GetSubListFromFile4Series", err)
@@ -165,6 +172,32 @@ func OneSeriesDlSubInAllSite(Suppliers []_interface.ISupplier, seriesInfo *commo
 	return outSUbInfos
 }
 
+// GetSeriesList 获取这个目录下的所有文件夹名称，默认为一个连续剧的目录的List
+func GetSeriesList(dir string) ([]string, error) {
+
+	var seriesDirList = make([]string, 0)
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	for _, curFile := range files {
+		if curFile.IsDir() == false {
+
+			// 如果发现有 tvshow.nfo 文件，那么就任务这个目录就是剧集的目录
+			if strings.ToLower(curFile.Name()) == model.MetadateTVNfo {
+				seriesDirList = make([]string, 0)
+				seriesDirList = append(seriesDirList, dir)
+				return seriesDirList, nil
+			}
+			continue
+		}
+		fullPath := path.Join(dir, curFile.Name())
+		seriesDirList = append(seriesDirList, fullPath)
+	}
+
+	return seriesDirList, err
+}
+
 // whichEpsNeedDownloadSub 有那些 Eps 需要下载的，按 SxEx 反回 epsKey
 func whichEpsNeedDownloadSub(seriesInfo *common.SeriesInfo) map[string]common.EpisodeInfo {
 	var needDlSubEpsList = make(map[string]common.EpisodeInfo, 0)
@@ -174,12 +207,12 @@ func whichEpsNeedDownloadSub(seriesInfo *common.SeriesInfo) map[string]common.Ep
 	for _, epsInfo := range seriesInfo.EpList {
 		// 如果没有字幕，则加入下载列表
 		// 这一集下载后的30天内，都进行字幕的下载
-		if len(epsInfo.SubList) < 1 || epsInfo.ModifyTime.Add(dayRange).After(currentTime) == true {
+		if len(epsInfo.SubAlreadyDownloadedList) < 1 || epsInfo.ModifyTime.Add(dayRange).After(currentTime) == true {
 			// 添加
 			epsKey := model.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
 			needDlSubEpsList[epsKey] = epsInfo
 		} else {
-			if len(epsInfo.SubList) > 0 {
+			if len(epsInfo.SubAlreadyDownloadedList) > 0 {
 				model.GetLogger().Infoln("Skip because find sub file", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 			} else if epsInfo.ModifyTime.Add(dayRange).After(currentTime) == false {
 				model.GetLogger().Infoln("Skip because 30 days pass", epsInfo.Title, epsInfo.Season, epsInfo.Episode)

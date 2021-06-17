@@ -10,8 +10,18 @@ type SupplierSubInfo struct {
 	Offset    int64          `json:"offset"`     // 字幕的偏移
 	Ext       string         `json:"ext"`        // 字幕文件的后缀名带点，有可能是直接能用的字幕文件，也可能是压缩包
 	Data      []byte         `json:"data"`       // 字幕文件的二进制数据
+	Season    int			 `json:"season"`     // 第几季，默认-1
+	Episode   int			 `json:"episode"`    // 第几集，默认-1
 }
 
-func NewSupplierSubInfo(fromWhere string, topN int64, name string, language Language, fileUrl string, score int64, offset int64, ext string, data []byte) *SupplierSubInfo {
-	return &SupplierSubInfo{FromWhere: fromWhere, TopN: topN,Name: name, Language: language, FileUrl: fileUrl, Score: score, Offset: offset, Ext: ext, Data: data}
+func NewSupplierSubInfo(fromWhere string, topN int64, name string, language Language, fileUrl string,
+	score int64, offset int64, ext string, data []byte) *SupplierSubInfo {
+
+	s := SupplierSubInfo{FromWhere: fromWhere, TopN: topN,Name: name, Language: language, FileUrl: fileUrl,
+		Score: score, Offset: offset, Ext: ext, Data: data}
+
+	s.Season = -1
+	s.Episode = -1
+	
+	return &s
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/mark_system"
 	"github.com/allanpk716/ChineseSubFinder/model"
+	"github.com/allanpk716/ChineseSubFinder/series_helper"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier/subhd"
@@ -74,47 +75,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 			d.log.Errorln("subSupplierHub.DownloadSub4Movie", oneVideoFullPath ,err)
 			continue
 		}
-		// 得到目标视频文件的根目录
-		videoRootPath := filepath.Dir(oneVideoFullPath)
-		// -------------------------------------------------
-		// 调试缓存，把下载好的字幕写到对应的视频目录下，方便调试
-		if d.reqParam.DebugMode == true {
-			err = d.copySubFile2DesFolder(videoRootPath, organizeSubFiles)
-			if err != nil {
-				d.log.Errorln("copySubFile2DesFolder", err)
-			}
-		}
-		// -------------------------------------------------
-		if d.reqParam.SaveMultiSub == false {
-			// 选择最优的一个字幕
-			var finalSubFile *common.SubParserFileInfo
-			finalSubFile = d.mk.SelectOneSubFile(organizeSubFiles)
-			if finalSubFile == nil {
-				d.log.Warnln("Found", len(organizeSubFiles), " subtitles but not one fit:", oneVideoFullPath)
-				continue
-			}
-			// 找到了，写入文件
-			err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile, "")
-			if err != nil {
-				d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub ,"writeSubFile2VideoPath:", err)
-				continue
-			}
-		} else {
-			// 每个网站 Top1 的字幕
-			siteNames, finalSubFiles := d.mk.SelectEachSiteTop1SubFile(organizeSubFiles)
-			if len(siteNames) < 0 {
-				d.log.Warnln("SelectEachSiteTop1SubFile found none sub file")
-				continue
-			}
-
-			for i, file := range finalSubFiles {
-				err = d.writeSubFile2VideoPath(oneVideoFullPath, file, siteNames[i])
-				if err != nil {
-					d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub ,"writeSubFile2VideoPath:", err)
-					continue
-				}
-			}
-		}
+		d.oneVideoSelectBestSub(oneVideoFullPath, organizeSubFiles)
 		// -----------------------------------------------------
 	}
 	return nil
@@ -130,21 +91,76 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	}()
 	// 构建每个字幕站点下载者的实例
 	var subSupplierHub *sub_supplier.SubSupplierHub
-	subSupplierHub = sub_supplier.NewSubSupplierHub(shooter.NewSupplier(d.reqParam),
-		subhd.NewSupplier(d.reqParam),
-		xunlei.NewSupplier(d.reqParam),
-		zimuku.NewSupplier(d.reqParam),
+	subSupplierHub = sub_supplier.NewSubSupplierHub(zimuku.NewSupplier(d.reqParam),
+		//shooter.NewSupplier(d.reqParam),
+		//subhd.NewSupplier(d.reqParam),
+		//xunlei.NewSupplier(d.reqParam),
 	)
-
-	organizeSubFiles, err := subSupplierHub.DownloadSub4Series(dir, 0)
+	// 遍历连续剧总目录下的第一层目录
+	seriesDirList, err := series_helper.GetSeriesList(dir)
 	if err != nil {
-		d.log.Errorln("subSupplierHub.DownloadSub4Series", dir ,err)
 		return err
 	}
+	for i, oneSeriesPath := range seriesDirList {
+		// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
+		seriesInfo, organizeSubFiles, err := subSupplierHub.DownloadSub4Series(oneSeriesPath, i)
+		if err != nil {
+			d.log.Errorln("subSupplierHub.DownloadSub4Series", oneSeriesPath ,err)
+			return err
+		}
 
-	println(organizeSubFiles)
-
+		for epsKey, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
+			// 匹配对应的 Eps 去处理
+			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, organizeSubFiles[epsKey])
+		}
+	}
 	return nil
+}
+
+// oneVideoSelectBestSub 一个视频，选择最佳的一个字幕（也可以保存所有网站第一个最佳字幕）
+func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFiles []string) {
+	var err error
+	// 得到目标视频文件的根目录
+	videoRootPath := filepath.Dir(oneVideoFullPath)
+	// -------------------------------------------------
+	// 调试缓存，把下载好的字幕写到对应的视频目录下，方便调试
+	if d.reqParam.DebugMode == true {
+		err = d.copySubFile2DesFolder(videoRootPath, organizeSubFiles)
+		if err != nil {
+			d.log.Errorln("copySubFile2DesFolder", err)
+		}
+	}
+	// -------------------------------------------------
+	if d.reqParam.SaveMultiSub == false {
+		// 选择最优的一个字幕
+		var finalSubFile *common.SubParserFileInfo
+		finalSubFile = d.mk.SelectOneSubFile(organizeSubFiles)
+		if finalSubFile == nil {
+			d.log.Warnln("Found", len(organizeSubFiles), " subtitles but not one fit:", oneVideoFullPath)
+			return
+		}
+		// 找到了，写入文件
+		err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile, "")
+		if err != nil {
+			d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub, "writeSubFile2VideoPath:", err)
+			return
+		}
+	} else {
+		// 每个网站 Top1 的字幕
+		siteNames, finalSubFiles := d.mk.SelectEachSiteTop1SubFile(organizeSubFiles)
+		if len(siteNames) < 0 {
+			d.log.Warnln("SelectEachSiteTop1SubFile found none sub file")
+			return
+		}
+
+		for i, file := range finalSubFiles {
+			err = d.writeSubFile2VideoPath(oneVideoFullPath, file, siteNames[i])
+			if err != nil {
+				d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub, "writeSubFile2VideoPath:", err)
+				return
+			}
+		}
+	}
 }
 
 // 在前面需要进行语言的筛选、排序，这里仅仅是存储
@@ -169,6 +185,7 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	return nil
 }
 
+// copySubFile2DesFolder 拷贝字幕文件到目标文件夹
 func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) error {
 
 	// 需要进行字幕文件的缓存
