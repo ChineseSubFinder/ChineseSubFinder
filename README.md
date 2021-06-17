@@ -63,6 +63,18 @@
 
 注意，使用本程序前，**强烈推荐**使用 emby 或者 tinyMediaManager 对你的视频进行基础的削刮，整理好视频的命名。
 
+### 连续剧的推荐目录结构
+
+连续剧字幕自动下载的功能**严重**依赖于 IMDB ID，所以会自动去每个剧集的目录中找 **tvshow.nfo** 这个文件，这个文件是 emby、sonarr 自动生成的。
+
+目录结构如下图：
+
+![05](DesignFile/pics/05.png)
+
+![06](DesignFile/pics/06.png)
+
+如果你的剧集没有经过 emby 的整理，那么抱歉，本功能将无法正常使用。
+
 ### 使用 docker-compose 部署
 
 编写以下的配置文件，注意 docker-compose 文件需要与本程序的 config.yaml 配套，特别是 MovieFolder 这个。
