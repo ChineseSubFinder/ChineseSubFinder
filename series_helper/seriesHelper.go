@@ -6,6 +6,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/srt"
 	"path/filepath"
+	"time"
 )
 
 // ReadSeriesInfoFromDir 读取剧集的信息
@@ -110,5 +111,31 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 		seriesInfo.SeasonDict[episodeInfo.Season] = episodeInfo.Season
 	}
 
+	seriesInfo.NeedDlEpsKeyList = whichEpsNeedDownloadSub(&seriesInfo)
+
 	return &seriesInfo, nil
+}
+
+// whichEpsNeedDownloadSub 有那些 Eps 需要下载的，按 SxEx 反回 epsKey
+func whichEpsNeedDownloadSub(seriesInfo *common.SeriesInfo) map[string]common.EpisodeInfo {
+	var needDlSubEpsList = make(map[string]common.EpisodeInfo, 0)
+	currentTime := time.Now()
+	// 30 天
+	dayRange, _ := time.ParseDuration(common.DownloadSubDuring30Days)
+	for _, epsInfo := range seriesInfo.EpList {
+		// 如果没有字幕，则加入下载列表
+		// 这一集下载后的30天内，都进行字幕的下载
+		if len(epsInfo.SubList) < 1 || epsInfo.ModifyTime.Add(dayRange).After(currentTime) == true {
+			// 添加
+			epsKey := model.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
+			needDlSubEpsList[epsKey] = epsInfo
+		} else {
+			if len(epsInfo.SubList) > 0 {
+				model.GetLogger().Infoln("Skip because find sub file", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+			} else if epsInfo.ModifyTime.Add(dayRange).After(currentTime) == false {
+				model.GetLogger().Infoln("Skip because 30 days pass", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+			}
+		}
+	}
+	return needDlSubEpsList
 }

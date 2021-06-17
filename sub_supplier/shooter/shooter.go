@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type Supplier struct {
@@ -44,11 +45,16 @@ func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSu
 	return s.GetSubListFromFile(filePath)
 }
 
-func (s Supplier) GetSubListFromFile4Series(filePath string) ([]common.SupplierSubInfo, error) {
-	return s.GetSubListFromFile(filePath)
+func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error) {
+
+
+
+	s.GetSubListFromFile(filePath)
+
+	return
 }
 
-func (s Supplier) GetSubListFromFile4Anime(filePath string) ([]common.SupplierSubInfo, error){
+func (s Supplier) GetSubListFromFile4Anime(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error){
 	return s.GetSubListFromFile(filePath)
 }
 

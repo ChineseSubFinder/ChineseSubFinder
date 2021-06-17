@@ -10,7 +10,7 @@ func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 	//imdbId1 := "tt3228774"
 	videoName := "黑白魔女库伊拉"
 	s := NewSupplier()
-	outList, err := s.GetSubListFromKeyword(videoName)
+	outList, err := s.getSubListFromKeyword(videoName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -29,7 +29,7 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 	//movie1 := "X:\\连续剧\\The Bad Batch\\Season 1\\The Bad Batch - S01E01 - Aftermath WEBDL-1080p.mkv"
 
 	s := NewSupplier()
-	outList, err := s.GetSubListFromFile(movie1)
+	outList, err := s.getSubListFromFile(movie1)
 	if err != nil {
 		t.Error(err)
 	}

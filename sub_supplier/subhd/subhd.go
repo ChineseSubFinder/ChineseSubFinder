@@ -92,7 +92,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 		if err != nil {
 			// 允许的错误，跳过，继续进行文件名的搜索
 			s.log.Errorln(s.GetSupplierName(), "keyword:", imdbInfo.ImdbId)
-			s.log.Errorln("GetSubListFromKeyword", "IMDBID can not found sub", filePath, err)
+			s.log.Errorln("getSubListFromKeyword", "IMDBID can not found sub", filePath, err)
 		}
 		// 如果有就优先返回
 		if len(subInfoList) >0 {

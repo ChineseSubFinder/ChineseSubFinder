@@ -7,12 +7,13 @@ import "time"
 	所以命名很标注，使用 GetVideoInfoFromFileName 读取 SxxExx 问题不大
 */
 type SeriesInfo struct {
-	ImdbId	   string
-	Name       string
-	Year	   int
-	EpList	   []EpisodeInfo
-	DirPath    string
-	SeasonDict map[int]int
+	ImdbId           string
+	Name             string
+	Year             int
+	EpList           []EpisodeInfo
+	DirPath          string
+	SeasonDict       map[int]int
+	NeedDlEpsKeyList map[string]EpisodeInfo		// SxEx
 }
 
 type EpisodeInfo struct {

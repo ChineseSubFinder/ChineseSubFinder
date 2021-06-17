@@ -104,7 +104,6 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) ([]s
 	if skip == true {
 		return nil, nil
 	}
-
 	// 读取本地的视频和字幕信息
 	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(seriesDirPath)
 	if err != nil {

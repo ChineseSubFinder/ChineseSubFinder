@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"time"
 )
 
 type Supplier struct {
@@ -43,7 +42,7 @@ func (s Supplier) GetReqParam() common.ReqParam{
 }
 
 func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSubInfo, error){
-	return s.GetSubListFromFile(filePath)
+	return s.getSubListFromFile(filePath)
 }
 
 func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error) {
@@ -62,11 +61,13 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
 		filmDetailPageUrl, err := s.Step0(keyword)
 		if err != nil {
+			s.log.Errorln(keyword)
 			return nil, err
 		}
 		// 第二级界面，有多少个字幕
 		subResult, err := s.Step1(filmDetailPageUrl)
 		if err != nil {
+			s.log.Errorln(filmDetailPageUrl)
 			return nil, err
 		}
 
@@ -78,64 +79,19 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 	}
 	// 找到最大的优先级的字幕下载
 	sort.Sort(SortByPriority{AllSeasonSubResult.SubInfos})
-	// 字幕很多，考虑效率，需要做成字典
-	// key SxEx - SubInfos
-	var allSubDict = make(map[string]SubInfos)
-	for _, subInfo := range AllSeasonSubResult.SubInfos {
-		_, season, episode, err := model.GetSeasonAndEpisodeFromSubFileName(subInfo.Name)
-		if err != nil {
-			s.log.Errorln("SubInfos GetSubListFromFile4Series.GetVideoInfoFromFileFullPath", subInfo.Name, err)
-			continue
-		}
-		// 这里的 episode 为 0，则是全季
-		epsKey := model.GetEpisodeKeyName(season, episode)
-		_, ok := allSubDict[epsKey]
-		if ok == false {
-			// 初始化
-			allSubDict[epsKey] = SubInfos{}
-		}
-		// 添加
-		allSubDict[epsKey] = append(allSubDict[epsKey], subInfo)
-	}
-	// 本地的视频列表，找到没有字幕的
-	// 需要进行下载字幕的列表
-	var subInfoNeedDownload = make([]SubInfo, 0)
-	currentTime := time.Now()
-	// 30 天
-	dayRange, _ := time.ParseDuration(common.DownloadSubDuring30Days)
-	for _, epsInfo := range seriesInfo.EpList {
-		// 如果没有字幕，则加入下载列表
-		// 这一集下载后的30天内，都进行字幕的下载
-		if len(epsInfo.SubList) < 1 || epsInfo.ModifyTime.Add(dayRange).After(currentTime) == true {
-			// 添加
-			epsKey := model.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
-			// 从一堆字幕里面找合适的
-			value, ok := allSubDict[epsKey]
-			// 是否有
-			if ok == true && len(value) > 0 {
-				subInfoNeedDownload = append(subInfoNeedDownload, value[0])
-			} else {
-				s.log.Infoln("Not Find Sub can be download", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
-			}
-		} else {
-			if len(epsInfo.SubList) > 0 {
-				s.log.Infoln("Skip because find sub file", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
-			} else if epsInfo.ModifyTime.Add(dayRange).After(currentTime) == false {
-				s.log.Infoln("Skip because 30 days pass", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
-			}
-		}
-	}
+	// 找到那些 Eps 需要下载字幕的
+	subInfoNeedDownload := s.whichEpisodeNeedDownloadSub(seriesInfo, AllSeasonSubResult)
 	// 剩下的部分跟 GetSubListFroKeyword 一样，就是去下载了
 	outSubInfoList := s.whichSubInfoNeedDownload(subInfoNeedDownload, err)
 
 	return outSubInfoList, nil
 }
 
-func (s Supplier) GetSubListFromFile4Anime(animePath string) ([]common.SupplierSubInfo, error){
+func (s Supplier) GetSubListFromFile4Anime(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error){
 	panic("not implemented")
 }
 
-func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
+func (s Supplier) getSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
 
 	/*
 		虽然是传入视频文件路径，但是其实需要读取对应的视频文件目录下的
@@ -161,11 +117,11 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 
 	if imdbInfo.ImdbId != "" {
 		// 先用 imdb id 找
-		subInfoList, err = s.GetSubListFromKeyword(imdbInfo.ImdbId)
+		subInfoList, err = s.getSubListFromKeyword(imdbInfo.ImdbId)
 		if err != nil {
 			// 允许的错误，跳过，继续进行文件名的搜索
 			s.log.Errorln(s.GetSupplierName(), "keyword:", imdbInfo.ImdbId)
-			s.log.Errorln("GetSubListFromKeyword", "IMDBID can not found sub", filePath, err)
+			s.log.Errorln("getSubListFromKeyword", "IMDBID can not found sub", filePath, err)
 		}
 		// 如果有就优先返回
 		if len(subInfoList) >0 {
@@ -175,7 +131,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 
 	// 如果没有，那么就用文件名查找
 	searchKeyword := model.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
-	subInfoList, err = s.GetSubListFromKeyword(searchKeyword)
+	subInfoList, err = s.getSubListFromKeyword(searchKeyword)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "keyword:", searchKeyword)
 		return nil, err
@@ -184,7 +140,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	return subInfoList, nil
 }
 
-func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error) {
+func (s Supplier) getSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error) {
 
 	var outSubInfoList []common.SupplierSubInfo
 	// 第一级界面，找到影片的详情界面
@@ -204,6 +160,44 @@ func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	outSubInfoList = s.whichSubInfoNeedDownload(subResult.SubInfos, err)
 
 	return outSubInfoList, nil
+}
+
+func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *common.SeriesInfo, AllSeasonSubResult SubResult) []SubInfo {
+	// 字幕很多，考虑效率，需要做成字典
+	// key SxEx - SubInfos
+	var allSubDict = make(map[string]SubInfos)
+	for _, subInfo := range AllSeasonSubResult.SubInfos {
+		_, season, episode, err := model.GetSeasonAndEpisodeFromSubFileName(subInfo.Name)
+		if err != nil {
+			s.log.Errorln("SubInfos GetSubListFromFile4Series.GetVideoInfoFromFileFullPath", subInfo.Name, err)
+			continue
+		}
+		// 这里的 episode 为 0，则是全季
+		epsKey := model.GetEpisodeKeyName(season, episode)
+		_, ok := allSubDict[epsKey]
+		if ok == false {
+			// 初始化
+			allSubDict[epsKey] = SubInfos{}
+		}
+		// 添加
+		allSubDict[epsKey] = append(allSubDict[epsKey], subInfo)
+	}
+	// 本地的视频列表，找到没有字幕的
+	// 需要进行下载字幕的列表
+	var subInfoNeedDownload = make([]SubInfo, 0)
+	// 有那些 Eps 需要下载的，按 SxEx 反回 epsKey
+	for epsKey, epsInfo := range seriesInfo.NeedDlEpsKeyList {
+		// 从一堆字幕里面找合适的
+		value, ok := allSubDict[epsKey]
+		// 是否有
+		if ok == true && len(value) > 0 {
+			subInfoNeedDownload = append(subInfoNeedDownload, value[0])
+		} else {
+			s.log.Infoln("Not Find Sub can be download", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+		}
+	}
+
+	return subInfoNeedDownload
 }
 
 func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []common.SupplierSubInfo {
