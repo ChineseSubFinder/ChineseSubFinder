@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 type Supplier struct {
@@ -42,29 +41,25 @@ func (s Supplier) GetReqParam() common.ReqParam{
 }
 
 func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSubInfo, error){
-	return s.GetSubListFromFile(filePath)
+	return s.getSubListFromFile(filePath)
 }
 
 func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error) {
-
-
-	s.GetSubListFromFile(filePath)
-
-	return
+	return s.downloadSub4Series(seriesInfo)
 }
 
 func (s Supplier) GetSubListFromFile4Anime(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error){
-	return s.GetSubListFromFile(filePath)
+	return s.downloadSub4Series(seriesInfo)
 }
 
-func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
+func (s Supplier) getSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
 
 	// 可以提供的字幕查询 eng或者chn
 	const qLan = "Chn"
 	var outSubInfoList []common.SupplierSubInfo
 	var jsonList []SublistShooter
 
-	hash, err := s.ComputeFileHash(filePath)
+	hash, err := s.computeFileHash(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -112,11 +107,11 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	return outSubInfoList, nil
 }
 
-func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error) {
+func (s Supplier) getSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error) {
 	panic("not implemented")
 }
 
-func (s Supplier) ComputeFileHash(filePath string) (string, error) {
+func (s Supplier) computeFileHash(filePath string) (string, error) {
 	hash := ""
 	fp, err := os.Open(filePath)
 	if err != nil {
@@ -152,6 +147,19 @@ func (s Supplier) ComputeFileHash(filePath string) (string, error) {
 	}
 
 	return hash, nil
+}
+
+func (s Supplier) downloadSub4Series(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error) {
+	var allSupplierSubInfo = make([]common.SupplierSubInfo, 0)
+	// 这里拿到的 seriesInfo ，里面包含了，需要下载字幕的 Eps 信息
+	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
+		one, err := s.getSubListFromFile(episodeInfo.FileFullPath)
+		if err != nil {
+			return nil, err
+		}
+		allSupplierSubInfo = append(allSupplierSubInfo, one...)
+	}
+	return allSupplierSubInfo, nil
 }
 
 

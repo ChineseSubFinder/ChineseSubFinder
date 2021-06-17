@@ -40,18 +40,18 @@ func (s Supplier) GetReqParam() common.ReqParam{
 }
 
 func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSubInfo, error){
-	return s.GetSubListFromFile(filePath)
+	return s.getSubListFromFile(filePath)
 }
 
-func (s Supplier) GetSubListFromFile4Series(filePath string) ([]common.SupplierSubInfo, error) {
-	return s.GetSubListFromFile(filePath)
+func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error) {
+	return s.downloadSub4Series(seriesInfo)
 }
 
-func (s Supplier) GetSubListFromFile4Anime(filePath string) ([]common.SupplierSubInfo, error){
-	return s.GetSubListFromFile(filePath)
+func (s Supplier) GetSubListFromFile4Anime(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error){
+	return s.downloadSub4Series(seriesInfo)
 }
 
-func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
+func (s Supplier) getSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
 
 	cid, err := s.getCid(filePath)
 	var jsonList SublistSliceXunLei
@@ -114,7 +114,7 @@ func (s Supplier) GetSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	return outSubList, nil
 }
 
-func (s Supplier) GetSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error) {
+func (s Supplier) getSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error) {
 	panic("not implemented")
 }
 
@@ -153,6 +153,19 @@ func (s Supplier) getCid(filePath string) (string, error) {
 
 	hash = fmt.Sprintf("%X", sha1Ctx.Sum(nil))
 	return hash, nil
+}
+
+func (s Supplier) downloadSub4Series(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error) {
+	var allSupplierSubInfo = make([]common.SupplierSubInfo, 0)
+	// 这里拿到的 seriesInfo ，里面包含了，需要下载字幕的 Eps 信息
+	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
+		one, err := s.getSubListFromFile(episodeInfo.FileFullPath)
+		if err != nil {
+			return nil, err
+		}
+		allSupplierSubInfo = append(allSupplierSubInfo, one...)
+	}
+	return allSupplierSubInfo, nil
 }
 
 type SublistXunLei struct {

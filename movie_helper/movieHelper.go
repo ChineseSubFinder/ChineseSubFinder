@@ -173,7 +173,7 @@ func SkipChineseMovie(videoFullPath string, _reqParam ...common.ReqParam) (bool,
 	return false, nil
 }
 
-func MoiveNeedDlSub(videoFullPath string) (bool, error) {
+func MovieNeedDlSub(videoFullPath string) (bool, error) {
 	// 视频下面有不有字幕
 	found, err := MovieHasSub(videoFullPath)
 	if err != nil {

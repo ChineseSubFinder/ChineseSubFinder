@@ -43,7 +43,7 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 	}
 
 	var organizeSubFiles []string
-	needDlSub, err := movie_helper.MoiveNeedDlSub(videoFullPath)
+	needDlSub, err := movie_helper.MovieNeedDlSub(videoFullPath)
 	if err != nil {
 		return nil, err
 	}
