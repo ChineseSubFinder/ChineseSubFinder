@@ -88,6 +88,10 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) (*co
 	if err != nil {
 		return nil, nil, err
 	}
+	d.log.Debugln(seriesInfo.Name, "IMDB ID:", seriesInfo.ImdbId, "NeedDownloadSubs:", len(seriesInfo.NeedDlEpsKeyList))
+	for key, _ := range seriesInfo.NeedDlEpsKeyList {
+		d.log.Debugln(key)
+	}
 	// 下载好的字幕
 	subInfos := series_helper.OneSeriesDlSubInAllSite(d.Suppliers, seriesInfo, index)
 	// 整理字幕，比如解压什么的
