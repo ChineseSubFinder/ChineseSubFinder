@@ -25,6 +25,9 @@ type Downloader struct {
 	mk            *mark_system.MarkingSystem // MarkingSystem
 }
 
+// TODO 加入一个功能，如果这个电影，发行很久了，而且没得字幕，那么重复多天后，应该就不用再扫描它了
+// TODO 把字幕下载周期开放出来允许设置，现在默认是 3个月
+
 func NewDownloader(_reqParam ...common.ReqParam) *Downloader {
 
 	var downloader Downloader
