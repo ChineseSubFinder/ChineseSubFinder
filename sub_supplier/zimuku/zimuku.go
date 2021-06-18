@@ -66,8 +66,8 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 			if err != common.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
 				return nil, err
 			}
-			s.log.Infoln("Retry", keyword)
 			keyword := seriesInfo.Name
+			s.log.Infoln("Retry", keyword)
 			filmDetailPageUrl, err = s.step0(keyword)
 			if err != nil {
 				s.log.Errorln(keyword)

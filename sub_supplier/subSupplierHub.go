@@ -88,7 +88,7 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) (*co
 	subInfos := series_helper.OneSeriesDlSubInAllSite(d.Suppliers, seriesInfo, index)
 	// 整理字幕，比如解压什么的
 	// 每一集 SxEx - 对应解压整理后的字幕列表
-	organizeSubFiles, err := model.OrganizeDlSubFiles(filepath.Dir(seriesDirPath), subInfos)
+	organizeSubFiles, err := model.OrganizeDlSubFiles(filepath.Base(seriesDirPath), subInfos)
 
-	return seriesInfo, organizeSubFiles, nil
+	return seriesInfo, organizeSubFiles, err
 }
