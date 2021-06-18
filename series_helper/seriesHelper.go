@@ -216,9 +216,9 @@ func whichEpsNeedDownloadSub(seriesInfo *common.SeriesInfo) map[string]common.Ep
 			needDlSubEpsList[epsKey] = epsInfo
 		} else {
 			if len(epsInfo.SubAlreadyDownloadedList) > 0 {
-				model.GetLogger().Infoln("Skip because find sub file and over 30 days,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+				model.GetLogger().Infoln("Skip because find sub file and over 3 months,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 			} else if epsInfo.ModifyTime.Add(dayRange).After(currentTime) == false {
-				model.GetLogger().Infoln("Skip because 30 days pass,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+				model.GetLogger().Infoln("Skip because 3 months pass,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 			}
 		}
 	}

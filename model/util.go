@@ -107,7 +107,8 @@ func GetDebugFolder() (string, error) {
 	return defDebugFolder, nil
 }
 
-func GetTmpFolder() (string, error) {
+// GetRootTmpFolder 获取缓存的根目录，每一个视频的缓存将在其中额外新建子集文件夹
+func GetRootTmpFolder() (string, error) {
 	if defTmpFolder == "" {
 		nowProcessRoot, _ := os.Getwd()
 		nowProcessRoot = path.Join(nowProcessRoot, common.TmpFolder)
@@ -121,8 +122,55 @@ func GetTmpFolder() (string, error) {
 	return defTmpFolder, nil
 }
 
-func ClearTmpFolder() error {
-	nowTmpFolder, err := GetTmpFolder()
+// ClearRootTmpFolder 清理缓存的根目录，将里面的子文件夹一并清理
+func ClearRootTmpFolder() error {
+	nowTmpFolder, err := GetRootTmpFolder()
+	if err != nil {
+		return err
+	}
+
+	pathSep := string(os.PathSeparator)
+	files, err := ioutil.ReadDir(nowTmpFolder)
+	if err != nil {
+		return err
+	}
+	for _, curFile := range files {
+		fullPath := nowTmpFolder + pathSep + curFile.Name()
+		if curFile.IsDir() {
+			err = os.RemoveAll(fullPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			// 这里就是文件了
+			err = os.Remove(fullPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetTmpFolder 获取缓存的文件夹，没有则新建
+func GetTmpFolder(folderName string) (string, error) {
+	rootPath, err := GetRootTmpFolder()
+	if err != nil {
+		return "", err
+	}
+	tmpFolderFullPath :=path.Join(rootPath, folderName)
+	err = os.MkdirAll(tmpFolderFullPath, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	return tmpFolderFullPath, nil
+}
+
+// ClearTmpFolder 清理指定的缓存文件夹
+func ClearTmpFolder(folderName string) error {
+
+	nowTmpFolder, err := GetTmpFolder(folderName)
 	if err != nil {
 		return err
 	}

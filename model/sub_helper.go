@@ -10,17 +10,12 @@ import (
 )
 
 // OrganizeDlSubFiles 需要从汇总来是网站字幕中，解压对应的压缩包中的字幕出来
-func OrganizeDlSubFiles(subInfos []common.SupplierSubInfo) (map[string][]string, error) {
+func OrganizeDlSubFiles(tmpFolderName string, subInfos []common.SupplierSubInfo) (map[string][]string, error) {
 
 	// 缓存列表，整理后的字幕列表
 	// SxEx - []string 字幕的路径
 	var siteSubInfoDict = make(map[string][]string)
-	tmpFolderFullPath, err := GetTmpFolder()
-	if err != nil {
-		return nil, err
-	}
-	// 先清理缓存目录
-	err = ClearTmpFolder()
+	tmpFolderFullPath, err := GetTmpFolder(tmpFolderName)
 	if err != nil {
 		return nil, err
 	}

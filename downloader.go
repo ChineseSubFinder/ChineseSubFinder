@@ -11,11 +11,13 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/sub_supplier/zimuku"
 	"github.com/go-rod/rod/lib/utils"
+	"github.com/panjf2000/ants/v2"
 	"github.com/sirupsen/logrus"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 type Downloader struct {
@@ -38,7 +40,14 @@ func NewDownloader(_reqParam ...common.ReqParam) *Downloader {
 		if downloader.reqParam.Topic > 0 && downloader.reqParam.Topic != downloader.topic {
 			downloader.topic = downloader.reqParam.Topic
 		}
+		// 并发线程的范围控制
+		if downloader.reqParam.Threads <= 0 {
+			downloader.reqParam.Threads = 2
+		} else if downloader.reqParam.Threads >= 10 {
+			downloader.reqParam.Threads = 10
+		}
 	}
+
 	var sitesSequence = make([]string, 0)
 	// TODO 这里写固定了抉择字幕的顺序
 	sitesSequence = append(sitesSequence, common.SubSiteZiMuKu)
@@ -52,64 +61,85 @@ func NewDownloader(_reqParam ...common.ReqParam) *Downloader {
 
 func (d Downloader) DownloadSub4Movie(dir string) error {
 	defer func() {
-		// 抉择完毕，需要清理缓存目录
-		err := model.ClearTmpFolder()
+		// 所有的电影字幕下载完成，抉择完成，需要清理缓存目录
+		err := model.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error(err)
 		}
+		// 注意并发 pool 的释放
+		defer ants.Release()
 	}()
 	nowVideoList, err := model.SearchMatchedVideoFile(dir)
 	if err != nil {
 		return err
 	}
-	// 构建每个字幕站点下载者的实例
-	var subSupplierHub *sub_supplier.SubSupplierHub
-	subSupplierHub = sub_supplier.NewSubSupplierHub(shooter.NewSupplier(d.reqParam),
-		subhd.NewSupplier(d.reqParam),
-		xunlei.NewSupplier(d.reqParam),
-		zimuku.NewSupplier(d.reqParam),
-	)
-	// TODO 后续再改为每个视频以上的流程都是一个 channel 来做（目前做不了，得重构缓存字幕的方式，不然会出问题），并且需要控制在一个并发量之下（很可能没必要，毕竟要在弱鸡机器上挂机用的）
+
+	// 并发控制
+	movieDlFunc := func(i interface{}) {
+		inData := i.(InputData)
+		// -----------------------------------------------------
+		// 构建每个字幕站点下载者的实例
+		var subSupplierHub = sub_supplier.NewSubSupplierHub(shooter.NewSupplier(d.reqParam),
+			subhd.NewSupplier(d.reqParam),
+			xunlei.NewSupplier(d.reqParam),
+			zimuku.NewSupplier(d.reqParam),
+		)
+		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
+		organizeSubFiles, err := subSupplierHub.DownloadSub4Movie(inData.OneVideoFullPath, inData.Index)
+		if err != nil {
+			d.log.Errorln("subSupplierHub.DownloadSub4Movie", inData.OneVideoFullPath ,err)
+			return
+		}
+		d.oneVideoSelectBestSub(inData.OneVideoFullPath, organizeSubFiles)
+		// -----------------------------------------------------
+	}
+	wg := sync.WaitGroup{}
+	p, err := ants.NewPoolWithFunc(d.reqParam.Threads, func(inData interface{}) {
+		movieDlFunc(inData)
+		wg.Done()
+	})
+	if err != nil {
+		return err
+	}
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
 	for i, oneVideoFullPath := range nowVideoList {
-		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
-		organizeSubFiles, err := subSupplierHub.DownloadSub4Movie(oneVideoFullPath, i)
+		wg.Add(1)
+		err = p.Invoke(InputData{OneVideoFullPath: oneVideoFullPath, Index: i})
 		if err != nil {
-			d.log.Errorln("subSupplierHub.DownloadSub4Movie", oneVideoFullPath ,err)
-			continue
+			d.log.Errorln("movie ants.Invoke",err)
 		}
-		d.oneVideoSelectBestSub(oneVideoFullPath, organizeSubFiles)
-		// -----------------------------------------------------
 	}
 	return nil
 }
 
 func (d Downloader) DownloadSub4Series(dir string) error {
 	defer func() {
-		// 抉择完毕，需要清理缓存目录
-		err := model.ClearTmpFolder()
+		// 所有的连续剧字幕下载完成，抉择完成，需要清理缓存目录
+		err := model.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error(err)
 		}
+		// 注意并发 pool 的释放
+		defer ants.Release()
 	}()
-	// 构建每个字幕站点下载者的实例
-	var subSupplierHub *sub_supplier.SubSupplierHub
-	subSupplierHub = sub_supplier.NewSubSupplierHub(zimuku.NewSupplier(d.reqParam),
-		shooter.NewSupplier(d.reqParam),
-		//subhd.NewSupplier(d.reqParam),
-		xunlei.NewSupplier(d.reqParam),
-	)
-	// 遍历连续剧总目录下的第一层目录
-	seriesDirList, err := series_helper.GetSeriesList(dir)
-	if err != nil {
-		return err
-	}
-	for i, oneSeriesPath := range seriesDirList {
+
+
+	// 并发控制
+	seriesDlFunc := func(i interface{}) {
+
+		inData := i.(InputData)
+		// 构建每个字幕站点下载者的实例
+		var subSupplierHub *sub_supplier.SubSupplierHub
+		subSupplierHub = sub_supplier.NewSubSupplierHub(zimuku.NewSupplier(d.reqParam),
+			shooter.NewSupplier(d.reqParam),
+			//subhd.NewSupplier(d.reqParam),
+			xunlei.NewSupplier(d.reqParam),
+		)
 		// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
-		seriesInfo, organizeSubFiles, err := subSupplierHub.DownloadSub4Series(oneSeriesPath, i)
+		seriesInfo, organizeSubFiles, err := subSupplierHub.DownloadSub4Series(inData.OneVideoFullPath, inData.Index)
 		if err != nil {
-			d.log.Errorln("subSupplierHub.DownloadSub4Series", oneSeriesPath ,err)
-			return err
+			d.log.Errorln("subSupplierHub.DownloadSub4Series", inData.OneVideoFullPath ,err)
+			return
 		}
 		// 只针对需要下载字幕的视频进行字幕的选择保存
 		for epsKey, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
@@ -123,6 +153,26 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 			// 匹配对应的 Eps 去处理
 			seasonEpsKey := model.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
 			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, fullSeasonSubDict[seasonEpsKey])
+		}
+	}
+	wg := sync.WaitGroup{}
+	p, err := ants.NewPoolWithFunc(d.reqParam.Threads, func(inData interface{}) {
+		seriesDlFunc(inData)
+		wg.Done()
+	})
+	if err != nil {
+		return err
+	}
+	// 遍历连续剧总目录下的第一层目录
+	seriesDirList, err := series_helper.GetSeriesList(dir)
+	if err != nil {
+		return err
+	}
+	for i, oneSeriesPath := range seriesDirList {
+		wg.Add(1)
+		err = p.Invoke(InputData{OneVideoFullPath: oneSeriesPath, Index: i})
+		if err != nil {
+			d.log.Errorln("series ants.Invoke",err)
 		}
 	}
 	return nil
@@ -258,3 +308,7 @@ func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) e
 	return nil
 }
 
+type InputData struct {
+	OneVideoFullPath string
+	Index			int
+}

@@ -112,11 +112,11 @@ func MovieNeedDlSub(videoFullPath string) (bool, error) {
 		return true, nil
 	} else {
 		if modifyTime.Add(dayRange).After(currentTime) == false {
-			model.GetLogger().Infoln("Skip", videoFullPath, "Sub Download, because movie has sub and downloaded more than 30 days")
+			model.GetLogger().Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because movie has sub and downloaded more than 3 months")
 			return false, nil
 		}
 		if found == true {
-			model.GetLogger().Infoln("Skip", videoFullPath, "Sub Download, because sub file found")
+			model.GetLogger().Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because sub file found")
 			return false, nil
 		}
 

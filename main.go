@@ -49,8 +49,8 @@ func main() {
 		HttpProxy: httpProxy,
 		DebugMode: config.DebugMode,
 		SaveMultiSub: config.SaveMultiSub,
-		FoundExistSubFileThanSkip: config.FoundExistSubFileThanSkip,
-		})
+		Threads: config.Threads,
+	})
 	//任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
