@@ -189,7 +189,9 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]common.Supplier
 
 	for i, item := range subList {
 		hdContent, err := s.step2Ex(browser, item.Url)
+		time.Sleep(time.Second)
 		if err != nil {
+			s.log.Errorln("step2Ex", err)
 			return nil, err
 		}
 		subInfos = append(subInfos, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, common.ChineseSimple, model.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
