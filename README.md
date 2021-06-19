@@ -110,6 +110,7 @@ services:
     image: allanpk716/chinesesubfinder:v0.3.0
     volumes:
       - /volume1/docker/chinesesubfinder/config.yaml:/app/config.yaml
+      - /volume1/docker/chinesesubfinder/logs:/app/Logs
       - /volume1/Video/电影:/app/MovieFolder
       - /volume1/Video/连续剧:/app/SeriesFolder
     environment:
