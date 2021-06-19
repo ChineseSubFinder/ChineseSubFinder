@@ -53,7 +53,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	s := NewSupplier()
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	println(outList)
 	for i, sublist := range outList {

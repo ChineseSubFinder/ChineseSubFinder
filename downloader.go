@@ -133,7 +133,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		var subSupplierHub *sub_supplier.SubSupplierHub
 		subSupplierHub = sub_supplier.NewSubSupplierHub(zimuku.NewSupplier(d.reqParam),
 			shooter.NewSupplier(d.reqParam),
-			//subhd.NewSupplier(d.reqParam),
+			subhd.NewSupplier(d.reqParam),
 			xunlei.NewSupplier(d.reqParam),
 		)
 		// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
