@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/allanpk716/ChineseSubFinder/model"
 	"github.com/go-rod/rod"
@@ -52,18 +53,66 @@ func (s Supplier) GetReqParam() common.ReqParam{
 }
 
 func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]common.SupplierSubInfo, error){
-	return s.getSubListFromFile(filePath)
+	return s.getSubListFromFile4Movie(filePath)
 }
 
 func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error) {
-	return nil, nil
+
+	var subInfos = make([]common.SupplierSubInfo, 0)
+	var subList = make([]HdListItem, 0)
+	for value := range seriesInfo.SeasonDict {
+		// 第一级界面，找到影片的详情界面
+		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
+		detailPageUrl, err := s.step0(keyword)
+		if err != nil {
+			// 如果只是搜索不到，则继续换关键词
+			if err != common.SubHDStep0SubCountNotFound {
+				return nil, err
+			}
+			keyword := seriesInfo.Name
+			s.log.Infoln("Retry", keyword)
+			detailPageUrl, err = s.step0(keyword)
+			if err != nil {
+				s.log.Errorln(keyword)
+				return nil, err
+			}
+		}
+		// 列举字幕
+		oneSubList, err := s.step1(detailPageUrl, false)
+		if err != nil {
+			return nil, err
+		}
+
+		subList = append(subList, oneSubList...)
+	}
+	// 与剧集需要下载的集 List 进行比较，找到需要下载的列表
+	// 找到那些 Eps 需要下载字幕的
+	subInfoNeedDownload := s.whichEpisodeNeedDownloadSub(seriesInfo, subList)
+	// 下载字幕
+	var browser *rod.Browser
+	// 是用本地的 Browser 还是远程的，推荐是远程的
+	browser, err := model.NewBrowserFromDocker(s.reqParam.HttpProxy, "ws://192.168.50.135:9222")
+	if err != nil {
+		return nil, err
+	}
+	defer browser.Close()
+	for i, item := range subInfoNeedDownload {
+		hdContent, err := s.step2Ex(browser, item.Url)
+		if err != nil {
+			s.log.Errorln("step2Ex", err)
+			continue
+		}
+		subInfos = append(subInfos, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, common.ChineseSimple, model.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
+	}
+
+	return subInfos, nil
 }
 
 func (s Supplier) GetSubListFromFile4Anime(seriesInfo *common.SeriesInfo) ([]common.SupplierSubInfo, error){
 	panic("not implemented")
 }
 
-func (s Supplier) getSubListFromFile(filePath string) ([]common.SupplierSubInfo, error) {
+func (s Supplier) getSubListFromFile4Movie(filePath string) ([]common.SupplierSubInfo, error) {
 	/*
 		虽然是传入视频文件路径，但是其实需要读取对应的视频文件目录下的
 		movie.xml 以及 *.nfo，找到 IMDB id
@@ -88,11 +137,11 @@ func (s Supplier) getSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 
 	if imdbInfo.ImdbId != "" {
 		// 先用 imdb id 找
-		subInfoList, err = s.getSubListFromKeyword(imdbInfo.ImdbId)
+		subInfoList, err = s.getSubListFromKeyword4Movie(imdbInfo.ImdbId)
 		if err != nil {
 			// 允许的错误，跳过，继续进行文件名的搜索
 			s.log.Errorln(s.GetSupplierName(), "keyword:", imdbInfo.ImdbId)
-			s.log.Errorln("getSubListFromKeyword", "IMDBID can not found sub", filePath, err)
+			s.log.Errorln("getSubListFromKeyword4Movie", "IMDBID can not found sub", filePath, err)
 		}
 		// 如果有就优先返回
 		if len(subInfoList) >0 {
@@ -101,7 +150,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	}
 	// 如果没有，那么就用文件名查找
 	searchKeyword := model.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
-	subInfoList, err = s.getSubListFromKeyword(searchKeyword)
+	subInfoList, err = s.getSubListFromKeyword4Movie(searchKeyword)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "keyword:", searchKeyword)
 		return nil, err
@@ -110,7 +159,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]common.SupplierSubInfo,
 	return subInfoList, nil
 }
 
-func (s Supplier) getSubListFromKeyword(keyword string) ([]common.SupplierSubInfo, error) {
+func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]common.SupplierSubInfo, error) {
 
 	var subInfos  []common.SupplierSubInfo
 	detailPageUrl, err := s.step0(keyword)
@@ -121,7 +170,7 @@ func (s Supplier) getSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	if detailPageUrl == "" {
 		return nil, nil
 	}
-	subList, err := s.step1(detailPageUrl)
+	subList, err := s.step1(detailPageUrl, true)
 	if err != nil {
 		return nil, err
 	}
@@ -147,6 +196,60 @@ func (s Supplier) getSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	}
 
 	return subInfos, nil
+}
+
+func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *common.SeriesInfo, allSubList []HdListItem) []HdListItem {
+	// 字幕很多，考虑效率，需要做成字典
+	// key SxEx - SubInfos
+	var allSubDict = make(map[string][]HdListItem )
+	// 全季的字幕列表
+	var oneSeasonSubDict  = make(map[string][]HdListItem )
+	for _, subInfo := range allSubList {
+		_, season, episode, err := model.GetSeasonAndEpisodeFromSubFileName(subInfo.Title)
+		if err != nil {
+			s.log.Errorln("whichEpisodeNeedDownloadSub.GetVideoInfoFromFileFullPath", subInfo.Title, err)
+			continue
+		}
+		subInfo.Season = season
+		subInfo.Episode = episode
+		epsKey := model.GetEpisodeKeyName(season, episode)
+		_, ok := allSubDict[epsKey]
+		if ok == false {
+			// 初始化
+			allSubDict[epsKey] = make([]HdListItem, 0)
+			if season != 0 && episode == 0 {
+				oneSeasonSubDict[epsKey] = make([]HdListItem, 0)
+			}
+		}
+		// 添加
+		allSubDict[epsKey] = append(allSubDict[epsKey], subInfo)
+		if season != 0 && episode == 0 {
+			oneSeasonSubDict[epsKey] = append(oneSeasonSubDict[epsKey], subInfo)
+		}
+	}
+	// 本地的视频列表，找到没有字幕的
+	// 需要进行下载字幕的列表
+	var subInfoNeedDownload = make([]HdListItem, 0)
+	// 有那些 Eps 需要下载的，按 SxEx 反回 epsKey
+	for epsKey, epsInfo := range seriesInfo.NeedDlEpsKeyList {
+		// 从一堆字幕里面找合适的
+		value, ok := allSubDict[epsKey]
+		// 是否有
+		if ok == true && len(value) > 0 {
+			value[0].Season = epsInfo.Season
+			value[0].Episode = epsInfo.Episode
+			subInfoNeedDownload = append(subInfoNeedDownload, value[0])
+		} else {
+			s.log.Infoln("Not Find Sub can be download", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+		}
+	}
+	// 全季的字幕列表，也拼进去，后面进行下载
+	for _, infos := range oneSeasonSubDict {
+		subInfoNeedDownload = append(subInfoNeedDownload, infos[0])
+	}
+
+	// 返回前，需要把每一个 Eps 的 Season Episode 信息填充到每个 SubInfo 中
+	return subInfoNeedDownload
 }
 
 // step0 找到这个影片的详情列表
@@ -198,7 +301,7 @@ func (s Supplier) step0(keyword string) (string, error) {
 }
 
 // step1 获取影片的详情字幕列表
-func (s Supplier) step1(detailPageUrl string) ([]HdListItem, error) {
+func (s Supplier) step1(detailPageUrl string, isMovieOrSeries bool) ([]HdListItem, error) {
 	detailPageUrl = model.AddBaseUrl(common.SubSubHDRootUrl, detailPageUrl)
 	result, err := s.httpGet(detailPageUrl)
 	if err != nil {
@@ -243,12 +346,15 @@ func (s Supplier) step1(detailPageUrl string) ([]HdListItem, error) {
 		listItem.Title = title
 		listItem.DownCount = downCount
 
-		if len(lists) >= s.topic {
-			return false
+		// 电影，就需要第一个
+		// 连续剧，需要多个
+		if isMovieOrSeries == true {
+
+			if len(lists) >= s.topic {
+				return false
+			}
 		}
-
 		lists = append(lists, listItem)
-
 		return true
 	})
 
@@ -462,6 +568,8 @@ type HdListItem struct {
 	Lang       string `json:"lang"`
 	Rate       string `json:"rate"`
 	DownCount  int    `json:"downCount"`
+	Season    			int		// 第几季，默认-1
+	Episode   			int		// 第几集，默认-1
 }
 
 type HdContent struct {
