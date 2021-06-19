@@ -4,7 +4,7 @@
 
 > 开发中，可能有不兼容性的调整（配置文件字段变更）
 >
-> 最新版本 v0.4.x 支持连续剧字幕下载，且支持设置并发数（连续剧暂不支持 subhd）
+> 最新版本 v0.5.x 支持连续剧字幕下载
 
 ## Why？
 
@@ -107,7 +107,7 @@
 version: "3"
 services:
   chinesesubfinder:
-    image: allanpk716/chinesesubfinder:v0.3.0
+    image: allanpk716/chinesesubfinder:v0.5.0
     volumes:
       - /volume1/docker/chinesesubfinder/config.yaml:/app/config.yaml
       - /volume1/docker/chinesesubfinder/logs:/app/Logs
