@@ -1,7 +1,7 @@
 ---
-name: 
-about: 
-title: 
+name: 这是提 Bug 的模板
+about: 请尽可能填写模板中的信息，有助于定位问题
+title: ''
 labels: ''
 assignees: ''
 
