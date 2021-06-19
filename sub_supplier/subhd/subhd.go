@@ -136,6 +136,7 @@ func (s Supplier) getSubListFromKeyword(keyword string) ([]common.SupplierSubInf
 	if err != nil {
 		return nil, err
 	}
+	defer browser.Close()
 
 	for i, item := range subList {
 		hdContent, err := s.step2Ex(browser, item.Url)
