@@ -102,24 +102,36 @@ func MovieNeedDlSub(videoFullPath string) (bool, error) {
 	// 资源下载的时间后的多少天内都进行字幕的自动下载，替换原有的字幕
 	currentTime := time.Now()
 	dayRange, _ := time.ParseDuration(common.DownloadSubDuring3Months)
-	_, modifyTime, err := model.GetVideoInfoFromFileFullPath(videoFullPath)
+	mInfo, modifyTime, err := model.GetVideoInfoFromFileFullPath(videoFullPath)
 	if err != nil {
 		return false, err
 	}
-	// 3个月内，或者没有字幕都要进行下载
-	if modifyTime.Add(dayRange).After(currentTime) == true || found == false {
-		// 需要下载的
-		return true, nil
+	// 如果这个视频发布的时间早于现在有两个年的间隔
+	if mInfo.Year > 0 &&  currentTime.Year() - 2 > mInfo.Year {
+		if found == false {
+			// 需要下载的
+			return true, nil
+		} else {
+			// 有字幕了，没必要每次都刷新，跳过
+			model.GetLogger().Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because movie has sub and published more than 2 years")
+			return false, nil
+		}
 	} else {
-		if modifyTime.Add(dayRange).After(currentTime) == false {
-			model.GetLogger().Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because movie has sub and downloaded more than 3 months")
-			return false, nil
-		}
-		if found == true {
-			model.GetLogger().Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because sub file found")
-			return false, nil
-		}
+		// 3个月内，或者没有字幕都要进行下载
+		if modifyTime.Add(dayRange).After(currentTime) == true || found == false {
+			// 需要下载的
+			return true, nil
+		} else {
+			if modifyTime.Add(dayRange).After(currentTime) == false {
+				model.GetLogger().Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because movie has sub and downloaded more than 3 months")
+				return false, nil
+			}
+			if found == true {
+				model.GetLogger().Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because sub file found")
+				return false, nil
+			}
 
-		return false, nil
+			return false, nil
+		}
 	}
 }
