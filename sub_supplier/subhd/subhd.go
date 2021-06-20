@@ -69,7 +69,8 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 			if err != common.SubHDStep0SubCountNotFound {
 				return nil, err
 			}
-			keyword := seriesInfo.Name
+			s.log.Infoln("first search keyword", keyword, "not found")
+			keyword = seriesInfo.Name
 			s.log.Infoln("Retry", keyword)
 			detailPageUrl, err = s.step0(keyword)
 			if err != nil {
@@ -91,7 +92,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 	// 下载字幕
 	var browser *rod.Browser
 	// 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := model.NewBrowserFromDocker(s.reqParam.HttpProxy, "ws://192.168.50.135:9222")
+	browser, err := model.NewBrowser(s.reqParam.HttpProxy)
 	if err != nil {
 		return nil, err
 	}
@@ -177,11 +178,7 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]common.Supplier
 
 	var browser *rod.Browser
 	// 是用本地的 Browser 还是远程的，推荐是远程的
-	//if s.reqParam.RemoteBrowserDockerURL != "" {
-		browser, err = model.NewBrowserFromDocker(s.reqParam.HttpProxy, "ws://192.168.50.135:9222")
-	//} else {
-	//browser, err = model.NewBrowser(s.reqParam.HttpProxy)
-	////}
+	browser, err = model.NewBrowser(s.reqParam.HttpProxy)
 	if err != nil {
 		return nil, err
 	}

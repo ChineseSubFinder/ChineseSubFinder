@@ -91,6 +91,10 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 			d.log.Errorln("subSupplierHub.DownloadSub4Movie", inData.OneVideoFullPath ,err)
 			return
 		}
+		if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
+			d.log.Infoln("no sub found", filepath.Base(inData.OneVideoFullPath))
+			return
+		}
 		d.oneVideoSelectBestSub(inData.OneVideoFullPath, organizeSubFiles)
 		// -----------------------------------------------------
 	}
@@ -131,15 +135,20 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		inData := i.(InputData)
 		// 构建每个字幕站点下载者的实例
 		var subSupplierHub *sub_supplier.SubSupplierHub
-		subSupplierHub = sub_supplier.NewSubSupplierHub(zimuku.NewSupplier(d.reqParam),
-			shooter.NewSupplier(d.reqParam),
+		subSupplierHub = sub_supplier.NewSubSupplierHub(
+			zimuku.NewSupplier(d.reqParam),
 			subhd.NewSupplier(d.reqParam),
 			xunlei.NewSupplier(d.reqParam),
+			shooter.NewSupplier(d.reqParam),
 		)
 		// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
 		seriesInfo, organizeSubFiles, err := subSupplierHub.DownloadSub4Series(inData.OneVideoFullPath, inData.Index)
 		if err != nil {
 			d.log.Errorln("subSupplierHub.DownloadSub4Series", inData.OneVideoFullPath ,err)
+			return
+		}
+		if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
+			d.log.Infoln("no sub found", filepath.Base(inData.OneVideoFullPath))
 			return
 		}
 		// 只针对需要下载字幕的视频进行字幕的选择保存
