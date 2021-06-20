@@ -103,7 +103,11 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 			s.log.Errorln("step2Ex", err)
 			continue
 		}
-		subInfos = append(subInfos, *common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, common.ChineseSimple, model.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
+		oneSubInfo := common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, common.ChineseSimple, model.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0,
+			0, hdContent.Ext, hdContent.Data)
+		oneSubInfo.Season = item.Season
+		oneSubInfo.Episode = item.Episode
+		subInfos = append(subInfos, *oneSubInfo)
 	}
 
 	return subInfos, nil

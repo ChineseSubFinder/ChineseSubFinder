@@ -80,7 +80,8 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		inData := i.(InputData)
 		// -----------------------------------------------------
 		// 构建每个字幕站点下载者的实例
-		var subSupplierHub = sub_supplier.NewSubSupplierHub(shooter.NewSupplier(d.reqParam),
+		var subSupplierHub = sub_supplier.NewSubSupplierHub(
+			shooter.NewSupplier(d.reqParam),
 			subhd.NewSupplier(d.reqParam),
 			xunlei.NewSupplier(d.reqParam),
 			zimuku.NewSupplier(d.reqParam),
@@ -136,10 +137,10 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		// 构建每个字幕站点下载者的实例
 		var subSupplierHub *sub_supplier.SubSupplierHub
 		subSupplierHub = sub_supplier.NewSubSupplierHub(
-			zimuku.NewSupplier(d.reqParam),
+			//zimuku.NewSupplier(d.reqParam),
 			subhd.NewSupplier(d.reqParam),
-			xunlei.NewSupplier(d.reqParam),
-			shooter.NewSupplier(d.reqParam),
+			//xunlei.NewSupplier(d.reqParam),
+			//shooter.NewSupplier(d.reqParam),
 		)
 		// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
 		seriesInfo, organizeSubFiles, err := subSupplierHub.DownloadSub4Series(inData.OneVideoFullPath, inData.Index)

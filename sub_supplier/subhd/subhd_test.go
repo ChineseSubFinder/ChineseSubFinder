@@ -7,7 +7,8 @@ import (
 
 func TestSupplier_GetSubListFromFile(t *testing.T) {
 
-	movie1 := "X:\\电影\\The Devil All the Time (2020)\\The Devil All the Time (2020) WEBDL-1080p.mkv"
+	//movie1 := "X:\\电影\\The Devil All the Time (2020)\\The Devil All the Time (2020) WEBDL-1080p.mkv"
+	movie1 := "X:\\电影\\Luca (2021)\\Luca (2021) WEBDL-1080p.mkv"
 	//movie1 := "X:\\电影\\Oslo (2021)\\Oslo (2021) WEBDL-1080p.mkv"
 	//movie1 := "X:\\电影\\Spiral From the Book of Saw (2021)\\Spiral From the Book of Saw (2021) WEBDL-1080p.mkv"
 	//movie1 := "X:\\电影\\消失爱人 (2016)\\消失爱人 (2016) 720p AAC.rmvb"
@@ -31,10 +32,11 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 
 func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 
-	//ser := "X:\\连续剧\\The Bad Batch"	// tt12708542
+	ser := "X:\\连续剧\\The Bad Batch"	// tt12708542
 	//ser := "X:\\连续剧\\杀死伊芙 (2018)"	// tt7016936
 	//ser := "X:\\连续剧\\Money.Heist"
-	ser := "X:\\连续剧\\黑钱胜地 (2017)"
+	//ser := "X:\\连续剧\\黑钱胜地 (2017)"
+
 
 	// 读取本地的视频和字幕信息
 	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(ser)

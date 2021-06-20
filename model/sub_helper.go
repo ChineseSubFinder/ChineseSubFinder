@@ -33,7 +33,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []common.SupplierSubInfo)
 		nowExt := strings.ToLower(subInfo.Ext)
 		epsKey := GetEpisodeKeyName(subInfo.Season, subInfo.Episode)
 		_, ok := siteSubInfoDict[epsKey]
-		if ok == true {
+		if ok == false {
 			// 不存在则实例化
 			siteSubInfoDict[epsKey] = make([]string, 0)
 		}
@@ -87,8 +87,10 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []common.SupplierSubInfo)
 func ChangeVideoExt2SubExt(subInfos []common.SupplierSubInfo) {
 	for x, info := range subInfos {
 		tmpSubFileName := info.Name
-		if strings.Contains(tmpSubFileName, info.Ext) == false {
-			subInfos[x].Name = tmpSubFileName + info.Ext
+		if IsWantedVideoExtDef(tmpSubFileName) == false && IsWantedArchiveExtName(tmpSubFileName) == false {
+			if strings.Contains(tmpSubFileName, info.Ext) == false {
+				subInfos[x].Name = tmpSubFileName + info.Ext
+			}
 		}
 	}
 }

@@ -163,3 +163,12 @@ func unArr7z(fileFullPath, desRootPath string) error {
 
 	return nil
 }
+
+func IsWantedArchiveExtName(fileName string) bool {
+	switch strings.ToLower(filepath.Ext(fileName)) {
+	case ".zip", ".tar",".rar", "7z":
+		return true
+	default:
+		return false
+	}
+}
