@@ -28,9 +28,10 @@ func TestDownloader_DownloadSub4Movie(t *testing.T) {
 func TestDownloader_DownloadSub4Series(t *testing.T) {
 	var err error
 	//dirRoot := "X:\\连续剧\\隐秘的角落 (2020)"
-	dirRoot := "X:\\连续剧\\The Bad Batch"
+	//dirRoot := "X:\\连续剧\\The Bad Batch"
 	//dirRoot := "X:\\连续剧\\Why Women Kill"
 	//dirRoot := "X:\\连续剧\\Mare of Easttown"
+	dirRoot := "X:\\连续剧\\瑞克和莫蒂 (2013)"
 	//dirRoot := "X:\\连续剧"
 
 	dl := NewDownloader(common.ReqParam{

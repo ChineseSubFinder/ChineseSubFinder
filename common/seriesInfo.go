@@ -13,6 +13,7 @@ type SeriesInfo struct {
 	EpList           []EpisodeInfo
 	DirPath          string
 	SeasonDict       map[int]int
+	NeedDlSeasonDict map[int]int
 	NeedDlEpsKeyList map[string]EpisodeInfo		// SxEx
 }
 

@@ -115,7 +115,7 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 		seriesInfo.SeasonDict[episodeInfo.Season] = episodeInfo.Season
 	}
 
-	seriesInfo.NeedDlEpsKeyList = whichEpsNeedDownloadSub(&seriesInfo)
+	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(&seriesInfo)
 
 	return &seriesInfo, nil
 }
@@ -201,9 +201,10 @@ func GetSeriesList(dir string) ([]string, error) {
 	return seriesDirList, err
 }
 
-// whichEpsNeedDownloadSub 有那些 Eps 需要下载的，按 SxEx 反回 epsKey
-func whichEpsNeedDownloadSub(seriesInfo *common.SeriesInfo) map[string]common.EpisodeInfo {
+// whichSeasonEpsNeedDownloadSub 有那些 Eps 需要下载的，按 SxEx 反回 epsKey
+func whichSeasonEpsNeedDownloadSub(seriesInfo *common.SeriesInfo) (map[string]common.EpisodeInfo, map[int]int) {
 	var needDlSubEpsList = make(map[string]common.EpisodeInfo, 0)
+	var needDlSeasonList = make(map[int]int, 0)
 	currentTime := time.Now()
 	// 3个月
 	dayRange, _ := time.ParseDuration(common.DownloadSubDuring3Months)
@@ -214,6 +215,7 @@ func whichEpsNeedDownloadSub(seriesInfo *common.SeriesInfo) map[string]common.Ep
 			// 添加
 			epsKey := model.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
 			needDlSubEpsList[epsKey] = epsInfo
+			needDlSeasonList[epsInfo.Season] = epsInfo.Season
 		} else {
 			if len(epsInfo.SubAlreadyDownloadedList) > 0 {
 				model.GetLogger().Infoln("Skip because find sub file and over 3 months,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
@@ -222,5 +224,5 @@ func whichEpsNeedDownloadSub(seriesInfo *common.SeriesInfo) map[string]common.Ep
 			}
 		}
 	}
-	return needDlSubEpsList
+	return needDlSubEpsList, needDlSeasonList
 }
