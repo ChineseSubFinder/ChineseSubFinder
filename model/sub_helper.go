@@ -19,6 +19,10 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []common.SupplierSubInfo)
 	if err != nil {
 		return nil, err
 	}
+
+	// 把后缀名给改好
+	ChangeVideoExt2SubExt(subInfos)
+
 	// 第三方的解压库，首先不支持 io.Reader 的操作，也就是得缓存到本地硬盘再读取解压
 	// 且使用 walk 会无法解压 rar，得指定具体的实例，太麻烦了，直接用通用的接口得了，就是得都缓存下来再判断
 	// 基于以上两点，写了一堆啰嗦的逻辑···
@@ -87,10 +91,11 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []common.SupplierSubInfo)
 func ChangeVideoExt2SubExt(subInfos []common.SupplierSubInfo) {
 	for x, info := range subInfos {
 		tmpSubFileName := info.Name
-		if IsWantedVideoExtDef(tmpSubFileName) == false && IsWantedArchiveExtName(tmpSubFileName) == false {
-			if strings.Contains(tmpSubFileName, info.Ext) == false {
-				subInfos[x].Name = tmpSubFileName + info.Ext
-			}
+		// 如果后缀名是下载字幕目标的后缀名  或者 是压缩包格式的，则跳过
+		if strings.Contains(tmpSubFileName, info.Ext) == true || IsWantedArchiveExtName(tmpSubFileName) == true {
+
+		} else {
+			subInfos[x].Name = tmpSubFileName + info.Ext
 		}
 	}
 }
