@@ -160,7 +160,12 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		// 这里会拿到一份季度字幕的列表比如，Key 是 S1E0 S2E0 S3E0，value 是新的存储位置
 		fullSeasonSubDict := d.saveFullSeasonSub(seriesInfo, organizeSubFiles)
 		// TODO 季度的字幕包，应该优先于零散的字幕吧，暂定就这样了，注意是全部都替换
+		// 需要与有下载需求的季交叉
 		for _, episodeInfo := range seriesInfo.EpList {
+			_, ok := seriesInfo.NeedDlSeasonDict[episodeInfo.Season]
+			if ok == false {
+				continue
+			}
 			// 匹配对应的 Eps 去处理
 			seasonEpsKey := model.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
 			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, fullSeasonSubDict[seasonEpsKey])

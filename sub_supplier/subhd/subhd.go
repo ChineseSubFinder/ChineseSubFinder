@@ -60,7 +60,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 
 	var subInfos = make([]common.SupplierSubInfo, 0)
 	var subList = make([]HdListItem, 0)
-	for value := range seriesInfo.SeasonDict {
+	for value := range seriesInfo.NeedDlSeasonDict {
 		// 第一级界面，找到影片的详情界面
 		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
 		detailPageUrl, err := s.step0(keyword)
