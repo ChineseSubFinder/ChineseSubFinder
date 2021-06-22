@@ -53,8 +53,16 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*comm
 	subFileInfo.Dialogues = make([]common.OneDialogue, 0)
 	// 这里需要统计一共有几个 \N，以及这个数量在整体行数中的比例，这样就知道是不是双语字幕了
 	countLineFeed := 0
+	// 有意义的对话统计数，排除 Style 类型
+	usefullDialogueCount := 0
 	// 先读取一次字幕文件
 	for _, oneLine := range matched {
+		// 排除特效内容，只统计有意义的对话部分
+		if strings.Contains(oneLine[0], "Default") == false {
+			continue
+		}
+		usefullDialogueCount++
+
 		startTime := oneLine[1]
 		endTime := oneLine[2]
 		nowText := oneLine[3]
@@ -97,7 +105,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*comm
 		model.DetectSubLangAndStatistics(dialogue.Lines, langDict)
 	}
 	// 从统计出来的字典，找出 Top 1 或者 2 的出来，然后计算出是什么语言的字幕
-	detectLang := model.SubLangStatistics2SubLangType(float32(countLineFeed), float32(len(matched)), langDict)
+	detectLang := model.SubLangStatistics2SubLangType(float32(countLineFeed), float32(usefullDialogueCount), langDict)
 	subFileInfo.Lang = detectLang
 	subFileInfo.Data = inBytes
 	return &subFileInfo, nil
@@ -106,4 +114,6 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*comm
 const (
 	// 字幕文件对话的每一行
 	regString = `Dialogue: [^,.]*[0-9]*,([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),[^,.]*,[^,.]*,[0-9]*,[0-9]*,[0-9]*,[^,.]*,(.*)`
+	// 匹配 ass 文件中的 Style 变量
+	regString4Style = `(?m)^Style:\s*(\w+),`
 )
