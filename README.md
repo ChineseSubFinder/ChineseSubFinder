@@ -232,3 +232,4 @@ SeriesFolder: X:\连续剧
 * [Andyfoo/GoSubTitleSearcher: 字幕搜索查询(go语言版)，支持4k 2160p,1080p,720p视频字幕搜索，集合了字幕库、迅雷、射手、SubHD查询接口。 (github.com)](https://github.com/Andyfoo/GoSubTitleSearcher)
 * [go-rod/rod: A Devtools driver for web automation and scraping (github.com)](https://github.com/go-rod/rod)
 * [ausaki/subfinder: 字幕查找器 (github.com)](https://github.com/ausaki/subfinder)
+* [golandscape/sat: 高性能简繁体转换 (github.com)](https://github.com/golandscape/sat)
