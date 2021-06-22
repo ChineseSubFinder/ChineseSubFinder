@@ -58,6 +58,49 @@
 * 双语 -> 单语种
 * 简体 -> 繁体
 
+### 支持字幕语言的检测
+
+并非简单的从文件名或者字幕提供方的标记进行识别，而是读取字幕文件，进行双语、简体、繁体等的识别，支持列表如下：
+
+```go
+const (
+	Unknow                     Language = iota // 未知语言
+	ChineseSimple                              // 简体中文
+	ChineseTraditional                         // 繁体中文
+	ChineseSimpleEnglish                       // 简英双语字幕
+	ChineseTraditionalEnglish                  // 繁英双语字幕
+	English                                    // 英文
+	Japanese                                   // 日语
+	ChineseSimpleJapanese                      // 简日双语字幕
+	ChineseTraditionalJapanese                 // 繁日双语字幕
+	Korean                                     // 韩语
+	ChineseSimpleKorean                        // 简韩双语字幕
+	ChineseTraditionalKorean                   // 繁韩双语字幕
+)
+```
+
+然后相应的会转换为以下的字幕语言“后缀名”
+
+```go
+// 需要符合 emby 的格式要求，在后缀名前面
+const (
+	Emby_unknow = ".unknow"					// 未知语言
+	Emby_chs 	= ".chs"					// 简体
+	Emby_cht 	= ".cht"					// 繁体
+	Emby_chs_en = ".chs_en"                 // 简英双语字幕
+	Emby_cht_en = ".cht_en"                	// 繁英双语字幕
+	Emby_en 	= ".en"                     // 英文
+	Emby_jp 	= ".jp"						// 日语
+	Emby_chs_jp = ".chs_jp"                 // 简日双语字幕
+	Emby_cht_jp = ".cht_jp"                	// 繁日双语字幕
+	Emby_kr 	= ".kr"                     // 韩语
+	Emby_chs_kr = ".chs_kr"                 // 简韩双语字幕
+	Emby_cht_kr = ".cht_kr"                	// 繁韩双语字幕
+)
+```
+
+
+
 
 ## How to use
 
