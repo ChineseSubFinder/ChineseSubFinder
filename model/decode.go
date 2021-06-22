@@ -36,7 +36,6 @@ func getImdbAndYearMovieXml(movieFilePath string) (common.VideoInfo, error) {
 }
 
 func getImdbAndYearNfo(nfoFilePath string) (common.VideoInfo, error) {
-	// TODO 新增 TVDB ID 的读取
 	imdbInfo := common.VideoInfo{}
 	doc := etree.NewDocument()
 	// 这里会遇到一个梗，下面的关键词，可能是小写、大写、首字母大写

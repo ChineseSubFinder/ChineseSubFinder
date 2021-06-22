@@ -10,6 +10,7 @@ require (
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
 	github.com/beevik/etree v1.1.0
 	github.com/gen2brain/go-unarr v0.1.1
+	github.com/go-creed/sat v1.0.3 // indirect
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/go-rod/rod v0.97.2
 	github.com/jonboulle/clockwork v0.2.2 // indirect
@@ -27,3 +28,5 @@ require (
 	github.com/t-tomalak/logrus-easy-formatter v0.0.0-20190827215021-c074f06c5816
 	golang.org/x/text v0.3.3
 )
+
+replace github.com/go-creed/sat => github.com/allanpk716/sat v0.0.0-20210622112535-2e00ce54a80b

@@ -4,6 +4,7 @@ import (
 	"github.com/abadojack/whatlanggo"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/axgle/mahonia"
+	"github.com/go-creed/sat"
 	"github.com/saintfish/chardet"
 	"strings"
 )
@@ -151,7 +152,8 @@ func IsWhiteListLang(lang whatlanggo.Lang) bool {
 }
 
 // DetectSubLangAndStatistics 检测语言然后统计
-func DetectSubLangAndStatistics(lines []string, langDict map[int]int) {
+func DetectSubLangAndStatistics(lines []string, langDict map[int]int, chLines *[]string) {
+
 	for _, line := range lines {
 		info := whatlanggo.DetectWithOptions(line, GetLangOptions())
 		tmpLang := -1
@@ -167,11 +169,15 @@ func DetectSubLangAndStatistics(lines []string, langDict map[int]int) {
 		} else {
 			langDict[tmpLang] = 1
 		}
+		// 统计中文有多少行
+		if info.Lang == whatlanggo.Cmn {
+			*chLines = append(*chLines, line)
+		}
 	}
 }
 
 // SubLangStatistics2SubLangType 由分析的信息转换为具体是什么字幕的语言类型
-func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map[int]int) common.Language {
+func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map[int]int, chLines []string) common.Language {
 	const basePer = 0.8
 	// 是否是双语？
 	isDouble := false
@@ -180,7 +186,7 @@ func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map
 	if perLines > basePer {
 		isDouble = true
 	}
-	// 中文
+	// 中文(包含了 chs 以及 cht，这一级是无法区分的，需要额外的简体和繁体区分方法)
 	countChinese, hasChinese := langDict[int(whatlanggo.Cmn)]
 	// 英文
 	countEnglish, hasEnglish := langDict[int(whatlanggo.Eng)]
@@ -188,21 +194,37 @@ func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map
 	countJapanese, hasJapanese := langDict[int(whatlanggo.Jpn)]
 	// 韩文
 	countKorean, hasKorean := langDict[int(whatlanggo.Kor)]
+	// 0 - No , 1 - Chs, 2 - Cht
+	isNoOrChsOrCht := 0
+	isChsCount := 0
+	if hasChinese {
+		for _, line := range chLines {
+			if chDict.IsChs(line, 0.9) == true {
+				isChsCount++
+			}
+		}
+		// 简体句子的占比超过 80%
+		if float32(isChsCount) / float32(len(chLines)) > 0.8 {
+			isNoOrChsOrCht = 1
+		} else {
+			isNoOrChsOrCht = 2
+		}
+	}
 
 	// 优先判断双语
 	if isDouble == true {
 		// 首先得在外面统计就知道是双语
 		if hasChinese && hasEnglish {
 			// 简体	英文
-			return common.ChineseSimpleEnglish
+			return chIsChsOrCht(common.ChineseSimpleEnglish, isNoOrChsOrCht)
 		} else if hasChinese && hasJapanese {
 			// 简体 日文
-			return common.ChineseSimpleJapanese
+			return chIsChsOrCht(common.ChineseSimpleJapanese, isNoOrChsOrCht)
 		} else if hasChinese && hasKorean {
 			// 简体 韩文
-			return common.ChineseSimpleKorean
+			return chIsChsOrCht(common.ChineseSimpleKorean, isNoOrChsOrCht)
 		} else if hasChinese {
-			return common.ChineseSimple
+			return chIsChsOrCht(common.ChineseSimple, isNoOrChsOrCht)
 		} else if hasEnglish {
 			return common.English
 		} else if hasJapanese {
@@ -219,7 +241,7 @@ func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map
 			// 那么起码要占比 80% 对吧
 			perLines = float32(countChinese) / AllLines
 			if perLines > basePer {
-				return common.ChineseSimple
+				return chIsChsOrCht(common.ChineseSimple, isNoOrChsOrCht)
 			}
 		}
 		if hasEnglish {
@@ -249,7 +271,31 @@ func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map
 
 }
 
-// IsChineseSimpleOrTraditional 从字幕的文件名称中尝试确认是简体还是繁体，不需要判断双语问题，有额外的解析器完成。只可能出现 ChineseSimple ChineseTraditional Unknow 三种情况
+// 跟中文相关的再使用，其他的无需传入
+func chIsChsOrCht(language common.Language, isNoOrChsOrCht int) common.Language {
+	// 输出原来的
+	if isNoOrChsOrCht == 0 || isNoOrChsOrCht == 1 {
+		return language
+	}
+	switch language {
+	case common.ChineseSimpleEnglish:
+		// 简体	英文
+		return common.ChineseTraditionalEnglish
+	case common.ChineseSimpleJapanese:
+		// 简体 日文
+		return common.ChineseTraditionalJapanese
+	case common.ChineseSimpleKorean:
+		// 简体 韩文
+		return common.ChineseTraditionalKorean
+	case common.ChineseSimple:
+		// 简体
+		return common.ChineseTraditional
+	default:
+		return language
+	}
+}
+
+// IsChineseSimpleOrTraditional 暂时弃用，在 SubLangStatistics2SubLangType 检测语言，通过 unicode 做到。 从字幕的文件名称中尝试确认是简体还是繁体，不需要判断双语问题，有额外的解析器完成。只可能出现 ChineseSimple ChineseTraditional Unknow 三种情况
 func IsChineseSimpleOrTraditional(inputFileName string, orgLang common.Language) common.Language {
 	// TODO 现在是没有很好的办法去识别是简体还是繁体中文的，所以是依赖判断文件名中的关键词做到的，会有一定的误判
 	if strings.Contains(inputFileName, common.SubNameKeywordChineseSimple) || strings.Contains(inputFileName, common.MatchLangChs) {
@@ -322,3 +368,7 @@ func FindChineseBestSubtitle(subs []common.SubParserFileInfo) *common.SubParserF
 	}
 	return nil
 }
+
+var (
+	chDict = sat.DefaultDict()
+)

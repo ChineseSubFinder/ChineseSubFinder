@@ -38,9 +38,9 @@ func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*common.SubPar
 		} else {
 			// 正常至少应该匹配一个吧，不然就是最外层继续返回 nil 出去了
 			// 简体和繁体字幕的判断，通过文件名来做到的，基本就算个补判而已
-			newLang := IsChineseSimpleOrTraditional(filePath, subFileInfo.Lang)
+			//newLang := IsChineseSimpleOrTraditional(filePath, subFileInfo.Lang)
 			subFileInfo.Name = filepath.Base(filePath)
-			subFileInfo.Lang = newLang
+			//subFileInfo.Lang = newLang
 			subFileInfo.FileFullPath = filePath
 			subFileInfo.FromWhereSite = p.getFromWhereSite(filePath)
 			return subFileInfo, nil
