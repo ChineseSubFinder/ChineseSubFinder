@@ -14,6 +14,7 @@ type MarkingSystem struct {
 	subSiteSequence []string			// 网站的优先级，从高到低
 	subParserHub *model.SubParserHub
 }
+// TODO 在这里添加字幕格式选择的逻辑
 
 func NewMarkingSystem(subSiteSequence []string) *MarkingSystem {
 	mk := MarkingSystem{subSiteSequence: subSiteSequence,
