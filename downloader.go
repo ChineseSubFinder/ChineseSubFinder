@@ -67,8 +67,11 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		}
 		// 注意并发 pool 的释放
 		defer ants.Release()
+
+		log.Infoln("Download Movie Sub End...")
 	}()
 
+	log.Infoln("Download Movie Sub Started...")
 	nowVideoList, err := model.SearchMatchedVideoFile(dir)
 	if err != nil {
 		return err
@@ -127,7 +130,10 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		}
 		// 注意并发 pool 的释放
 		defer ants.Release()
+
+		log.Infoln("Download Series Sub End...")
 	}()
+	log.Infoln("Download Series Sub Started...")
 
 	// 并发控制
 	seriesDlFunc := func(i interface{}) {

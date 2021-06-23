@@ -354,21 +354,6 @@ func ChangeFileCoding2UTF8(inBytes []byte) ([]byte, error) {
 	return ouBytes, nil
 }
 
-// FindChineseBestSubtitle 找到合适的中文字幕，优先简体双语，简体->繁体，以及 字幕类型的优先级选择
-func FindChineseBestSubtitle(subs []common.SubParserFileInfo) *common.SubParserFileInfo {
-	for _, info := range subs {
-		// 找到了中文字幕
-		if HasChineseLang(info.Lang) == true {
-			// 优先双语
-			if IsBilingualSubtitle(info.Lang) == true {
-				return &info
-			}
-			return &info
-		}
-	}
-	return nil
-}
-
 var (
 	chDict = sat.DefaultDict()
 )
