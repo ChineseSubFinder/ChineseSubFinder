@@ -50,6 +50,7 @@ func main() {
 		DebugMode: config.DebugMode,
 		SaveMultiSub: config.SaveMultiSub,
 		Threads: config.Threads,
+		SubTypePriority: config.SubTypePriority,
 	})
 	//任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))

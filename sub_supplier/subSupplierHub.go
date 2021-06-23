@@ -53,11 +53,12 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 		if err != nil {
 			return nil, err
 		}
-		// 因为是下载电影，所以直接返回第一个就好了，默认应该key是 S-1E-1
+		// 因为是下载电影，需要合并返回
+		var outSubFileFullPathList = make([]string, 0)
 		for s, _ := range organizeSubFiles {
-			return organizeSubFiles[s], nil
+			outSubFileFullPathList = append(outSubFileFullPathList, organizeSubFiles[s]...)
 		}
-		return nil, nil
+		return outSubFileFullPathList, nil
 	} else {
 		// 无需下载字幕
 		return nil, nil

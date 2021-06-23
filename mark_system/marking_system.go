@@ -15,7 +15,6 @@ type MarkingSystem struct {
 	SubTypePriority int					// 字幕格式的优先级
 	subParserHub *model.SubParserHub
 }
-// TODO 在这里添加字幕格式选择的逻辑
 
 func NewMarkingSystem(subSiteSequence []string, subTypePriority int) *MarkingSystem {
 	mk := MarkingSystem{subSiteSequence: subSiteSequence,
@@ -35,7 +34,7 @@ func (m MarkingSystem) SelectOneSubFile(organizeSubFiles []string) *common.SubPa
 		if ok == false {
 			continue
 		}
-		info := model.FindChineseBestSubtitle(value)
+		info := model.FindChineseBestSubtitle(value, m.SubTypePriority)
 		if info != nil {
 			finalSubFile = *info
 			return &finalSubFile
@@ -52,7 +51,7 @@ func (m MarkingSystem) SelectEachSiteTop1SubFile(organizeSubFiles []string) ([]s
 	subInfoDict := m.parseSubFileInfo(organizeSubFiles)
 	for siteName, infos := range subInfoDict {
 		// 每个网站保存一个
-		info := model.FindChineseBestSubtitle(infos)
+		info := model.FindChineseBestSubtitle(infos, m.SubTypePriority)
 		if info != nil {
 			outSiteName = append(outSiteName, siteName)
 			outSubParserFileInfos = append(outSubParserFileInfos, *info)

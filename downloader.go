@@ -39,12 +39,15 @@ func NewDownloader(_reqParam ...common.ReqParam) *Downloader {
 		if downloader.reqParam.Topic > 0 && downloader.reqParam.Topic != downloader.topic {
 			downloader.topic = downloader.reqParam.Topic
 		}
+
 		// 并发线程的范围控制
 		if downloader.reqParam.Threads <= 0 {
 			downloader.reqParam.Threads = 2
 		} else if downloader.reqParam.Threads >= 10 {
 			downloader.reqParam.Threads = 10
 		}
+	} else {
+		downloader.reqParam = *common.NewReqParam()
 	}
 
 	var sitesSequence = make([]string, 0)
@@ -53,7 +56,7 @@ func NewDownloader(_reqParam ...common.ReqParam) *Downloader {
 	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
 	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
 	sitesSequence = append(sitesSequence, common.SubSiteShooter)
-	downloader.mk = mark_system.NewMarkingSystem(sitesSequence)
+	downloader.mk = mark_system.NewMarkingSystem(sitesSequence, downloader.reqParam.SubTypePriority)
 
 	return &downloader
 }

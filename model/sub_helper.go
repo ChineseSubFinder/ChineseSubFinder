@@ -124,10 +124,11 @@ func FindChineseBestSubtitle(subs []common.SubParserFileInfo, subTypePriority in
 						return &info
 					}
 				}
-			}
-			// 优先双语
-			if IsBilingualSubtitle(info.Lang) == true {
-				return &info
+			} else {
+				// 优先双语
+				if IsBilingualSubtitle(info.Lang) == true {
+					return &info
+				}
 			}
 		}
 	}
