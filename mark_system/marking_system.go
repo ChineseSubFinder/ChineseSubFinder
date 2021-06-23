@@ -26,18 +26,32 @@ func NewMarkingSystem(subSiteSequence []string, subTypePriority int) *MarkingSys
 
 // SelectOneSubFile 选择最优的一个字幕文件
 func (m MarkingSystem) SelectOneSubFile(organizeSubFiles []string) *common.SubParserFileInfo {
-	var finalSubFile common.SubParserFileInfo
+	var finalSubFile *common.SubParserFileInfo
 	subInfoDict := m.parseSubFileInfo(organizeSubFiles)
 	// 优先级别暂定 subSiteSequence: zimuku -> subhd -> xunlei -> shooter
-	for _, subSite := range m.subSiteSequence {
-		value, ok := subInfoDict[subSite]
-		if ok == false {
-			continue
-		}
-		info := model.FindChineseBestSubtitle(value, m.SubTypePriority)
-		if info != nil {
-			finalSubFile = *info
-			return &finalSubFile
+	// 这里需要循环四轮：
+	// 第一轮，双语、字幕类型自定义，优先
+	// 第二轮，单语言（中文）、字幕类型自定义，优先
+	// 第三轮，双语、字幕类型0，优先
+	// 第四轮，单语言（中文）、字幕类型0，优先
+	for i := 0; i < 4; i++ {
+		for _, subSite := range m.subSiteSequence {
+			infos, ok := subInfoDict[subSite]
+			if ok == false {
+				continue
+			}
+			if i == 0 {
+				finalSubFile = model.SelectChineseBestBilingualSubtitle(infos, m.SubTypePriority)
+			} else if i == 1 {
+				finalSubFile = model.SelectChineseBestSubtitle(infos, m.SubTypePriority)
+			} else if i == 2 {
+				finalSubFile = model.SelectChineseBestBilingualSubtitle(infos, 0)
+			} else if i == 3 {
+				finalSubFile = model.SelectChineseBestSubtitle(infos, 0)
+			}
+			if finalSubFile != nil {
+				return finalSubFile
+			}
 		}
 	}
 	return nil
@@ -46,15 +60,31 @@ func (m MarkingSystem) SelectOneSubFile(organizeSubFiles []string) *common.SubPa
 // SelectEachSiteTop1SubFile 每个网站最优的文件
 func (m MarkingSystem) SelectEachSiteTop1SubFile(organizeSubFiles []string) ([]string, []common.SubParserFileInfo) {
 	// 每个文件都带有出处 [subhd]
+	var finalSubFile *common.SubParserFileInfo
 	var outSiteName = make([]string, 0)
 	var outSubParserFileInfos = make([]common.SubParserFileInfo, 0)
 	subInfoDict := m.parseSubFileInfo(organizeSubFiles)
-	for siteName, infos := range subInfoDict {
-		// 每个网站保存一个
-		info := model.FindChineseBestSubtitle(infos, m.SubTypePriority)
-		if info != nil {
-			outSiteName = append(outSiteName, siteName)
-			outSubParserFileInfos = append(outSubParserFileInfos, *info)
+	// 这里需要循环四轮：
+	// 第一轮，双语、字幕类型自定义，优先
+	// 第二轮，单语言（中文）、字幕类型自定义，优先
+	// 第三轮，双语、字幕类型0，优先
+	// 第四轮，单语言（中文）、字幕类型0，优先
+	for i := 0; i < 4; i++ {
+		for siteName, infos := range subInfoDict {
+			// 每个网站保存一个
+			if i == 0 {
+				finalSubFile = model.SelectChineseBestBilingualSubtitle(infos, m.SubTypePriority)
+			} else if i == 1 {
+				finalSubFile = model.SelectChineseBestSubtitle(infos, m.SubTypePriority)
+			} else if i == 2 {
+				finalSubFile = model.SelectChineseBestBilingualSubtitle(infos, 0)
+			} else if i == 3 {
+				finalSubFile = model.SelectChineseBestSubtitle(infos, 0)
+			}
+			if finalSubFile != nil {
+				outSiteName = append(outSiteName, siteName)
+				outSubParserFileInfos = append(outSubParserFileInfos, *finalSubFile)
+			}
 		}
 	}
 

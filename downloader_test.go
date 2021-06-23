@@ -17,7 +17,7 @@ func TestDownloader_DownloadSub4Movie(t *testing.T) {
 	//dirRoot := "X:\\电影"
 
 	dl := NewDownloader(common.ReqParam{
-		SaveMultiSub: false,
+		SaveMultiSub: true,
 		SubTypePriority: 1,
 	})
 	err = dl.DownloadSub4Movie(dirRoot)
