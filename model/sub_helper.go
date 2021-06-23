@@ -101,16 +101,55 @@ func ChangeVideoExt2SubExt(subInfos []common.SupplierSubInfo) {
 }
 
 // FindChineseBestSubtitle 找到合适的中文字幕，优先简体双语，简体->繁体，以及 字幕类型的优先级选择
-func FindChineseBestSubtitle(subs []common.SubParserFileInfo) *common.SubParserFileInfo {
+func FindChineseBestSubtitle(subs []common.SubParserFileInfo, subTypePriority int) *common.SubParserFileInfo {
+
+	// 先傻一点实现优先双语的，之前的写法有 bug
 	for _, info := range subs {
 		// 找到了中文字幕
 		if HasChineseLang(info.Lang) == true {
+			// 字幕的优先级 0 - 原样, 1 - srt , 2 - ass/ssa
+			if subTypePriority == 1 {
+				// 1 - srt
+				if strings.ToLower(info.Ext) == common.SubExtSRT {
+					// 优先双语
+					if IsBilingualSubtitle(info.Lang) == true {
+						return &info
+					}
+				}
+			} else if subTypePriority == 2 {
+				//  2 - ass/ssa
+				if strings.ToLower(info.Ext) == common.SubExtASS || strings.ToLower(info.Ext) == common.SubExtSSA {
+					// 优先双语
+					if IsBilingualSubtitle(info.Lang) == true {
+						return &info
+					}
+				}
+			}
 			// 优先双语
 			if IsBilingualSubtitle(info.Lang) == true {
 				return &info
 			}
+		}
+	}
+	// 然后才是 chs 和 cht
+	for _, info := range subs {
+		// 找到了中文字幕
+		if HasChineseLang(info.Lang) == true {
+			// 字幕的优先级 0 - 原样, 1 - srt , 2 - ass/ssa
+			if subTypePriority == 1 {
+				// 1 - srt
+				if strings.ToLower(info.Ext) == common.SubExtSRT {
+					return &info
+				}
+			} else if subTypePriority == 2 {
+				//  2 - ass/ssa
+				if strings.ToLower(info.Ext) == common.SubExtASS || strings.ToLower(info.Ext) == common.SubExtSSA {
+					return &info
+				}
+			}
 			return &info
 		}
 	}
+
 	return nil
 }

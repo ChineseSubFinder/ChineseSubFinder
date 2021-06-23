@@ -12,13 +12,15 @@ import (
 type MarkingSystem struct {
 	log *logrus.Logger
 	subSiteSequence []string			// 网站的优先级，从高到低
+	SubTypePriority int					// 字幕格式的优先级
 	subParserHub *model.SubParserHub
 }
 // TODO 在这里添加字幕格式选择的逻辑
 
-func NewMarkingSystem(subSiteSequence []string) *MarkingSystem {
+func NewMarkingSystem(subSiteSequence []string, subTypePriority int) *MarkingSystem {
 	mk := MarkingSystem{subSiteSequence: subSiteSequence,
 		log: model.GetLogger(),
+		SubTypePriority: subTypePriority,
 		subParserHub: model.NewSubParserHub(ass.NewParser(), srt.NewParser())}
 	return &mk
 }
