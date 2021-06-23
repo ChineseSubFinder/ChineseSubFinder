@@ -184,6 +184,7 @@ UseProxy: false
 HttpProxy: http://127.0.0.1:10809
 EveryTime: 12h
 Threads: 4
+SubTypePriority: 0
 DebugMode: false
 SaveMultiSub: false
 MovieFolder: /app/MovieFolder
@@ -199,6 +200,7 @@ UseProxy: false
 HttpProxy: http://127.0.0.1:10809
 EveryTime: 6h
 Threads: 4
+SubTypePriority: 0
 DebugMode: false
 SaveMultiSub: false
 MovieFolder: X:\电影
@@ -206,12 +208,21 @@ SeriesFolder: X:\连续剧
 ```
 
 * UseProxy，默认false。是否使用代理，需要配合 HttpProxy 设置
+
 * HttpProxy，默认 http://127.0.0.1:10809。http 代理这里不要留空，不适应就设置 UseProxy 为 false
+
 * EveryTime，默认 6h。每隔多久触发一次下载逻辑。怎么用参考，[robfig/cron: a cron library for go (github.com)](https://github.com/robfig/cron)
+
 * Threads，并发数，最高到 20 个。看机器性能和网速来调整即可。
+
+* SubTypePriority，字幕下载的优先级，0 是自动，1 是 srt 优先，2 是 ass/ssa 优先
+
 * DebugMode，默认 false。调试模式，会在每个视频的文件夹下，新建一个  subtmp 文件夹，把所有匹配到的字幕都缓存到这个目录，没啥事可以不开。开的话就可以让你手动选择一堆的字幕啦。
+
 * SaveMultiSub，默认值 false。true 会在每个视频下面保存每个网站找到的最佳字幕（见下面《如何手动刷新 emby 加载字幕》，会举例）。false ，那么每个视频下面就一个最优字幕。
+
 * MovieFolder，填写你的电影的目录
+
 * SeriesFolder，填写你的连续剧的目录
 
 ### 如何手动刷新 emby 加载字幕
