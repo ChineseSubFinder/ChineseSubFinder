@@ -19,17 +19,18 @@
 ### 支持的部署方式
 
 * docker，见 How to use
-* ~~Windows，需要去 Release 下载，见 How to use~~ Windows 可以自行编译即可
 
 ### 支持的视频分类
 
-|  类型  | 是否支持 |                    备注                    |
-| :----: | :------: | :----------------------------------------: |
-|  电影  |    ✔     |  已经支持，通过 IMDB、或者文件名进行搜索   |
-| 连续剧 |    ✔     | 已经支持，必须依赖 tvshow.nfo 中的 IMDB ID |
-|  动画  |    -     |                    待定                    |
+|      类型       | Emby | TinyMediaManger | Sonarr | Radarr | 人工随意命名分类 |                             备注                             |
+| :-------------: | :--: | :-------------: | :----: | :----: | :--------------: | :----------------------------------------------------------: |
+|      电影       |  ✔   |        ✔        |   ✖    |   ✔    |        ✓         |              通过 IMDB ID 或者 文件名 进行搜索               |
+|     连续剧      |  ✔   |        ✔        |   ✔    |   ✖    |        ✖         |             **必须**依赖 tvshow.nfo 中的 IMDB ID             |
+| 日本动画(Anime) |  ✖   |        ✖        |   ✖    |   ✖    |        ✖         | [待定，见讨论](https://github.com/allanpk716/ChineseSubFinder/issues/1) |
 
-
+* ✔ -- 支持
+* ✓ -- 支持，但是可能搜索结果不稳定
+* ✖ -- 不支持
 
 ### 支持的字幕下载站点
 
@@ -89,7 +90,7 @@ const (
 	Emby_cht 	= ".cht"					// 繁体
 	Emby_chs_en = ".chs_en"                 // 简英双语字幕
 	Emby_cht_en = ".cht_en"                	// 繁英双语字幕
-	Emby_en 	= ".en"                     // 英文
+	Emby_en 	= ".en"                       // 英文
 	Emby_jp 	= ".jp"						// 日语
 	Emby_chs_jp = ".chs_jp"                 // 简日双语字幕
 	Emby_cht_jp = ".cht_jp"                	// 繁日双语字幕
@@ -104,7 +105,7 @@ const (
 
 ## How to use
 
-使用本程序前，**强烈推荐**使用 emby 或者 tinyMediaManager 对你的视频进行基础的削刮，整理好视频的命名，否则你自行命名连续剧是无法进行识别自动下载的。
+使用本程序前，**强烈推荐**使用 emby 或者 tinyMediaManager 对你的视频进行基础的削刮，整理好视频的命名，否则你**自行命名**连续剧是无法进行识别自动下载的。
 
 ### 配置建议
 
@@ -150,7 +151,7 @@ const (
 version: "3"
 services:
   chinesesubfinder:
-    image: allanpk716/chinesesubfinder:v0.5.0
+    image: allanpk716/chinesesubfinder:latest
     volumes:
       - /volume1/docker/chinesesubfinder/config.yaml:/app/config.yaml
       - /volume1/docker/chinesesubfinder/logs:/app/Logs
@@ -236,37 +237,11 @@ SeriesFolder: X:\连续剧
 * 字幕的风评（有些字幕太差了，需要进行过滤，考虑排除，字幕组，关键词，机翻，以及评分等条件
 * 加入 Web 设置界面（也许没得很大的必要···）
 * 提供 API 接口，部署后，允许额外的程序访问（类似 emby 等）获取字幕
+* 支持 Anime 的字幕下载
 
 ## 设计
 
 ![基础字幕搜索流程](DesignFile/基础字幕搜索流程.png)
-
-## 限定条件
-
-* 电影、连续剧（后续会考虑：动画）
-
-* 只搜索中文字幕
-
-* **必要**条件，视频文件经过**削刮器**处理
-
-* 搜索优先级
-
-  * 经过削刮器处理
-    1. 视频经过削刮器（tinyMediaManager、Emby）处理，视频同级目录有 *.nfo 文件（Kodi 格式的）
-    2. 使用 Raddarr 下载的电影， Metadata 设置 Emby，存在一个 movie.xml 文件
-    3. 以上两个文件任意一个能读取到 IMDB ID
-  * 通过视频文件的唯一ID（针对不同搜索方式不同）进行搜索
-  * 视频文件名
-  
-* 支持的网站
-
-  * subhd（根据优先级）
-
-  * zimuku（根据优先级）
-
-  * shooter（通过视频文件的唯一ID）
-
-  * 迅雷（通过视频文件的唯一ID）
 
 ## 感谢
 
