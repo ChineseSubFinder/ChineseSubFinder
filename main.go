@@ -23,6 +23,8 @@ func init() {
 	}
 }
 
+// TODO 考虑加入 TV 相关季开播的信息读取（每一集都有对应的 nfo 文件，可以考虑从这里面读取），这样可以更加容易判断跳过老的剧集，近期下载了，字幕下载一次即可，无需反反复复
+
 func main() {
 	if log == nil {
 		panic("log init error")
@@ -44,60 +46,55 @@ func main() {
 	}
 	log.Infoln("MovieFolder:", config.MovieFolder)
 
-	// 下载实例
-	downloader := NewDownloader(common.ReqParam{
-		HttpProxy: httpProxy,
-		DebugMode: config.DebugMode,
-		SaveMultiSub: config.SaveMultiSub,
-		Threads: config.Threads,
-		SubTypePriority: config.SubTypePriority,
-	})
 	//任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
 	entryID, err := c.AddFunc("@every " + config.EveryTime, func() {
-		defer func() {
-			log.Infoln("Download One End...")
-		}()
 
-		log.Infoln("Download One Started...")
-		// 开始下载
-		err := downloader.DownloadSub4Movie(config.MovieFolder)
-		if err != nil {
-			log.Errorln("DownloadSub4Movie", err)
-			return
-		}
-
-		err = downloader.DownloadSub4Series(config.SeriesFolder)
-		if err != nil {
-			log.Errorln("DownloadSub4Series", err)
-			return
-		}
+		DownLoadStart(httpProxy)
 	})
 	if err != nil {
 		log.Errorln("cron entryID:", entryID, "Error:", err)
 		return
 	}
-
 	log.Infoln("First Time Download Start")
-	// 立即触发第一次的更新
+
+	DownLoadStart(httpProxy)
+
+	log.Infoln("First Time Download End")
+
+	c.Start()
+	// 阻塞
+	select {}
+}
+
+func DownLoadStart(httpProxy string) {
+	defer func() {
+		log.Infoln("Download One End...")
+	}()
+
+	// 下载实例
+	downloader := NewDownloader(common.ReqParam{
+		HttpProxy:       httpProxy,
+		DebugMode:       config.DebugMode,
+		SaveMultiSub:    config.SaveMultiSub,
+		Threads:         config.Threads,
+		SubTypePriority: config.SubTypePriority,
+	})
+
+	log.Infoln("Download One Started...")
 	// 开始下载
-	err = downloader.DownloadSub4Movie(config.MovieFolder)
+	err := downloader.DownloadSub4Movie(config.MovieFolder)
 	if err != nil {
 		log.Errorln("DownloadSub4Movie", err)
 		return
 	}
+
 	err = downloader.DownloadSub4Series(config.SeriesFolder)
 	if err != nil {
 		log.Errorln("DownloadSub4Series", err)
 		return
 	}
-	log.Infoln("First Time Download End")
-
-	c.Start()
-
-	// 阻塞
-	select {}
 }
 
 var(

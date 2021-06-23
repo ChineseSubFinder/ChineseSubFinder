@@ -68,9 +68,6 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		if err != nil {
 			d.log.Error(err)
 		}
-		// 注意并发 pool 的释放
-		defer ants.Release()
-
 		log.Infoln("Download Movie Sub End...")
 	}()
 
@@ -112,6 +109,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	if err != nil {
 		return err
 	}
+	defer p.Release()
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
 	for i, oneVideoFullPath := range nowVideoList {
 		wg.Add(1)
@@ -131,9 +129,6 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		if err != nil {
 			d.log.Error(err)
 		}
-		// 注意并发 pool 的释放
-		defer ants.Release()
-
 		log.Infoln("Download Series Sub End...")
 	}()
 	log.Infoln("Download Series Sub Started...")
@@ -187,6 +182,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	if err != nil {
 		return err
 	}
+	defer p.Release()
 	// 遍历连续剧总目录下的第一层目录
 	seriesDirList, err := series_helper.GetSeriesList(dir)
 	if err != nil {
