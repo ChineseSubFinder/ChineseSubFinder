@@ -59,6 +59,11 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 			model.GetLogger().Errorln(err)
 			continue
 		}
+		if subParserFileInfo == nil {
+			// 说明这个字幕无法解析
+			model.GetLogger().Warnln(seriesInfo.DirPath, "DetermineFileTypeFromFile is nill")
+			continue
+		}
 		epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
 		oneFileSubInfo := common.SubInfo{
 			Title: info.Title,
