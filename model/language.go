@@ -5,6 +5,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/axgle/mahonia"
 	"github.com/go-creed/sat"
+	chardet2 "github.com/nzlov/chardet"
+	"github.com/qiniu/iconv"
 	"github.com/saintfish/chardet"
 	"strings"
 )
@@ -341,19 +343,30 @@ func ConvertToString(src string, srcCode string, tagCode string) string {
 
 // ChangeFileCoding2UTF8 自动检测文件的编码，然后转换到 UTF-8
 func ChangeFileCoding2UTF8(inBytes []byte) ([]byte, error) {
-	detector := chardet.NewTextDetector()
-	result, err := detector.DetectBest(inBytes)
+	best, err := detector.DetectBest(inBytes)
 	if err != nil {
-		return nil ,err
+		return nil, err
 	}
-	ouBytes := inBytes
-	if result.Charset != "UTF-8" {
-		ouString := ConvertToString(string(inBytes), result.Charset, "UTF-8")
-		ouBytes = []byte(ouString)
+	var cd iconv.Iconv
+	if best.Confidence < 90 {
+		detectBest := chardet2.Mostlike(inBytes)
+		cd, err = iconv.Open("utf-8", detectBest)
+	} else {
+		cd, err = iconv.Open("utf-8", best.Charset)
 	}
-	return ouBytes, nil
+	if err != nil {
+		return nil, err
+	}
+	defer cd.Close()
+
+	utf8String := cd.ConvString(string(inBytes))
+	if utf8String == "" {
+		return inBytes, nil
+	}
+	return []byte(utf8String), nil
 }
 
 var (
 	chDict = sat.DefaultDict()
+	detector = chardet.NewTextDetector()
 )
