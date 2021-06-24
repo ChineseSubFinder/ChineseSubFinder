@@ -1,0 +1,11 @@
+#!/usr/bin/with-contenv bash
+
+# 检查config配置文件，并创建
+if [ ! -e "/config/config.yaml" ] ;  then 
+cp /app/config.yaml /config/config.yaml
+fi
+
+# 检查用户config配置文件，并移动.
+if [ -e "/config/config.yaml" ] ;  then
+cp /config/config.yaml /app/config.yaml
+fi

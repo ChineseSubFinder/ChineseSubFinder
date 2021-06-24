@@ -14,7 +14,9 @@ COPY . .
 # 执行编译，-o 指定保存位置和程序编译名称
 RUN go build -ldflags="-s -w" -o /app/chinesesubfinder
 
-FROM ubuntu:bionic
+FROM lsiobase/ubuntu:bionic
+
+COPY Docker/root /
 
 RUN ln -s /root/.cache/rod/chromium-869685/chrome-linux/chrome /usr/bin/chrome && \
     sed -i "s@http://deb.debian.org@http://mirrors.aliyun.com@g" /etc/apt/sources.list && rm -Rf /var/lib/apt/lists/* && \
@@ -32,23 +34,24 @@ RUN ln -s /root/.cache/rod/chromium-869685/chrome-linux/chrome /usr/bin/chrome &
     ca-certificates \
     # fonts
     fonts-liberation fonts-noto-color-emoji fonts-noto-cjk \
-    # timezone
-    tzdata \
     # processs reaper
     dumb-init \
     # headful mode support, for example: $ xvfb-run chromium-browser --remote-debugging-port=9222
     xvfb \
     # cleanup
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf \
+       /tmp/* \
+       /var/lib/apt/lists/* \
+       /var/tmp/*
 
-ENV TZ Asia/Shanghai
+ENV TZ=Asia/Shanghai \
+    PUID=1026 PGID=100
 
 WORKDIR /app
 # 主程序
 COPY --from=builder /app/chinesesubfinder /app/chinesesubfinder
 # 配置文件
 COPY --from=builder /homelab/buildspace/config.yaml.sample /app/config.yaml
-RUN chmod -R 777 /app
 EXPOSE 1200
-
-ENTRYPOINT ["/app/chinesesubfinder"]
+VOLUME /config /media
