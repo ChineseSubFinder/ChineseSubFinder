@@ -15,8 +15,7 @@ COPY . .
 RUN go build -ldflags="-s -w" -o /app/chinesesubfinder
 
 FROM lsiobase/ubuntu:bionic
-
-COPY Docker/root /
+COPY Docker/root/ /
 
 RUN ln -s /root/.cache/rod/chromium-869685/chrome-linux/chrome /usr/bin/chrome && \
     sed -i "s@http://deb.debian.org@http://mirrors.aliyun.com@g" /etc/apt/sources.list && rm -Rf /var/lib/apt/lists/* && \

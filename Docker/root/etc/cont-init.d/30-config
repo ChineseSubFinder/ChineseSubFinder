@@ -9,3 +9,7 @@ fi
 if [ -e "/config/config.yaml" ] ;  then
 cp /config/config.yaml /app/config.yaml
 fi
+
+# 容器启动时下载最新示例文件
+rm -f /config/config.yaml.sample
+wget -q -O /config/config.yaml.sample https://cdn.jsdelivr.net/gh/allanpk716/ChineseSubFinder/config.yaml.sample
