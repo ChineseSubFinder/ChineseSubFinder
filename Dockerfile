@@ -31,6 +31,7 @@ RUN ln -s /root/.cache/rod/chromium-869685/chrome-linux/chrome /usr/bin/chrome &
     libgtk-3-0 \
     libgbm1 \
     ca-certificates \
+    wget \
     # fonts
     fonts-liberation fonts-noto-color-emoji fonts-noto-cjk \
     # processs reaper
