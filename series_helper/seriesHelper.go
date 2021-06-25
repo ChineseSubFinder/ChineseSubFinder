@@ -39,7 +39,7 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*common.Seri
 		if err != nil {
 			// 不是必须的
 			seriesInfo.Year = 0
-			model.GetLogger().Errorln("ReadSeriesInfoFromDir.GetImdbInfo4SeriesDir.strconv.Atoi", err)
+			model.GetLogger().Warnln("ReadSeriesInfoFromDir.GetImdbInfo4SeriesDir.strconv.Atoi", err)
 		} else {
 			seriesInfo.Year = iYear
 
