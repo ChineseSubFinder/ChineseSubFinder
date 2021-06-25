@@ -158,7 +158,7 @@ const (
 
 ![07](DesignFile/pics/07.png)
 
-### 使用 docker-compose 部署
+### 使用 docker-compose 部署，支持x86_64、ARM32，ARM64设备
 
 编写以下的配置文件，注意 docker-compose 文件需要与本程序的 config.yaml 配套，特别是 MovieFolder、SeriesFolder  。
 
@@ -179,7 +179,7 @@ services:
     restart: unless-stopped
 ```
 第一次使用本容器时，请启动后立即关闭，修改config.yaml的媒体文件夹地址  
-每次重启或更新chinesesubfinder容器时，系统会自动最新版的config.yaml.sample，可自行浏览最新配置文件并修改到config.yaml  
+每次重启或更新chinesesubfinder容器时，系统会自动下载最新版的config.yaml.sample，可自行浏览最新配置文件并修改到config.yaml  
 推荐使用watchtower自动更新  
 https://sleele.com/2019/06/16/docker更新容器镜像神器-watchtower/  
 config.yaml 内容如下（每个配置啥意思见《配置文件解析》）  
@@ -286,5 +286,7 @@ SeriesFolder: /media/连续剧
 
 
 # 预览图
+![Xnip2021-06-25_11-11-55](https://cdn.jsdelivr.net/gh/SuperNG6/pic@master/uPic/2021-06-25/Xnip2021-06-25_11-11-55.jpg)
+![Xnip2021-06-25_11-12-33](https://cdn.jsdelivr.net/gh/SuperNG6/pic@master/uPic/2021-06-25/Xnip2021-06-25_11-12-33.jpg)
 ![Xnip2021-06-25_10-29-06](https://cdn.jsdelivr.net/gh/SuperNG6/pic@master/uPic/2021-06-25/Xnip2021-06-25_10-29-06.jpg)
 ![Xnip2021-06-25_10-24-22](https://cdn.jsdelivr.net/gh/SuperNG6/pic@master/uPic/2021-06-25/Xnip2021-06-25_10-24-22.jpg)
