@@ -3,8 +3,10 @@
 # permissions
 chown -R abc:abc \
 	/app \
+    /root/.cache \
     /config \
     /media
     
 chmod a+x \
-    /app/chinesesubfinder
+    /app/chinesesubfinder \
+    /usr/bin/chrome 
