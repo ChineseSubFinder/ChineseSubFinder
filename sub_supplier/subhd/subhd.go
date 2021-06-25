@@ -74,7 +74,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 			s.log.Infoln("Retry", keyword)
 			detailPageUrl, err = s.step0(keyword)
 			if err != nil {
-				s.log.Errorln(keyword)
+				s.log.Errorln("step0", keyword)
 				return nil, err
 			}
 		}

@@ -4,9 +4,9 @@
 
 > 开发中，可能有不兼容性的调整（配置文件字段变更）
 >
-> 最新版本 v0.7.x 优化视频跳过下载字幕的逻辑，加快扫描速度
+> 最新版本 v0.8.x 配置文件 config.xml 有更新，注意看下面的文档
 >
-> v0.6.x 支持字幕类型优先级设置
+> v0.7.x 优化视频跳过下载字幕的逻辑，加快扫描速度
 
 ## Why？
 
@@ -160,7 +160,9 @@ const (
 
 ![07](DesignFile/pics/07.png)
 
-### 使用 docker-compose 部署，支持x86_64、ARM32，ARM64设备
+### 使用 docker-compose 部署
+
+> 支持 x86_64、ARM32，ARM64设备
 
 编写以下的配置文件，注意 docker-compose 文件需要与本程序的 config.yaml 配套，特别是 MovieFolder、SeriesFolder  。
 
@@ -180,7 +182,7 @@ services:
     restart: unless-stopped
 ```
 
-## docker 命令创建容器
+### docker 命令创建容器
 ````
 docker create \
   --name=chinesesubfinder \
@@ -191,25 +193,12 @@ docker create \
   -v /volume1/Video:/media \
   --restart unless-stopped \
   allanpk716/chinesesubfinder:latest
-  ````
+````
 
 第一次使用本容器时，请启动后立即关闭，修改config.yaml的媒体文件夹地址  
 每次重启或更新chinesesubfinder容器时，系统会自动下载最新版的config.yaml.sample，可自行浏览最新配置文件并修改到config.yaml  
 推荐使用watchtower自动更新  
 https://sleele.com/2019/06/16/docker更新容器镜像神器-watchtower/  
-config.yaml 内容如下（每个配置啥意思见《配置文件解析》）  
-
-```yaml
-UseProxy: false
-HttpProxy: http://127.0.0.1:10809
-EveryTime: 12h
-Threads: 4
-SubTypePriority: 0
-DebugMode: false
-SaveMultiSub: false
-MovieFolder: /media/电影
-SeriesFolder: /media/连续剧
-```
 
 ### 配置文件解析
 
@@ -271,6 +260,8 @@ SeriesFolder: /media/连续剧
 
 ## 版本
 
+* v0.8.x 调整 docker 镜像结构 -- 2021年6月25日
+* v0.7.x 提高搜索效率 -- 2021年6月25日
 * v0.6.x 支持设置字幕格式的优先级 -- 2021年6月23日
 * v0.5.x 支持连续剧字幕下载 -- 2021年6月19日
 * v0.4.x 支持设置并发数 -- 2021年6月18日

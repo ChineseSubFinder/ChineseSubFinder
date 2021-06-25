@@ -77,7 +77,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 		// 第二级界面，有多少个字幕
 		subResult, err := s.step1(filmDetailPageUrl)
 		if err != nil {
-			s.log.Errorln(filmDetailPageUrl)
+			s.log.Errorln("step1", filmDetailPageUrl)
 			return nil, err
 		}
 
