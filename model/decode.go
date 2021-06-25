@@ -36,7 +36,7 @@ func getImdbAndYearMovieXml(movieFilePath string) (common.VideoIMDBInfo, error) 
 	return videoInfo, common.CanNotFindIMDBID
 }
 
-func getImdbAndYearNfo(nfoFilePath string) (common.VideoIMDBInfo, error) {
+func getImdbAndYearNfo(nfoFilePath string, rootKey string) (common.VideoIMDBInfo, error) {
 	imdbInfo := common.VideoIMDBInfo{}
 	doc := etree.NewDocument()
 	// 这里会遇到一个梗，下面的关键词，可能是小写、大写、首字母大写
@@ -58,15 +58,15 @@ func getImdbAndYearNfo(nfoFilePath string) (common.VideoIMDBInfo, error) {
 		imdbInfo.ImdbId = t.Text()
 		break
 	}
-	for _, t := range doc.FindElements("./movie/year") {
+	for _, t := range doc.FindElements("./" + rootKey +"/year") {
 		imdbInfo.Year = t.Text()
 		break
 	}
-	for _, t := range doc.FindElements("./movie/releasedate") {
+	for _, t := range doc.FindElements("./" + rootKey + "/releasedate") {
 		imdbInfo.ReleaseDate = t.Text()
 		break
 	}
-	for _, t := range doc.FindElements("./movie/premiered") {
+	for _, t := range doc.FindElements("./" + rootKey + "/premiered") {
 		imdbInfo.ReleaseDate = t.Text()
 		break
 	}
@@ -82,7 +82,7 @@ func GetImdbInfo4Movie(movieFileFullPath string) (common.VideoIMDBInfo, error) {
 	dirPth := filepath.Dir(movieFileFullPath)
 	// 与 movie 文件名一致的 nfo 文件名称
 	movieNfoFileName := filepath.Base(movieFileFullPath)
-	movieNfoFileName = strings.ReplaceAll(movieNfoFileName, filepath.Ext(movieFileFullPath), "")
+	movieNfoFileName = strings.ReplaceAll(movieNfoFileName, filepath.Ext(movieFileFullPath), suffixNameNfo)
 	// movie.xml
 	movieXmlFPath := ""
 	// movieName.nfo 文件
@@ -120,7 +120,7 @@ func GetImdbInfo4Movie(movieFileFullPath string) (common.VideoIMDBInfo, error) {
 	}
 	// 优先分析 movieName.nfo 文件
 	if movieNameNfoFPath != "" {
-		imdbInfo, err = getImdbAndYearNfo(movieNameNfoFPath)
+		imdbInfo, err = getImdbAndYearNfo(movieNameNfoFPath, "movie")
 		if err != nil {
 			return common.VideoIMDBInfo{}, err
 		}
@@ -137,7 +137,7 @@ func GetImdbInfo4Movie(movieFileFullPath string) (common.VideoIMDBInfo, error) {
 		}
 	}
 	if nfoFilePath != "" {
-		imdbInfo, err = getImdbAndYearNfo(nfoFilePath)
+		imdbInfo, err = getImdbAndYearNfo(nfoFilePath, "movie")
 		if err != nil {
 			return imdbInfo, err
 		} else {
@@ -176,7 +176,7 @@ func GetImdbInfo4SeriesDir(seriesDir string) (common.VideoIMDBInfo, error) {
 	if nfoFilePath == "" {
 		return imdbInfo, common.NoMetadataFile
 	}
-	imdbInfo, err = getImdbAndYearNfo(nfoFilePath)
+	imdbInfo, err = getImdbAndYearNfo(nfoFilePath, "tvshow")
 	if err != nil {
 		return common.VideoIMDBInfo{}, err
 	}
@@ -189,7 +189,7 @@ func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (common.VideoIMDBInfo, erro
 	EPdir := filepath.Dir(oneEpFPath)
 	// 与 EP 文件名一致的 nfo 文件名称
 	EpNfoFileName := filepath.Base(oneEpFPath)
-	EpNfoFileName = strings.ReplaceAll(EpNfoFileName, filepath.Ext(oneEpFPath), "")
+	EpNfoFileName = strings.ReplaceAll(EpNfoFileName, filepath.Ext(oneEpFPath), suffixNameNfo)
 	// 全路径
 	EpNfoFPath := path.Join(EPdir, EpNfoFileName)
 	//

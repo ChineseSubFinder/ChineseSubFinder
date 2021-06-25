@@ -7,10 +7,10 @@ import (
 
 func TestDownloader_DownloadSub4Movie(t *testing.T) {
 	var err error
-	dirRoot := "X:\\电影\\Spiral From the Book of Saw (2021)"
+	//dirRoot := "X:\\电影\\Spiral From the Book of Saw (2021)"
 	//dirRoot := "X:\\电影\\Oslo (2021)"
 	//dirRoot := "X:\\电影\\The Devil All the Time (2020)"
-	//dirRoot := "X:\\电影\\21座桥 (2019)"
+	dirRoot := "X:\\电影\\21座桥 (2019)"
 	//dirRoot := "X:\\电影\\An Invisible Sign (2010)"
 	//dirRoot := "X:\\电影\\送你一朵小红花 (2020)"
 	//dirRoot := "X:\\电影\\冰海陷落 (2018)"
@@ -32,7 +32,8 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 	//dirRoot := "X:\\连续剧\\The Bad Batch"
 	//dirRoot := "X:\\连续剧\\Why Women Kill"
 	//dirRoot := "X:\\连续剧\\Mare of Easttown"
-	dirRoot := "X:\\连续剧\\瑞克和莫蒂 (2013)"
+	//dirRoot := "X:\\连续剧\\瑞克和莫蒂 (2013)"
+	dirRoot := "X:\\连续剧\\黄石 (2018)"
 	//dirRoot := "X:\\连续剧"
 
 	dl := NewDownloader(common.ReqParam{

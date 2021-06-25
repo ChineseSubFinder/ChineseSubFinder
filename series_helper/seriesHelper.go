@@ -37,9 +37,13 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*common.Seri
 		seriesInfo.ImdbId = videoInfo.ImdbId
 		iYear, err := strconv.Atoi(videoInfo.Year)
 		if err != nil {
-			return nil, err
+			// 不是必须的
+			seriesInfo.Year = 0
+			model.GetLogger().Errorln("ReadSeriesInfoFromDir.GetImdbInfo4SeriesDir.strconv.Atoi", err)
+		} else {
+			seriesInfo.Year = iYear
+
 		}
-		seriesInfo.Year = iYear
 	}
 	seriesInfo.ReleaseDate = videoInfo.ReleaseDate
 	seriesInfo.DirPath = seriesDir
@@ -159,15 +163,25 @@ func SkipChineseSeries(seriesRootPath string, _reqParam ...common.ReqParam) (boo
 		model.GetLogger().Infoln("Skip", filepath.Base(seriesRootPath), "Sub Download, because series is Chinese")
 		return true, t, nil
 	}
-	return false, nil, nil
+	return false, t, nil
 }
 
 // OneSeriesDlSubInAllSite 一部连续剧在所有的网站下载相应的字幕
 func OneSeriesDlSubInAllSite(Suppliers []_interface.ISupplier, seriesInfo *common.SeriesInfo, i int) []common.SupplierSubInfo {
+	defer func() {
+		model.GetLogger().Infoln("DlSub End", seriesInfo.DirPath)
+	}()
+	model.GetLogger().Infoln("DlSub Start", seriesInfo.DirPath)
+	model.GetLogger().Debugln(seriesInfo.Name, "IMDB ID:", seriesInfo.ImdbId, "NeedDownloadSubs:", len(seriesInfo.NeedDlEpsKeyList))
 	var outSUbInfos = make([]common.SupplierSubInfo, 0)
+	if len(seriesInfo.NeedDlEpsKeyList) < 1 {
+		return outSUbInfos
+	}
+	for key, _ := range seriesInfo.NeedDlEpsKeyList {
+		model.GetLogger().Debugln(key)
+	}
 	// 同时进行查询
 	subInfosChannel := make(chan []common.SupplierSubInfo)
-	model.GetLogger().Infoln("DlSub Start", seriesInfo.DirPath)
 	for _, supplier := range Suppliers {
 		supplier := supplier
 		go func() {
@@ -192,7 +206,7 @@ func OneSeriesDlSubInAllSite(Suppliers []_interface.ISupplier, seriesInfo *commo
 			outSUbInfos = append(outSUbInfos, v...)
 		}
 	}
-	model.GetLogger().Infoln("DlSub End", seriesInfo.DirPath)
+
 	return outSUbInfos
 }
 
