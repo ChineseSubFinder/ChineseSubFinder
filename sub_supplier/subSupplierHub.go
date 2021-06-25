@@ -69,7 +69,7 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) (*common.SeriesInfo, map[string][]string, error) {
 
 	// 跳过中文的连续剧，不是一定要跳过的
-	skip, err := series_helper.SkipChineseSeries(seriesDirPath, d.Suppliers[0].GetReqParam())
+	skip, idmbInfo, err := series_helper.SkipChineseSeries(seriesDirPath, d.Suppliers[0].GetReqParam())
 	if err != nil {
 		d.log.Error("SkipChineseSeries", err)
 	}
@@ -77,7 +77,7 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) (*co
 		return nil, nil, nil
 	}
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(seriesDirPath)
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(seriesDirPath, idmbInfo)
 	if err != nil {
 		return nil, nil, err
 	}

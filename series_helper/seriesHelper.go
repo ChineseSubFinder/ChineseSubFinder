@@ -1,6 +1,7 @@
 package series_helper
 
 import (
+	"github.com/StalkR/imdb"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	_interface "github.com/allanpk716/ChineseSubFinder/interface"
 	"github.com/allanpk716/ChineseSubFinder/model"
@@ -9,29 +10,37 @@ import (
 	"io/ioutil"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
 
 // ReadSeriesInfoFromDir 读取剧集的信息，只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList
-func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
+func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*common.SeriesInfo, error) {
 	seriesInfo := common.SeriesInfo{}
 
 	subParserHub := model.NewSubParserHub(ass.NewParser(), srt.NewParser())
 	// 只考虑 IMDB 去查询，文件名目前发现可能会跟电影重复，导致很麻烦，本来也有前置要求要削刮器处理的
-	videoInfo, err := model.GetImdbInfo(seriesDir)
+	videoInfo, err := model.GetImdbInfo4SeriesDir(seriesDir)
 	if err != nil {
 		return nil, err
 	}
 	// 使用 IMDB ID 得到通用的剧集名称
-	imdbInfo, err := model.GetVideoInfoFromIMDB(videoInfo.ImdbId)
-	if err != nil {
-		return nil, err
-	}
 	// 以 IMDB 的信息为准
-	seriesInfo.Name = imdbInfo.Name
-	seriesInfo.ImdbId = imdbInfo.ID
-	seriesInfo.Year = imdbInfo.Year
+	if imdbInfo != nil {
+		seriesInfo.Name = imdbInfo.Name
+		seriesInfo.ImdbId = imdbInfo.ID
+		seriesInfo.Year = imdbInfo.Year
+	} else {
+		seriesInfo.Name = videoInfo.Title
+		seriesInfo.ImdbId = videoInfo.ImdbId
+		iYear, err := strconv.Atoi(videoInfo.Year)
+		if err != nil {
+			return nil, err
+		}
+		seriesInfo.Year = iYear
+	}
+	seriesInfo.ReleaseDate = videoInfo.ReleaseDate
 	seriesInfo.DirPath = seriesDir
 	seriesInfo.EpList = make([]common.EpisodeInfo, 0)
 	seriesInfo.SeasonDict = make(map[int]int)
@@ -126,24 +135,24 @@ func ReadSeriesInfoFromDir(seriesDir string) (*common.SeriesInfo, error) {
 }
 
 // SkipChineseSeries 跳过中文连续剧
-func SkipChineseSeries(seriesRootPath string, _reqParam ...common.ReqParam) (bool, error) {
+func SkipChineseSeries(seriesRootPath string, _reqParam ...common.ReqParam) (bool, *imdb.Title, error) {
 	var reqParam common.ReqParam
 	if len(_reqParam) > 0 {
 		reqParam = _reqParam[0]
 	}
-	imdbInfo, err := model.GetImdbInfo(seriesRootPath)
+	imdbInfo, err := model.GetImdbInfo4SeriesDir(seriesRootPath)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 	t, err := model.GetVideoInfoFromIMDB(imdbInfo.ImdbId, reqParam)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 	if len(t.Languages) > 0 && strings.ToLower(t.Languages[0]) == "chinese" {
 		model.GetLogger().Infoln("Skip", filepath.Base(seriesRootPath), "Sub Download, because series is Chinese")
-		return true, nil
+		return true, t, nil
 	}
-	return false, nil
+	return false, nil, nil
 }
 
 // OneSeriesDlSubInAllSite 一部连续剧在所有的网站下载相应的字幕

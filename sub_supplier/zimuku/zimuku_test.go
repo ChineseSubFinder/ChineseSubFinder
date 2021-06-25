@@ -29,7 +29,7 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 	//movie1 := "X:\\连续剧\\The Bad Batch\\Season 1\\The Bad Batch - S01E01 - Aftermath WEBDL-1080p.mkv"
 
 	s := NewSupplier()
-	outList, err := s.getSubListFromFile(movie1)
+	outList, err := s.getSubListFromMovie(movie1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -46,7 +46,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	//ser := "X:\\连续剧\\Money.Heist"
 
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(ser)
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(ser, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
