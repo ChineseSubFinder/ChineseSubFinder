@@ -23,8 +23,6 @@ func init() {
 	}
 }
 
-// TODO 考虑加入 TV 相关季开播的信息读取（每一集都有对应的 nfo 文件，可以考虑从这里面读取），这样可以更加容易判断跳过老的剧集，近期下载了，字幕下载一次即可，无需反反复复
-
 func main() {
 	if log == nil {
 		panic("log init error")
@@ -44,7 +42,12 @@ func main() {
 		log.Errorln("MovieFolder not found")
 		return
 	}
+	if model.IsDir(config.SeriesFolder) == false {
+		log.Errorln("SeriesFolder not found")
+		return
+	}
 	log.Infoln("MovieFolder:", config.MovieFolder)
+	log.Infoln("SeriesFolder:", config.SeriesFolder)
 
 	// ReloadBrowser 提前把浏览器下载好
 	model.ReloadBrowser()
