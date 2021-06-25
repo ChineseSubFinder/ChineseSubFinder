@@ -2,8 +2,6 @@ name: Build Docker Image
 
 on:
   push:
-    branches:
-      - master
     tags:
       - v*.*.*
   workflow_dispatch:
@@ -30,7 +28,6 @@ jobs:
 
       # Build and push
       - name: Build dockerfile
-        if: steps.set-version.outputs.status == 'success'
         uses: docker/build-push-action@v2
         with:
           file: ./Dockerfile
