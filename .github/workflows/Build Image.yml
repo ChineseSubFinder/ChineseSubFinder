@@ -18,7 +18,6 @@ jobs:
         run: |
           echo "::set-output name=version::${GITHUB_REF:10}"
           echo "ReleaseTag=${GITHUB_REF:10}" 
-          echo "::set-output name=status::success
 
       # Docker Image 构建环境
       - name: Set up QEMU
@@ -35,7 +34,6 @@ jobs:
 
       # Build and push
       - name: Build dockerfile
-        if: steps.set-version.outputs.status == 'success'
         uses: docker/build-push-action@v2
         with:
           file: ./Dockerfile
