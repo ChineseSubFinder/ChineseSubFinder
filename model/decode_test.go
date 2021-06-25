@@ -4,16 +4,6 @@ import (
 	"testing"
 )
 
-func Test_GetIMDB_Info(t *testing.T)  {
-
-	serPath := "X:\\连续剧\\The Bad Batch"
-	imdbInfo, err := GetImdbInfo(serPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	println(imdbInfo.ImdbId, imdbInfo.Year)
-}
-
 func Test_get_IMDB_movie_xml(t *testing.T) {
     wantid := "tt0993840"
     wantyear:= "2021"

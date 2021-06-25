@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/common"
 	_interface "github.com/allanpk716/ChineseSubFinder/interface"
 	"github.com/allanpk716/ChineseSubFinder/model"
+	"github.com/jinzhu/now"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -117,13 +118,31 @@ func MovieNeedDlSub(videoFullPath string) (bool, error) {
 			return false, nil
 		}
 	} else {
+		// 读取不到 IMDB 信息也能接受
+		videoIMDBInfo, err := model.GetImdbInfo4Movie(videoFullPath)
+		if err != nil {
+			model.GetLogger().Errorln("MovieNeedDlSub.GetImdbInfo4Movie", err)
+		}
+		// 如果播出时间能够读取到，那么就以这个完后推算 3个月
+		// 如果读取不到 Aired Time 那么，下载后的 ModifyTime 3个月天内，都进行字幕的下载
+		var baseTime time.Time
+		if videoIMDBInfo.ReleaseDate != "" {
+			baseTime, err = now.Parse(videoIMDBInfo.ReleaseDate)
+			if err != nil {
+				model.GetLogger().Errorln("Movie parse AiredTime", err)
+				baseTime = modifyTime
+			}
+		} else {
+			baseTime = modifyTime
+		}
+
 		// 3个月内，或者没有字幕都要进行下载
-		if modifyTime.Add(dayRange).After(currentTime) == true || found == false {
+		if baseTime.Add(dayRange).After(currentTime) == true || found == false {
 			// 需要下载的
 			return true, nil
 		} else {
-			if modifyTime.Add(dayRange).After(currentTime) == false {
-				model.GetLogger().Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because movie has sub and downloaded more than 3 months")
+			if baseTime.Add(dayRange).After(currentTime) == false {
+				model.GetLogger().Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because movie has sub and downloaded or aired more than 3 months")
 				return false, nil
 			}
 			if found == true {

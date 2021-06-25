@@ -9,7 +9,7 @@ func TestReadSeriesInfoFromDir(t *testing.T) {
 	series := "X:\\连续剧\\杀死伊芙 (2018)"
 	//series := "X:\\连续剧\\Money.Heist"
 
-	seriesInfo, err := ReadSeriesInfoFromDir(series)
+	seriesInfo, err := ReadSeriesInfoFromDir(series, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

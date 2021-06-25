@@ -183,65 +183,37 @@ func GetImdbInfo4SeriesDir(seriesDir string) (common.VideoIMDBInfo, error) {
 	return imdbInfo, nil
 }
 
-// TODO 需要拆分出三个方向，一个是电影，输入电影文件全路径，一个是连续剧，输入的是连续剧的目录，最后一个是连续剧的一集文件的全路径
-func GetImdbInfo(dirPth string) (common.VideoIMDBInfo, error) {
+func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (common.VideoIMDBInfo, error) {
 
+	// 从这一集的视频文件全路径去推算对应的 nfo 文件是否存在
+	EPdir := filepath.Dir(oneEpFPath)
+	// 与 EP 文件名一致的 nfo 文件名称
+	EpNfoFileName := filepath.Base(oneEpFPath)
+	EpNfoFileName = strings.ReplaceAll(EpNfoFileName, filepath.Ext(oneEpFPath), "")
+	// 全路径
+	EpNfoFPath := path.Join(EPdir, EpNfoFileName)
+	//
 	imdbInfo := common.VideoIMDBInfo{}
-	dir, err := ioutil.ReadDir(dirPth)
+	doc := etree.NewDocument()
+	// 这里会遇到一个梗，下面的关键词，可能是小写、大写、首字母大写
+	// 读取文件转换为全部的小写，然后在解析 xml ？ etree 在转换为小写后，某些类型的文件的内容会崩溃···
+	// 所以这里很傻的方式解决
+	err := doc.ReadFromFile(EpNfoFPath)
 	if err != nil {
 		return imdbInfo, err
 	}
-	pathSep := string(os.PathSeparator)
-	// 优先找 movie.xml 这个是 raddarr 下载的电影会存下来的，可以在 Metadata 设置 Emby
-	var movieFilePath = ""
-	// 这个是使用 tinyMediaManager 削刮器按 Kodi 来存储的
-	var nfoFilePath = ""
-
-	for _, fi := range dir {
-		if fi.IsDir() == true {
-			continue
-		}
-		upperName := strings.ToUpper(fi.Name())
-		// 找 movie.xml
-		if upperName == strings.ToUpper(MetadataMovieXml) {
-			movieFilePath = dirPth + pathSep + fi.Name()
-			break
-		} else if upperName == strings.ToUpper(MetadateTVNfo) {
-			// 连续剧的 nfo 文件
-			nfoFilePath = dirPth + pathSep + fi.Name()
-			break
-		} else {
-			// 找 *.nfo
-			ok := strings.HasSuffix(fi.Name(), suffixNameNfo)
-			if ok {
-				nfoFilePath = dirPth + pathSep + fi.Name()
-			}
-		}
+	for _, t := range doc.FindElements("./episodedetails/aired") {
+		imdbInfo.ReleaseDate = t.Text()
+		break
 	}
-	// 根据找到的开始解析
-	if movieFilePath == "" && nfoFilePath == "" {
-		return imdbInfo, common.NoMetadataFile
+	for _, t := range doc.FindElements("./episodedetails/premiered") {
+		imdbInfo.ReleaseDate = t.Text()
+		break
 	}
-
-	if movieFilePath != "" {
-		imdbInfo, err = getImdbAndYearMovieXml(movieFilePath)
-		if err != nil {
-			GetLogger().Errorln("getImdbAndYearMovieXml error, move on:", err)
-		} else {
-			return imdbInfo, nil
-		}
+	if imdbInfo.ReleaseDate != "" {
+		return imdbInfo, nil
 	}
-
-	if nfoFilePath != "" {
-		imdbInfo, err = getImdbAndYearNfo(nfoFilePath)
-		if err != nil {
-			return imdbInfo, err
-		} else {
-			return imdbInfo, nil
-		}
-	}
-
-	return imdbInfo, common.CanNotFindIMDBID
+	return imdbInfo, common.CanNotFindEpAiredTime
 }
 
 //GetVideoInfoFromFileFullPath 从全文件路径推断文件信息

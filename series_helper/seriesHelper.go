@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/model"
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/sub_parser/srt"
+	"github.com/jinzhu/now"
 	"io/ioutil"
 	"path"
 	"path/filepath"
@@ -95,7 +96,12 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*common.Seri
 		// 正常来说，一集只有一个格式的视频，也就是 S01E01 只有一个，如果有多个则会只保存第一个
 		info, modifyTime, err := model.GetVideoInfoFromFileFullPath(videoFile)
 		if err != nil {
-			model.GetLogger().Errorln(err)
+			model.GetLogger().Errorln("model.GetVideoInfoFromFileFullPath", err)
+			continue
+		}
+		episodeInfo, err := model.GetImdbInfo4OneSeriesEpisode(videoFile)
+		if err != nil {
+			model.GetLogger().Errorln("model.GetImdbInfo4OneSeriesEpisode", err)
 			continue
 		}
 		epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
@@ -109,6 +115,7 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*common.Seri
 				Dir: filepath.Dir(videoFile),
 				FileFullPath: videoFile,
 				ModifyTime: modifyTime,
+				AiredTime: episodeInfo.ReleaseDate,
 			}
 			// 需要匹配同级目录下的字幕
 			oneFileEpInfo.SubAlreadyDownloadedList = make([]common.SubInfo, 0)
@@ -224,16 +231,29 @@ func whichSeasonEpsNeedDownloadSub(seriesInfo *common.SeriesInfo) (map[string]co
 	dayRange, _ := time.ParseDuration(common.DownloadSubDuring3Months)
 	for _, epsInfo := range seriesInfo.EpList {
 		// 如果没有字幕，则加入下载列表
-		// 这一集下载后的30天内，都进行字幕的下载
-		if len(epsInfo.SubAlreadyDownloadedList) < 1 || epsInfo.ModifyTime.Add(dayRange).After(currentTime) == true {
+		// 如果每一集的播出时间能够读取到，那么就以这个完后推算 3个月
+		// 如果读取不到 Aired Time 那么，这一集下载后的 ModifyTime 3个月天内，都进行字幕的下载
+		var err error
+		var baseTime time.Time
+		if epsInfo.AiredTime != "" {
+			baseTime, err = now.Parse(epsInfo.AiredTime)
+			if err != nil {
+				model.GetLogger().Errorln("SeriesInfo parse AiredTime", err)
+				baseTime = epsInfo.ModifyTime
+			}
+		} else {
+			baseTime = epsInfo.ModifyTime
+		}
+
+		if len(epsInfo.SubAlreadyDownloadedList) < 1 || baseTime.Add(dayRange).After(currentTime) == true {
 			// 添加
 			epsKey := model.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
 			needDlSubEpsList[epsKey] = epsInfo
 			needDlSeasonList[epsInfo.Season] = epsInfo.Season
 		} else {
 			if len(epsInfo.SubAlreadyDownloadedList) > 0 {
-				model.GetLogger().Infoln("Skip because find sub file and over 3 months,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
-			} else if epsInfo.ModifyTime.Add(dayRange).After(currentTime) == false {
+				model.GetLogger().Infoln("Skip because find sub file and downloaded or aired over 3 months,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+			} else if baseTime.Add(dayRange).After(currentTime) == false {
 				model.GetLogger().Infoln("Skip because 3 months pass,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 			}
 		}
