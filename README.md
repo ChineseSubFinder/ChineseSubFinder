@@ -160,26 +160,44 @@ const (
 
 ![07](DesignFile/pics/07.png)
 
-### 使用 docker-compose 部署
+### 使用 docker-compose 部署，支持x86_64、ARM32，ARM64设备
 
 编写以下的配置文件，注意 docker-compose 文件需要与本程序的 config.yaml 配套，特别是 MovieFolder、SeriesFolder  。
 
+NAS用户请注意填写用户UID，GID，ssh进入NAS后输入id可获得对应账户的UID，GID  
 ```yaml
 version: "3"
 services:
   chinesesubfinder:
     image: allanpk716/chinesesubfinder:latest
     volumes:
-      - /volume1/docker/chinesesubfinder/config.yaml:/app/config.yaml
-      - /volume1/docker/chinesesubfinder/logs:/app/Logs
-      - /volume1/Video/电影:/app/MovieFolder
-      - /volume1/Video/连续剧:/app/SeriesFolder
+      - /volume1/docker/chinesesubfinder:/config
+      - /volume1/Video:/media
     environment:
-      TZ: Asia/Shanghai
+      - PUID=1026
+      - PGID=100
+      - TZ=Asia/Shanghai
     restart: unless-stopped
 ```
 
-然后把 config.yaml.sample 复制一份，重命名为 config.yaml，内容如下（每个配置啥意思见《配置文件解析》）
+## docker 命令创建容器
+````
+docker create \
+  --name=chinesesubfinder \
+  -e PUID=1026 \
+  -e PGID=100 \
+  -e TZ=Asia/Shanghai \
+  -v /volume1/docker/chinesesubfinder:/config \
+  -v /volume1/Video:/media \
+  --restart unless-stopped \
+  allanpk716/chinesesubfinder:latest
+  ````
+
+第一次使用本容器时，请启动后立即关闭，修改config.yaml的媒体文件夹地址  
+每次重启或更新chinesesubfinder容器时，系统会自动下载最新版的config.yaml.sample，可自行浏览最新配置文件并修改到config.yaml  
+推荐使用watchtower自动更新  
+https://sleele.com/2019/06/16/docker更新容器镜像神器-watchtower/  
+config.yaml 内容如下（每个配置啥意思见《配置文件解析》）  
 
 ```yaml
 UseProxy: false
@@ -189,13 +207,11 @@ Threads: 4
 SubTypePriority: 0
 DebugMode: false
 SaveMultiSub: false
-MovieFolder: /app/MovieFolder
-SeriesFolder: /app/SeriesFolder
+MovieFolder: /media/电影
+SeriesFolder: /media/连续剧
 ```
 
 ### 配置文件解析
-
-把 config.yaml.sample 复制一份，重命名为 config.yaml，内容如下：
 
 ```yaml
 UseProxy: false
@@ -205,8 +221,8 @@ Threads: 4
 SubTypePriority: 0
 DebugMode: false
 SaveMultiSub: false
-MovieFolder: X:\电影
-SeriesFolder: X:\连续剧
+MovieFolder: /media/电影
+SeriesFolder: /media/连续剧
 ```
 
 * UseProxy，默认false。是否使用代理，需要配合 HttpProxy 设置
@@ -282,3 +298,11 @@ SeriesFolder: X:\连续剧
 * [go-rod/rod: A Devtools driver for web automation and scraping (github.com)](https://github.com/go-rod/rod)
 * [ausaki/subfinder: 字幕查找器 (github.com)](https://github.com/ausaki/subfinder)
 * [golandscape/sat: 高性能简繁体转换 (github.com)](https://github.com/golandscape/sat)
+
+
+# 预览图
+![Xnip2021-06-25_11-11-55](https://cdn.jsdelivr.net/gh/SuperNG6/pic@master/uPic/2021-06-25/Xnip2021-06-25_11-11-55.jpg)
+![Xnip2021-06-25_11-12-33](https://cdn.jsdelivr.net/gh/SuperNG6/pic@master/uPic/2021-06-25/Xnip2021-06-25_11-12-33.jpg)
+![Xnip2021-06-25_10-29-06](https://cdn.jsdelivr.net/gh/SuperNG6/pic@master/uPic/2021-06-25/Xnip2021-06-25_10-29-06.jpg)
+![Xnip2021-06-25_10-24-22](https://cdn.jsdelivr.net/gh/SuperNG6/pic@master/uPic/2021-06-25/Xnip2021-06-25_10-24-22.jpg)
+![Xnip2021-06-25_11-42-38](https://cdn.jsdelivr.net/gh/SuperNG6/pic@master/uPic/2021-06-25/Xnip2021-06-25_11-42-38.jpg)
