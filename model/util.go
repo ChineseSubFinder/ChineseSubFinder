@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // NewHttpClient 新建一个 resty 的对象
@@ -321,6 +322,15 @@ func IsWantedVideoExtDef(fileName string) bool {
 
 func GetEpisodeKeyName(season, eps int) string {
 	return "S" + strconv.Itoa(season) + "E" +strconv.Itoa(eps)
+}
+
+// ReloadBrowser 提前把浏览器下载好
+func ReloadBrowser() {
+	page, err := NewBrowserLoadPage("https://www.baidu.com", "", 300*time.Second, 2)
+	if err != nil {
+		return
+	}
+	defer page.Close()
 }
 
 var (

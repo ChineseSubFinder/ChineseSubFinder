@@ -46,6 +46,9 @@ func main() {
 	}
 	log.Infoln("MovieFolder:", config.MovieFolder)
 
+	// ReloadBrowser 提前把浏览器下载好
+	model.ReloadBrowser()
+
 	//任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
