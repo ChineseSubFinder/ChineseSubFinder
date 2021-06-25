@@ -14,8 +14,16 @@ COPY . .
 # 执行编译，-o 指定保存位置和程序编译名称
 RUN go build -ldflags="-s -w" -o /app/chinesesubfinder
 
+# 运行时环境
 FROM lsiobase/ubuntu:bionic
 COPY Docker/root/ /
+# 主程序
+COPY --from=builder /app/chinesesubfinder /app/chinesesubfinder
+# 配置文件
+COPY --from=builder /homelab/buildspace/config.yaml.sample /app/config.yaml
+
+ENV TZ=Asia/Shanghai \
+    PUID=1026 PGID=100
 
 RUN ln -s /root/.cache/rod/chromium-869685/chrome-linux/chrome /usr/bin/chrome && \
     sed -i "s@http://deb.debian.org@http://mirrors.aliyun.com@g" /etc/apt/sources.list && rm -Rf /var/lib/apt/lists/* && \
@@ -45,13 +53,4 @@ RUN ln -s /root/.cache/rod/chromium-869685/chrome-linux/chrome /usr/bin/chrome &
        /var/lib/apt/lists/* \
        /var/tmp/*
 
-ENV TZ=Asia/Shanghai \
-    PUID=1026 PGID=100
-
-WORKDIR /app
-# 主程序
-COPY --from=builder /app/chinesesubfinder /app/chinesesubfinder
-# 配置文件
-COPY --from=builder /homelab/buildspace/config.yaml.sample /app/config.yaml
-EXPOSE 1200
 VOLUME /config /media

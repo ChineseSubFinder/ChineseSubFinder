@@ -171,8 +171,7 @@ services:
   chinesesubfinder:
     image: allanpk716/chinesesubfinder:latest
     volumes:
-      - /volume1/docker/chinesesubfinder/config.yaml:/config/config.yaml
-      - /volume1/docker/chinesesubfinder/logs:/app/Logs
+      - /volume1/docker/chinesesubfinder:/config
       - /volume1/Video:/media
     environment:
       - PUID=1026
@@ -180,6 +179,20 @@ services:
       - TZ=Asia/Shanghai
     restart: unless-stopped
 ```
+
+## docker 命令创建容器
+````
+docker create \
+  --name=chinesesubfinder \
+  -e PUID=1026 \
+  -e PGID=100 \
+  -e TZ=Asia/Shanghai \
+  -v /volume1/docker/chinesesubfinder:/config \
+  -v /volume1/Video:/media \
+  --restart unless-stopped \
+  allanpk716/chinesesubfinder:latest
+  ````
+
 第一次使用本容器时，请启动后立即关闭，修改config.yaml的媒体文件夹地址  
 每次重启或更新chinesesubfinder容器时，系统会自动下载最新版的config.yaml.sample，可自行浏览最新配置文件并修改到config.yaml  
 推荐使用watchtower自动更新  
