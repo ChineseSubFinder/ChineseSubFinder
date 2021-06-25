@@ -7,6 +7,7 @@ import (
 	PTN "github.com/middelink/go-parse-torrent-name"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -14,9 +15,9 @@ import (
 	"time"
 )
 
-func getImdbAndYearMovieXml(movieFilePath string) (common.VideoInfo, error) {
+func getImdbAndYearMovieXml(movieFilePath string) (common.VideoIMDBInfo, error) {
 
-	videoInfo := common.VideoInfo{}
+	videoInfo := common.VideoIMDBInfo{}
 	doc := etree.NewDocument()
 	if err := doc.ReadFromFile(movieFilePath); err != nil {
 		return videoInfo, err
@@ -35,8 +36,8 @@ func getImdbAndYearMovieXml(movieFilePath string) (common.VideoInfo, error) {
 	return videoInfo, common.CanNotFindIMDBID
 }
 
-func getImdbAndYearNfo(nfoFilePath string) (common.VideoInfo, error) {
-	imdbInfo := common.VideoInfo{}
+func getImdbAndYearNfo(nfoFilePath string) (common.VideoIMDBInfo, error) {
+	imdbInfo := common.VideoIMDBInfo{}
 	doc := etree.NewDocument()
 	// 这里会遇到一个梗，下面的关键词，可能是小写、大写、首字母大写
 	// 读取文件转换为全部的小写，然后在解析 xml ？ etree 在转换为小写后，某些类型的文件的内容会崩溃···
@@ -61,15 +62,131 @@ func getImdbAndYearNfo(nfoFilePath string) (common.VideoInfo, error) {
 		imdbInfo.Year = t.Text()
 		break
 	}
+	for _, t := range doc.FindElements("./movie/releasedate") {
+		imdbInfo.ReleaseDate = t.Text()
+		break
+	}
+	for _, t := range doc.FindElements("./movie/premiered") {
+		imdbInfo.ReleaseDate = t.Text()
+		break
+	}
 	if imdbInfo.ImdbId != "" {
 		return imdbInfo, nil
 	}
 	return imdbInfo, common.CanNotFindIMDBID
 }
 
-func GetImdbInfo(dirPth string) (common.VideoInfo, error) {
+func GetImdbInfo4Movie(movieFileFullPath string) (common.VideoIMDBInfo, error) {
+	imdbInfo := common.VideoIMDBInfo{}
+	// movie 当前的目录
+	dirPth := filepath.Dir(movieFileFullPath)
+	// 与 movie 文件名一致的 nfo 文件名称
+	movieNfoFileName := filepath.Base(movieFileFullPath)
+	movieNfoFileName = strings.ReplaceAll(movieNfoFileName, filepath.Ext(movieFileFullPath), "")
+	// movie.xml
+	movieXmlFPath := ""
+	// movieName.nfo 文件
+	movieNameNfoFPath := ""
+	// 通用的 *.nfo
+	nfoFilePath := ""
+	dir, err := ioutil.ReadDir(dirPth)
+	if err != nil {
+		return imdbInfo, err
+	}
+	for _, fi := range dir {
+		if fi.IsDir() == true {
+			continue
+		}
+		upperName := strings.ToLower(fi.Name())
+		if upperName == MetadataMovieXml {
+			// 找 movie.xml
+			movieXmlFPath = path.Join(dirPth, fi.Name())
+			break
+		} else if upperName == movieNfoFileName {
+			// movieName.nfo 文件
+			movieNameNfoFPath = path.Join(dirPth, fi.Name())
+			break
+		} else {
+			// 找 *.nfo，很可能是 movie.nfo
+			ok := strings.HasSuffix(fi.Name(), suffixNameNfo)
+			if ok {
+				nfoFilePath = path.Join(dirPth, fi.Name())
+			}
+		}
+	}
+	// 根据找到的开始解析
+	if movieNameNfoFPath == "" && movieXmlFPath == "" && nfoFilePath == "" {
+		return imdbInfo, common.NoMetadataFile
+	}
+	// 优先分析 movieName.nfo 文件
+	if movieNameNfoFPath != "" {
+		imdbInfo, err = getImdbAndYearNfo(movieNameNfoFPath)
+		if err != nil {
+			return common.VideoIMDBInfo{}, err
+		}
+		return imdbInfo, nil
+	}
 
-	imdbInfo := common.VideoInfo{}
+
+	if movieXmlFPath != "" {
+		imdbInfo, err = getImdbAndYearMovieXml(movieXmlFPath)
+		if err != nil {
+			GetLogger().Errorln("getImdbAndYearMovieXml error, move on:", err)
+		} else {
+			return imdbInfo, nil
+		}
+	}
+	if nfoFilePath != "" {
+		imdbInfo, err = getImdbAndYearNfo(nfoFilePath)
+		if err != nil {
+			return imdbInfo, err
+		} else {
+			return imdbInfo, nil
+		}
+	}
+
+	return imdbInfo, common.CanNotFindIMDBID
+}
+
+func GetImdbInfo4SeriesDir(seriesDir string) (common.VideoIMDBInfo, error) {
+	imdbInfo := common.VideoIMDBInfo{}
+	dir, err := ioutil.ReadDir(seriesDir)
+	if err != nil {
+		return imdbInfo, err
+	}
+	nfoFilePath := ""
+	for _, fi := range dir {
+		if fi.IsDir() == true {
+			continue
+		}
+		upperName := strings.ToUpper(fi.Name())
+		if upperName == strings.ToUpper(MetadateTVNfo) {
+			// 连续剧的 nfo 文件
+			nfoFilePath = path.Join(seriesDir, fi.Name())
+			break
+		} else {
+			// 找 *.nfo
+			ok := strings.HasSuffix(fi.Name(), suffixNameNfo)
+			if ok {
+				nfoFilePath = path.Join(seriesDir, fi.Name())
+			}
+		}
+	}
+	// 根据找到的开始解析
+	if nfoFilePath == "" {
+		return imdbInfo, common.NoMetadataFile
+	}
+	imdbInfo, err = getImdbAndYearNfo(nfoFilePath)
+	if err != nil {
+		return common.VideoIMDBInfo{}, err
+	}
+	return imdbInfo, nil
+}
+
+// TODO 需要拆分出三个方向，一个是电影，输入电影文件全路径，一个是连续剧，输入的是连续剧的目录，最后一个是连续剧的一集文件的全路径
+func GetImdbInfo(dirPth string) (common.VideoIMDBInfo, error) {
+
+	imdbInfo := common.VideoIMDBInfo{}
 	dir, err := ioutil.ReadDir(dirPth)
 	if err != nil {
 		return imdbInfo, err
@@ -86,7 +203,7 @@ func GetImdbInfo(dirPth string) (common.VideoInfo, error) {
 		}
 		upperName := strings.ToUpper(fi.Name())
 		// 找 movie.xml
-		if upperName == strings.ToUpper(MetadataFileEmby) {
+		if upperName == strings.ToUpper(MetadataMovieXml) {
 			movieFilePath = dirPth + pathSep + fi.Name()
 			break
 		} else if upperName == strings.ToUpper(MetadateTVNfo) {
@@ -212,7 +329,7 @@ func GetNumber2int(input string) (int, error) {
 }
 
 const (
-	MetadataFileEmby = "movie.xml"
+	MetadataMovieXml = "movie.xml"
 	suffixNameXml    = ".xml"
 	suffixNameNfo    = ".nfo"
 	MetadateTVNfo    = "tvshow.nfo"

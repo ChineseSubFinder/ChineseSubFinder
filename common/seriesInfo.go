@@ -10,6 +10,7 @@ type SeriesInfo struct {
 	ImdbId           string
 	Name             string
 	Year             int
+	ReleaseDate 	 string
 	EpList           []EpisodeInfo
 	DirPath          string
 	SeasonDict       map[int]int

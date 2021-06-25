@@ -78,7 +78,7 @@ func SkipChineseMovie(videoFullPath string, _reqParam ...common.ReqParam) (bool,
 	if len(_reqParam) > 0 {
 		reqParam = _reqParam[0]
 	}
-	imdbInfo, err := model.GetImdbInfo(filepath.Dir(videoFullPath))
+	imdbInfo, err := model.GetImdbInfo4Movie(videoFullPath)
 	if err != nil {
 		return false, err
 	}

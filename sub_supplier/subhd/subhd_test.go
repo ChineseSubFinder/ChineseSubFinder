@@ -39,7 +39,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 
 
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(ser)
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(ser, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
