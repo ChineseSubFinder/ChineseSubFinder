@@ -26,6 +26,7 @@ type EpisodeInfo struct {
 	Dir                      string    // 这里需要记录字幕的位置，因为需要在同级目录匹配相应的字幕才行
 	FileFullPath             string    // 视频文件的全路径
 	ModifyTime               time.Time // 创建时间
+	AiredTime				 string    // 播出的时间
 }
 
 type SubInfo struct {
