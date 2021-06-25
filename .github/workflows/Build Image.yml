@@ -13,8 +13,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       # 获取 tag 版本
-      - name: Set env
-        run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF:10}
+      - name: Set Version
+        id: set-version
+        run: |
+          echo "::set-output name=version::${GITHUB_REF:10}"
+          echo "ReleaseTag=${GITHUB_REF:10}" 
+          echo "::set-output name=status::success
 
       # Docker Image 构建环境
       - name: Set up QEMU
@@ -31,13 +35,14 @@ jobs:
 
       # Build and push
       - name: Build dockerfile
+        if: steps.set-version.outputs.status == 'success'
         uses: docker/build-push-action@v2
         with:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm/v7,linux/arm64
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:${{ env.RELEASE_VERSION }}
+            ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:${{ steps.set-version.outputs.version }}
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:latest
 
 
