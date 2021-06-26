@@ -18,7 +18,7 @@
 
 ## 功能
 
-[功能](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/功能.md)
+本程序有什么功能见: [功能](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/功能.md)
 
 
 ## How to use
