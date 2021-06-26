@@ -124,7 +124,10 @@ const (
 
 ## 其他文档
 
-
+* [削刮器的推荐设置](https://github.com/allanpk716/ChineseSubFinder/blob/master/DesignFile/%E5%89%8A%E5%88%AE%E5%99%A8%E7%9A%84%E6%8E%A8%E8%8D%90%E8%AE%BE%E7%BD%AE.md)
+* [如何手动刷新 Emby 加载字幕](https://github.com/allanpk716/ChineseSubFinder/blob/master/DesignFile/%E5%A6%82%E4%BD%95%E6%89%8B%E5%8A%A8%E5%88%B7%E6%96%B0%20Emby%20%E5%8A%A0%E8%BD%BD%E5%AD%97%E5%B9%95.md)
+* [连续剧如何搜索字幕](https://github.com/allanpk716/ChineseSubFinder/blob/master/DesignFile/%E8%BF%9E%E7%BB%AD%E5%89%A7%E5%A6%82%E4%BD%95%E6%90%9C%E7%B4%A2%E5%AD%97%E5%B9%95.md)
+* [设计](https://github.com/allanpk716/ChineseSubFinder/blob/master/DesignFile/%E8%AE%BE%E8%AE%A1.md)
 
 ## 版本
 
@@ -139,7 +142,6 @@ const (
 
 ## TODO
 
-* 支持设置字幕格式的优先级，srt 或者 ssa/ass
 * 字幕的风评（有些字幕太差了，需要进行过滤，考虑排除，字幕组，关键词，机翻，以及评分等条件
 * 加入 Web 设置界面（也许没得很大的必要···）
 * 提供 API 接口，部署后，允许额外的程序访问（类似 emby 等）获取字幕
@@ -149,7 +151,7 @@ const (
 
 感谢下面项目的帮助
 
-* [Andyfoo/GoSubTitleSearcher: 字幕搜索查询(go语言版)，支持4k 2160p,1080p,720p视频字幕搜索，集合了字幕库、迅雷、射手、SubHD查询接口。 (github.com)](https://github.com/Andyfoo/GoSubTitleSearcher)
+* [Andyfoo/GoSubTitleSearcher: 字幕搜索查询(go语言版)](https://github.com/Andyfoo/GoSubTitleSearcher)
 * [go-rod/rod: A Devtools driver for web automation and scraping (github.com)](https://github.com/go-rod/rod)
 * [ausaki/subfinder: 字幕查找器 (github.com)](https://github.com/ausaki/subfinder)
 * [golandscape/sat: 高性能简繁体转换 (github.com)](https://github.com/golandscape/sat)
