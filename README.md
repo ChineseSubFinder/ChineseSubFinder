@@ -7,6 +7,8 @@
 > 最新版本 v0.8.x 配置文件 config.xml 有更新，注意看下面的文档
 >
 > v0.7.x 优化视频跳过下载字幕的逻辑，加快扫描速度
+>
+> 关于日本动画字幕自动搜索功能的讨论，欢迎在这里提出：[关于动画字幕下载--日本](https://github.com/allanpk716/ChineseSubFinder/issues/1)
 
 ## Why？
 
