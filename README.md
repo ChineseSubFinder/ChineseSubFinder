@@ -18,19 +18,19 @@
 
 ## 功能
 
-[功能](https://github.com/allanpk716/ChineseSubFinder/blob/master/DesignFile/功能.md)
+[功能](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/功能.md)
 
 
 ## How to use
 
-[How To Use](https://github.com/allanpk716/ChineseSubFinder/blob/master/DesignFile/HowToUse.md)
+[How To Use](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/HowToUse.md)
 
 ## 其他文档
 
-* [削刮器的推荐设置](https://github.com/allanpk716/ChineseSubFinder/blob/master/DesignFile/%E5%89%8A%E5%88%AE%E5%99%A8%E7%9A%84%E6%8E%A8%E8%8D%90%E8%AE%BE%E7%BD%AE.md)
-* [如何手动刷新 Emby 加载字幕](https://github.com/allanpk716/ChineseSubFinder/blob/master/DesignFile/%E5%A6%82%E4%BD%95%E6%89%8B%E5%8A%A8%E5%88%B7%E6%96%B0%20Emby%20%E5%8A%A0%E8%BD%BD%E5%AD%97%E5%B9%95.md)
-* [连续剧如何搜索字幕](https://github.com/allanpk716/ChineseSubFinder/blob/master/DesignFile/%E8%BF%9E%E7%BB%AD%E5%89%A7%E5%A6%82%E4%BD%95%E6%90%9C%E7%B4%A2%E5%AD%97%E5%B9%95.md)
-* [设计](https://github.com/allanpk716/ChineseSubFinder/blob/master/DesignFile/%E8%AE%BE%E8%AE%A1.md)
+* [削刮器的推荐设置](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%89%8A%E5%88%AE%E5%99%A8%E7%9A%84%E6%8E%A8%E8%8D%90%E8%AE%BE%E7%BD%AE.md)
+* [如何手动刷新 Emby 加载字幕](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%A6%82%E4%BD%95%E6%89%8B%E5%8A%A8%E5%88%B7%E6%96%B0%20Emby%20%E5%8A%A0%E8%BD%BD%E5%AD%97%E5%B9%95.md)
+* [连续剧如何搜索字幕](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E8%BF%9E%E7%BB%AD%E5%89%A7%E5%A6%82%E4%BD%95%E6%90%9C%E7%B4%A2%E5%AD%97%E5%B9%95.md)
+* [设计](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E8%AE%BE%E8%AE%A1.md)
 
 ## 版本
 
