@@ -49,15 +49,17 @@
 * 加入 Web 设置界面（也许没得很大的必要···）
 * 提供 API 接口，部署后，允许额外的程序访问（类似 emby 等）获取字幕
 * 支持 Anime 的字幕下载
+* 监控 zimuku、subhd 的获取接口失效，通知开发者
+* 编写相应的 zimuku、subhd 字幕获取的教程（待定）
 
 ## 感谢
 
 感谢下面项目的帮助
 
 * [Andyfoo/GoSubTitleSearcher: 字幕搜索查询(go语言版)](https://github.com/Andyfoo/GoSubTitleSearcher)
-* [go-rod/rod: A Devtools driver for web automation and scraping (github.com)](https://github.com/go-rod/rod)
-* [ausaki/subfinder: 字幕查找器 (github.com)](https://github.com/ausaki/subfinder)
-* [golandscape/sat: 高性能简繁体转换 (github.com)](https://github.com/golandscape/sat)
+* [go-rod/rod: A Devtools driver for web automation and scraping](https://github.com/go-rod/rod)
+* [ausaki/subfinder: 字幕查找器](https://github.com/ausaki/subfinder)
+* [golandscape/sat: 高性能简繁体转换](https://github.com/golandscape/sat)
 
 
 # 预览图
