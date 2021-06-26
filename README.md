@@ -20,7 +20,7 @@
 
 ### 支持的部署方式
 
-* docker，见 How to use
+* docker，见 [How to use](https://github.com/allanpk716/ChineseSubFinder/blob/master/DesignFile/HowToUse.md)
 
 ### 支持的视频分类（如何削刮视频的）
 
@@ -120,7 +120,7 @@ const (
 
 ## How to use
 
-
+[How To Use](https://github.com/allanpk716/ChineseSubFinder/blob/master/DesignFile/HowToUse.md)
 
 ## 其他文档
 
