@@ -300,7 +300,6 @@ func chIsChsOrCht(language common.Language, isNoOrChsOrCht int) common.Language 
 
 // IsChineseSimpleOrTraditional 暂时弃用，在 SubLangStatistics2SubLangType 检测语言，通过 unicode 做到。 从字幕的文件名称中尝试确认是简体还是繁体，不需要判断双语问题，有额外的解析器完成。只可能出现 ChineseSimple ChineseTraditional Unknow 三种情况
 func IsChineseSimpleOrTraditional(inputFileName string, orgLang common.Language) common.Language {
-	// TODO 现在是没有很好的办法去识别是简体还是繁体中文的，所以是依赖判断文件名中的关键词做到的，会有一定的误判
 	if strings.Contains(inputFileName, common.SubNameKeywordChineseSimple) || strings.Contains(inputFileName, common.MatchLangChs) {
 		// 简体中文关键词的匹配
 		return orgLang
