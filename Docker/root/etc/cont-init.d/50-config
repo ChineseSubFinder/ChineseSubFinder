@@ -3,7 +3,7 @@
 mkdir -p /root/.cache
 # permissions
 chown -R abc:abc \
-	/app \
+    /app \
     /root/.cache \
     /config \
     /media
