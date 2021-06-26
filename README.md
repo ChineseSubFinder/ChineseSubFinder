@@ -20,10 +20,14 @@
 
 本程序有什么功能见: [功能](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/功能.md)
 
-
 ## How to use
 
-[How To Use](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/HowToUse.md)
+有两个文档可以参考：
+
+* [How To Use](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/HowToUse.md)
+* [Docker ChineseSubFinder--中文字幕自动下载 | sleele的博客](https://sleele.com/2021/06/25/docker-chinesesubfinder-中文字幕自动下载/)
+
+如果文档没有及时更新，或者描述含糊、歧义的，欢迎提 [ISSUES](https://github.com/allanpk716/ChineseSubFinder/issues)。
 
 ## 其他文档
 
