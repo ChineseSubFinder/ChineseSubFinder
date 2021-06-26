@@ -2,11 +2,12 @@ package model
 
 import (
 	"github.com/abadojack/whatlanggo"
+	"github.com/allanpk716/ChineseSubFinder/charset"
 	"github.com/allanpk716/ChineseSubFinder/common"
 	"github.com/axgle/mahonia"
 	"github.com/go-creed/sat"
 	chardet2 "github.com/nzlov/chardet"
-	"github.com/qiniu/iconv"
+	//"github.com/qiniu/iconv"
 	"github.com/saintfish/chardet"
 	"strings"
 )
@@ -341,25 +342,24 @@ func ConvertToString(src string, srcCode string, tagCode string) string {
 	return result
 }
 
+// 感谢: https://blog.csdn.net/gaoluhua/article/details/109128154，解决了编码问题
+
 // ChangeFileCoding2UTF8 自动检测文件的编码，然后转换到 UTF-8
 func ChangeFileCoding2UTF8(inBytes []byte) ([]byte, error) {
 	best, err := detector.DetectBest(inBytes)
+	utf8String := ""
 	if err != nil {
 		return nil, err
 	}
-	var cd iconv.Iconv
 	if best.Confidence < 90 {
 		detectBest := chardet2.Mostlike(inBytes)
-		cd, err = iconv.Open("utf-8", detectBest)
+		utf8String, err = charset.ToUTF8(charset.Charset(detectBest), string(inBytes))
 	} else {
-		cd, err = iconv.Open("utf-8", best.Charset)
+		utf8String, err = charset.ToUTF8(charset.Charset(best.Charset), string(inBytes))
 	}
 	if err != nil {
 		return nil, err
 	}
-	defer cd.Close()
-
-	utf8String := cd.ConvString(string(inBytes))
 	if utf8String == "" {
 		return inBytes, nil
 	}

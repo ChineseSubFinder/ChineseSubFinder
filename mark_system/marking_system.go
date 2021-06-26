@@ -100,7 +100,7 @@ func (m MarkingSystem) parseSubFileInfo(organizeSubFiles []string) map[string][]
 	for _, oneSubFileFullPath := range organizeSubFiles {
 		subFileInfo, err := m.subParserHub.DetermineFileTypeFromFile(oneSubFileFullPath)
 		if err != nil {
-			m.log.Error(err)
+			m.log.Error("DetermineFileTypeFromFile", oneSubFileFullPath, err)
 			continue
 		}
 		if subFileInfo == nil {

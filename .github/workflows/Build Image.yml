@@ -2,8 +2,8 @@ name: Build Docker Image
 
 on:
   push:
-    paths:
-      - "ReleaseTag"
+    tags:
+      - v*.*.*
   workflow_dispatch:
 
 jobs:
@@ -12,6 +12,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      # 获取 tag 版本
+      - name: Set Version
+        id: set-version
+        run: |
+          echo "::set-output name=version::${GITHUB_REF:10}"
+          echo "ReleaseTag=${GITHUB_REF:10}" 
 
       # Docker Image 构建环境
       - name: Set up QEMU
@@ -26,24 +32,15 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # ReleaseTag
-      - name: Set Version
-        id: set-version
-        run: |
-          echo "::set-output name=version::$(cat ReleaseTag | head -n1)"
-          echo "ReleaseTag=$(cat ReleaseTag | head -n1)" 
-          echo "::set-output name=status::success"
-
       # Build and push
       - name: Build dockerfile
-        if: steps.set-version.outputs.status == 'success'
         uses: docker/build-push-action@v2
         with:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm/v7,linux/arm64
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:v${{ steps.set-version.outputs.version }}
+            ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:${{ steps.set-version.outputs.version }}
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:latest
 
 

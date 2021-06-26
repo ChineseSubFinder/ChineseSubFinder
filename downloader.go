@@ -66,7 +66,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		// 所有的电影字幕下载完成，抉择完成，需要清理缓存目录
 		err := model.ClearRootTmpFolder()
 		if err != nil {
-			d.log.Error(err)
+			d.log.Error("ClearRootTmpFolder", err)
 		}
 		log.Infoln("Download Movie Sub End...")
 	}()
@@ -127,7 +127,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		// 所有的连续剧字幕下载完成，抉择完成，需要清理缓存目录
 		err := model.ClearRootTmpFolder()
 		if err != nil {
-			d.log.Error(err)
+			d.log.Error("ClearRootTmpFolder", err)
 		}
 		log.Infoln("Download Series Sub End...")
 	}()

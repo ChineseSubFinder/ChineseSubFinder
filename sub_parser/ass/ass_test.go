@@ -5,6 +5,7 @@ import (
 )
 
 func TestParser_DetermineFileTypeFromFile(t *testing.T) {
+
 	type args struct {
 		filePath string
 	}
