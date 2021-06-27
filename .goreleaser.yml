@@ -10,10 +10,9 @@ builds:
 - env:
       - CGO_ENABLED=1
   goos:
-      - darwin
-      - linux
       - windows
   goarch:
+      - 386
       - amd64
   
 archives:
