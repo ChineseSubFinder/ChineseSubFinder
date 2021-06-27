@@ -28,6 +28,7 @@
 
 * [How To Use](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/HowToUse.md)
 * [Docker ChineseSubFinder--中文字幕自动下载 | sleele的博客](https://sleele.com/2021/06/25/docker-chinesesubfinder-中文字幕自动下载/)
+* [配置建议以及解释](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E9%85%8D%E7%BD%AE%E5%BB%BA%E8%AE%AE%E4%BB%A5%E5%8F%8A%E8%A7%A3%E9%87%8A.md)
 
 如果文档没有及时更新，或者描述含糊、歧义的，欢迎提 [ISSUES](https://github.com/allanpk716/ChineseSubFinder/issues)。
 
