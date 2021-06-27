@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/movie_helper"
 	"github.com/allanpk716/ChineseSubFinder/series_helper"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/errgo.v2/fmt/errors"
 	"path/filepath"
 )
 
@@ -34,7 +35,7 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 	// 跳过中文的电影，不是一定要跳过的
 	skip, err := movie_helper.SkipChineseMovie(videoFullPath, d.Suppliers[0].GetReqParam())
 	if err != nil {
-		d.log.Error("SkipChineseMovie", err)
+		d.log.Warnln("SkipChineseMovie", videoFullPath, err)
 	}
 	if skip == true {
 		return nil, nil
@@ -42,7 +43,7 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 
 	needDlSub, err := movie_helper.MovieNeedDlSub(videoFullPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Newf("MovieNeedDlSub %v %v", videoFullPath , err)
 	}
 	if needDlSub == true {
 		// 需要下载字幕
@@ -51,7 +52,7 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 		// 整理字幕，比如解压什么的
 		organizeSubFiles, err := model.OrganizeDlSubFiles(filepath.Base(videoFullPath), subInfos)
 		if err != nil {
-			return nil, err
+			return nil, errors.Newf("OrganizeDlSubFiles %v %v", videoFullPath , err)
 		}
 		// 因为是下载电影，需要合并返回
 		var outSubFileFullPathList = make([]string, 0)
@@ -69,17 +70,17 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) (*common.SeriesInfo, map[string][]string, error) {
 
 	// 跳过中文的连续剧，不是一定要跳过的
-	skip, idmbInfo, err := series_helper.SkipChineseSeries(seriesDirPath, d.Suppliers[0].GetReqParam())
+	skip, imdbInfo, err := series_helper.SkipChineseSeries(seriesDirPath, d.Suppliers[0].GetReqParam())
 	if err != nil {
-		d.log.Error("SkipChineseSeries", err)
+		d.log.Warnln("SkipChineseSeries", seriesDirPath, err)
 	}
 	if skip == true {
 		return nil, nil, nil
 	}
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(seriesDirPath, idmbInfo)
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(seriesDirPath, imdbInfo)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesDirPath , err)
 	}
 	// 下载好的字幕
 	subInfos := series_helper.OneSeriesDlSubInAllSite(d.Suppliers, seriesInfo, index)
@@ -87,5 +88,5 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) (*co
 	// 每一集 SxEx - 对应解压整理后的字幕列表
 	organizeSubFiles, err := model.OrganizeDlSubFiles(filepath.Base(seriesDirPath), subInfos)
 
-	return seriesInfo, organizeSubFiles, err
+	return seriesInfo, organizeSubFiles, errors.Newf("OrganizeDlSubFiles %v %v", seriesDirPath , err)
 }
