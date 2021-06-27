@@ -4,7 +4,7 @@ mkdir -p /root/.cache
 # permissions
 chown -R abc:abc \
     /app \
-    /root/.cache \
+    /root \
     /config \
     /media
     
