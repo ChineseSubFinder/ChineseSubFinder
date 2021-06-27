@@ -24,7 +24,7 @@ func Test_get_IMDB_nfo(t *testing.T) {
 	wantid := "tt0993840"
 	wantyear:= "2021"
 	dirPth := "X:\\电影\\Army of the Dead (2021)\\Army of the Dead (2021) WEBDL-1080p.nfo"
-	imdbInfo, err := getImdbAndYearNfo(dirPth)
+	imdbInfo, err := getImdbAndYearNfo(dirPth, "movie")
 	if err != nil {
 		t.Error(err)
 	}
@@ -85,4 +85,15 @@ func TestGetNumber2int(t *testing.T) {
 	if outNumber != 1998 {
 		t.Error("not the same")
 	}
+}
+
+func Test_getImdbAndYearNfo(t *testing.T) {
+
+	nfoInfo := "C:\\tmp\\imdb_id.nfo"
+	nfo, err := getImdbAndYearNfo(nfoInfo, "tvshow")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	println(nfo.ImdbId, nfo.Year, nfo.ReleaseDate)
 }
