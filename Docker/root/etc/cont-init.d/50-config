@@ -1,12 +1,12 @@
 #!/usr/bin/with-contenv bash
 
+mkdir -p /root/.cache
 # permissions
 chown -R abc:abc \
-	/app \
-    /root/.cache \
+    /app \
+    /root \
     /config \
     /media
     
 chmod a+x \
-    /app/chinesesubfinder \
-    /usr/bin/chrome 
+    /app/chinesesubfinder

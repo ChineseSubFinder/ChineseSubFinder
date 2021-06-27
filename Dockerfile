@@ -16,17 +16,12 @@ RUN go build -ldflags="-s -w" -o /app/chinesesubfinder
 
 # 运行时环境
 FROM lsiobase/ubuntu:bionic
-COPY Docker/root/ /
-# 主程序
-COPY --from=builder /app/chinesesubfinder /app/chinesesubfinder
-# 配置文件
-COPY --from=builder /homelab/buildspace/config.yaml.sample /app/config.yaml
 
 ENV TZ=Asia/Shanghai \
     PUID=1026 PGID=100
 
-RUN ln -s /root/.cache/rod/chromium-869685/chrome-linux/chrome /usr/bin/chrome && \
-    sed -i "s@http://deb.debian.org@http://mirrors.aliyun.com@g" /etc/apt/sources.list && rm -Rf /var/lib/apt/lists/* && \
+RUN ln -s /root/.cache/rod/chromium-856583/chrome-linux/chrome /usr/bin/chrome && \
+    # sed -i "s@http://archive.ubuntu.com@http://mirrors.aliyun.com@g" /etc/apt/sources.list && rm -Rf /var/lib/apt/lists/* && \
     apt-get update && \
     apt-get install --no-install-recommends -y \
     # C、C++ 支持库
@@ -52,5 +47,11 @@ RUN ln -s /root/.cache/rod/chromium-869685/chrome-linux/chrome /usr/bin/chrome &
        /tmp/* \
        /var/lib/apt/lists/* \
        /var/tmp/*
+
+COPY Docker/root/ /
+# 主程序
+COPY --from=builder /app/chinesesubfinder /app/chinesesubfinder
+# 配置文件
+COPY --from=builder /homelab/buildspace/config.yaml.sample /app/config.yaml
 
 VOLUME /config /media
