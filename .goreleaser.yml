@@ -19,7 +19,7 @@ builds:
       - arm
       - arm64
   goarm:
-      - 6
+      #- 6
       - 7
   ignore:
       - goos: darwin
