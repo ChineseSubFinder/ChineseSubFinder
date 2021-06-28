@@ -54,6 +54,7 @@ var charsetAlias = map[string]string{
 	"hzgb2312": "HZ-GB-2312",
 	"GB2312":   "HZ-GB-2312",
 	"gb2312":   "HZ-GB-2312",
+	"GB-18030": "GB18030",
 }
 
 func Convert(dstCharset Charset, srcCharset Charset, src string) (dst string, err error) {
