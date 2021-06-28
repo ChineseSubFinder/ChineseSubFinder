@@ -7,41 +7,13 @@ before:
   hooks:
     - go mod tidy
 builds:
-  - id: chinesesubfinder-win-x64
-    ldflags: -s -w -X main.appVersion=aabbcc
-    # brew install mingw-w64
-    main: ./main.go
-    env:
+  - env:
       - CGO_ENABLED=1
-      - CC=x86_64-w64-mingw32-gcc
-      # - CXX=x86_64-w64-mingw32-g++
     goos:
       - windows
     goarch:
       - amd64
-    
-  # - id: chinesesubfinder-linux-x64
-    # ldflags: -s -w -X main.appVersion=aabbcc
-    # # brew install FiloSottile/musl-cross/musl-cross
-    # main: ./main.go
-    # env:
-      # - CGO_ENABLED=1
-    # goos:
-      # - linux
-    # goarch:
-      # - amd64
-      
-  # - id: unarr-darwin-x64
-    # ldflags: -s -w -X main.appVersion=aabbcc
-    # main: ./main.go
-    # env:
-      # - CGO_ENABLED=1
-      # - CC=o64-clang 
-      # - CXX=o64-clang++
-    # goos:
-      # - darwin
-    # goarch:
-      # - amd64
+
 archives:
   - id: archive
     name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
