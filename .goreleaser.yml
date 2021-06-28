@@ -14,7 +14,6 @@ builds:
     env:
       - CGO_ENABLED=1
       - CC=x86_64-w64-mingw32-gcc
-      - CC=x86_64-w64-mingw32-gcc
       - CXX=x86_64-w64-mingw32-g++
     goos:
       - windows
@@ -27,9 +26,6 @@ builds:
     main: ./main.go
     env:
       - CGO_ENABLED=1
-      #- CC=x86_64-linux-musl-gcc
-    # flags:
-      # - '-extldflags "-static"'
     goos:
       - linux
     goarch:
@@ -40,8 +36,6 @@ builds:
     main: ./main.go
     env:
       - CGO_ENABLED=1
-      # comment CC line if releasing from macOS
-      #- CC=x86_64-apple-darwin14-clang
       - CC=o64-clang 
       - CXX=o64-clang++
     goos:

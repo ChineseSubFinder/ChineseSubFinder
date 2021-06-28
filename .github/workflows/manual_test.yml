@@ -27,13 +27,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          
-      - name: change app version
-        run: |
-            # sed -i.bak 's/aabbcc/${{ steps.set-version.outputs.version }}/g' .goreleaser.yml
-            # rm -f .goreleaser.yml.bak
-            # sed -i.bak 's/aabbcc/${{ steps.set-version.outputs.version }}/g' Makefile
-            # sed -i.bak 's/aabbcc/${{ steps.set-version.outputs.version }}/g' Makefile.cross-compiles
             
       - name: Create Release
         id: create_release
@@ -41,7 +34,7 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           GO111MODULE: "on"
-        run: docker run -e DOCKER_USERNAME=$DOCKER_USERNAME -e DOCKER_PASSWORD=$DOCKER_PASSWORD -e GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} --rm --privileged -v $GITHUB_WORKSPACE:/go/src/github.com/allanpk716/chinesesubfinder -v /var/run/docker.sock:/var/run/docker.sock -w /go/src/github.com/allanpk716/chinesesubfinder neilotoole/xcgo goreleaser --rm-dist    
+        run: docker run -e DOCKER_USERNAME=$DOCKER_USERNAME -e DOCKER_PASSWORD=$DOCKER_PASSWORD -e GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} --rm --privileged -v $GITHUB_WORKSPACE:/go/src/github.com/allanpk716/chinesesubfinder -v /var/run/docker.sock:/var/run/docker.sock -w /go/src/github.com/allanpk716/chinesesubfinder techknowlogick/xgo:latest goreleaser --rm-dist    
 
 
 
