@@ -1,29 +1,61 @@
-# This is an example goreleaser.yaml file with some sane defaults.
-# Make sure to check the documentation at http://goreleaser.com
+project_name: chinesesubfinder
+
+env:
+    - GO111MODULE=on
+
 before:
   hooks:
-    # you may remove this if you don't use vgo
     - go mod tidy
-    # you may remove this if you don't need go generate
-    # - go generate ./...
 builds:
-- env:
+  - id: chinesesubfinder-win-x64
+    ldflags: -s -w -X main.appVersion=aabbcc
+    # brew install mingw-w64
+    main: ./main.go
+    env:
       - CGO_ENABLED=1
-  goos:
+      - CC=x86_64-w64-mingw32-gcc
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+    goos:
       - windows
-  goarch:
+    goarch:
       - amd64
-  
+    
+  - id: chinesesubfinder-linux-x64
+    ldflags: -s -w -X main.appVersion=aabbcc
+    # brew install FiloSottile/musl-cross/musl-cross
+    main: ./main.go
+    env:
+      - CGO_ENABLED=1
+      #- CC=x86_64-linux-musl-gcc
+    # flags:
+      # - '-extldflags "-static"'
+    goos:
+      - linux
+    goarch:
+      - amd64
+      
+  - id: unarr-darwin-x64
+    ldflags: -s -w -X main.appVersion=aabbcc
+    main: ./main.go
+    env:
+      - CGO_ENABLED=1
+      # comment CC line if releasing from macOS
+      #- CC=x86_64-apple-darwin14-clang
+      - CC=o64-clang 
+      - CXX=o64-clang++
+    goos:
+      - darwin
+    goarch:
+      - amd64
 archives:
-- replacements:
-    darwin: Darwin
-    linux: Linux
-    windows: Windows
-    386: i386
-    amd64: x86_64
-  format_overrides:
-      - goos: windows
-        format: zip
+  - id: archive
+    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      amd64: x86_64
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -32,5 +64,5 @@ changelog:
   sort: asc
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
+      - '^docs:'
+      - '^test:'
