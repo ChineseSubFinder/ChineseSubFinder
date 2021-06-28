@@ -192,7 +192,7 @@ func OneSeriesDlSubInAllSite(Suppliers []_interface.ISupplier, seriesInfo *commo
 			// 一次性把这一部连续剧的所有字幕下载完
 			subInfos, err := supplier.GetSubListFromFile4Series(seriesInfo)
 			if err != nil {
-				model.GetLogger().Errorln("GetSubListFromFile4Series", err)
+				model.GetLogger().Errorln(supplier.GetSupplierName(), "GetSubListFromFile4Series", err)
 			}
 			// 把后缀名给改好
 			model.ChangeVideoExt2SubExt(subInfos)

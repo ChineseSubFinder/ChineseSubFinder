@@ -22,7 +22,7 @@ func OneMovieDlSubInAllSite(Suppliers []_interface.ISupplier, oneVideoFullPath s
 		go func() {
 			subInfos, err := OneMovieDlSubInOneSite(oneVideoFullPath, i, supplier)
 			if err != nil {
-				model.GetLogger().Errorln("oneMovieDlSubInOneSite", err)
+				model.GetLogger().Errorln(supplier.GetSupplierName(), "oneMovieDlSubInOneSite", err)
 			}
 			subInfosChannel <- subInfos
 		}()

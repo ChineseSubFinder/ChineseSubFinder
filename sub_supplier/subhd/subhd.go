@@ -242,7 +242,7 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *common.SeriesInfo, all
 			value[0].Episode = epsInfo.Episode
 			subInfoNeedDownload = append(subInfoNeedDownload, value[0])
 		} else {
-			s.log.Infoln("Not Find Sub can be download", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+			s.log.Infoln("SubHD Not Find Sub can be download", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 		}
 	}
 	// 全季的字幕列表，也拼进去，后面进行下载
