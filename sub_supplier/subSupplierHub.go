@@ -13,6 +13,7 @@ import (
 
 type SubSupplierHub struct {
 	Suppliers []_interface.ISupplier
+
 	log *logrus.Logger
 }
 
@@ -26,6 +27,7 @@ func NewSubSupplierHub(one _interface.ISupplier,_inSupplier ..._interface.ISuppl
 			s.Suppliers = append(s.Suppliers, supplier)
 		}
 	}
+
 	return &s
 }
 

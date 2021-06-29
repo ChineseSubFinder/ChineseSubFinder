@@ -49,6 +49,28 @@ func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*common.SubPar
 	// 如果返回 nil ，那么就说明都没有字幕的格式匹配上
 	return nil, nil
 }
+
+// IsSubHasChinese 字幕文件是否包含中文
+func (p SubParserHub) IsSubHasChinese(fileFPath string) bool {
+
+	// 增加判断已存在的字幕是否有中文
+	file, err := p.DetermineFileTypeFromFile(fileFPath)
+	if err != nil {
+		GetLogger().Warnln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, err)
+		return false
+	}
+	if file == nil {
+		GetLogger().Warnln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, "is nil")
+		return false
+	}
+	if HasChineseLang(file.Lang) == false {
+		GetLogger().Warnln("IsSubHasChinese.HasChineseLang", fileFPath, "not chinese sub, is ")
+		return false
+	}
+
+	return true
+}
+
 // getFromWhereSite 从文件名找出是从那个网站下载的。这里的文件名的前缀是下载时候标记好的，比较特殊
 func (p SubParserHub) getFromWhereSite(filePath string) string {
 	fileName := filepath.Base(filePath)
