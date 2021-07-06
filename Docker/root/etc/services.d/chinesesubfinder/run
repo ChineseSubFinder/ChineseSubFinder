@@ -1,4 +1,4 @@
 #!/usr/bin/with-contenv bash
 
 # 启动chinesesubfinder
-cd /app && exec s6-setuidgid abc ./chinesesubfinder 2>&1 | s6-setuidgid abc tee -a /config/chinesesubfinder.log
+cd /app && exec s6-setuidgid abc ./chinesesubfinder
