@@ -281,16 +281,42 @@ func (s Supplier) step0(keyword string) (string, error) {
 		return "", err
 	}
 	imgSelection := doc.Find("img.rounded-start")
-	imgUrl, ok := imgSelection.Attr("src")
+	_, ok := imgSelection.Attr("src")
 	if ok == true{
-		imgName := filepath.Base(imgUrl)
-		imgExt := filepath.Ext(imgUrl)
-		if strings.Contains(imgName, "_") == true {
-			items := strings.Split(imgName, "_")
-			return "/d/" + items[0], nil
-		} else {
-			return "/d/" + strings.ReplaceAll(imgName, imgExt, ""), nil
+
+		if len(imgSelection.Nodes) < 2 {
+			return "",  common.SubHDStep0ImgParentLessThan2
 		}
+		step1Url := ""
+		if imgSelection.Nodes[0].Parent.Data == "a" {
+			// 第一个父级是不是超链接
+			for _, attribute := range imgSelection.Nodes[0].Parent.Attr {
+				if attribute.Key == "href" {
+					step1Url = attribute.Val
+					break
+				}
+			}
+		} else if imgSelection.Nodes[0].Parent.Parent.Data == "a" {
+			// 第二个父级是不是超链接
+			for _, attribute := range imgSelection.Nodes[0].Parent.Parent.Attr {
+				if attribute.Key == "href" {
+					step1Url = attribute.Val
+					break
+				}
+			}
+		}
+		if step1Url == "" {
+			return "",  common.SubHDStep0HrefIsNull
+		}
+		return step1Url, nil
+		//imgName := filepath.Base(imgUrl)
+		//imgExt := filepath.Ext(imgUrl)
+		//if strings.Contains(imgName, "_") == true {
+		//	items := strings.Split(imgName, "_")
+		//	return "/d/" + items[0], nil
+		//} else {
+		//	return "/d/" + strings.ReplaceAll(imgName, imgExt, ""), nil
+		//}
 	} else{
 		return "",  common.SubHDStep0HrefIsNull
 	}
@@ -389,18 +415,14 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 	if len(waterWall.Nodes) < 1 {
 		hasWaterWall = false
 	}
-	// 是否有下载按钮
-	hasDownBtn := true
-	downBtn := doc.Find("#down")
-	if len(downBtn.Nodes) < 1 {
-		hasDownBtn = false
-	}
+	hasDownBtn, BtnElemenString := s.JugDownloadBtn(doc)
+
 	if hasWaterWall == false && hasDownBtn == false {
 		// 都没有，则返回故障，无法下载
 		return nil, common.SubHDStep2ExCannotFindDownloadBtn
 	}
 	// 下载字幕
-	content, err := s.downloadSubFile(browser, page, hasWaterWall)
+	content, err := s.downloadSubFile(browser, page, hasWaterWall, BtnElemenString)
 	if err != nil {
 		return nil, err
 	}
@@ -408,7 +430,28 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 	return content, nil
 }
 
-func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWaterWall bool) (*HdContent, error) {
+func (s Supplier) JugDownloadBtn(doc *goquery.Document) (bool, string) {
+	// 是否有下载按钮
+	hasDownBtn := true
+	downBtn := doc.Find("#down")
+	if len(downBtn.Nodes) < 1 {
+		hasDownBtn = false
+	} else {
+		return true, "#down"
+	}
+	// 另一种是否有下载按钮的判断
+	if hasDownBtn == false {
+		downBtn = doc.Find("button.down")
+		if len(downBtn.Nodes) < 1 {
+			hasDownBtn = false
+		} else {
+			hasDownBtn = true
+		}
+	}
+	return hasDownBtn, "button.down"
+}
+
+func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWaterWall bool, btnElemenString string) (*HdContent, error) {
 	var err error
 	fileName := ""
 	fileByte := []byte{0}
@@ -430,7 +473,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWater
 		if hasWaterWall == true {
 			page.MustElement("#TencentCaptcha").MustClick()
 		} else {
-			page.MustElement("#down").MustClick()
+			page.MustElement(btnElemenString).MustClick()
 		}
 		// 过墙
 		if hasWaterWall == true {

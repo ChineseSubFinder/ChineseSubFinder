@@ -83,10 +83,10 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		// -----------------------------------------------------
 		// 构建每个字幕站点下载者的实例
 		var subSupplierHub = sub_supplier.NewSubSupplierHub(
-			shooter.NewSupplier(d.reqParam),
 			subhd.NewSupplier(d.reqParam),
-			xunlei.NewSupplier(d.reqParam),
 			zimuku.NewSupplier(d.reqParam),
+			xunlei.NewSupplier(d.reqParam),
+			shooter.NewSupplier(d.reqParam),
 		)
 		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
 		organizeSubFiles, err := subSupplierHub.DownloadSub4Movie(inData.OneVideoFullPath, inData.Index)
