@@ -64,7 +64,7 @@ func (p SubParserHub) IsSubHasChinese(fileFPath string) bool {
 		return false
 	}
 	if HasChineseLang(file.Lang) == false {
-		GetLogger().Warnln("IsSubHasChinese.HasChineseLang", fileFPath, "not chinese sub, is ")
+		GetLogger().Warnln("IsSubHasChinese.HasChineseLang", fileFPath, "not chinese sub, is ", file.Lang.String())
 		return false
 	}
 

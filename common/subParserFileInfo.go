@@ -14,5 +14,6 @@ type SubParserFileInfo struct {
 type OneDialogue struct {
 	StartTime string		// 开始时间
 	EndTime string			// 结束时间
+	StyleName	string			// StyleName
 	Lines	[]string		// 台词
 }

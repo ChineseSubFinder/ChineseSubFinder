@@ -46,6 +46,11 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (common.VideoIMDBInfo
 	if err != nil {
 		return imdbInfo, err
 	}
+	for _, t := range doc.FindElements("./" + rootKey +"/title") {
+		imdbInfo.Title = t.Text()
+		break
+	}
+	//---------------------------------------------------------------------
 	for _, t := range doc.FindElements("./" + rootKey +"/imdb_id") {
 		imdbInfo.ImdbId = t.Text()
 		break
@@ -62,14 +67,17 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (common.VideoIMDBInfo
 		imdbInfo.ImdbId = t.Text()
 		break
 	}
+	//---------------------------------------------------------------------
 	for _, t := range doc.FindElements("./" + rootKey +"/year") {
 		imdbInfo.Year = t.Text()
 		break
 	}
+	//---------------------------------------------------------------------
 	for _, t := range doc.FindElements("./" + rootKey + "/releasedate") {
 		imdbInfo.ReleaseDate = t.Text()
 		break
 	}
+	//---------------------------------------------------------------------
 	for _, t := range doc.FindElements("./" + rootKey + "/premiered") {
 		imdbInfo.ReleaseDate = t.Text()
 		break

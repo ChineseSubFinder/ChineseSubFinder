@@ -32,7 +32,8 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 
 func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 
-	ser := "X:\\连续剧\\The Bad Batch"	// tt12708542
+	//ser := "X:\\连续剧\\The Bad Batch"	// tt12708542
+	ser := "X:\\连续剧\\瑞克和莫蒂 (2013)"	//
 	//ser := "X:\\连续剧\\杀死伊芙 (2018)"	// tt7016936
 	//ser := "X:\\连续剧\\Money.Heist"
 	//ser := "X:\\连续剧\\黑钱胜地 (2017)"

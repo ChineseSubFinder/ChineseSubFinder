@@ -2,6 +2,9 @@ package main
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/common"
+	"github.com/allanpk716/ChineseSubFinder/model"
+	"github.com/allanpk716/ChineseSubFinder/sub_parser/ass"
+	"github.com/allanpk716/ChineseSubFinder/sub_parser/srt"
 	"testing"
 )
 
@@ -29,11 +32,11 @@ func TestDownloader_DownloadSub4Movie(t *testing.T) {
 func TestDownloader_DownloadSub4Series(t *testing.T) {
 	var err error
 	//dirRoot := "X:\\连续剧\\隐秘的角落 (2020)"
-	dirRoot := "X:\\连续剧\\The Bad Batch"
+	//dirRoot := "X:\\连续剧\\The Bad Batch"
 	//dirRoot := "X:\\连续剧\\豪斯医生 (2004)"
 	//dirRoot := "X:\\连续剧\\Why Women Kill"
 	//dirRoot := "X:\\连续剧\\Mare of Easttown"
-	//dirRoot := "X:\\连续剧\\瑞克和莫蒂 (2013)"
+	dirRoot := "X:\\连续剧\\瑞克和莫蒂 (2013)"
 	//dirRoot := "X:\\连续剧\\黄石 (2018)"
 	//dirRoot := "X:\\连续剧"
 
@@ -44,4 +47,13 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestDownloader_SubParserHub(t *testing.T) {
+	//subFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 4\\瑞克和莫蒂 - S04E01 - Rick and Morty.chs[zimuku].ass"
+	//subFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 1\\瑞克和莫蒂 - S01E01 - 试播集.en.ass"
+	subFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 1\\瑞克和莫蒂 - S01E01 - 试播集.chs_en[zimuku].ass"
+
+	subParserHub := model.NewSubParserHub(ass.NewParser(), srt.NewParser())
+	subParserHub.IsSubHasChinese(subFile)
 }

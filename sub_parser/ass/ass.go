@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -55,18 +56,32 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*comm
 	countLineFeed := 0
 	// 有意义的对话统计数，排除 Style 类型
 	usefullDialogueCount := 0
+	// 先进行字幕 StyleName 的出现次数排序，找到最多的，就是常规字幕的，不是特效的
+	var nameMap = make(map[string]int)
+	for _, oneLine := range matched {
+		nowStyleName := oneLine[3]
+		_, ok := nameMap[nowStyleName]
+		if ok == false {
+			nameMap[nowStyleName] = 1
+		} else {
+			nameMap[nowStyleName]++
+		}
+	}
+	mapByValue := sortMapByValue(nameMap)
 	// 先读取一次字幕文件
 	for _, oneLine := range matched {
 		// 排除特效内容，只统计有意义的对话部分
-		if strings.Contains(oneLine[0], "Default") == false {
+		if strings.Contains(oneLine[0], mapByValue[0].Name) == false {
 			continue
 		}
 		usefullDialogueCount++
 
 		startTime := oneLine[1]
 		endTime := oneLine[2]
-		nowText := oneLine[3]
+		nowStyleName := oneLine[3]
+		nowText := oneLine[4]
 		odl := common.OneDialogue{
+			StyleName: nowStyleName,
 			StartTime: startTime,
 			EndTime: endTime,
 		}
@@ -114,7 +129,27 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*comm
 
 const (
 	// 字幕文件对话的每一行
-	regString = `Dialogue: [^,.]*[0-9]*,([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),[^,.]*,[^,.]*,[0-9]*,[0-9]*,[0-9]*,[^,.]*,(.*)`
+	//regString = `Dialogue: [^,.]*[0-9]*,([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),[^,.]*,[^,.]*,[0-9]*,[0-9]*,[0-9]*,[^,.]*,(.*)`
+	regString = `Dialogue: [^,.]*[0-9]*,([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([^,.]*),[^,.]*,[0-9]*,[0-9]*,[0-9]*,[^,.]*,(.*)`
 	// 匹配 ass 文件中的 Style 变量
 	regString4Style = `(?m)^Style:\s*(\w+),`
 )
+
+type StyleNameInfo struct {
+	Name string
+	Count  int
+}
+type StyleNameInfos []StyleNameInfo
+func (a StyleNameInfos) Len() int           { return len(a) }
+func (a StyleNameInfos) Less(i, j int) bool { return a[i].Count < a[j].Count }
+func (a StyleNameInfos) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func sortMapByValue(m map[string]int) StyleNameInfos {
+	p := make(StyleNameInfos, len(m))
+	i := 0
+	for k, v := range m {
+		p[i] = StyleNameInfo{k, v}
+		i++
+	}
+	sort.Sort(sort.Reverse(p))
+	return p
+}
