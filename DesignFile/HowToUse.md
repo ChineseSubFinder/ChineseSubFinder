@@ -48,3 +48,11 @@ docker create \
 
 推荐 [使用watchtower自动更新](https://sleele.com/2019/06/16/docker更新容器镜像神器-watchtower/ ) 
 
+## 如何查看日志
+
+映射日志目录出来即可，每7天回滚记录
+
+```
+- /volume1/docker/chinesesubfinder/log:/app/Logs
+```
+
