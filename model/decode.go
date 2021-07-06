@@ -220,6 +220,24 @@ func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (common.VideoIMDBInfo, erro
 	return imdbInfo, common.CanNotFindEpAiredTime
 }
 
+// GetVideoInfoFromFileName 从文件名推断文件信息
+func GetVideoInfoFromFileName(fileName string) (*PTN.TorrentInfo, error) {
+
+	parse, err := PTN.Parse(fileName)
+	if err != nil {
+		return nil, err
+	}
+	compile, err := regexp.Compile(regFixTitle2)
+	if err != nil {
+		return nil, err
+	}
+	match := compile.ReplaceAllString(parse.Title, "")
+	match = strings.TrimRight(match, "")
+	parse.Title = match
+
+	return parse, nil
+}
+
 //GetVideoInfoFromFileFullPath 从全文件路径推断文件信息
 func GetVideoInfoFromFileFullPath(videoFileFullPath string) (*PTN.TorrentInfo, time.Time, error) {
 

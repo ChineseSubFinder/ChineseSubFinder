@@ -4,6 +4,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/common"
 	_interface "github.com/allanpk716/ChineseSubFinder/interface"
 	"github.com/allanpk716/ChineseSubFinder/model"
+	"github.com/allanpk716/ChineseSubFinder/sub_parser/ass"
+	"github.com/allanpk716/ChineseSubFinder/sub_parser/srt"
 	"github.com/jinzhu/now"
 	"io/ioutil"
 	"path/filepath"
@@ -65,7 +67,11 @@ func MovieHasSub(videoFilePath string) (bool, error) {
 			continue
 		} else {
 			// 文件
-			if model.IsSubExtWanted(curFile.Name()) == true {
+			if model.IsSubExtWanted(curFile.Name()) == false {
+				continue
+			}
+			// 字幕文件是否包含中文
+			if model.NewSubParserHub(ass.NewParser(), srt.NewParser()).IsSubHasChinese(filepath.Join(dir, curFile.Name())) == true {
 				return true, nil
 			}
 		}

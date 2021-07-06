@@ -13,6 +13,7 @@ import (
 
 type SubSupplierHub struct {
 	Suppliers []_interface.ISupplier
+
 	log *logrus.Logger
 }
 
@@ -26,6 +27,7 @@ func NewSubSupplierHub(one _interface.ISupplier,_inSupplier ..._interface.ISuppl
 			s.Suppliers = append(s.Suppliers, supplier)
 		}
 	}
+
 	return &s
 }
 
@@ -87,6 +89,8 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) (*co
 	// 整理字幕，比如解压什么的
 	// 每一集 SxEx - 对应解压整理后的字幕列表
 	organizeSubFiles, err := model.OrganizeDlSubFiles(filepath.Base(seriesDirPath), subInfos)
-
-	return seriesInfo, organizeSubFiles, errors.Newf("OrganizeDlSubFiles %v %v", seriesDirPath , err)
+	if err != nil {
+		return nil, nil, errors.Newf("OrganizeDlSubFiles %v %v", seriesDirPath , err)
+	}
+	return seriesInfo, organizeSubFiles, nil
 }

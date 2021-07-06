@@ -62,7 +62,10 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*common.Seri
 	// 字幕字典 S01E01 - []SubInfo
 	SubDict := make(map[string][]common.SubInfo)
 	for _, subFile := range subFiles {
-
+		// 判断这个字幕是否包含中文
+		if subParserHub.IsSubHasChinese(subFile) == false {
+			continue
+		}
 		info, _, err := model.GetVideoInfoFromFileFullPath(subFile)
 		if err != nil {
 			model.GetLogger().Errorln(err)
@@ -75,7 +78,7 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*common.Seri
 		}
 		if subParserFileInfo == nil {
 			// 说明这个字幕无法解析
-			model.GetLogger().Warnln(seriesInfo.DirPath, "DetermineFileTypeFromFile is nill")
+			model.GetLogger().Warnln("ReadSeriesInfoFromDir", seriesInfo.DirPath, "DetermineFileTypeFromFile is nil")
 			continue
 		}
 		epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
