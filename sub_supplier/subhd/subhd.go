@@ -65,22 +65,28 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
 		detailPageUrl, err := s.step0(keyword)
 		if err != nil {
+			s.log.Errorln("subhd step0", keyword)
+			return nil, err
+		}
+		if detailPageUrl == "" {
 			// 如果只是搜索不到，则继续换关键词
-			if err != common.SubHDStep0SubCountNotFound {
-				return nil, err
-			}
-			s.log.Infoln("first search keyword", keyword, "not found")
+			s.log.Warning("subhd first search keyword", keyword, "not found")
 			keyword = seriesInfo.Name
-			s.log.Infoln("Retry", keyword)
+			s.log.Warning("subhd Retry", keyword)
 			detailPageUrl, err = s.step0(keyword)
 			if err != nil {
-				s.log.Errorln("step0", keyword)
+				s.log.Errorln("subhd step0", keyword)
 				return nil, err
 			}
+		}
+		if detailPageUrl == "" {
+			s.log.Warning("subhd search keyword", keyword, "not found")
+			continue
 		}
 		// 列举字幕
 		oneSubList, err := s.step1(detailPageUrl, false)
 		if err != nil {
+			s.log.Errorln("subhd step1", keyword)
 			return nil, err
 		}
 
@@ -100,7 +106,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *common.SeriesInfo) ([]co
 	for i, item := range subInfoNeedDownload {
 		hdContent, err := s.step2Ex(browser, item.Url)
 		if err != nil {
-			s.log.Errorln("step2Ex", err)
+			s.log.Errorln("subhd step2Ex", err)
 			continue
 		}
 		oneSubInfo := common.NewSupplierSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, common.ChineseSimple, model.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0,
@@ -256,6 +262,12 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *common.SeriesInfo, all
 
 // step0 找到这个影片的详情列表
 func (s Supplier) step0(keyword string) (string, error) {
+	var err error
+	defer func() {
+		if err != nil {
+			model.Notify.Add("subhd_step0", err.Error())
+		}
+	}()
 
 	result, err := s.httpGet(fmt.Sprintf(common.SubSubHDSearchUrl, url.QueryEscape(keyword)))
 	if err != nil {
@@ -265,7 +277,7 @@ func (s Supplier) step0(keyword string) (string, error) {
 	re := regexp.MustCompile(`共\s*(\d+)\s*条`)
 	matched := re.FindAllStringSubmatch(result, -1)
 	if len(matched) < 1 {
-		return "",  common.SubHDStep0SubCountNotFound
+		return "",  common.SubHDStep0SubCountElementNotFound
 	}
 	subCount, err := model.GetNumber2int(matched[0][0])
 	if err != nil {
@@ -330,6 +342,12 @@ func (s Supplier) step0(keyword string) (string, error) {
 
 // step1 获取影片的详情字幕列表
 func (s Supplier) step1(detailPageUrl string, isMovieOrSeries bool) ([]HdListItem, error) {
+	var err error
+	defer func() {
+		if err != nil {
+			model.Notify.Add("subhd_step1", err.Error())
+		}
+	}()
 	detailPageUrl = model.AddBaseUrl(common.SubSubHDRootUrl, detailPageUrl)
 	result, err := s.httpGet(detailPageUrl)
 	if err != nil {
@@ -391,6 +409,12 @@ func (s Supplier) step1(detailPageUrl string, isMovieOrSeries bool) ([]HdListIte
 
 // step2Ex 下载字幕 过防水墙
 func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdContent, error)  {
+	var err error
+	defer func() {
+		if err != nil {
+			model.Notify.Add("subhd_step2Ex", err.Error())
+		}
+	}()
 	subDownloadPageUrl = model.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
 	// TODO 需要提取出 rod 的超时时间和重试次数，注意，这里的超时时间，在调试的时候也算进去的，所以···
 	page, err := model.NewPageNavigate(browser, subDownloadPageUrl, 300*time.Second, 5)

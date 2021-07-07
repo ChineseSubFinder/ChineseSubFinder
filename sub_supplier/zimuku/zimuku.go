@@ -282,6 +282,12 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []commo
 
 // step0 先在查询界面找到字幕对应第一个影片的详情界面，需要解决自定义错误 ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound
 func (s Supplier) step0(keyword string) (string, error) {
+	var err error
+	defer func() {
+		if err != nil {
+			model.Notify.Add("zimuku_step0", err.Error())
+		}
+	}()
 	httpClient := model.NewHttpClient(s.reqParam)
 	// 第一级界面，有多少个字幕
 	resp, err := httpClient.R().
@@ -305,6 +311,12 @@ func (s Supplier) step0(keyword string) (string, error) {
 
 // step1 分析详情界面，找到有多少个字幕
 func (s Supplier) step1(filmDetailPageUrl string) (SubResult, error) {
+	var err error
+	defer func() {
+		if err != nil {
+			model.Notify.Add("zimuku_step1", err.Error())
+		}
+	}()
 	filmDetailPageUrl = model.AddBaseUrl(common.SubZiMuKuRootUrl, filmDetailPageUrl)
 	httpClient := model.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
@@ -400,7 +412,12 @@ func (s Supplier) step1(filmDetailPageUrl string) (SubResult, error) {
 
 // step2 第二级界面，单个字幕详情，需要判断 ZiMuKuDownloadUrlStep2NotFound 这个自定义错误
 func (s Supplier) step2(subInfo *SubInfo) error {
-
+	var err error
+	defer func() {
+		if err != nil {
+			model.Notify.Add("zimuku_step2", err.Error())
+		}
+	}()
 	detailUrl := model.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.DetailUrl)
 	httpClient := model.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
@@ -425,7 +442,12 @@ func (s Supplier) step2(subInfo *SubInfo) error {
 
 // step3 第三级界面，具体字幕下载 ZiMuKuDownloadUrlStep3NotFound ZiMuKuDownloadUrlStep3AllFailed
 func (s Supplier) step3(subDownloadPageUrl string) (string, []byte, error) {
-
+	var err error
+	defer func() {
+		if err != nil {
+			model.Notify.Add("zimuku_step3", err.Error())
+		}
+	}()
 	subDownloadPageUrl = model.AddBaseUrl(common.SubZiMuKuRootUrl, subDownloadPageUrl)
 	httpClient := model.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().

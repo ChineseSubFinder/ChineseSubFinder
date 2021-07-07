@@ -46,6 +46,9 @@ func main() {
 		log.Errorln("SeriesFolder not found")
 		return
 	}
+
+	model.Notify = model.NewNotifyCenter(config.WhenSubSupplierInvalidWebHook)
+
 	log.Infoln("MovieFolder:", config.MovieFolder)
 	log.Infoln("SeriesFolder:", config.SeriesFolder)
 
@@ -77,7 +80,9 @@ func main() {
 func DownLoadStart(httpProxy string) {
 	defer func() {
 		log.Infoln("Download One End...")
+		model.Notify.Send()
 	}()
+	model.Notify.Clear()
 
 	// 下载实例
 	downloader := NewDownloader(common.ReqParam{
@@ -86,6 +91,7 @@ func DownLoadStart(httpProxy string) {
 		SaveMultiSub:    config.SaveMultiSub,
 		Threads:         config.Threads,
 		SubTypePriority: config.SubTypePriority,
+		WhenSubSupplierInvalidWebHook: config.WhenSubSupplierInvalidWebHook,
 	})
 
 	log.Infoln("Download One Started...")
