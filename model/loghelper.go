@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"sync"
 	"time"
 )
 
@@ -40,9 +41,10 @@ func NewLogHelper(appName string, level logrus.Level, maxAge time.Duration, rota
 	return Logger
 }
 func GetLogger() *logrus.Logger {
-	if logger == nil {
+	once.Do(func() {
 		logger = NewLogHelper("ChineseSubFinder", logrus.DebugLevel, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
-	}
+	})
 	return logger
 }
 var logger *logrus.Logger
+var once sync.Once
