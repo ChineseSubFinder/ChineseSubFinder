@@ -214,6 +214,20 @@ func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map
 		}
 	}
 
+	// 这里有一种情况，就是双语的字幕不是在一个时间轴上的，而是分成两个时间轴的
+	// 那么之前的 isDouble 判断就失效了，需要补判一次
+	if isDouble == false {
+		if hasChinese && hasEnglish {
+			isDouble = isDoubleLang(countChinese, countEnglish)
+		}
+		if hasChinese && hasJapanese {
+			isDouble = isDoubleLang(countChinese, countJapanese)
+		}
+		if hasChinese && hasKorean {
+			isDouble = isDoubleLang(countChinese, countKorean)
+		}
+	}
+
 	// 优先判断双语
 	if isDouble == true {
 		// 首先得在外面统计就知道是双语
@@ -363,6 +377,24 @@ func ChangeFileCoding2UTF8(inBytes []byte) ([]byte, error) {
 		return inBytes, nil
 	}
 	return []byte(utf8String), nil
+}
+
+func isDoubleLang(count0, count1 int) bool {
+	if count0 >= count1 {
+		f := float32(count0) / float32(count1)
+		if f >= 1 && f <= 1.4 {
+			return true
+		} else {
+			return false
+		}
+	} else {
+		f := float32(count1) / float32(count0)
+		if f >= 1 && f <= 1.4 {
+			return true
+		} else {
+			return false
+		}
+	}
 }
 
 var (
