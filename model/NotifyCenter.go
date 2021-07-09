@@ -19,13 +19,16 @@ func NewNotifyCenter(webhookUrl string) *NotifyCenter {
 }
 
 func (n *NotifyCenter) Add(groupName, infoContent string) {
+	if n == nil {
+		return
+	}
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	n.infos[groupName] = infoContent
 }
 
 func (n *NotifyCenter) Send() {
-	if n.webhookUrl == "" {
+	if n == nil || n.webhookUrl == "" {
 		return
 	}
 	client := resty.New()
@@ -39,6 +42,9 @@ func (n *NotifyCenter) Send() {
 }
 
 func (n *NotifyCenter) Clear() {
+	if n == nil {
+		return
+	}
 	n.infos = make(map[string]string)
 }
 

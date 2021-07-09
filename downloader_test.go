@@ -36,7 +36,10 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 	//dirRoot := "X:\\连续剧\\豪斯医生 (2004)"
 	//dirRoot := "X:\\连续剧\\Why Women Kill"
 	//dirRoot := "X:\\连续剧\\Mare of Easttown"
-	dirRoot := "X:\\连续剧\\瑞克和莫蒂 (2013)"
+	//dirRoot := "X:\\连续剧\\瑞克和莫蒂 (2013)"
+	dirRoot := "X:\\连续剧\\黑钱胜地 (2017)"
+	//dirRoot := "X:\\连续剧\\黑道家族 (1999)"
+	//dirRoot := "X:\\连续剧\\黑镜 (2011)"
 	//dirRoot := "X:\\连续剧\\黄石 (2018)"
 	//dirRoot := "X:\\连续剧"
 
@@ -52,7 +55,9 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 func TestDownloader_SubParserHub(t *testing.T) {
 	//subFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 4\\瑞克和莫蒂 - S04E01 - Rick and Morty.chs[zimuku].ass"
 	//subFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 1\\瑞克和莫蒂 - S01E01 - 试播集.en.ass"
-	subFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 1\\瑞克和莫蒂 - S01E01 - 试播集.chs_en[zimuku].ass"
+	//subFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 1\\瑞克和莫蒂 - S01E01 - 试播集.chs_en[zimuku].ass"
+	//subFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 4\\瑞克和莫蒂 - S04E01 - Rick and Morty.zh.srt"
+	subFile := "X:\\连续剧\\黑钱胜地 (2017)\\Sub_S3E0\\[subhd]_0_Ozark.S03E07.iNTERNAL.720p.WEB.x264-GHOSTS.chs.eng.ass"
 
 	subParserHub := model.NewSubParserHub(ass.NewParser(), srt.NewParser())
 	subParserHub.IsSubHasChinese(subFile)

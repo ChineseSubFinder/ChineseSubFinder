@@ -13,6 +13,7 @@ import (
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/panjf2000/ants/v2"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/net/context"
 	"os"
 	"path"
 	"path/filepath"
@@ -76,7 +77,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	}
 
 	// 并发控制
-	movieDlFunc := func(i interface{}) {
+	movieDlFunc := func(i interface{}) error {
 		inData := i.(InputData)
 		// -----------------------------------------------------
 		// 构建每个字幕站点下载者的实例
@@ -90,28 +91,55 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		organizeSubFiles, err := subSupplierHub.DownloadSub4Movie(inData.OneVideoFullPath, inData.Index)
 		if err != nil {
 			d.log.Errorln("subSupplierHub.DownloadSub4Movie", inData.OneVideoFullPath ,err)
-			return
+			return nil
 		}
 		if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
 			d.log.Infoln("no sub found", filepath.Base(inData.OneVideoFullPath))
-			return
+			return nil
 		}
 		d.oneVideoSelectBestSub(inData.OneVideoFullPath, organizeSubFiles)
 		// -----------------------------------------------------
+
+		return nil
 	}
-	wg := sync.WaitGroup{}
 	p, err := ants.NewPoolWithFunc(d.reqParam.Threads, func(inData interface{}) {
-		movieDlFunc(inData)
-		wg.Done()
+		data := inData.(InputData)
+		defer data.Wg.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), common.OneVideoProcessTimeOut)
+		defer cancel()
+
+		done := make(chan error, 1)
+		panicChan := make(chan interface{}, 1)
+		go func() {
+			defer func() {
+				if p := recover(); p != nil {
+					panicChan <- p
+				}
+			}()
+
+			done <- movieDlFunc(inData)
+		}()
+
+		select {
+		case _ = <- done:
+			return
+		case p := <- panicChan:
+			d.log.Errorln("NewPoolWithFunc got panic", p)
+		case <-ctx.Done():
+			d.log.Errorln("NewPoolWithFunc got time out", ctx.Err())
+			return
+		}
+
 	})
 	if err != nil {
 		return err
 	}
 	defer p.Release()
+	wg := sync.WaitGroup{}
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
 	for i, oneVideoFullPath := range nowVideoList {
 		wg.Add(1)
-		err = p.Invoke(InputData{OneVideoFullPath: oneVideoFullPath, Index: i})
+		err = p.Invoke(InputData{OneVideoFullPath: oneVideoFullPath, Index: i, Wg: &wg})
 		if err != nil {
 			d.log.Errorln("movie ants.Invoke",err)
 		}
@@ -132,8 +160,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	log.Infoln("Download Series Sub Started...")
 
 	// 并发控制
-	seriesDlFunc := func(i interface{}) {
-
+	seriesDlFunc := func(i interface{}) error {
 		inData := i.(InputData)
 		// 构建每个字幕站点下载者的实例
 		var subSupplierHub *sub_supplier.SubSupplierHub
@@ -146,12 +173,12 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
 		seriesInfo, organizeSubFiles, err := subSupplierHub.DownloadSub4Series(inData.OneVideoFullPath, inData.Index)
 		if err != nil {
-			d.log.Errorln("subSupplierHub.DownloadSub4Series", inData.OneVideoFullPath ,err)
-			return
+			d.log.Errorln("subSupplierHub.DownloadSub4Series", inData.OneVideoFullPath, err)
+			return nil
 		}
 		if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
 			d.log.Infoln("no sub found", filepath.Base(inData.OneVideoFullPath))
-			return
+			return nil
 		}
 		// 只针对需要下载字幕的视频进行字幕的选择保存
 		for epsKey, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
@@ -171,11 +198,36 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 			seasonEpsKey := model.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
 			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, fullSeasonSubDict[seasonEpsKey])
 		}
+
+		return nil
 	}
-	wg := sync.WaitGroup{}
 	p, err := ants.NewPoolWithFunc(d.reqParam.Threads, func(inData interface{}) {
-		seriesDlFunc(inData)
-		wg.Done()
+		data := inData.(InputData)
+		defer data.Wg.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), common.OneVideoProcessTimeOut)
+		defer cancel()
+
+		done := make(chan error, 1)
+		panicChan := make(chan interface{}, 1)
+		go func() {
+			defer func() {
+				if p := recover(); p != nil {
+					panicChan <- p
+				}
+			}()
+
+			done <- seriesDlFunc(inData)
+		}()
+
+		select {
+		case _ = <- done:
+			return
+		case p := <- panicChan:
+			d.log.Errorln("NewPoolWithFunc got panic", p)
+		case <-ctx.Done():
+			d.log.Errorln("NewPoolWithFunc got time out", ctx.Err())
+			return
+		}
 	})
 	if err != nil {
 		return err
@@ -186,9 +238,11 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	if err != nil {
 		return err
 	}
+
+	wg := sync.WaitGroup{}
 	for i, oneSeriesPath := range seriesDirList {
 		wg.Add(1)
-		err = p.Invoke(InputData{OneVideoFullPath: oneSeriesPath, Index: i})
+		err = p.Invoke(InputData{OneVideoFullPath: oneSeriesPath, Index: i, Wg: &wg})
 		if err != nil {
 			d.log.Errorln("series ants.Invoke",err)
 		}
@@ -330,4 +384,5 @@ func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) e
 type InputData struct {
 	OneVideoFullPath string
 	Index			int
+	Wg 				*sync.WaitGroup
 }

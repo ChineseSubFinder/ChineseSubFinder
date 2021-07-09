@@ -416,8 +416,12 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 		}
 	}()
 	subDownloadPageUrl = model.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
-	// TODO 需要提取出 rod 的超时时间和重试次数，注意，这里的超时时间，在调试的时候也算进去的，所以···
-	page, err := model.NewPageNavigate(browser, subDownloadPageUrl, 300*time.Second, 5)
+	// 默认超时是 60s，如果是调试模式则是 5 min
+	tt := common.HTMLTimeOut
+	if s.reqParam.DebugMode == true {
+		tt = common.OneVideoProcessTimeOut
+	}
+	page, err := model.NewPageNavigate(browser, subDownloadPageUrl, tt, 5)
 	if err != nil {
 		return nil, err
 	}
