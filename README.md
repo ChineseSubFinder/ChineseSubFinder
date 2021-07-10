@@ -4,7 +4,7 @@
 
 > 开发中，可能有不兼容性的调整（配置文件字段变更）
 >
-> 最新版本 v0.9.x 新增 subhd zimuku 解析故障的通知接口，给维护人员用，可以尽快去修复解析问题。一般人员无需关心此设置。
+> 最新版本 v0.11.x 支持 Emby API，搜索效率更高
 >
 > 关于日本动画字幕自动搜索功能的讨论，欢迎在这里提出：[关于动画字幕下载--日本](https://github.com/allanpk716/ChineseSubFinder/issues/1)
 
@@ -26,6 +26,10 @@
 
 * [How To Use - 原生文档](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/HowToUse.md)
 * [Docker ChineseSubFinder--中文字幕自动下载 | sleele的博客 - 第三方教程](https://sleele.com/2021/06/25/docker-chinesesubfinder-中文字幕自动下载/)
+
+高阶设置：
+
+* [高阶设置 - Emby API 支持](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/高阶设置 - Emby API 支持.md)
 
 建议了解的文档，特别是对《连续剧目录结构要求》。
 

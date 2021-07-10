@@ -22,7 +22,12 @@ func TestDownloader_DownloadSub4Movie(t *testing.T) {
 	dl := NewDownloader(common.ReqParam{
 		SaveMultiSub: true,
 		SubTypePriority: 1,
+		EmbyConfig: config.EmbyConfig,
 	})
+	err = dl.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = dl.DownloadSub4Movie(dirRoot)
 	if err != nil {
 		t.Fatal(err)
@@ -37,16 +42,36 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 	//dirRoot := "X:\\连续剧\\Why Women Kill"
 	//dirRoot := "X:\\连续剧\\Mare of Easttown"
 	//dirRoot := "X:\\连续剧\\瑞克和莫蒂 (2013)"
-	dirRoot := "X:\\连续剧\\黑钱胜地 (2017)"
+	//dirRoot := "X:\\连续剧\\黑钱胜地 (2017)"
 	//dirRoot := "X:\\连续剧\\黑道家族 (1999)"
 	//dirRoot := "X:\\连续剧\\黑镜 (2011)"
 	//dirRoot := "X:\\连续剧\\黄石 (2018)"
-	//dirRoot := "X:\\连续剧"
+	dirRoot := "X:\\连续剧"
 
+	// 如果需要调试 Emby 一定需要 dirRoot := "X:\\连续剧"
 	dl := NewDownloader(common.ReqParam{
 		SaveMultiSub: true,
+		SubTypePriority: 1,
+		EmbyConfig: config.EmbyConfig,
 	})
+	err = dl.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = dl.DownloadSub4Series(dirRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDownloader_GetUpdateVideoListFromEmby(t *testing.T) {
+	var err error
+	dl := NewDownloader(common.ReqParam{
+		SaveMultiSub: true,
+		SubTypePriority: 1,
+		EmbyConfig: config.EmbyConfig,
+	})
+	err = dl.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
 	if err != nil {
 		t.Fatal(err)
 	}

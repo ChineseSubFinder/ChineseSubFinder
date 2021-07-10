@@ -9,6 +9,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/model"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
+	"github.com/go-rod/rod/lib/proto"
 	"github.com/nfnt/resize"
 	"github.com/sirupsen/logrus"
 	"image/jpeg"
@@ -425,6 +426,9 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 	if err != nil {
 		return nil, err
 	}
+	page.MustSetUserAgent(&proto.NetworkSetUserAgentOverride{
+		UserAgent: model.RandomUserAgent(true),
+	})
 	err = page.WaitLoad()
 	if err != nil {
 		return nil, err
@@ -624,9 +628,11 @@ func (s Supplier) httpGet(url string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	recvText := resp.String()
 	//搜索验证 点击继续搜索
-	if strings.Contains(resp.String(), "搜索验证") {
-		s.log.Debug("搜索验证 reload", url)
+	if strings.Contains(recvText, "搜索验证") || strings.Contains(recvText, "搜索频率") {
+		s.log.Debugln("搜索验证 or 搜索频率 reload", url)
+		time.Sleep(model.RandomSecondDuration(5, 10))
 		return s.httpGet(url)
 	}
 	return resp.String(), nil

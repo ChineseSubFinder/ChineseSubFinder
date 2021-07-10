@@ -18,37 +18,13 @@ import (
 
 // ReadSeriesInfoFromDir 读取剧集的信息，只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList
 func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*common.SeriesInfo, error) {
-	seriesInfo := common.SeriesInfo{}
 
 	subParserHub := model.NewSubParserHub(ass.NewParser(), srt.NewParser())
-	// 只考虑 IMDB 去查询，文件名目前发现可能会跟电影重复，导致很麻烦，本来也有前置要求要削刮器处理的
-	videoInfo, err := model.GetImdbInfo4SeriesDir(seriesDir)
+
+	seriesInfo, err := getSeriesInfoFromDir(seriesDir, imdbInfo)
 	if err != nil {
 		return nil, err
 	}
-	// 使用 IMDB ID 得到通用的剧集名称
-	// 以 IMDB 的信息为准
-	if imdbInfo != nil {
-		seriesInfo.Name = imdbInfo.Name
-		seriesInfo.ImdbId = imdbInfo.ID
-		seriesInfo.Year = imdbInfo.Year
-	} else {
-		seriesInfo.Name = videoInfo.Title
-		seriesInfo.ImdbId = videoInfo.ImdbId
-		iYear, err := strconv.Atoi(videoInfo.Year)
-		if err != nil {
-			// 不是必须的
-			seriesInfo.Year = 0
-			model.GetLogger().Warnln("ReadSeriesInfoFromDir.GetImdbInfo4SeriesDir.strconv.Atoi", err)
-		} else {
-			seriesInfo.Year = iYear
-
-		}
-	}
-	seriesInfo.ReleaseDate = videoInfo.ReleaseDate
-	seriesInfo.DirPath = seriesDir
-	seriesInfo.EpList = make([]common.EpisodeInfo, 0)
-	seriesInfo.SeasonDict = make(map[int]int)
 	// 搜索所有的视频
 	videoFiles, err := model.SearchMatchedVideoFile(seriesDir)
 	if err != nil {
@@ -83,11 +59,11 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*common.Seri
 		}
 		epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
 		oneFileSubInfo := common.SubInfo{
-			Title: info.Title,
-			Season: info.Season,
-			Episode: info.Episode,
-			Language: subParserFileInfo.Lang,
-			Dir: filepath.Dir(subFile),
+			Title:        info.Title,
+			Season:       info.Season,
+			Episode:      info.Episode,
+			Language:     subParserFileInfo.Lang,
+			Dir:          filepath.Dir(subFile),
 			FileFullPath: subFile,
 		}
 		_, ok := SubDict[epsKey]
@@ -100,42 +76,7 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*common.Seri
 	// 视频字典 S01E01 - EpisodeInfo
 	EpisodeDict := make(map[string]common.EpisodeInfo)
 	for _, videoFile := range videoFiles {
-		// 正常来说，一集只有一个格式的视频，也就是 S01E01 只有一个，如果有多个则会只保存第一个
-		info, modifyTime, err := model.GetVideoInfoFromFileFullPath(videoFile)
-		if err != nil {
-			model.GetLogger().Errorln("model.GetVideoInfoFromFileFullPath", err)
-			continue
-		}
-		episodeInfo, err := model.GetImdbInfo4OneSeriesEpisode(videoFile)
-		if err != nil {
-			model.GetLogger().Errorln("model.GetImdbInfo4OneSeriesEpisode", err)
-			continue
-		}
-		epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
-		_, ok := EpisodeDict[epsKey]
-		if ok == false {
-			// 初始化
-			oneFileEpInfo := common.EpisodeInfo{
-				Title: info.Title,
-				Season: info.Season,
-				Episode: info.Episode,
-				Dir: filepath.Dir(videoFile),
-				FileFullPath: videoFile,
-				ModifyTime: modifyTime,
-				AiredTime: episodeInfo.ReleaseDate,
-			}
-			// 需要匹配同级目录下的字幕
-			oneFileEpInfo.SubAlreadyDownloadedList = make([]common.SubInfo, 0)
-			for _, subInfo := range SubDict[epsKey] {
-				if subInfo.Dir == oneFileEpInfo.Dir {
-					oneFileEpInfo.SubAlreadyDownloadedList = append(oneFileEpInfo.SubAlreadyDownloadedList, subInfo)
-				}
-			}
-			EpisodeDict[epsKey] = oneFileEpInfo
-		} else {
-			// 存在则跳过
-			continue
-		}
+		getEpsInfoAndSubDic(videoFile, EpisodeDict, SubDict)
 	}
 
 	for _, episodeInfo := range EpisodeDict {
@@ -143,9 +84,34 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*common.Seri
 		seriesInfo.SeasonDict[episodeInfo.Season] = episodeInfo.Season
 	}
 
-	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(&seriesInfo)
+	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(seriesInfo)
 
-	return &seriesInfo, nil
+	return seriesInfo, nil
+}
+
+// ReadSeriesInfoFromEmby 将 Emby API 读取到的数据进行转换到通用的结构中，需要填充那些剧集需要下载，这样要的是一个连续剧的，不是所有的传入
+func ReadSeriesInfoFromEmby(seriesDir string, imdbInfo *imdb.Title, seriesList []common.EmbyMixInfo) (*common.SeriesInfo, error) {
+
+	seriesInfo, err := getSeriesInfoFromDir(seriesDir, imdbInfo)
+	if err != nil {
+		return nil, err
+	}
+	seriesInfo.NeedDlSeasonDict = make(map[int]int)
+	seriesInfo.NeedDlEpsKeyList = make(map[string]common.EpisodeInfo)
+	EpisodeDict := make(map[string]common.EpisodeInfo)
+	SubDict := make(map[string][]common.SubInfo)
+	for _, info := range seriesList {
+		getEpsInfoAndSubDic(info.VideoFileFullPath, EpisodeDict, SubDict)
+	}
+
+	for _, episodeInfo := range EpisodeDict {
+		seriesInfo.EpList = append(seriesInfo.EpList, episodeInfo)
+		seriesInfo.SeasonDict[episodeInfo.Season] = episodeInfo.Season
+	}
+
+	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(seriesInfo)
+
+	return seriesInfo, nil
 }
 
 // SkipChineseSeries 跳过中文连续剧
@@ -276,4 +242,76 @@ func whichSeasonEpsNeedDownloadSub(seriesInfo *common.SeriesInfo) (map[string]co
 		}
 	}
 	return needDlSubEpsList, needDlSeasonList
+}
+
+func getSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*common.SeriesInfo, error) {
+	seriesInfo := common.SeriesInfo{}
+	// 只考虑 IMDB 去查询，文件名目前发现可能会跟电影重复，导致很麻烦，本来也有前置要求要削刮器处理的
+	videoInfo, err := model.GetImdbInfo4SeriesDir(seriesDir)
+	if err != nil {
+		return nil, err
+	}
+	// 使用 IMDB ID 得到通用的剧集名称
+	// 以 IMDB 的信息为准
+	if imdbInfo != nil {
+		seriesInfo.Name = imdbInfo.Name
+		seriesInfo.ImdbId = imdbInfo.ID
+		seriesInfo.Year = imdbInfo.Year
+	} else {
+		seriesInfo.Name = videoInfo.Title
+		seriesInfo.ImdbId = videoInfo.ImdbId
+		iYear, err := strconv.Atoi(videoInfo.Year)
+		if err != nil {
+			// 不是必须的
+			seriesInfo.Year = 0
+			model.GetLogger().Warnln("ReadSeriesInfoFromDir.GetImdbInfo4SeriesDir.strconv.Atoi", err)
+		} else {
+			seriesInfo.Year = iYear
+		}
+	}
+	seriesInfo.ReleaseDate = videoInfo.ReleaseDate
+	seriesInfo.DirPath = seriesDir
+	seriesInfo.EpList = make([]common.EpisodeInfo, 0)
+	seriesInfo.SeasonDict = make(map[int]int)
+	return &seriesInfo, nil
+}
+
+func getEpsInfoAndSubDic(videoFile string, EpisodeDict map[string]common.EpisodeInfo, SubDict map[string][]common.SubInfo) {
+	// 正常来说，一集只有一个格式的视频，也就是 S01E01 只有一个，如果有多个则会只保存第一个
+	info, modifyTime, err := model.GetVideoInfoFromFileFullPath(videoFile)
+	if err != nil {
+		model.GetLogger().Errorln("model.GetVideoInfoFromFileFullPath", err)
+		return
+	}
+	episodeInfo, err := model.GetImdbInfo4OneSeriesEpisode(videoFile)
+	if err != nil {
+		model.GetLogger().Errorln("model.GetImdbInfo4OneSeriesEpisode", err)
+		return
+	}
+	epsKey := model.GetEpisodeKeyName(info.Season, info.Episode)
+	_, ok := EpisodeDict[epsKey]
+	if ok == false {
+		// 初始化
+		oneFileEpInfo := common.EpisodeInfo{
+			Title:        info.Title,
+			Season:       info.Season,
+			Episode:      info.Episode,
+			Dir:          filepath.Dir(videoFile),
+			FileFullPath: videoFile,
+			ModifyTime:   modifyTime,
+			AiredTime:    episodeInfo.ReleaseDate,
+		}
+		// 需要匹配同级目录下的字幕
+		oneFileEpInfo.SubAlreadyDownloadedList = make([]common.SubInfo, 0)
+		for _, subInfo := range SubDict[epsKey] {
+			if subInfo.Dir == oneFileEpInfo.Dir {
+				oneFileEpInfo.SubAlreadyDownloadedList = append(oneFileEpInfo.SubAlreadyDownloadedList, subInfo)
+			}
+		}
+		EpisodeDict[epsKey] = oneFileEpInfo
+	} else {
+		// 存在则跳过
+		return
+	}
+	return
 }

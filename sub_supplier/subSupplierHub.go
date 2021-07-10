@@ -84,13 +84,44 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) (*co
 	if err != nil {
 		return nil, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesDirPath , err)
 	}
+	organizeSubFiles, err := d.dlSubFromSeriesInfo(seriesDirPath, index, seriesInfo, err)
+	if err != nil {
+		return nil, nil, err
+	}
+	return seriesInfo, organizeSubFiles, nil
+}
+
+// DownloadSub4SeriesFromEmby 通过 Emby 查询到的信息进行字幕下载，下载完毕后，返回下载缓存每个字幕的位置
+func (d SubSupplierHub) DownloadSub4SeriesFromEmby(seriesDirPath string, seriesList []common.EmbyMixInfo, index int) (*common.SeriesInfo, map[string][]string, error) {
+
+	// 跳过中文的连续剧，不是一定要跳过的
+	skip, imdbInfo, err := series_helper.SkipChineseSeries(seriesDirPath, d.Suppliers[0].GetReqParam())
+	if err != nil {
+		d.log.Warnln("SkipChineseSeries", seriesDirPath, err)
+	}
+	if skip == true {
+		return nil, nil, nil
+	}
+	// 读取本地的视频和字幕信息
+	seriesInfo, err := series_helper.ReadSeriesInfoFromEmby(seriesDirPath, imdbInfo, seriesList)
+	if err != nil {
+		return nil, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesDirPath , err)
+	}
+	organizeSubFiles, err := d.dlSubFromSeriesInfo(seriesDirPath, index, seriesInfo, err)
+	if err != nil {
+		return nil, nil, err
+	}
+	return seriesInfo, organizeSubFiles, nil
+}
+
+func (d SubSupplierHub) dlSubFromSeriesInfo(seriesDirPath string, index int, seriesInfo *common.SeriesInfo, err error) (map[string][]string, error) {
 	// 下载好的字幕
 	subInfos := series_helper.OneSeriesDlSubInAllSite(d.Suppliers, seriesInfo, index)
 	// 整理字幕，比如解压什么的
 	// 每一集 SxEx - 对应解压整理后的字幕列表
 	organizeSubFiles, err := model.OrganizeDlSubFiles(filepath.Base(seriesDirPath), subInfos)
 	if err != nil {
-		return nil, nil, errors.Newf("OrganizeDlSubFiles %v %v", seriesDirPath , err)
+		return nil, errors.Newf("OrganizeDlSubFiles %v %v", seriesDirPath, err)
 	}
-	return seriesInfo, organizeSubFiles, nil
+	return organizeSubFiles, nil
 }

@@ -92,19 +92,38 @@ func DownLoadStart(httpProxy string) {
 		Threads:         config.Threads,
 		SubTypePriority: config.SubTypePriority,
 		WhenSubSupplierInvalidWebHook: config.WhenSubSupplierInvalidWebHook,
+		EmbyConfig: config.EmbyConfig,
 	})
 
 	log.Infoln("Download One Started...")
-	// 开始下载
-	err := downloader.DownloadSub4Movie(config.MovieFolder)
+
+	// 刷新 Emby 的字幕，如果下载了字幕倒是没有刷新，则先刷新一次，便于后续的 Emby api 统计逻辑
+	err := downloader.RefreshEmbySubList()
+	if err != nil {
+		log.Errorln("RefreshEmbySubList", err)
+		return
+	}
+	err = downloader.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
+	if err != nil {
+		log.Errorln("GetUpdateVideoListFromEmby", err)
+		return
+	}
+	// 开始下载，电影
+	err = downloader.DownloadSub4Movie(config.MovieFolder)
 	if err != nil {
 		log.Errorln("DownloadSub4Movie", err)
 		return
 	}
-
+	// 开始下载，连续剧
 	err = downloader.DownloadSub4Series(config.SeriesFolder)
 	if err != nil {
 		log.Errorln("DownloadSub4Series", err)
+		return
+	}
+	// 刷新 Emby 的字幕，下载完毕字幕了，就统一刷新一下
+	err = downloader.RefreshEmbySubList()
+	if err != nil {
+		log.Errorln("RefreshEmbySubList", err)
 		return
 	}
 }

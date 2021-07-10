@@ -13,6 +13,7 @@ func GetVideoInfoFromIMDB(imdbID string, _reqParam ...common.ReqParam) (*imdb.Ti
 	}
 	t, err := imdb.NewTitle(NewHttpClient(reqParam).GetClient(), imdbID)
 	if err != nil {
+		Notify.Add("imdb model - imdb.NewTitle :", err.Error())
 		return nil, err
 	}
 
