@@ -91,6 +91,11 @@ func (d *Downloader) GetUpdateVideoListFromEmby(movieRootDir, seriesRootDir stri
 }
 
 func (d Downloader) RefreshEmbySubList() error {
+
+	if d.embyHelper == nil {
+		return nil
+	}
+
 	bRefresh := false
 	defer func() {
 		if bRefresh == true {
