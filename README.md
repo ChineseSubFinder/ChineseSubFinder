@@ -29,7 +29,7 @@
 
 高阶设置：
 
-* [高阶设置 - Emby API 支持](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/高阶设置 - Emby API 支持.md)
+* [高阶设置 - Emby API 支持]([ChineseSubFinder/高阶设置 - Emby API 支持.md at docs · allanpk716/ChineseSubFinder (github.com)](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/高阶设置 - Emby API 支持.md))
 
 建议了解的文档，特别是对《连续剧目录结构要求》。
 
