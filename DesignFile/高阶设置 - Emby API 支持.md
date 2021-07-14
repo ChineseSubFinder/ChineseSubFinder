@@ -29,7 +29,7 @@
 
 ### 编写 Emby Api 配置信息
 
-> 这里都是以 docker 的部署方式来举例，举一反三
+> 这里都是以 docker 的部署方式来举例，请举一反三。
 
 在原有的 ChineseSubFinder  config.yaml 中新增一下配置信息
 
@@ -40,13 +40,13 @@ EmbyConfig:
     LimitCount: 3000
 ```
 
-那么新增后的 ChineseSubFinder  config.yaml 文件为
+那么新增后的 ChineseSubFinder  config.yaml 文件为:
 
 ```yaml
 UseProxy: false
 HttpProxy: http:/127.0.0.1:10809
 EveryTime: 12h
-Threads: 4
+Threads: 1
 SaveMultiSub: true
 MovieFolder: /media/电影
 SeriesFolder: /media/连续剧
@@ -74,6 +74,19 @@ EmbyConfig:
 
 但是如果你的 Emby 和 ChineseSubFinder 物理视频文件夹路径都**不一样**，那么这个功能肯定是**无法用**的。
 
+## 使用建议
+
+* Emby 已经完成了一次所有媒体库的扫描
+* 已经运行过多次或者挂机多天 ChineseSubFinder
+* Threads: 1 并发数设置为 1。原因是扫描速度过快，请求给 subhd zimuku 太快，可能被拒接，所以强烈建议改为单线程，最多双线程即可···
+* 合理的设置适合你自己的 LimitCount 参数
+
+> 上面配置文件中的 LimitCount: 3000 是举例，比如你第一次使用 ChineseSubFinder 且设置了 Emby API 的时候，这个应该要设置一个较大的值，这样才能把所有Emby 扫描到的视频获取一次。同时你还需注意，如果你的 Emby 刚搭建起来还在扫描媒体库，那么此时，使用 Emby API 功能很可能效果很差的。
+>
+> 如果之前用过 ChineseSubFinder 的常规扫描功能做过几天的挂机处理，基本可以认为该下载的字幕早就有了。那么 LimitCount: 500 一般是足够的。
+>
+> 比如，你的间隔时间是 6h，除非你 6h 能丢 500+ 视频进 Emby，否则就是足够的，以此类推即可。
+
 ## 配置解释
 
 ```yaml
@@ -86,3 +99,8 @@ EmbyConfig:
 * Url，Emby 的地址，目前只支持内网路径，且必须是 http
 * ApiKey，Emby API Key，需要去 Emby 手动申请
 * LimitCount，最多一次获取多少个近期更新的视频，包含电影和连续剧。测试设置了 3000 ，大概 10s 左右就能初步读取完信息，然后筛选出需要下载字幕的视频
+
+## 可能遇到的问题
+
+* 如果 Emby 没有进行新加入媒体文件的扫描，本功能是无法正常使用的
+* subhd、zimuku 报错、提示异常增多，需要设置 Threads: 1
