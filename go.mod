@@ -23,6 +23,7 @@ require (
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.4 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect
+	github.com/mattn/go-sqlite3 v1.14.8 // indirect
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/middelink/go-parse-torrent-name v0.0.0-20190301154245-3ff4efacd4c4
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
@@ -51,6 +52,7 @@ require (
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gorm.io/driver/sqlite v1.1.4 // indirect
 	gorm.io/gorm v1.21.12 // indirect
 )
 
