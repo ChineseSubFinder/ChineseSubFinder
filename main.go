@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/common"
-	"github.com/allanpk716/ChineseSubFinder/model"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -10,13 +10,13 @@ import (
 
 func init() {
 	var err error
-	log = model.GetLogger()
-	configViper, err = model.InitConfigure()
+	log = pkg.GetLogger()
+	configViper, err = pkg.InitConfigure()
 	if err != nil {
 		log.Errorln("InitConfigure", err)
 		return 
 	}
-	config, err = model.ReadConfig(configViper)
+	config, err = pkg.ReadConfig(configViper)
 	if err != nil {
 		log.Errorln("ReadConfig", err)
 		return 
@@ -38,22 +38,22 @@ func main() {
 		httpProxy = ""
 	}
 	// 判断文件夹是否存在
-	if model.IsDir(config.MovieFolder) == false {
+	if pkg.IsDir(config.MovieFolder) == false {
 		log.Errorln("MovieFolder not found")
 		return
 	}
-	if model.IsDir(config.SeriesFolder) == false {
+	if pkg.IsDir(config.SeriesFolder) == false {
 		log.Errorln("SeriesFolder not found")
 		return
 	}
 
-	model.Notify = model.NewNotifyCenter(config.WhenSubSupplierInvalidWebHook)
+	pkg.Notify = pkg.NewNotifyCenter(config.WhenSubSupplierInvalidWebHook)
 
 	log.Infoln("MovieFolder:", config.MovieFolder)
 	log.Infoln("SeriesFolder:", config.SeriesFolder)
 
 	// ReloadBrowser 提前把浏览器下载好
-	model.ReloadBrowser()
+	pkg.ReloadBrowser()
 
 	//任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
@@ -80,12 +80,12 @@ func main() {
 func DownLoadStart(httpProxy string) {
 	defer func() {
 		log.Infoln("Download One End...")
-		model.Notify.Send()
+		pkg.Notify.Send()
 	}()
-	model.Notify.Clear()
+	pkg.Notify.Clear()
 
 	// 下载实例
-	downloader := NewDownloader(common.ReqParam{
+	downloader := NewDownloader(types.ReqParam{
 		HttpProxy:       httpProxy,
 		DebugMode:       config.DebugMode,
 		SaveMultiSub:    config.SaveMultiSub,
@@ -131,5 +131,5 @@ func DownLoadStart(httpProxy string) {
 var(
 	log         *logrus.Logger
 	configViper *viper.Viper
-	config      *common.Config
+	config      *types.Config
 )

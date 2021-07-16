@@ -1,5 +1,5 @@
 /.idea
-/sub_supplier/subhd/result.png
+/internal/logic/sub_supplier/subhd/result.png
 /common/result.png
 /result.png
 /Logs
@@ -11,9 +11,9 @@
 /ChineseSubFinder.exe
 /*.zip
 /*.rar
-/sub_supplier/subhd/Logs
+/internal/logic/sub_supplier/subhd/Logs
 /model/config.yaml
-/sub_supplier/zimuku/Logs
+/internal/logic/sub_supplier/zimuku/Logs
 /dist
-/emby_helper/config.yaml
+/internal/logic/emby_helper/config.yaml
 /emby_helper/Logs/*.log

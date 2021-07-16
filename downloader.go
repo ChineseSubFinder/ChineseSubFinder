@@ -1,16 +1,20 @@
 package main
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/common"
-	"github.com/allanpk716/ChineseSubFinder/emby_helper"
-	"github.com/allanpk716/ChineseSubFinder/mark_system"
-	"github.com/allanpk716/ChineseSubFinder/model"
-	"github.com/allanpk716/ChineseSubFinder/series_helper"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier/shooter"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier/subhd"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier/xunlei"
-	"github.com/allanpk716/ChineseSubFinder/sub_supplier/zimuku"
+	common2 "github.com/allanpk716/ChineseSubFinder/internal/common"
+	emby_helper2 "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
+	mark_system2 "github.com/allanpk716/ChineseSubFinder/internal/logic/mark_system"
+	series_helper2 "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
+	sub_supplier2 "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
+	shooter2 "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
+	subhd2 "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
+	xunlei2 "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
+	zimuku2 "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/panjf2000/ants/v2"
 	"github.com/sirupsen/logrus"
@@ -24,20 +28,20 @@ import (
 
 // Downloader 实例化一次用一次，不要反复的使用，很多临时标志位需要清理。
 type Downloader struct {
-	reqParam      common.ReqParam
-	log           *logrus.Logger
-	topic         int                        // 最多能够下载 Top 几的字幕，每一个网站
-	mk            *mark_system.MarkingSystem // MarkingSystem
-	embyHelper	  *emby_helper.EmbyHelper
-	movieDirList  []string									//  多个需要搜索字幕的电影目录
-	seriesSubNeedDlMap map[string][]common.EmbyMixInfo		//  多个需要搜索字幕的连续剧目录
+	reqParam           types.ReqParam
+	log                *logrus.Logger
+	topic              int                         // 最多能够下载 Top 几的字幕，每一个网站
+	mk                 *mark_system2.MarkingSystem // MarkingSystem
+	embyHelper         *emby_helper2.EmbyHelper
+	movieDirList       []string                           //  多个需要搜索字幕的电影目录
+	seriesSubNeedDlMap map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录
 }
 
-func NewDownloader(_reqParam ...common.ReqParam) *Downloader {
+func NewDownloader(_reqParam ...types.ReqParam) *Downloader {
 
 	var downloader Downloader
-	downloader.log = model.GetLogger()
-	downloader.topic = common.DownloadSubsPerSite
+	downloader.log = pkg.GetLogger()
+	downloader.topic = common2.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		downloader.reqParam = _reqParam[0]
 		if downloader.reqParam.Topic > 0 && downloader.reqParam.Topic != downloader.topic {
@@ -51,22 +55,22 @@ func NewDownloader(_reqParam ...common.ReqParam) *Downloader {
 		}
 		// 初始化 Emby API 接口
 		if downloader.reqParam.EmbyConfig.Url != "" && downloader.reqParam.EmbyConfig.ApiKey != "" {
-			downloader.embyHelper = emby_helper.NewEmbyHelper(downloader.reqParam.EmbyConfig)
+			downloader.embyHelper = emby_helper2.NewEmbyHelper(downloader.reqParam.EmbyConfig)
 		}
 	} else {
-		downloader.reqParam = *common.NewReqParam()
+		downloader.reqParam = *types.NewReqParam()
 	}
 
 	var sitesSequence = make([]string, 0)
 	// TODO 这里写固定了抉择字幕的顺序
-	sitesSequence = append(sitesSequence, common.SubSiteZiMuKu)
-	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
-	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
-	sitesSequence = append(sitesSequence, common.SubSiteShooter)
-	downloader.mk = mark_system.NewMarkingSystem(sitesSequence, downloader.reqParam.SubTypePriority)
+	sitesSequence = append(sitesSequence, common2.SubSiteZiMuKu)
+	sitesSequence = append(sitesSequence, common2.SubSiteSubHd)
+	sitesSequence = append(sitesSequence, common2.SubSiteXunLei)
+	sitesSequence = append(sitesSequence, common2.SubSiteShooter)
+	downloader.mk = mark_system2.NewMarkingSystem(sitesSequence, downloader.reqParam.SubTypePriority)
 
 	downloader.movieDirList = make([]string, 0)
-	downloader.seriesSubNeedDlMap = make(map[string][]common.EmbyMixInfo)
+	downloader.seriesSubNeedDlMap = make(map[string][]emby.EmbyMixInfo)
 
 	return &downloader
 }
@@ -77,7 +81,7 @@ func (d *Downloader) GetUpdateVideoListFromEmby(movieRootDir, seriesRootDir stri
 		return nil
 	}
 	var err error
-	var moviveList []common.EmbyMixInfo
+	var moviveList []emby.EmbyMixInfo
 	moviveList, d.seriesSubNeedDlMap, err = d.embyHelper.GetRecentlyAddVideoList(movieRootDir, seriesRootDir)
 	if err != nil {
 		return err
@@ -114,7 +118,7 @@ func (d Downloader) RefreshEmbySubList() error {
 func (d Downloader) DownloadSub4Movie(dir string) error {
 	defer func() {
 		// 所有的电影字幕下载完成，抉择完成，需要清理缓存目录
-		err := model.ClearRootTmpFolder()
+		err := pkg.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error("ClearRootTmpFolder", err)
 		}
@@ -125,7 +129,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	// 是否是通过 emby api 获取的列表
 	if d.embyHelper == nil {
 		// 没有填写 emby api 的信息，那么就走常规的全文件扫描流程
-		d.movieDirList, err = model.SearchMatchedVideoFile(dir)
+		d.movieDirList, err = pkg.SearchMatchedVideoFile(dir)
 		if err != nil {
 			return err
 		}
@@ -142,11 +146,11 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		inData := i.(InputData)
 		// -----------------------------------------------------
 		// 构建每个字幕站点下载者的实例
-		var subSupplierHub = sub_supplier.NewSubSupplierHub(
-			subhd.NewSupplier(d.reqParam),
-			zimuku.NewSupplier(d.reqParam),
-			xunlei.NewSupplier(d.reqParam),
-			shooter.NewSupplier(d.reqParam),
+		var subSupplierHub = sub_supplier2.NewSubSupplierHub(
+			subhd2.NewSupplier(d.reqParam),
+			zimuku2.NewSupplier(d.reqParam),
+			xunlei2.NewSupplier(d.reqParam),
+			shooter2.NewSupplier(d.reqParam),
 		)
 		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
 		organizeSubFiles, err := subSupplierHub.DownloadSub4Movie(inData.OneVideoFullPath, inData.Index)
@@ -166,7 +170,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	p, err := ants.NewPoolWithFunc(d.reqParam.Threads, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), common.OneVideoProcessTimeOut)
+		ctx, cancel := context.WithTimeout(context.Background(), common2.OneVideoProcessTimeOut)
 		defer cancel()
 
 		done := make(chan error, 1)
@@ -213,7 +217,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	var err error
 	defer func() {
 		// 所有的连续剧字幕下载完成，抉择完成，需要清理缓存目录
-		err := model.ClearRootTmpFolder()
+		err := pkg.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error("ClearRootTmpFolder", err)
 		}
@@ -225,15 +229,15 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	seriesDlFunc := func(i interface{}) error {
 		inData := i.(InputData)
 		// 构建每个字幕站点下载者的实例
-		var subSupplierHub *sub_supplier.SubSupplierHub
-		subSupplierHub = sub_supplier.NewSubSupplierHub(
-			zimuku.NewSupplier(d.reqParam),
-			subhd.NewSupplier(d.reqParam),
-			xunlei.NewSupplier(d.reqParam),
-			shooter.NewSupplier(d.reqParam),
+		var subSupplierHub *sub_supplier2.SubSupplierHub
+		subSupplierHub = sub_supplier2.NewSubSupplierHub(
+			zimuku2.NewSupplier(d.reqParam),
+			subhd2.NewSupplier(d.reqParam),
+			xunlei2.NewSupplier(d.reqParam),
+			shooter2.NewSupplier(d.reqParam),
 		)
 		// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
-		var seriesInfo *common.SeriesInfo
+		var seriesInfo *series.SeriesInfo
 		var organizeSubFiles map[string][]string
 		// 是否是通过 emby api 获取的列表
 		if d.embyHelper == nil {
@@ -272,7 +276,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 				continue
 			}
 			// 匹配对应的 Eps 去处理
-			seasonEpsKey := model.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
+			seasonEpsKey := pkg.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
 			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, fullSeasonSubDict[seasonEpsKey])
 		}
 
@@ -281,7 +285,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	p, err := ants.NewPoolWithFunc(d.reqParam.Threads, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), common.OneVideoProcessTimeOut)
+		ctx, cancel := context.WithTimeout(context.Background(), common2.OneVideoProcessTimeOut)
 		defer cancel()
 
 		done := make(chan error, 1)
@@ -315,7 +319,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	var seriesDirList = make([]string, 0)
 	if d.embyHelper == nil {
 		// 遍历连续剧总目录下的第一层目录
-		seriesDirList, err = series_helper.GetSeriesList(dir)
+		seriesDirList, err = series_helper2.GetSeriesList(dir)
 		if err != nil {
 			return err
 		}
@@ -353,7 +357,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 	// -------------------------------------------------
 	if d.reqParam.SaveMultiSub == false {
 		// 选择最优的一个字幕
-		var finalSubFile *common.SubParserFileInfo
+		var finalSubFile *subparser.FileInfo
 		finalSubFile = d.mk.SelectOneSubFile(organizeSubFiles)
 		if finalSubFile == nil {
 			d.log.Warnln("Found", len(organizeSubFiles), " subtitles but not one fit:", oneVideoFullPath)
@@ -384,12 +388,12 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 }
 
 // saveFullSeasonSub 这里就需要单独存储到连续剧每一季的文件夹的特殊文件夹中
-func (d Downloader) saveFullSeasonSub(seriesInfo *common.SeriesInfo, organizeSubFiles map[string][]string) map[string][]string {
+func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSubFiles map[string][]string) map[string][]string {
 
 	var fullSeasonSubDict = make(map[string][]string)
 
 	for _, season := range seriesInfo.SeasonDict {
-		seasonKey := model.GetEpisodeKeyName(season, 0)
+		seasonKey := pkg.GetEpisodeKeyName(season, 0)
 		subs, ok := organizeSubFiles[seasonKey]
 		if ok == false {
 			continue
@@ -399,18 +403,18 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *common.SeriesInfo, organizeSub
 			newSeasonSubRootPath := path.Join(seriesInfo.DirPath, "Sub_"+seasonKey)
 			_ = os.MkdirAll(newSeasonSubRootPath, os.ModePerm)
 			newSubFullPath := path.Join(newSeasonSubRootPath, subFileName)
-			_, err := model.CopyFile(newSubFullPath, sub)
+			_, err := pkg.CopyFile(newSubFullPath, sub)
 			if err != nil {
 				d.log.Errorln("saveFullSeasonSub", subFileName, err)
 				continue
 			}
 			// 从字幕的文件名推断是 哪一季 的 那一集
-			_, gusSeason, gusEpisode, err := model.GetSeasonAndEpisodeFromSubFileName(subFileName)
+			_, gusSeason, gusEpisode, err := pkg.GetSeasonAndEpisodeFromSubFileName(subFileName)
 			if err != nil {
 				return nil
 			}
 			// 把整季的字幕缓存位置也提供出去，如果之前没有下载到的，这里返回出来的可以补上
-			seasonEpsKey := model.GetEpisodeKeyName(gusSeason, gusEpisode)
+			seasonEpsKey := pkg.GetEpisodeKeyName(gusSeason, gusEpisode)
 			_, ok := fullSeasonSubDict[seasonEpsKey]
 			if ok == false {
 				// 初始化
@@ -424,9 +428,9 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *common.SeriesInfo, organizeSub
 }
 
 // 在前面需要进行语言的筛选、排序，这里仅仅是存储
-func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile common.SubParserFileInfo, extraSubPreName string) error {
+func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile subparser.FileInfo, extraSubPreName string) error {
 	videoRootPath := filepath.Dir(videoFileFullPath)
-	embyLanExtName := model.Lang2EmbyName(finalSubFile.Lang)
+	embyLanExtName := pkg.Lang2EmbyName(finalSubFile.Lang)
 	// 构建视频文件加 emby 的字幕预研要求名称
 	videoFileNameWithOutExt := strings.ReplaceAll(filepath.Base(videoFileFullPath),
 		filepath.Ext(videoFileFullPath), "")
@@ -450,7 +454,7 @@ func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) e
 
 	// 需要进行字幕文件的缓存
 	// 把缓存的文件夹新建出来
-	desFolderFullPath := path.Join(desFolder, common.SubTmpFolderName)
+	desFolderFullPath := path.Join(desFolder, common2.SubTmpFolderName)
 	err := os.MkdirAll(desFolderFullPath, os.ModePerm)
 	if err != nil {
 		return err
@@ -458,7 +462,7 @@ func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) e
 	// 复制下载在 tmp 文件夹中的字幕文件到视频文件夹下面
 	for _, subFile := range subFiles {
 		newFn := path.Join(desFolderFullPath, filepath.Base(subFile))
-		_, err = model.CopyFile(newFn, subFile)
+		_, err = pkg.CopyFile(newFn, subFile)
 		if err != nil {
 			return err
 		}
