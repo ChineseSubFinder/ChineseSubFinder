@@ -26,7 +26,9 @@ const (
 // 需要符合 emby 的格式要求，在后缀名前面
 const (
 	Emby_unknow = ".unknow"					// 未知语言
+	Emby_chinese 	= ".chinese"			// 中文
 	Emby_chi 	= ".chi"					// 简体
+	Emby_chn 	= ".chn"					// 中国国家代码
 	Emby_chs 	= ".chs"					// 简体
 	Emby_cht 	= ".cht"					// 繁体
 	Emby_chs_en = ".chs_en"                 // 简英双语字幕

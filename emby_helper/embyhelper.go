@@ -288,9 +288,15 @@ func (em *EmbyHelper) langStringOK(inLang string) bool {
 	spStrings := strings.Split(tmpString, "[")
 	if len(spStrings) > 1 {
 		nextString = spStrings[0]
+	} else {
+		spStrings = strings.Split(tmpString, "(")
+		if len(spStrings) > 1 {
+			nextString = spStrings[0]
+		}
 	}
 	switch nextString {
 	case em.replaceLangString(common.Emby_chi),
+		em.replaceLangString(common.Emby_chn),
 		em.replaceLangString(common.Emby_chs),
 		em.replaceLangString(common.Emby_cht),
 		em.replaceLangString(common.Emby_chs_en),
@@ -300,6 +306,8 @@ func (em *EmbyHelper) langStringOK(inLang string) bool {
 		em.replaceLangString(common.Emby_chs_kr),
 		em.replaceLangString(common.Emby_cht_kr):
 			return true
+	case em.replaceLangString(common.Emby_chinese):
+		return true
 	default:
 		return false
 	}
