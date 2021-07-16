@@ -3,8 +3,11 @@ package xunlei
 import (
 	"crypto/sha1"
 	"fmt"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -23,8 +26,8 @@ type Supplier struct {
 func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
 
 	sup := Supplier{}
-	sup.log = pkg.GetLogger()
-	sup.topic = common2.DownloadSubsPerSite
+	sup.log = log_helper.GetLogger()
+	sup.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		sup.reqParam = _reqParam[0]
 		if sup.reqParam.Topic > 0 && sup.reqParam.Topic != sup.topic {
@@ -35,7 +38,7 @@ func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
 }
 
 func (s Supplier) GetSupplierName() string {
-	return common2.SubSiteXunLei
+	return common.SubSiteXunLei
 }
 
 func (s Supplier) GetReqParam() types.ReqParam {
@@ -61,12 +64,12 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	var tmpXunLeiSubListChinese = make([]SublistXunLei, 0)
 	var outSubList []supplier.SubInfo
 	if len(cid) == 0 {
-		return outSubList, common2.XunLeiCIdIsEmpty
+		return outSubList, common.XunLeiCIdIsEmpty
 	}
 	httpClient := pkg.NewHttpClient(s.reqParam)
 	_, err = httpClient.R().
 		SetResult(&jsonList).
-		Get(fmt.Sprintf(common2.SubXunLeiRootUrl, cid))
+		Get(fmt.Sprintf(common.SubXunLeiRootUrl, cid))
 	if err != nil {
 		return outSubList, err
 	}
@@ -74,8 +77,8 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	for _, v := range jsonList.Sublist {
 		if len(v.Scid) > 0 && v.Scid != "" {
 			// 符合中文语言的先加入列表
-			tmpLang := pkg.LangConverter(v.Language)
-			if pkg.HasChineseLang(tmpLang) == true && pkg.IsSubTypeWanted(v.Sname) == true {
+			tmpLang := language.LangConverter(v.Language)
+			if language.HasChineseLang(tmpLang) == true && sub_helper.IsSubTypeWanted(v.Sname) == true {
 				tmpXunLeiSubListChinese = append(tmpXunLeiSubListChinese, v)
 			}
 		}
@@ -88,8 +91,8 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 				break
 			}
 			if len(v.Scid) > 0 && v.Scid != "" {
-				tmpLang := pkg.LangConverter(v.Language)
-				if pkg.HasChineseLang(tmpLang) == false {
+				tmpLang := language.LangConverter(v.Language)
+				if language.HasChineseLang(tmpLang) == false {
 					tmpXunLeiSubListChinese = append(tmpXunLeiSubListChinese, v)
 				}
 			}
@@ -97,7 +100,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	}
 	// 再开始下载字幕
 	for i, v := range tmpXunLeiSubListChinese {
-		tmpLang := pkg.LangConverter(v.Language)
+		tmpLang := language.LangConverter(v.Language)
 		data, filename, err := pkg.DownFile(v.Surl)
 		if err != nil {
 			s.log.Error(err)

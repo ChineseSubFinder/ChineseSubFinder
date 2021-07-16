@@ -1,8 +1,9 @@
 package emby_helper
 
 import (
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/panjf2000/ants/v2"
@@ -15,7 +16,7 @@ import (
 )
 
 type EmbyHelper struct {
-	embyApi    *pkg.EmbyApi
+	embyApi    *embyHelper.EmbyApi
 	EmbyConfig emby.EmbyConfig
 	threads    int
 	timeOut    time.Duration
@@ -24,7 +25,7 @@ type EmbyHelper struct {
 
 func NewEmbyHelper(embyConfig emby.EmbyConfig) *EmbyHelper {
 	em := EmbyHelper{EmbyConfig: embyConfig}
-	em.embyApi = pkg.NewEmbyHelper(embyConfig)
+	em.embyApi = embyHelper.NewEmbyHelper(embyConfig)
 	em.threads = 6
 	em.timeOut = 5 * time.Second
 	return &em
@@ -46,10 +47,10 @@ func (em *EmbyHelper) GetRecentlyAddVideoList(movieRootDir, seriesRootDir string
 	// 分类
 	for _, item := range items.Items {
 		if item.Type == "Episode" {
-			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby 其实会把其他的混合内容也标记进去
+			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
 			EpisodeIdList = append(EpisodeIdList, item.Id)
 		} else if item.Type == "Movie" {
-			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby 其实会把其他的混合内容也标记进去
+			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
 			MovieIdList = append(MovieIdList, item.Id)
 		}
 	}
@@ -181,7 +182,7 @@ func (em *EmbyHelper) filterEmbyVideoList(videoFolderName string, videoIdList []
 		case outData := <- done:
 			// 收到结果，需要加锁
 			if outData.Err != nil {
-				pkg.GetLogger().Errorln("filterEmbyVideoList.NewPoolWithFunc got Err", outData.Err)
+				log_helper.GetLogger().Errorln("filterEmbyVideoList.NewPoolWithFunc got Err", outData.Err)
 				return
 			}
 			if outData.Info == nil {
@@ -192,9 +193,9 @@ func (em *EmbyHelper) filterEmbyVideoList(videoFolderName string, videoIdList []
 			em.listLock.Unlock()
 			return
 		case p := <- panicChan:
-			pkg.GetLogger().Errorln("filterEmbyVideoList.NewPoolWithFunc got panic", p)
+			log_helper.GetLogger().Errorln("filterEmbyVideoList.NewPoolWithFunc got panic", p)
 		case <-ctx.Done():
-			pkg.GetLogger().Errorln("filterEmbyVideoList.NewPoolWithFunc got time out", ctx.Err())
+			log_helper.GetLogger().Errorln("filterEmbyVideoList.NewPoolWithFunc got time out", ctx.Err())
 			return
 		}
 	})
@@ -208,7 +209,7 @@ func (em *EmbyHelper) filterEmbyVideoList(videoFolderName string, videoIdList []
 		wg.Add(1)
 		err = p.Invoke(InputData{Id: m, Wg: &wg})
 		if err != nil {
-			pkg.GetLogger().Errorln("filterEmbyVideoList ants.Invoke", err)
+			log_helper.GetLogger().Errorln("filterEmbyVideoList ants.Invoke", err)
 		}
 	}
 	wg.Wait()
@@ -218,8 +219,8 @@ func (em *EmbyHelper) filterEmbyVideoList(videoFolderName string, videoIdList []
 
 func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) ([]emby.EmbyMixInfo, error) {
 	currentTime := time.Now()
-	dayRange_3Months, _ := time.ParseDuration(common2.DownloadSubDuring3Months)
-	dayRange_7Days, _ := time.ParseDuration(common2.DownloadSubDuring7Days)
+	dayRange3Months, _ := time.ParseDuration(common.DownloadSubDuring3Months)
+	dayRange7Days, _ := time.ParseDuration(common.DownloadSubDuring7Days)
 
 	var noSubVideoList = make([]emby.EmbyMixInfo, 0)
 	// TODO 这里有一种情况需要考虑的，如果内置有中文的字幕，那么是否需要跳过，目前暂定的一定要有外置的字幕
@@ -227,7 +228,7 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 
 		needDlSub3Month := false
 		// 3个月内，或者没有字幕都要进行下载
-		if info.VideoInfo.PremiereDate.Add(dayRange_3Months).After(currentTime) == true {
+		if info.VideoInfo.PremiereDate.Add(dayRange3Months).After(currentTime) == true {
 			// 需要下载的
 			needDlSub3Month = true
 		}
@@ -257,11 +258,11 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 		// 比如，创建的时间在3个月内，然后没有额外下载的中文字幕，都符合要求
 		if haveExternalChineseSub == false {
 			// 如果创建了7天，且有内置的中文字幕，那么也不进行下载了
-			if info.VideoInfo.DateCreated.Add(dayRange_7Days).After(currentTime) == false && haveInsideChineseSub == true {
+			if info.VideoInfo.DateCreated.Add(dayRange7Days).After(currentTime) == false && haveInsideChineseSub == true {
 				continue
 			}
 			// 如果创建了三个月，还是没有字幕，那么也不进行下载了
-			if info.VideoInfo.DateCreated.Add(dayRange_3Months).After(currentTime) == false {
+			if info.VideoInfo.DateCreated.Add(dayRange3Months).After(currentTime) == false {
 				continue
 			}
 			// 没有中文字幕就加入下载列表
@@ -319,9 +320,9 @@ func (em *EmbyHelper) langStringOK(inLang string) bool {
 func (em *EmbyHelper) subTypeStringOK(inSubType string) bool {
 
 	tmpString := strings.ToLower(inSubType)
-	if tmpString == common2.SubTypeSRT ||
-		tmpString == common2.SubTypeASS ||
-		tmpString == common2.SubTypeSSA {
+	if tmpString == common.SubTypeSRT ||
+		tmpString == common.SubTypeASS ||
+		tmpString == common.SubTypeSSA {
 		return true
 	}
 

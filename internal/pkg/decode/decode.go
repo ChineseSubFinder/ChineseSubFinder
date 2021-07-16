@@ -1,8 +1,9 @@
-package pkg
+package decode
 
 import (
 	"errors"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/beevik/etree"
 	PTN "github.com/middelink/go-parse-torrent-name"
@@ -34,7 +35,7 @@ func getImdbAndYearMovieXml(movieFilePath string) (types.VideoIMDBInfo, error) {
 	if videoInfo.ImdbId != "" {
 		return videoInfo, nil
 	}
-	return videoInfo, common2.CanNotFindIMDBID
+	return videoInfo, common.CanNotFindIMDBID
 }
 
 func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo, error) {
@@ -86,7 +87,7 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo,
 	if imdbInfo.ImdbId != "" {
 		return imdbInfo, nil
 	}
-	return imdbInfo, common2.CanNotFindIMDBID
+	return imdbInfo, common.CanNotFindIMDBID
 }
 
 func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
@@ -129,7 +130,7 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	}
 	// 根据找到的开始解析
 	if movieNameNfoFPath == "" && movieXmlFPath == "" && nfoFilePath == "" {
-		return imdbInfo, common2.NoMetadataFile
+		return imdbInfo, common.NoMetadataFile
 	}
 	// 优先分析 movieName.nfo 文件
 	if movieNameNfoFPath != "" {
@@ -144,7 +145,7 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	if movieXmlFPath != "" {
 		imdbInfo, err = getImdbAndYearMovieXml(movieXmlFPath)
 		if err != nil {
-			GetLogger().Errorln("getImdbAndYearMovieXml error, move on:", err)
+			log_helper.GetLogger().Errorln("getImdbAndYearMovieXml error, move on:", err)
 		} else {
 			return imdbInfo, nil
 		}
@@ -158,7 +159,7 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 		}
 	}
 
-	return imdbInfo, common2.CanNotFindIMDBID
+	return imdbInfo, common.CanNotFindIMDBID
 }
 
 func GetImdbInfo4SeriesDir(seriesDir string) (types.VideoIMDBInfo, error) {
@@ -187,7 +188,7 @@ func GetImdbInfo4SeriesDir(seriesDir string) (types.VideoIMDBInfo, error) {
 	}
 	// 根据找到的开始解析
 	if nfoFilePath == "" {
-		return imdbInfo, common2.NoMetadataFile
+		return imdbInfo, common.NoMetadataFile
 	}
 	imdbInfo, err = getImdbAndYearNfo(nfoFilePath, "tvshow")
 	if err != nil {
@@ -226,7 +227,7 @@ func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoIMDBInfo, error
 	if imdbInfo.ReleaseDate != "" {
 		return imdbInfo, nil
 	}
-	return imdbInfo, common2.CanNotFindEpAiredTime
+	return imdbInfo, common.CanNotFindEpAiredTime
 }
 
 // GetVideoInfoFromFileName 从文件名推断文件信息

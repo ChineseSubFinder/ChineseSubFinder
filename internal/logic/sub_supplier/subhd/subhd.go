@@ -5,8 +5,13 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -37,8 +42,8 @@ type Supplier struct {
 func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
 
 	sup := Supplier{}
-	sup.log = pkg.GetLogger()
-	sup.topic = common2.DownloadSubsPerSite
+	sup.log = log_helper.GetLogger()
+	sup.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		sup.reqParam = _reqParam[0]
 		if sup.reqParam.Topic > 0 && sup.reqParam.Topic != sup.topic {
@@ -49,7 +54,7 @@ func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
 }
 
 func (s Supplier) GetSupplierName() string {
-	return common2.SubSiteSubHd
+	return common.SubSiteSubHd
 }
 
 func (s Supplier) GetReqParam() types.ReqParam {
@@ -102,7 +107,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	// 下载字幕
 	var browser *rod.Browser
 	// 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := pkg.NewBrowser(s.reqParam.HttpProxy)
+	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +118,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 			s.log.Errorln("subhd step2Ex", err)
 			continue
 		}
-		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, types.ChineseSimple, pkg.AddBaseUrl(common2.SubSubHDRootUrl, item.Url), 0,
+		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, types.ChineseSimple, pkg.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0,
 			0, hdContent.Ext, hdContent.Data)
 		oneSubInfo.Season = item.Season
 		oneSubInfo.Episode = item.Episode
@@ -135,14 +140,14 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 		如果找不到，再靠文件名提取影片名称去查找
 	*/
 	// 得到这个视频文件名中的信息
-	info, _, err := pkg.GetVideoInfoFromFileFullPath(filePath)
+	info, _, err := decode.GetVideoInfoFromFileFullPath(filePath)
 	if err != nil {
 		return nil, err
 	}
 	// 找到这个视频文件，尝试得到 IMDB ID
 	// 目前测试来看，加入 年 这个关键词去搜索，对 2020 年后的影片有利，因为网站有统一的详细页面了，而之前的，没有，会影响识别
 	// 所以，year >= 2020 年，则可以多加一个关键词（年）去搜索影片
-	imdbInfo, err := pkg.GetImdbInfo4Movie(filePath)
+	imdbInfo, err := decode.GetImdbInfo4Movie(filePath)
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
 		s.log.Errorln("model.GetImdbInfo", err)
@@ -191,7 +196,7 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInf
 
 	var browser *rod.Browser
 	// 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err = pkg.NewBrowser(s.reqParam.HttpProxy)
+	browser, err = rod_helper.NewBrowser(s.reqParam.HttpProxy)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +209,7 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInf
 			s.log.Errorln("step2Ex", err)
 			return nil, err
 		}
-		subInfos = append(subInfos, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, types.ChineseSimple, pkg.AddBaseUrl(common2.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
+		subInfos = append(subInfos, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, types.ChineseSimple, pkg.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
 	}
 
 	return subInfos, nil
@@ -217,7 +222,7 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, all
 	// 全季的字幕列表
 	var oneSeasonSubDict  = make(map[string][]HdListItem)
 	for _, subInfo := range allSubList {
-		_, season, episode, err := pkg.GetSeasonAndEpisodeFromSubFileName(subInfo.Title)
+		_, season, episode, err := decode.GetSeasonAndEpisodeFromSubFileName(subInfo.Title)
 		if err != nil {
 			s.log.Errorln("whichEpisodeNeedDownloadSub.GetVideoInfoFromFileFullPath", subInfo.Title, err)
 			continue
@@ -269,11 +274,11 @@ func (s Supplier) step0(keyword string) (string, error) {
 	var err error
 	defer func() {
 		if err != nil {
-			pkg.Notify.Add("subhd_step0", err.Error())
+			notify_center.Notify.Add("subhd_step0", err.Error())
 		}
 	}()
 
-	result, err := s.httpGet(fmt.Sprintf(common2.SubSubHDSearchUrl, url.QueryEscape(keyword)))
+	result, err := s.httpGet(fmt.Sprintf(common.SubSubHDSearchUrl, url.QueryEscape(keyword)))
 	if err != nil {
 		return "", err
 	}
@@ -281,9 +286,9 @@ func (s Supplier) step0(keyword string) (string, error) {
 	re := regexp.MustCompile(`共\s*(\d+)\s*条`)
 	matched := re.FindAllStringSubmatch(result, -1)
 	if len(matched) < 1 {
-		return "", common2.SubHDStep0SubCountElementNotFound
+		return "", common.SubHDStep0SubCountElementNotFound
 	}
-	subCount, err := pkg.GetNumber2int(matched[0][0])
+	subCount, err := decode.GetNumber2int(matched[0][0])
 	if err != nil {
 		return "", err
 	}
@@ -301,7 +306,7 @@ func (s Supplier) step0(keyword string) (string, error) {
 	if ok == true{
 
 		if len(imgSelection.Nodes) < 2 {
-			return "", common2.SubHDStep0ImgParentLessThan2
+			return "", common.SubHDStep0ImgParentLessThan2
 		}
 		step1Url := ""
 		if imgSelection.Nodes[0].Parent.Data == "a" {
@@ -322,7 +327,7 @@ func (s Supplier) step0(keyword string) (string, error) {
 			}
 		}
 		if step1Url == "" {
-			return "", common2.SubHDStep0HrefIsNull
+			return "", common.SubHDStep0HrefIsNull
 		}
 		return step1Url, nil
 		//imgName := filepath.Base(imgUrl)
@@ -334,7 +339,7 @@ func (s Supplier) step0(keyword string) (string, error) {
 		//	return "/d/" + strings.ReplaceAll(imgName, imgExt, ""), nil
 		//}
 	} else{
-		return "", common2.SubHDStep0HrefIsNull
+		return "", common.SubHDStep0HrefIsNull
 	}
 	//re = regexp.MustCompile(`<a\shref="(/d/[\w]+)">\s?<img`)
 	//matched = re.FindAllStringSubmatch(result, -1)
@@ -349,10 +354,10 @@ func (s Supplier) step1(detailPageUrl string, isMovieOrSeries bool) ([]HdListIte
 	var err error
 	defer func() {
 		if err != nil {
-			pkg.Notify.Add("subhd_step1", err.Error())
+			notify_center.Notify.Add("subhd_step1", err.Error())
 		}
 	}()
-	detailPageUrl = pkg.AddBaseUrl(common2.SubSubHDRootUrl, detailPageUrl)
+	detailPageUrl = pkg.AddBaseUrl(common.SubSubHDRootUrl, detailPageUrl)
 	result, err := s.httpGet(detailPageUrl)
 	if err != nil {
 		return nil, err
@@ -381,18 +386,18 @@ func (s Supplier) step1(detailPageUrl string, isMovieOrSeries bool) ([]HdListIte
 		title := strings.TrimSpace(tr.Find(oneSubTrTitleKeyword).Text())
 		// 字幕类型
 		insideSubType := tr.Find(oneSubLangAndTypeKeyword).Text()
-		if pkg.IsSubTypeWanted(insideSubType) == false {
+		if sub_helper.IsSubTypeWanted(insideSubType) == false {
 			return true
 		}
 		// 下载的次数
-		downCount, err := pkg.GetNumber2int(tr.Find(oneSubTrDownloadCountKeyword).Eq(1).Text())
+		downCount, err := decode.GetNumber2int(tr.Find(oneSubTrDownloadCountKeyword).Eq(1).Text())
 		if err != nil {
 			return true
 		}
 
 		listItem := HdListItem{}
 		listItem.Url = downUrl
-		listItem.BaseUrl = common2.SubSubHDRootUrl
+		listItem.BaseUrl = common.SubSubHDRootUrl
 		listItem.Title = title
 		listItem.DownCount = downCount
 
@@ -416,16 +421,16 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 	var err error
 	defer func() {
 		if err != nil {
-			pkg.Notify.Add("subhd_step2Ex", err.Error())
+			notify_center.Notify.Add("subhd_step2Ex", err.Error())
 		}
 	}()
-	subDownloadPageUrl = pkg.AddBaseUrl(common2.SubSubHDRootUrl, subDownloadPageUrl)
+	subDownloadPageUrl = pkg.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
 	// 默认超时是 60s，如果是调试模式则是 5 min
-	tt := common2.HTMLTimeOut
+	tt := common.HTMLTimeOut
 	if s.reqParam.DebugMode == true {
-		tt = common2.OneVideoProcessTimeOut
+		tt = common.OneVideoProcessTimeOut
 	}
-	page, err := pkg.NewPageNavigate(browser, subDownloadPageUrl, tt, 5)
+	page, err := rod_helper.NewPageNavigate(browser, subDownloadPageUrl, tt, 5)
 	if err != nil {
 		return nil, err
 	}
@@ -454,7 +459,7 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 
 	if hasWaterWall == false && hasDownBtn == false {
 		// 都没有，则返回故障，无法下载
-		return nil, common2.SubHDStep2ExCannotFindDownloadBtn
+		return nil, common.SubHDStep2ExCannotFindDownloadBtn
 	}
 	// 下载字幕
 	content, err := s.downloadSubFile(browser, page, hasWaterWall, BtnElemenString)

@@ -1,13 +1,29 @@
 package pkg
 
 import (
+	"errors"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/spf13/viper"
+	"sync"
 )
-import "errors"
 
-// InitConfigure 初始化配置文件实例
-func InitConfigure() (*viper.Viper, error) {
+// GetConfig 统一获取配置的接口
+func GetConfig() *types.Config {
+	configOnce.Do(func() {
+		configViper, err := initConfigure()
+		if err != nil {
+			panic("GetConfig - initConfigure " + err.Error())
+		}
+		config, err = readConfig(configViper)
+		if err != nil {
+			panic("GetConfig - readConfig " + err.Error())
+		}
+	})
+	return config
+}
+
+// initConfigure 初始化配置文件实例
+func initConfigure() (*viper.Viper, error) {
 	v := viper.New()
 	v.SetConfigName("config") // 设置文件名称（无后缀）
 	v.SetConfigType("yaml")   // 设置后缀名 {"1.6以后的版本可以不设置该后缀"}
@@ -20,8 +36,9 @@ func InitConfigure() (*viper.Viper, error) {
 
 	return v, nil
 }
-// ReadConfig 读取配置文件
-func ReadConfig(viper *viper.Viper) (*types.Config, error) {
+
+// readConfig 读取配置文件
+func readConfig(viper *viper.Viper) (*types.Config, error) {
 	conf := &types.Config{}
 	err := viper.Unmarshal(conf)
 	if err != nil {
@@ -29,3 +46,8 @@ func ReadConfig(viper *viper.Viper) (*types.Config, error) {
 	}
 	return conf, nil
 }
+
+var(
+	config *types.Config
+	configOnce sync.Once
+)

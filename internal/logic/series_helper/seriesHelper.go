@@ -2,11 +2,15 @@ package series_helper
 
 import (
 	"github.com/StalkR/imdb"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/common"
-	_interface2 "github.com/allanpk716/ChineseSubFinder/internal/interface"
-	ass2 "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
-	srt2 "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
@@ -23,7 +27,7 @@ import (
 // ReadSeriesInfoFromDir 读取剧集的信息，只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList
 func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*series.SeriesInfo, error) {
 
-	subParserHub := pkg.NewSubParserHub(ass2.NewParser(), srt2.NewParser())
+	subParserHub := sub_helper.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
 	seriesInfo, err := getSeriesInfoFromDir(seriesDir, imdbInfo)
 	if err != nil {
@@ -35,7 +39,7 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*series.Seri
 		return nil, err
 	}
 	// 搜索所有的字幕
-	subFiles, err := pkg.SearchMatchedSubFile(seriesDir)
+	subFiles, err := sub_helper.SearchMatchedSubFile(seriesDir)
 	if err != nil {
 		return nil, err
 	}
@@ -46,19 +50,19 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*series.Seri
 		if subParserHub.IsSubHasChinese(subFile) == false {
 			continue
 		}
-		info, _, err := pkg.GetVideoInfoFromFileFullPath(subFile)
+		info, _, err := decode.GetVideoInfoFromFileFullPath(subFile)
 		if err != nil {
-			pkg.GetLogger().Errorln(err)
+			log_helper.GetLogger().Errorln(err)
 			continue
 		}
 		subParserFileInfo, err := subParserHub.DetermineFileTypeFromFile(subFile)
 		if err != nil {
-			pkg.GetLogger().Errorln(err)
+			log_helper.GetLogger().Errorln(err)
 			continue
 		}
 		if subParserFileInfo == nil {
 			// 说明这个字幕无法解析
-			pkg.GetLogger().Warnln("ReadSeriesInfoFromDir", seriesInfo.DirPath, "DetermineFileTypeFromFile is nil")
+			log_helper.GetLogger().Warnln("ReadSeriesInfoFromDir", seriesInfo.DirPath, "DetermineFileTypeFromFile is nil")
 			continue
 		}
 		epsKey := pkg.GetEpisodeKeyName(info.Season, info.Episode)
@@ -124,51 +128,51 @@ func SkipChineseSeries(seriesRootPath string, _reqParam ...types.ReqParam) (bool
 	if len(_reqParam) > 0 {
 		reqParam = _reqParam[0]
 	}
-	imdbInfo, err := pkg.GetImdbInfo4SeriesDir(seriesRootPath)
+	imdbInfo, err := decode.GetImdbInfo4SeriesDir(seriesRootPath)
 	if err != nil {
 		return false, nil, err
 	}
-	t, err := pkg.GetVideoInfoFromIMDB(imdbInfo.ImdbId, reqParam)
+	t, err := imdb_helper.GetVideoInfoFromIMDB(imdbInfo.ImdbId, reqParam)
 	if err != nil {
 		return false, nil, err
 	}
 	if len(t.Languages) > 0 && strings.ToLower(t.Languages[0]) == "chinese" {
-		pkg.GetLogger().Infoln("Skip", filepath.Base(seriesRootPath), "Sub Download, because series is Chinese")
+		log_helper.GetLogger().Infoln("Skip", filepath.Base(seriesRootPath), "Sub Download, because series is Chinese")
 		return true, t, nil
 	}
 	return false, t, nil
 }
 
 // OneSeriesDlSubInAllSite 一部连续剧在所有的网站下载相应的字幕
-func OneSeriesDlSubInAllSite(Suppliers []_interface2.ISupplier, seriesInfo *series.SeriesInfo, i int) []supplier.SubInfo {
+func OneSeriesDlSubInAllSite(Suppliers []ifaces.ISupplier, seriesInfo *series.SeriesInfo, i int) []supplier.SubInfo {
 	defer func() {
-		pkg.GetLogger().Infoln("DlSub End", seriesInfo.DirPath)
+		log_helper.GetLogger().Infoln("DlSub End", seriesInfo.DirPath)
 	}()
-	pkg.GetLogger().Infoln("DlSub Start", seriesInfo.DirPath)
-	pkg.GetLogger().Debugln(seriesInfo.Name, "IMDB ID:", seriesInfo.ImdbId, "NeedDownloadSubs:", len(seriesInfo.NeedDlEpsKeyList))
+	log_helper.GetLogger().Infoln("DlSub Start", seriesInfo.DirPath)
+	log_helper.GetLogger().Debugln(seriesInfo.Name, "IMDB ID:", seriesInfo.ImdbId, "NeedDownloadSubs:", len(seriesInfo.NeedDlEpsKeyList))
 	var outSUbInfos = make([]supplier.SubInfo, 0)
 	if len(seriesInfo.NeedDlEpsKeyList) < 1 {
 		return outSUbInfos
 	}
 	for key, _ := range seriesInfo.NeedDlEpsKeyList {
-		pkg.GetLogger().Debugln(key)
+		log_helper.GetLogger().Debugln(key)
 	}
 	// 同时进行查询
 	subInfosChannel := make(chan []supplier.SubInfo)
-	for _, supplier := range Suppliers {
-		supplier := supplier
+	for _, oneSupplier := range Suppliers {
+		nowSupplier := oneSupplier
 		go func() {
 			defer func() {
-				pkg.GetLogger().Infoln(i, supplier.GetSupplierName(), "End...")
+				log_helper.GetLogger().Infoln(i, nowSupplier.GetSupplierName(), "End...")
 			}()
-			pkg.GetLogger().Infoln(i, supplier.GetSupplierName(), "Start...")
+			log_helper.GetLogger().Infoln(i, nowSupplier.GetSupplierName(), "Start...")
 			// 一次性把这一部连续剧的所有字幕下载完
-			subInfos, err := supplier.GetSubListFromFile4Series(seriesInfo)
+			subInfos, err := nowSupplier.GetSubListFromFile4Series(seriesInfo)
 			if err != nil {
-				pkg.GetLogger().Errorln(supplier.GetSupplierName(), "GetSubListFromFile4Series", err)
+				log_helper.GetLogger().Errorln(nowSupplier.GetSupplierName(), "GetSubListFromFile4Series", err)
 			}
 			// 把后缀名给改好
-			pkg.ChangeVideoExt2SubExt(subInfos)
+			sub_helper.ChangeVideoExt2SubExt(subInfos)
 
 			subInfosChannel <- subInfos
 		}()
@@ -195,7 +199,7 @@ func GetSeriesList(dir string) ([]string, error) {
 		if curFile.IsDir() == false {
 
 			// 如果发现有 tvshow.nfo 文件，那么就任务这个目录就是剧集的目录
-			if strings.ToLower(curFile.Name()) == pkg.MetadateTVNfo {
+			if strings.ToLower(curFile.Name()) == decode.MetadateTVNfo {
 				seriesDirList = make([]string, 0)
 				seriesDirList = append(seriesDirList, dir)
 				return seriesDirList, nil
@@ -215,7 +219,7 @@ func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo) (map[string]se
 	var needDlSeasonList = make(map[int]int, 0)
 	currentTime := time.Now()
 	// 3个月
-	dayRange, _ := time.ParseDuration(common2.DownloadSubDuring3Months)
+	dayRange, _ := time.ParseDuration(common.DownloadSubDuring3Months)
 	for _, epsInfo := range seriesInfo.EpList {
 		// 如果没有字幕，则加入下载列表
 		// 如果每一集的播出时间能够读取到，那么就以这个完后推算 3个月
@@ -225,7 +229,7 @@ func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo) (map[string]se
 		if epsInfo.AiredTime != "" {
 			baseTime, err = now.Parse(epsInfo.AiredTime)
 			if err != nil {
-				pkg.GetLogger().Errorln("SeriesInfo parse AiredTime", err)
+				log_helper.GetLogger().Errorln("SeriesInfo parse AiredTime", err)
 				baseTime = epsInfo.ModifyTime
 			}
 		} else {
@@ -239,9 +243,9 @@ func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo) (map[string]se
 			needDlSeasonList[epsInfo.Season] = epsInfo.Season
 		} else {
 			if len(epsInfo.SubAlreadyDownloadedList) > 0 {
-				pkg.GetLogger().Infoln("Skip because find sub file and downloaded or aired over 3 months,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+				log_helper.GetLogger().Infoln("Skip because find sub file and downloaded or aired over 3 months,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 			} else if baseTime.Add(dayRange).After(currentTime) == false {
-				pkg.GetLogger().Infoln("Skip because 3 months pass,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+				log_helper.GetLogger().Infoln("Skip because 3 months pass,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 			}
 		}
 	}
@@ -251,7 +255,7 @@ func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo) (map[string]se
 func getSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*series.SeriesInfo, error) {
 	seriesInfo := series.SeriesInfo{}
 	// 只考虑 IMDB 去查询，文件名目前发现可能会跟电影重复，导致很麻烦，本来也有前置要求要削刮器处理的
-	videoInfo, err := pkg.GetImdbInfo4SeriesDir(seriesDir)
+	videoInfo, err := decode.GetImdbInfo4SeriesDir(seriesDir)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +272,7 @@ func getSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*series.Serie
 		if err != nil {
 			// 不是必须的
 			seriesInfo.Year = 0
-			pkg.GetLogger().Warnln("ReadSeriesInfoFromDir.GetImdbInfo4SeriesDir.strconv.Atoi", err)
+			log_helper.GetLogger().Warnln("ReadSeriesInfoFromDir.GetImdbInfo4SeriesDir.strconv.Atoi", err)
 		} else {
 			seriesInfo.Year = iYear
 		}
@@ -282,14 +286,14 @@ func getSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*series.Serie
 
 func getEpsInfoAndSubDic(videoFile string, EpisodeDict map[string]series.EpisodeInfo, SubDict map[string][]series.SubInfo) {
 	// 正常来说，一集只有一个格式的视频，也就是 S01E01 只有一个，如果有多个则会只保存第一个
-	info, modifyTime, err := pkg.GetVideoInfoFromFileFullPath(videoFile)
+	info, modifyTime, err := decode.GetVideoInfoFromFileFullPath(videoFile)
 	if err != nil {
-		pkg.GetLogger().Errorln("model.GetVideoInfoFromFileFullPath", err)
+		log_helper.GetLogger().Errorln("model.GetVideoInfoFromFileFullPath", err)
 		return
 	}
-	episodeInfo, err := pkg.GetImdbInfo4OneSeriesEpisode(videoFile)
+	episodeInfo, err := decode.GetImdbInfo4OneSeriesEpisode(videoFile)
 	if err != nil {
-		pkg.GetLogger().Errorln("model.GetImdbInfo4OneSeriesEpisode", err)
+		log_helper.GetLogger().Errorln("model.GetImdbInfo4OneSeriesEpisode", err)
 		return
 	}
 	epsKey := pkg.GetEpisodeKeyName(info.Season, info.Episode)

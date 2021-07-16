@@ -1,34 +1,23 @@
 package main
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 func init() {
-	var err error
-	log = pkg.GetLogger()
-	configViper, err = pkg.InitConfigure()
-	if err != nil {
-		log.Errorln("InitConfigure", err)
-		return 
-	}
-	config, err = pkg.ReadConfig(configViper)
-	if err != nil {
-		log.Errorln("ReadConfig", err)
-		return 
-	}
+	log = log_helper.GetLogger()
+	config = pkg.GetConfig()
 }
 
 func main() {
 	if log == nil {
 		panic("log init error")
-	}
-	if configViper == nil {
-		panic("init viper error")
 	}
 	if config == nil {
 		panic("read config error")
@@ -47,7 +36,7 @@ func main() {
 		return
 	}
 
-	pkg.Notify = pkg.NewNotifyCenter(config.WhenSubSupplierInvalidWebHook)
+	notify_center.Notify = notify_center.NewNotifyCenter(config.WhenSubSupplierInvalidWebHook)
 
 	log.Infoln("MovieFolder:", config.MovieFolder)
 	log.Infoln("SeriesFolder:", config.SeriesFolder)
@@ -80,12 +69,12 @@ func main() {
 func DownLoadStart(httpProxy string) {
 	defer func() {
 		log.Infoln("Download One End...")
-		pkg.Notify.Send()
+		notify_center.Notify.Send()
 	}()
-	pkg.Notify.Clear()
+	notify_center.Notify.Clear()
 
 	// 下载实例
-	downloader := NewDownloader(types.ReqParam{
+	downloader := internal.NewDownloader(types.ReqParam{
 		HttpProxy:       httpProxy,
 		DebugMode:       config.DebugMode,
 		SaveMultiSub:    config.SaveMultiSub,
@@ -130,6 +119,5 @@ func DownLoadStart(httpProxy string) {
 
 var(
 	log         *logrus.Logger
-	configViper *viper.Viper
 	config      *types.Config
 )

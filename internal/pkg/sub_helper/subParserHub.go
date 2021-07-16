@@ -1,8 +1,10 @@
-package pkg
+package sub_helper
 
 import (
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/common"
-	_interface2 "github.com/allanpk716/ChineseSubFinder/internal/interface"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"path/filepath"
 	"regexp"
@@ -10,13 +12,13 @@ import (
 )
 
 type SubParserHub struct {
-	Parser []_interface2.ISubParser
+	Parser []ifaces.ISubParser
 }
 
 // NewSubParserHub 处理的字幕文件需要符合 [siteName]_ 的前缀描述，是本程序专用的
-func NewSubParserHub(parser _interface2.ISubParser, _parser ..._interface2.ISubParser) *SubParserHub {
+func NewSubParserHub(parser ifaces.ISubParser, _parser ...ifaces.ISubParser) *SubParserHub {
 	s := SubParserHub{}
-	s.Parser = make([]_interface2.ISubParser, 0)
+	s.Parser = make([]ifaces.ISubParser, 0)
 	s.Parser = append(s.Parser, parser)
 	if len(_parser) > 0 {
 		for _, one := range _parser {
@@ -57,15 +59,15 @@ func (p SubParserHub) IsSubHasChinese(fileFPath string) bool {
 	// 增加判断已存在的字幕是否有中文
 	file, err := p.DetermineFileTypeFromFile(fileFPath)
 	if err != nil {
-		GetLogger().Warnln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, err)
+		log_helper.GetLogger().Warnln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, err)
 		return false
 	}
 	if file == nil {
-		GetLogger().Warnln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, "is nil")
+		log_helper.GetLogger().Warnln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, "is nil")
 		return false
 	}
-	if HasChineseLang(file.Lang) == false {
-		GetLogger().Warnln("IsSubHasChinese.HasChineseLang", fileFPath, "not chinese sub, is ", file.Lang.String())
+	if language.HasChineseLang(file.Lang) == false {
+		log_helper.GetLogger().Warnln("IsSubHasChinese.HasChineseLang", fileFPath, "not chinese sub, is ", file.Lang.String())
 		return false
 	}
 
@@ -86,9 +88,9 @@ func (p SubParserHub) getFromWhereSite(filePath string) string {
 // IsSubTypeWanted 这里匹配的字幕的格式，不包含 Ext 的 . 小数点，注意，仅仅是包含关系
 func IsSubTypeWanted(subName string) bool {
 	nowLowerName := strings.ToLower(subName)
-	if strings.Contains(nowLowerName, common2.SubTypeASS) ||
-		strings.Contains(nowLowerName, common2.SubTypeSSA) ||
-		strings.Contains(nowLowerName, common2.SubTypeSRT) {
+	if strings.Contains(nowLowerName, common.SubTypeASS) ||
+		strings.Contains(nowLowerName, common.SubTypeSSA) ||
+		strings.Contains(nowLowerName, common.SubTypeSRT) {
 		return true
 	}
 
@@ -99,7 +101,7 @@ func IsSubTypeWanted(subName string) bool {
 func IsSubExtWanted(subName string) bool {
 	inExt := filepath.Ext(subName)
 	switch strings.ToLower(inExt) {
-	case common2.SubExtSSA, common2.SubExtASS, common2.SubExtSRT:
+	case common.SubExtSSA, common.SubExtASS, common.SubExtSRT:
 		return true
 	default:
 		return false

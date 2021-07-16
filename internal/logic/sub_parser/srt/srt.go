@@ -1,8 +1,8 @@
 package srt
 
 import (
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"io/ioutil"
 	"path/filepath"
@@ -25,14 +25,14 @@ func (p Parser) GetParserName() string {
 // DetermineFileTypeFromFile 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
 func (p Parser) DetermineFileTypeFromFile(filePath string) (*subparser.FileInfo, error) {
 	nowExt := filepath.Ext(filePath)
-	if strings.ToLower(nowExt) != common2.SubExtSRT {
+	if strings.ToLower(nowExt) != common.SubExtSRT {
 		return nil ,nil
 	}
 	fBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil ,err
 	}
-	inBytes, err := pkg.ChangeFileCoding2UTF8(fBytes)
+	inBytes, err := language.ChangeFileCoding2UTF8(fBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -82,10 +82,10 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*subp
 	langDict = make(map[int]int)
 	var chLines = make([]string, 0)
 	for _, dialogue := range subFileInfo.Dialogues {
-		pkg.DetectSubLangAndStatistics(dialogue.Lines, langDict, &chLines)
+		language.DetectSubLangAndStatistics(dialogue.Lines, langDict, &chLines)
 	}
 	// 从统计出来的字典，找出 Top 1 或者 2 的出来，然后计算出是什么语言的字幕
-	detectLang := pkg.SubLangStatistics2SubLangType(float32(countLineFeed), float32(len(matched)), langDict, chLines)
+	detectLang := language.SubLangStatistics2SubLangType(float32(countLineFeed), float32(len(matched)), langDict, chLines)
 	subFileInfo.Lang = detectLang
 	subFileInfo.Data = inBytes
 	return &subFileInfo, nil

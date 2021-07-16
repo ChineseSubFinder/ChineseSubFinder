@@ -1,21 +1,13 @@
-package pkg
+package notify_center
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"testing"
 )
 
 func TestNewNotifyCenter(t *testing.T) {
 
-	configViper, err := InitConfigure()
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-	config, err := ReadConfig(configViper)
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
+	config := pkg.GetConfig()
 	center := NewNotifyCenter(config.WhenSubSupplierInvalidWebHook)
 	center.Add("groupName", "Info asd 哈哈")
 	center.Send()

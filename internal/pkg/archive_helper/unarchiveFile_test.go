@@ -1,4 +1,4 @@
-package pkg
+package archive_helper
 
 import (
 	"testing"

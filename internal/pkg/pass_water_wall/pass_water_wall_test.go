@@ -1,4 +1,4 @@
-package pkg
+package pass_water_wall
 
 import (
 	"testing"

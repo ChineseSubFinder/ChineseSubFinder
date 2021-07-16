@@ -1,9 +1,10 @@
 package mark_system
 
 import (
-	ass2 "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
-	srt2 "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/sirupsen/logrus"
 )
@@ -13,14 +14,14 @@ type MarkingSystem struct {
 	log *logrus.Logger
 	subSiteSequence []string			// 网站的优先级，从高到低
 	SubTypePriority int					// 字幕格式的优先级
-	subParserHub *pkg.SubParserHub
+	subParserHub *sub_helper.SubParserHub
 }
 
 func NewMarkingSystem(subSiteSequence []string, subTypePriority int) *MarkingSystem {
 	mk := MarkingSystem{subSiteSequence: subSiteSequence,
-		log:             pkg.GetLogger(),
+		log:             log_helper.GetLogger(),
 		SubTypePriority: subTypePriority,
-		subParserHub:    pkg.NewSubParserHub(ass2.NewParser(), srt2.NewParser())}
+		subParserHub:    sub_helper.NewSubParserHub(ass.NewParser(), srt.NewParser())}
 	return &mk
 }
 
@@ -41,13 +42,13 @@ func (m MarkingSystem) SelectOneSubFile(organizeSubFiles []string) *subparser.Fi
 				continue
 			}
 			if i == 0 {
-				finalSubFile = pkg.SelectChineseBestBilingualSubtitle(infos, m.SubTypePriority)
+				finalSubFile = sub_helper.SelectChineseBestBilingualSubtitle(infos, m.SubTypePriority)
 			} else if i == 1 {
-				finalSubFile = pkg.SelectChineseBestSubtitle(infos, m.SubTypePriority)
+				finalSubFile = sub_helper.SelectChineseBestSubtitle(infos, m.SubTypePriority)
 			} else if i == 2 {
-				finalSubFile = pkg.SelectChineseBestBilingualSubtitle(infos, 0)
+				finalSubFile = sub_helper.SelectChineseBestBilingualSubtitle(infos, 0)
 			} else if i == 3 {
-				finalSubFile = pkg.SelectChineseBestSubtitle(infos, 0)
+				finalSubFile = sub_helper.SelectChineseBestSubtitle(infos, 0)
 			}
 			if finalSubFile != nil {
 				return finalSubFile
@@ -73,13 +74,13 @@ func (m MarkingSystem) SelectEachSiteTop1SubFile(organizeSubFiles []string) ([]s
 		for siteName, infos := range subInfoDict {
 			// 每个网站保存一个
 			if i == 0 {
-				finalSubFile = pkg.SelectChineseBestBilingualSubtitle(infos, m.SubTypePriority)
+				finalSubFile = sub_helper.SelectChineseBestBilingualSubtitle(infos, m.SubTypePriority)
 			} else if i == 1 {
-				finalSubFile = pkg.SelectChineseBestSubtitle(infos, m.SubTypePriority)
+				finalSubFile = sub_helper.SelectChineseBestSubtitle(infos, m.SubTypePriority)
 			} else if i == 2 {
-				finalSubFile = pkg.SelectChineseBestBilingualSubtitle(infos, 0)
+				finalSubFile = sub_helper.SelectChineseBestBilingualSubtitle(infos, 0)
 			} else if i == 3 {
-				finalSubFile = pkg.SelectChineseBestSubtitle(infos, 0)
+				finalSubFile = sub_helper.SelectChineseBestSubtitle(infos, 0)
 			}
 			if finalSubFile != nil {
 				outSiteName = append(outSiteName, siteName)

@@ -1,13 +1,13 @@
-package pkg
+package language
 
 import (
 	"github.com/abadojack/whatlanggo"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/charset"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/axgle/mahonia"
 	"github.com/go-creed/sat"
-	chardet2 "github.com/nzlov/chardet"
-	//"github.com/qiniu/iconv"
+	nzlov "github.com/nzlov/chardet"
 	"github.com/saintfish/chardet"
 	"strings"
 )
@@ -344,7 +344,7 @@ func IsChineseSimpleOrTraditional(inputFileName string, orgLang types.Language) 
 func ConvertToString(src string, srcCode string, tagCode string) string {
 	defer func() {
 		if err := recover(); err != nil {
-			GetLogger().Errorln("ConvertToString panic:", err)
+			log_helper.GetLogger().Errorln("ConvertToString panic:", err)
 		}
 	}()
 	srcCoder := mahonia.NewDecoder(srcCode)
@@ -365,7 +365,7 @@ func ChangeFileCoding2UTF8(inBytes []byte) ([]byte, error) {
 		return nil, err
 	}
 	if best.Confidence < 90 {
-		detectBest := chardet2.Mostlike(inBytes)
+		detectBest := nzlov.Mostlike(inBytes)
 		utf8String, err = charset.ToUTF8(charset.Charset(detectBest), string(inBytes))
 	} else {
 		utf8String, err = charset.ToUTF8(charset.Charset(best.Charset), string(inBytes))

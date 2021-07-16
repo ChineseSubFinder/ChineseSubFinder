@@ -1,4 +1,4 @@
-package pkg
+package imdb_helper
 
 import "testing"
 

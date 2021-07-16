@@ -23,7 +23,7 @@ const (
 )
 
 
-// 需要符合 emby 的格式要求，在后缀名前面
+// 需要符合 emby_helper 的格式要求，在后缀名前面
 const (
 	Emby_unknow = ".unknow"					// 未知语言
 	Emby_chinese 	= ".chinese"			// 中文

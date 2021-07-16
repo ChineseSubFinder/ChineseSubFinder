@@ -4,8 +4,13 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -25,8 +30,8 @@ type Supplier struct {
 func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
 
 	sup := Supplier{}
-	sup.log = pkg.GetLogger()
-	sup.topic = common2.DownloadSubsPerSite
+	sup.log = log_helper.GetLogger()
+	sup.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		sup.reqParam = _reqParam[0]
 		if sup.reqParam.Topic > 0 && sup.reqParam.Topic != sup.topic {
@@ -37,7 +42,7 @@ func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
 }
 
 func (s Supplier) GetSupplierName() string {
-	return common2.SubSiteZiMuKu
+	return common.SubSiteZiMuKu
 }
 
 func (s Supplier) GetReqParam() types.ReqParam {
@@ -66,7 +71,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 		if err != nil {
 			s.log.Errorln(keyword)
 			// 如果只是搜索不到，则继续换关键词
-			if err != common2.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
+			if err != common.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
 				return nil, err
 			}
 			keyword := seriesInfo.Name
@@ -114,14 +119,14 @@ func (s Supplier) getSubListFromMovie(fileFPath string) ([]supplier.SubInfo, err
 		如果找不到，再靠文件名提取影片名称去查找
 	*/
 	// 得到这个视频文件名中的信息
-	info, _, err := pkg.GetVideoInfoFromFileFullPath(fileFPath)
+	info, _, err := decode.GetVideoInfoFromFileFullPath(fileFPath)
 	if err != nil {
 		return nil, err
 	}
 	// 找到这个视频文件，尝试得到 IMDB ID
 	// 目前测试来看，加入 年 这个关键词去搜索，对 2020 年后的影片有利，因为网站有统一的详细页面了，而之前的，没有，会影响识别
 	// 所以，year >= 2020 年，则可以多加一个关键词（年）去搜索影片
-	imdbInfo, err := pkg.GetImdbInfo4Movie(fileFPath)
+	imdbInfo, err := decode.GetImdbInfo4Movie(fileFPath)
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
 		s.log.Errorln("model.GetImdbInfo", err)
@@ -182,7 +187,7 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, All
 	// 全季的字幕列表
 	var oneSeasonSubDict  = make(map[string]SubInfos)
 	for _, subInfo := range AllSeasonSubResult.SubInfos {
-		_, season, episode, err := pkg.GetSeasonAndEpisodeFromSubFileName(subInfo.Name)
+		_, season, episode, err := decode.GetSeasonAndEpisodeFromSubFileName(subInfo.Name)
 		if err != nil {
 			s.log.Errorln("whichEpisodeNeedDownloadSub.GetVideoInfoFromFileFullPath", subInfo.Name, err)
 			continue
@@ -244,8 +249,8 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 	// 首先过滤出中文的字幕，同时需要满足是支持的字幕
 	var tmpSubInfo = make([]SubInfo, 0)
 	for _, subInfo := range subInfos {
-		tmpLang := pkg.LangConverter(subInfo.Lang)
-		if pkg.HasChineseLang(tmpLang) == true && pkg.IsSubTypeWanted(subInfo.Ext) == true {
+		tmpLang := language.LangConverter(subInfo.Lang)
+		if language.HasChineseLang(tmpLang) == true && sub_helper.IsSubTypeWanted(subInfo.Ext) == true {
 			tmpSubInfo = append(tmpSubInfo, subInfo)
 		}
 	}
@@ -255,8 +260,8 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 			if len(tmpSubInfo) >= s.topic {
 				break
 			}
-			tmpLang := pkg.LangConverter(subInfo.Lang)
-			if pkg.HasChineseLang(tmpLang) == false {
+			tmpLang := language.LangConverter(subInfo.Lang)
+			if language.HasChineseLang(tmpLang) == false {
 				tmpSubInfo = append(tmpSubInfo, subInfo)
 			}
 		}
@@ -271,7 +276,7 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 		}
 		// 默认都是包含中文字幕的，然后具体使用的时候再进行区分
 
-		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, types.ChineseSimple, pkg.AddBaseUrl(common2.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
+		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, types.ChineseSimple, pkg.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
 			0, filepath.Ext(fileName), data)
 
 		oneSubInfo.Season = subInfo.Season
@@ -288,7 +293,7 @@ func (s Supplier) step0(keyword string) (string, error) {
 	var err error
 	defer func() {
 		if err != nil {
-			pkg.Notify.Add("zimuku_step0", err.Error())
+			notify_center.Notify.Add("zimuku_step0", err.Error())
 		}
 	}()
 	httpClient := pkg.NewHttpClient(s.reqParam)
@@ -297,7 +302,7 @@ func (s Supplier) step0(keyword string) (string, error) {
 		SetQueryParams(map[string]string{
 			"q": keyword,
 		}).
-		Get(common2.SubZiMuKuSearchUrl)
+		Get(common.SubZiMuKuSearchUrl)
 	if err != nil {
 		return "", err
 	}
@@ -305,7 +310,7 @@ func (s Supplier) step0(keyword string) (string, error) {
 	re := regexp.MustCompile(`<p\s+class="tt\s+clearfix"><a\s+href="(/subs/[\w]+\.html)"\s+target="_blank"><b>(.*?)</b></a></p>`)
 	matched := re.FindAllStringSubmatch(resp.String(), -1)
 	if len(matched) < 1 {
-		return "", common2.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound
+		return "", common.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound
 	}
 	// 影片的详情界面 url
 	filmDetailPageUrl := matched[0][1]
@@ -317,10 +322,10 @@ func (s Supplier) step1(filmDetailPageUrl string) (SubResult, error) {
 	var err error
 	defer func() {
 		if err != nil {
-			pkg.Notify.Add("zimuku_step1", err.Error())
+			notify_center.Notify.Add("zimuku_step1", err.Error())
 		}
 	}()
-	filmDetailPageUrl = pkg.AddBaseUrl(common2.SubZiMuKuRootUrl, filmDetailPageUrl)
+	filmDetailPageUrl = pkg.AddBaseUrl(common.SubZiMuKuRootUrl, filmDetailPageUrl)
 	httpClient := pkg.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
 		Get(filmDetailPageUrl)
@@ -375,7 +380,7 @@ func (s Supplier) step1(filmDetailPageUrl string) (SubResult, error) {
 		if !exists {
 			rate = ""
 		}
-		vote, err := pkg.GetNumber2Float(rate)
+		vote, err := decode.GetNumber2Float(rate)
 		if err != nil {
 			return
 		}
@@ -383,13 +388,13 @@ func (s Supplier) step1(filmDetailPageUrl string) (SubResult, error) {
 		downCountNub := 0
 		downCount := tr.Find("td").Eq(counterIndex).Text()
 		if strings.Contains(downCount, "万") {
-			fNumb, err := pkg.GetNumber2Float(downCount)
+			fNumb, err := decode.GetNumber2Float(downCount)
 			if err != nil {
 				return
 			}
 			downCountNub = int(fNumb * 10000)
 		} else {
-			downCountNub, err = pkg.GetNumber2int(downCount)
+			downCountNub, err = decode.GetNumber2int(downCount)
 			if err != nil {
 				return
 			}
@@ -418,10 +423,10 @@ func (s Supplier) step2(subInfo *SubInfo) error {
 	var err error
 	defer func() {
 		if err != nil {
-			pkg.Notify.Add("zimuku_step2", err.Error())
+			notify_center.Notify.Add("zimuku_step2", err.Error())
 		}
 	}()
-	detailUrl := pkg.AddBaseUrl(common2.SubZiMuKuRootUrl, subInfo.DetailUrl)
+	detailUrl := pkg.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.DetailUrl)
 	httpClient := pkg.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
 		Get(detailUrl)
@@ -433,12 +438,12 @@ func (s Supplier) step2(subInfo *SubInfo) error {
 	matched := re.FindAllStringSubmatch(resp.String(), -1)
 	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
 		s.log.Debug(detailUrl)
-		return common2.ZiMuKuDownloadUrlStep2NotFound
+		return common.ZiMuKuDownloadUrlStep2NotFound
 	}
 	if strings.Contains(matched[0][1], "://") {
 		subInfo.SubDownloadPageUrl = matched[0][1]
 	} else {
-		subInfo.SubDownloadPageUrl = fmt.Sprintf("%s%s", common2.SubZiMuKuRootUrl, matched[0][1])
+		subInfo.SubDownloadPageUrl = fmt.Sprintf("%s%s", common.SubZiMuKuRootUrl, matched[0][1])
 	}
 	return nil
 }
@@ -448,10 +453,10 @@ func (s Supplier) step3(subDownloadPageUrl string) (string, []byte, error) {
 	var err error
 	defer func() {
 		if err != nil {
-			pkg.Notify.Add("zimuku_step3", err.Error())
+			notify_center.Notify.Add("zimuku_step3", err.Error())
 		}
 	}()
-	subDownloadPageUrl = pkg.AddBaseUrl(common2.SubZiMuKuRootUrl, subDownloadPageUrl)
+	subDownloadPageUrl = pkg.AddBaseUrl(common.SubZiMuKuRootUrl, subDownloadPageUrl)
 	httpClient := pkg.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
 		Get(subDownloadPageUrl)
@@ -462,14 +467,14 @@ func (s Supplier) step3(subDownloadPageUrl string) (string, []byte, error) {
 	matched := re.FindAllStringSubmatch(resp.String(), -1)
 	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
 		s.log.Debug(subDownloadPageUrl)
-		return "", nil, common2.ZiMuKuDownloadUrlStep3NotFound
+		return "", nil, common.ZiMuKuDownloadUrlStep3NotFound
 	}
 	var filename string
 	var data []byte
 
 	s.reqParam.Referer = subDownloadPageUrl
 	for i := 0; i < len(matched); i++ {
-		data, filename, err = pkg.DownFile(pkg.AddBaseUrl(common2.SubZiMuKuRootUrl, matched[i][1]), s.reqParam)
+		data, filename, err = pkg.DownFile(pkg.AddBaseUrl(common.SubZiMuKuRootUrl, matched[i][1]), s.reqParam)
 		if err != nil {
 			s.log.Errorln("ZiMuKu step3 DownloadFile", err)
 			continue
@@ -477,7 +482,7 @@ func (s Supplier) step3(subDownloadPageUrl string) (string, []byte, error) {
 		return filename, data, nil
 	}
 	s.log.Debug(subDownloadPageUrl)
-	return "", nil, common2.ZiMuKuDownloadUrlStep3AllFailed
+	return "", nil, common.ZiMuKuDownloadUrlStep3AllFailed
 }
 
 type SubResult struct {

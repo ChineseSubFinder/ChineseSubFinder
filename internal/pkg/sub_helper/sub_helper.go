@@ -1,13 +1,20 @@
-package pkg
+package sub_helper
 
 import (
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/archive_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod/lib/utils"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -17,7 +24,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 	// 缓存列表，整理后的字幕列表
 	// SxEx - []string 字幕的路径
 	var siteSubInfoDict = make(map[string][]string)
-	tmpFolderFullPath, err := GetTmpFolder(tmpFolderName)
+	tmpFolderFullPath, err := pkg.GetTmpFolder(tmpFolderName)
 	if err != nil {
 		return nil, err
 	}
@@ -33,11 +40,11 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 		nowFileSaveFullPath := path.Join(tmpFolderFullPath, GetFrontNameAndOrgName(&subInfos[i]))
 		err = utils.OutputFile(nowFileSaveFullPath, subInfos[i].Data)
 		if err != nil {
-			GetLogger().Errorln("getFrontNameAndOrgName - OutputFile",subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
+			log_helper.GetLogger().Errorln("getFrontNameAndOrgName - OutputFile",subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
 			continue
 		}
 		nowExt := strings.ToLower(subInfos[i].Ext)
-		epsKey := GetEpisodeKeyName(subInfos[i].Season, subInfos[i].Episode)
+		epsKey := pkg.GetEpisodeKeyName(subInfos[i].Season, subInfos[i].Episode)
 		_, ok := siteSubInfoDict[epsKey]
 		if ok == false {
 			// 不存在则实例化
@@ -58,16 +65,16 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 			if err != nil {
 				return nil, err
 			}
-			err = UnArchiveFile(nowFileSaveFullPath, unzipTmpFolder)
+			err = archive_helper.UnArchiveFile(nowFileSaveFullPath, unzipTmpFolder)
 			// 解压完成后，遍历受支持的字幕列表，加入缓存列表
 			if err != nil {
-				GetLogger().Errorln("archiver.UnArchive", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
+				log_helper.GetLogger().Errorln("archiver.UnArchive", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
 				continue
 			}
 			// 搜索这个目录下的所有符合字幕格式的文件
 			subFileFullPaths, err := SearchMatchedSubFile(unzipTmpFolder)
 			if err != nil {
-				GetLogger().Errorln("searchMatchedSubFile", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
+				log_helper.GetLogger().Errorln("searchMatchedSubFile", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
 				continue
 			}
 			// 这里需要给这些下载到的文件进行改名，加是从那个网站来的前缀，后续好查找
@@ -77,7 +84,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 				// 改名
 				err = os.Rename(fileFullPath, newSubNameFullPath)
 				if err != nil {
-					GetLogger().Errorln("os.Rename", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
+					log_helper.GetLogger().Errorln("os.Rename", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
 					continue
 				}
 				// 加入缓存列表
@@ -94,7 +101,7 @@ func ChangeVideoExt2SubExt(subInfos []supplier.SubInfo) {
 	for x, info := range subInfos {
 		tmpSubFileName := info.Name
 		// 如果后缀名是下载字幕目标的后缀名  或者 是压缩包格式的，则跳过
-		if strings.Contains(tmpSubFileName, info.Ext) == true || IsWantedArchiveExtName(tmpSubFileName) == true {
+		if strings.Contains(tmpSubFileName, info.Ext) == true || archive_helper.IsWantedArchiveExtName(tmpSubFileName) == true {
 
 		} else {
 			subInfos[x].Name = tmpSubFileName + info.Ext
@@ -108,27 +115,27 @@ func SelectChineseBestBilingualSubtitle(subs []subparser.FileInfo, subTypePriori
 	// 先傻一点实现优先双语的，之前的写法有 bug
 	for _, info := range subs {
 		// 找到了中文字幕
-		if HasChineseLang(info.Lang) == true {
+		if language.HasChineseLang(info.Lang) == true {
 			// 字幕的优先级 0 - 原样, 1 - srt , 2 - ass/ssa
 			if subTypePriority == 1 {
 				// 1 - srt
-				if strings.ToLower(info.Ext) == common2.SubExtSRT {
+				if strings.ToLower(info.Ext) == common.SubExtSRT {
 					// 优先双语
-					if IsBilingualSubtitle(info.Lang) == true {
+					if language.IsBilingualSubtitle(info.Lang) == true {
 						return &info
 					}
 				}
 			} else if subTypePriority == 2 {
 				//  2 - ass/ssa
-				if strings.ToLower(info.Ext) == common2.SubExtASS || strings.ToLower(info.Ext) == common2.SubExtSSA {
+				if strings.ToLower(info.Ext) == common.SubExtASS || strings.ToLower(info.Ext) == common.SubExtSSA {
 					// 优先双语
-					if IsBilingualSubtitle(info.Lang) == true {
+					if language.IsBilingualSubtitle(info.Lang) == true {
 						return &info
 					}
 				}
 			} else {
 				// 优先双语
-				if IsBilingualSubtitle(info.Lang) == true {
+				if language.IsBilingualSubtitle(info.Lang) == true {
 					return &info
 				}
 			}
@@ -144,16 +151,16 @@ func SelectChineseBestSubtitle(subs []subparser.FileInfo, subTypePriority int) *
 	// 先傻一点实现优先双语的，之前的写法有 bug
 	for _, info := range subs {
 		// 找到了中文字幕
-		if HasChineseLang(info.Lang) == true {
+		if language.HasChineseLang(info.Lang) == true {
 			// 字幕的优先级 0 - 原样, 1 - srt , 2 - ass/ssa
 			if subTypePriority == 1 {
 				// 1 - srt
-				if strings.ToLower(info.Ext) == common2.SubExtSRT {
+				if strings.ToLower(info.Ext) == common.SubExtSRT {
 					return &info
 				}
 			} else if subTypePriority == 2 {
 				//  2 - ass/ssa
-				if strings.ToLower(info.Ext) == common2.SubExtASS || strings.ToLower(info.Ext) == common2.SubExtSSA {
+				if strings.ToLower(info.Ext) == common.SubExtASS || strings.ToLower(info.Ext) == common.SubExtSSA {
 					return &info
 				}
 			} else {
@@ -164,3 +171,55 @@ func SelectChineseBestSubtitle(subs []subparser.FileInfo, subTypePriority int) *
 
 	return nil
 }
+
+// GetFrontNameAndOrgName 返回的名称包含，那个网站下载的，这个网站中排名第几，文件名
+func GetFrontNameAndOrgName(info *supplier.SubInfo) string {
+
+	infoName := ""
+	path, err := decode.GetVideoInfoFromFileName(info.Name)
+	if err != nil {
+		log_helper.GetLogger().Warnln("", err)
+		infoName = info.Name
+	} else {
+		infoName = path.Title + "_S" + strconv.Itoa(path.Season) + "E" + strconv.Itoa(path.Episode) + filepath.Ext(info.Name)
+	}
+	info.Name = infoName
+
+	return "[" + info.FromWhere + "]_" + strconv.FormatInt(info.TopN,10) + "_" + infoName
+}
+
+// AddFrontName 添加文件的前缀
+func AddFrontName(info supplier.SubInfo, orgName string) string {
+	return "[" + info.FromWhere + "]_" + strconv.FormatInt(info.TopN,10) + "_" + orgName
+}
+
+// SearchMatchedSubFile 搜索符合后缀名的视频文件
+func SearchMatchedSubFile(dir string) ([]string, error) {
+	// 这里有个梗，会出现 __MACOSX 这类文件夹，那么里面会有一样的文件，需要用文件大小排除一下，至少大于 1 kb 吧
+	var fileFullPathList = make([]string, 0)
+	pathSep := string(os.PathSeparator)
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	for _, curFile := range files {
+		fullPath := dir + pathSep + curFile.Name()
+		if curFile.IsDir() {
+			// 内层的错误就无视了
+			oneList, _ := SearchMatchedSubFile(fullPath)
+			if oneList != nil {
+				fileFullPathList = append(fileFullPathList, oneList...)
+			}
+		} else {
+			// 这里就是文件了
+			if curFile.Size() < 1000 {
+				continue
+			}
+			if IsSubExtWanted(filepath.Ext(curFile.Name())) == true {
+				fileFullPathList = append(fileFullPathList, fullPath)
+			}
+		}
+	}
+	return fileFullPathList, nil
+}
+

@@ -1,4 +1,4 @@
-package _interface
+package ifaces
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"

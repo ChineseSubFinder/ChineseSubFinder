@@ -1,6 +1,7 @@
-package pkg
+package notify_center
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/go-resty/resty/v2"
 	"net/url"
 	"sync"
@@ -35,7 +36,7 @@ func (n *NotifyCenter) Send() {
 	for s, s2 := range n.infos {
 		_, err := client.R().Get(n.webhookUrl + s + "/" + url.QueryEscape(s2))
 		if err != nil {
-			GetLogger().Errorln("NewNotifyCenter.Send", err)
+			log_helper.GetLogger().Errorln("NewNotifyCenter.Send", err)
 			return
 		}
 	}

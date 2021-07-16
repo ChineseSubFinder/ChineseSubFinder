@@ -3,7 +3,9 @@ package pkg
 import (
 	"fmt"
 	browser "github.com/EDDYCJY/fake-useragent"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/go-resty/resty/v2"
 	"io"
@@ -44,7 +46,7 @@ func NewHttpClient(_reqParam ...types.ReqParam) *resty.Client {
 	}
 
 	httpClient := resty.New()
-	httpClient.SetTimeout(common2.HTMLTimeOut)
+	httpClient.SetTimeout(common.HTMLTimeOut)
 	if HttpProxy != "" {
 		httpClient.SetProxy(HttpProxy)
 	} else {
@@ -103,7 +105,7 @@ func AddBaseUrl(baseUrl, url string) string {
 func GetDebugFolder() (string, error) {
 	if defDebugFolder == "" {
 		nowProcessRoot, _ := os.Getwd()
-		nowProcessRoot = path.Join(nowProcessRoot, common2.DebugFolder)
+		nowProcessRoot = path.Join(nowProcessRoot, common.DebugFolder)
 		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err
@@ -118,7 +120,7 @@ func GetDebugFolder() (string, error) {
 func GetRootTmpFolder() (string, error) {
 	if defTmpFolder == "" {
 		nowProcessRoot, _ := os.Getwd()
-		nowProcessRoot = path.Join(nowProcessRoot, common2.TmpFolder)
+		nowProcessRoot = path.Join(nowProcessRoot, common.TmpFolder)
 		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err
@@ -234,7 +236,7 @@ func VideoNameSearchKeywordMaker(title string, year string) string {
 	iYear, err := strconv.Atoi(year)
 	if err != nil {
 		// 允许的错误
-		GetLogger().Errorln("VideoNameSearchKeywordMaker", "year to int", err)
+		log_helper.GetLogger().Errorln("VideoNameSearchKeywordMaker", "year to int", err)
 		iYear = 0
 	}
 	searchKeyword := title
@@ -272,50 +274,20 @@ func SearchMatchedVideoFile(dir string) ([]string, error) {
 	return fileFullPathList, nil
 }
 
-// SearchMatchedSubFile 搜索符合后缀名的视频文件
-func SearchMatchedSubFile(dir string) ([]string, error) {
-	// 这里有个梗，会出现 __MACOSX 这类文件夹，那么里面会有一样的文件，需要用文件大小排除一下，至少大于 1 kb 吧
-	var fileFullPathList = make([]string, 0)
-	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	for _, curFile := range files {
-		fullPath := dir + pathSep + curFile.Name()
-		if curFile.IsDir() {
-			// 内层的错误就无视了
-			oneList, _ := SearchMatchedSubFile(fullPath)
-			if oneList != nil {
-				fileFullPathList = append(fileFullPathList, oneList...)
-			}
-		} else {
-			// 这里就是文件了
-			if curFile.Size() < 1000 {
-				continue
-			}
-			if IsSubExtWanted(filepath.Ext(curFile.Name())) == true {
-				fileFullPathList = append(fileFullPathList, fullPath)
-			}
-		}
-	}
-	return fileFullPathList, nil
-}
-
 // IsWantedVideoExtDef 后缀名是否符合规则
 func IsWantedVideoExtDef(fileName string) bool {
 	// TODO 强制使用固定的视频后缀名匹配列表，后续有需求再考虑额实现外部可配置的列表
 
 	if len(wantedExtList) < 1 {
-		defExtList = append(defExtList, common2.VideoExtMp4)
-		defExtList = append(defExtList, common2.VideoExtMkv)
-		defExtList = append(defExtList, common2.VideoExtRmvb)
-		defExtList = append(defExtList, common2.VideoExtIso)
+		defExtList = append(defExtList, common.VideoExtMp4)
+		defExtList = append(defExtList, common.VideoExtMkv)
+		defExtList = append(defExtList, common.VideoExtRmvb)
+		defExtList = append(defExtList, common.VideoExtIso)
 
-		wantedExtList = append(defExtList, common2.VideoExtMp4)
-		wantedExtList = append(defExtList, common2.VideoExtMkv)
-		wantedExtList = append(defExtList, common2.VideoExtRmvb)
-		wantedExtList = append(defExtList, common2.VideoExtIso)
+		wantedExtList = append(defExtList, common.VideoExtMp4)
+		wantedExtList = append(defExtList, common.VideoExtMkv)
+		wantedExtList = append(defExtList, common.VideoExtRmvb)
+		wantedExtList = append(defExtList, common.VideoExtIso)
 	}
 	fileName = strings.ToLower(filepath.Ext(fileName))
 	for _, s := range wantedExtList {
@@ -332,7 +304,7 @@ func GetEpisodeKeyName(season, eps int) string {
 
 // ReloadBrowser 提前把浏览器下载好
 func ReloadBrowser() {
-	page, err := NewBrowserLoadPage("https://www.baidu.com", "", 300*time.Second, 2)
+	page, err := rod_helper.NewBrowserLoadPage("https://www.baidu.com", "", 300*time.Second, 2)
 	if err != nil {
 		return
 	}

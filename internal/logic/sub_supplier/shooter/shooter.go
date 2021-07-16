@@ -3,8 +3,9 @@ package shooter
 import (
 	"crypto/md5"
 	"fmt"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -24,8 +25,8 @@ type Supplier struct {
 func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
 
 	sup := Supplier{}
-	sup.log = pkg.GetLogger()
-	sup.topic = common2.DownloadSubsPerSite
+	sup.log = log_helper.GetLogger()
+	sup.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
 		sup.reqParam = _reqParam[0]
 		if sup.reqParam.Topic > 0 && sup.reqParam.Topic != sup.topic {
@@ -36,7 +37,7 @@ func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
 }
 
 func (s Supplier) GetSupplierName() string {
-	return common2.SubSiteShooter
+	return common.SubSiteShooter
 }
 
 func (s Supplier) GetReqParam() types.ReqParam {
@@ -67,7 +68,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 		return nil, err
 	}
 	if hash == "" {
-		return nil, common2.ShooterFileHashIsEmpty
+		return nil, common.ShooterFileHashIsEmpty
 	}
 
 	fileName := filepath.Base(filePath)
@@ -82,7 +83,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 			"lang": qLan,
 		}).
 		SetResult(&jsonList).
-		Post(common2.SubShooterRootUrl)
+		Post(common.SubShooterRootUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +130,7 @@ func (s Supplier) computeFileHash(filePath string) (string, error) {
 	}
 	size := float64(stat.Size())
 	if size < 0xF000 {
-		return "", common2.VideoFileIsTooSmall
+		return "", common.VideoFileIsTooSmall
 	}
 	samplePositions := [4]int64{
 		4 * 1024,

@@ -1,9 +1,10 @@
-package main
+package internal
 
 import (
-	ass2 "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
-	srt2 "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"testing"
 )
@@ -18,11 +19,11 @@ func TestDownloader_DownloadSub4Movie(t *testing.T) {
 	//dirRoot := "X:\\电影\\送你一朵小红花 (2020)"
 	//dirRoot := "X:\\电影\\冰海陷落 (2018)"
 	//dirRoot := "X:\\电影"
-
+	config := pkg.GetConfig()
 	dl := NewDownloader(types.ReqParam{
-		SaveMultiSub: true,
+		SaveMultiSub:    true,
 		SubTypePriority: 1,
-		EmbyConfig: config.EmbyConfig,
+		EmbyConfig:      config.EmbyConfig,
 	})
 	err = dl.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
 	if err != nil {
@@ -48,11 +49,12 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 	//dirRoot := "X:\\连续剧\\黄石 (2018)"
 	dirRoot := "X:\\连续剧"
 
+	config := pkg.GetConfig()
 	// 如果需要调试 Emby 一定需要 dirRoot := "X:\\连续剧"
 	dl := NewDownloader(types.ReqParam{
-		SaveMultiSub: true,
+		SaveMultiSub:    true,
 		SubTypePriority: 1,
-		EmbyConfig: config.EmbyConfig,
+		EmbyConfig:      config.EmbyConfig,
 	})
 	err = dl.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
 	if err != nil {
@@ -66,10 +68,11 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 
 func TestDownloader_GetUpdateVideoListFromEmby(t *testing.T) {
 	var err error
+	config := pkg.GetConfig()
 	dl := NewDownloader(types.ReqParam{
-		SaveMultiSub: true,
+		SaveMultiSub:    true,
 		SubTypePriority: 1,
-		EmbyConfig: config.EmbyConfig,
+		EmbyConfig:      config.EmbyConfig,
 	})
 	err = dl.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
 	if err != nil {
@@ -84,6 +87,6 @@ func TestDownloader_SubParserHub(t *testing.T) {
 	//subFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 4\\瑞克和莫蒂 - S04E01 - Rick and Morty.zh.srt"
 	subFile := "X:\\连续剧\\黑钱胜地 (2017)\\Sub_S3E0\\[subhd]_0_Ozark.S03E07.iNTERNAL.720p.WEB.x264-GHOSTS.chs.eng.ass"
 
-	subParserHub := pkg.NewSubParserHub(ass2.NewParser(), srt2.NewParser())
+	subParserHub := sub_helper.NewSubParserHub(ass.NewParser(), srt.NewParser())
 	subParserHub.IsSubHasChinese(subFile)
 }

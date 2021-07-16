@@ -1,4 +1,4 @@
-package pkg
+package rod_helper
 
 import (
 	"github.com/go-rod/rod/lib/proto"

@@ -1,8 +1,9 @@
-package pkg
+package emby_helper
 
 import (
 	"fmt"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/go-resty/resty/v2"
 	"github.com/panjf2000/ants/v2"
@@ -20,10 +21,10 @@ type EmbyApi struct {
 func NewEmbyHelper(embyConfig emby.EmbyConfig) *EmbyApi {
 	em := EmbyApi{}
 	em.embyConfig = embyConfig
-	if em.embyConfig.LimitCount < common2.EmbyApiGetItemsLimitMin ||
-		em.embyConfig.LimitCount > common2.EmbyApiGetItemsLimitMax {
+	if em.embyConfig.LimitCount < common.EmbyApiGetItemsLimitMin ||
+		em.embyConfig.LimitCount > common.EmbyApiGetItemsLimitMax {
 
-		em.embyConfig.LimitCount = common2.EmbyApiGetItemsLimitMin
+		em.embyConfig.LimitCount = common.EmbyApiGetItemsLimitMin
 	}
 	em.threads = 6
 	em.timeOut = 5 * time.Second
@@ -62,13 +63,13 @@ func (em EmbyApi) RefreshRecentlyVideoInfo() error {
 		select {
 		case err = <- done:
 			if err != nil {
-				GetLogger().Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got error", err)
+				log_helper.GetLogger().Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got error", err)
 			}
 			return
 		case p := <- panicChan:
-			GetLogger().Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got panic", p)
+			log_helper.GetLogger().Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got panic", p)
 		case <-ctx.Done():
-			GetLogger().Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got time out", ctx.Err())
+			log_helper.GetLogger().Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got time out", ctx.Err())
 			return
 		}
 	})
@@ -81,7 +82,7 @@ func (em EmbyApi) RefreshRecentlyVideoInfo() error {
 		wg.Add(1)
 		err = p.Invoke(InputData{Id: item.Id, Wg: &wg})
 		if err != nil {
-			GetLogger().Errorln("RefreshRecentlyVideoInfo ants.Invoke", err)
+			log_helper.GetLogger().Errorln("RefreshRecentlyVideoInfo ants.Invoke", err)
 		}
 	}
 	wg.Wait()
@@ -105,7 +106,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 			"SortBy":           "DateCreated",
 		}).
 		SetResult(&recItems).
-		Get(em.embyConfig.Url + "/emby/Items")
+		Get(em.embyConfig.Url + "/emby_helper/Items")
 	if err != nil {
 		return emby.EmbyRecentlyItems{}, err
 	}
@@ -123,7 +124,7 @@ func (em EmbyApi) GetItemAncestors(id string) ([]emby.EmbyItemsAncestors, error)
 			"api_key":          em.embyConfig.ApiKey,
 		}).
 		SetResult(&recItems).
-		Get(em.embyConfig.Url + "/emby/Items/" + id + "/Ancestors")
+		Get(em.embyConfig.Url + "/emby_helper/Items/" + id + "/Ancestors")
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +142,7 @@ func (em EmbyApi) GetItemVideoInfo(id string) (emby.EmbyVideoInfo, error) {
 			"api_key":          em.embyConfig.ApiKey,
 		}).
 		SetResult(&recItem).
-		Get(em.embyConfig.Url + "/emby/LiveTv/Programs/" + id)
+		Get(em.embyConfig.Url + "/emby_helper/LiveTv/Programs/" + id)
 	if err != nil {
 		return emby.EmbyVideoInfo{}, err
 	}
@@ -156,7 +157,7 @@ func (em EmbyApi) UpdateVideoSubList(id string) error {
 		SetQueryParams(map[string]string{
 			"api_key":          em.embyConfig.ApiKey,
 		}).
-		Post(em.embyConfig.Url + "/emby/Items/" + id + "/Refresh")
+		Post(em.embyConfig.Url + "/emby_helper/Items/" + id + "/Refresh")
 	if err != nil {
 		return err
 	}
