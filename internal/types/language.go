@@ -25,6 +25,7 @@ const (
 
 // 需要符合 emby_helper 的格式要求，在后缀名前面
 const (
+	Emby_default = ".default"				// 指定这个字幕是默认的
 	Emby_unknow = ".unknow"					// 未知语言
 	Emby_chinese 	= ".chinese"			// 中文
 	Emby_chi 	= ".chi"					// 简体

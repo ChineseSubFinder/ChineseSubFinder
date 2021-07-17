@@ -60,13 +60,20 @@ func OneMovieDlSubInOneSite(oneVideoFullPath string, i int, supplier ifaces.ISup
 	return subInfos, nil
 }
 
-// MovieHasSub 这个视频文件的目录下面有字幕文件了没有
-func MovieHasSub(videoFilePath string) (bool, error) {
+// MovieHasChineseSub 这个视频文件的目录下面有字幕文件了没有
+func MovieHasChineseSub(videoFilePath string) (bool, []string, []string, error) {
 	dir := filepath.Dir(videoFilePath)
+	videoFileName := filepath.Base(videoFilePath)
+	videoFileName = strings.ReplaceAll(videoFileName, filepath.Ext(videoFileName), "")
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return false, err
+		return false, nil, nil, err
 	}
+	// 所有的中文字幕列表
+	var chineseSubFullPathList = make([]string, 0)
+	// 所有的中文字幕列表，需要文件名与视频名称一样，也就是 Sub 文件半酣 Video name 即可
+	var chineseSubFitVideoNameFullPathList = make([]string, 0)
+	bFoundChineseSub := false
 	for _, curFile := range files {
 		if curFile.IsDir() {
 			continue
@@ -76,13 +83,21 @@ func MovieHasSub(videoFilePath string) (bool, error) {
 				continue
 			}
 			// 字幕文件是否包含中文
-			if sub_helper.NewSubParserHub(ass.NewParser(), srt.NewParser()).IsSubHasChinese(filepath.Join(dir, curFile.Name())) == true {
-				return true, nil
+			subFileFullPath := filepath.Join(dir, curFile.Name())
+			if sub_helper.NewSubParserHub(ass.NewParser(), srt.NewParser()).IsSubHasChinese(subFileFullPath) == true {
+				if bFoundChineseSub == false {
+					bFoundChineseSub = true
+				}
+				chineseSubFullPathList = append(chineseSubFullPathList, subFileFullPath)
+
+				if strings.Contains(curFile.Name(), videoFileName) == true {
+					chineseSubFitVideoNameFullPathList = append(chineseSubFitVideoNameFullPathList, subFileFullPath)
+				}
 			}
 		}
 	}
 
-	return false, nil
+	return bFoundChineseSub, chineseSubFullPathList, chineseSubFitVideoNameFullPathList, nil
 }
 
 func SkipChineseMovie(videoFullPath string, _reqParam ...types.ReqParam) (bool, error) {
@@ -107,7 +122,7 @@ func SkipChineseMovie(videoFullPath string, _reqParam ...types.ReqParam) (bool, 
 
 func MovieNeedDlSub(videoFullPath string) (bool, error) {
 	// 视频下面有不有字幕
-	found, err := MovieHasSub(videoFullPath)
+	found, _, _, err := MovieHasChineseSub(videoFullPath)
 	if err != nil {
 		return false, err
 	}

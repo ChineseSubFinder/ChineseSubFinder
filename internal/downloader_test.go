@@ -11,14 +11,14 @@ import (
 
 func TestDownloader_DownloadSub4Movie(t *testing.T) {
 	var err error
-	dirRoot := "X:\\电影\\Spiral From the Book of Saw (2021)"
+	//dirRoot := "X:\\电影\\Spiral From the Book of Saw (2021)"
 	//dirRoot := "X:\\电影\\Oslo (2021)"
 	//dirRoot := "X:\\电影\\The Devil All the Time (2020)"
 	//dirRoot := "X:\\电影\\21座桥 (2019)"
 	//dirRoot := "X:\\电影\\An Invisible Sign (2010)"
 	//dirRoot := "X:\\电影\\送你一朵小红花 (2020)"
 	//dirRoot := "X:\\电影\\冰海陷落 (2018)"
-	//dirRoot := "X:\\电影"
+	dirRoot := "X:\\电影"
 	config := pkg.GetConfig()
 	dl := NewDownloader(types.ReqParam{
 		SaveMultiSub:    true,

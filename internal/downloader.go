@@ -31,13 +31,13 @@ import (
 
 // Downloader 实例化一次用一次，不要反复的使用，很多临时标志位需要清理。
 type Downloader struct {
-	reqParam           types.ReqParam
-	log                *logrus.Logger
-	topic              int                       // 最多能够下载 Top 几的字幕，每一个网站
-	mk                 *markSystem.MarkingSystem // MarkingSystem
-	embyHelper         *embyHelper.EmbyHelper
-	movieDirList       []string                           //  多个需要搜索字幕的电影目录
-	seriesSubNeedDlMap map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录
+	reqParam              types.ReqParam
+	log                   *logrus.Logger
+	topic                 int                       // 最多能够下载 Top 几的字幕，每一个网站
+	mk                    *markSystem.MarkingSystem // MarkingSystem
+	embyHelper            *embyHelper.EmbyHelper
+	movieFileFullPathList []string                      //  多个需要搜索字幕的电影文件全路径
+	seriesSubNeedDlMap    map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录
 }
 
 func NewDownloader(_reqParam ...types.ReqParam) *Downloader {
@@ -72,7 +72,7 @@ func NewDownloader(_reqParam ...types.ReqParam) *Downloader {
 	sitesSequence = append(sitesSequence, common.SubSiteShooter)
 	downloader.mk = markSystem.NewMarkingSystem(sitesSequence, downloader.reqParam.SubTypePriority)
 
-	downloader.movieDirList = make([]string, 0)
+	downloader.movieFileFullPathList = make([]string, 0)
 	downloader.seriesSubNeedDlMap = make(map[string][]emby.EmbyMixInfo)
 
 	return &downloader
@@ -84,14 +84,14 @@ func (d *Downloader) GetUpdateVideoListFromEmby(movieRootDir, seriesRootDir stri
 		return nil
 	}
 	var err error
-	var moviveList []emby.EmbyMixInfo
-	moviveList, d.seriesSubNeedDlMap, err = d.embyHelper.GetRecentlyAddVideoList(movieRootDir, seriesRootDir)
+	var movieList []emby.EmbyMixInfo
+	movieList, d.seriesSubNeedDlMap, err = d.embyHelper.GetRecentlyAddVideoList(movieRootDir, seriesRootDir)
 	if err != nil {
 		return err
 	}
 	// 获取全路径
-	for _, info := range moviveList {
-		d.movieDirList = append(d.movieDirList, info.VideoFileFullPath)
+	for _, info := range movieList {
+		d.movieFileFullPathList = append(d.movieFileFullPathList, info.VideoFileFullPath)
 	}
 
 	return nil
@@ -132,14 +132,14 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	// 是否是通过 emby_helper api 获取的列表
 	if d.embyHelper == nil {
 		// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
-		d.movieDirList, err = pkg.SearchMatchedVideoFile(dir)
+		d.movieFileFullPathList, err = pkg.SearchMatchedVideoFile(dir)
 		if err != nil {
 			return err
 		}
 	} else {
 		// 进过 emby_helper api 的信息读取
 		d.log.Infoln("Movie Sub Dl From Emby API...")
-		if len(d.movieDirList) < 1 {
+		if len(d.movieFileFullPathList) < 1 {
 			d.log.Infoln("Movie Sub Dl From Emby API no movie need Dl sub")
 			return nil
 		}
@@ -205,7 +205,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	defer p.Release()
 	wg := sync.WaitGroup{}
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
-	for i, oneVideoFullPath := range d.movieDirList {
+	for i, oneVideoFullPath := range d.movieFileFullPathList {
 		wg.Add(1)
 		err = p.Invoke(InputData{OneVideoFullPath: oneVideoFullPath, Index: i, Wg: &wg})
 		if err != nil {

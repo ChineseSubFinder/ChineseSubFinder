@@ -18,3 +18,4 @@
 /internal/logic/emby_helper/config.yaml
 /emby_helper/Logs/*.log
 /internal/config.yaml
+/internal/Logs/*.log
