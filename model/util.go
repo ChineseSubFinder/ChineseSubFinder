@@ -52,7 +52,7 @@ func NewHttpClient(_reqParam ...common.ReqParam) *resty.Client {
 
 	httpClient.SetHeaders(map[string]string{
 		"Content-Type": "application/json",
-		"User-Agent": UserAgent,
+		"User-Agent":   UserAgent,
 	})
 	if len(Referer) > 0 {
 		httpClient.SetHeader("Referer", Referer)
@@ -62,7 +62,7 @@ func NewHttpClient(_reqParam ...common.ReqParam) *resty.Client {
 }
 
 // DownFile 从指定的 url 下载文件
-func DownFile(urlStr string, _reqParam ...common.ReqParam) ([]byte, string, error)  {
+func DownFile(urlStr string, _reqParam ...common.ReqParam) ([]byte, string, error) {
 	var reqParam common.ReqParam
 	if len(_reqParam) > 0 {
 		reqParam = _reqParam[0]
@@ -165,7 +165,7 @@ func GetTmpFolder(folderName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	tmpFolderFullPath :=path.Join(rootPath, folderName)
+	tmpFolderFullPath := path.Join(rootPath, folderName)
 	err = os.MkdirAll(tmpFolderFullPath, os.ModePerm)
 	if err != nil {
 		return "", err
@@ -303,8 +303,6 @@ func SearchMatchedSubFile(dir string) ([]string, error) {
 
 // IsWantedVideoExtDef 后缀名是否符合规则
 func IsWantedVideoExtDef(fileName string) bool {
-	// TODO 强制使用固定的视频后缀名匹配列表，后续有需求再考虑额实现外部可配置的列表
-
 	if len(wantedExtList) < 1 {
 		defExtList = append(defExtList, common.VideoExtMp4)
 		defExtList = append(defExtList, common.VideoExtMkv)
@@ -315,6 +313,10 @@ func IsWantedVideoExtDef(fileName string) bool {
 		wantedExtList = append(defExtList, common.VideoExtMkv)
 		wantedExtList = append(defExtList, common.VideoExtRmvb)
 		wantedExtList = append(defExtList, common.VideoExtIso)
+
+		for _, fileExt := range common.VideoExts {
+			wantedExtList = append(wantedExtList, fileExt)
+		}
 	}
 	fileName = strings.ToLower(filepath.Ext(fileName))
 	for _, s := range wantedExtList {
@@ -326,7 +328,7 @@ func IsWantedVideoExtDef(fileName string) bool {
 }
 
 func GetEpisodeKeyName(season, eps int) string {
-	return "S" + strconv.Itoa(season) + "E" +strconv.Itoa(eps)
+	return "S" + strconv.Itoa(season) + "E" + strconv.Itoa(eps)
 }
 
 // ReloadBrowser 提前把浏览器下载好
@@ -340,7 +342,7 @@ func ReloadBrowser() {
 
 var (
 	defDebugFolder = ""
-	defTmpFolder = ""
-	wantedExtList = make([]string, 0)                   // 人工确认的需要监控的视频后缀名
-	defExtList    = make([]string, 0)                  // 内置支持的视频后缀名列表
+	defTmpFolder   = ""
+	wantedExtList  = make([]string, 0) // 人工确认的需要监控的视频后缀名
+	defExtList     = make([]string, 0) // 内置支持的视频后缀名列表
 )

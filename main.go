@@ -6,6 +6,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"strings"
 )
 
 func init() {
@@ -14,12 +15,16 @@ func init() {
 	configViper, err = model.InitConfigure()
 	if err != nil {
 		log.Errorln("InitConfigure", err)
-		return 
+		return
 	}
 	config, err = model.ReadConfig(configViper)
 	if err != nil {
 		log.Errorln("ReadConfig", err)
-		return 
+		return
+	}
+
+	for _, customExt := range strings.Split(config.CustomExts, ",") {
+		common.VideoExts = append(common.VideoExts, "."+customExt)
 	}
 }
 
@@ -58,7 +63,7 @@ func main() {
 	//任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
-	entryID, err := c.AddFunc("@every " + config.EveryTime, func() {
+	entryID, err := c.AddFunc("@every "+config.EveryTime, func() {
 
 		DownLoadStart(httpProxy)
 	})
@@ -86,13 +91,13 @@ func DownLoadStart(httpProxy string) {
 
 	// 下载实例
 	downloader := NewDownloader(common.ReqParam{
-		HttpProxy:       httpProxy,
-		DebugMode:       config.DebugMode,
-		SaveMultiSub:    config.SaveMultiSub,
-		Threads:         config.Threads,
-		SubTypePriority: config.SubTypePriority,
+		HttpProxy:                     httpProxy,
+		DebugMode:                     config.DebugMode,
+		SaveMultiSub:                  config.SaveMultiSub,
+		Threads:                       config.Threads,
+		SubTypePriority:               config.SubTypePriority,
 		WhenSubSupplierInvalidWebHook: config.WhenSubSupplierInvalidWebHook,
-		EmbyConfig: config.EmbyConfig,
+		EmbyConfig:                    config.EmbyConfig,
 	})
 
 	log.Infoln("Download One Started...")
@@ -128,7 +133,7 @@ func DownLoadStart(httpProxy string) {
 	}
 }
 
-var(
+var (
 	log         *logrus.Logger
 	configViper *viper.Viper
 	config      *common.Config
