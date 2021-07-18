@@ -24,13 +24,13 @@ import (
 
 // Downloader 实例化一次用一次，不要反复的使用，很多临时标志位需要清理。
 type Downloader struct {
-	reqParam      common.ReqParam
-	log           *logrus.Logger
-	topic         int                        // 最多能够下载 Top 几的字幕，每一个网站
-	mk            *mark_system.MarkingSystem // MarkingSystem
-	embyHelper	  *emby_helper.EmbyHelper
-	movieDirList  []string									//  多个需要搜索字幕的电影目录
-	seriesSubNeedDlMap map[string][]common.EmbyMixInfo		//  多个需要搜索字幕的连续剧目录
+	reqParam           common.ReqParam
+	log                *logrus.Logger
+	topic              int                        // 最多能够下载 Top 几的字幕，每一个网站
+	mk                 *mark_system.MarkingSystem // MarkingSystem
+	embyHelper         *emby_helper.EmbyHelper
+	movieDirList       []string                        //  多个需要搜索字幕的电影目录
+	seriesSubNeedDlMap map[string][]common.EmbyMixInfo //  多个需要搜索字幕的连续剧目录
 }
 
 func NewDownloader(_reqParam ...common.ReqParam) *Downloader {
@@ -151,7 +151,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
 		organizeSubFiles, err := subSupplierHub.DownloadSub4Movie(inData.OneVideoFullPath, inData.Index)
 		if err != nil {
-			d.log.Errorln("subSupplierHub.DownloadSub4Movie", inData.OneVideoFullPath ,err)
+			d.log.Errorln("subSupplierHub.DownloadSub4Movie", inData.OneVideoFullPath, err)
 			return err
 		}
 		if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
@@ -182,9 +182,9 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		}()
 
 		select {
-		case _ = <- done:
+		case _ = <-done:
 			return
-		case p := <- panicChan:
+		case p := <-panicChan:
 			d.log.Errorln("DownloadSub4Movie.NewPoolWithFunc got panic", p)
 		case <-ctx.Done():
 			d.log.Errorln("DownloadSub4Movie.NewPoolWithFunc got time out", ctx.Err())
@@ -202,7 +202,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		wg.Add(1)
 		err = p.Invoke(InputData{OneVideoFullPath: oneVideoFullPath, Index: i, Wg: &wg})
 		if err != nil {
-			d.log.Errorln("DownloadSub4Movie ants.Invoke",err)
+			d.log.Errorln("DownloadSub4Movie ants.Invoke", err)
 		}
 	}
 	wg.Wait()
@@ -297,9 +297,9 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		}()
 
 		select {
-		case _ = <- done:
+		case _ = <-done:
 			return
-		case p := <- panicChan:
+		case p := <-panicChan:
 			d.log.Errorln("DownloadSub4Series.NewPoolWithFunc got panic", p)
 		case <-ctx.Done():
 			d.log.Errorln("DownloadSub4Series.NewPoolWithFunc got time out", ctx.Err())
@@ -330,7 +330,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		wg.Add(1)
 		err = p.Invoke(InputData{OneVideoFullPath: oneSeriesPath, Index: i, Wg: &wg})
 		if err != nil {
-			d.log.Errorln("DownloadSub4Series ants.Invoke",err)
+			d.log.Errorln("DownloadSub4Series ants.Invoke", err)
 		}
 	}
 	wg.Wait()
@@ -387,7 +387,16 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 func (d Downloader) saveFullSeasonSub(seriesInfo *common.SeriesInfo, organizeSubFiles map[string][]string) map[string][]string {
 
 	var fullSeasonSubDict = make(map[string][]string)
+	var tmpDirs = make([]string, 0)
 
+	defer func() {
+		for _, tmpDir := range tmpDirs {
+			err := os.RemoveAll(tmpDir)
+			if err != nil {
+				d.log.Errorf("Delete tmp dir %s failed %v", tmpDir, err)
+			}
+		}
+	}()
 	for _, season := range seriesInfo.SeasonDict {
 		seasonKey := model.GetEpisodeKeyName(season, 0)
 		subs, ok := organizeSubFiles[seasonKey]
@@ -397,6 +406,7 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *common.SeriesInfo, organizeSub
 		for _, sub := range subs {
 			subFileName := filepath.Base(sub)
 			newSeasonSubRootPath := path.Join(seriesInfo.DirPath, "Sub_"+seasonKey)
+			tmpDirs = append(tmpDirs, newSeasonSubRootPath)
 			_ = os.MkdirAll(newSeasonSubRootPath, os.ModePerm)
 			newSubFullPath := path.Join(newSeasonSubRootPath, subFileName)
 			_, err := model.CopyFile(newSubFullPath, sub)
@@ -431,7 +441,7 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	videoFileNameWithOutExt := strings.ReplaceAll(filepath.Base(videoFileFullPath),
 		filepath.Ext(videoFileFullPath), "")
 	if extraSubPreName != "" {
-		extraSubPreName = "[" + extraSubPreName +"]"
+		extraSubPreName = "[" + extraSubPreName + "]"
 	}
 	subNewName := videoFileNameWithOutExt + embyLanExtName + extraSubPreName + finalSubFile.Ext
 	desSubFullPath := path.Join(videoRootPath, subNewName)
@@ -469,6 +479,6 @@ func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) e
 
 type InputData struct {
 	OneVideoFullPath string
-	Index			int
-	Wg 				*sync.WaitGroup
+	Index            int
+	Wg               *sync.WaitGroup
 }
