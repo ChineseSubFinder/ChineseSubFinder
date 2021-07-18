@@ -1,6 +1,10 @@
 package hot_fix
 
-import "testing"
+import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"path"
+	"testing"
+)
 
 func TestHotFix001_GetKey(t *testing.T) {
 	hf001 := NewHotFix001("", "")
@@ -10,11 +14,19 @@ func TestHotFix001_GetKey(t *testing.T) {
 }
 
 func TestHotFix001_Process(t *testing.T) {
-	movieDir := "X:\\电影\\21座桥 (2019)"
-	seriesDir := "X:\\连续剧\\无罪之最 (2021)"
-
-	hf001 := NewHotFix001(movieDir, seriesDir)
-	err := hf001.Process()
+	testDataPath := "..\\..\\..\\TestData\\hotfix\\001"
+	movieDir := "movies"
+	seriesDir := "series"
+	testRootDir, err := pkg.CopyTestData(testDataPath)
+	if err != nil {
+		return
+	}
+	// 测试文件夹
+	testMovieDir := path.Join(testRootDir, movieDir)
+	testSeriesDir := path.Join(testRootDir, seriesDir)
+	// 开始修复
+	hf001 := NewHotFix001(testMovieDir, testSeriesDir)
+	err = hf001.Process()
 	if err != nil {
 		t.Fatal("Process ", err.Error())
 	}

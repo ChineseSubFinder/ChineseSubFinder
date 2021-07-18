@@ -19,3 +19,4 @@
 /emby_helper/Logs/*.log
 /internal/config.yaml
 /internal/Logs/*.log
+/TestData/hotfix/001/test

@@ -176,21 +176,15 @@ func GetTmpFolder(folderName string) (string, error) {
 	return tmpFolderFullPath, nil
 }
 
-// ClearTmpFolder 清理指定的缓存文件夹
-func ClearTmpFolder(folderName string) error {
-
-	nowTmpFolder, err := GetTmpFolder(folderName)
-	if err != nil {
-		return err
-	}
-
+// ClearFolder 清理文件夹
+func ClearFolder(folderName string) error {
 	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(nowTmpFolder)
+	files, err := ioutil.ReadDir(folderName)
 	if err != nil {
 		return err
 	}
 	for _, curFile := range files {
-		fullPath := nowTmpFolder + pathSep + curFile.Name()
+		fullPath := folderName + pathSep + curFile.Name()
 		if curFile.IsDir() {
 			err = os.RemoveAll(fullPath)
 			if err != nil {
@@ -208,19 +202,15 @@ func ClearTmpFolder(folderName string) error {
 	return nil
 }
 
-func CopyFile(dstName, srcName string) (written int64, err error) {
-	src, err := os.Open(srcName)
-	if err != nil {
-		return
-	}
-	defer src.Close()
+// ClearTmpFolder 清理指定的缓存文件夹
+func ClearTmpFolder(folderName string) error {
 
-	dst, err := os.OpenFile(dstName, os.O_WRONLY|os.O_CREATE, 0644)
+	nowTmpFolder, err := GetTmpFolder(folderName)
 	if err != nil {
-		return
+		return err
 	}
-	defer dst.Close()
-	return io.Copy(dst, src)
+
+	return ClearFolder(nowTmpFolder)
 }
 
 func IsDir(path string) bool {
@@ -309,4 +299,77 @@ func ReloadBrowser() {
 		return
 	}
 	defer page.Close()
+}
+
+// CopyFile copies a single file from src to dst
+func CopyFile(src, dst string) error {
+	var err error
+	var srcfd *os.File
+	var dstfd *os.File
+	var srcinfo os.FileInfo
+
+	if srcfd, err = os.Open(src); err != nil {
+		return err
+	}
+	defer srcfd.Close()
+
+	if dstfd, err = os.Create(dst); err != nil {
+		return err
+	}
+	defer dstfd.Close()
+
+	if _, err = io.Copy(dstfd, srcfd); err != nil {
+		return err
+	}
+	if srcinfo, err = os.Stat(src); err != nil {
+		return err
+	}
+	return os.Chmod(dst, srcinfo.Mode())
+}
+
+// CopyDir copies a whole directory recursively
+func CopyDir(src string, dst string) error {
+	var err error
+	var fds []os.FileInfo
+	var srcinfo os.FileInfo
+
+	if srcinfo, err = os.Stat(src); err != nil {
+		return err
+	}
+
+	if err = os.MkdirAll(dst, srcinfo.Mode()); err != nil {
+		return err
+	}
+
+	if fds, err = ioutil.ReadDir(src); err != nil {
+		return err
+	}
+	for _, fd := range fds {
+		srcfp := path.Join(src, fd.Name())
+		dstfp := path.Join(dst, fd.Name())
+
+		if fd.IsDir() {
+			if err = CopyDir(srcfp, dstfp); err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			if err = CopyFile(srcfp, dstfp); err != nil {
+				fmt.Println(err)
+			}
+		}
+	}
+	return nil
+}
+
+// CopyTestData 单元测试前把测试的数据 copy 一份出来操作，src 目录中默认应该有一个 org 原始数据文件夹，然后需要复制一份 test 文件夹出来
+func CopyTestData(srcDir string) (string, error) {
+	// 测试数据的文件夹
+	orgDir := path.Join(srcDir, "org")
+	testDir := path.Join(srcDir, "test")
+
+	err := CopyDir(orgDir, testDir)
+	if err != nil {
+		return "", err
+	}
+	return testDir, nil
 }

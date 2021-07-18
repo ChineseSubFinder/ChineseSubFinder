@@ -1,6 +1,7 @@
 package hot_fix
 
 import (
+	"errors"
 	movieHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/movie_helper"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
@@ -27,6 +28,13 @@ func (h HotFix001) GetKey() string {
 
 func (h HotFix001) Process() error {
 
+	if pkg.IsDir(h.movieRootDir) == false {
+		return errors.New("movieRootDir path not exist: " + h.movieRootDir)
+	}
+	if pkg.IsDir(h.seriesRootDir) == false {
+		return errors.New("seriesRootDir path not exist: " + h.seriesRootDir)
+	}
+
 	var err error
 	// 先找出有那些电影文件夹和连续剧文件夹
 	movieFullPathList, err := pkg.SearchMatchedVideoFile(h.movieRootDir)
@@ -43,8 +51,7 @@ func (h HotFix001) Process() error {
 		if err != nil || found == false {
 			continue
 		}
-
-
+		println(len(fitMovieNameSubList))
 	}
 
 	seriesSubFiles, err := sub_helper.SearchMatchedSubFile(h.seriesRootDir)

@@ -406,7 +406,7 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSub
 			newSeasonSubRootPath := path.Join(seriesInfo.DirPath, "Sub_"+seasonKey)
 			_ = os.MkdirAll(newSeasonSubRootPath, os.ModePerm)
 			newSubFullPath := path.Join(newSeasonSubRootPath, subFileName)
-			_, err := pkg.CopyFile(newSubFullPath, sub)
+			err := pkg.CopyFile(sub, newSubFullPath)
 			if err != nil {
 				d.log.Errorln("saveFullSeasonSub", subFileName, err)
 				continue
@@ -465,7 +465,7 @@ func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) e
 	// 复制下载在 tmp 文件夹中的字幕文件到视频文件夹下面
 	for _, subFile := range subFiles {
 		newFn := path.Join(desFolderFullPath, filepath.Base(subFile))
-		_, err = pkg.CopyFile(newFn, subFile)
+		err = pkg.CopyFile(subFile, newFn)
 		if err != nil {
 			return err
 		}
