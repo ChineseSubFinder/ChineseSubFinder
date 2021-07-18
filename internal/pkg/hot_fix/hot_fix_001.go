@@ -51,7 +51,10 @@ func (h HotFix001) Process() error {
 		if err != nil || found == false {
 			continue
 		}
-		println(len(fitMovieNameSubList))
+		// 判断是否是符合要求
+		for _, fitSubName := range fitMovieNameSubList {
+			sub_helper.IsOldVersionSubPrefixName(fitSubName)
+		}
 	}
 
 	seriesSubFiles, err := sub_helper.SearchMatchedSubFile(h.seriesRootDir)
