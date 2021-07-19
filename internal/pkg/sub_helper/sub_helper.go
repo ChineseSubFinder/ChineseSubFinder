@@ -244,31 +244,32 @@ func IsOldVersionSubPrefixName(subFileName string) (bool, string, string) {
 	*/
 	// 无罪之最 - S01E01 - 重建生活.chs[shooter].ass -> 无罪之最 - S01E01 - 重建生活.chs[shooter]
 	subTypeExt := filepath.Ext(subFileName)
-	subFileName = strings.ReplaceAll(subFileName, subTypeExt, "")
+	subFileNameWithOutExt := strings.ReplaceAll(subFileName, subTypeExt, "")
 	// .chs[shooter]
-	nowExt := filepath.Ext(subFileName)
+	nowExt := filepath.Ext(subFileNameWithOutExt)
 	// .chs_en[shooter].ass
 	orgMixExt := nowExt + subTypeExt
+	orgFileNameWithOutOrgMixExt := strings.ReplaceAll(subFileName, orgMixExt, "")
 	// 这里也有两种情况，一种是单字幕 SaveMultiSub: false
 	// 一种的保存了多字幕 SaveMultiSub: true
 	// 先判断 单字幕
 	switch nowExt {
 	case types.Emby_chs:
-		return true, orgMixExt, makeMixSubExtString(types.MatchLangChs, subTypeExt, "", true)
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChs, subTypeExt, "", true)
 	case types.Emby_cht:
-		return true, orgMixExt, makeMixSubExtString(types.MatchLangCht, subTypeExt, "", false)
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangCht, subTypeExt, "", false)
 	case types.Emby_chs_en:
-		return true, orgMixExt, makeMixSubExtString(types.MatchLangChsEn, subTypeExt, "", true)
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChsEn, subTypeExt, "", true)
 	case types.Emby_cht_en:
-		return true, orgMixExt, makeMixSubExtString(types.MatchLangChtEn, subTypeExt, "", false)
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChtEn, subTypeExt, "", false)
 	case types.Emby_chs_jp:
-		return true, orgMixExt, makeMixSubExtString(types.MatchLangChsJp, subTypeExt, "", true)
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChsJp, subTypeExt, "", true)
 	case types.Emby_cht_jp:
-		return true, orgMixExt, makeMixSubExtString(types.MatchLangChtJp, subTypeExt, "", false)
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChtJp, subTypeExt, "", false)
 	case types.Emby_chs_kr:
-		return true, orgMixExt, makeMixSubExtString(types.MatchLangChsKr, subTypeExt, "", true)
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChsKr, subTypeExt, "", true)
 	case types.Emby_cht_kr:
-		return true, orgMixExt, makeMixSubExtString(types.MatchLangChtKr, subTypeExt, "", false)
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChtKr, subTypeExt, "", false)
 	}
 	// 再判断 多字幕情况
 	spStrings := strings.Split(nowExt, "[")
@@ -317,12 +318,12 @@ func IsOldVersionSubPrefixName(subFileName string) (bool, string, string) {
 	}
 	// 都要符合条件
 	if firstOk == true && secondOk == true {
-		return true, orgMixExt, makeMixSubExtString(lang, subTypeExt, site, false)
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, lang, subTypeExt, site, false)
 	}
 	return false, "", ""
 }
 
-func makeMixSubExtString(lang string, ext, site string, beDefault bool) string {
+func makeMixSubExtString(orgFileNameWithOutExt, lang string, ext, site string, beDefault bool) string {
 
 	tmpDefault := ""
 	if beDefault == true {
@@ -330,9 +331,9 @@ func makeMixSubExtString(lang string, ext, site string, beDefault bool) string {
 	}
 
 	if site == "" {
-		return types.Emby_chinese + "(" + lang + ")" + tmpDefault + ext
+		return orgFileNameWithOutExt + types.Emby_chinese + "(" + lang + ")" + tmpDefault + ext
 	}
-	return types.Emby_chinese + "(" + lang + "," + site + ")" + tmpDefault + ext
+	return orgFileNameWithOutExt + types.Emby_chinese + "(" + lang + "," + site + ")" + tmpDefault + ext
 }
 
 var(

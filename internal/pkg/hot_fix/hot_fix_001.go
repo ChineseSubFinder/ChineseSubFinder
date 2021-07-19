@@ -6,6 +6,7 @@ import (
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	"os"
 )
 
 /*
@@ -26,46 +27,70 @@ func (h HotFix001) GetKey() string {
 	return "001"
 }
 
-func (h HotFix001) Process() error {
+func (h HotFix001) Process() (renamedFiles, errFiles []string, err error) {
 
+	renamedFiles = make([]string, 0)
+	errFiles = make([]string, 0)
 	if pkg.IsDir(h.movieRootDir) == false {
-		return errors.New("movieRootDir path not exist: " + h.movieRootDir)
+		return renamedFiles, errFiles, errors.New("movieRootDir path not exist: " + h.movieRootDir)
 	}
 	if pkg.IsDir(h.seriesRootDir) == false {
-		return errors.New("seriesRootDir path not exist: " + h.seriesRootDir)
+		return renamedFiles, errFiles, errors.New("seriesRootDir path not exist: " + h.seriesRootDir)
 	}
-
-	var err error
 	// 先找出有那些电影文件夹和连续剧文件夹
-	movieFullPathList, err := pkg.SearchMatchedVideoFile(h.movieRootDir)
+	var movieFullPathList = make([]string, 0)
+	movieFullPathList, err = pkg.SearchMatchedVideoFile(h.movieRootDir)
 	if err != nil {
-		return err
+		return
 	}
 	seriesDirList, err := seriesHelper.GetSeriesList(h.seriesRootDir)
 	if err != nil {
-		return err
+		return
 	}
 	// 搜索所有的字幕，找到相关的字幕进行修改
 	for _, one := range movieFullPathList {
-		found, _, fitMovieNameSubList, err := movieHelper.MovieHasChineseSub(one)
+		found := false
+		var fitMovieNameSubList = make([]string, 0)
+		found, _, fitMovieNameSubList, err = movieHelper.MovieHasChineseSub(one)
 		if err != nil || found == false {
 			continue
 		}
 		// 判断是否是符合要求
 		for _, fitSubName := range fitMovieNameSubList {
-			sub_helper.IsOldVersionSubPrefixName(fitSubName)
+			bFix, _, newSubFileName := sub_helper.IsOldVersionSubPrefixName(fitSubName)
+			if bFix == false {
+				continue
+			}
+			err = os.Rename(fitSubName, newSubFileName)
+			if err != nil {
+				errFiles = append(errFiles, fitSubName)
+				continue
+			}
+			renamedFiles = append(renamedFiles, newSubFileName)
+		}
+	}
+	// 连续剧
+	var seriesSubFiles = make([]string, 0)
+	for _, oneSeriesDir := range seriesDirList {
+		seriesSubFiles, err = sub_helper.SearchMatchedSubFile(oneSeriesDir)
+		if err != nil {
+			return
+		}
+		// 判断是否是符合要求
+		for _, fitSubName := range seriesSubFiles {
+			bFix, _, newSubFileName := sub_helper.IsOldVersionSubPrefixName(fitSubName)
+			if bFix == false {
+				continue
+			}
+			err = os.Rename(fitSubName, newSubFileName)
+			if err != nil {
+				errFiles = append(errFiles, fitSubName)
+				continue
+			}
+			renamedFiles = append(renamedFiles, newSubFileName)
 		}
 	}
 
-	seriesSubFiles, err := sub_helper.SearchMatchedSubFile(h.seriesRootDir)
-	if err != nil {
-		return err
-	}
-	// 从找到的这些字幕中，找出，结尾是
 
-	println(len(movieFullPathList))
-	println(len(seriesDirList))
-	println(len(seriesSubFiles))
-
-	return nil
+	return
 }

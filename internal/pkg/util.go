@@ -213,12 +213,21 @@ func ClearTmpFolder(folderName string) error {
 	return ClearFolder(nowTmpFolder)
 }
 
+// IsDir 存在且是文件夹
 func IsDir(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {
 		return false
 	}
 	return s.IsDir()
+}
+// IsFile 存在且是文件
+func IsFile(filePath string) bool {
+	s, err := os.Stat(filePath)
+	if err != nil {
+		return false
+	}
+	return !s.IsDir()
 }
 
 // VideoNameSearchKeywordMaker 拼接视频搜索的 title 和 年份
@@ -366,6 +375,13 @@ func CopyTestData(srcDir string) (string, error) {
 	// 测试数据的文件夹
 	orgDir := path.Join(srcDir, "org")
 	testDir := path.Join(srcDir, "test")
+
+	if IsDir(testDir) == true {
+		err := ClearFolder(testDir)
+		if err != nil {
+			return "", err
+		}
+	}
 
 	err := CopyDir(orgDir, testDir)
 	if err != nil {
