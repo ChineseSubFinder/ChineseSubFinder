@@ -9,8 +9,8 @@ import (
 
 type NotifyCenter struct {
 	webhookUrl string
-	infos map[string]string
-	mu sync.Mutex
+	infos      map[string]string
+	mu         sync.Mutex
 }
 
 func NewNotifyCenter(webhookUrl string) *NotifyCenter {

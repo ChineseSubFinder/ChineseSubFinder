@@ -15,7 +15,7 @@ import (
 	chs_en[shooter] -> Chinese(中英,shooter)
 */
 type HotFix001 struct {
-	movieRootDir string
+	movieRootDir  string
 	seriesRootDir string
 }
 
@@ -27,25 +27,27 @@ func (h HotFix001) GetKey() string {
 	return "001"
 }
 
-func (h HotFix001) Process() (renamedFiles, errFiles []string, err error) {
+func (h HotFix001) Process() (interface{}, error) {
 
-	renamedFiles = make([]string, 0)
-	errFiles = make([]string, 0)
+	var err error
+	outStruct := OutStruct001{}
+	outStruct.RenamedFiles = make([]string, 0)
+	outStruct.ErrFiles = make([]string, 0)
 	if pkg.IsDir(h.movieRootDir) == false {
-		return renamedFiles, errFiles, errors.New("movieRootDir path not exist: " + h.movieRootDir)
+		return outStruct, errors.New("movieRootDir path not exist: " + h.movieRootDir)
 	}
 	if pkg.IsDir(h.seriesRootDir) == false {
-		return renamedFiles, errFiles, errors.New("seriesRootDir path not exist: " + h.seriesRootDir)
+		return outStruct, errors.New("seriesRootDir path not exist: " + h.seriesRootDir)
 	}
 	// 先找出有那些电影文件夹和连续剧文件夹
 	var movieFullPathList = make([]string, 0)
 	movieFullPathList, err = pkg.SearchMatchedVideoFile(h.movieRootDir)
 	if err != nil {
-		return
+		return outStruct, err
 	}
 	seriesDirList, err := seriesHelper.GetSeriesList(h.seriesRootDir)
 	if err != nil {
-		return
+		return outStruct, err
 	}
 	// 搜索所有的字幕，找到相关的字幕进行修改
 	for _, one := range movieFullPathList {
@@ -63,10 +65,10 @@ func (h HotFix001) Process() (renamedFiles, errFiles []string, err error) {
 			}
 			err = os.Rename(fitSubName, newSubFileName)
 			if err != nil {
-				errFiles = append(errFiles, fitSubName)
+				outStruct.ErrFiles = append(outStruct.ErrFiles, fitSubName)
 				continue
 			}
-			renamedFiles = append(renamedFiles, newSubFileName)
+			outStruct.RenamedFiles = append(outStruct.RenamedFiles, newSubFileName)
 		}
 	}
 	// 连续剧
@@ -74,7 +76,7 @@ func (h HotFix001) Process() (renamedFiles, errFiles []string, err error) {
 	for _, oneSeriesDir := range seriesDirList {
 		seriesSubFiles, err = sub_helper.SearchMatchedSubFile(oneSeriesDir)
 		if err != nil {
-			return
+			return outStruct, err
 		}
 		// 判断是否是符合要求
 		for _, fitSubName := range seriesSubFiles {
@@ -84,13 +86,17 @@ func (h HotFix001) Process() (renamedFiles, errFiles []string, err error) {
 			}
 			err = os.Rename(fitSubName, newSubFileName)
 			if err != nil {
-				errFiles = append(errFiles, fitSubName)
+				outStruct.ErrFiles = append(outStruct.ErrFiles, fitSubName)
 				continue
 			}
-			renamedFiles = append(renamedFiles, newSubFileName)
+			outStruct.RenamedFiles = append(outStruct.RenamedFiles, newSubFileName)
 		}
 	}
 
+	return outStruct, nil
+}
 
-	return
+type OutStruct001 struct {
+	RenamedFiles []string
+	ErrFiles     []string
 }

@@ -19,7 +19,7 @@ type SubSupplierHub struct {
 	log *logrus.Logger
 }
 
-func NewSubSupplierHub(one ifaces.ISupplier,_inSupplier ...ifaces.ISupplier) *SubSupplierHub {
+func NewSubSupplierHub(one ifaces.ISupplier, _inSupplier ...ifaces.ISupplier) *SubSupplierHub {
 	s := SubSupplierHub{}
 	s.log = log_helper.GetLogger()
 	s.Suppliers = make([]ifaces.ISupplier, 0)
@@ -47,7 +47,7 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 
 	needDlSub, err := movieHelper.MovieNeedDlSub(videoFullPath)
 	if err != nil {
-		return nil, errors.Newf("MovieNeedDlSub %v %v", videoFullPath , err)
+		return nil, errors.Newf("MovieNeedDlSub %v %v", videoFullPath, err)
 	}
 	if needDlSub == true {
 		// 需要下载字幕
@@ -56,7 +56,7 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 		// 整理字幕，比如解压什么的
 		organizeSubFiles, err := sub_helper.OrganizeDlSubFiles(filepath.Base(videoFullPath), subInfos)
 		if err != nil {
-			return nil, errors.Newf("OrganizeDlSubFiles %v %v", videoFullPath , err)
+			return nil, errors.Newf("OrganizeDlSubFiles %v %v", videoFullPath, err)
 		}
 		// 因为是下载电影，需要合并返回
 		var outSubFileFullPathList = make([]string, 0)
@@ -84,7 +84,7 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) (*se
 	// 读取本地的视频和字幕信息
 	seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(seriesDirPath, imdbInfo)
 	if err != nil {
-		return nil, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesDirPath , err)
+		return nil, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesDirPath, err)
 	}
 	organizeSubFiles, err := d.dlSubFromSeriesInfo(seriesDirPath, index, seriesInfo, err)
 	if err != nil {
@@ -107,7 +107,7 @@ func (d SubSupplierHub) DownloadSub4SeriesFromEmby(seriesDirPath string, seriesL
 	// 读取本地的视频和字幕信息
 	seriesInfo, err := seriesHelper.ReadSeriesInfoFromEmby(seriesDirPath, imdbInfo, seriesList)
 	if err != nil {
-		return nil, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesDirPath , err)
+		return nil, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesDirPath, err)
 	}
 	organizeSubFiles, err := d.dlSubFromSeriesInfo(seriesDirPath, index, seriesInfo, err)
 	if err != nil {

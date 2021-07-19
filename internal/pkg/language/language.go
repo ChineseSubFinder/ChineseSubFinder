@@ -136,18 +136,19 @@ func Lang2EmbyName(lan types.Language) string {
 func GetLangOptions() whatlanggo.Options {
 	return whatlanggo.Options{
 		Whitelist: map[whatlanggo.Lang]bool{
-			whatlanggo.Cmn: true,	// 中文	11
-			whatlanggo.Eng: true,	// 英文	15
-			whatlanggo.Jpn: true,	// 日文	32
-			whatlanggo.Kor: true,	// 韩文	37
+			whatlanggo.Cmn: true, // 中文	11
+			whatlanggo.Eng: true, // 英文	15
+			whatlanggo.Jpn: true, // 日文	32
+			whatlanggo.Kor: true, // 韩文	37
 		},
 	}
 }
+
 // IsWhiteListLang 是否是白名单语言
 func IsWhiteListLang(lang whatlanggo.Lang) bool {
 	switch lang {
 	// 中文 英文 日文 韩文
-	case whatlanggo.Cmn, whatlanggo.Eng,whatlanggo.Jpn,whatlanggo.Kor:
+	case whatlanggo.Cmn, whatlanggo.Eng, whatlanggo.Jpn, whatlanggo.Kor:
 		return true
 	default:
 		return false
@@ -207,7 +208,7 @@ func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map
 			}
 		}
 		// 简体句子的占比超过 80%
-		if float32(isChsCount) / float32(len(chLines)) > 0.8 {
+		if float32(isChsCount)/float32(len(chLines)) > 0.8 {
 			isNoOrChsOrCht = 1
 		} else {
 			isNoOrChsOrCht = 2
@@ -398,6 +399,6 @@ func isDoubleLang(count0, count1 int) bool {
 }
 
 var (
-	chDict = sat.DefaultDict()
+	chDict   = sat.DefaultDict()
 	detector = chardet.NewTextDetector()
 )

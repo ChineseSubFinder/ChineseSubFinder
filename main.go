@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal"
+	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
@@ -35,7 +36,19 @@ func main() {
 		log.Errorln("SeriesFolder not found")
 		return
 	}
+	// ------ 数据库相关操作 Start ------
+	err := dao.InitDb()
+	if err != nil {
+		log.Errorln("dao.InitDb()", err)
+		return
+	}
+	// ------ 数据库相关操作 End ------
 
+	// ------ Hot Fix Start ------
+
+	// ------ Hot Fix End ------
+
+	// 初始化通知缓存模块
 	notify_center.Notify = notify_center.NewNotifyCenter(config.WhenSubSupplierInvalidWebHook)
 
 	log.Infoln("MovieFolder:", config.MovieFolder)
@@ -44,10 +57,10 @@ func main() {
 	// ReloadBrowser 提前把浏览器下载好
 	pkg.ReloadBrowser()
 
-	//任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
+	// 任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
-	entryID, err := c.AddFunc("@every " + config.EveryTime, func() {
+	entryID, err := c.AddFunc("@every "+config.EveryTime, func() {
 
 		DownLoadStart(httpProxy)
 	})
@@ -75,13 +88,13 @@ func DownLoadStart(httpProxy string) {
 
 	// 下载实例
 	downloader := internal.NewDownloader(types.ReqParam{
-		HttpProxy:       httpProxy,
-		DebugMode:       config.DebugMode,
-		SaveMultiSub:    config.SaveMultiSub,
-		Threads:         config.Threads,
-		SubTypePriority: config.SubTypePriority,
+		HttpProxy:                     httpProxy,
+		DebugMode:                     config.DebugMode,
+		SaveMultiSub:                  config.SaveMultiSub,
+		Threads:                       config.Threads,
+		SubTypePriority:               config.SubTypePriority,
 		WhenSubSupplierInvalidWebHook: config.WhenSubSupplierInvalidWebHook,
-		EmbyConfig: config.EmbyConfig,
+		EmbyConfig:                    config.EmbyConfig,
 	})
 
 	log.Infoln("Download One Started...")
@@ -117,7 +130,7 @@ func DownLoadStart(httpProxy string) {
 	}
 }
 
-var(
-	log         *logrus.Logger
-	config      *types.Config
+var (
+	log    *logrus.Logger
+	config *types.Config
 )

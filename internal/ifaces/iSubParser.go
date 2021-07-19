@@ -5,7 +5,6 @@ import (
 )
 
 type ISubParser interface {
-
 	GetParserName() string
 
 	DetermineFileTypeFromFile(filePath string) (*subparser.FileInfo, error)

@@ -7,7 +7,6 @@ import (
 )
 
 type ISupplier interface {
-
 	GetSupplierName() string
 
 	GetReqParam() types.ReqParam
@@ -15,6 +14,6 @@ type ISupplier interface {
 	GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error)
 
 	GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error)
-	
+
 	GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error)
 }

@@ -20,3 +20,4 @@
 /internal/config.yaml
 /internal/Logs/*.log
 /TestData/hotfix/001/test
+/internal/pkg/hot_fix/settings.db

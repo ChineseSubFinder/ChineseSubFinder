@@ -5,8 +5,8 @@ import (
 )
 
 func Test_get_IMDB_movie_xml(t *testing.T) {
-    wantid := "tt0993840"
-    wantyear:= "2021"
+	wantid := "tt0993840"
+	wantyear := "2021"
 	dirPth := "x:\\电影\\Army of the Dead (2021)\\movie.xml"
 	imdbInfo, err := getImdbAndYearMovieXml(dirPth)
 	if err != nil {
@@ -22,7 +22,7 @@ func Test_get_IMDB_movie_xml(t *testing.T) {
 
 func Test_get_IMDB_nfo(t *testing.T) {
 	wantid := "tt0993840"
-	wantyear:= "2021"
+	wantyear := "2021"
 	dirPth := "X:\\电影\\Army of the Dead (2021)\\Army of the Dead (2021) WEBDL-1080p.nfo"
 	imdbInfo, err := getImdbAndYearNfo(dirPth, "movie")
 	if err != nil {

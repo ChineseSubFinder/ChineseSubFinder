@@ -158,7 +158,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
 		organizeSubFiles, err := subSupplierHub.DownloadSub4Movie(inData.OneVideoFullPath, inData.Index)
 		if err != nil {
-			d.log.Errorln("subSupplierHub.DownloadSub4Movie", inData.OneVideoFullPath ,err)
+			d.log.Errorln("subSupplierHub.DownloadSub4Movie", inData.OneVideoFullPath, err)
 			return err
 		}
 		if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
@@ -189,9 +189,9 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		}()
 
 		select {
-		case _ = <- done:
+		case _ = <-done:
 			return
-		case p := <- panicChan:
+		case p := <-panicChan:
 			d.log.Errorln("DownloadSub4Movie.NewPoolWithFunc got panic", p)
 		case <-ctx.Done():
 			d.log.Errorln("DownloadSub4Movie.NewPoolWithFunc got time out", ctx.Err())
@@ -209,7 +209,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		wg.Add(1)
 		err = p.Invoke(InputData{OneVideoFullPath: oneVideoFullPath, Index: i, Wg: &wg})
 		if err != nil {
-			d.log.Errorln("DownloadSub4Movie ants.Invoke",err)
+			d.log.Errorln("DownloadSub4Movie ants.Invoke", err)
 		}
 	}
 	wg.Wait()
@@ -304,9 +304,9 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		}()
 
 		select {
-		case _ = <- done:
+		case _ = <-done:
 			return
-		case p := <- panicChan:
+		case p := <-panicChan:
 			d.log.Errorln("DownloadSub4Series.NewPoolWithFunc got panic", p)
 		case <-ctx.Done():
 			d.log.Errorln("DownloadSub4Series.NewPoolWithFunc got time out", ctx.Err())
@@ -337,7 +337,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		wg.Add(1)
 		err = p.Invoke(InputData{OneVideoFullPath: oneSeriesPath, Index: i, Wg: &wg})
 		if err != nil {
-			d.log.Errorln("DownloadSub4Series ants.Invoke",err)
+			d.log.Errorln("DownloadSub4Series ants.Invoke", err)
 		}
 	}
 	wg.Wait()
@@ -438,7 +438,7 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	videoFileNameWithOutExt := strings.ReplaceAll(filepath.Base(videoFileFullPath),
 		filepath.Ext(videoFileFullPath), "")
 	if extraSubPreName != "" {
-		extraSubPreName = "[" + extraSubPreName +"]"
+		extraSubPreName = "[" + extraSubPreName + "]"
 	}
 	subNewName := videoFileNameWithOutExt + embyLanExtName + extraSubPreName + finalSubFile.Ext
 	desSubFullPath := path.Join(videoRootPath, subNewName)
@@ -476,6 +476,6 @@ func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) e
 
 type InputData struct {
 	OneVideoFullPath string
-	Index			int
-	Wg 				*sync.WaitGroup
+	Index            int
+	Wg               *sync.WaitGroup
 }

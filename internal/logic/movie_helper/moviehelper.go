@@ -134,7 +134,7 @@ func MovieNeedDlSub(videoFullPath string) (bool, error) {
 		return false, err
 	}
 	// 如果这个视频发布的时间早于现在有两个年的间隔
-	if mInfo.Year > 0 &&  currentTime.Year() - 2 > mInfo.Year {
+	if mInfo.Year > 0 && currentTime.Year()-2 > mInfo.Year {
 		if found == false {
 			// 需要下载的
 			return true, nil

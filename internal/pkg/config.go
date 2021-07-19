@@ -47,7 +47,7 @@ func readConfig(viper *viper.Viper) (*types.Config, error) {
 	return conf, nil
 }
 
-var(
-	config *types.Config
+var (
+	config     *types.Config
 	configOnce sync.Once
 )

@@ -230,7 +230,7 @@ func NewBrowserLoadPageByHijackRequests(desURL string, httpProxyURL string, time
 		})
 	})
 	if err != nil {
-		return nil ,err
+		return nil, err
 	}
 	go router.Run()
 

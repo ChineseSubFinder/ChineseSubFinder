@@ -34,7 +34,6 @@ func SimulationTest() {
 	//等待缺口圖像載入
 	iframe.MustElement("#slideBg").MustWaitLoad()
 
-
 	//取得帶缺口圖像
 	shadowbg := iframe.MustElement("#slideBg").MustResource()
 	//取得原始圖像
@@ -83,11 +82,11 @@ search:
 		for j := top; j <= maxtop; j++ {
 			color_a_R, color_a_G, color_a_B, _ := fullbg_img.At(i, j).RGBA()
 			color_b_R, color_b_G, color_b_B, _ := shadowbg_img.At(i, j).RGBA()
-			color_a_R, color_a_G, color_a_B = color_a_R >> 8, color_a_G >> 8, color_a_B >> 8
-			color_b_R, color_b_G, color_b_B = color_b_R >> 8, color_b_G >> 8, color_b_B >> 8
-			if abs(int(color_a_R) - int(color_b_R)) > threshold ||
-				abs(int(color_a_G) - int(color_b_G)) > threshold ||
-				abs(int(color_a_B) - int(color_b_B)) > threshold {
+			color_a_R, color_a_G, color_a_B = color_a_R>>8, color_a_G>>8, color_a_B>>8
+			color_b_R, color_b_G, color_b_B = color_b_R>>8, color_b_G>>8, color_b_B>>8
+			if abs(int(color_a_R)-int(color_b_R)) > threshold ||
+				abs(int(color_a_G)-int(color_b_G)) > threshold ||
+				abs(int(color_a_B)-int(color_b_B)) > threshold {
 				distance += float64(i)
 				fmt.Printf("info: 對比完畢, 偏移量: %v\n", distance)
 				break search
@@ -100,11 +99,11 @@ search:
 	//启用滑鼠功能
 	mouse := page.Mouse
 	//模擬滑鼠移動至拖動按鈕處, 右移3的原因: 拖動按鈕比滑塊圖大3個像素
-	mouse.MustMove(dragbtnbox.X + 3, dragbtnbox.Y + (dragbtnbox.Height / 2))
+	mouse.MustMove(dragbtnbox.X+3, dragbtnbox.Y+(dragbtnbox.Height/2))
 	//按下滑鼠左鍵
 	mouse.MustDown("left")
 	//開始拖動
-	mouse.Move(dragbtnbox.X + distance, dragbtnbox.Y + (dragbtnbox.Height / 2), 20)
+	mouse.Move(dragbtnbox.X+distance, dragbtnbox.Y+(dragbtnbox.Height/2), 20)
 	//鬆開滑鼠左鍵, 拖动完毕
 	mouse.MustUp("left")
 	//截圖保存

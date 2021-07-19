@@ -20,7 +20,7 @@ type SubInfo struct {
 func NewSubInfo(fromWhere string, topN int64, name string, language types.Language, fileUrl string,
 	score int64, offset int64, ext string, data []byte) *SubInfo {
 
-	s := SubInfo{FromWhere: fromWhere, TopN: topN,Name: name, Language: language, FileUrl: fileUrl,
+	s := SubInfo{FromWhere: fromWhere, TopN: topN, Name: name, Language: language, FileUrl: fileUrl,
 		Score: score, Offset: offset, Ext: ext, Data: data}
 
 	s.Season = -1

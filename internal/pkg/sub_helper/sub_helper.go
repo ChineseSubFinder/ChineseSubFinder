@@ -42,7 +42,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 		nowFileSaveFullPath := path.Join(tmpFolderFullPath, GetFrontNameAndOrgName(&subInfos[i]))
 		err = utils.OutputFile(nowFileSaveFullPath, subInfos[i].Data)
 		if err != nil {
-			log_helper.GetLogger().Errorln("getFrontNameAndOrgName - OutputFile",subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
+			log_helper.GetLogger().Errorln("getFrontNameAndOrgName - OutputFile", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
 			continue
 		}
 		nowExt := strings.ToLower(subInfos[i].Ext)
@@ -187,12 +187,12 @@ func GetFrontNameAndOrgName(info *supplier.SubInfo) string {
 	}
 	info.Name = infoName
 
-	return "[" + info.FromWhere + "]_" + strconv.FormatInt(info.TopN,10) + "_" + infoName
+	return "[" + info.FromWhere + "]_" + strconv.FormatInt(info.TopN, 10) + "_" + infoName
 }
 
 // AddFrontName 添加文件的前缀
 func AddFrontName(info supplier.SubInfo, orgName string) string {
-	return "[" + info.FromWhere + "]_" + strconv.FormatInt(info.TopN,10) + "_" + orgName
+	return "[" + info.FromWhere + "]_" + strconv.FormatInt(info.TopN, 10) + "_" + orgName
 }
 
 // SearchMatchedSubFile 搜索符合后缀名的视频文件，排除 Sub_SxE0 这样的文件夹中的文件
@@ -336,6 +336,6 @@ func makeMixSubExtString(orgFileNameWithOutExt, lang string, ext, site string, b
 	return orgFileNameWithOutExt + types.Emby_chinese + "(" + lang + "," + site + ")" + tmpDefault + ext
 }
 
-var(
+var (
 	regOneSeasonSubFolderNameMatch = regexp.MustCompile(`(?m)^Sub_S\dE0`)
 )

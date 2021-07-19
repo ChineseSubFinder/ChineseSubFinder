@@ -173,13 +173,13 @@ func (em *EmbyHelper) filterEmbyVideoList(videoFolderName string, videoIdList []
 			info, err := queryFunc(data.Id)
 			outData := OutData{
 				Info: info,
-				Err: err,
+				Err:  err,
 			}
 			done <- outData
 		}()
 
 		select {
-		case outData := <- done:
+		case outData := <-done:
 			// 收到结果，需要加锁
 			if outData.Err != nil {
 				log_helper.GetLogger().Errorln("filterEmbyVideoList.NewPoolWithFunc got Err", outData.Err)
@@ -192,7 +192,7 @@ func (em *EmbyHelper) filterEmbyVideoList(videoFolderName string, videoIdList []
 			filterVideoEmbyInfo = append(filterVideoEmbyInfo, *outData.Info)
 			em.listLock.Unlock()
 			return
-		case p := <- panicChan:
+		case p := <-panicChan:
 			log_helper.GetLogger().Errorln("filterEmbyVideoList.NewPoolWithFunc got panic", p)
 		case <-ctx.Done():
 			log_helper.GetLogger().Errorln("filterEmbyVideoList.NewPoolWithFunc got time out", ctx.Err())
@@ -269,7 +269,7 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 			noSubVideoList = append(noSubVideoList, info)
 		} else {
 			// 如果视频发布时间超过两年了，有字幕就直接跳过了，一般字幕稳定了
-			if currentTime.Year() - 2 > info.VideoInfo.PremiereDate.Year() {
+			if currentTime.Year()-2 > info.VideoInfo.PremiereDate.Year() {
 				continue
 			}
 			// 有中文字幕，且如果在三个月内，则需要继续下载字幕`
@@ -308,7 +308,7 @@ func (em *EmbyHelper) langStringOK(inLang string) bool {
 		em.replaceLangString(types.Emby_cht_jp),
 		em.replaceLangString(types.Emby_chs_kr),
 		em.replaceLangString(types.Emby_cht_kr):
-			return true
+		return true
 	case em.replaceLangString(types.Emby_chinese):
 		return true
 	default:
@@ -337,11 +337,11 @@ func (em *EmbyHelper) replaceLangString(inString string) string {
 }
 
 type InputData struct {
-	Id 		string
-	Wg 		*sync.WaitGroup
+	Id string
+	Wg *sync.WaitGroup
 }
 
 type OutData struct {
-	Info 	*emby.EmbyMixInfo
-	Err 	error
+	Info *emby.EmbyMixInfo
+	Err  error
 }

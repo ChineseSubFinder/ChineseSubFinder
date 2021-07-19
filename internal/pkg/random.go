@@ -7,7 +7,7 @@ import (
 )
 
 func RandomSecondDuration(min, max int32) time.Duration {
-	tmp := random.Int31n(max - min) + min
+	tmp := random.Int31n(max-min) + min
 	return time.Duration(tmp) * time.Second
 }
 
@@ -20,8 +20,8 @@ func RandomUserAgent(UserOrSearchEngine bool) string {
 	}
 }
 
-var(
-	random = rand.New(rand.NewSource(time.Now().UnixNano()))
+var (
+	random       = rand.New(rand.NewSource(time.Now().UnixNano()))
 	engineUAList = []string{
 		// 百度搜索User-Agent：
 		// 百度 PC UA

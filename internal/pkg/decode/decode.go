@@ -48,12 +48,12 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo,
 	if err != nil {
 		return imdbInfo, err
 	}
-	for _, t := range doc.FindElements("./" + rootKey +"/title") {
+	for _, t := range doc.FindElements("./" + rootKey + "/title") {
 		imdbInfo.Title = t.Text()
 		break
 	}
 	//---------------------------------------------------------------------
-	for _, t := range doc.FindElements("./" + rootKey +"/imdb_id") {
+	for _, t := range doc.FindElements("./" + rootKey + "/imdb_id") {
 		imdbInfo.ImdbId = t.Text()
 		break
 	}
@@ -70,7 +70,7 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo,
 		break
 	}
 	//---------------------------------------------------------------------
-	for _, t := range doc.FindElements("./" + rootKey +"/year") {
+	for _, t := range doc.FindElements("./" + rootKey + "/year") {
 		imdbInfo.Year = t.Text()
 		break
 	}
@@ -140,7 +140,6 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 		}
 		return imdbInfo, nil
 	}
-
 
 	if movieXmlFPath != "" {
 		imdbInfo, err = getImdbAndYearMovieXml(movieXmlFPath)
@@ -288,14 +287,14 @@ func GetSeasonAndEpisodeFromSubFileName(videoFileName string) (bool, int, int, e
 		}
 		season, err := GetNumber2int(matched[0][1])
 		if err != nil {
-			return false,0, 0, err
+			return false, 0, 0, err
 		}
 		return true, season, 0, nil
 	} else {
 		// 一集的字幕
 		season, err := GetNumber2int(matched[0][1])
 		if err != nil {
-			return false,0, 0, err
+			return false, 0, 0, err
 		}
 		episode, err := GetNumber2int(matched[0][2])
 		if err != nil {
@@ -312,7 +311,7 @@ func GetNumber2Float(input string) (float32, error) {
 	if len(params) == 0 {
 		return 0, errors.New("get number not match")
 	}
-	fNum, err := strconv.ParseFloat(params[0],32)
+	fNum, err := strconv.ParseFloat(params[0], 32)
 	if err != nil {
 		return 0, errors.New("get number ParseFloat error")
 	}

@@ -11,10 +11,10 @@ import (
 
 // MarkingSystem 评价系统，解决字幕排序优先级问题
 type MarkingSystem struct {
-	log *logrus.Logger
-	subSiteSequence []string			// 网站的优先级，从高到低
-	SubTypePriority int					// 字幕格式的优先级
-	subParserHub *sub_helper.SubParserHub
+	log             *logrus.Logger
+	subSiteSequence []string // 网站的优先级，从高到低
+	SubTypePriority int      // 字幕格式的优先级
+	subParserHub    *sub_helper.SubParserHub
 }
 
 func NewMarkingSystem(subSiteSequence []string, subTypePriority int) *MarkingSystem {

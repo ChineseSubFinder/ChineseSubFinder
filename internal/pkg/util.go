@@ -55,7 +55,7 @@ func NewHttpClient(_reqParam ...types.ReqParam) *resty.Client {
 
 	httpClient.SetHeaders(map[string]string{
 		"Content-Type": "application/json",
-		"User-Agent": UserAgent,
+		"User-Agent":   UserAgent,
 	})
 	if len(Referer) > 0 {
 		httpClient.SetHeader("Referer", Referer)
@@ -65,7 +65,7 @@ func NewHttpClient(_reqParam ...types.ReqParam) *resty.Client {
 }
 
 // DownFile 从指定的 url 下载文件
-func DownFile(urlStr string, _reqParam ...types.ReqParam) ([]byte, string, error)  {
+func DownFile(urlStr string, _reqParam ...types.ReqParam) ([]byte, string, error) {
 	var reqParam types.ReqParam
 	if len(_reqParam) > 0 {
 		reqParam = _reqParam[0]
@@ -168,7 +168,7 @@ func GetTmpFolder(folderName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	tmpFolderFullPath :=path.Join(rootPath, folderName)
+	tmpFolderFullPath := path.Join(rootPath, folderName)
 	err = os.MkdirAll(tmpFolderFullPath, os.ModePerm)
 	if err != nil {
 		return "", err
@@ -221,6 +221,7 @@ func IsDir(path string) bool {
 	}
 	return s.IsDir()
 }
+
 // IsFile 存在且是文件
 func IsFile(filePath string) bool {
 	s, err := os.Stat(filePath)
@@ -298,7 +299,7 @@ func IsWantedVideoExtDef(fileName string) bool {
 }
 
 func GetEpisodeKeyName(season, eps int) string {
-	return "S" + strconv.Itoa(season) + "E" +strconv.Itoa(eps)
+	return "S" + strconv.Itoa(season) + "E" + strconv.Itoa(eps)
 }
 
 // ReloadBrowser 提前把浏览器下载好

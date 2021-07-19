@@ -53,7 +53,7 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 			ContinueOnError:        false,
 			OverwriteExisting:      false,
 			ImplicitTopLevelFolder: false,
-			StripComponents: 1,
+			StripComponents:        1,
 		}
 		err := z.Walk(fileFullPath, func(f archiver.File) error {
 			if f.IsDir() == true {
@@ -61,8 +61,8 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 			}
 			err := processOneFile(f, false, desRootPath)
 			if err != nil {
-					return err
-				}
+				return err
+			}
 			return nil
 		})
 		if err != nil {
@@ -74,7 +74,7 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 			ContinueOnError:        false,
 			OverwriteExisting:      false,
 			ImplicitTopLevelFolder: false,
-			StripComponents: 1,
+			StripComponents:        1,
 		}
 		err := z.Walk(fileFullPath, func(f archiver.File) error {
 			if f.IsDir() == true {
@@ -166,7 +166,7 @@ func unArr7z(fileFullPath, desRootPath string) error {
 
 func IsWantedArchiveExtName(fileName string) bool {
 	switch strings.ToLower(filepath.Ext(fileName)) {
-	case ".zip", ".tar",".rar", "7z":
+	case ".zip", ".tar", ".rar", "7z":
 		return true
 	default:
 		return false

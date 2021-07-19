@@ -61,12 +61,12 @@ func (em EmbyApi) RefreshRecentlyVideoInfo() error {
 		}()
 
 		select {
-		case err = <- done:
+		case err = <-done:
 			if err != nil {
 				log_helper.GetLogger().Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got error", err)
 			}
 			return
-		case p := <- panicChan:
+		case p := <-panicChan:
 			log_helper.GetLogger().Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got panic", p)
 		case <-ctx.Done():
 			log_helper.GetLogger().Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got time out", ctx.Err())
@@ -121,7 +121,7 @@ func (em EmbyApi) GetItemAncestors(id string) ([]emby.EmbyItemsAncestors, error)
 
 	_, err := em.getNewClient().R().
 		SetQueryParams(map[string]string{
-			"api_key":          em.embyConfig.ApiKey,
+			"api_key": em.embyConfig.ApiKey,
 		}).
 		SetResult(&recItems).
 		Get(em.embyConfig.Url + "/emby_helper/Items/" + id + "/Ancestors")
@@ -139,7 +139,7 @@ func (em EmbyApi) GetItemVideoInfo(id string) (emby.EmbyVideoInfo, error) {
 
 	_, err := em.getNewClient().R().
 		SetQueryParams(map[string]string{
-			"api_key":          em.embyConfig.ApiKey,
+			"api_key": em.embyConfig.ApiKey,
 		}).
 		SetResult(&recItem).
 		Get(em.embyConfig.Url + "/emby_helper/LiveTv/Programs/" + id)
@@ -155,7 +155,7 @@ func (em EmbyApi) UpdateVideoSubList(id string) error {
 
 	_, err := em.getNewClient().R().
 		SetQueryParams(map[string]string{
-			"api_key":          em.embyConfig.ApiKey,
+			"api_key": em.embyConfig.ApiKey,
 		}).
 		Post(em.embyConfig.Url + "/emby_helper/Items/" + id + "/Refresh")
 	if err != nil {
@@ -173,6 +173,6 @@ func (em EmbyApi) getNewClient() *resty.Client {
 }
 
 type InputData struct {
-	Id 				string
-	Wg 				*sync.WaitGroup
+	Id string
+	Wg *sync.WaitGroup
 }

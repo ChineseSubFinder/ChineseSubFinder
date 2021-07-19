@@ -61,7 +61,7 @@ func (s Supplier) GetReqParam() types.ReqParam {
 	return s.reqParam
 }
 
-func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error){
+func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 	return s.getSubListFromFile4Movie(filePath)
 }
 
@@ -128,7 +128,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	return subInfos, nil
 }
 
-func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error){
+func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	panic("not implemented")
 }
 
@@ -163,7 +163,7 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 			s.log.Errorln("getSubListFromKeyword4Movie", "IMDBID can not found sub", filePath, err)
 		}
 		// 如果有就优先返回
-		if len(subInfoList) >0 {
+		if len(subInfoList) > 0 {
 			return subInfoList, nil
 		}
 	}
@@ -180,7 +180,7 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 
 func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInfo, error) {
 
-	var subInfos  []supplier.SubInfo
+	var subInfos []supplier.SubInfo
 	detailPageUrl, err := s.step0(keyword)
 	if err != nil {
 		return nil, err
@@ -220,7 +220,7 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, all
 	// key SxEx - SubInfos
 	var allSubDict = make(map[string][]HdListItem)
 	// 全季的字幕列表
-	var oneSeasonSubDict  = make(map[string][]HdListItem)
+	var oneSeasonSubDict = make(map[string][]HdListItem)
 	for _, subInfo := range allSubList {
 		_, season, episode, err := decode.GetSeasonAndEpisodeFromSubFileName(subInfo.Title)
 		if err != nil {
@@ -303,7 +303,7 @@ func (s Supplier) step0(keyword string) (string, error) {
 	}
 	imgSelection := doc.Find("img.rounded-start")
 	_, ok := imgSelection.Attr("src")
-	if ok == true{
+	if ok == true {
 
 		if len(imgSelection.Nodes) < 2 {
 			return "", common.SubHDStep0ImgParentLessThan2
@@ -338,7 +338,7 @@ func (s Supplier) step0(keyword string) (string, error) {
 		//} else {
 		//	return "/d/" + strings.ReplaceAll(imgName, imgExt, ""), nil
 		//}
-	} else{
+	} else {
 		return "", common.SubHDStep0HrefIsNull
 	}
 	//re = regexp.MustCompile(`<a\shref="(/d/[\w]+)">\s?<img`)
@@ -417,7 +417,7 @@ func (s Supplier) step1(detailPageUrl string, isMovieOrSeries bool) ([]HdListIte
 }
 
 // step2Ex 下载字幕 过防水墙
-func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdContent, error)  {
+func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdContent, error) {
 	var err error
 	defer func() {
 		if err != nil {
@@ -498,7 +498,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWater
 	err = rod.Try(func() {
 		tmpDir := filepath.Join(os.TempDir(), "rod", "downloads")
 		wait := browser.WaitDownload(tmpDir)
-		getDownloadFile:= func() ([]byte, string, error) {
+		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()
 			downloadPath := filepath.Join(tmpDir, info.GUID)
 			defer func() { _ = os.Remove(downloadPath) }()
@@ -506,7 +506,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWater
 			if err != nil {
 				return nil, "", err
 			}
-			return b,info.SuggestedFilename, nil
+			return b, info.SuggestedFilename, nil
 		}
 
 		// 点击下载按钮
@@ -536,7 +536,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWater
 	return &hdContent, nil
 }
 
-func (s Supplier) passWaterWall(page *rod.Page)  {
+func (s Supplier) passWaterWall(page *rod.Page) {
 	//等待驗證碼窗體載入
 	page.MustElement("#tcaptcha_iframe").MustWaitLoad()
 	//進入到iframe
@@ -655,8 +655,8 @@ type HdListItem struct {
 	Lang       string `json:"lang"`
 	Rate       string `json:"rate"`
 	DownCount  int    `json:"downCount"`
-	Season    			int		// 第几季，默认-1
-	Episode   			int		// 第几集，默认-1
+	Season     int    // 第几季，默认-1
+	Episode    int    // 第几集，默认-1
 }
 
 type HdContent struct {

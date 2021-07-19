@@ -11,7 +11,6 @@ import (
 )
 
 type Parser struct {
-
 }
 
 func NewParser() *Parser {
@@ -26,11 +25,11 @@ func (p Parser) GetParserName() string {
 func (p Parser) DetermineFileTypeFromFile(filePath string) (*subparser.FileInfo, error) {
 	nowExt := filepath.Ext(filePath)
 	if strings.ToLower(nowExt) != common.SubExtSRT {
-		return nil ,nil
+		return nil, nil
 	}
 	fBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return nil ,err
+		return nil, err
 	}
 	inBytes, err := language.ChangeFileCoding2UTF8(fBytes)
 	if err != nil {
@@ -40,7 +39,7 @@ func (p Parser) DetermineFileTypeFromFile(filePath string) (*subparser.FileInfo,
 }
 
 // DetermineFileTypeFromBytes 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
-func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*subparser.FileInfo, error){
+func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*subparser.FileInfo, error) {
 
 	allString := string(inBytes)
 	// 注意，需要替换掉 \r 不然正则表达式会有问题
@@ -49,7 +48,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*subp
 	// 找到 start end text
 	matched := re.FindAllStringSubmatch(allString, -1)
 	if len(matched) < 1 {
-		return nil ,nil
+		return nil, nil
 	}
 	subFileInfo := subparser.FileInfo{}
 	subFileInfo.Ext = nowExt
@@ -62,7 +61,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*subp
 		nowText := oneDial[4]
 		odl := subparser.OneDialogue{
 			StartTime: startTime,
-			EndTime: endTime,
+			EndTime:   endTime,
 		}
 		odl.Lines = make([]string, 0)
 		nowText = strings.TrimRight(nowText, "\n")

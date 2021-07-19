@@ -45,7 +45,7 @@ func (s Supplier) GetReqParam() types.ReqParam {
 	return s.reqParam
 }
 
-func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error){
+func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 	return s.getSubListFromFile(filePath)
 }
 
@@ -53,7 +53,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	return s.downloadSub4Series(seriesInfo)
 }
 
-func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error){
+func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	return s.downloadSub4Series(seriesInfo)
 }
 
@@ -115,7 +115,6 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 
 		outSubList = append(outSubList, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), v.Sname, tmpLang, v.Surl, v.Svote, v.Roffset, ext, data))
 	}
-
 
 	return outSubList, nil
 }

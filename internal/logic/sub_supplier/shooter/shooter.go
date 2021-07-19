@@ -44,7 +44,7 @@ func (s Supplier) GetReqParam() types.ReqParam {
 	return s.reqParam
 }
 
-func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error){
+func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 	return s.getSubListFromFile(filePath)
 }
 
@@ -52,7 +52,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	return s.downloadSub4Series(seriesInfo)
 }
 
-func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error){
+func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	return s.downloadSub4Series(seriesInfo)
 }
 
@@ -79,8 +79,8 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 		SetFormData(map[string]string{
 			"filehash": hash,
 			"pathinfo": fileName,
-			"format": "json",
-			"lang": qLan,
+			"format":   "json",
+			"lang":     qLan,
 		}).
 		SetResult(&jsonList).
 		Post(common.SubShooterRootUrl)
@@ -173,7 +173,6 @@ func (s Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier.
 	// 返回前，需要把每一个 Eps 的 Season Episode 信息填充到每个 SubInfo 中
 	return allSupplierSubInfo, nil
 }
-
 
 type FilesShooter struct {
 	Ext  string `json:"ext"`

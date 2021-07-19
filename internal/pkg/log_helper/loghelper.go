@@ -46,5 +46,6 @@ func GetLogger() *logrus.Logger {
 	})
 	return logger
 }
+
 var logger *logrus.Logger
 var logOnce sync.Once

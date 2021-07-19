@@ -49,7 +49,7 @@ func (s Supplier) GetReqParam() types.ReqParam {
 	return s.reqParam
 }
 
-func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error){
+func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 	return s.getSubListFromMovie(filePath)
 }
 
@@ -106,7 +106,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	return outSubInfoList, nil
 }
 
-func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error){
+func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	panic("not implemented")
 }
 
@@ -142,7 +142,7 @@ func (s Supplier) getSubListFromMovie(fileFPath string) ([]supplier.SubInfo, err
 			s.log.Errorln("getSubListFromKeyword", "IMDBID can not found sub", fileFPath, err)
 		}
 		// 如果有就优先返回
-		if len(subInfoList) >0 {
+		if len(subInfoList) > 0 {
 			return subInfoList, nil
 		}
 	}
@@ -185,7 +185,7 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, All
 	// key SxEx - SubInfos
 	var allSubDict = make(map[string]SubInfos)
 	// 全季的字幕列表
-	var oneSeasonSubDict  = make(map[string]SubInfos)
+	var oneSeasonSubDict = make(map[string]SubInfos)
 	for _, subInfo := range AllSeasonSubResult.SubInfos {
 		_, season, episode, err := decode.GetSeasonAndEpisodeFromSubFileName(subInfo.Name)
 		if err != nil {
@@ -492,22 +492,23 @@ type SubResult struct {
 }
 
 type SubInfo struct {
-	Name				string	// 字幕的名称
-	Lang				string	// 语言
-	AuthorInfo			string	// 作者
-	Ext					string	// 后缀名
-	Score				float32	// 评分
-	DownloadTimes 		int		// 下载的次数
-	Priority			float32	// 优先级，使用评分和次数乘积而来，类似于 Score 投票
-	DetailUrl			string	// 字幕的详情界面，需要再次分析具体的下载地址，地址需要拼接网站的根地址上去
-	SubDownloadPageUrl 	string	// 字幕的具体的下载页面，会有多个下载可用的链接
-	DownloadUrl			string	// 字幕的下载地址
-	Season    			int		// 第几季，默认-1
-	Episode   			int		// 第几集，默认-1
+	Name               string  // 字幕的名称
+	Lang               string  // 语言
+	AuthorInfo         string  // 作者
+	Ext                string  // 后缀名
+	Score              float32 // 评分
+	DownloadTimes      int     // 下载的次数
+	Priority           float32 // 优先级，使用评分和次数乘积而来，类似于 Score 投票
+	DetailUrl          string  // 字幕的详情界面，需要再次分析具体的下载地址，地址需要拼接网站的根地址上去
+	SubDownloadPageUrl string  // 字幕的具体的下载页面，会有多个下载可用的链接
+	DownloadUrl        string  // 字幕的下载地址
+	Season             int     // 第几季，默认-1
+	Episode            int     // 第几集，默认-1
 }
 
 // SubInfos 实现自定义排序
 type SubInfos []SubInfo
+
 func (s SubInfos) Len() int {
 	return len(s)
 }
@@ -517,6 +518,7 @@ func (s SubInfos) Less(i, j int) bool {
 func (s SubInfos) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 
 type SortByPriority struct{ SubInfos }
+
 // Less 根据元素的优先级降序排序
 func (s SortByPriority) Less(i, j int) bool {
 	return s.SubInfos[i].Priority > s.SubInfos[j].Priority
