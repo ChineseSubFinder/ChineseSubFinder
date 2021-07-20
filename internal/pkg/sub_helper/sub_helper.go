@@ -336,6 +336,32 @@ func makeMixSubExtString(orgFileNameWithOutExt, lang string, ext, site string, b
 	return orgFileNameWithOutExt + types.Emby_chinese + "(" + lang + "," + site + ")" + tmpDefault + ext
 }
 
+// DeleteOneSeasonSubCacheFolder 删除一个连续剧中的所有一季字幕的缓存文件夹
+func DeleteOneSeasonSubCacheFolder(seriesDir string) error {
+
+	files, err := ioutil.ReadDir(seriesDir)
+	if err != nil {
+		return err
+	}
+	pathSep := string(os.PathSeparator)
+	for _, curFile := range files {
+		if curFile.IsDir() == true {
+			matched := regOneSeasonSubFolderNameMatch.FindAllStringSubmatch(curFile.Name(), -1)
+			if matched == nil || len(matched) < 1 {
+				continue
+			}
+
+			fullPath := seriesDir + pathSep + curFile.Name()
+			err = os.RemoveAll(fullPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 var (
 	regOneSeasonSubFolderNameMatch = regexp.MustCompile(`(?m)^Sub_S\dE0`)
 )

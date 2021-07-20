@@ -95,6 +95,7 @@ func DownLoadStart(httpProxy string) {
 		SubTypePriority:               config.SubTypePriority,
 		WhenSubSupplierInvalidWebHook: config.WhenSubSupplierInvalidWebHook,
 		EmbyConfig:                    config.EmbyConfig,
+		SaveOneSeasonSub:              config.SaveOneSeasonSub,
 	})
 
 	log.Infoln("Download One Started...")

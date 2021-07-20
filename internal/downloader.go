@@ -14,6 +14,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
@@ -281,6 +282,13 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 			// 匹配对应的 Eps 去处理
 			seasonEpsKey := pkg.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
 			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, fullSeasonSubDict[seasonEpsKey])
+		}
+		// 是否清理全季的缓存字幕文件夹
+		if d.reqParam.SaveOneSeasonSub == false {
+			err = sub_helper.DeleteOneSeasonSubCacheFolder(seriesInfo.DirPath)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil

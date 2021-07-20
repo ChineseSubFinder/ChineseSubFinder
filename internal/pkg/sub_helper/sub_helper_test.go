@@ -1,6 +1,10 @@
 package sub_helper
 
-import "testing"
+import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"path"
+	"testing"
+)
 
 func TestIsOldVersionSubPrefixName(t *testing.T) {
 	type args struct {
@@ -32,5 +36,21 @@ func TestIsOldVersionSubPrefixName(t *testing.T) {
 				t.Errorf("IsOldVersionSubPrefixName() got2 = %v, want %v", got2, tt.want2)
 			}
 		})
+	}
+}
+
+func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
+
+	testDataPath := "..\\..\\..\\TestData\\sub_helper"
+	testRootDir, err := pkg.CopyTestData(testDataPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = DeleteOneSeasonSubCacheFolder(testRootDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pkg.IsDir(path.Join(testRootDir, "Sub_S1E0")) == true {
+		t.Fatal("Sub_S1E0 not delete")
 	}
 }

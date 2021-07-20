@@ -176,7 +176,7 @@ func GetTmpFolder(folderName string) (string, error) {
 	return tmpFolderFullPath, nil
 }
 
-// ClearFolder 清理文件夹
+// ClearFolder 清空文件夹
 func ClearFolder(folderName string) error {
 	pathSep := string(os.PathSeparator)
 	files, err := ioutil.ReadDir(folderName)
