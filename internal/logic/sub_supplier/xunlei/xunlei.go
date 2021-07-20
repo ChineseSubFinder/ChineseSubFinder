@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
@@ -67,10 +68,14 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 		return outSubList, common.XunLeiCIdIsEmpty
 	}
 	httpClient := pkg.NewHttpClient(s.reqParam)
-	_, err = httpClient.R().
+	resp, err := httpClient.R().
 		SetResult(&jsonList).
 		Get(fmt.Sprintf(common.SubXunLeiRootUrl, cid))
 	if err != nil {
+		if resp != nil {
+			s.log.Errorln("xunlei NewHttpClient:", resp.String())
+			notify_center.Notify.Add("xunlei NewHttpClient", fmt.Sprintf("resp: %s, error: %s", resp.String(), err.Error()))
+		}
 		return outSubList, err
 	}
 	// 剔除空的
@@ -103,7 +108,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 		tmpLang := language.LangConverter(v.Language)
 		data, filename, err := pkg.DownFile(v.Surl)
 		if err != nil {
-			s.log.Error(err)
+			s.log.Errorln("xunlei pkg.DownFile:", err)
 			continue
 		}
 		ext := ""
