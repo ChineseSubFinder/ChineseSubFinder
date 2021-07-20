@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/spf13/viper"
+	"strings"
 	"sync"
 )
 
@@ -17,6 +18,10 @@ func GetConfig() *types.Config {
 		config, err = readConfig(configViper)
 		if err != nil {
 			panic("GetConfig - readConfig " + err.Error())
+		}
+		// 读取用户自定义的视频后缀名列表
+		for _, customExt := range strings.Split(config.CustomVideoExts, ",") {
+			customVideoExts = append(customVideoExts, "."+customExt)
 		}
 	})
 	return config

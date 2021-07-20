@@ -276,26 +276,25 @@ func SearchMatchedVideoFile(dir string) ([]string, error) {
 
 // IsWantedVideoExtDef 后缀名是否符合规则
 func IsWantedVideoExtDef(fileName string) bool {
-	// TODO 强制使用固定的视频后缀名匹配列表，后续有需求再考虑额实现外部可配置的列表
 
-	if len(wantedExtList) < 1 {
-		defExtList = append(defExtList, common.VideoExtMp4)
-		defExtList = append(defExtList, common.VideoExtMkv)
-		defExtList = append(defExtList, common.VideoExtRmvb)
-		defExtList = append(defExtList, common.VideoExtIso)
+	if len(wantedExtMap) < 1 {
+		defExtMap[common.VideoExtMp4] = common.VideoExtMp4
+		defExtMap[common.VideoExtMkv] = common.VideoExtMkv
+		defExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
+		defExtMap[common.VideoExtIso] = common.VideoExtIso
 
-		wantedExtList = append(defExtList, common.VideoExtMp4)
-		wantedExtList = append(defExtList, common.VideoExtMkv)
-		wantedExtList = append(defExtList, common.VideoExtRmvb)
-		wantedExtList = append(defExtList, common.VideoExtIso)
-	}
-	fileName = strings.ToLower(filepath.Ext(fileName))
-	for _, s := range wantedExtList {
-		if s == fileName {
-			return true
+		wantedExtMap[common.VideoExtMp4] = common.VideoExtMp4
+		wantedExtMap[common.VideoExtMkv] = common.VideoExtMkv
+		wantedExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
+		wantedExtMap[common.VideoExtIso] = common.VideoExtIso
+
+		for _, videoExt := range customVideoExts {
+			wantedExtMap[videoExt] = videoExt
 		}
 	}
-	return false
+	fileExt := strings.ToLower(filepath.Ext(fileName))
+	_, bFound := wantedExtMap[fileExt]
+	return bFound
 }
 
 func GetEpisodeKeyName(season, eps int) string {

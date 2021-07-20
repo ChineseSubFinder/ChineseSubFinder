@@ -13,7 +13,9 @@ type Config struct {
 	EmbyConfig                    emby.EmbyConfig // Emby API 高阶设置参数
 	SaveMultiSub                  bool            // 保存多个网站的 Top 1 字幕
 	SaveOneSeasonSub              bool            // 保存整个季度的字幕
-	MovieFolder                   string          // 电影文件夹
-	SeriesFolder                  string          // 连续剧文件夹
-	AnimeFolder                   string          // 日本动画文件夹，很可能不会实现该功能
+	CustomVideoExts               string          // 自定义视频扩展名，多个扩展名用英文逗号分隔。是在原有基础上新增。
+
+	MovieFolder  string // 电影文件夹
+	SeriesFolder string // 连续剧文件夹
+	AnimeFolder  string // 日本动画文件夹，很可能不会实现该功能
 }
