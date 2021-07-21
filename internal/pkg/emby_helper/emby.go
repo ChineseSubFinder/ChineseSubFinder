@@ -106,7 +106,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 			"SortBy":           "DateCreated",
 		}).
 		SetResult(&recItems).
-		Get(em.embyConfig.Url + "/emby_helper/Items")
+		Get(em.embyConfig.Url + "/emby/Items")
 	if err != nil {
 		return emby.EmbyRecentlyItems{}, err
 	}
@@ -124,7 +124,7 @@ func (em EmbyApi) GetItemAncestors(id string) ([]emby.EmbyItemsAncestors, error)
 			"api_key": em.embyConfig.ApiKey,
 		}).
 		SetResult(&recItems).
-		Get(em.embyConfig.Url + "/emby_helper/Items/" + id + "/Ancestors")
+		Get(em.embyConfig.Url + "/emby/Items/" + id + "/Ancestors")
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func (em EmbyApi) GetItemVideoInfo(id string) (emby.EmbyVideoInfo, error) {
 			"api_key": em.embyConfig.ApiKey,
 		}).
 		SetResult(&recItem).
-		Get(em.embyConfig.Url + "/emby_helper/LiveTv/Programs/" + id)
+		Get(em.embyConfig.Url + "/emby/LiveTv/Programs/" + id)
 	if err != nil {
 		return emby.EmbyVideoInfo{}, err
 	}
@@ -157,7 +157,7 @@ func (em EmbyApi) UpdateVideoSubList(id string) error {
 		SetQueryParams(map[string]string{
 			"api_key": em.embyConfig.ApiKey,
 		}).
-		Post(em.embyConfig.Url + "/emby_helper/Items/" + id + "/Refresh")
+		Post(em.embyConfig.Url + "/emby/Items/" + id + "/Refresh")
 	if err != nil {
 		return err
 	}

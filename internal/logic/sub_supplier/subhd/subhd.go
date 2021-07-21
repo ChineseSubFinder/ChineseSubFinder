@@ -67,12 +67,6 @@ func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 
 func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 
-	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
-	if err != nil {
-		return nil, err
-	}
-	defer browser.Close()
-
 	var subInfos = make([]supplier.SubInfo, 0)
 	var subList = make([]HdListItem, 0)
 	for value := range seriesInfo.NeedDlSeasonDict {
@@ -111,6 +105,13 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	// 找到那些 Eps 需要下载字幕的
 	subInfoNeedDownload := s.whichEpisodeNeedDownloadSub(seriesInfo, subList)
 	// 下载字幕
+	var browser *rod.Browser
+	// 是用本地的 Browser 还是远程的，推荐是远程的
+	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
+	if err != nil {
+		return nil, err
+	}
+	defer browser.Close()
 	for i, item := range subInfoNeedDownload {
 		hdContent, err := s.step2Ex(browser, item.Url)
 		if err != nil {
@@ -132,12 +133,6 @@ func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]sup
 }
 
 func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
-
-	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
-	if err != nil {
-		return nil, err
-	}
-	defer browser.Close()
 	/*
 		虽然是传入视频文件路径，但是其实需要读取对应的视频文件目录下的
 		movie.xml 以及 *.nfo，找到 IMDB id
@@ -161,7 +156,7 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 
 	if imdbInfo.ImdbId != "" {
 		// 先用 imdb id 找
-		subInfoList, err = s.getSubListFromKeyword4Movie(browser, imdbInfo.ImdbId)
+		subInfoList, err = s.getSubListFromKeyword4Movie(imdbInfo.ImdbId)
 		if err != nil {
 			// 允许的错误，跳过，继续进行文件名的搜索
 			s.log.Errorln(s.GetSupplierName(), "keyword:", imdbInfo.ImdbId)
@@ -174,7 +169,7 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 	}
 	// 如果没有，那么就用文件名查找
 	searchKeyword := pkg.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
-	subInfoList, err = s.getSubListFromKeyword4Movie(browser, searchKeyword)
+	subInfoList, err = s.getSubListFromKeyword4Movie(searchKeyword)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "keyword:", searchKeyword)
 		return nil, err
@@ -183,7 +178,7 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 	return subInfoList, nil
 }
 
-func (s Supplier) getSubListFromKeyword4Movie(browser *rod.Browser, keyword string) ([]supplier.SubInfo, error) {
+func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInfo, error) {
 
 	var subInfos []supplier.SubInfo
 	detailPageUrl, err := s.step0(keyword)
@@ -198,6 +193,14 @@ func (s Supplier) getSubListFromKeyword4Movie(browser *rod.Browser, keyword stri
 	if err != nil {
 		return nil, err
 	}
+
+	var browser *rod.Browser
+	// 是用本地的 Browser 还是远程的，推荐是远程的
+	browser, err = rod_helper.NewBrowser(s.reqParam.HttpProxy)
+	if err != nil {
+		return nil, err
+	}
+	defer browser.Close()
 
 	for i, item := range subList {
 		hdContent, err := s.step2Ex(browser, item.Url)
@@ -422,7 +425,7 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 		}
 	}()
 	subDownloadPageUrl = pkg.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
-	// 默认超时是 120s，如果是调试模式则是 20 min
+	// 默认超时是 60s，如果是调试模式则是 5 min
 	tt := common.HTMLTimeOut
 	if s.reqParam.DebugMode == true {
 		tt = common.OneVideoProcessTimeOut
@@ -431,6 +434,7 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 	if err != nil {
 		return nil, err
 	}
+	defer page.Close()
 	page.MustSetUserAgent(&proto.NetworkSetUserAgentOverride{
 		UserAgent: pkg.RandomUserAgent(true),
 	})
@@ -626,21 +630,49 @@ search:
 	}
 }
 
-func (s Supplier) httpGet(url string) (string, error) {
-	s.reqParam.Referer = url
+func (s Supplier) httpGet(inputUrl string) (string, error) {
+	s.reqParam.Referer = inputUrl
+	// TODO subhd 搜索限制太大，更换方式也差不多
+	// 是用本地的 Browser 还是远程的，推荐是远程的
+	//browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
+	//if err != nil {
+	//	return "", err
+	//}
+	//defer browser.Close()
+	//// 默认超时是 60s，如果是调试模式则是 5 min
+	//tt := common.HTMLTimeOut
+	//if s.reqParam.DebugMode == true {
+	//	tt = common.OneVideoProcessTimeOut
+	//}
+	//page, err := rod_helper.NewPageNavigate(browser, inputUrl, tt, 5)
+	//if err != nil {
+	//	return "", err
+	//}
+	//defer page.Close()
+	//page.MustSetUserAgent(&proto.NetworkSetUserAgentOverride{
+	//	UserAgent: pkg.RandomUserAgent(true),
+	//})
+	//err = page.WaitLoad()
+	//if err != nil {
+	//	return "", err
+	//}
+	//recvText, err := page.HTML()
+	//if err != nil {
+	//	return "", err
+	//}
 	httpClient := pkg.NewHttpClient(s.reqParam)
-	resp, err := httpClient.R().Get(url)
+	resp, err := httpClient.R().Get(inputUrl)
 	if err != nil {
 		return "", err
 	}
 	recvText := resp.String()
 	//搜索验证 点击继续搜索
 	if strings.Contains(recvText, "搜索验证") || strings.Contains(recvText, "搜索频率") {
-		s.log.Debugln("搜索验证 or 搜索频率 reload", url)
+		s.log.Debugln("搜索验证 or 搜索频率 reload", inputUrl)
 		time.Sleep(pkg.RandomSecondDuration(5, 10))
-		return s.httpGet(url)
+		return s.httpGet(inputUrl)
 	}
-	return resp.String(), nil
+	return recvText, nil
 }
 
 type HdListItem struct {

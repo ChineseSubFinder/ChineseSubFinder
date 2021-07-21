@@ -362,6 +362,12 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 
 // oneVideoSelectBestSub 一个视频，选择最佳的一个字幕（也可以保存所有网站第一个最佳字幕）
 func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFiles []string) {
+
+	// 如果没有则直接跳过
+	if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
+		return
+	}
+
 	var err error
 	// 得到目标视频文件的根目录
 	videoRootPath := filepath.Dir(oneVideoFullPath)
@@ -465,20 +471,18 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSub
 
 // 在前面需要进行语言的筛选、排序，这里仅仅是存储， extraSubPreName 这里传递是字幕的网站，有就认为是多字幕的存储。空就是单字幕，单字幕就可以setDefault
 func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile subparser.FileInfo, extraSubPreName string, setDefault bool) error {
+
 	videoRootPath := filepath.Dir(videoFileFullPath)
-
-	subNewName := sub_helper.GenerateMixSubName(videoFileFullPath, finalSubFile.Ext, finalSubFile.Lang, extraSubPreName, setDefault, false)
-
-	//embyLanExtName := language.Lang2EmbyNameOld(finalSubFile.Lang)
-	//// 构建视频文件加 emby_helper 的字幕预研要求名称
-	//videoFileNameWithOutExt := strings.ReplaceAll(filepath.Base(videoFileFullPath),
-	//	filepath.Ext(videoFileFullPath), "")
-	//if extraSubPreName != "" {
-	//	extraSubPreName = "[" + extraSubPreName + "]"
-	//}
-	//subNewName := videoFileNameWithOutExt + embyLanExtName + extraSubPreName + finalSubFile.Ext
+	subNewName, subNewNameWithDefault, _ := sub_helper.GenerateMixSubName(videoFileFullPath, finalSubFile.Ext, finalSubFile.Lang, extraSubPreName)
 
 	desSubFullPath := path.Join(videoRootPath, subNewName)
+	if setDefault == true {
+		// 先判断没有 default 的字幕是否存在了，在的话，先删除，然后再写入
+		if pkg.IsFile(desSubFullPath) == true {
+			_ = os.Remove(desSubFullPath)
+		}
+		desSubFullPath = path.Join(videoRootPath, subNewNameWithDefault)
+	}
 	// 最后写入字幕
 	err := utils.OutputFile(desSubFullPath, finalSubFile.Data)
 	if err != nil {

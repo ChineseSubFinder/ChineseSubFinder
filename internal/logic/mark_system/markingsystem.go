@@ -70,9 +70,9 @@ func (m MarkingSystem) SelectEachSiteTop1SubFile(organizeSubFiles []string) ([]s
 	// 第二轮，单语言（中文）、字幕类型自定义，优先
 	// 第三轮，双语、字幕类型0，优先
 	// 第四轮，单语言（中文）、字幕类型0，优先
-	for i := 0; i < 4; i++ {
-		for siteName, infos := range subInfoDict {
-			// 每个网站保存一个
+	for siteName, infos := range subInfoDict {
+		// 每个网站保存一个
+		for i := 0; i < 4; i++ {
 			if i == 0 {
 				finalSubFile = sub_helper.SelectChineseBestBilingualSubtitle(infos, m.SubTypePriority)
 			} else if i == 1 {
@@ -85,6 +85,7 @@ func (m MarkingSystem) SelectEachSiteTop1SubFile(organizeSubFiles []string) ([]s
 			if finalSubFile != nil {
 				outSiteName = append(outSiteName, siteName)
 				outSubParserFileInfos = append(outSubParserFileInfos, *finalSubFile)
+				break
 			}
 		}
 	}
