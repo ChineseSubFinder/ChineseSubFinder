@@ -422,7 +422,7 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 		}
 	}()
 	subDownloadPageUrl = pkg.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
-	// 默认超时是 60s，如果是调试模式则是 5 min
+	// 默认超时是 120s，如果是调试模式则是 20 min
 	tt := common.HTMLTimeOut
 	if s.reqParam.DebugMode == true {
 		tt = common.OneVideoProcessTimeOut

@@ -21,14 +21,14 @@ func DownloadTest() error {
 
 		browser, err := rod_helper.NewBrowser("")
 		if err != nil {
+			println(inData.Index, "rod_helper.NewBrowser", err)
 			return err
 		}
 		defer func() {
 			browser.Close()
 			println(inData.Index, "browser closed")
 		}()
-
-		page, err := rod_helper.NewPageNavigate(browser, "https://www.baidu.com", 1*time.Second, 5)
+		page, err := rod_helper.NewPageNavigate(browser, "https://www.baidu.com", 10*time.Second, 5)
 		if err != nil {
 			return err
 		}
@@ -36,17 +36,71 @@ func DownloadTest() error {
 			UserAgent: pkg.RandomUserAgent(true),
 		})
 		err = page.WaitLoad()
-		time.Sleep(6 * time.Second)
+		time.Sleep(10 * time.Second)
 
 		return nil
+
+		//outDataChan := make(chan int)
+		//for i := 0; i < 2; i++ {
+		//	go func(in int) {
+		//
+		//		var outData int
+		//		outData = -1
+		//		defer func() {
+		//			println(inData.Index, in, "go func done")
+		//			outDataChan <- outData
+		//		}()
+		//
+		//		browser, err := rod_helper.NewBrowser("")
+		//		if err != nil {
+		//			println(inData.Index, in, "rod_helper.NewBrowser", err)
+		//			return
+		//		}
+		//		defer func() {
+		//			browser.Close()
+		//			println(inData.Index, in, "browser closed")
+		//		}()
+		//		page, err := rod_helper.NewPageNavigate(browser, "https://www.baidu.com", 10*time.Second, 5)
+		//		if err != nil {
+		//			return
+		//		}
+		//		page.MustSetUserAgent(&proto.NetworkSetUserAgentOverride{
+		//			UserAgent: pkg.RandomUserAgent(true),
+		//		})
+		//		err = page.WaitLoad()
+		//		time.Sleep(6 * time.Second)
+		//
+		//		outData = in
+		//	}(i)
+		//}
+		//
+		//countResult := 0
+		//for {
+		//	select {
+		//	case <-inData.Ctx.Done():
+		//		// 超时退出
+		//		return nil
+		//	case v, ok := <-outDataChan:
+		//		if ok == true {
+		//			println(inData.Index, "outData ok", v)
+		//		} else {
+		//			println(inData.Index, "outData not ok", v)
+		//		}
+		//		countResult++
+		//		// 跳出，收到够反馈了
+		//		if countResult == 2 {
+		//			return nil
+		//		}
+		//	}
+		//}
 	}
 
 	antPool, err := ants.NewPoolWithFunc(2, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
-
+		data.Ctx = ctx
 		done := make(chan error, 1)
 		panicChan := make(chan interface{}, 1)
 		go func() {
@@ -56,7 +110,7 @@ func DownloadTest() error {
 				}
 			}()
 
-			done <- testFunc(inData)
+			done <- testFunc(data)
 		}()
 
 		select {
@@ -93,6 +147,7 @@ func DownloadTest() error {
 }
 
 type InputData struct {
+	Ctx   context.Context
 	Index int
 	Wg    *sync.WaitGroup
 }
