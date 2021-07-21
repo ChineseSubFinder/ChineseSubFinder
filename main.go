@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
@@ -46,17 +47,17 @@ func main() {
 
 	// ------ Hot Fix Start ------
 	// 开始修复
-	//log.Infoln("HotFix Start...")
-	//err = hot_fix.HotFixProcess(types.HotFixParam{
-	//	MovieRootDir:  config.MovieFolder,
-	//	SeriesRootDir: config.SeriesFolder,
-	//})
-	//if err != nil {
-	//	log.Errorln("HotFixProcess()", err)
-	//	log.Infoln("HotFix End")
-	//	return
-	//}
-	//log.Infoln("HotFix End")
+	log.Infoln("HotFix Start...")
+	err = hot_fix.HotFixProcess(types.HotFixParam{
+		MovieRootDir:  config.MovieFolder,
+		SeriesRootDir: config.SeriesFolder,
+	})
+	if err != nil {
+		log.Errorln("HotFixProcess()", err)
+		log.Infoln("HotFix End")
+		return
+	}
+	log.Infoln("HotFix End")
 	// ------ Hot Fix End ------
 
 	// 初始化通知缓存模块
@@ -94,6 +95,7 @@ func DownLoadStart(httpProxy string) {
 	defer func() {
 		log.Infoln("Download One End...")
 		notify_center.Notify.Send()
+		pkg.CloseChrome()
 	}()
 	notify_center.Notify.Clear()
 

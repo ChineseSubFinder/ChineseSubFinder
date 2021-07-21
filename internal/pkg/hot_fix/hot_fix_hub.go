@@ -35,6 +35,7 @@ func HotFixProcess(param types.HotFixParam) error {
 		_, bFound := hotFixRecord[hotfixCase.GetKey()]
 		if bFound == false {
 			// 没有找到那么就需要进行修复
+			log_helper.GetLogger().Infoln("hotfix", hotfixCase.GetKey(), "start...")
 			processResult, err := hotfixCase.Process()
 			// 找到对应的 hotfix 方案进行 interface 数据的转换输出
 			switch hotfixCase.GetKey() {
@@ -58,6 +59,7 @@ func HotFixProcess(param types.HotFixParam) error {
 			if result.Error != nil {
 				return errors.New(fmt.Sprintf("hotfix %s is done, but record failed, %s", hotfixCase.GetKey(), result.Error))
 			}
+			log_helper.GetLogger().Infoln("hotfix", hotfixCase.GetKey(), "is done")
 		}
 		// 找到了，目前的逻辑是成功才插入，那么查询到了，就默认是执行成功了
 	}

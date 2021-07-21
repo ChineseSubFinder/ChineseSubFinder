@@ -12,9 +12,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -388,4 +390,30 @@ func CopyTestData(srcDir string) (string, error) {
 		return "", err
 	}
 	return testDir, nil
+}
+
+// CloseChrome 强行结束没有关闭的 Chrome 进程
+func CloseChrome() {
+
+	cmdString := ""
+	sysType := runtime.GOOS
+	if sysType == "linux" {
+		// LINUX系统
+		cmdString = "pkill chrome"
+	}
+	if sysType == "windows" {
+		// windows系统
+		cmdString = "taskkill /F /im chromedriver.exe"
+	}
+
+	if cmdString == "" {
+		log_helper.GetLogger().Errorln("CloseChrome OS:", sysType)
+		return
+	}
+
+	command := exec.Command(cmdString)
+	err := command.Run()
+	if err != nil {
+		log_helper.GetLogger().Errorln("CloseChrome", err)
+	}
 }
