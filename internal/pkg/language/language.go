@@ -100,8 +100,8 @@ func IsBilingualSubtitle(lan types.Language) bool {
 	}
 }
 
-// Lang2EmbyName 从语言转换到 Emby 能够识别的字幕命名
-func Lang2EmbyName(lan types.Language) string {
+// Lang2EmbyNameOld 弃用。从语言转换到 Emby 能够识别的字幕命名
+func Lang2EmbyNameOld(lan types.Language) string {
 	switch lan {
 	case types.Unknow: // 未知语言
 		return types.Emby_unknow
@@ -129,6 +129,38 @@ func Lang2EmbyName(lan types.Language) string {
 		return types.Emby_cht_kr
 	default:
 		return types.Emby_unknow
+	}
+}
+
+// Lang2ChineseString 将 types.Language 转换为中文描述：简、繁、简英
+func Lang2ChineseString(lan types.Language) string {
+	switch lan {
+	case types.Unknow: // 未知语言
+		return types.MathLangChnUnknow
+	case types.ChineseSimple: // 简体中文
+		return types.MatchLangChs
+	case types.ChineseTraditional: // 繁体中文
+		return types.MatchLangCht
+	case types.ChineseSimpleEnglish: // 简英双语字幕
+		return types.MatchLangChsEn
+	case types.ChineseTraditionalEnglish: // 繁英双语字幕
+		return types.MatchLangChtEn
+	case types.English: // 英文
+		return types.MatchLangEn
+	case types.Japanese: // 日语
+		return types.MatchLangJp
+	case types.ChineseSimpleJapanese: // 简日双语字幕
+		return types.MatchLangChsJp
+	case types.ChineseTraditionalJapanese: // 繁日双语字幕
+		return types.MatchLangChtJp
+	case types.Korean: // 韩语
+		return types.MatchLangKr
+	case types.ChineseSimpleKorean: // 简韩双语字幕
+		return types.MatchLangChsKr
+	case types.ChineseTraditionalKorean: // 繁韩双语字幕
+		return types.MatchLangChtKr
+	default:
+		return types.MathLangChnUnknow
 	}
 }
 

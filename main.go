@@ -45,7 +45,18 @@ func main() {
 	// ------ 数据库相关操作 End ------
 
 	// ------ Hot Fix Start ------
-
+	// 开始修复
+	//log.Infoln("HotFix Start...")
+	//err = hot_fix.HotFixProcess(types.HotFixParam{
+	//	MovieRootDir:  config.MovieFolder,
+	//	SeriesRootDir: config.SeriesFolder,
+	//})
+	//if err != nil {
+	//	log.Errorln("HotFixProcess()", err)
+	//	log.Infoln("HotFix End")
+	//	return
+	//}
+	//log.Infoln("HotFix End")
 	// ------ Hot Fix End ------
 
 	// 初始化通知缓存模块

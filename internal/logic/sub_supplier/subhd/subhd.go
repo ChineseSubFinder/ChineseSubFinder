@@ -67,6 +67,12 @@ func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 
 func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 
+	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
+	if err != nil {
+		return nil, err
+	}
+	defer browser.Close()
+
 	var subInfos = make([]supplier.SubInfo, 0)
 	var subList = make([]HdListItem, 0)
 	for value := range seriesInfo.NeedDlSeasonDict {
@@ -105,13 +111,6 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	// 找到那些 Eps 需要下载字幕的
 	subInfoNeedDownload := s.whichEpisodeNeedDownloadSub(seriesInfo, subList)
 	// 下载字幕
-	var browser *rod.Browser
-	// 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
-	if err != nil {
-		return nil, err
-	}
-	defer browser.Close()
 	for i, item := range subInfoNeedDownload {
 		hdContent, err := s.step2Ex(browser, item.Url)
 		if err != nil {
@@ -133,6 +132,12 @@ func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]sup
 }
 
 func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
+
+	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
+	if err != nil {
+		return nil, err
+	}
+	defer browser.Close()
 	/*
 		虽然是传入视频文件路径，但是其实需要读取对应的视频文件目录下的
 		movie.xml 以及 *.nfo，找到 IMDB id
@@ -156,7 +161,7 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 
 	if imdbInfo.ImdbId != "" {
 		// 先用 imdb id 找
-		subInfoList, err = s.getSubListFromKeyword4Movie(imdbInfo.ImdbId)
+		subInfoList, err = s.getSubListFromKeyword4Movie(browser, imdbInfo.ImdbId)
 		if err != nil {
 			// 允许的错误，跳过，继续进行文件名的搜索
 			s.log.Errorln(s.GetSupplierName(), "keyword:", imdbInfo.ImdbId)
@@ -169,7 +174,7 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 	}
 	// 如果没有，那么就用文件名查找
 	searchKeyword := pkg.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
-	subInfoList, err = s.getSubListFromKeyword4Movie(searchKeyword)
+	subInfoList, err = s.getSubListFromKeyword4Movie(browser, searchKeyword)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "keyword:", searchKeyword)
 		return nil, err
@@ -178,7 +183,7 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 	return subInfoList, nil
 }
 
-func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInfo, error) {
+func (s Supplier) getSubListFromKeyword4Movie(browser *rod.Browser, keyword string) ([]supplier.SubInfo, error) {
 
 	var subInfos []supplier.SubInfo
 	detailPageUrl, err := s.step0(keyword)
@@ -194,19 +199,11 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInf
 		return nil, err
 	}
 
-	var browser *rod.Browser
-	// 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err = rod_helper.NewBrowser(s.reqParam.HttpProxy)
-	if err != nil {
-		return nil, err
-	}
-	defer browser.Close()
-
 	for i, item := range subList {
 		hdContent, err := s.step2Ex(browser, item.Url)
 		time.Sleep(time.Second)
 		if err != nil {
-			s.log.Errorln("step2Ex", err)
+			s.log.Errorln("subhd step2Ex", err)
 			return nil, err
 		}
 		subInfos = append(subInfos, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, types.ChineseSimple, pkg.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))

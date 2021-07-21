@@ -12,7 +12,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
@@ -26,7 +25,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"sync"
 )
 
@@ -162,7 +160,12 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 			d.log.Errorln("subSupplierHub.DownloadSub4Movie", inData.OneVideoFullPath, err)
 			return err
 		}
-		if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
+		// 返回的两个值都是 nil 的时候，就是无需下载字幕，那么同样不用输出额外的信息，因为之前会输出跳过的原因
+		if organizeSubFiles == nil {
+			return nil
+		}
+		// 去搜索了没有发现字幕
+		if len(organizeSubFiles) < 1 {
 			d.log.Infoln("no sub found", filepath.Base(inData.OneVideoFullPath))
 			return nil
 		}
@@ -171,7 +174,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 
 		return nil
 	}
-	p, err := ants.NewPoolWithFunc(d.reqParam.Threads, func(inData interface{}) {
+	antPool, err := ants.NewPoolWithFunc(d.reqParam.Threads, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), common.OneVideoProcessTimeOut)
@@ -190,7 +193,10 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		}()
 
 		select {
-		case _ = <-done:
+		case err := <-done:
+			if err != nil {
+				d.log.Errorln("DownloadSub4Movie.NewPoolWithFunc done with Error", err.Error())
+			}
 			return
 		case p := <-panicChan:
 			d.log.Errorln("DownloadSub4Movie.NewPoolWithFunc got panic", p)
@@ -198,17 +204,16 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 			d.log.Errorln("DownloadSub4Movie.NewPoolWithFunc got time out", ctx.Err())
 			return
 		}
-
 	})
 	if err != nil {
 		return err
 	}
-	defer p.Release()
+	defer antPool.Release()
 	wg := sync.WaitGroup{}
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
 	for i, oneVideoFullPath := range d.movieFileFullPathList {
 		wg.Add(1)
-		err = p.Invoke(InputData{OneVideoFullPath: oneVideoFullPath, Index: i, Wg: &wg})
+		err = antPool.Invoke(InputData{OneVideoFullPath: oneVideoFullPath, Index: i, Wg: &wg})
 		if err != nil {
 			d.log.Errorln("DownloadSub4Movie ants.Invoke", err)
 		}
@@ -293,7 +298,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 
 		return nil
 	}
-	p, err := ants.NewPoolWithFunc(d.reqParam.Threads, func(inData interface{}) {
+	antPool, err := ants.NewPoolWithFunc(d.reqParam.Threads, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), common.OneVideoProcessTimeOut)
@@ -312,7 +317,10 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		}()
 
 		select {
-		case _ = <-done:
+		case err := <-done:
+			if err != nil {
+				d.log.Errorln("DownloadSub4Series.NewPoolWithFunc done with Error", err.Error())
+			}
 			return
 		case p := <-panicChan:
 			d.log.Errorln("DownloadSub4Series.NewPoolWithFunc got panic", p)
@@ -324,7 +332,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	if err != nil {
 		return err
 	}
-	defer p.Release()
+	defer antPool.Release()
 
 	// 是否是通过 emby_helper api 获取的列表
 	var seriesDirList = make([]string, 0)
@@ -343,7 +351,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	wg := sync.WaitGroup{}
 	for i, oneSeriesPath := range seriesDirList {
 		wg.Add(1)
-		err = p.Invoke(InputData{OneVideoFullPath: oneSeriesPath, Index: i, Wg: &wg})
+		err = antPool.Invoke(InputData{OneVideoFullPath: oneSeriesPath, Index: i, Wg: &wg})
 		if err != nil {
 			d.log.Errorln("DownloadSub4Series ants.Invoke", err)
 		}
@@ -366,6 +374,18 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 		}
 	}
 	// -------------------------------------------------
+	/*
+		这里需要额外考虑一点，有可能当前目录已经有一个 .Default 标记的字幕了
+		那么下载字幕丢进来的时候就需要提前把这个字幕找出来，去除整个 .Default 标记
+		然后进行正常的下载，存储和替换字幕，最后将本次操作的第一次标记为 .Default
+	*/
+	// 不管是不是保存多个字幕，都要先扫描本地的字幕，进行 .Default 去除
+	// 这个视频的所有字幕，去除 .default 标记
+	err = sub_helper.SearchVideoMatchSubFileAndRemoveDefaultMark(oneVideoFullPath)
+	if err != nil {
+		// 找个错误可以忍
+		d.log.Errorln("SearchVideoMatchSubFileAndRemoveDefaultMark,", oneVideoFullPath, err)
+	}
 	if d.reqParam.SaveMultiSub == false {
 		// 选择最优的一个字幕
 		var finalSubFile *subparser.FileInfo
@@ -375,7 +395,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 			return
 		}
 		// 找到了，写入文件
-		err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile, "")
+		err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile, "", true)
 		if err != nil {
 			d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub, "writeSubFile2VideoPath:", err)
 			return
@@ -387,15 +407,20 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 			d.log.Warnln("SelectEachSiteTop1SubFile found none sub file")
 			return
 		}
-
+		// 多网站 Top 1 字幕保存的时候，第一个设置为 Default 即可
 		for i, file := range finalSubFiles {
-			err = d.writeSubFile2VideoPath(oneVideoFullPath, file, siteNames[i])
+			setDefault := false
+			if i == 0 {
+				setDefault = true
+			}
+			err = d.writeSubFile2VideoPath(oneVideoFullPath, file, siteNames[i], setDefault)
 			if err != nil {
 				d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub, "writeSubFile2VideoPath:", err)
 				return
 			}
 		}
 	}
+	// -------------------------------------------------
 }
 
 // saveFullSeasonSub 这里就需要单独存储到连续剧每一季的文件夹的特殊文件夹中
@@ -438,17 +463,21 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSub
 	return fullSeasonSubDict
 }
 
-// 在前面需要进行语言的筛选、排序，这里仅仅是存储
-func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile subparser.FileInfo, extraSubPreName string) error {
+// 在前面需要进行语言的筛选、排序，这里仅仅是存储， extraSubPreName 这里传递是字幕的网站，有就认为是多字幕的存储。空就是单字幕，单字幕就可以setDefault
+func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile subparser.FileInfo, extraSubPreName string, setDefault bool) error {
 	videoRootPath := filepath.Dir(videoFileFullPath)
-	embyLanExtName := language.Lang2EmbyName(finalSubFile.Lang)
-	// 构建视频文件加 emby_helper 的字幕预研要求名称
-	videoFileNameWithOutExt := strings.ReplaceAll(filepath.Base(videoFileFullPath),
-		filepath.Ext(videoFileFullPath), "")
-	if extraSubPreName != "" {
-		extraSubPreName = "[" + extraSubPreName + "]"
-	}
-	subNewName := videoFileNameWithOutExt + embyLanExtName + extraSubPreName + finalSubFile.Ext
+
+	subNewName := sub_helper.GenerateMixSubName(videoFileFullPath, finalSubFile.Ext, finalSubFile.Lang, extraSubPreName, setDefault, false)
+
+	//embyLanExtName := language.Lang2EmbyNameOld(finalSubFile.Lang)
+	//// 构建视频文件加 emby_helper 的字幕预研要求名称
+	//videoFileNameWithOutExt := strings.ReplaceAll(filepath.Base(videoFileFullPath),
+	//	filepath.Ext(videoFileFullPath), "")
+	//if extraSubPreName != "" {
+	//	extraSubPreName = "[" + extraSubPreName + "]"
+	//}
+	//subNewName := videoFileNameWithOutExt + embyLanExtName + extraSubPreName + finalSubFile.Ext
+
 	desSubFullPath := path.Join(videoRootPath, subNewName)
 	// 最后写入字幕
 	err := utils.OutputFile(desSubFullPath, finalSubFile.Data)

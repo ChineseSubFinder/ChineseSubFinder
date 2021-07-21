@@ -230,6 +230,50 @@ func SearchMatchedSubFile(dir string) ([]string, error) {
 	return fileFullPathList, nil
 }
 
+// SearchVideoMatchSubFileAndRemoveDefaultMark 找到找个视频目录下相匹配的字幕，同时去除这些字幕中 .default 的标记
+func SearchVideoMatchSubFileAndRemoveDefaultMark(oneVideoFullPath string) error {
+
+	dir := path.Dir(oneVideoFullPath)
+	fileName := filepath.Base(oneVideoFullPath)
+	fileName = strings.ToLower(fileName)
+	fileName = strings.ReplaceAll(fileName, filepath.Ext(fileName), "")
+	pathSep := string(os.PathSeparator)
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	for _, curFile := range files {
+		if curFile.IsDir() {
+			continue
+		} else {
+			// 这里就是文件了
+			if curFile.Size() < 1000 {
+				continue
+			}
+			// 后缀名得对
+			if IsSubExtWanted(filepath.Ext(curFile.Name())) == false {
+				continue
+			}
+			// 字幕文件名应该包含 视频文件名（无后缀）
+			if strings.Contains(curFile.Name(), fileName) == false {
+				continue
+			}
+			// 得包含 .default. 找个关键词
+			if strings.Contains(curFile.Name(), types.Emby_default+".") == false {
+				continue
+			}
+			oldPath := dir + pathSep + curFile.Name()
+			newPath := dir + pathSep + strings.ReplaceAll(curFile.Name(), types.Emby_default+".", ".")
+			err = os.Rename(oldPath, newPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 // IsOldVersionSubPrefixName 是否是老版本的字幕命名 .chs_en[shooter] ，符合也返回这个部分＋字幕格式后缀名 .chs_en[shooter].ass, 修改后的名称
 func IsOldVersionSubPrefixName(subFileName string) (bool, string, string) {
 
@@ -321,6 +365,30 @@ func IsOldVersionSubPrefixName(subFileName string) (bool, string, string) {
 		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, lang, subTypeExt, site, false)
 	}
 	return false, "", ""
+}
+
+// GenerateMixSubName 这里会生成类似的文件名 xxxx.chinese(中英,shooter)
+func GenerateMixSubName(videoFileName, subExt string, subLan types.Language, extraSubPreName string, setDefault, setForced bool) string {
+
+	videoFileNameWithOutExt := strings.ReplaceAll(filepath.Base(videoFileName),
+		filepath.Ext(videoFileName), "")
+
+	note := ""
+	if extraSubPreName != "" {
+		note = "," + extraSubPreName
+	}
+
+	appendString := ""
+	if setDefault == true {
+		appendString = ".default"
+	}
+	if setForced == true {
+		appendString = ".forced"
+	}
+
+	subNewName := videoFileNameWithOutExt + "(" + language.Lang2ChineseString(subLan) + note + ")" + appendString + subExt
+
+	return subNewName
 }
 
 func makeMixSubExtString(orgFileNameWithOutExt, lang string, ext, site string, beDefault bool) string {
