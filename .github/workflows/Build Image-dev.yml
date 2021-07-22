@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          ref: dev
       # 获取 tag 版本
       - name: Set Version
         id: set-version
@@ -40,6 +42,6 @@ jobs:
           platforms: linux/amd64,linux/arm/v7,linux/arm64
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:dev${{ steps.set-version.outputs.version }}
+            ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:${{ steps.set-version.outputs.version }}
 
 
