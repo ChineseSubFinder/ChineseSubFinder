@@ -1,4 +1,4 @@
-name: goreleaser
+name: manual_test
 
 on:
   workflow_dispatch:
