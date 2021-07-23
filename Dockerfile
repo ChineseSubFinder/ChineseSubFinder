@@ -6,7 +6,6 @@ LABEL stage=gobuilder
 ENV CGO_ENABLED 1
 ENV GO111MODULE=on
 ENV GOOS linux
-ENV GOPROXY https://goproxy.cn,direct
 
 # 切换工作目录
 WORKDIR /homelab/buildspace
