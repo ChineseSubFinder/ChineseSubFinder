@@ -11,6 +11,9 @@ ENV GOOS linux
 WORKDIR /homelab/buildspace
 COPY . .
 # 执行编译，-o 指定保存位置和程序编译名称
+
+RUN go version
+
 RUN go build -ldflags="-s -w" -o /app/chinesesubfinder
 
 # 运行时环境
