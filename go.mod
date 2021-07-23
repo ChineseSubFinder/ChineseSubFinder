@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/EDDYCJY/fake-useragent v0.2.0
-	github.com/PuerkitoBio/goquery v1.6.1
+	github.com/PuerkitoBio/goquery v1.7.1
 	github.com/StalkR/imdb v1.0.7
 	github.com/Tnze/go.num/v2 v2.0.0-20191006170829-cb483d4c9152
 	github.com/abadojack/whatlanggo v1.0.1
@@ -56,6 +56,6 @@ require (
 )
 
 replace (
-	github.com/EDDYCJY/fake-useragent => github.com/allanpk716/fake-useragent v0.2.0
+	github.com/EDDYCJY/fake-useragent => github.com/allanpk716/fake-useragent v0.2.1
 	github.com/go-creed/sat => github.com/allanpk716/sat v0.0.0-20210622112535-2e00ce54a80b
 )
