@@ -1,7 +1,7 @@
 package pkg
 
 import (
-	browser "github.com/EDDYCJY/fake-useragent"
+	browser "github.com/allanpk716/fake-useragent"
 	"math/rand"
 	"time"
 )

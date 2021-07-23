@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"fmt"
-	browser "github.com/EDDYCJY/fake-useragent"
+	browser "github.com/allanpk716/fake-useragent"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"

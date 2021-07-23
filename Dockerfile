@@ -6,14 +6,13 @@ LABEL stage=gobuilder
 ENV CGO_ENABLED 1
 ENV GO111MODULE=on
 ENV GOOS linux
+ENV GOPROXY https://goproxy.cn,direct
 
 # 切换工作目录
 WORKDIR /homelab/buildspace
 COPY . .
-# 执行编译，-o 指定保存位置和程序编译名称
-
 RUN go mod tidy
-
+# 执行编译，-o 指定保存位置和程序编译名称
 RUN go build -ldflags="-s -w" -o /app/chinesesubfinder
 
 # 运行时环境
