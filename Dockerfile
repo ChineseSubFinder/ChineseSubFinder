@@ -1,4 +1,4 @@
-FROM allanpk716/ubuntu:bionic AS builder
+FROM superng6/go:latest AS builder
 
 LABEL stage=gobuilder
 
@@ -10,13 +10,6 @@ ENV GOPROXY https://goproxy.cn,direct
 
 # 切换工作目录
 WORKDIR /homelab/buildspace
-
-RUN ls
-RUN ls /usr/local/go
-RUN cat /etc/profile
-RUN cat ~/.bashrc
-RUN source /etc/profile
-
 COPY . .
 # 执行编译，-o 指定保存位置和程序编译名称
 RUN go build -ldflags="-s -w" -o /app/chinesesubfinder
