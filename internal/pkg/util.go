@@ -2,11 +2,11 @@ package pkg
 
 import (
 	"fmt"
-	browser "github.com/allanpk716/fake-useragent"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	browser "github.com/allanpk716/fake-useragent"
 	"github.com/go-resty/resty/v2"
 	"io"
 	"io/ioutil"

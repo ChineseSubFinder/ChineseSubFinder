@@ -37,7 +37,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 	// 第三方的解压库，首先不支持 io.Reader 的操作，也就是得缓存到本地硬盘再读取解压
 	// 且使用 walk 会无法解压 rar，得指定具体的实例，太麻烦了，直接用通用的接口得了，就是得都缓存下来再判断
 	// 基于以上两点，写了一堆啰嗦的逻辑···
-	for i, _ := range subInfos {
+	for i := range subInfos {
 		// 先存下来，保存是时候需要前缀，前缀就是从那个网站下载来的
 		nowFileSaveFullPath := path.Join(tmpFolderFullPath, GetFrontNameAndOrgName(&subInfos[i]))
 		err = utils.OutputFile(nowFileSaveFullPath, subInfos[i].Data)
@@ -178,12 +178,12 @@ func SelectChineseBestSubtitle(subs []subparser.FileInfo, subTypePriority int) *
 func GetFrontNameAndOrgName(info *supplier.SubInfo) string {
 
 	infoName := ""
-	path, err := decode.GetVideoInfoFromFileName(info.Name)
+	fileName, err := decode.GetVideoInfoFromFileName(info.Name)
 	if err != nil {
 		log_helper.GetLogger().Warnln("", err)
 		infoName = info.Name
 	} else {
-		infoName = path.Title + "_S" + strconv.Itoa(path.Season) + "E" + strconv.Itoa(path.Episode) + filepath.Ext(info.Name)
+		infoName = fileName.Title + "_S" + strconv.Itoa(fileName.Season) + "E" + strconv.Itoa(fileName.Episode) + filepath.Ext(info.Name)
 	}
 	info.Name = infoName
 
