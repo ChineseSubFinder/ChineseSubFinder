@@ -1,9 +1,9 @@
-FROM superng6/go:latest AS builder
+FROM golang:1.15-buster AS builder
 
 LABEL stage=gobuilder
 
 # 开始编译
-ENV CGO_ENABLED 1
+ENV CGO_ENABLED 0
 ENV GO111MODULE=on
 ENV GOOS linux
 ENV GOPROXY https://goproxy.cn,direct
