@@ -13,6 +13,11 @@ import (
 )
 
 func init() {
+
+	if pkg.OSCheck() == false {
+		panic("only support Linux and Windows")
+	}
+
 	log = log_helper.GetLogger()
 	config = pkg.GetConfig()
 }

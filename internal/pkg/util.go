@@ -417,3 +417,16 @@ func CloseChrome() {
 		log_helper.GetLogger().Errorln("CloseChrome", err)
 	}
 }
+
+// OSCheck 强制的系统支持检查
+func OSCheck() bool {
+	sysType := runtime.GOOS
+	if sysType == "linux" {
+		return true
+	}
+	if sysType == "windows" {
+		return true
+	}
+
+	return false
+}
