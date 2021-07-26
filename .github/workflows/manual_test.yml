@@ -1,57 +1,36 @@
-name: manual_test
+name: Dev Build Docker Image
 
 on:
   workflow_dispatch:
-    # Inputs the workflow accepts.
-    inputs:
-      name:
-        # Friendly description to be shown in the UI instead of 'name'
-        description: 'Test Cross-compiles'
-        # Default value if no value is explicitly provided
-        default: 'Windows'
-        # Input has to be provided for the workflow to run
-        required: true
+
 jobs:
-  goreleaser:
+  buildx:
     runs-on: ubuntu-latest
     steps:
-    
-    # 获取 tag 版本
-      - name: Set Version
-        id: set-version
-        run: |
-          echo "::set-output name=version::${GITHUB_REF:11}"
-          echo "ReleaseTag=${GITHUB_REF:11}"
-          
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
-            
-      - name: Create Release
-        id: create_release
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          GO111MODULE: "on"
-        run: docker run -e DOCKER_USERNAME=$DOCKER_USERNAME -e DOCKER_PASSWORD=$DOCKER_PASSWORD -e GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} --rm --privileged -v $GITHUB_WORKSPACE:/go/src/github.com/allanpk716/chinesesubfinder -v /var/run/docker.sock:/var/run/docker.sock -w /go/src/github.com/allanpk716/chinesesubfinder techknowlogick/xgo:latest goreleaser --rm-dist    
+          ref: dev
 
+      # Docker Image 构建环境
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # - name: Set up Go
-        # uses: actions/setup-go@v2
-        # with:
-          # go-version: 1.16
-         
-      # - run: |
-          # # https://github.com/actions/setup-go/issues/107
-          # cp -f `which go` /usr/bin/go
-
-      # - name: Run GoReleaser
-        # uses: goreleaser/goreleaser-action@v2
-        # with:
-          # version: latest
-          # args: release --rm-dist
-        # env:
-          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Build and push
+      - name: Build dockerfile
+        uses: docker/build-push-action@v2
+        with:
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            allanpk716/chinesesubfinder:dev

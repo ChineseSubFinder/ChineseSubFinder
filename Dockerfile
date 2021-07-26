@@ -2,6 +2,7 @@ FROM superng6/go:latest AS builder
 
 LABEL stage=gobuilder
 
+# 开始编译
 ENV CGO_ENABLED 1
 ENV GO111MODULE=on
 ENV GOOS linux
@@ -10,6 +11,7 @@ ENV GOPROXY https://goproxy.cn,direct
 # 切换工作目录
 WORKDIR /homelab/buildspace
 COPY . .
+RUN go mod tidy
 # 执行编译，-o 指定保存位置和程序编译名称
 RUN go build -ldflags="-s -w" -o /app/chinesesubfinder
 

@@ -3,11 +3,11 @@ module github.com/allanpk716/ChineseSubFinder
 go 1.15
 
 require (
-	github.com/EDDYCJY/fake-useragent v0.2.0
-	github.com/PuerkitoBio/goquery v1.6.1
+	github.com/PuerkitoBio/goquery v1.7.1
 	github.com/StalkR/imdb v1.0.7
 	github.com/Tnze/go.num/v2 v2.0.0-20191006170829-cb483d4c9152
 	github.com/abadojack/whatlanggo v1.0.1
+	github.com/allanpk716/fake-useragent v0.2.1
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
 	github.com/beevik/etree v1.1.0
 	github.com/bodgit/sevenzip v1.1.0 // indirect
@@ -23,7 +23,6 @@ require (
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.4 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect
-	github.com/mattn/go-sqlite3 v1.14.8 // indirect
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/middelink/go-parse-torrent-name v0.0.0-20190301154245-3ff4efacd4c4
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
