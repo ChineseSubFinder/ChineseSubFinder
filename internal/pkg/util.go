@@ -396,24 +396,37 @@ func CopyTestData(srcDir string) (string, error) {
 func CloseChrome() {
 
 	cmdString := ""
+	var command *exec.Cmd
 	sysType := runtime.GOOS
 	if sysType == "linux" {
 		// LINUX系统
 		cmdString = "pkill chrome"
+		command = exec.Command("/bin/sh", "-c", cmdString)
 	}
 	if sysType == "windows" {
 		// windows系统
-		cmdString = "taskkill /F /im chromedriver.exe"
+		cmdString = "taskkill /F /im notepad.exe"
+		command = exec.Command("cmd.exe", "/c", cmdString)
 	}
-
-	if cmdString == "" {
+	if cmdString == "" || command == nil {
 		log_helper.GetLogger().Errorln("CloseChrome OS:", sysType)
 		return
 	}
-
-	command := exec.Command(cmdString)
 	err := command.Run()
 	if err != nil {
 		log_helper.GetLogger().Errorln("CloseChrome", err)
 	}
+}
+
+// OSCheck 强制的系统支持检查
+func OSCheck() bool {
+	sysType := runtime.GOOS
+	if sysType == "linux" {
+		return true
+	}
+	if sysType == "windows" {
+		return true
+	}
+
+	return false
 }

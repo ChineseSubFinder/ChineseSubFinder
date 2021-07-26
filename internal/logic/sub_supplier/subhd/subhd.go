@@ -632,34 +632,6 @@ search:
 
 func (s Supplier) httpGet(inputUrl string) (string, error) {
 	s.reqParam.Referer = inputUrl
-	// TODO subhd 搜索限制太大，更换方式也差不多
-	// 是用本地的 Browser 还是远程的，推荐是远程的
-	//browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
-	//if err != nil {
-	//	return "", err
-	//}
-	//defer browser.Close()
-	//// 默认超时是 60s，如果是调试模式则是 5 min
-	//tt := common.HTMLTimeOut
-	//if s.reqParam.DebugMode == true {
-	//	tt = common.OneVideoProcessTimeOut
-	//}
-	//page, err := rod_helper.NewPageNavigate(browser, inputUrl, tt, 5)
-	//if err != nil {
-	//	return "", err
-	//}
-	//defer page.Close()
-	//page.MustSetUserAgent(&proto.NetworkSetUserAgentOverride{
-	//	UserAgent: pkg.RandomUserAgent(true),
-	//})
-	//err = page.WaitLoad()
-	//if err != nil {
-	//	return "", err
-	//}
-	//recvText, err := page.HTML()
-	//if err != nil {
-	//	return "", err
-	//}
 	httpClient := pkg.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().Get(inputUrl)
 	if err != nil {
@@ -669,9 +641,12 @@ func (s Supplier) httpGet(inputUrl string) (string, error) {
 	//搜索验证 点击继续搜索
 	if strings.Contains(recvText, "搜索验证") || strings.Contains(recvText, "搜索频率") {
 		s.log.Debugln("搜索验证 or 搜索频率 reload", inputUrl)
-		time.Sleep(pkg.RandomSecondDuration(5, 10))
+		// 每次搜索间隔在 30-40s
+		time.Sleep(pkg.RandomSecondDuration(30, 40))
 		return s.httpGet(inputUrl)
 	}
+	// 每次搜索间隔在 30-40s
+	time.Sleep(pkg.RandomSecondDuration(30, 40))
 	return recvText, nil
 }
 
