@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
-	"gorm.io/driver/sqlite"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sqlite"
 	"gorm.io/gorm"
 	"os"
 )
