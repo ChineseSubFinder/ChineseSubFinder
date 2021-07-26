@@ -1,4 +1,4 @@
-name: Dev Build Docker Image - Manual
+name: Dev Manual Build Docker
 
 on:
   workflow_dispatch:
