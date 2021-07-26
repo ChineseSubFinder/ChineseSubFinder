@@ -8,6 +8,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sqlite"
 	"gorm.io/gorm"
 	"os"
+	"path"
 	"runtime"
 )
 
@@ -16,6 +17,11 @@ func InitDb() error {
 	var err error
 	// 新建数据库
 	nowDbFileName := getDbName()
+
+	dbDir := path.Dir(nowDbFileName)
+	if pkg.IsDir(dbDir) == false {
+		_ = os.MkdirAll(dbDir, os.ModePerm)
+	}
 	db, err = gorm.Open(sqlite.Open(nowDbFileName), &gorm.Config{})
 	if err != nil {
 		return errors.New(fmt.Sprintf("failed to connect database, %s", err.Error()))
