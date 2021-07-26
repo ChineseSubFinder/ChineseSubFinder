@@ -3,13 +3,13 @@ package archive_helper
 import (
 	"archive/zip"
 	"bytes"
+	"github.com/bodgit/sevenzip"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"io/ioutil"
 
 	"compress/flate"
 	"errors"
-	"github.com/gen2brain/go-unarr"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/mholt/archiver/v3"
 	"io"
@@ -135,32 +135,40 @@ func processOneFile(f archiver.File, notUTF8 bool, desRootPath string) error {
 }
 
 func unArr7z(fileFullPath, desRootPath string) error {
-	a, err := unarr.NewArchive(fileFullPath)
+
+	r, err := sevenzip.OpenReader(fileFullPath)
 	if err != nil {
 		return err
 	}
-	defer a.Close()
-	for {
-		err := a.Entry()
-		if err != nil {
-			if err == io.EOF {
-				break
-			} else {
-				return err
-			}
-		}
-		data, err := a.ReadAll()
-		if err != nil {
-			return err
-		}
-		decodeName := a.Name()
-		decodeName = filepath.Base(decodeName)
-		err = utils.OutputFile(path.Join(desRootPath, decodeName), data)
+	defer r.Close()
+
+	for _, file := range r.File {
+		err = un7zOneFile(file, desRootPath)
 		if err != nil {
 			return err
 		}
 	}
 
+	return nil
+}
+
+func un7zOneFile(file *sevenzip.File, desRootPath string) error {
+	rc, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer rc.Close()
+
+	data, err := ioutil.ReadAll(rc)
+	if err != nil {
+		return err
+	}
+	decodeName := file.Name
+	decodeName = filepath.Base(decodeName)
+	err = utils.OutputFile(path.Join(desRootPath, decodeName), data)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

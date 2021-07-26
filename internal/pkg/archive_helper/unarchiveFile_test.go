@@ -1,29 +1,40 @@
 package archive_helper
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"path"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
 func TestUnArchiveFile(t *testing.T) {
 
-	desRoot := "C:\\Tmp"
-	//file := "C:\\Tmp\\123.zip"
-	//file := "C:\\Tmp\\456.rar"
-	file := "C:\\Tmp\\789.tar"
-	err := UnArchiveFile(file, desRoot)
+	testDataPath := "..\\..\\..\\TestData\\zips"
+	testRootDir, err := pkg.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)
+	}
+	tetUnArchive(t, testRootDir, "zip.zip")
+	tetUnArchive(t, testRootDir, "tar.tar")
+	tetUnArchive(t, testRootDir, "rar.rar")
+	tetUnArchive(t, testRootDir, "7z.7z")
+}
+
+func tetUnArchive(t *testing.T, testRootDir string, missionName string) {
+	fileFPath := path.Join(testRootDir, missionName)
+	desPath := path.Join(testRootDir, strings.ReplaceAll(filepath.Ext(missionName), ".", ""))
+	err := UnArchiveFile(fileFPath, desPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pkg.IsFile(path.Join(desPath, subASS)) == false {
+		t.Fatal(missionName, " unArchive failed")
+	}
+	if pkg.IsFile(path.Join(desPath, subSRT)) == false {
+		t.Fatal(missionName, " unArchive failed")
 	}
 }
 
-func TestUnArr(t *testing.T) {
-	desRoot := "C:\\Tmp"
-	//file := "C:\\Tmp\\[subhd]_0_162236051219240.zip"
-	file := "C:\\Tmp\\123.zip"
-	//file := "C:\\Tmp\\Tmp.7z"
-	//file := "C:\\Tmp\\[zimuku]_0_[zmk.pw]奥斯陆.Oslo.[WEB.1080P]中英文字幕.zip"
-	err := unArr7z(file, desRoot)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
+const subASS = "oslo.2021.1080p.web.h264-naisu.繁体&英文.ass"
+const subSRT = "oslo.2021.1080p.web.h264-naisu.繁体&英文.srt"
