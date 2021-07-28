@@ -59,3 +59,7 @@ docker create \
 ## 配置建议及解释
 
 见，[配置建议以及解释](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E9%85%8D%E7%BD%AE%E5%BB%BA%E8%AE%AE%E4%BB%A5%E5%8F%8A%E8%A7%A3%E9%87%8A.md)
+
+# 欢迎捐赠
+
+![收款码](收款码/收款码.png)
