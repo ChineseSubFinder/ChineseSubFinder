@@ -27,6 +27,22 @@
 
 ![Emby-apikey-01](pics/Emby-apikey-01.png)
 
+### 获取 Emby UserId
+
+> ChineseSubFinder Version >= 0.13.0
+
+添加此字段后，默认就排除当前用户看过的视频，不进行这些视频的字幕搜索和下载了。如果不填写，就删除此字段，默认为空。走正常的搜索流程。
+
+![获取 UserID 00](pics/获取 UserID 00.png)
+
+
+
+![获取 UserID 01](pics/获取 UserID 01.png)
+
+
+
+![获取 UserID 02](pics/获取 UserID 02.png)
+
 ### 编写 Emby Api 配置信息
 
 > 这里都是以 docker 的部署方式来举例，请举一反三。

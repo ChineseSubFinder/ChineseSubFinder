@@ -23,3 +23,7 @@
 直接播放影片，点击 “CC” 这个按钮是不是看到对应的字幕列表了。
 
 ![04](pics/04.png)
+
+# 如何让 Emby 自动加载已下载的字幕
+
+ 参考： [高阶设置 - Emby API 支持](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E8%A7%86%E9%A2%91%E6%98%AF%E5%90%A6%E9%9C%80%E8%A6%81%E4%B8%8B%E8%BD%BD%E3%80%81%E6%9B%B4%E6%96%B0%E5%AD%97%E5%B9%95%E7%9A%84.md)
