@@ -94,19 +94,39 @@ func (em EmbyApi) RefreshRecentlyVideoInfo() error {
 func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 
 	var recItems emby.EmbyRecentlyItems
-	_, err := em.getNewClient().R().
-		SetQueryParams(map[string]string{
-			"api_key":          em.embyConfig.ApiKey,
-			"IsUnaired":        "false",
-			"Limit":            fmt.Sprintf("%d", em.embyConfig.LimitCount),
-			"Recursive":        "true",
-			"SortOrder":        "Descending",
-			"IncludeItemTypes": "Episode,Movie",
-			"Filters":          "IsNotFolder",
-			"SortBy":           "DateCreated",
-		}).
-		SetResult(&recItems).
-		Get(em.embyConfig.Url + "/emby/Items")
+	var err error
+	if em.embyConfig.UserId == "" {
+		// 默认是不指定某一个User的视频列表
+		_, err = em.getNewClient().R().
+			SetQueryParams(map[string]string{
+				"api_key":          em.embyConfig.ApiKey,
+				"IsUnaired":        "false",
+				"Limit":            fmt.Sprintf("%d", em.embyConfig.LimitCount),
+				"Recursive":        "true",
+				"SortOrder":        "Descending",
+				"IncludeItemTypes": "Episode,Movie",
+				"Filters":          "IsNotFolder",
+				"SortBy":           "DateCreated",
+			}).
+			SetResult(&recItems).
+			Get(em.embyConfig.Url + "/emby/Items")
+	} else {
+		// 获取指定用户的视频列表
+		_, err = em.getNewClient().R().
+			SetQueryParams(map[string]string{
+				"api_key":          em.embyConfig.ApiKey,
+				"IsUnaired":        "false",
+				"Limit":            fmt.Sprintf("%d", em.embyConfig.LimitCount),
+				"Recursive":        "true",
+				"SortOrder":        "Descending",
+				"IncludeItemTypes": "Episode,Movie",
+				"Filters":          "IsNotFolder,IsUnplayed",
+				"SortBy":           "DateCreated",
+			}).
+			SetResult(&recItems).
+			Get(em.embyConfig.Url + "/emby/Users/" + em.embyConfig.UserId + "/Items")
+	}
+
 	if err != nil {
 		return emby.EmbyRecentlyItems{}, err
 	}

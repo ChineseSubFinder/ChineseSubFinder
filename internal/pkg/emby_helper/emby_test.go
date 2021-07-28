@@ -13,7 +13,9 @@ func TestEmbyHelper_GetRecentlyItems(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	println(items.Items[0].Name, items.Items[0].SeriesName, items.Items[0].Type)
+	for i, item := range items.Items {
+		println(i, item.Name, item.SeriesName, item.Type)
+	}
 }
 
 func TestEmbyHelper_GetItemsAncestors(t *testing.T) {

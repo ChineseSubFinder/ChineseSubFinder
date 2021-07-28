@@ -25,3 +25,4 @@
 /settings.db
 /TestData/zips/test
 /internal/pkg/Logs
+/internal/pkg/emby_helper/config.yaml
