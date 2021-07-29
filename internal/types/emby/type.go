@@ -44,6 +44,33 @@ type EmbyVideoInfo struct {
 	} `json:"MediaStreams"`
 }
 
+type EmbyVideoInfoByUserId struct {
+	Name          string    `json:"Name"`
+	OriginalTitle string    `json:"OriginalTitle"`
+	Id            string    `json:"Id"`
+	DateCreated   time.Time `json:"DateCreated,omitempty"`
+	PremiereDate  time.Time `json:"PremiereDate,omitempty"`
+	SortName      string    `json:"SortName,omitempty"`
+	Path          string    `json:"Path"`
+	MediaSources  []struct {
+		Path                       string `json:"Path"`
+		DefaultAudioStreamIndex    int    `json:"DefaultAudioStreamIndex,omitempty"`
+		DefaultSubtitleStreamIndex int    `json:"DefaultSubtitleStreamIndex,omitempty"`
+	} `json:"MediaSources"`
+}
+
+// GetDefaultSubIndex 获取匹配视频字幕的索引，默认值是0，不应该是0，0 就是没有选择或者说关闭
+func (info EmbyVideoInfoByUserId) GetDefaultSubIndex() int {
+
+	for _, mediaSource := range info.MediaSources {
+		if info.Path == mediaSource.Path {
+			return mediaSource.DefaultSubtitleStreamIndex
+		}
+	}
+
+	return 0
+}
+
 type EmbyMixInfo struct {
 	VideoFolderName       string // 电影就是电影的文件夹名称，连续剧就是对应的剧集的 root 文件夹
 	VideoFileName         string // 视频文件名

@@ -170,6 +170,24 @@ func (em EmbyApi) GetItemVideoInfo(id string) (emby.EmbyVideoInfo, error) {
 	return recItem, nil
 }
 
+// GetItemVideoInfoByUserId 可以拿到这个视频的选择字幕Index，配合 GetItemVideoInfo 使用。 在 API 调试界面 -- UserLibraryService
+func (em EmbyApi) GetItemVideoInfoByUserId(id string) (emby.EmbyVideoInfoByUserId, error) {
+
+	var recItem emby.EmbyVideoInfoByUserId
+
+	_, err := em.getNewClient().R().
+		SetQueryParams(map[string]string{
+			"api_key": em.embyConfig.ApiKey,
+		}).
+		SetResult(&recItem).
+		Get(em.embyConfig.Url + "/emby/Users/" + em.embyConfig.UserId + "/Items/" + id)
+	if err != nil {
+		return emby.EmbyVideoInfoByUserId{}, err
+	}
+
+	return recItem, nil
+}
+
 // UpdateVideoSubList 在 API 调试界面 -- ItemRefreshService
 func (em EmbyApi) UpdateVideoSubList(id string) error {
 
