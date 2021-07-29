@@ -27,3 +27,4 @@
 /internal/pkg/Logs
 /internal/pkg/emby_helper/config.yaml
 /cmd/chinesesubfinder/config.yaml
+/*.exe
