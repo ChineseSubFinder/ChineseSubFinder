@@ -44,6 +44,19 @@ func TestEmbyHelper_GetItemVideoInfo(t *testing.T) {
 	println(videoInfo.Name, videoInfo.Path)
 }
 
+func TestEmbyHelper_GetItemVideoInfoByUserId(t *testing.T) {
+	em := NewEmbyHelper(pkg.GetConfig().EmbyConfig)
+	// 95813 -- 命运夜
+	// 96564 -- The Bad Batch - S01E11
+	// 108766 -- R&M - S05E06
+	videoInfo, err := em.GetItemVideoInfoByUserId("108766")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	println(videoInfo.Name, videoInfo.Path, "Default Sub Index:", videoInfo.GetDefaultSubIndex())
+}
+
 func TestEmbyHelper_UpdateVideoSubList(t *testing.T) {
 	em := NewEmbyHelper(pkg.GetConfig().EmbyConfig)
 	// 95813 -- 命运夜
