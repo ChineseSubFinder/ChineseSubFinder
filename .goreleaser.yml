@@ -18,6 +18,7 @@ builds:
       - windows
     goarch:
       - amd64
+    main: ./cmd/chinesesubfinder/main.go
 
 archives:
   - id: archive
