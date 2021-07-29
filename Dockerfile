@@ -12,8 +12,7 @@ ENV GOPROXY https://goproxy.cn,direct
 WORKDIR /homelab/buildspace
 COPY . .
 # 执行编译，-o 指定保存位置和程序编译名称
-RUN cd ./cmd/chinesesubfinder \
-    && go build -ldflags="-s -w" -o /app/chinesesubfinder
+RUN go build -ldflags="-s -w" $PWD/cmd/chinesesubfinder/main.go -o /app/chinesesubfinder
 
 # 运行时环境
 FROM lsiobase/ubuntu:bionic
