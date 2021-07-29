@@ -38,3 +38,5 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+      - '^TestData:'
+      - '^TestCode:'
