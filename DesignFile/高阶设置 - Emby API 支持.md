@@ -54,6 +54,7 @@ EmbyConfig:
     Url: http://192.168.50.x:8096
     ApiKey: 123456789
     LimitCount: 3000
+    UserId: abcxx
 ```
 
 那么新增后的 ChineseSubFinder  config.yaml 文件为:
