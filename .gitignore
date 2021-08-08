@@ -29,3 +29,4 @@
 /cmd/chinesesubfinder/config.yaml
 /*.exe
 /cmd/chinesesubfinder/*.exe
+/internal/tmpthings

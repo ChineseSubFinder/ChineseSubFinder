@@ -8,7 +8,8 @@ import (
 func TestSupplier_GetSubListFromFile(t *testing.T) {
 
 	//movie1 := "X:\\电影\\The Devil All the Time (2020)\\The Devil All the Time (2020) WEBDL-1080p.mkv"
-	movie1 := "X:\\电影\\Luca (2021)\\Luca (2021) WEBDL-1080p.mkv"
+	//movie1 := "X:\\电影\\Luca (2021)\\Luca (2021) WEBDL-1080p.mkv"
+	movie1 := "X:\\电影\\The Boss Baby Family Business (2021)\\The Boss Baby Family Business (2021) WEBDL-1080p.mkv"
 	//movie1 := "X:\\电影\\Oslo (2021)\\Oslo (2021) WEBDL-1080p.mkv"
 	//movie1 := "X:\\电影\\Spiral From the Book of Saw (2021)\\Spiral From the Book of Saw (2021) WEBDL-1080p.mkv"
 	//movie1 := "X:\\电影\\消失爱人 (2016)\\消失爱人 (2016) 720p AAC.rmvb"
