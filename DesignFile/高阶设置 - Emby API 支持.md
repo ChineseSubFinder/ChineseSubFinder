@@ -27,22 +27,6 @@
 
 ![Emby-apikey-01](pics/Emby-apikey-01.png)
 
-### 获取 Emby UserId
-
-> ChineseSubFinder Version >= 0.13.0
-
-添加此字段后，默认就排除当前用户看过的视频，不进行这些视频的字幕搜索和下载了。如果不填写，就删除此字段，默认为空。走正常的搜索流程。
-
-![获取 UserID 00](pics/获取_UserID_00.png)
-
-
-
-![获取 UserID 01](pics/获取_UserID_01.png)
-
-
-
-![获取 UserID 02](pics/获取_UserID_02.png)
-
 ### 编写 Emby Api 配置信息
 
 > 这里都是以 docker 的部署方式来举例，请举一反三。
@@ -54,7 +38,7 @@ EmbyConfig:
     Url: http://192.168.50.x:8096
     ApiKey: 123456789
     LimitCount: 3000
-    UserId: abcxx
+    SkipWatched: false
 ```
 
 那么新增后的 ChineseSubFinder  config.yaml 文件为:
@@ -116,6 +100,7 @@ EmbyConfig:
 * Url，Emby 的地址，目前只支持内网路径，且必须是 http
 * ApiKey，Emby API Key，需要去 Emby 手动申请
 * LimitCount，最多一次获取多少个近期更新的视频，包含电影和连续剧。测试设置了 3000 ，大概 10s 左右就能初步读取完信息，然后筛选出需要下载字幕的视频
+* SkipWatched，默认值是 false，如果是 true 的时候，跳过所有 Emby 用户看过的视频不进行字幕的搜索下载
 
 ## 可能遇到的问题
 
