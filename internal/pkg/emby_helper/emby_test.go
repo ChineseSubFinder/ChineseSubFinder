@@ -49,7 +49,7 @@ func TestEmbyHelper_GetItemVideoInfoByUserId(t *testing.T) {
 	// 95813 -- 命运夜
 	// 96564 -- The Bad Batch - S01E11
 	// 108766 -- R&M - S05E06
-	videoInfo, err := em.GetItemVideoInfoByUserId("108766")
+	videoInfo, err := em.GetItemVideoInfoByUserId("xxxxxxxxxxxxx", "108766")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,5 +64,16 @@ func TestEmbyHelper_UpdateVideoSubList(t *testing.T) {
 	err := em.UpdateVideoSubList("95813")
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestEmbyHelper_GetUserIdList(t *testing.T) {
+	em := NewEmbyHelper(pkg.GetConfig().EmbyConfig)
+	userIds, err := em.GetUserIdList()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, item := range userIds.Items {
+		println(i, item.Name, item.Id)
 	}
 }

@@ -44,6 +44,14 @@ type EmbyVideoInfo struct {
 	} `json:"MediaStreams"`
 }
 
+type EmbyUsers struct {
+	Items []struct {
+		Name string `json:"Name"`
+		Id   string `json:"Id"`
+	} `json:"Items"`
+	TotalRecordCount int `json:"TotalRecordCount"`
+}
+
 type EmbyVideoInfoByUserId struct {
 	Name          string    `json:"Name"`
 	OriginalTitle string    `json:"OriginalTitle"`

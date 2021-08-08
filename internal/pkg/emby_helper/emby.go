@@ -95,7 +95,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 
 	var recItems emby.EmbyRecentlyItems
 	var err error
-	if em.embyConfig.UserId == "" {
+	if em.embyConfig.SkipWatched == false {
 		// 默认是不指定某一个User的视频列表
 		_, err = em.getNewClient().R().
 			SetQueryParams(map[string]string{
@@ -111,24 +111,55 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 			SetResult(&recItems).
 			Get(em.embyConfig.Url + "/emby/Items")
 	} else {
-		// 获取指定用户的视频列表
-		_, err = em.getNewClient().R().
-			SetQueryParams(map[string]string{
-				"api_key":          em.embyConfig.ApiKey,
-				"IsUnaired":        "false",
-				"Limit":            fmt.Sprintf("%d", em.embyConfig.LimitCount),
-				"Recursive":        "true",
-				"SortOrder":        "Descending",
-				"IncludeItemTypes": "Episode,Movie",
-				"Filters":          "IsNotFolder,IsUnplayed",
-				"SortBy":           "DateCreated",
-			}).
-			SetResult(&recItems).
-			Get(em.embyConfig.Url + "/emby/Users/" + em.embyConfig.UserId + "/Items")
+
+		var userIds emby.EmbyUsers
+		userIds, err = em.GetUserIdList()
+		if err != nil {
+			return emby.EmbyRecentlyItems{}, err
+		}
+
+		for _, item := range userIds.Items {
+			var tmpRecItems emby.EmbyRecentlyItems
+			// 获取指定用户的视频列表
+			_, err = em.getNewClient().R().
+				SetQueryParams(map[string]string{
+					"api_key":          em.embyConfig.ApiKey,
+					"IsUnaired":        "false",
+					"Limit":            fmt.Sprintf("%d", em.embyConfig.LimitCount),
+					"Recursive":        "true",
+					"SortOrder":        "Descending",
+					"IncludeItemTypes": "Episode,Movie",
+					"Filters":          "IsNotFolder,IsUnplayed",
+					"SortBy":           "DateCreated",
+				}).
+				SetResult(&tmpRecItems).
+				Get(em.embyConfig.Url + "/emby/Users/" + item.Id + "/Items")
+
+			if err != nil {
+				return emby.EmbyRecentlyItems{}, err
+			}
+
+			recItems.Items = append(recItems.Items, tmpRecItems.Items...)
+			recItems.TotalRecordCount += tmpRecItems.TotalRecordCount
+		}
+
 	}
 
+	return recItems, nil
+}
+
+// GetUserIdList 获取所有的 UserId
+func (em EmbyApi) GetUserIdList() (emby.EmbyUsers, error) {
+	var recItems emby.EmbyUsers
+	_, err := em.getNewClient().R().
+		SetQueryParams(map[string]string{
+			"api_key": em.embyConfig.ApiKey,
+		}).
+		SetResult(&recItems).
+		Get(em.embyConfig.Url + "/emby/Users/Query")
+
 	if err != nil {
-		return emby.EmbyRecentlyItems{}, err
+		return emby.EmbyUsers{}, err
 	}
 
 	return recItems, nil
@@ -171,7 +202,7 @@ func (em EmbyApi) GetItemVideoInfo(id string) (emby.EmbyVideoInfo, error) {
 }
 
 // GetItemVideoInfoByUserId 可以拿到这个视频的选择字幕Index，配合 GetItemVideoInfo 使用。 在 API 调试界面 -- UserLibraryService
-func (em EmbyApi) GetItemVideoInfoByUserId(id string) (emby.EmbyVideoInfoByUserId, error) {
+func (em EmbyApi) GetItemVideoInfoByUserId(userId, videoId string) (emby.EmbyVideoInfoByUserId, error) {
 
 	var recItem emby.EmbyVideoInfoByUserId
 
@@ -180,7 +211,7 @@ func (em EmbyApi) GetItemVideoInfoByUserId(id string) (emby.EmbyVideoInfoByUserI
 			"api_key": em.embyConfig.ApiKey,
 		}).
 		SetResult(&recItem).
-		Get(em.embyConfig.Url + "/emby/Users/" + em.embyConfig.UserId + "/Items/" + id)
+		Get(em.embyConfig.Url + "/emby/Users/" + userId + "/Items/" + videoId)
 	if err != nil {
 		return emby.EmbyVideoInfoByUserId{}, err
 	}
