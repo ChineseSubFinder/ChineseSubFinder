@@ -1,26 +1,35 @@
 package ass
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"path"
 	"testing"
 )
 
 func TestParser_DetermineFileTypeFromFile(t *testing.T) {
 
+	testDataPath := "..\\..\\..\\..\\TestData\\sub_parser"
+	testRootDir, err := pkg.CopyTestData(testDataPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	type args struct {
 		filePath string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantNil bool
-		wantErr bool
+		name     string
+		args     args
+		wantNil  bool
+		wantErr  bool
+		wantLang types.Language
 	}{
-		{name: "1", args: args{filePath: "C:\\WorkSpace\\go2hell\\src\\github.com\\allanpk716\\ChineseSubFinder\\TestData\\sub_parser\\org\\[xunlei]_0_C3A5CUsers5CAdministrator5CDesktop5CThe Boss Baby Family Business_S0E0.ass"}, wantNil: false, wantErr: false},
-		{name: "2", args: args{filePath: "C:\\Tmp\\Loki - S01E01 - Glorious Purpose WEBDL-1080p Proper.chs[subhd].ass"}, wantNil: false, wantErr: false},
-		{name: "3", args: args{filePath: "C:\\tmp\\oslo.2021.1080p.web.h264-naisu.简体&英文.ass"}, wantNil: false, wantErr: false},
-		{name: "4", args: args{filePath: "C:\\Tmp\\oslo.2021.1080p.web.h264-naisu.繁体&英文.ass"}, wantNil: false, wantErr: false},
-		{name: "5", args: args{filePath: "C:\\Tmp\\oslo.2021.1080p.web.h264-naisu.繁体.ass"}, wantNil: false, wantErr: false},
-		{name: "6", args: args{filePath: "X:\\连续剧\\黑镜 (2011)\\Season 2\\黑镜 - S02E02 - 白熊.en.ass"}, wantNil: false, wantErr: false},
+		{name: "1", args: args{filePath: path.Join(testRootDir, "[xunlei]_0_C3A5CUsers5CAdministrator5CDesktop5CThe Boss Baby Family Business_S0E0.ass")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimpleEnglish},
+		{name: "2", args: args{filePath: path.Join(testRootDir, "Loki - S01E01 - Glorious Purpose WEBDL-1080p Proper.chs[subhd].ass")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimple},
+		{name: "3", args: args{filePath: path.Join(testRootDir, "oslo.2021.1080p.web.h264-naisu.简体&英文.ass")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimpleEnglish},
+		{name: "4", args: args{filePath: path.Join(testRootDir, "oslo.2021.1080p.web.h264-naisu.繁体&英文.ass")}, wantNil: false, wantErr: false, wantLang: types.ChineseTraditionalEnglish},
+		{name: "5", args: args{filePath: path.Join(testRootDir, "oslo.2021.1080p.web.h264-naisu.繁体.ass")}, wantNil: false, wantErr: false, wantLang: types.ChineseTraditional},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

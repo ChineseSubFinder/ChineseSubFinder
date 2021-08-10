@@ -90,7 +90,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*subp
 		// nowText 优先移除 \h 这个是替换空格， \h 是让两个词在一行，不换行显示
 		nowText = strings.ReplaceAll(nowText, `\h`, " ")
 		// nowText 这个需要先把 {} 花括号内的内容给移除
-		var re = regexp.MustCompile(`(?i){.*}`)
+		var re = regexp.MustCompile(`(?m)((?i){[^}]*})`)
 		nowText1 := re.ReplaceAllString(nowText, "")
 		nowText1 = strings.TrimRight(nowText1, "\r")
 		// 然后判断是否有 \N 或者 \n
