@@ -94,6 +94,9 @@ func (em EmbyApi) RefreshRecentlyVideoInfo() error {
 func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 
 	var recItems emby.EmbyRecentlyItems
+	recItems.Items = make([]emby.EmbyRecentlyItem, 0)
+	var recItemMap = make(map[string]emby.EmbyRecentlyItem)
+	var recItemExsitMap = make(map[string]emby.EmbyRecentlyItem)
 	var err error
 	if em.embyConfig.SkipWatched == false {
 		// 默认是不指定某一个User的视频列表
@@ -129,7 +132,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 					"Recursive":        "true",
 					"SortOrder":        "Descending",
 					"IncludeItemTypes": "Episode,Movie",
-					"Filters":          "IsNotFolder,IsUnplayed",
+					"Filters":          "IsNotFolder",
 					"SortBy":           "DateCreated",
 				}).
 				SetResult(&tmpRecItems).
@@ -138,11 +141,38 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 			if err != nil {
 				return emby.EmbyRecentlyItems{}, err
 			}
-
-			recItems.Items = append(recItems.Items, tmpRecItems.Items...)
-			recItems.TotalRecordCount += tmpRecItems.TotalRecordCount
+			// 相同的视频项目，需要判断是否已经看过了，看过的需要排除
+			// 项目是否相同可以通过 Id 判断
+			for _, recentlyItem := range tmpRecItems.Items {
+				// 这个视频是否已经插入过了，可能会进行删除
+				_, bFound := recItemMap[recentlyItem.Id]
+				if bFound == false {
+					// map 中不存在
+					// 如果没有播放过，则插入
+					if recentlyItem.UserData.Played == false {
+						recItemMap[recentlyItem.Id] = recentlyItem
+					}
+				} else {
+					// map 中存在
+					// 既然存在，则可以理解为其他人是没有看过的，但是，如果当前的用户看过了，那么就要删除这一条
+					if recentlyItem.UserData.Played == true {
+						// 先记录下来，然后再删除这一条
+						recItemExsitMap[recentlyItem.Id] = recentlyItem
+					}
+				}
+				recItemMap[recentlyItem.Id] = recentlyItem
+			}
 		}
 
+		for id := range recItemExsitMap {
+			delete(recItemMap, id)
+		}
+
+		for _, item := range recItemMap {
+			recItems.Items = append(recItems.Items, item)
+		}
+
+		recItems.TotalRecordCount = len(recItemMap)
 	}
 
 	return recItems, nil
