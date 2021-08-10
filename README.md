@@ -3,7 +3,6 @@
 本项目的初衷仅仅是想自动化搞定**限定条件**下 **中文** 字幕下载。
 
 > 开发中，可能有不兼容性的调整（配置文件字段变更）
->
 
 ## Why？
 
@@ -43,8 +42,30 @@
 * [如何判断视频是否需要下载、更新字幕的](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E8%A7%86%E9%A2%91%E6%98%AF%E5%90%A6%E9%9C%80%E8%A6%81%E4%B8%8B%E8%BD%BD%E3%80%81%E6%9B%B4%E6%96%B0%E5%AD%97%E5%B9%95%E7%9A%84.md)
 * [设计](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E8%AE%BE%E8%AE%A1.md)
 
+## 如何编译此项目
+
+本来想写以下注意事项的，貌似重构后无需 CGO=1 的支持了，只要你找到 cmd\chinesesubfinder\main.go 这个入口文件就好了。
+
+编译代码如下：
+
+> cd ./cmd/chinesesubfinder \
+>     && go build -ldflags="-s -w" -o /app/chinesesubfinder
+
+跨平台是没有问题的，作者现在就是 Windows 开发的。
+
+## 如何参与开发
+
+建议看 [关于中文字幕下载器的中长期规划讨论、求助](https://github.com/allanpk716/ChineseSubFinder/issues/20)，里面提及了后续的规划，需要大家的讨论。
+
+目前阶段参与开发可以会遇到项目大范围重构，导致合并代码困难的问题。
+
+可以协助规划和设计 Web 设置页面的需求，比如 api 接口设计什么的。
+
+正式版本发布后，参与开发可以更加容易一些。
+
 ## 版本
 
+* v0.13.x 新增高级配置，支持 Emby 任意用户看过的视频不下载字幕，修复字幕识别问题。 -- 2021年8月10日
 * v0.12.x 重构，调整字幕的命名格式，移除 CGO 依赖。 -- 2021年7月26日
 * v0.11.x 新增 Emby API 支持，以及其他细节修复和调整。 -- 2021年7月14日
 * v0.10.x 添加额外的超时控制（最长超时时间设置为 20 min），修复特殊的双语字幕内容识别问题。 -- 2021年7月9日
