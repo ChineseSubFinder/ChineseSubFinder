@@ -56,6 +56,7 @@ EmbyConfig:
     Url: http://192.168.50.x:8096
     ApiKey: 123456789
     LimitCount: 3000
+    SkipWatched: false
 ```
 
 ### Emby 与 ChineseSubFinder 的目录映射关系
@@ -95,12 +96,13 @@ EmbyConfig:
     Url: http://192.168.50.x:8096
     ApiKey: 123456789
     LimitCount: 3000
+    SkipWatched: false
 ```
 
 * Url，Emby 的地址，目前只支持内网路径，且必须是 http
 * ApiKey，Emby API Key，需要去 Emby 手动申请
 * LimitCount，最多一次获取多少个近期更新的视频，包含电影和连续剧。测试设置了 3000 ，大概 10s 左右就能初步读取完信息，然后筛选出需要下载字幕的视频
-* SkipWatched，默认值是 false，如果是 true 的时候，跳过所有 Emby 用户看过的视频不进行字幕的搜索下载
+* SkipWatched，默认值是 false，如果是 true 的时候，跳过Emby 任意用户看过的视频不进行字幕的搜索下载
 
 ## 可能遇到的问题
 
