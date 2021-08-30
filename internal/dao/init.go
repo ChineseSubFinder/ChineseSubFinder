@@ -27,7 +27,7 @@ func InitDb() error {
 		return errors.New(fmt.Sprintf("failed to connect database, %s", err.Error()))
 	}
 	// 迁移 schema
-	err = db.AutoMigrate(&models.HotFix{})
+	err = db.AutoMigrate(&models.HotFix{}, &models.SubFormatRec{})
 	if err != nil {
 		return errors.New(fmt.Sprintf("db AutoMigrate error, %s", err.Error()))
 	}

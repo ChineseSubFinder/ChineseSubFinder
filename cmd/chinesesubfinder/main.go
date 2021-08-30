@@ -65,6 +65,17 @@ func main() {
 	log.Infoln("HotFix End")
 	// ------ Hot Fix End ------
 
+	// ------ Change SubName Format Start ------
+	/*
+		字幕命名格式转换，需要数据库支持
+		如果数据库没有记录经过转换，那么默认从 Emby 的格式作为检测的起点，转换到目标的格式
+		然后需要在数据库中记录本次的转换结果
+	*/
+	log.Infoln("Change Sub Name Format Start...")
+
+	log.Infoln("Change Sub Name Format End")
+	// ------ Change SubName Format End ------
+
 	// 初始化通知缓存模块
 	notify_center.Notify = notify_center.NewNotifyCenter(config.WhenSubSupplierInvalidWebHook)
 
