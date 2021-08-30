@@ -15,7 +15,7 @@ import (
 func init() {
 
 	if pkg.OSCheck() == false {
-		panic("only support Linux and Windows")
+		panic("only support Linux and Windows, if you want support MacOS, you need implement getDbName() in file: internal/dao/init.go ")
 	}
 
 	log = log_helper.GetLogger()
