@@ -430,6 +430,7 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 	if s.reqParam.DebugMode == true {
 		tt = common.OneVideoProcessTimeOut
 	}
+	// TODO 考虑后续把浏览器爬虫的逻辑剥离出来，需要替换这个到远程的 Docker 执行
 	page, err := rod_helper.NewPageNavigate(browser, subDownloadPageUrl, tt, 5)
 	if err != nil {
 		return nil, err

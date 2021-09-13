@@ -305,6 +305,7 @@ func GetEpisodeKeyName(season, eps int) string {
 
 // ReloadBrowser 提前把浏览器下载好
 func ReloadBrowser() {
+	// TODO 考虑后续把浏览器爬虫的逻辑剥离出来，需要替换这个到远程的 Docker 执行
 	page, err := rod_helper.NewBrowserLoadPage("https://www.baidu.com", "", 300*time.Second, 2)
 	if err != nil {
 		return
