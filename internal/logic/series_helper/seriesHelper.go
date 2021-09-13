@@ -132,15 +132,17 @@ func SkipChineseSeries(seriesRootPath string, _reqParam ...types.ReqParam) (bool
 	if err != nil {
 		return false, nil, err
 	}
-	t, err := imdb_helper.GetVideoInfoFromIMDB(imdbInfo.ImdbId, reqParam)
+
+	isChineseVideo, t, err := imdb_helper.IsChineseVideo(imdbInfo.ImdbId, reqParam)
 	if err != nil {
 		return false, nil, err
 	}
-	if len(t.Languages) > 0 && strings.ToLower(t.Languages[0]) == "chinese" {
+	if isChineseVideo == true {
 		log_helper.GetLogger().Infoln("Skip", filepath.Base(seriesRootPath), "Sub Download, because series is Chinese")
 		return true, t, nil
+	} else {
+		return false, t, nil
 	}
-	return false, t, nil
 }
 
 // OneSeriesDlSubInAllSite 一部连续剧在所有的网站下载相应的字幕
