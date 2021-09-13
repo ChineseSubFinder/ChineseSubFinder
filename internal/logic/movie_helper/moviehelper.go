@@ -105,7 +105,9 @@ func MovieHasChineseSub(videoFilePath string) (bool, []string, []string, error) 
 	return bFoundChineseSub, chineseSubFullPathList, chineseSubFitVideoNameFullPathList, nil
 }
 
+// SkipChineseMovie 跳过中文的电影
 func SkipChineseMovie(videoFullPath string, _reqParam ...types.ReqParam) (bool, error) {
+
 	var reqParam types.ReqParam
 	if len(_reqParam) > 0 {
 		reqParam = _reqParam[0]
@@ -114,15 +116,16 @@ func SkipChineseMovie(videoFullPath string, _reqParam ...types.ReqParam) (bool, 
 	if err != nil {
 		return false, err
 	}
-	t, err := imdb_helper.GetVideoInfoFromIMDB(imdbInfo.ImdbId, reqParam)
+	isChineseVideo, _, err := imdb_helper.IsChineseVideo(imdbInfo.ImdbId, reqParam)
 	if err != nil {
 		return false, err
 	}
-	if len(t.Languages) > 0 && strings.ToLower(t.Languages[0]) == "chinese" {
+	if isChineseVideo == true {
 		log_helper.GetLogger().Infoln("Skip", videoFullPath, "Sub Download, because movie is Chinese")
 		return true, nil
+	} else {
+		return false, nil
 	}
-	return false, nil
 }
 
 func MovieNeedDlSub(videoFullPath string) (bool, error) {
