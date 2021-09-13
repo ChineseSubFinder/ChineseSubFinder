@@ -370,20 +370,21 @@ func IsOldVersionSubPrefixName(subFileName string) (bool, string, string) {
 }
 
 // GenerateMixSubName 这里会生成类似的文件名 xxxx.chinese(中英,shooter)
-func GenerateMixSubName(videoFileName, subExt string, subLan types.Language, extraSubPreName string) (string, string, string) {
+func GenerateMixSubName(videoFileName, subExt string, subLang types.Language, extraSubPreName string) (string, string, string) {
 
 	videoFileNameWithOutExt := strings.ReplaceAll(filepath.Base(videoFileName),
 		filepath.Ext(videoFileName), "")
 	note := ""
+	// extraSubPreName 那个字幕网站下载的
 	if extraSubPreName != "" {
 		note = "," + extraSubPreName
 	}
 	defaultString := ".default"
 	forcedString := ".forced"
 
-	subNewName := videoFileNameWithOutExt + ".chinese" + "(" + language.Lang2ChineseString(subLan) + note + ")" + subExt
-	subNewNameWithDefault := videoFileNameWithOutExt + ".chinese" + "(" + language.Lang2ChineseString(subLan) + note + ")" + defaultString + subExt
-	subNewNameWithForced := videoFileNameWithOutExt + ".chinese" + "(" + language.Lang2ChineseString(subLan) + note + ")" + forcedString + subExt
+	subNewName := videoFileNameWithOutExt + ".chinese" + "(" + language.Lang2ChineseString(subLang) + note + ")" + subExt
+	subNewNameWithDefault := videoFileNameWithOutExt + ".chinese" + "(" + language.Lang2ChineseString(subLang) + note + ")" + defaultString + subExt
+	subNewNameWithForced := videoFileNameWithOutExt + ".chinese" + "(" + language.Lang2ChineseString(subLang) + note + ")" + forcedString + subExt
 
 	return subNewName, subNewNameWithDefault, subNewNameWithForced
 }
