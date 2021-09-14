@@ -32,8 +32,8 @@ func (f Formatter) IsMatchThisFormat(subName string) (bool, string, types.Langua
 		[0][1]	简英,subhd or 简英
 		[0][2]	.ass
 	*/
-	if len(matched) < 1 || len(matched[0]) < 3 {
-		return false, "", types.ChineseSimple, ""
+	if matched == nil || len(matched) < 1 || len(matched[0]) < 3 {
+		return false, "", types.Unknow, ""
 	}
 	var subLang types.Language
 	var subLangStr string
@@ -43,7 +43,7 @@ func (f Formatter) IsMatchThisFormat(subName string) (bool, string, types.Langua
 	if strings.Contains(midString, ",") == true {
 		tmps := strings.Split(midString, ",")
 		if len(tmps) < 2 {
-			return false, "", types.ChineseSimple, ""
+			return false, "", types.Unknow, ""
 		}
 		subLangStr = tmps[0]
 		extraSubPreName = tmps[1]
@@ -68,13 +68,10 @@ func (f Formatter) GenerateMixSubName(videoFileName, subExt string, subLang type
 	if extraSubPreName != "" {
 		note = "," + extraSubPreName
 	}
-	const defaultString = ".default"
-	const forcedString = ".forced"
-	const chineseString = ".chinese"
 
-	subNewName := videoFileNameWithOutExt + chineseString + "(" + language.Lang2ChineseString(subLang) + note + ")" + subExt
-	subNewNameWithDefault := videoFileNameWithOutExt + chineseString + "(" + language.Lang2ChineseString(subLang) + note + ")" + defaultString + subExt
-	subNewNameWithForced := videoFileNameWithOutExt + chineseString + "(" + language.Lang2ChineseString(subLang) + note + ")" + forcedString + subExt
+	subNewName := videoFileNameWithOutExt + types.Emby_chinese + "(" + language.Lang2ChineseString(subLang) + note + ")" + subExt
+	subNewNameWithDefault := videoFileNameWithOutExt + types.Emby_chinese + "(" + language.Lang2ChineseString(subLang) + note + ")" + types.Sub_Ext_Mark_Default + subExt
+	subNewNameWithForced := videoFileNameWithOutExt + types.Emby_chinese + "(" + language.Lang2ChineseString(subLang) + note + ")" + types.Sub_Ext_Mark_Forced + subExt
 
 	return subNewName, subNewNameWithDefault, subNewNameWithForced
 }

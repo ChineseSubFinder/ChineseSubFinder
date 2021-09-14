@@ -164,6 +164,17 @@ func Lang2ChineseString(lan types.Language) string {
 	}
 }
 
+// ChineseISOString2Lang 将 中文描述：zh、zho、chi 转换为 types.Language
+func ChineseISOString2Lang(chineseStr string) types.Language {
+
+	switch chineseStr {
+	case types.ChineseAbbr_639_1, types.ChineseAbbr_639_2T, types.ChineseAbbr_639_2B:
+		return types.ChineseSimple
+	default:
+		return types.Unknow
+	}
+}
+
 // ChineseString2Lang 将 中文描述：简、繁、简英 转换为 types.Language
 func ChineseString2Lang(chineseStr string) types.Language {
 	switch chineseStr {

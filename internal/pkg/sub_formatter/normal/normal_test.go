@@ -1,4 +1,4 @@
-package emby
+package normal
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
@@ -8,7 +8,7 @@ import (
 
 func TestFormatter_GetFormatterName(t *testing.T) {
 	f := NewFormatter()
-	if f.GetFormatterName() != "emby formatter" {
+	if f.GetFormatterName() != "normal formatter" {
 		t.Errorf("GetFormatterName error")
 	}
 }
@@ -25,37 +25,22 @@ func TestFormatter_IsMatchThisFormat(t *testing.T) {
 		want2 types.Language
 		want3 string
 	}{
-		{name: "00", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简英,subhd).ass"},
+		{name: "00", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.zh.ass"},
 			want:  true,
 			want1: ".ass",
-			want2: types.ChineseSimpleEnglish,
-			want3: "subhd"},
-		{name: "01", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简英,xunlei).default.ass"},
-			want:  true,
-			want1: ".default.ass",
-			want2: types.ChineseSimpleEnglish,
-			want3: "xunlei"},
-		{name: "02", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简英,zimuku).forced.ass"},
-			want:  true,
-			want1: ".forced.ass",
-			want2: types.ChineseSimpleEnglish,
-			want3: "zimuku"},
-		{name: "10", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简日).ass"},
-			want:  true,
-			want1: ".ass",
-			want2: types.ChineseSimpleJapanese,
+			want2: types.ChineseSimple,
 			want3: ""},
-		{name: "11", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简).default.ass"},
+		{name: "01", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.zh.default.ass"},
 			want:  true,
 			want1: ".default.ass",
 			want2: types.ChineseSimple,
 			want3: ""},
-		{name: "12", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(繁英).forced.ass"},
+		{name: "02", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.zh.forced.ass"},
 			want:  true,
 			want1: ".forced.ass",
-			want2: types.ChineseTraditionalEnglish,
+			want2: types.ChineseSimple,
 			want3: ""},
-		{name: "03", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese.ass"},
+		{name: "03", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.cn.ass"},
 			want:  false,
 			want1: "",
 			want2: types.Unknow,
@@ -99,18 +84,18 @@ func TestFormatter_GenerateMixSubName(t *testing.T) {
 		want1 string
 		want2 string
 	}{
+		{name: "zh", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: types.ChineseSimple, extraSubPreName: ""},
+			want:  videoFileNamePre + ".zh.ass",
+			want1: videoFileNamePre + ".zh.default.ass",
+			want2: videoFileNamePre + ".zh.forced.ass"},
 		{name: "zh_shooter", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: types.ChineseSimple, extraSubPreName: "shooter"},
-			want:  videoFileNamePre + ".chinese(简,shooter).ass",
-			want1: videoFileNamePre + ".chinese(简,shooter).default.ass",
-			want2: videoFileNamePre + ".chinese(简,shooter).forced.ass"},
-		{name: "zh_en_shooter", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: types.ChineseSimpleEnglish, extraSubPreName: "shooter"},
-			want:  videoFileNamePre + ".chinese(简英,shooter).ass",
-			want1: videoFileNamePre + ".chinese(简英,shooter).default.ass",
-			want2: videoFileNamePre + ".chinese(简英,shooter).forced.ass"},
-		{name: "zh_en", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: types.ChineseSimpleEnglish, extraSubPreName: ""},
-			want:  videoFileNamePre + ".chinese(简英).ass",
-			want1: videoFileNamePre + ".chinese(简英).default.ass",
-			want2: videoFileNamePre + ".chinese(简英).forced.ass"},
+			want:  videoFileNamePre + ".zh.ass",
+			want1: videoFileNamePre + ".zh.default.ass",
+			want2: videoFileNamePre + ".zh.forced.ass"},
+		{name: "zh_shooter2", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: types.ChineseSimpleEnglish, extraSubPreName: "shooter"},
+			want:  videoFileNamePre + ".zh.ass",
+			want1: videoFileNamePre + ".zh.default.ass",
+			want2: videoFileNamePre + ".zh.forced.ass"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

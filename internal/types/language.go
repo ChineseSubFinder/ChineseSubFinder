@@ -1,6 +1,7 @@
 package types
 
 const (
+	// SubNameKeywordChineseSimple 用于区分字幕是简体中文还是繁体中文
 	SubNameKeywordChineseSimple = "chs"
 	SubNameKeywordTraditional   = "cht"
 )
@@ -21,6 +22,13 @@ const (
 	Korean                                     // 韩语
 	ChineseSimpleKorean                        // 简韩双语字幕
 	ChineseTraditionalKorean                   // 繁韩双语字幕
+)
+
+// 参考 https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes 标准
+const (
+	ChineseAbbr_639_1  = "zh"
+	ChineseAbbr_639_2T = "zho"
+	ChineseAbbr_639_2B = "chi"
 )
 
 const (
