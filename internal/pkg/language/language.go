@@ -164,6 +164,38 @@ func Lang2ChineseString(lan types.Language) string {
 	}
 }
 
+// ChineseString2Lang 将 中文描述：简、繁、简英 转换为 types.Language
+func ChineseString2Lang(chineseStr string) types.Language {
+	switch chineseStr {
+	case types.MathLangChnUnknow: // 未知语言
+		return types.Unknow
+	case types.MatchLangChs: // 简体中文
+		return types.ChineseSimple
+	case types.MatchLangCht: // 繁体中文
+		return types.ChineseTraditional
+	case types.MatchLangChsEn: // 简英双语字幕
+		return types.ChineseSimpleEnglish
+	case types.MatchLangChtEn: // 繁英双语字幕
+		return types.ChineseTraditionalEnglish
+	case types.MatchLangEn: // 英文
+		return types.English
+	case types.MatchLangJp: // 日语
+		return types.Japanese
+	case types.MatchLangChsJp: // 简日双语字幕
+		return types.ChineseSimpleJapanese
+	case types.MatchLangChtJp: // 繁日双语字幕
+		return types.ChineseTraditionalJapanese
+	case types.MatchLangKr: // 韩语
+		return types.Korean
+	case types.MatchLangChsKr: // 简韩双语字幕
+		return types.ChineseSimpleKorean
+	case types.MatchLangChtKr: // 繁韩双语字幕
+		return types.ChineseTraditionalKorean
+	default:
+		return types.Unknow
+	}
+}
+
 // GetLangOptions 语言识别的 Options Whitelist
 func GetLangOptions() whatlanggo.Options {
 	return whatlanggo.Options{

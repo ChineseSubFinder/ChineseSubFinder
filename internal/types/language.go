@@ -23,6 +23,11 @@ const (
 	ChineseTraditionalKorean                   // 繁韩双语字幕
 )
 
+const (
+	Sub_Ext_Mark_Default = ".default" // 指定这个字幕是默认的
+	Sub_Ext_Mark_Forced  = ".forced"  // 指定这个字幕是强制的
+)
+
 // 需要符合 emby_helper 的格式要求，在后缀名前面
 const (
 	Emby_default = ".default" // 指定这个字幕是默认的

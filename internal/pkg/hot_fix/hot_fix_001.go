@@ -5,6 +5,7 @@ import (
 	movieHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/movie_helper"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/old"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"os"
 )
@@ -59,7 +60,7 @@ func (h HotFix001) Process() (interface{}, error) {
 		}
 		// 判断是否是符合要求
 		for _, fitSubName := range fitMovieNameSubList {
-			bFix, _, newSubFileName := sub_helper.IsOldVersionSubPrefixName(fitSubName)
+			bFix, _, newSubFileName := old.IsOldVersionSubPrefixName(fitSubName)
 			if bFix == false {
 				continue
 			}
@@ -80,7 +81,7 @@ func (h HotFix001) Process() (interface{}, error) {
 		}
 		// 判断是否是符合要求
 		for _, fitSubName := range seriesSubFiles {
-			bFix, _, newSubFileName := sub_helper.IsOldVersionSubPrefixName(fitSubName)
+			bFix, _, newSubFileName := old.IsOldVersionSubPrefixName(fitSubName)
 			if bFix == false {
 				continue
 			}

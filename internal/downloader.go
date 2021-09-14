@@ -2,6 +2,7 @@ package internal
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
 	markSystem "github.com/allanpk716/ChineseSubFinder/internal/logic/mark_system"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
@@ -37,11 +38,13 @@ type Downloader struct {
 	embyHelper            *embyHelper.EmbyHelper
 	movieFileFullPathList []string                      //  多个需要搜索字幕的电影文件全路径
 	seriesSubNeedDlMap    map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录
+	subFormatter          ifaces.ISubFormatter          //	字幕格式化命名的实现
 }
 
-func NewDownloader(_reqParam ...types.ReqParam) *Downloader {
+func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqParam) *Downloader {
 
 	var downloader Downloader
+	downloader.subFormatter = inSubFormatter
 	downloader.log = log_helper.GetLogger()
 	downloader.topic = common.DownloadSubsPerSite
 	if len(_reqParam) > 0 {
@@ -387,10 +390,10 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 	*/
 	// 不管是不是保存多个字幕，都要先扫描本地的字幕，进行 .Default 去除
 	// 这个视频的所有字幕，去除 .default 标记
-	err = sub_helper.SearchVideoMatchSubFileAndRemoveDefaultMark(oneVideoFullPath)
+	err = sub_helper.SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath)
 	if err != nil {
 		// 找个错误可以忍
-		d.log.Errorln("SearchVideoMatchSubFileAndRemoveDefaultMark,", oneVideoFullPath, err)
+		d.log.Errorln("SearchVideoMatchSubFileAndRemoveExtMark,", oneVideoFullPath, err)
 	}
 	if d.reqParam.SaveMultiSub == false {
 		// 选择最优的一个字幕
@@ -473,7 +476,7 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSub
 func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile subparser.FileInfo, extraSubPreName string, setDefault bool) error {
 
 	videoRootPath := filepath.Dir(videoFileFullPath)
-	subNewName, subNewNameWithDefault, _ := sub_helper.GenerateMixSubName(videoFileFullPath, finalSubFile.Ext, finalSubFile.Lang, extraSubPreName)
+	subNewName, subNewNameWithDefault, _ := d.subFormatter.GenerateMixSubName(videoFileFullPath, finalSubFile.Ext, finalSubFile.Lang, extraSubPreName)
 
 	desSubFullPath := path.Join(videoRootPath, subNewName)
 	if setDefault == true {

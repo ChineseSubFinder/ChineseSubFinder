@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
@@ -116,7 +117,7 @@ func DownLoadStart(httpProxy string) {
 	notify_center.Notify.Clear()
 
 	// 下载实例
-	downloader := internal.NewDownloader(types.ReqParam{
+	downloader := internal.NewDownloader(emby.NewFormatter(), types.ReqParam{
 		HttpProxy:                     httpProxy,
 		DebugMode:                     config.DebugMode,
 		SaveMultiSub:                  config.SaveMultiSub,
