@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+/*
+	整个是早期版本使用的字幕命名格式，现在已经弃用，通过 HotFix01 进行调整过。
+	后续是无需关心的
+*/
+
 // IsOldVersionSubPrefixName 是否是老版本的字幕命名 .chs_en[shooter] ，符合也返回这个部分＋字幕格式后缀名 .chs_en[shooter].ass, 修改后的名称
 func IsOldVersionSubPrefixName(subFileName string) (bool, string, string) {
 	/*

@@ -2,18 +2,22 @@ package emby
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	subCommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"testing"
 )
 
 func TestFormatter_GetFormatterName(t *testing.T) {
 	f := NewFormatter()
-	if f.GetFormatterName() != "emby formatter" {
+	if f.GetFormatterName() != subCommon.FormatterNameString_Emby {
 		t.Errorf("GetFormatterName error")
 	}
 }
 
 func TestFormatter_IsMatchThisFormat(t *testing.T) {
+
+	const fileWithOutExt = "The Boss Baby Family Business (2021) WEBDL-1080p"
+
 	type args struct {
 		subName string
 	}
@@ -22,49 +26,57 @@ func TestFormatter_IsMatchThisFormat(t *testing.T) {
 		args  args
 		want  bool
 		want1 string
-		want2 types.Language
-		want3 string
+		want2 string
+		want3 types.Language
+		want4 string
 	}{
 		{name: "00", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简英,subhd).ass"},
 			want:  true,
-			want1: ".ass",
-			want2: types.ChineseSimpleEnglish,
-			want3: "subhd"},
+			want1: fileWithOutExt,
+			want2: ".ass",
+			want3: types.ChineseSimpleEnglish,
+			want4: "subhd"},
 		{name: "01", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简英,xunlei).default.ass"},
 			want:  true,
-			want1: ".default.ass",
-			want2: types.ChineseSimpleEnglish,
-			want3: "xunlei"},
+			want1: fileWithOutExt,
+			want2: ".default.ass",
+			want3: types.ChineseSimpleEnglish,
+			want4: "xunlei"},
 		{name: "02", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简英,zimuku).forced.ass"},
 			want:  true,
-			want1: ".forced.ass",
-			want2: types.ChineseSimpleEnglish,
-			want3: "zimuku"},
+			want1: fileWithOutExt,
+			want2: ".forced.ass",
+			want3: types.ChineseSimpleEnglish,
+			want4: "zimuku"},
 		{name: "10", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简日).ass"},
 			want:  true,
-			want1: ".ass",
-			want2: types.ChineseSimpleJapanese,
-			want3: ""},
+			want1: fileWithOutExt,
+			want2: ".ass",
+			want3: types.ChineseSimpleJapanese,
+			want4: ""},
 		{name: "11", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简).default.ass"},
 			want:  true,
-			want1: ".default.ass",
-			want2: types.ChineseSimple,
-			want3: ""},
+			want1: fileWithOutExt,
+			want2: ".default.ass",
+			want3: types.ChineseSimple,
+			want4: ""},
 		{name: "12", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(繁英).forced.ass"},
 			want:  true,
-			want1: ".forced.ass",
-			want2: types.ChineseTraditionalEnglish,
-			want3: ""},
+			want1: fileWithOutExt,
+			want2: ".forced.ass",
+			want3: types.ChineseTraditionalEnglish,
+			want4: ""},
 		{name: "03", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese.ass"},
 			want:  false,
 			want1: "",
-			want2: types.Unknow,
-			want3: ""},
+			want2: "",
+			want3: types.Unknow,
+			want4: ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			f := Formatter{}
-			got, got1, got2, got3 := f.IsMatchThisFormat(tt.args.subName)
+			got, got1, got2, got3, got4 := f.IsMatchThisFormat(tt.args.subName)
 			if got != tt.want {
 				t.Errorf("IsMatchThisFormat() got = %v, want %v", got, tt.want)
 			}
@@ -76,6 +88,9 @@ func TestFormatter_IsMatchThisFormat(t *testing.T) {
 			}
 			if got3 != tt.want3 {
 				t.Errorf("IsMatchThisFormat() got3 = %v, want %v", got3, tt.want3)
+			}
+			if got4 != tt.want4 {
+				t.Errorf("IsMatchThisFormat() got4 = %v, want %v", got4, tt.want4)
 			}
 		})
 	}

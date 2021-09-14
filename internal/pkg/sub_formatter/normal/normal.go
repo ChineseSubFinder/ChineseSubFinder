@@ -2,6 +2,7 @@ package normal
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"path/filepath"
 	"regexp"
@@ -17,11 +18,11 @@ func NewFormatter() *Formatter {
 
 // GetFormatterName 当前的 Formatter 是那个
 func (f Formatter) GetFormatterName() string {
-	return "normal formatter"
+	return common.FormatterNameString_Normal
 }
 
-// IsMatchThisFormat 是否满足当前实现接口的字幕命名格式 - 是否符合规则、subExt string, subLang types.Language, extraSubPreName string
-func (f Formatter) IsMatchThisFormat(subName string) (bool, string, types.Language, string) {
+// IsMatchThisFormat 是否满足当前实现接口的字幕命名格式 - 是否符合规则、fileNameWithOutExt string, subExt string, subLang types.Language, extraSubPreName string
+func (f Formatter) IsMatchThisFormat(subName string) (bool, string, string, types.Language, string) {
 	/*
 		Emby 的命名规则比较特殊，而且本程序就是做中文字幕下载的，所以，下面的正则表达式比较特殊
 	*/
@@ -43,17 +44,18 @@ func (f Formatter) IsMatchThisFormat(subName string) (bool, string, types.Langua
 		[0][2]	.ass
 	*/
 	if matched == nil || len(matched) < 1 || len(matched[0]) < 3 {
-		return false, "", types.Unknow, ""
+		return false, "", "", types.Unknow, ""
 	}
 	var subLang types.Language
 	var subLangStr string
 	var extraSubPreName string
+	fileNameWithOutExt := strings.ReplaceAll(subName, matched[0][0], "")
 	subExt := matched[0][2]
 	subLangStr = matched[0][1]
 	extraSubPreName = ""
 	subLang = language.ChineseISOString2Lang(subLangStr)
 
-	return true, subExt, subLang, extraSubPreName
+	return true, fileNameWithOutExt, subExt, subLang, extraSubPreName
 }
 
 // GenerateMixSubName 通过视频和字幕信息，生成当前实现接口的字幕命名格式。extraSubPreName 一般是填写字幕网站，不填写则留空 - 新名称、新名称带有 default 标记，新名称带有 forced 标记
@@ -63,10 +65,14 @@ func (f Formatter) GenerateMixSubName(videoFileName, subExt string, subLang type
 	*/
 	videoFileNameWithOutExt := strings.ReplaceAll(filepath.Base(videoFileName),
 		filepath.Ext(videoFileName), "")
+	return f.GenerateMixSubNameBase(videoFileNameWithOutExt, subExt, subLang, extraSubPreName)
+}
 
-	subNewName := videoFileNameWithOutExt + "." + types.ChineseAbbr_639_1 + subExt
-	subNewNameWithDefault := videoFileNameWithOutExt + "." + types.ChineseAbbr_639_1 + types.Sub_Ext_Mark_Default + subExt
-	subNewNameWithForced := videoFileNameWithOutExt + "." + types.ChineseAbbr_639_1 + types.Sub_Ext_Mark_Forced + subExt
+func (f Formatter) GenerateMixSubNameBase(fileNameWithOutExt, subExt string, subLang types.Language, extraSubPreName string) (string, string, string) {
+
+	subNewName := fileNameWithOutExt + "." + types.ChineseAbbr_639_1 + subExt
+	subNewNameWithDefault := fileNameWithOutExt + "." + types.ChineseAbbr_639_1 + types.Sub_Ext_Mark_Default + subExt
+	subNewNameWithForced := fileNameWithOutExt + "." + types.ChineseAbbr_639_1 + types.Sub_Ext_Mark_Forced + subExt
 
 	return subNewName, subNewNameWithDefault, subNewNameWithForced
 }
