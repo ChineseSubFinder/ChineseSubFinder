@@ -15,8 +15,8 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 	//movie1 := "X:\\电影\\消失爱人 (2016)\\消失爱人 (2016) 720p AAC.rmvb"
 	//movie1 := "X:\\电影\\机动战士Z高达：星之继承者 (2005)\\机动战士Z高达：星之继承者 (2005) 1080p TrueHD.mkv"
 	//movie1 := "X:\\连续剧\\The Bad Batch\\Season 1\\The Bad Batch - S01E01 - Aftermath WEBDL-1080p.mkv"
-	shooter := NewSupplier()
-	outList, err := shooter.getSubListFromFile4Movie(movie1)
+	subhd := NewSupplier()
+	outList, err := subhd.getSubListFromFile4Movie(movie1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -51,6 +51,25 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	}
 	println(outList)
 	for i, sublist := range outList {
+		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, len(sublist.Data))
+	}
+}
+
+func TestSupplier_getSubListFromKeyword4Movie(t *testing.T) {
+
+	//imdbID := "tt12708542" // 星球大战：残次品
+	//imdbID := "tt7016936" // 杀死伊芙
+	imdbID := "tt2990738" // 恐怖直播
+	//imdbID := "tt3032476" 	// 风骚律师
+	//imdbID := "tt6468322" 	// 纸钞屋
+	//imdbID := "tt15299712" // 云南虫谷
+	//imdbID := "tt3626476"	// Vacation Friends (2021)
+	subhd := NewSupplier()
+	subInfos, err := subhd.getSubListFromKeyword4Movie(imdbID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, sublist := range subInfos {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, len(sublist.Data))
 	}
 }
