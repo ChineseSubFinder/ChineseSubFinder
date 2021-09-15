@@ -10,7 +10,7 @@ import (
 
 func TestUnArchiveFile(t *testing.T) {
 
-	testDataPath := "..\\..\\..\\TestData\\zips"
+	testDataPath := "../../../TestData/zips"
 	testRootDir, err := pkg.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)

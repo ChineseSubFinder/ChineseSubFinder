@@ -431,3 +431,8 @@ func OSCheck() bool {
 
 	return false
 }
+
+// FixWindowPathBackSlash 修复 Windows 反斜杠的梗
+func FixWindowPathBackSlash(path string) string {
+	return strings.Replace(path, string(filepath.Separator), "/", -1)
+}

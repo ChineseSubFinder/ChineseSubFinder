@@ -21,7 +21,7 @@ func TestHotFixProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	testDataPath := "..\\..\\..\\TestData\\hotfix\\001"
+	testDataPath := "../../../TestData/hotfix/001"
 	movieDir := "movies"
 	seriesDir := "series"
 	testRootDir, err := pkg.CopyTestData(testDataPath)

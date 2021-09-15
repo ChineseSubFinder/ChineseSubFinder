@@ -15,7 +15,7 @@ func TestHotFix001_GetKey(t *testing.T) {
 }
 
 func TestHotFix001_Process(t *testing.T) {
-	testDataPath := "..\\..\\..\\TestData\\hotfix\\001"
+	testDataPath := "../../../TestData/hotfix/001"
 	movieDir := "movies"
 	seriesDir := "series"
 	testRootDir, err := pkg.CopyTestData(testDataPath)

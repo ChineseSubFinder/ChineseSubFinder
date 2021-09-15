@@ -31,3 +31,4 @@
 /cmd/chinesesubfinder/*.exe
 /internal/tmpthings
 /TestData/sub_parser/test
+/TestData/sub_format_changer/test

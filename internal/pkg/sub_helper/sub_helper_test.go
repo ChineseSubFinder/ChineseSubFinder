@@ -8,7 +8,7 @@ import (
 
 func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
 
-	testDataPath := "..\\..\\..\\TestData\\sub_helper"
+	testDataPath := "../../../TestData/sub_helper"
 	testRootDir, err := pkg.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)

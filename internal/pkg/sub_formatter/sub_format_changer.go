@@ -41,8 +41,8 @@ func (s SubFormatChanger) AutoDetectThenChangeTo(desFormatter common.FormatterNa
 
 	var err error
 	outStruct := RenameResults{}
-	outStruct.RenamedFiles = make([]string, 0)
-	outStruct.ErrFiles = make([]string, 0)
+	outStruct.RenamedFiles = make(map[string]int)
+	outStruct.ErrFiles = make(map[string]int)
 	if pkg.IsDir(s.movieRootDir) == false {
 		return outStruct, errors.New("movieRootDir path not exist: " + s.movieRootDir)
 	}
@@ -113,7 +113,7 @@ func (s SubFormatChanger) autoDetectAndChange(outStruct *RenameResults, fitSubNa
 		newSubFileName := ""
 		newName, newDefaultName, newForcedName := s.Formatter[fmt.Sprintf("%s", desFormatter)].
 			GenerateMixSubNameBase(fileNameWithOutExt, subExt, subLang, extraSubPreName)
-		if findDefault == false && findForce == true {
+		if findDefault == false && findForce == false {
 			// 使用没得额外 Default 或者 Forced 的名称即可
 			newSubFileName = newName
 		} else if findDefault == true {
@@ -127,14 +127,17 @@ func (s SubFormatChanger) autoDetectAndChange(outStruct *RenameResults, fitSubNa
 		// 确认改格式
 		err := os.Rename(fitSubName, newSubFileName)
 		if err != nil {
-			outStruct.ErrFiles = append(outStruct.ErrFiles, fitSubName)
+			tmpName := pkg.FixWindowPathBackSlash(fitSubName)
+			outStruct.ErrFiles[tmpName] += 1
 			continue
+		} else {
+			tmpName := pkg.FixWindowPathBackSlash(newSubFileName)
+			outStruct.RenamedFiles[tmpName] += 1
 		}
-		outStruct.RenamedFiles = append(outStruct.RenamedFiles, newSubFileName)
 	}
 }
 
 type RenameResults struct {
-	RenamedFiles []string
-	ErrFiles     []string
+	RenamedFiles map[string]int
+	ErrFiles     map[string]int
 }

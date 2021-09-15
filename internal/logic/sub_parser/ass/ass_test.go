@@ -9,7 +9,7 @@ import (
 
 func TestParser_DetermineFileTypeFromFile(t *testing.T) {
 
-	testDataPath := "..\\..\\..\\..\\TestData\\sub_parser"
+	testDataPath := "../../../../TestData/sub_parser"
 	testRootDir, err := pkg.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)
