@@ -21,6 +21,10 @@ func (f Formatter) GetFormatterName() string {
 	return common.FormatterNameString_Emby
 }
 
+func (f Formatter) GetFormatterFormatterName() int {
+	return int(common.Emby)
+}
+
 // IsMatchThisFormat 是否满足当前实现接口的字幕命名格式 - 是否符合规则、fileNameWithOutExt string, subExt string, subLang types.Language, extraSubPreName string
 func (f Formatter) IsMatchThisFormat(subName string) (bool, string, string, types.Language, string) {
 	/*

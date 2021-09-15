@@ -4,7 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/emby"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"testing"
@@ -22,7 +22,7 @@ func TestDownloader_DownloadSub4Movie(t *testing.T) {
 	dirRoot := "X:\\电影\\The Boss Baby Family Business (2021)"
 	//dirRoot := "X:\\电影"
 	config := pkg.GetConfig()
-	dl := NewDownloader(emby.NewFormatter(), types.ReqParam{
+	dl := NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter), types.ReqParam{
 		SaveMultiSub:    true,
 		SubTypePriority: 1,
 		EmbyConfig:      config.EmbyConfig,
@@ -54,7 +54,7 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 
 	config := pkg.GetConfig()
 	// 如果需要调试 Emby 一定需要 dirRoot := "X:\\连续剧"
-	dl := NewDownloader(emby.NewFormatter(), types.ReqParam{
+	dl := NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter), types.ReqParam{
 		SaveMultiSub:    true,
 		SubTypePriority: 1,
 		EmbyConfig:      config.EmbyConfig,
@@ -72,7 +72,7 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 func TestDownloader_GetUpdateVideoListFromEmby(t *testing.T) {
 	var err error
 	config := pkg.GetConfig()
-	dl := NewDownloader(emby.NewFormatter(), types.ReqParam{
+	dl := NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter), types.ReqParam{
 		SaveMultiSub:    true,
 		SubTypePriority: 1,
 		EmbyConfig:      config.EmbyConfig,

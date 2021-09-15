@@ -14,6 +14,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	subcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
@@ -39,6 +40,7 @@ type Downloader struct {
 	movieFileFullPathList []string                      //  多个需要搜索字幕的电影文件全路径
 	seriesSubNeedDlMap    map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录
 	subFormatter          ifaces.ISubFormatter          //	字幕格式化命名的实现
+	subNameFormatter      subcommon.FormatterName       // 从 inSubFormatter 推断出来
 }
 
 func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqParam) *Downloader {
@@ -65,6 +67,8 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqPa
 	} else {
 		downloader.reqParam = *types.NewReqParam()
 	}
+	// 这里就不单独弄一个 reqParam.SubNameFormatter 字段来传递值了，因为 inSubFormatter 就已经知道是什么 formatter 了
+	downloader.subNameFormatter = subcommon.FormatterName(downloader.subFormatter.GetFormatterFormatterName())
 
 	var sitesSequence = make([]string, 0)
 	// TODO 这里写固定了抉择字幕的顺序
@@ -384,12 +388,12 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 	}
 	// -------------------------------------------------
 	/*
-		这里需要额外考虑一点，有可能当前目录已经有一个 .Default 标记的字幕了
-		那么下载字幕丢进来的时候就需要提前把这个字幕找出来，去除整个 .Default 标记
+		这里需要额外考虑一点，有可能当前目录已经有一个 .Default .Forced 标记的字幕了
+		那么下载字幕丢进来的时候就需要提前把这个字幕找出来，去除整个 .Default .Forced  标记
 		然后进行正常的下载，存储和替换字幕，最后将本次操作的第一次标记为 .Default
 	*/
-	// 不管是不是保存多个字幕，都要先扫描本地的字幕，进行 .Default 去除
-	// 这个视频的所有字幕，去除 .default 标记
+	// 不管是不是保存多个字幕，都要先扫描本地的字幕，进行 .Default .Forced 去除
+	// 这个视频的所有字幕，去除 .default .Forced 标记
 	err = sub_helper.SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath)
 	if err != nil {
 		// 找个错误可以忍
@@ -403,8 +407,18 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 			d.log.Warnln("Found", len(organizeSubFiles), " subtitles but not one fit:", oneVideoFullPath)
 			return
 		}
+		/*
+			这里还有一个梗，Emby、jellyfin 支持 default 和 forced 扩展字段
+			但是，plex 只支持 forced
+			那么就比较麻烦，干脆，normal 的命名格式化实例，就不设置 default 了，forced 不想用，因为可能会跟你手动选择的字幕冲突（下次观看的时候，理论上也可能不会）
+		*/
+		// 判断配置文件中的字幕命名格式化的选择
+		bSetDefault := true
+		if d.subNameFormatter == subcommon.Normal {
+			bSetDefault = false
+		}
 		// 找到了，写入文件
-		err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile, "", true)
+		err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile, "", bSetDefault, false)
 		if err != nil {
 			d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub, "writeSubFile2VideoPath:", err)
 			return
@@ -417,15 +431,38 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 			return
 		}
 		// 多网站 Top 1 字幕保存的时候，第一个设置为 Default 即可
-		for i, file := range finalSubFiles {
-			setDefault := false
-			if i == 0 {
-				setDefault = true
+		/*
+			由于新功能支持了字幕命名格式的选择，那么如果触发了多个字幕保存的逻辑，如果不调整
+			则会遇到，top1 先写入，然后 top2 覆盖 top1 ，以此类推的情况出现
+			所以如果开启了 Normal SubNameFormatter 的功能，则要反序写入文件
+			如果是 Emby 的字幕命名格式则无需考虑此问题，因为每个网站只会有一个字幕，且字幕命名格式决定了不会重复写入覆盖
+		*/
+		if d.subNameFormatter == subcommon.Emby {
+			for i, file := range finalSubFiles {
+				setDefault := false
+				if i == 0 {
+					setDefault = true
+				}
+				err = d.writeSubFile2VideoPath(oneVideoFullPath, file, siteNames[i], setDefault, false)
+				if err != nil {
+					d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub, "writeSubFile2VideoPath:", err)
+					return
+				}
 			}
-			err = d.writeSubFile2VideoPath(oneVideoFullPath, file, siteNames[i], setDefault)
-			if err != nil {
-				d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub, "writeSubFile2VideoPath:", err)
-				return
+		} else {
+			// 默认这里就是 normal 模式
+			// 逆序写入
+			/*
+				这里还有一个梗，Emby、jellyfin 支持 default 和 forced 扩展字段
+				但是，plex 只支持 forced
+				那么就比较麻烦，干脆，normal 的命名格式化实例，就不设置 default 了，forced 不想用，因为可能会跟你手动选择的字幕冲突（下次观看的时候，理论上也可能不会）
+			*/
+			for i := len(finalSubFiles) - 1; i > -1; i-- {
+				err = d.writeSubFile2VideoPath(oneVideoFullPath, finalSubFiles[i], siteNames[i], false, false)
+				if err != nil {
+					d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub, "writeSubFile2VideoPath:", err)
+					return
+				}
 			}
 		}
 	}
@@ -473,7 +510,7 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSub
 }
 
 // 在前面需要进行语言的筛选、排序，这里仅仅是存储， extraSubPreName 这里传递是字幕的网站，有就认为是多字幕的存储。空就是单字幕，单字幕就可以setDefault
-func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile subparser.FileInfo, extraSubPreName string, setDefault bool) error {
+func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile subparser.FileInfo, extraSubPreName string, setDefault bool, skipExistFile bool) error {
 
 	videoRootPath := filepath.Dir(videoFileFullPath)
 	subNewName, subNewNameWithDefault, _ := d.subFormatter.GenerateMixSubName(videoFileFullPath, finalSubFile.Ext, finalSubFile.Lang, extraSubPreName)
@@ -486,6 +523,15 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 		}
 		desSubFullPath = path.Join(videoRootPath, subNewNameWithDefault)
 	}
+
+	if skipExistFile == true {
+		// 需要判断文件是否存在在，有则跳过
+		if pkg.IsFile(desSubFullPath) == true {
+			d.log.Infoln("OrgSubName:", finalSubFile.Name)
+			d.log.Infoln("Sub Skip DownAt:", desSubFullPath)
+			return nil
+		}
+	}
 	// 最后写入字幕
 	err := utils.OutputFile(desSubFullPath, finalSubFile.Data)
 	if err != nil {
@@ -493,6 +539,7 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	}
 	d.log.Infoln("OrgSubName:", finalSubFile.Name)
 	d.log.Infoln("SubDownAt:", desSubFullPath)
+
 	return nil
 }
 

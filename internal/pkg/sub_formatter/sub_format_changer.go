@@ -141,3 +141,27 @@ type RenameResults struct {
 	RenamedFiles map[string]int
 	ErrFiles     map[string]int
 }
+
+// GetSubFormatter 选择字幕命名格式化的实例
+func GetSubFormatter(subNameFormatter int) ifaces.ISubFormatter {
+	var subFormatter ifaces.ISubFormatter
+	switch subNameFormatter {
+	case int(common.Emby):
+		{
+			subFormatter = emby.NewFormatter()
+			break
+		}
+	case int(common.Normal):
+		{
+			subFormatter = normal.NewFormatter()
+			break
+		}
+	default:
+		{
+			subFormatter = emby.NewFormatter()
+			break
+		}
+	}
+
+	return subFormatter
+}

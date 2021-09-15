@@ -7,7 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/emby"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
@@ -43,6 +43,10 @@ func main() {
 		log.Errorln("SeriesFolder not found")
 		return
 	}
+	// 读取到的文件夹信息展示
+	log.Infoln("MovieFolder:", config.MovieFolder)
+	log.Infoln("SeriesFolder:", config.SeriesFolder)
+
 	// ------ 数据库相关操作 Start ------
 	err := dao.InitDb()
 	if err != nil {
@@ -80,9 +84,6 @@ func main() {
 	// 初始化通知缓存模块
 	notify_center.Notify = notify_center.NewNotifyCenter(config.WhenSubSupplierInvalidWebHook)
 
-	log.Infoln("MovieFolder:", config.MovieFolder)
-	log.Infoln("SeriesFolder:", config.SeriesFolder)
-
 	// ReloadBrowser 提前把浏览器下载好
 	pkg.ReloadBrowser()
 
@@ -117,16 +118,17 @@ func DownLoadStart(httpProxy string) {
 	notify_center.Notify.Clear()
 
 	// 下载实例
-	downloader := internal.NewDownloader(emby.NewFormatter(), types.ReqParam{
-		HttpProxy:                     httpProxy,
-		DebugMode:                     config.DebugMode,
-		SaveMultiSub:                  config.SaveMultiSub,
-		Threads:                       config.Threads,
-		SubTypePriority:               config.SubTypePriority,
-		WhenSubSupplierInvalidWebHook: config.WhenSubSupplierInvalidWebHook,
-		EmbyConfig:                    config.EmbyConfig,
-		SaveOneSeasonSub:              config.SaveOneSeasonSub,
-	})
+	downloader := internal.NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter),
+		types.ReqParam{
+			HttpProxy:                     httpProxy,
+			DebugMode:                     config.DebugMode,
+			SaveMultiSub:                  config.SaveMultiSub,
+			Threads:                       config.Threads,
+			SubTypePriority:               config.SubTypePriority,
+			WhenSubSupplierInvalidWebHook: config.WhenSubSupplierInvalidWebHook,
+			EmbyConfig:                    config.EmbyConfig,
+			SaveOneSeasonSub:              config.SaveOneSeasonSub,
+		})
 
 	log.Infoln("Download One Started...")
 
