@@ -32,3 +32,5 @@
 /internal/tmpthings
 /TestData/sub_parser/test
 /TestData/sub_format_changer/test
+/internal/logic/sub_supplier/subhd/.rod
+/internal/logic/sub_supplier/subhd/config.yaml

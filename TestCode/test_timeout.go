@@ -1,7 +1,7 @@
 package TestCode
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_useragent"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/panjf2000/ants/v2"
@@ -120,7 +120,7 @@ func goStep(inData InputData) error {
 						return
 					}
 					page.MustSetUserAgent(&proto.NetworkSetUserAgentOverride{
-						UserAgent: pkg.RandomUserAgent(true),
+						UserAgent: random_useragent.RandomUserAgent(true),
 					})
 					err = page.WaitLoad()
 					time.Sleep(10 * time.Second)
@@ -168,7 +168,7 @@ func oneStep(inData InputData) error {
 		return err
 	}
 	page.MustSetUserAgent(&proto.NetworkSetUserAgentOverride{
-		UserAgent: pkg.RandomUserAgent(true),
+		UserAgent: random_useragent.RandomUserAgent(true),
 	})
 	err = page.WaitLoad()
 	time.Sleep(10 * time.Second)

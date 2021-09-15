@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_useragent"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
@@ -73,6 +74,9 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 	if err != nil {
 		return nil, err
 	}
+	page.MustSetUserAgent(&proto.NetworkSetUserAgentOverride{
+		UserAgent: random_useragent.RandomUserAgent(true),
+	})
 	page = page.Timeout(timeOut)
 	nowRetryTimes := 0
 	for nowRetryTimes <= maxRetryTimes {
@@ -86,6 +90,10 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 			return nil, err
 		} else if err == nil {
 			// 没有问题
+			err = page.WaitLoad()
+			if err != nil {
+				return page, nil
+			}
 			return page, nil
 		}
 	}

@@ -2,6 +2,7 @@ package subhd
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
@@ -18,6 +19,7 @@ import (
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
+
 	"github.com/nfnt/resize"
 	"github.com/sirupsen/logrus"
 	"image/jpeg"
@@ -37,6 +39,7 @@ type Supplier struct {
 	log         *logrus.Logger
 	topic       int
 	rodLauncher *launcher.Launcher
+	tt          time.Duration
 }
 
 func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
@@ -50,6 +53,13 @@ func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
 			sup.topic = sup.reqParam.Topic
 		}
 	}
+
+	// 默认超时是 2 * 60s，如果是调试模式则是 5 min
+	sup.tt = common.HTMLTimeOut
+	if sup.reqParam.DebugMode == true {
+		sup.tt = common.OneVideoProcessTimeOut
+	}
+
 	return &sup
 }
 
@@ -67,12 +77,20 @@ func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 
 func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 
+	var browser *rod.Browser
+	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
+	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
+	if err != nil {
+		return nil, err
+	}
+	defer browser.Close()
+
 	var subInfos = make([]supplier.SubInfo, 0)
 	var subList = make([]HdListItem, 0)
 	for value := range seriesInfo.NeedDlSeasonDict {
 		// 第一级界面，找到影片的详情界面
 		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
-		detailPageUrl, err := s.step0(keyword)
+		detailPageUrl, err := s.step0(browser, keyword)
 		if err != nil {
 			s.log.Errorln("subhd step0", keyword)
 			return nil, err
@@ -82,7 +100,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 			s.log.Warning("subhd first search keyword", keyword, "not found")
 			keyword = seriesInfo.Name
 			s.log.Warning("subhd Retry", keyword)
-			detailPageUrl, err = s.step0(keyword)
+			detailPageUrl, err = s.step0(browser, keyword)
 			if err != nil {
 				s.log.Errorln("subhd step0", keyword)
 				return nil, err
@@ -93,7 +111,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 			continue
 		}
 		// 列举字幕
-		oneSubList, err := s.step1(detailPageUrl, false)
+		oneSubList, err := s.step1(browser, detailPageUrl, false)
 		if err != nil {
 			s.log.Errorln("subhd step1", keyword)
 			return nil, err
@@ -105,13 +123,6 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	// 找到那些 Eps 需要下载字幕的
 	subInfoNeedDownload := s.whichEpisodeNeedDownloadSub(seriesInfo, subList)
 	// 下载字幕
-	var browser *rod.Browser
-	// 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
-	if err != nil {
-		return nil, err
-	}
-	defer browser.Close()
 	for i, item := range subInfoNeedDownload {
 		hdContent, err := s.step2Ex(browser, item.Url)
 		if err != nil {
@@ -180,8 +191,16 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 
 func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInfo, error) {
 
+	var browser *rod.Browser
+	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
+	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
+	if err != nil {
+		return nil, err
+	}
+	defer browser.Close()
+
 	var subInfos []supplier.SubInfo
-	detailPageUrl, err := s.step0(keyword)
+	detailPageUrl, err := s.step0(browser, keyword)
 	if err != nil {
 		return nil, err
 	}
@@ -189,18 +208,10 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInf
 	if detailPageUrl == "" {
 		return nil, nil
 	}
-	subList, err := s.step1(detailPageUrl, true)
+	subList, err := s.step1(browser, detailPageUrl, true)
 	if err != nil {
 		return nil, err
 	}
-
-	var browser *rod.Browser
-	// 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err = rod_helper.NewBrowser(s.reqParam.HttpProxy)
-	if err != nil {
-		return nil, err
-	}
-	defer browser.Close()
 
 	for i, item := range subList {
 		hdContent, err := s.step2Ex(browser, item.Url)
@@ -270,7 +281,7 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, all
 }
 
 // step0 找到这个影片的详情列表
-func (s Supplier) step0(keyword string) (string, error) {
+func (s Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 	var err error
 	defer func() {
 		if err != nil {
@@ -278,10 +289,11 @@ func (s Supplier) step0(keyword string) (string, error) {
 		}
 	}()
 
-	result, err := s.httpGet(fmt.Sprintf(common.SubSubHDSearchUrl, url.QueryEscape(keyword)))
+	result, page, err := s.httpGetFromBrowser(browser, fmt.Sprintf(common.SubSubHDSearchUrl, url.QueryEscape(keyword)))
 	if err != nil {
 		return "", err
 	}
+	defer page.Close()
 	// 是否有查找到的结果，至少要有结果。根据这里这样下面才能判断是分析失效了，还是就是没有结果而已
 	re := regexp.MustCompile(`共\s*(\d+)\s*条`)
 	matched := re.FindAllStringSubmatch(result, -1)
@@ -305,8 +317,8 @@ func (s Supplier) step0(keyword string) (string, error) {
 	_, ok := imgSelection.Attr("src")
 	if ok == true {
 
-		if len(imgSelection.Nodes) < 2 {
-			return "", common.SubHDStep0ImgParentLessThan2
+		if len(imgSelection.Nodes) < 1 {
+			return "", common.SubHDStep0ImgParentLessThan1
 		}
 		step1Url := ""
 		if imgSelection.Nodes[0].Parent.Data == "a" {
@@ -330,27 +342,13 @@ func (s Supplier) step0(keyword string) (string, error) {
 			return "", common.SubHDStep0HrefIsNull
 		}
 		return step1Url, nil
-		//imgName := filepath.Base(imgUrl)
-		//imgExt := filepath.Ext(imgUrl)
-		//if strings.Contains(imgName, "_") == true {
-		//	items := strings.Split(imgName, "_")
-		//	return "/d/" + items[0], nil
-		//} else {
-		//	return "/d/" + strings.ReplaceAll(imgName, imgExt, ""), nil
-		//}
 	} else {
 		return "", common.SubHDStep0HrefIsNull
 	}
-	//re = regexp.MustCompile(`<a\shref="(/d/[\w]+)">\s?<img`)
-	//matched = re.FindAllStringSubmatch(result, -1)
-	//if len(matched) < 1 || len(matched[0]) < 2{
-	//	return "",  common.SubHDStep0HrefIsNull
-	//}
-	//return matched[0][1], nil
 }
 
 // step1 获取影片的详情字幕列表
-func (s Supplier) step1(detailPageUrl string, isMovieOrSeries bool) ([]HdListItem, error) {
+func (s Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSeries bool) ([]HdListItem, error) {
 	var err error
 	defer func() {
 		if err != nil {
@@ -358,10 +356,11 @@ func (s Supplier) step1(detailPageUrl string, isMovieOrSeries bool) ([]HdListIte
 		}
 	}()
 	detailPageUrl = pkg.AddBaseUrl(common.SubSubHDRootUrl, detailPageUrl)
-	result, err := s.httpGet(detailPageUrl)
+	result, page, err := s.httpGetFromBrowser(browser, detailPageUrl)
 	if err != nil {
 		return nil, err
 	}
+	defer page.Close()
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(result))
 	if err != nil {
 		return nil, err
@@ -425,35 +424,20 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 		}
 	}()
 	subDownloadPageUrl = pkg.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
-	// 默认超时是 60s，如果是调试模式则是 5 min
-	tt := common.HTMLTimeOut
-	if s.reqParam.DebugMode == true {
-		tt = common.OneVideoProcessTimeOut
-	}
-	// TODO 考虑后续把浏览器爬虫的逻辑剥离出来，需要替换这个到远程的 Docker 执行
-	page, err := rod_helper.NewPageNavigate(browser, subDownloadPageUrl, tt, 5)
+
+	pageString, page, err := s.httpGetFromBrowser(browser, subDownloadPageUrl)
 	if err != nil {
 		return nil, err
 	}
 	defer page.Close()
-	page.MustSetUserAgent(&proto.NetworkSetUserAgentOverride{
-		UserAgent: pkg.RandomUserAgent(true),
-	})
-	err = page.WaitLoad()
-	if err != nil {
-		return nil, err
-	}
-	pageString, err := page.HTML()
-	if err != nil {
-		return nil, err
-	}
+
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(pageString))
 	if err != nil {
 		return nil, err
 	}
 	// 是否有腾讯的防水墙
 	hasWaterWall := true
-	waterWall := doc.Find("#TencentCaptcha")
+	waterWall := doc.Find(TCode)
 	if len(waterWall.Nodes) < 1 {
 		hasWaterWall = false
 	}
@@ -473,24 +457,27 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 }
 
 func (s Supplier) JugDownloadBtn(doc *goquery.Document) (bool, string) {
+
+	const btnDown_0 = "#down"
+	const btnDown_1 = "button.down"
 	// 是否有下载按钮
 	hasDownBtn := true
-	downBtn := doc.Find("#down")
+	downBtn := doc.Find(btnDown_0)
 	if len(downBtn.Nodes) < 1 {
 		hasDownBtn = false
 	} else {
-		return true, "#down"
+		return true, btnDown_0
 	}
 	// 另一种是否有下载按钮的判断
 	if hasDownBtn == false {
-		downBtn = doc.Find("button.down")
+		downBtn = doc.Find(btnDown_1)
 		if len(downBtn.Nodes) < 1 {
 			hasDownBtn = false
 		} else {
 			hasDownBtn = true
 		}
 	}
-	return hasDownBtn, "button.down"
+	return hasDownBtn, btnDown_1
 }
 
 func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWaterWall bool, btnElemenString string) (*HdContent, error) {
@@ -512,10 +499,25 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWater
 		}
 
 		// 点击下载按钮
+		var el *rod.Element
 		if hasWaterWall == true {
-			page.MustElement("#TencentCaptcha").MustClick()
+			el = page.MustElement(TCode)
 		} else {
-			page.MustElement(btnElemenString).MustClick()
+			el = page.MustElement(btnElemenString)
+		}
+		err = el.Click(proto.InputMouseButtonLeft)
+		if err != nil {
+			if strings.Contains(err.Error(), "element covered by") == true {
+				println("11")
+				var eel *rod.ErrCovered
+				if errors.As(err, &eel) == true {
+					eel.MustRemove()
+					err = el.Click(proto.InputMouseButtonLeft)
+					if err != nil {
+						print(123)
+					}
+				}
+			}
 		}
 		// 过墙
 		if hasWaterWall == true {
@@ -631,24 +633,40 @@ search:
 	}
 }
 
-func (s Supplier) httpGet(inputUrl string) (string, error) {
-	s.reqParam.Referer = inputUrl
-	httpClient := pkg.NewHttpClient(s.reqParam)
-	resp, err := httpClient.R().Get(inputUrl)
+//func (s Supplier) httpGet(inputUrl string) (string, error) {
+//	s.reqParam.Referer = inputUrl
+//	httpClient := pkg.NewHttpClient(s.reqParam)
+//	resp, err := httpClient.R().Get(inputUrl)
+//	if err != nil {
+//		return "", err
+//	}
+//	recvText := resp.String()
+//	//搜索验证 点击继续搜索
+//	if strings.Contains(recvText, "搜索验证") || strings.Contains(recvText, "搜索频率") {
+//		s.log.Debugln("搜索验证 or 搜索频率 reload", inputUrl)
+//		// 每次搜索间隔在 30-40s
+//		time.Sleep(pkg.RandomSecondDuration(30, 40))
+//		return s.httpGet(inputUrl)
+//	}
+//	// 每次搜索间隔在 30-40s
+//	time.Sleep(pkg.RandomSecondDuration(30, 40))
+//	return recvText, nil
+//}
+
+func (s Supplier) httpGetFromBrowser(browser *rod.Browser, inputUrl string) (string, *rod.Page, error) {
+
+	page, err := rod_helper.NewPageNavigate(browser, inputUrl, s.tt, 5)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
-	recvText := resp.String()
-	//搜索验证 点击继续搜索
-	if strings.Contains(recvText, "搜索验证") || strings.Contains(recvText, "搜索频率") {
-		s.log.Debugln("搜索验证 or 搜索频率 reload", inputUrl)
-		// 每次搜索间隔在 30-40s
-		time.Sleep(pkg.RandomSecondDuration(30, 40))
-		return s.httpGet(inputUrl)
+	pageString, err := page.HTML()
+	if err != nil {
+		return "", nil, err
 	}
 	// 每次搜索间隔在 30-40s
-	time.Sleep(pkg.RandomSecondDuration(30, 40))
-	return recvText, nil
+	time.Sleep(pkg.RandomSecondDuration(5, 10))
+
+	return pageString, page, nil
 }
 
 type HdListItem struct {
@@ -669,3 +687,5 @@ type HdContent struct {
 	Ext      string `json:"ext"`
 	Data     []byte `json:"data"`
 }
+
+const TCode = "#TencentCaptcha"
