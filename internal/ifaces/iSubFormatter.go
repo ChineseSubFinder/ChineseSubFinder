@@ -3,7 +3,7 @@ package ifaces
 import "github.com/allanpk716/ChineseSubFinder/internal/types"
 
 type ISubFormatter interface {
-	// GetFormatterName 当前的 Formatter 是那个
+	// GetFormatterName 当前的 formatter 是那个
 	GetFormatterName() string
 	// IsMatchThisFormat 是否满足当前实现接口的字幕命名格式 - 是否符合规则、fileNameWithOutExt string, subExt string, subLang types.Language, extraSubPreName string
 	IsMatchThisFormat(subName string) (bool, string, string, types.Language, string)

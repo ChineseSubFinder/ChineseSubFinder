@@ -19,24 +19,24 @@ import (
 type SubFormatChanger struct {
 	movieRootDir  string
 	seriesRootDir string
-	Formatter     map[string]ifaces.ISubFormatter
+	formatter     map[string]ifaces.ISubFormatter
 }
 
 func NewSubFormatChanger(movieRootDir string, seriesRootDir string) *SubFormatChanger {
 
 	formatter := SubFormatChanger{movieRootDir: movieRootDir, seriesRootDir: seriesRootDir}
-	// 初始化支持的 Formatter
+	// 初始化支持的 formatter
 	// normal
-	formatter.Formatter = make(map[string]ifaces.ISubFormatter)
+	formatter.formatter = make(map[string]ifaces.ISubFormatter)
 	normalM := normal.NewFormatter()
-	formatter.Formatter[normalM.GetFormatterName()] = normalM
+	formatter.formatter[normalM.GetFormatterName()] = normalM
 	// emby
 	embyM := emby.NewFormatter()
-	formatter.Formatter[embyM.GetFormatterName()] = embyM
+	formatter.formatter[embyM.GetFormatterName()] = embyM
 	return &formatter
 }
 
-// AutoDetectThenChangeTo 自动检测字幕的命名格式，然后转换到目标的 Formatter 上
+// AutoDetectThenChangeTo 自动检测字幕的命名格式，然后转换到目标的 formatter 上
 func (s SubFormatChanger) AutoDetectThenChangeTo(desFormatter common.FormatterName) (RenameResults, error) {
 
 	var err error
@@ -91,7 +91,7 @@ func (s SubFormatChanger) AutoDetectThenChangeTo(desFormatter common.FormatterNa
 // autoDetectAndChange 自动检测命名格式，然后修改至目标的命名格式
 func (s SubFormatChanger) autoDetectAndChange(outStruct *RenameResults, fitSubName string, desFormatter common.FormatterName) {
 
-	for _, formatter := range s.Formatter {
+	for _, formatter := range s.formatter {
 		bok, fileNameWithOutExt, subExt, subLang, extraSubPreName := formatter.IsMatchThisFormat(fitSubName)
 		if bok == false {
 			continue
@@ -109,9 +109,9 @@ func (s SubFormatChanger) autoDetectAndChange(outStruct *RenameResults, fitSubNa
 			subExt = strings.Replace(subExt, types.Sub_Ext_Mark_Forced, "", -1)
 			findForce = true
 		}
-		// 通过传入的目标格式化 Formatter 的名称去调用
+		// 通过传入的目标格式化 formatter 的名称去调用
 		newSubFileName := ""
-		newName, newDefaultName, newForcedName := s.Formatter[fmt.Sprintf("%s", desFormatter)].
+		newName, newDefaultName, newForcedName := s.formatter[fmt.Sprintf("%s", desFormatter)].
 			GenerateMixSubNameBase(fileNameWithOutExt, subExt, subLang, extraSubPreName)
 		if findDefault == false && findForce == false {
 			// 使用没得额外 Default 或者 Forced 的名称即可

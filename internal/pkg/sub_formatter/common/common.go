@@ -2,7 +2,7 @@ package common
 
 const FormatterNameString_Normal = "normal formatter"
 const FormatterNameString_Emby = "emby formatter"
-const NoMatchFormatter = "No Match Formatter"
+const NoMatchFormatter = "No Match formatter"
 
 type FormatterName int
 
