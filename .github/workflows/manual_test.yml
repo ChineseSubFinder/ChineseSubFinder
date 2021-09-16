@@ -33,4 +33,4 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            allanpk716/chinesesubfinder:dev
+            allanpk716/chinesesubfinder:dev1
