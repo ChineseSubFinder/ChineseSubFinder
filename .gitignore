@@ -35,3 +35,6 @@
 /internal/logic/sub_supplier/subhd/.rod
 /internal/logic/sub_supplier/subhd/config.yaml
 /internal/pkg/rod_helper/Logs
+/internal/pkg/sub_formatter/Logs
+/internal/pkg/sub_formatter/config.yaml
+/internal/pkg/sub_formatter/settings.db

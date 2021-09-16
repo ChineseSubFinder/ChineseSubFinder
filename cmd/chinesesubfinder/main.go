@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal"
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
@@ -48,18 +47,10 @@ func main() {
 	log.Infoln("MovieFolder:", config.MovieFolder)
 	log.Infoln("SeriesFolder:", config.SeriesFolder)
 
-	// ------ 数据库相关操作 Start ------
-	err := dao.InitDb()
-	if err != nil {
-		log.Errorln("dao.InitDb()", err)
-		return
-	}
-	// ------ 数据库相关操作 End ------
-
 	// ------ Hot Fix Start ------
 	// 开始修复
 	log.Infoln("HotFix Start...")
-	err = hot_fix.HotFixProcess(types.HotFixParam{
+	err := hot_fix.HotFixProcess(types.HotFixParam{
 		MovieRootDir:  config.MovieFolder,
 		SeriesRootDir: config.SeriesFolder,
 	})

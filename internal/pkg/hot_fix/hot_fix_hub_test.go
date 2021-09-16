@@ -16,11 +16,6 @@ func TestHotFixProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// 新建 db
-	err = dao.InitDb()
-	if err != nil {
-		t.Fatal(err)
-	}
 	testDataPath := "../../../TestData/hotfix/001"
 	movieDir := "movies"
 	seriesDir := "series"

@@ -3,10 +3,13 @@ package sub_formatter
 import (
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	movieHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/movie_helper"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/normal"
@@ -168,4 +171,48 @@ func GetSubFormatter(subNameFormatter int) ifaces.ISubFormatter {
 	}
 
 	return subFormatter
+}
+
+// SubFormatChangerProcess 执行 SubFormatChanger 逻辑，并且更新数据库缓存
+func SubFormatChangerProcess(movieRootDir string, seriesRootDir string, nowDesFormatter common.FormatterName) (RenameResults, error) {
+	var subFormatRec models.SubFormatRec
+	dao.GetDb().First(&subFormatRec)
+	subFormatChanger := NewSubFormatChanger(movieRootDir, seriesRootDir)
+	// 理论上有且仅有一条记录
+	if subFormatRec.Done == false {
+		// 没有找到，认为是第一次执行
+		renameResults, err := subFormatChanger.AutoDetectThenChangeTo(nowDesFormatter)
+		if err != nil {
+			return renameResults, err
+		}
+		// 出错的文件有哪一些
+		for s, i := range renameResults.ErrFiles {
+			log_helper.GetLogger().Errorln("reformat ErrFile:"+s, i)
+		}
+		// 需要记录到数据库中
+		oneSubFormatter := models.SubFormatRec{FormatName: int(nowDesFormatter), Done: true}
+		dao.GetDb().Create(&oneSubFormatter)
+		return renameResults, nil
+	} else {
+		// 找到了，需要判断上一次执行的目标 formatter 是啥，如果这次的目标 formatter 不一样则执行
+		// 如果是一样的则跳过
+		if common.FormatterName(subFormatRec.FormatName) == nowDesFormatter {
+			log_helper.GetLogger().Infoln("DesSubFormatter == LateTimeSubFormatter then skip process")
+			return RenameResults{}, nil
+		}
+		// 执行更改
+		renameResults, err := subFormatChanger.AutoDetectThenChangeTo(nowDesFormatter)
+		if err != nil {
+			return renameResults, err
+		}
+		// 出错的文件有哪一些
+		for s, i := range renameResults.ErrFiles {
+			log_helper.GetLogger().Errorln("reformat ErrFile:"+s, i)
+		}
+		// 更新数据库
+		subFormatRec.FormatName = int(nowDesFormatter)
+		subFormatRec.Done = true
+		dao.GetDb().Save(subFormatRec)
+		return renameResults, nil
+	}
 }
