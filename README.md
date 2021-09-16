@@ -31,6 +31,7 @@
 
 * [配置建议以及解释](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E9%85%8D%E7%BD%AE%E5%BB%BA%E8%AE%AE%E4%BB%A5%E5%8F%8A%E8%A7%A3%E9%87%8A.md)
 * [连续剧目录结构要求](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E8%BF%9E%E7%BB%AD%E5%89%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E8%A6%81%E6%B1%82.md)
+* [关于字幕名称命名格式说明](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%85%B3%E4%BA%8E%E5%AD%97%E5%B9%95%E5%90%8D%E7%A7%B0%E5%91%BD%E5%90%8D%E6%A0%BC%E5%BC%8F%E8%AF%B4%E6%98%8E.md)
 * [物理路径与 docker 容器路劲映射指导](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E7%89%A9%E7%90%86%E8%B7%AF%E5%BE%84%E4%B8%8E%20docker%20%E5%AE%B9%E5%99%A8%E8%B7%AF%E5%8A%B2%E6%98%A0%E5%B0%84%E6%8C%87%E5%AF%BC.md)
 
 如果文档没有及时更新，或者描述含糊、歧义的，欢迎提 [ISSUES](https://github.com/allanpk716/ChineseSubFinder/issues)。
@@ -65,6 +66,7 @@
 
 ## 版本
 
+* v0.14.x 修复 subhd 解析问题，新增支持[字幕命名格式转换的功能](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%85%B3%E4%BA%8E%E5%AD%97%E5%B9%95%E5%90%8D%E7%A7%B0%E5%91%BD%E5%90%8D%E6%A0%BC%E5%BC%8F%E8%AF%B4%E6%98%8E.md)。 -- 2021年8月10日
 * v0.13.x 新增高级配置，支持 Emby 任意用户看过的视频不下载字幕，修复字幕识别问题。 -- 2021年8月10日
 * v0.12.x 重构，调整字幕的命名格式，移除 CGO 依赖。 -- 2021年7月26日
 * v0.11.x 新增 Emby API 支持，以及其他细节修复和调整。 -- 2021年7月14日
