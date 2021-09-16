@@ -52,7 +52,7 @@
 > cd ./cmd/chinesesubfinder \
 >     && go build -ldflags="-s -w" -o /app/chinesesubfinder
 
-跨平台是没有问题的，作者现在就是 Windows 开发的。
+跨平台是没有问题的，作者现在就是 Windows 开发的。因为手头没得 Mac OS ，也懒得整虚拟机去试，应该也是可以直接玩起来的。
 
 ## 如何参与开发
 
