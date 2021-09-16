@@ -43,7 +43,8 @@ func NewBrowser(httpProxyURL string, loadAdblock bool) (*rod.Browser, error) {
 				Set("load-extension", adblockSavePath).
 				Proxy(httpProxyURL).
 				Headless(false). // 插件模式需要设置这个
-				XVFB("--server-num=5", "--server-args=-screen 0 1600x900x16").
+				//XVFB("--server-num=5", "--server-args=-screen 0 1600x900x16").
+				XVFB("-ac :99", "-screen 0 1280x1024x16").
 				MustLaunch()
 		} else {
 			purl = launcher.New().
