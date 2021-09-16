@@ -38,3 +38,5 @@
 /internal/pkg/sub_formatter/Logs
 /internal/pkg/sub_formatter/config.yaml
 /internal/pkg/sub_formatter/settings.db
+/cmd/chinesesubfinder/Logs
+/cmd/chinesesubfinder/settings.db
