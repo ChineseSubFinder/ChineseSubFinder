@@ -1,4 +1,4 @@
-FROM golang:1.15-buster AS builder
+FROM golang:1.17-buster AS builder
 
 LABEL stage=gobuilder
 
