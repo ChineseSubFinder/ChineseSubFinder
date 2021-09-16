@@ -10,6 +10,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
+	"github.com/go-rod/rod/lib/utils"
 	"io/ioutil"
 	"os"
 	"path"

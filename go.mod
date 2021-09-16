@@ -16,7 +16,6 @@ require (
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/go-rod/rod v0.101.7
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/jinzhu/now v1.1.2
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/klauspost/compress v1.12.2 // indirect
