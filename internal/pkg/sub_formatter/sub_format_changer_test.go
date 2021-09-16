@@ -244,7 +244,7 @@ func TestSubFormatChangerProcess(t *testing.T) {
 				// 这里需要校验一次数据库的赋值是否正确
 				var subFormatRec models.SubFormatRec
 				dao.GetDb().First(&subFormatRec)
-				if subFormatRec.FormatName != 0 || subFormatRec.Done == false {
+				if subFormatRec.FormatName != int(common.Normal) || subFormatRec.Done == false {
 					t.Fatal(tt.name, "i == 0 check db result")
 				}
 			}
@@ -252,7 +252,7 @@ func TestSubFormatChangerProcess(t *testing.T) {
 				// 这里需要校验一次数据库的赋值是否正确
 				var subFormatRec models.SubFormatRec
 				dao.GetDb().First(&subFormatRec)
-				if subFormatRec.FormatName != 1 || subFormatRec.Done == false {
+				if subFormatRec.FormatName != int(common.Emby) || subFormatRec.Done == false {
 					t.Fatal(tt.name, "i == 1 check db result")
 				}
 			}
@@ -261,7 +261,7 @@ func TestSubFormatChangerProcess(t *testing.T) {
 				// 这里需要校验一次数据库的赋值是否正确
 				var subFormatRec models.SubFormatRec
 				dao.GetDb().First(&subFormatRec)
-				if subFormatRec.FormatName != 1 || subFormatRec.Done == false {
+				if subFormatRec.FormatName != int(common.Emby) || subFormatRec.Done == false {
 					t.Fatal(tt.name, "i == 3 check db result")
 				}
 			}
@@ -270,7 +270,7 @@ func TestSubFormatChangerProcess(t *testing.T) {
 				// 这里需要校验一次数据库的赋值是否正确
 				var subFormatRec models.SubFormatRec
 				dao.GetDb().First(&subFormatRec)
-				if subFormatRec.FormatName != 0 || subFormatRec.Done == false {
+				if subFormatRec.FormatName != int(common.Normal) || subFormatRec.Done == false {
 					t.Fatal(tt.name, "i == 4 check db result")
 				}
 			}

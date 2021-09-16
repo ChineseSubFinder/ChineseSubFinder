@@ -8,6 +8,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
@@ -69,6 +70,16 @@ func main() {
 		然后需要在数据库中记录本次的转换结果
 	*/
 	log.Infoln("Change Sub Name Format Start...")
+
+	renameResults, err := sub_formatter.SubFormatChangerProcess(config.MovieFolder, config.SeriesFolder, common.FormatterName(config.SubNameFormatter))
+	// 出错的文件有哪一些
+	for s, i := range renameResults.ErrFiles {
+		log_helper.GetLogger().Errorln("reformat ErrFile:"+s, i)
+	}
+	if err != nil {
+		log.Errorln("SubFormatChangerProcess()", err)
+		return
+	}
 
 	log.Infoln("Change Sub Name Format End")
 	// ------ Change SubName Format End ------

@@ -7,8 +7,8 @@ const NoMatchFormatter = "No Match formatter"
 type FormatterName int
 
 const (
-	Normal FormatterName = iota // 常规  xxx.zh.ass
-	Emby                        // Emby 格式 xxx.chinese.(简,shooter).ass
+	Emby   FormatterName = iota // Emby 格式 xxx.chinese.(简,shooter).ass
+	Normal                      // 常规  xxx.zh.ass
 )
 
 func (f FormatterName) String() string {

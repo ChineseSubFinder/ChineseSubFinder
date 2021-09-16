@@ -9,7 +9,7 @@ type Config struct {
 	DebugMode                     bool            // 是否启用 Debug 模式，调试功能
 	Threads                       int             // 同时并发的线程数（准确来说在go中不是线程，是 goroutine）
 	SubTypePriority               int             // 字幕下载的优先级，0 是自动，1 是 srt 优先，2 是 ass/ssa 优先
-	SubNameFormatter              int             // 字幕命名格式(默认不填写或者超出范围，则为 emby 格式)，0 常规格式（兼容性更好，AAA.zh.ass or AAA.zh.default.ass），1 emby 支持的的格式（AAA.chinese(简英,subhd).ass or AAA.chinese(简英,xunlei).default.ass）
+	SubNameFormatter              int             // 字幕命名格式(默认不填写或者超出范围，则为 emby 格式)，0，emby 支持的的格式（AAA.chinese(简英,subhd).ass or AAA.chinese(简英,xunlei).default.ass），1常规格式（兼容性更好，AAA.zh.ass or AAA.zh.default.ass）
 	WhenSubSupplierInvalidWebHook string          // 当字幕网站失效的时候，触发的 webhook 地址，默认是 get
 	EmbyConfig                    emby.EmbyConfig // Emby API 高阶设置参数
 	SaveMultiSub                  bool            // 保存多个网站的 Top 1 字幕

@@ -185,10 +185,7 @@ func SubFormatChangerProcess(movieRootDir string, seriesRootDir string, nowDesFo
 		if err != nil {
 			return renameResults, err
 		}
-		// 出错的文件有哪一些
-		for s, i := range renameResults.ErrFiles {
-			log_helper.GetLogger().Errorln("reformat ErrFile:"+s, i)
-		}
+
 		// 需要记录到数据库中
 		oneSubFormatter := models.SubFormatRec{FormatName: int(nowDesFormatter), Done: true}
 		dao.GetDb().Create(&oneSubFormatter)
@@ -204,10 +201,6 @@ func SubFormatChangerProcess(movieRootDir string, seriesRootDir string, nowDesFo
 		renameResults, err := subFormatChanger.AutoDetectThenChangeTo(nowDesFormatter)
 		if err != nil {
 			return renameResults, err
-		}
-		// 出错的文件有哪一些
-		for s, i := range renameResults.ErrFiles {
-			log_helper.GetLogger().Errorln("reformat ErrFile:"+s, i)
 		}
 		// 更新数据库
 		subFormatRec.FormatName = int(nowDesFormatter)
