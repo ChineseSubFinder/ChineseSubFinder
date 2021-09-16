@@ -27,6 +27,9 @@ func TestSubFormatChanger_AutoDetectThenChangeTo(t *testing.T) {
 	seriesDir_org_normal := path.Join(testRootDir, "series_org_normal")
 	movieOneDir_org_normal := path.Join(movieDir_org_normal, movie_name)
 	seriesOneDir_org_normal := path.Join(seriesDir_org_normal, series_name, "Season 1")
+	// emby 转 emby 理论上不应该改文件
+	movieDir_emby_2_emby := path.Join(testRootDir, "movie_emby_2_emby")
+	seriesDir_emby_2_emby := path.Join(testRootDir, "series_emby_2_emby")
 
 	type fields struct {
 		movieRootDir  string
@@ -68,6 +71,11 @@ func TestSubFormatChanger_AutoDetectThenChangeTo(t *testing.T) {
 					path.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简英).srt"):         1,
 				},
 			}, wantErr: false},
+		{name: "emby 2 emby",
+			fields:  fields{movieRootDir: movieDir_emby_2_emby, seriesRootDir: seriesDir_emby_2_emby},
+			args:    args{desFormatter: common.Emby},
+			want:    RenameResults{},
+			wantErr: false},
 	}
 
 	for _, tt := range tests {

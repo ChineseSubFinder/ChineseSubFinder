@@ -96,6 +96,10 @@ func (s SubFormatChanger) autoDetectAndChange(outStruct *RenameResults, fitSubNa
 		if bok == false {
 			continue
 		}
+		// 如果检测到的格式和目标要转换到的格式是一个，那么就跳过
+		if common.FormatterName(formatter.GetFormatterFormatterName()) == desFormatter {
+			return
+		}
 		// 这里得到的 subExt 可能是 .ass or .default.ass or .forced.ass
 		// 需要进行剔除，因为后续的 GenerateMixSubName 会自动生成对应的附加后缀名
 		// 转换格式后，需要保留之前的 default 或者 forced
