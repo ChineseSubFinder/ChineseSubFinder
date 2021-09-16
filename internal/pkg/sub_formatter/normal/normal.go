@@ -63,7 +63,7 @@ func (f Formatter) IsMatchThisFormat(subName string) (bool, string, string, type
 	// 目前倾向于这里用后面的逻辑
 	//subLang = language.ChineseISOString2Lang(subLangStr)
 	file, err := f.subParser.DetermineFileTypeFromFile(subName)
-	if file == nil || err != nil {
+	if err != nil {
 		return false, "", "", 0, ""
 	}
 	subLang = file.Lang

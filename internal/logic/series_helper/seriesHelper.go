@@ -57,12 +57,7 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*series.Seri
 		}
 		subParserFileInfo, err := subParserHub.DetermineFileTypeFromFile(subFile)
 		if err != nil {
-			log_helper.GetLogger().Errorln(err)
-			continue
-		}
-		if subParserFileInfo == nil {
-			// 说明这个字幕无法解析
-			log_helper.GetLogger().Warnln("ReadSeriesInfoFromDir", seriesInfo.DirPath, "DetermineFileTypeFromFile is nil")
+			log_helper.GetLogger().Errorln("DetermineFileTypeFromFile", subFile, err)
 			continue
 		}
 		epsKey := pkg.GetEpisodeKeyName(info.Season, info.Episode)

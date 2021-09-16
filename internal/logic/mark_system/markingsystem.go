@@ -105,12 +105,6 @@ func (m MarkingSystem) parseSubFileInfo(organizeSubFiles []string) map[string][]
 			m.log.Error("DetermineFileTypeFromFile", oneSubFileFullPath, err)
 			continue
 		}
-		if subFileInfo == nil {
-			// 说明这个字幕无法解析
-			m.log.Warnln("MarkingSystem.parseSubFileInfo", oneSubFileFullPath, "DetermineFileTypeFromFile is nill")
-			continue
-		}
-
 		_, ok := subInfoDict[subFileInfo.FromWhereSite]
 		if ok == false {
 			// 新建

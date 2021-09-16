@@ -50,7 +50,7 @@ func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*subparser.Fil
 		}
 	}
 	// 如果返回 nil ，那么就说明都没有字幕的格式匹配上
-	return nil, nil
+	return nil, common.CanNotMatchingAnySubType
 }
 
 // IsSubHasChinese 字幕文件是否包含中文
@@ -60,10 +60,6 @@ func (p SubParserHub) IsSubHasChinese(fileFPath string) bool {
 	file, err := p.DetermineFileTypeFromFile(fileFPath)
 	if err != nil {
 		log_helper.GetLogger().Warnln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, err)
-		return false
-	}
-	if file == nil {
-		log_helper.GetLogger().Warnln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, "is nil")
 		return false
 	}
 	if language.HasChineseLang(file.Lang) == false {
