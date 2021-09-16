@@ -41,9 +41,9 @@ func NewBrowser(httpProxyURL string, loadAdblock bool) (*rod.Browser, error) {
 			purl = launcher.New().
 				Delete("disable-extensions").
 				Set("load-extension", adblockSavePath).
-				Append("--no-sandbox").
 				Proxy(httpProxyURL).
 				Headless(false). // 插件模式需要设置这个
+				XVFB("--server-num=5", "--server-args=-screen 0 1600x900x16").
 				MustLaunch()
 		} else {
 			purl = launcher.New().
