@@ -42,9 +42,9 @@ RUN ln -s /root/.cache/rod/chromium-856583/chrome-linux/chrome /usr/bin/chrome &
     dumb-init \
     # headful mode support, for example: $ xvfb-run chromium-browser --remote-debugging-port=9222
     xvfb \
-#    xorg gtk2-engines-pixbuf \
-#    dbus-x11 xfonts-base xfonts-100dpi xfonts-75dpi xfonts-cyrillic xfonts-scalable \
-#    imagemagick x11-apps \
+    xorg gtk2-engines-pixbuf \
+    dbus-x11 xfonts-base xfonts-100dpi xfonts-75dpi xfonts-cyrillic xfonts-scalable \
+    imagemagick x11-apps \
     # cleanup
     && apt-get clean \
     && rm -rf \
