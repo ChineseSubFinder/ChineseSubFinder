@@ -14,8 +14,9 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-creed/sat v1.0.3
 	github.com/go-resty/resty/v2 v2.6.0
-	github.com/go-rod/rod v0.97.2
+	github.com/go-rod/rod v0.101.7
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/jinzhu/now v1.1.2
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/klauspost/compress v1.12.2 // indirect
@@ -43,6 +44,7 @@ require (
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/t-tomalak/logrus-easy-formatter v0.0.0-20190827215021-c074f06c5816
 	github.com/ulikunitz/xz v0.5.10 // indirect
+	github.com/ysmood/gson v0.7.0 // indirect
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
 	golang.org/x/sys v0.0.0-20210616094352-59db8d763f22 // indirect
 	golang.org/x/text v0.3.6

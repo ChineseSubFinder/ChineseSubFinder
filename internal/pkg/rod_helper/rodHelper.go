@@ -2,31 +2,55 @@ package rod_helper
 
 import (
 	"context"
-	"crypto/tls"
+	_ "embed"
 	"errors"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_useragent"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
-	"net/http"
-	"net/url"
+	"github.com/mholt/archiver/v3"
+	"os"
+	"path"
+	"path/filepath"
+	"sync"
 	"time"
 )
 
 /**
- * @Description: 			新建一个支持代理的 browser 对象
+ * @Description: 			新建一个支持代理的 browser 对象，使用完毕后，需要删除 adblockFilePath 文件夹
  * @param httpProxyURL		http://127.0.0.1:10809
  * @return *rod.Browser
  * @return error
  */
-func NewBrowser(httpProxyURL string) (*rod.Browser, error) {
-	var browser *rod.Browser
-	err := rod.Try(func() {
-		u := launcher.New().
-			Proxy(httpProxyURL).
-			MustLaunch()
+func NewBrowser(httpProxyURL string, loadAdblock bool) (*rod.Browser, error) {
 
-		browser = rod.New().ControlURL(u).MustConnect()
+	var err error
+
+	once.Do(func() {
+		adblockSavePath, err = releaseAdblock()
+		if err != nil {
+			log_helper.GetLogger().Errorln("releaseAdblock", err)
+		}
+	})
+	var browser *rod.Browser
+	err = rod.Try(func() {
+		purl := ""
+		if loadAdblock == true {
+			purl = launcher.New().
+				Delete("disable-extensions").
+				Set("load-extension", adblockSavePath).
+				Proxy(httpProxyURL).
+				Headless(false). // 插件模式需要设置这个
+				MustLaunch()
+		} else {
+			purl = launcher.New().
+				Proxy(httpProxyURL).
+				MustLaunch()
+		}
+
+		browser = rod.New().ControlURL(purl).MustConnect()
 	})
 	if err != nil {
 		return nil, err
@@ -48,7 +72,7 @@ func NewBrowserFromDocker(httpProxyURL, remoteDockerURL string) (*rod.Browser, e
 	var browser *rod.Browser
 
 	err := rod.Try(func() {
-		l := launcher.MustNewRemote(remoteDockerURL)
+		l := launcher.MustNewManaged(remoteDockerURL)
 		u := l.Proxy(httpProxyURL).MustLaunch()
 		l.Headless(false).XVFB()
 		browser = rod.New().Client(l.Client()).ControlURL(u).MustConnect()
@@ -60,17 +84,9 @@ func NewBrowserFromDocker(httpProxyURL, remoteDockerURL string) (*rod.Browser, e
 	return browser, nil
 }
 
-func NewPage(browser *rod.Browser) (*rod.Page, error) {
-	page, err := browser.Page(proto.TargetCreateTarget{URL: ""})
-	if err != nil {
-		return nil, err
-	}
-	return page, err
-}
-
 func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration, maxRetryTimes int) (*rod.Page, error) {
 
-	page, err := NewPage(browser)
+	page, err := newPage(browser)
 	if err != nil {
 		return nil, err
 	}
@@ -100,163 +116,78 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 	return nil, err
 }
 
-func PageNavigate(page *rod.Page, desURL string, timeOut time.Duration, maxRetryTimes int) (*rod.Page, error) {
-	var err error
-	page = page.Timeout(timeOut)
-	nowRetryTimes := 0
-	for nowRetryTimes <= maxRetryTimes {
-		err = rod.Try(func() {
-			wait := page.MustWaitNavigation()
-			page.MustNavigate(desURL)
-			wait()
-		})
-		if errors.Is(err, context.DeadlineExceeded) {
-			// 超时
-			return nil, err
-		} else if err == nil {
-			// 没有问题
-			return page, nil
-		}
+// ReloadBrowser 提前把浏览器下载好
+func ReloadBrowser() {
+	newBrowser, err := NewBrowser("", false)
+	if err != nil {
+		return
 	}
-	return nil, err
+	defer func() {
+		_ = newBrowser.Close()
+	}()
+	page, err := NewPageNavigate(newBrowser, "https://www.baidu.com", 30*time.Second, 5)
+	if err != nil {
+		return
+	}
+	defer func() {
+		_ = page.Close()
+	}()
 }
 
-/**
- * @Description: 			访问目标 Url，返回 page，只是这个 page 有效，如果再次出发其他的事件无效
- * @param desURL			目标 Url
- * @param httpProxyURL		http://127.0.0.1:10809
- * @param timeOut			超时时间
- * @param maxRetryTimes		当是非超时 err 的时候，最多可以重试几次
- * @return *rod.Page
- * @return error
- */
-func NewBrowserLoadPage(desURL string, httpProxyURL string, timeOut time.Duration, maxRetryTimes int) (*rod.Page, error) {
-	browser, err := NewBrowser(httpProxyURL)
-	if err != nil {
-		return nil, err
+func CleearExtensionsCache() {
+	if adblockSavePath != "" {
+		_ = os.Remove(adblockSavePath)
 	}
+}
+
+func newPage(browser *rod.Browser) (*rod.Page, error) {
 	page, err := browser.Page(proto.TargetCreateTarget{URL: ""})
 	if err != nil {
 		return nil, err
 	}
-	page = page.Timeout(timeOut)
-	nowRetryTimes := 0
-	for nowRetryTimes <= maxRetryTimes {
-		err = rod.Try(func() {
-			wait := page.MustWaitNavigation()
-			page.MustNavigate(desURL)
-			wait()
-		})
-		if errors.Is(err, context.DeadlineExceeded) {
-			// 超时
-			return nil, err
-		} else if err == nil {
-			// 没有问题
-			return page, nil
-
-		}
-	}
-	return nil, err
+	return page, err
 }
 
-/**
- * @Description: 			访问目标 Url，返回 page，只是这个 page 有效，如果再次出发其他的事件无效
- * @param desURL			目标 Url
- * @param httpProxyURL		http://127.0.0.1:10809
- * @param timeOut			超时时间
- * @param maxRetryTimes		当是非超时 err 的时候，最多可以重试几次
- * @return *rod.Page
- * @return error
- */
-func NewBrowserLoadPageFromRemoteDocker(desURL string, httpProxyURL, remoteDockerURL string, timeOut time.Duration, maxRetryTimes int) (*rod.Page, error) {
-	browser, err := NewBrowserFromDocker(httpProxyURL, remoteDockerURL)
+// releaseAdblock 从程序中释放 adblock 插件出来到本地路径
+func releaseAdblock() (string, error) {
+
+	adblockFolderPath := filepath.Join(os.TempDir(), "chinesesubfinder")
+	err := os.MkdirAll(path.Join(adblockFolderPath), os.ModePerm)
 	if err != nil {
-		return nil, err
-	}
-	page, err := browser.Page(proto.TargetCreateTarget{URL: ""})
-	if err != nil {
-		return nil, err
-	}
-	page = page.Timeout(timeOut)
-	nowRetryTimes := 0
-	for nowRetryTimes <= maxRetryTimes {
-		err = rod.Try(func() {
-			wait := page.MustWaitNavigation()
-			page.MustNavigate(desURL)
-			wait()
-		})
-		if errors.Is(err, context.DeadlineExceeded) {
-			// 超时
-			return nil, err
-		} else if err == nil {
-			// 没有问题
-			break
-		}
+		return "", err
 	}
 
-	return page, nil
+	_ = pkg.ClearFolder(adblockFolderPath)
+
+	outZipFileFPath := path.Join(adblockFolderPath, "adblock.zip")
+	adblockZipFile, err := os.Create(outZipFileFPath)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = adblockZipFile.Close()
+		_ = os.Remove(outZipFileFPath)
+	}()
+	_, err = adblockZipFile.Write(adblockFolder)
+	if err != nil {
+		return "", err
+	}
+
+	desPath := path.Join(adblockFolderPath, "RunAdblock")
+	r := archiver.NewZip()
+	err = r.Unarchive(outZipFileFPath, desPath)
+	if err != nil {
+		return "", err
+	}
+	return path.Join(desPath, adblockInsideName), err
 }
 
-/**
- * @Description:			访问目标 Url，返回 page，只是这个 page 有效，如果再次出发其他的事件无效
- * @param desURL			目标 Url
- * @param httpProxyURL		http://127.0.0.1:10809
- * @param timeOut			超时时间
- * @param maxRetryTimes		当是非超时 err 的时候，最多可以重试几次
- * @return *rod.Page
- * @return error
- */
-func NewBrowserLoadPageByHijackRequests(desURL string, httpProxyURL string, timeOut time.Duration, maxRetryTimes int) (*rod.Page, error) {
+const adblockInsideName = "adblock"
 
-	var page *rod.Page
-	var err error
-	// 创建一个 page
-	browser := rod.New()
-	err = browser.Connect()
-	if err != nil {
-		return nil, err
-	}
-	page, err = browser.Page(proto.TargetCreateTarget{URL: ""})
-	if err != nil {
-		return nil, err
-	}
-	page = page.Timeout(timeOut)
-	// 设置代理
-	router := page.HijackRequests()
-	defer router.Stop()
+var once sync.Once
 
-	err = rod.Try(func() {
-		router.MustAdd("*", func(ctx *rod.Hijack) {
-			px, _ := url.Parse(httpProxyURL)
-			ctx.LoadResponse(&http.Client{
-				Transport: &http.Transport{
-					Proxy:           http.ProxyURL(px),
-					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-				},
-				Timeout: timeOut,
-			}, true)
-		})
-	})
-	if err != nil {
-		return nil, err
-	}
-	go router.Run()
+// 这个文件内有一个子文件夹 adblock ，制作的时候务必注意
+//go:embed assets/adblock_v4.34.0.zip
+var adblockFolder []byte
 
-	nowRetryTimes := 0
-	for nowRetryTimes <= maxRetryTimes {
-		err = rod.Try(func() {
-			page.MustNavigate(desURL).MustWaitLoad()
-		})
-		if errors.Is(err, context.DeadlineExceeded) {
-			// 超时
-			return nil, err
-		} else if err == nil {
-			// 没有问题
-			break
-		}
-		time.Sleep(time.Second)
-		nowRetryTimes++
-	}
-
-	return page, nil
-}
+var adblockSavePath string

@@ -3,16 +3,15 @@ package archive_helper
 import (
 	"archive/zip"
 	"bytes"
-	"github.com/bodgit/sevenzip"
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/transform"
-	"io/ioutil"
-
 	"compress/flate"
 	"errors"
+	"github.com/bodgit/sevenzip"
 	"github.com/go-rod/rod/lib/utils"
 	"github.com/mholt/archiver/v3"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 	"io"
+	"io/ioutil"
 	"path"
 	"path/filepath"
 	"strings"
@@ -28,7 +27,7 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 			MkdirAll:               true,
 			SelectiveCompression:   true,
 			ContinueOnError:        false,
-			OverwriteExisting:      false,
+			OverwriteExisting:      true,
 			ImplicitTopLevelFolder: false,
 		}
 		err := z.Walk(fileFullPath, func(f archiver.File) error {
@@ -51,7 +50,7 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 		z := archiver.Tar{
 			MkdirAll:               true,
 			ContinueOnError:        false,
-			OverwriteExisting:      false,
+			OverwriteExisting:      true,
 			ImplicitTopLevelFolder: false,
 			StripComponents:        1,
 		}
@@ -72,7 +71,7 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 		z := archiver.Rar{
 			MkdirAll:               true,
 			ContinueOnError:        false,
-			OverwriteExisting:      false,
+			OverwriteExisting:      true,
 			ImplicitTopLevelFolder: false,
 			StripComponents:        1,
 		}

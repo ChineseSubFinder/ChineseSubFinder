@@ -16,11 +16,22 @@ import (
 func SimulationTest() {
 	// 具体的应用见 subhd 的解析器
 	// 感谢 https://www.bigs3.com/article/gorod-crack-slider-captcha/
-	page, err := rod_helper.NewBrowserLoadPage("https://007.qq.com/online.html", "", 10*time.Second, 5)
+	browser, err := rod_helper.NewBrowser("", false)
 	if err != nil {
 		println(err.Error())
 		return
 	}
+	defer func() {
+		_ = browser.Close()
+	}()
+	page, err := rod_helper.NewPageNavigate(browser, "https://007.qq.com/online.html", 10*time.Second, 5)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	defer func() {
+		_ = page.Close()
+	}()
 	// 切换到可疑用户
 	page.MustElement("#app > section.wp-on-online > div > div > div > div.wp-on-box.col-md-5.col-md-offset-1 > div.wp-onb-tit > a:nth-child(2)").MustClick()
 	//模擬Click點擊 "體驗驗證碼" 按鈕

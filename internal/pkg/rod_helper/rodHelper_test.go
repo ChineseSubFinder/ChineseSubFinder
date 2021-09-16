@@ -3,61 +3,25 @@ package rod_helper
 import (
 	"github.com/go-rod/rod/lib/proto"
 	"testing"
-	"time"
 )
-
-func TestLoadPage(t *testing.T) {
-	desURL := "https://www.wikipedia.org/"
-	httpProxyURL := "http://127.0.0.1:10809"
-	_, err := NewBrowserLoadPage(desURL, httpProxyURL, 10*time.Second, 5)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestLoadPageFromRemoteDocker(t *testing.T) {
-	desURL := "https://www.wikipedia.org/"
-	httpProxyURL := "http://127.0.0.1:10809"
-	remoteDockerURL := "ws://192.168.50.135:9222"
-	_, err := NewBrowserLoadPageFromRemoteDocker(desURL, httpProxyURL, remoteDockerURL, 10*time.Second, 5)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestLoadPageByHijackRequests(t *testing.T) {
-	desURL := "https://www.wikipedia.org/"
-	httpProxyURL := "http://127.0.0.1:10809"
-	_, err := NewBrowserLoadPageByHijackRequests(desURL, httpProxyURL, 10*time.Second, 5)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
 
 func TestNewBrowser(t *testing.T) {
 	desURL := "https://www.wikipedia.org/"
 	httpProxyURL := "http://127.0.0.1:10809"
-	browser, err := NewBrowser(httpProxyURL)
+	browser, err := NewBrowser(httpProxyURL, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = browser.Page(proto.TargetCreateTarget{URL: desURL})
+	defer func() {
+		_ = browser.Close()
+	}()
+	page, err := browser.Page(proto.TargetCreateTarget{URL: desURL})
 	if err != nil {
 		t.Fatal(err)
 	}
-	//err = rod.Try(func() {
-	//	page.MustElement("#searchInput").MustInput("earth")
-	//	page.MustElement("#search-form > fieldset > button").MustClick()
-	//
-	//	el := page.MustElement("#mw-content-text > div.mw-parser-output > table.infobox > tbody > tr:nth-child(1) > td > a > img")
-	//	err = utils.OutputFile("b.png", el.MustResource())
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//})
-	//if err != nil {
-	//	t.Fatal(err)
-	//}
+	defer func() {
+		_ = page.Close()
+	}()
 }
 
 func TestNewBrowserFromDocker(t *testing.T) {
@@ -69,8 +33,14 @@ func TestNewBrowserFromDocker(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = browser.Page(proto.TargetCreateTarget{URL: desURL})
+	defer func() {
+		_ = browser.Close()
+	}()
+	page, err := browser.Page(proto.TargetCreateTarget{URL: desURL})
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		_ = page.Close()
+	}()
 }

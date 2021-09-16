@@ -2,7 +2,6 @@ package subhd
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
@@ -18,8 +17,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
-	"github.com/go-rod/rod/lib/proto"
-
 	"github.com/nfnt/resize"
 	"github.com/sirupsen/logrus"
 	"image/jpeg"
@@ -79,12 +76,13 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
+	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy, true)
 	if err != nil {
 		return nil, err
 	}
-	defer browser.Close()
-
+	defer func() {
+		_ = browser.Close()
+	}()
 	var subInfos = make([]supplier.SubInfo, 0)
 	var subList = make([]HdListItem, 0)
 	for value := range seriesInfo.NeedDlSeasonDict {
@@ -193,12 +191,13 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInf
 
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy)
+	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy, true)
 	if err != nil {
 		return nil, err
 	}
-	defer browser.Close()
-
+	defer func() {
+		_ = browser.Close()
+	}()
 	var subInfos []supplier.SubInfo
 	detailPageUrl, err := s.step0(browser, keyword)
 	if err != nil {
@@ -293,7 +292,9 @@ func (s Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer page.Close()
+	defer func() {
+		_ = page.Close()
+	}()
 	// 是否有查找到的结果，至少要有结果。根据这里这样下面才能判断是分析失效了，还是就是没有结果而已
 	re := regexp.MustCompile(`共\s*(\d+)\s*条`)
 	matched := re.FindAllStringSubmatch(result, -1)
@@ -360,7 +361,9 @@ func (s Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSer
 	if err != nil {
 		return nil, err
 	}
-	defer page.Close()
+	defer func() {
+		_ = page.Close()
+	}()
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(result))
 	if err != nil {
 		return nil, err
@@ -429,7 +432,9 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 	if err != nil {
 		return nil, err
 	}
-	defer page.Close()
+	defer func() {
+		_ = page.Close()
+	}()
 
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(pageString))
 	if err != nil {
@@ -458,26 +463,26 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 
 func (s Supplier) JugDownloadBtn(doc *goquery.Document) (bool, string) {
 
-	const btnDown_0 = "#down"
-	const btnDown_1 = "button.down"
+	const btnDown0 = "#down"
+	const btnDown1 = "button.down"
 	// 是否有下载按钮
 	hasDownBtn := true
-	downBtn := doc.Find(btnDown_0)
+	downBtn := doc.Find(btnDown0)
 	if len(downBtn.Nodes) < 1 {
 		hasDownBtn = false
 	} else {
-		return true, btnDown_0
+		return true, btnDown0
 	}
 	// 另一种是否有下载按钮的判断
 	if hasDownBtn == false {
-		downBtn = doc.Find(btnDown_1)
+		downBtn = doc.Find(btnDown1)
 		if len(downBtn.Nodes) < 1 {
 			hasDownBtn = false
 		} else {
 			hasDownBtn = true
 		}
 	}
-	return hasDownBtn, btnDown_1
+	return hasDownBtn, btnDown1
 }
 
 func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWaterWall bool, btnElemenString string) (*HdContent, error) {
@@ -499,26 +504,26 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWater
 		}
 
 		// 点击下载按钮
-		var el *rod.Element
+		//var el *rod.Element
 		if hasWaterWall == true {
-			el = page.MustElement(TCode)
+			page.MustElement(TCode).MustClick()
 		} else {
-			el = page.MustElement(btnElemenString)
+			page.MustElement(btnElemenString).MustClick()
 		}
-		err = el.Click(proto.InputMouseButtonLeft)
-		if err != nil {
-			if strings.Contains(err.Error(), "element covered by") == true {
-				println("11")
-				var eel *rod.ErrCovered
-				if errors.As(err, &eel) == true {
-					eel.MustRemove()
-					err = el.Click(proto.InputMouseButtonLeft)
-					if err != nil {
-						print(123)
-					}
-				}
-			}
-		}
+		// 找到遮挡的信息块，尝试移除
+		//if err != nil {
+		//if strings.Contains(err.Error(), "element covered by") == true {
+		//	println("11")
+		//	var eel *rod.ErrCovered
+		//	if errors.As(err, &eel) == true {
+		//		eel.MustRemove()
+		//		err = el.Click(proto.InputMouseButtonLeft)
+		//		if err != nil {
+		//			print(123)
+		//		}
+		//	}
+		//}
+		//}
 		// 过墙
 		if hasWaterWall == true {
 			s.passWaterWall(page)
@@ -632,26 +637,6 @@ search:
 		}
 	}
 }
-
-//func (s Supplier) httpGet(inputUrl string) (string, error) {
-//	s.reqParam.Referer = inputUrl
-//	httpClient := pkg.NewHttpClient(s.reqParam)
-//	resp, err := httpClient.R().Get(inputUrl)
-//	if err != nil {
-//		return "", err
-//	}
-//	recvText := resp.String()
-//	//搜索验证 点击继续搜索
-//	if strings.Contains(recvText, "搜索验证") || strings.Contains(recvText, "搜索频率") {
-//		s.log.Debugln("搜索验证 or 搜索频率 reload", inputUrl)
-//		// 每次搜索间隔在 30-40s
-//		time.Sleep(pkg.RandomSecondDuration(30, 40))
-//		return s.httpGet(inputUrl)
-//	}
-//	// 每次搜索间隔在 30-40s
-//	time.Sleep(pkg.RandomSecondDuration(30, 40))
-//	return recvText, nil
-//}
 
 func (s Supplier) httpGetFromBrowser(browser *rod.Browser, inputUrl string) (string, *rod.Page, error) {
 
