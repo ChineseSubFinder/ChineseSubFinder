@@ -102,6 +102,7 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 			wait := page.MustWaitNavigation()
 			page.MustNavigate(desURL)
 			wait()
+			page.MustWaitLoad()
 		})
 		if errors.Is(err, context.DeadlineExceeded) {
 			// 超时
