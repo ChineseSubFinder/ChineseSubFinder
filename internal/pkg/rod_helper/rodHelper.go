@@ -118,7 +118,7 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 
 // ReloadBrowser 提前把浏览器下载好
 func ReloadBrowser() {
-	newBrowser, err := NewBrowser("", false)
+	newBrowser, err := NewBrowser("", true)
 	if err != nil {
 		return
 	}
@@ -132,12 +132,6 @@ func ReloadBrowser() {
 	defer func() {
 		_ = page.Close()
 	}()
-}
-
-func CleearExtensionsCache() {
-	if adblockSavePath != "" {
-		_ = os.Remove(adblockSavePath)
-	}
 }
 
 func newPage(browser *rod.Browser) (*rod.Page, error) {
@@ -156,9 +150,10 @@ func releaseAdblock() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	_ = pkg.ClearFolder(adblockFolderPath)
-
+	desPath := path.Join(adblockFolderPath, "RunAdblock")
+	// 清理之前缓存的信息
+	_ = pkg.ClearFolder(desPath)
+	// 具体把 adblock zip 解压下载到哪里
 	outZipFileFPath := path.Join(adblockFolderPath, "adblock.zip")
 	adblockZipFile, err := os.Create(outZipFileFPath)
 	if err != nil {
@@ -173,7 +168,6 @@ func releaseAdblock() (string, error) {
 		return "", err
 	}
 
-	desPath := path.Join(adblockFolderPath, "RunAdblock")
 	r := archiver.NewZip()
 	err = r.Unarchive(outZipFileFPath, desPath)
 	if err != nil {
