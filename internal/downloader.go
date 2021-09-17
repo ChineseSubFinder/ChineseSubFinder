@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/forced_scan_and_down_sub"
 	markSystem "github.com/allanpk716/ChineseSubFinder/internal/logic/mark_system"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
@@ -32,15 +33,16 @@ import (
 
 // Downloader 实例化一次用一次，不要反复的使用，很多临时标志位需要清理。
 type Downloader struct {
-	reqParam              types.ReqParam
-	log                   *logrus.Logger
-	topic                 int                       // 最多能够下载 Top 几的字幕，每一个网站
-	mk                    *markSystem.MarkingSystem // MarkingSystem
-	embyHelper            *embyHelper.EmbyHelper
-	movieFileFullPathList []string                      //  多个需要搜索字幕的电影文件全路径
-	seriesSubNeedDlMap    map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录
-	subFormatter          ifaces.ISubFormatter          //	字幕格式化命名的实现
-	subNameFormatter      subcommon.FormatterName       // 从 inSubFormatter 推断出来
+	reqParam                 types.ReqParam
+	log                      *logrus.Logger
+	topic                    int                       // 最多能够下载 Top 几的字幕，每一个网站
+	mk                       *markSystem.MarkingSystem // MarkingSystem
+	embyHelper               *embyHelper.EmbyHelper
+	movieFileFullPathList    []string                      //  多个需要搜索字幕的电影文件全路径
+	seriesSubNeedDlMap       map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录
+	subFormatter             ifaces.ISubFormatter          //	字幕格式化命名的实现
+	subNameFormatter         subcommon.FormatterName       // 从 inSubFormatter 推断出来
+	needForcedScanAndDownSub bool                          // 将会强制扫描所有的视频，下载字幕，替换已经存在的字幕，不进行时间段和已存在则跳过的判断。且不会进过 Emby API 的逻辑，智能进行强制去以本程序的方式去扫描。
 }
 
 func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqParam) *Downloader {
@@ -84,6 +86,17 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqPa
 	return &downloader
 }
 
+// ReadSpeFile 优先级最高。读取特殊文件，启用一些特殊的功能，比如 forced_scan_and_down_sub
+func (d *Downloader) ReadSpeFile() error {
+	// 理论上是一次性的，用了这个文件就应该没了
+	needProcess, err := forced_scan_and_down_sub.CheckSpeFile()
+	if err != nil {
+		return err
+	}
+	d.needForcedScanAndDownSub = needProcess
+	return nil
+}
+
 // GetUpdateVideoListFromEmby 这里首先会进行近期影片的获取，然后对这些影片进行刷新，然后在获取字幕列表，最终得到需要字幕获取的 video 列表
 func (d *Downloader) GetUpdateVideoListFromEmby(movieRootDir, seriesRootDir string) error {
 	if d.embyHelper == nil {
@@ -124,6 +137,7 @@ func (d Downloader) RefreshEmbySubList() error {
 	return nil
 }
 
+// DownloadSub4Movie 这里对接 Emby 的时候比较方便，只要更新 d.movieFileFullPathList 就行了，不像连续剧那么麻烦
 func (d Downloader) DownloadSub4Movie(dir string) error {
 	defer func() {
 		// 所有的电影字幕下载完成，抉择完成，需要清理缓存目录
@@ -135,19 +149,28 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	}()
 	var err error
 	d.log.Infoln("Download Movie Sub Started...")
-	// 是否是通过 emby_helper api 获取的列表
-	if d.embyHelper == nil {
-		// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
+	// 优先判断特殊的操作
+	if d.needForcedScanAndDownSub == true {
+		// 全扫描
 		d.movieFileFullPathList, err = pkg.SearchMatchedVideoFile(dir)
 		if err != nil {
 			return err
 		}
 	} else {
-		// 进过 emby_helper api 的信息读取
-		d.log.Infoln("Movie Sub Dl From Emby API...")
-		if len(d.movieFileFullPathList) < 1 {
-			d.log.Infoln("Movie Sub Dl From Emby API no movie need Dl sub")
-			return nil
+		// 是否是通过 emby_helper api 获取的列表
+		if d.embyHelper == nil {
+			// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
+			d.movieFileFullPathList, err = pkg.SearchMatchedVideoFile(dir)
+			if err != nil {
+				return err
+			}
+		} else {
+			// 进过 emby_helper api 的信息读取
+			d.log.Infoln("Movie Sub Dl From Emby API...")
+			if len(d.movieFileFullPathList) < 1 {
+				d.log.Infoln("Movie Sub Dl From Emby API no movie need Dl sub")
+				return nil
+			}
 		}
 	}
 	// 并发控制
@@ -162,7 +185,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 			shooter.NewSupplier(d.reqParam),
 		)
 		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
-		organizeSubFiles, err := subSupplierHub.DownloadSub4Movie(inData.OneVideoFullPath, inData.Index)
+		organizeSubFiles, err := subSupplierHub.DownloadSub4Movie(inData.OneVideoFullPath, inData.Index, d.needForcedScanAndDownSub)
 		if err != nil {
 			d.log.Errorln("subSupplierHub.DownloadSub4Movie", inData.OneVideoFullPath, err)
 			return err
@@ -255,21 +278,31 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
 		var seriesInfo *series.SeriesInfo
 		var organizeSubFiles map[string][]string
-		// 是否是通过 emby_helper api 获取的列表
-		if d.embyHelper == nil {
-			seriesInfo, organizeSubFiles, err = subSupplierHub.DownloadSub4Series(inData.OneVideoFullPath, inData.Index)
+		// 优先判断特殊的操作
+		if d.needForcedScanAndDownSub == true {
+			// 全盘扫描
+			seriesInfo, organizeSubFiles, err = subSupplierHub.DownloadSub4Series(inData.OneVideoFullPath, inData.Index, d.needForcedScanAndDownSub)
 			if err != nil {
 				d.log.Errorln("subSupplierHub.DownloadSub4Series", inData.OneVideoFullPath, err)
 				return err
 			}
 		} else {
-			// 先进性 emby_helper api 的操作，读取需要更新字幕的项目
-			seriesInfo, organizeSubFiles, err = subSupplierHub.DownloadSub4SeriesFromEmby(
-				path.Join(dir, inData.OneVideoFullPath),
-				d.seriesSubNeedDlMap[inData.OneVideoFullPath], inData.Index)
-			if err != nil {
-				d.log.Errorln("subSupplierHub.DownloadSub4Series", inData.OneVideoFullPath, err)
-				return err
+			// 是否是通过 emby_helper api 获取的列表
+			if d.embyHelper == nil {
+				seriesInfo, organizeSubFiles, err = subSupplierHub.DownloadSub4Series(inData.OneVideoFullPath, inData.Index, d.needForcedScanAndDownSub)
+				if err != nil {
+					d.log.Errorln("subSupplierHub.DownloadSub4Series", inData.OneVideoFullPath, err)
+					return err
+				}
+			} else {
+				// 先进性 emby_helper api 的操作，读取需要更新字幕的项目
+				seriesInfo, organizeSubFiles, err = subSupplierHub.DownloadSub4SeriesFromEmby(
+					path.Join(dir, inData.OneVideoFullPath),
+					d.seriesSubNeedDlMap[inData.OneVideoFullPath], inData.Index)
+				if err != nil {
+					d.log.Errorln("subSupplierHub.DownloadSub4Series", inData.OneVideoFullPath, err)
+					return err
+				}
 			}
 		}
 		if organizeSubFiles == nil || len(organizeSubFiles) < 1 {

@@ -17,7 +17,10 @@ import (
 func init() {
 
 	if pkg.OSCheck() == false {
-		panic("only support Linux and Windows, if you want support MacOS, you need implement getDbName() in file: internal/dao/init.go ")
+		panic(`only support Linux and Windows, if you want support MacOS, 
+you need implement getDbName() in file: internal/dao/init.go 
+and 
+implement getSpeFileName() in internal/logic/forced_scan_and_down_sub/forced_scan_and_down_sub.go`)
 	}
 
 	log = log_helper.GetLogger()
@@ -137,8 +140,13 @@ func DownLoadStart(httpProxy string) {
 
 	log.Infoln("Download One Started...")
 
+	// 优先级最高。读取特殊文件，启用一些特殊的功能，比如 forced_scan_and_down_sub
+	err := downloader.ReadSpeFile()
+	if err != nil {
+		log.Errorln("ReadSpeFile", err)
+	}
 	// 刷新 Emby 的字幕，如果下载了字幕倒是没有刷新，则先刷新一次，便于后续的 Emby api 统计逻辑
-	err := downloader.RefreshEmbySubList()
+	err = downloader.RefreshEmbySubList()
 	if err != nil {
 		log.Errorln("RefreshEmbySubList", err)
 		return

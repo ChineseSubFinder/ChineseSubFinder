@@ -26,6 +26,7 @@
 高阶设置：
 
 * [高阶设置 - Emby API 支持](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E9%AB%98%E9%98%B6%E8%AE%BE%E7%BD%AE%20-%20Emby%20API%20%E6%94%AF%E6%8C%81.md)
+* [强制扫描所有的视频文件下载字幕](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/强制扫描所有的视频文件下载字幕.md)
 
 建议了解的文档，特别是对《连续剧目录结构要求》。
 

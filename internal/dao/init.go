@@ -57,6 +57,10 @@ func InitDb() error {
 	var err error
 	// 新建数据库
 	nowDbFileName := getDbName()
+	if nowDbFileName == "" {
+		return errors.New(fmt.Sprintf(`InitDb().getDbName() is empty, not support this OS.
+you need implement getDbName() in file: internal/dao/init.go `))
+	}
 
 	dbDir := path.Dir(nowDbFileName)
 	if pkg.IsDir(dbDir) == false {

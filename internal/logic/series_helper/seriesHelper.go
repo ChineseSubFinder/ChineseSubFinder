@@ -25,7 +25,7 @@ import (
 )
 
 // ReadSeriesInfoFromDir 读取剧集的信息，只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList
-func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*series.SeriesInfo, error) {
+func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title, forcedScanAndDownloadSub bool) (*series.SeriesInfo, error) {
 
 	subParserHub := sub_helper.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
@@ -87,7 +87,7 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*series.Seri
 		seriesInfo.SeasonDict[episodeInfo.Season] = episodeInfo.Season
 	}
 
-	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(seriesInfo)
+	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(seriesInfo, forcedScanAndDownloadSub)
 
 	return seriesInfo, nil
 }
@@ -112,7 +112,7 @@ func ReadSeriesInfoFromEmby(seriesDir string, imdbInfo *imdb.Title, seriesList [
 		seriesInfo.SeasonDict[episodeInfo.Season] = episodeInfo.Season
 	}
 
-	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(seriesInfo)
+	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(seriesInfo, false)
 
 	return seriesInfo, nil
 }
@@ -212,12 +212,24 @@ func GetSeriesList(dir string) ([]string, error) {
 }
 
 // whichSeasonEpsNeedDownloadSub 有那些 Eps 需要下载的，按 SxEx 反回 epsKey
-func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo) (map[string]series.EpisodeInfo, map[int]int) {
+func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo, forcedScanAndDownloadSub bool) (map[string]series.EpisodeInfo, map[int]int) {
 	var needDlSubEpsList = make(map[string]series.EpisodeInfo, 0)
 	var needDlSeasonList = make(map[int]int, 0)
 	currentTime := time.Now()
 	// 3个月
 	dayRange, _ := time.ParseDuration(common.DownloadSubDuring3Months)
+	// 直接强制所有视频都下载字幕
+	if forcedScanAndDownloadSub == true {
+		for _, epsInfo := range seriesInfo.EpList {
+			// 添加
+			epsKey := pkg.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
+			needDlSubEpsList[epsKey] = epsInfo
+			needDlSeasonList[epsInfo.Season] = epsInfo.Season
+		}
+
+		return needDlSubEpsList, needDlSeasonList
+	}
+
 	for _, epsInfo := range seriesInfo.EpList {
 		// 如果没有字幕，则加入下载列表
 		// 如果每一集的播出时间能够读取到，那么就以这个完后推算 3个月

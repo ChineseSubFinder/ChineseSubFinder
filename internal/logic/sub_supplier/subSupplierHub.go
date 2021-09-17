@@ -34,7 +34,7 @@ func NewSubSupplierHub(one ifaces.ISupplier, _inSupplier ...ifaces.ISupplier) *S
 }
 
 // DownloadSub4Movie 某一个电影字幕下载，下载完毕后，返回下载缓存每个字幕的位置
-func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]string, error) {
+func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, forcedScanAndDownloadSub bool) ([]string, error) {
 
 	// 跳过中文的电影，不是一定要跳过的
 	skip, err := movieHelper.SkipChineseMovie(videoFullPath, d.Suppliers[0].GetReqParam())
@@ -44,10 +44,15 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 	if skip == true {
 		return nil, nil
 	}
-
-	needDlSub, err := movieHelper.MovieNeedDlSub(videoFullPath)
-	if err != nil {
-		return nil, errors.Newf("MovieNeedDlSub %v %v", videoFullPath, err)
+	var needDlSub = false
+	if forcedScanAndDownloadSub == true {
+		// 强制下载字幕
+		needDlSub = true
+	} else {
+		needDlSub, err = movieHelper.MovieNeedDlSub(videoFullPath)
+		if err != nil {
+			return nil, errors.Newf("MovieNeedDlSub %v %v", videoFullPath, err)
+		}
 	}
 	if needDlSub == true {
 		// 需要下载字幕
@@ -71,7 +76,7 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]st
 }
 
 // DownloadSub4Series 某一部连续剧的字幕下载，下载完毕后，返回下载缓存每个字幕的位置
-func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) (*series.SeriesInfo, map[string][]string, error) {
+func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int, forcedScanAndDownloadSub bool) (*series.SeriesInfo, map[string][]string, error) {
 
 	// 跳过中文的连续剧，不是一定要跳过的
 	skip, imdbInfo, err := seriesHelper.SkipChineseSeries(seriesDirPath, d.Suppliers[0].GetReqParam())
@@ -82,7 +87,7 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int) (*se
 		return nil, nil, nil
 	}
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(seriesDirPath, imdbInfo)
+	seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(seriesDirPath, imdbInfo, forcedScanAndDownloadSub)
 	if err != nil {
 		return nil, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesDirPath, err)
 	}
