@@ -83,7 +83,7 @@
 
 ## TODO
 
-见 [ToDo](https://github.com/allanpk716/ChineseSubFinder/projects/1#column-15141948)
+见 [ChineseSubProject (github.com)](https://github.com/users/allanpk716/projects/2)
 
 ## 感谢
 
