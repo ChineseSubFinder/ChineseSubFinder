@@ -99,20 +99,14 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 	nowRetryTimes := 0
 	for nowRetryTimes <= maxRetryTimes {
 		err = rod.Try(func() {
-			wait := page.MustWaitNavigation()
-			page.MustNavigate(desURL)
-			wait()
-			page.MustWaitLoad()
+			page.MustNavigate(desURL).MustWaitLoad()
+			nowRetryTimes++
 		})
 		if errors.Is(err, context.DeadlineExceeded) {
 			// 超时
 			return nil, err
 		} else if err == nil {
 			// 没有问题
-			err = page.WaitLoad()
-			if err != nil {
-				return page, nil
-			}
 			return page, nil
 		}
 	}
