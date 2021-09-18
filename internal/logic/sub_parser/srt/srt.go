@@ -25,7 +25,7 @@ func (p Parser) GetParserName() string {
 func (p Parser) DetermineFileTypeFromFile(filePath string) (*subparser.FileInfo, error) {
 	nowExt := filepath.Ext(filePath)
 	if strings.ToLower(nowExt) != common.SubExtSRT {
-		return nil, nil
+		return nil, common.DetermineFileTypeFromFileExtNotFitASRT
 	}
 	fBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {

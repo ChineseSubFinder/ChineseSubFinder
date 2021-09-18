@@ -35,19 +35,14 @@ func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*subparser.Fil
 		if err != nil {
 			return nil, err
 		}
-		// 文件的格式不匹配解析器就是 nil
-		if subFileInfo == nil {
-			continue
-		} else {
-			// 正常至少应该匹配一个吧，不然就是最外层继续返回 nil 出去了
-			// 简体和繁体字幕的判断，通过文件名来做到的，基本就算个补判而已
-			//newLang := IsChineseSimpleOrTraditional(filePath, subFileInfo.Lang)
-			subFileInfo.Name = filepath.Base(filePath)
-			//subFileInfo.Lang = newLang
-			subFileInfo.FileFullPath = filePath
-			subFileInfo.FromWhereSite = p.getFromWhereSite(filePath)
-			return subFileInfo, nil
-		}
+		// 正常至少应该匹配一个吧，不然就是最外层继续返回 nil 出去了
+		// 简体和繁体字幕的判断，通过文件名来做到的，基本就算个补判而已
+		//newLang := IsChineseSimpleOrTraditional(filePath, subFileInfo.Lang)
+		subFileInfo.Name = filepath.Base(filePath)
+		//subFileInfo.Lang = newLang
+		subFileInfo.FileFullPath = filePath
+		subFileInfo.FromWhereSite = p.getFromWhereSite(filePath)
+		return subFileInfo, nil
 	}
 	// 如果返回 nil ，那么就说明都没有字幕的格式匹配上
 	return nil, common.CanNotMatchingAnySubType
