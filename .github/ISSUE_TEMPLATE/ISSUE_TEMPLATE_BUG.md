@@ -9,9 +9,12 @@ assignees: ''
 
 ## 你使用的 chinesesubfinder 是什么版本，什么环境？
 
-chinesesubfinder 版本: v0.4.0
-
-环境: docker or Window or Linux or MAC
+> chinesesubfinder 版本: vx.x.x
+>
+> 程序启动后会显示版本（v0.16.x 后才有）
+>
+> 环境: docker or Window or Linux or MAC
+>
 
 ## 你遇到什么问题了？
 
