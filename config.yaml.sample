@@ -1,10 +1,6 @@
 UseProxy: false
 HttpProxy: http://127.0.0.1:10809
 EveryTime: 12h
-Threads: 4
-SubTypePriority: 0
-DebugMode: false
-SaveMultiSub: true
-MovieFolder: X:\电影
-SeriesFolder: X:\连续剧
-AnimeFolder: X:\动画
+Threads: 2
+MovieFolder: /media/电影
+SeriesFolder: /media/连续剧
