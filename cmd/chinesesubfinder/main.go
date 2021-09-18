@@ -16,6 +16,10 @@ import (
 
 func init() {
 
+	log = log_helper.GetLogger()
+
+	log.Infoln("ChineseSubFinder Version:", appVersion)
+
 	if pkg.OSCheck() == false {
 		panic(`only support Linux and Windows, if you want support MacOS, 
 you need implement getDbName() in file: internal/dao/init.go 
@@ -23,7 +27,6 @@ and
 implement getSpeFileName() in internal/logic/forced_scan_and_down_sub/forced_scan_and_down_sub.go`)
 	}
 
-	log = log_helper.GetLogger()
 	config = pkg.GetConfig()
 }
 
@@ -185,3 +188,10 @@ var (
 	log    *logrus.Logger
 	config *types.Config
 )
+
+/*
+	没有很好的想法，因为喜欢使用 tag 进行版本的输出标记，但是 tag 的时候编译 docker 前确实可以修改源码替换关键词做到版本与 tag 同步变更
+	但是， goreleaser 却不支持这样，会提示源码被改了，无法进行编译发布
+	除非不发布编译还是 Linux 和 Windows 程序，这样就能做到 tag 与 程序内部输出版本一致。
+*/
+const appVersion = "v0.16.0"
