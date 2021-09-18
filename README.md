@@ -67,14 +67,15 @@
 
 ## 版本
 
-* v0.15.x 新增[强制扫描所有的视频文件下载字幕](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%BC%BA%E5%88%B6%E6%89%AB%E6%8F%8F%E6%89%80%E6%9C%89%E7%9A%84%E8%A7%86%E9%A2%91%E6%96%87%E4%BB%B6%E4%B8%8B%E8%BD%BD%E5%AD%97%E5%B9%95.md)功能，但是依然跳过中文视频。 -- 2021年9月17日
-* v0.14.x 修复 subhd 解析问题，新增支持[字幕命名格式转换的功能](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%85%B3%E4%BA%8E%E5%AD%97%E5%B9%95%E5%90%8D%E7%A7%B0%E5%91%BD%E5%90%8D%E6%A0%BC%E5%BC%8F%E8%AF%B4%E6%98%8E.md)。 -- 2021年9月16日
-* v0.13.x 新增高级配置，支持 Emby 任意用户看过的视频不下载字幕，修复字幕识别问题。 -- 2021年8月10日
+* v0.16.x 新增，启动容器/程序时，是否开始搜索并下载选项功能见[讨论](https://github.com/allanpk716/ChineseSubFinder/issues/50) -- 2021年9月18日
+* v0.15.x 新增，[强制扫描所有的视频文件下载字幕](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%BC%BA%E5%88%B6%E6%89%AB%E6%8F%8F%E6%89%80%E6%9C%89%E7%9A%84%E8%A7%86%E9%A2%91%E6%96%87%E4%BB%B6%E4%B8%8B%E8%BD%BD%E5%AD%97%E5%B9%95.md)功能，但是依然跳过中文视频。 -- 2021年9月17日
+* v0.14.x 修复，subhd 解析问题，新增支持[字幕命名格式转换的功能](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%85%B3%E4%BA%8E%E5%AD%97%E5%B9%95%E5%90%8D%E7%A7%B0%E5%91%BD%E5%90%8D%E6%A0%BC%E5%BC%8F%E8%AF%B4%E6%98%8E.md)。 -- 2021年9月16日
+* v0.13.x 新增，高级配置，支持 Emby 任意用户看过的视频不下载字幕，修复字幕识别问题。 -- 2021年8月10日
 * v0.12.x 重构，调整字幕的命名格式，移除 CGO 依赖。 -- 2021年7月26日
-* v0.11.x 新增 Emby API 支持，以及其他细节修复和调整。 -- 2021年7月14日
+* v0.11.x 新增，Emby API 支持，以及其他细节修复和调整。 -- 2021年7月14日
 * v0.10.x 添加额外的超时控制（最长超时时间设置为 20 min），修复特殊的双语字幕内容识别问题。 -- 2021年7月9日
-* v0.9.x 新增 subhd zimuku 解析故障的通知接口，给维护人员用，可以尽快去修复解析问题。一般人员无需关心此设置。 -- 2021年6月25日
-* v0.8.x 调整 docker 镜像结构 -- 2021年6月25日
+* v0.9.x 新增，subhd zimuku 解析故障的通知接口，给维护人员用，可以尽快去修复解析问题。一般人员无需关心此设置。 -- 2021年6月25日
+* v0.8.x 调整，docker 镜像结构 -- 2021年6月25日
 * v0.7.x 提高搜索效率 -- 2021年6月25日
 * v0.6.x 支持设置字幕格式的优先级 -- 2021年6月23日
 * v0.5.x 支持连续剧字幕下载 -- 2021年6月19日
