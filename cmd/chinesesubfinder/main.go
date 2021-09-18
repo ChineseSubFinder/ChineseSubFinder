@@ -106,11 +106,16 @@ func main() {
 		log.Errorln("cron entryID:", entryID, "Error:", err)
 		return
 	}
-	log.Infoln("First Time Download Start")
 
-	DownLoadStart(httpProxy)
+	if config.RunAtStartup == true {
+		log.Infoln("First Time Download Start")
 
-	log.Infoln("First Time Download End")
+		DownLoadStart(httpProxy)
+
+		log.Infoln("First Time Download End")
+	} else {
+		log.Infoln("config.yaml set RunAtStartup: false, so will not Run At Startup, wait", config.EveryTime, "to Download")
+	}
 
 	c.Start()
 	// 阻塞

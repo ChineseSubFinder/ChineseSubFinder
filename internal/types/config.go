@@ -15,6 +15,7 @@ type Config struct {
 	SaveMultiSub                  bool            // 保存多个网站的 Top 1 字幕
 	SaveOneSeasonSub              bool            // 保存整个季度的字幕
 	CustomVideoExts               string          // 自定义视频扩展名，多个扩展名用英文逗号分隔。是在原有基础上新增。
+	RunAtStartup                  bool            // 扫描任务是否在启动程序的时候马上执行 见，https://github.com/allanpk716/ChineseSubFinder/issues/50
 
 	MovieFolder  string // 电影文件夹
 	SeriesFolder string // 连续剧文件夹
