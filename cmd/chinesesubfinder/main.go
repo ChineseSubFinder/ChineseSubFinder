@@ -41,6 +41,12 @@ func main() {
 	if config.UseProxy == false {
 		httpProxy = ""
 	}
+	if config.UseProxy == false {
+		log.Infoln("UseProxy = false")
+	} else {
+		log.Infoln("UseProxy:", httpProxy)
+	}
+
 	// 判断文件夹是否存在
 	if pkg.IsDir(config.MovieFolder) == false {
 		log.Errorln("MovieFolder not found")
