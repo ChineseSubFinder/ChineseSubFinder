@@ -6,6 +6,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/proxy_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
@@ -45,6 +46,13 @@ func main() {
 		log.Infoln("UseProxy = false")
 	} else {
 		log.Infoln("UseProxy:", httpProxy)
+		proxySpeed, proxyStatus, err := proxy_helper.ProxyTest(httpProxy)
+		if err != nil {
+			log.Errorln("ProxyTest Target Site http://google.com", err)
+			return
+		} else {
+			log.Infoln("ProxyTest Target Site http://google.com", "Speed:", proxySpeed, "Status:", proxyStatus)
+		}
 	}
 
 	// 判断文件夹是否存在

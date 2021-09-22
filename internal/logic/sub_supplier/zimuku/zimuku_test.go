@@ -46,7 +46,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	//ser := "X:\\连续剧\\Money.Heist"
 
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper2.ReadSeriesInfoFromDir(ser, nil)
+	seriesInfo, err := series_helper2.ReadSeriesInfoFromDir(ser, nil, false)
 	if err != nil {
 		t.Fatal(err)
 	}
