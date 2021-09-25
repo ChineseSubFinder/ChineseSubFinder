@@ -22,7 +22,8 @@ func (p Parser) GetParserName() string {
 }
 
 /*
-	DetermineFileTypeFromFile 确定字幕文件的类型，是双语字幕或者某一种语言等等信息，当 error 是 common.DetermineFileTypeFromFileExtNotFitASSorSSA
+	DetermineFileTypeFromFile 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
+	当 error 是 common.DetermineFileTypeFromFileExtNotFitSRT
 	需要额外的处理逻辑，比如不用报错，而是跳过后续的逻辑
 */
 func (p Parser) DetermineFileTypeFromFile(filePath string) (*subparser.FileInfo, error) {

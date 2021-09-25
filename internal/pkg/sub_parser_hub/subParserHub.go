@@ -33,6 +33,7 @@ func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*subparser.Fil
 	for _, parser := range p.Parser {
 		subFileInfo, err := parser.DetermineFileTypeFromFile(filePath)
 		if err != nil {
+			// 有一些错误是无需关注的，仅仅是跳过对应 ass 或者 srt 的字幕检测而已，并非错误
 			if err == common.DetermineFileTypeFromFileExtNotFitSRT || err == common.DetermineFileTypeFromFileExtNotFitASSorSSA {
 				continue
 			}
