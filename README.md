@@ -67,6 +67,7 @@
 
 ## 版本
 
+* v0.17.x 新增，代理检测模块，程序启动的时候会去 check 代理是否正常 -- 2021年9月22日
 * v0.16.x 新增，启动容器/程序时，是否开始搜索并下载选项功能见[讨论](https://github.com/allanpk716/ChineseSubFinder/issues/50) -- 2021年9月18日
 * v0.15.x 新增，[强制扫描所有的视频文件下载字幕](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%BC%BA%E5%88%B6%E6%89%AB%E6%8F%8F%E6%89%80%E6%9C%89%E7%9A%84%E8%A7%86%E9%A2%91%E6%96%87%E4%BB%B6%E4%B8%8B%E8%BD%BD%E5%AD%97%E5%B9%95.md)功能，但是依然跳过中文视频。 -- 2021年9月17日
 * v0.14.x 修复，subhd 解析问题，新增支持[字幕命名格式转换的功能](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%85%B3%E4%BA%8E%E5%AD%97%E5%B9%95%E5%90%8D%E7%A7%B0%E5%91%BD%E5%90%8D%E6%A0%BC%E5%BC%8F%E8%AF%B4%E6%98%8E.md)。 -- 2021年9月16日
