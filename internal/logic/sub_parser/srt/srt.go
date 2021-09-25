@@ -21,11 +21,14 @@ func (p Parser) GetParserName() string {
 	return "srt"
 }
 
-// DetermineFileTypeFromFile 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
+/*
+	DetermineFileTypeFromFile 确定字幕文件的类型，是双语字幕或者某一种语言等等信息，当 error 是 common.DetermineFileTypeFromFileExtNotFitASSorSSA
+	需要额外的处理逻辑，比如不用报错，而是跳过后续的逻辑
+*/
 func (p Parser) DetermineFileTypeFromFile(filePath string) (*subparser.FileInfo, error) {
 	nowExt := filepath.Ext(filePath)
 	if strings.ToLower(nowExt) != common.SubExtSRT {
-		return nil, common.DetermineFileTypeFromFileExtNotFitASRT
+		return nil, common.DetermineFileTypeFromFileExtNotFitSRT
 	}
 	fBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {

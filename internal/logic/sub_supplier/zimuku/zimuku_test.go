@@ -69,7 +69,8 @@ func TestSupplier_getSubListFromKeyword(t *testing.T) {
 	//imdbID := "tt3032476" 	// 风骚律师
 	//imdbID := "tt6468322" 	// 纸钞屋
 	//imdbID := "tt15299712" // 云南虫谷
-	imdbID := "tt3626476" // Vacation Friends (2021)
+	//imdbID := "tt3626476"  // Vacation Friends (2021)
+	imdbID := "tt11192306" // Superman.and.Lois
 	subhd := NewSupplier()
 	subInfos, err := subhd.getSubListFromKeyword(imdbID)
 	if err != nil {

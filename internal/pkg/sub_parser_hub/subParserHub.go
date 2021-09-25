@@ -1,4 +1,4 @@
-package sub_helper
+package sub_parser_hub
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
@@ -33,6 +33,9 @@ func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*subparser.Fil
 	for _, parser := range p.Parser {
 		subFileInfo, err := parser.DetermineFileTypeFromFile(filePath)
 		if err != nil {
+			if err == common.DetermineFileTypeFromFileExtNotFitSRT || err == common.DetermineFileTypeFromFileExtNotFitASSorSSA {
+				continue
+			}
 			return nil, err
 		}
 		// 正常至少应该匹配一个吧，不然就是最外层继续返回 nil 出去了

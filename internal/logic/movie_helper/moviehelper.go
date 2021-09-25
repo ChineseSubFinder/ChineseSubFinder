@@ -9,6 +9,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/jinzhu/now"
@@ -84,12 +85,12 @@ func MovieHasChineseSub(videoFilePath string) (bool, []string, []string, error) 
 			continue
 		} else {
 			// 文件
-			if sub_helper.IsSubExtWanted(curFile.Name()) == false {
+			if sub_parser_hub.IsSubExtWanted(curFile.Name()) == false {
 				continue
 			}
 			// 字幕文件是否包含中文
 			subFileFullPath := filepath.Join(dir, curFile.Name())
-			if sub_helper.NewSubParserHub(ass.NewParser(), srt.NewParser()).IsSubHasChinese(subFileFullPath) == true {
+			if sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()).IsSubHasChinese(subFileFullPath) == true {
 				if bFoundChineseSub == false {
 					bFoundChineseSub = true
 				}

@@ -10,7 +10,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -250,7 +250,7 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 	var tmpSubInfo = make([]SubInfo, 0)
 	for _, subInfo := range subInfos {
 		tmpLang := language.LangConverter(subInfo.Lang)
-		if language.HasChineseLang(tmpLang) == true && sub_helper.IsSubTypeWanted(subInfo.Ext) == true {
+		if language.HasChineseLang(tmpLang) == true && sub_parser_hub.IsSubTypeWanted(subInfo.Ext) == true {
 			tmpSubInfo = append(tmpSubInfo, subInfo)
 		}
 	}

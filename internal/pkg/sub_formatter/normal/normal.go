@@ -4,7 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"path/filepath"
 	"regexp"
@@ -12,11 +12,11 @@ import (
 )
 
 type Formatter struct {
-	subParser *sub_helper.SubParserHub
+	subParser *sub_parser_hub.SubParserHub
 }
 
 func NewFormatter() *Formatter {
-	return &Formatter{subParser: sub_helper.NewSubParserHub(ass.NewParser(), srt.NewParser())}
+	return &Formatter{subParser: sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())}
 }
 
 // GetFormatterName 当前的 Formatter 是那个

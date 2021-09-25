@@ -11,7 +11,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -388,7 +388,7 @@ func (s Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSer
 		title := strings.TrimSpace(tr.Find(oneSubTrTitleKeyword).Text())
 		// 字幕类型
 		insideSubType := tr.Find(oneSubLangAndTypeKeyword).Text()
-		if sub_helper.IsSubTypeWanted(insideSubType) == false {
+		if sub_parser_hub.IsSubTypeWanted(insideSubType) == false {
 			return true
 		}
 		// 下载的次数

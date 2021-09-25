@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -54,7 +55,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 		}
 		if nowExt != ".zip" && nowExt != ".tar" && nowExt != ".rar" && nowExt != ".7z" {
 			// 是否是受支持的字幕类型
-			if IsSubExtWanted(nowExt) == false {
+			if sub_parser_hub.IsSubExtWanted(nowExt) == false {
 				continue
 			}
 			// 加入缓存列表
@@ -222,7 +223,7 @@ func SearchMatchedSubFile(dir string) ([]string, error) {
 			if curFile.Size() < 1000 {
 				continue
 			}
-			if IsSubExtWanted(filepath.Ext(curFile.Name())) == true {
+			if sub_parser_hub.IsSubExtWanted(filepath.Ext(curFile.Name())) == true {
 				fileFullPathList = append(fileFullPathList, fullPath)
 			}
 		}
@@ -253,7 +254,7 @@ func SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath string) error {
 			// 判断的时候用小写的，后续重命名的时候用原有的名称
 			nowFileName := strings.ToLower(curFile.Name())
 			// 后缀名得对
-			if IsSubExtWanted(filepath.Ext(nowFileName)) == false {
+			if sub_parser_hub.IsSubExtWanted(filepath.Ext(nowFileName)) == false {
 				continue
 			}
 			// 字幕文件名应该包含 视频文件名（无后缀）

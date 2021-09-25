@@ -11,6 +11,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
@@ -27,7 +28,7 @@ import (
 // ReadSeriesInfoFromDir 读取剧集的信息，只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList
 func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title, forcedScanAndDownloadSub bool) (*series.SeriesInfo, error) {
 
-	subParserHub := sub_helper.NewSubParserHub(ass.NewParser(), srt.NewParser())
+	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
 	seriesInfo, err := getSeriesInfoFromDir(seriesDir, imdbInfo)
 	if err != nil {

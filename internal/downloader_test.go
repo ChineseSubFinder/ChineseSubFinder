@@ -1,11 +1,8 @@
 package internal
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"testing"
 )
@@ -81,15 +78,4 @@ func TestDownloader_GetUpdateVideoListFromEmby(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-func TestDownloader_SubParserHub(t *testing.T) {
-	//subFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 4\\瑞克和莫蒂 - S04E01 - Rick and Morty.chs[zimuku].ass"
-	//subFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 1\\瑞克和莫蒂 - S01E01 - 试播集.en.ass"
-	//subFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 1\\瑞克和莫蒂 - S01E01 - 试播集.chs_en[zimuku].ass"
-	//subFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 4\\瑞克和莫蒂 - S04E01 - Rick and Morty.zh.srt"
-	subFile := "X:\\连续剧\\黑钱胜地 (2017)\\Sub_S3E0\\[subhd]_0_Ozark.S03E07.iNTERNAL.720p.WEB.x264-GHOSTS.chs.eng.ass"
-
-	subParserHub := sub_helper.NewSubParserHub(ass.NewParser(), srt.NewParser())
-	subParserHub.IsSubHasChinese(subFile)
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -83,7 +83,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 		if len(v.Scid) > 0 && v.Scid != "" {
 			// 符合中文语言的先加入列表
 			tmpLang := language.LangConverter(v.Language)
-			if language.HasChineseLang(tmpLang) == true && sub_helper.IsSubTypeWanted(v.Sname) == true {
+			if language.HasChineseLang(tmpLang) == true && sub_parser_hub.IsSubTypeWanted(v.Sname) == true {
 				tmpXunLeiSubListChinese = append(tmpXunLeiSubListChinese, v)
 			}
 		}

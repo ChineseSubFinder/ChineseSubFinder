@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/sirupsen/logrus"
 )
@@ -14,14 +15,14 @@ type MarkingSystem struct {
 	log             *logrus.Logger
 	subSiteSequence []string // 网站的优先级，从高到低
 	SubTypePriority int      // 字幕格式的优先级
-	subParserHub    *sub_helper.SubParserHub
+	subParserHub    *sub_parser_hub.SubParserHub
 }
 
 func NewMarkingSystem(subSiteSequence []string, subTypePriority int) *MarkingSystem {
 	mk := MarkingSystem{subSiteSequence: subSiteSequence,
 		log:             log_helper.GetLogger(),
 		SubTypePriority: subTypePriority,
-		subParserHub:    sub_helper.NewSubParserHub(ass.NewParser(), srt.NewParser())}
+		subParserHub:    sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())}
 	return &mk
 }
 

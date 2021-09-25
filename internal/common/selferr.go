@@ -12,7 +12,7 @@ var (
 	CanNotMatchingAnySubType = errors.New("can not matching any sub type")
 
 	DetermineFileTypeFromFileExtNotFitASSorSSA = errors.New("DetermineFileTypeFromFile Ext Not Fit .ass or .ssa")
-	DetermineFileTypeFromFileExtNotFitASRT     = errors.New("DetermineFileTypeFromFile Ext Not Fit .srt")
+	DetermineFileTypeFromFileExtNotFitSRT      = errors.New("DetermineFileTypeFromFile Ext Not Fit .srt")
 
 	ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound = errors.New("zimuku search keyword step0 not found, detail page url")
 	ZiMuKuDownloadUrlStep2NotFound                = errors.New("zimuku download url step2 not found")
