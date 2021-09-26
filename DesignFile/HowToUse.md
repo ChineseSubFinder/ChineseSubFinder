@@ -4,6 +4,10 @@
 
 使用本程序前，**强烈推荐**使用 Emby 或者 TinyMediaManager 对你的视频进行基础的削刮，整理好视频的命名，否则你**自行命名**连续剧是无法进行识别自动下载的。
 
+## 如何在 Windows 下使用
+
+见[文档](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%A6%82%E4%BD%95%E5%9C%A8%20Windows%20%E4%B8%8A%E4%BD%BF%E7%94%A8.md)
+
 
 ## 使用 docker-compose 部署
 
