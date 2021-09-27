@@ -51,6 +51,22 @@ func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (bool, *subpars
 	return false, nil, nil
 }
 
+// DetermineFileTypeFromBytes 确定字幕文件的类型，是双语字幕或者某一种语言等等信息，如果返回 nil ，那么就说明都没有字幕的格式匹配上
+func (p SubParserHub) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool, *subparser.FileInfo, error) {
+	for _, parser := range p.Parser {
+		bFind, subFileInfo, err := parser.DetermineFileTypeFromBytes(inBytes, nowExt)
+		if err != nil {
+			return false, nil, err
+		}
+		if bFind == false {
+			continue
+		}
+		return true, subFileInfo, nil
+	}
+	// 如果返回 nil ，那么就说明都没有字幕的格式匹配上
+	return false, nil, nil
+}
+
 // IsSubHasChinese 字幕文件是否包含中文
 func (p SubParserHub) IsSubHasChinese(fileFPath string) bool {
 

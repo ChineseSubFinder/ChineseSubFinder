@@ -231,7 +231,7 @@ func IsWhiteListLang(lang whatlanggo.Lang) bool {
 }
 
 // DetectSubLangAndStatistics 检测语言然后统计
-func DetectSubLangAndStatistics(lines []string, langDict map[int]int, chLines *[]string) {
+func DetectSubLangAndStatistics(lines []string, langDict map[int]int, chLines *[]string, otherLines *[]string) {
 
 	for _, line := range lines {
 		info := whatlanggo.DetectWithOptions(line, GetLangOptions())
@@ -251,6 +251,8 @@ func DetectSubLangAndStatistics(lines []string, langDict map[int]int, chLines *[
 		// 统计中文有多少行
 		if info.Lang == whatlanggo.Cmn {
 			*chLines = append(*chLines, line)
+		} else {
+			*otherLines = append(*otherLines, line)
 		}
 	}
 }

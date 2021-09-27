@@ -10,6 +10,8 @@ type FileInfo struct {
 	FileFullPath  string         // 字幕文件的全路径
 	Data          []byte         // 字幕的二进制文件内容
 	Dialogues     []OneDialogue  // 整个字幕文件的所有对话
+	CHLines       []string       // 抽取出所有的中文对话
+	OtherLines    []string       // 抽取出所有的第二语言对话，可能是英文、韩文、日文
 }
 
 // OneDialogue 一句对话
