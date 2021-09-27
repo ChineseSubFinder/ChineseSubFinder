@@ -29,15 +29,14 @@ func NewSubParserHub(parser ifaces.ISubParser, _parser ...ifaces.ISubParser) *Su
 }
 
 // DetermineFileTypeFromFile 确定字幕文件的类型，是双语字幕或者某一种语言等等信息，如果返回 nil ，那么就说明都没有字幕的格式匹配上
-func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*subparser.FileInfo, error) {
+func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (bool, *subparser.FileInfo, error) {
 	for _, parser := range p.Parser {
-		subFileInfo, err := parser.DetermineFileTypeFromFile(filePath)
+		bFind, subFileInfo, err := parser.DetermineFileTypeFromFile(filePath)
 		if err != nil {
-			// 有一些错误是无需关注的，仅仅是跳过对应 ass 或者 srt 的字幕检测而已，并非错误
-			if err == common.DetermineFileTypeFromFileExtNotFitSRT || err == common.DetermineFileTypeFromFileExtNotFitASSorSSA {
-				continue
-			}
-			return nil, err
+			return false, nil, err
+		}
+		if bFind == false {
+			continue
 		}
 		// 正常至少应该匹配一个吧，不然就是最外层继续返回 nil 出去了
 		// 简体和繁体字幕的判断，通过文件名来做到的，基本就算个补判而已
@@ -46,19 +45,23 @@ func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (*subparser.Fil
 		//subFileInfo.Lang = newLang
 		subFileInfo.FileFullPath = filePath
 		subFileInfo.FromWhereSite = p.getFromWhereSite(filePath)
-		return subFileInfo, nil
+		return true, subFileInfo, nil
 	}
 	// 如果返回 nil ，那么就说明都没有字幕的格式匹配上
-	return nil, common.CanNotMatchingAnySubType
+	return false, nil, nil
 }
 
 // IsSubHasChinese 字幕文件是否包含中文
 func (p SubParserHub) IsSubHasChinese(fileFPath string) bool {
 
 	// 增加判断已存在的字幕是否有中文
-	file, err := p.DetermineFileTypeFromFile(fileFPath)
+	bFind, file, err := p.DetermineFileTypeFromFile(fileFPath)
 	if err != nil {
-		log_helper.GetLogger().Warnln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, err)
+		log_helper.GetLogger().Errorln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, err)
+		return false
+	}
+	if bFind == false {
+		log_helper.GetLogger().Warnln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, "not support SubType")
 		return false
 	}
 	if language.HasChineseLang(file.Lang) == false {

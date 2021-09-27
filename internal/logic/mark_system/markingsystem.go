@@ -101,9 +101,13 @@ func (m MarkingSystem) parseSubFileInfo(organizeSubFiles []string) map[string][]
 	// 拿到现有的字幕列表，开始抉择
 	// 先判断当前字幕是什么语言（如果是简体，还需要考虑，判断这个字幕是简体还是繁体）
 	for _, oneSubFileFullPath := range organizeSubFiles {
-		subFileInfo, err := m.subParserHub.DetermineFileTypeFromFile(oneSubFileFullPath)
+		bFind, subFileInfo, err := m.subParserHub.DetermineFileTypeFromFile(oneSubFileFullPath)
 		if err != nil {
-			m.log.Error("DetermineFileTypeFromFile", oneSubFileFullPath, err)
+			m.log.Errorln("DetermineFileTypeFromFile", oneSubFileFullPath, err)
+			continue
+		}
+		if bFind == false {
+			m.log.Warnln("DetermineFileTypeFromFile", oneSubFileFullPath, "not support SubType")
 			continue
 		}
 		_, ok := subInfoDict[subFileInfo.FromWhereSite]

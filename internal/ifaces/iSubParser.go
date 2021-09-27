@@ -7,7 +7,7 @@ import (
 type ISubParser interface {
 	GetParserName() string
 
-	DetermineFileTypeFromFile(filePath string) (*subparser.FileInfo, error)
+	DetermineFileTypeFromFile(filePath string) (bool, *subparser.FileInfo, error)
 
-	DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*subparser.FileInfo, error)
+	DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool, *subparser.FileInfo, error)
 }

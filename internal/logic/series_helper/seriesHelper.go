@@ -56,9 +56,13 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title, forcedScanAnd
 			log_helper.GetLogger().Errorln(err)
 			continue
 		}
-		subParserFileInfo, err := subParserHub.DetermineFileTypeFromFile(subFile)
+		bFind, subParserFileInfo, err := subParserHub.DetermineFileTypeFromFile(subFile)
 		if err != nil {
 			log_helper.GetLogger().Errorln("DetermineFileTypeFromFile", subFile, err)
+			continue
+		}
+		if bFind == false {
+			log_helper.GetLogger().Warnln("DetermineFileTypeFromFile", subFile, "not support SubType")
 			continue
 		}
 		epsKey := pkg.GetEpisodeKeyName(info.Season, info.Episode)

@@ -26,24 +26,24 @@ func (p Parser) GetParserName() string {
 	当 error 是 common.DetermineFileTypeFromFileExtNotFitSRT
 	需要额外的处理逻辑，比如不用报错，而是跳过后续的逻辑
 */
-func (p Parser) DetermineFileTypeFromFile(filePath string) (*subparser.FileInfo, error) {
+func (p Parser) DetermineFileTypeFromFile(filePath string) (bool, *subparser.FileInfo, error) {
 	nowExt := filepath.Ext(filePath)
 	if strings.ToLower(nowExt) != common.SubExtSRT {
-		return nil, common.DetermineFileTypeFromFileExtNotFitSRT
+		return false, nil, nil
 	}
 	fBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return nil, err
+		return false, nil, err
 	}
 	inBytes, err := language.ChangeFileCoding2UTF8(fBytes)
 	if err != nil {
-		return nil, err
+		return false, nil, err
 	}
 	return p.DetermineFileTypeFromBytes(inBytes, nowExt)
 }
 
 // DetermineFileTypeFromBytes 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
-func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*subparser.FileInfo, error) {
+func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool, *subparser.FileInfo, error) {
 
 	allString := string(inBytes)
 	// 注意，需要替换掉 \r 不然正则表达式会有问题
@@ -52,7 +52,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*subp
 	// 找到 start end text
 	matched := re.FindAllStringSubmatch(allString, -1)
 	if len(matched) < 1 {
-		return nil, nil
+		return false, nil, nil
 	}
 	subFileInfo := subparser.FileInfo{}
 	subFileInfo.Ext = nowExt
@@ -91,7 +91,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (*subp
 	detectLang := language.SubLangStatistics2SubLangType(float32(countLineFeed), float32(len(matched)), langDict, chLines)
 	subFileInfo.Lang = detectLang
 	subFileInfo.Data = inBytes
-	return &subFileInfo, nil
+	return true, &subFileInfo, nil
 }
 
 const regString = `(\d+)\n([\d:,]+)\s+-{2}\>\s+([\d:,]+)\n([\s\S]*?(\n{2}|$))`

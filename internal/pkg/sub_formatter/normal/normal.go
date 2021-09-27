@@ -62,8 +62,8 @@ func (f Formatter) IsMatchThisFormat(subName string) (bool, string, string, type
 	// 这里有一个点，是直接从 zh zho ch 去转换成中文语言就行了，还是要做字幕的语言识别
 	// 目前倾向于这里用后面的逻辑
 	//subLang = language.ChineseISOString2Lang(subLangStr)
-	file, err := f.subParser.DetermineFileTypeFromFile(subName)
-	if err != nil {
+	bFind, file, err := f.subParser.DetermineFileTypeFromFile(subName)
+	if err != nil || bFind == false {
 		return false, "", "", 0, ""
 	}
 	subLang = file.Lang
