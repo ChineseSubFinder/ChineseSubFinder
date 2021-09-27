@@ -39,7 +39,70 @@ type EmbyVideoInfo struct {
 	PremiereDate  time.Time `json:"PremiereDate,omitempty"`
 	SortName      string    `json:"SortName,omitempty"`
 	Path          string    `json:"Path"`
-	MediaStreams  []struct {
+	MediaSources  []struct {
+		Protocol             string `json:"Protocol"`
+		Id                   string `json:"Id"`
+		Path                 string `json:"Path"`
+		Type                 string `json:"Type"`
+		Container            string `json:"Container"`
+		Size                 int    `json:"Size"`
+		Name                 string `json:"Name"`
+		IsRemote             bool   `json:"IsRemote"`
+		RunTimeTicks         int64  `json:"RunTimeTicks"`
+		SupportsTranscoding  bool   `json:"SupportsTranscoding"`
+		SupportsDirectStream bool   `json:"SupportsDirectStream"`
+		SupportsDirectPlay   bool   `json:"SupportsDirectPlay"`
+		IsInfiniteStream     bool   `json:"IsInfiniteStream"`
+		RequiresOpening      bool   `json:"RequiresOpening"`
+		RequiresClosing      bool   `json:"RequiresClosing"`
+		RequiresLooping      bool   `json:"RequiresLooping"`
+		SupportsProbing      bool   `json:"SupportsProbing"`
+		MediaStreams         []struct {
+			Codec                  string  `json:"Codec"`
+			TimeBase               string  `json:"TimeBase,omitempty"`
+			CodecTimeBase          string  `json:"CodecTimeBase,omitempty"`
+			VideoRange             string  `json:"VideoRange,omitempty"`
+			DisplayTitle           string  `json:"DisplayTitle"`
+			NalLengthSize          string  `json:"NalLengthSize,omitempty"`
+			IsInterlaced           bool    `json:"IsInterlaced"`
+			IsAVC                  bool    `json:"IsAVC,omitempty"`
+			BitRate                int     `json:"BitRate,omitempty"`
+			BitDepth               int     `json:"BitDepth,omitempty"`
+			RefFrames              int     `json:"RefFrames,omitempty"`
+			IsDefault              bool    `json:"IsDefault"`
+			IsForced               bool    `json:"IsForced"`
+			Height                 int     `json:"Height,omitempty"`
+			Width                  int     `json:"Width,omitempty"`
+			AverageFrameRate       float64 `json:"AverageFrameRate,omitempty"`
+			RealFrameRate          float64 `json:"RealFrameRate,omitempty"`
+			Profile                string  `json:"Profile,omitempty"`
+			Type                   string  `json:"Type"`
+			AspectRatio            string  `json:"AspectRatio,omitempty"`
+			Index                  int     `json:"Index"`
+			IsExternal             bool    `json:"IsExternal"`
+			IsTextSubtitleStream   bool    `json:"IsTextSubtitleStream"`
+			SupportsExternalStream bool    `json:"SupportsExternalStream"`
+			Protocol               string  `json:"Protocol"`
+			PixelFormat            string  `json:"PixelFormat,omitempty"`
+			Level                  int     `json:"Level,omitempty"`
+			IsAnamorphic           bool    `json:"IsAnamorphic,omitempty"`
+			Language               string  `json:"Language,omitempty"`
+			DisplayLanguage        string  `json:"DisplayLanguage,omitempty"`
+			ChannelLayout          string  `json:"ChannelLayout,omitempty"`
+			Channels               int     `json:"Channels,omitempty"`
+			SampleRate             int     `json:"SampleRate,omitempty"`
+			Title                  string  `json:"Title,omitempty"`
+			Path                   string  `json:"Path,omitempty"`
+		} `json:"MediaStreams"`
+		Formats             []interface{} `json:"Formats"`
+		Bitrate             int           `json:"Bitrate"`
+		RequiredHttpHeaders struct {
+		} `json:"RequiredHttpHeaders"`
+		ReadAtNativeFramerate      bool `json:"ReadAtNativeFramerate"`
+		DefaultAudioStreamIndex    int  `json:"DefaultAudioStreamIndex"`
+		DefaultSubtitleStreamIndex int  `json:"DefaultSubtitleStreamIndex"`
+	} `json:"MediaSources"`
+	MediaStreams []struct {
 		Codec                  string `json:"Codec"`
 		Language               string `json:"Language"`
 		DisplayTitle           string `json:"DisplayTitle"`

@@ -90,7 +90,7 @@ func (em EmbyApi) RefreshRecentlyVideoInfo() error {
 	return nil
 }
 
-// GetRecentlyItems 在 API 调试界面 -- ItemsService
+// GetRecentlyItems 获取近期的视频，在 API 调试界面 -- ItemsService
 func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 
 	var recItems emby.EmbyRecentlyItems
@@ -195,7 +195,7 @@ func (em EmbyApi) GetUserIdList() (emby.EmbyUsers, error) {
 	return recItems, nil
 }
 
-// GetItemAncestors 在 API 调试界面 -- LibraryService
+// GetItemAncestors 获取父级信息，在 API 调试界面 -- LibraryService
 func (em EmbyApi) GetItemAncestors(id string) ([]emby.EmbyItemsAncestors, error) {
 
 	var recItems []emby.EmbyItemsAncestors
@@ -249,7 +249,7 @@ func (em EmbyApi) GetItemVideoInfoByUserId(userId, videoId string) (emby.EmbyVid
 	return recItem, nil
 }
 
-// UpdateVideoSubList 在 API 调试界面 -- ItemRefreshService
+// UpdateVideoSubList 更新字幕列表， 在 API 调试界面 -- ItemRefreshService
 func (em EmbyApi) UpdateVideoSubList(id string) error {
 
 	_, err := em.getNewClient().R().
@@ -262,6 +262,18 @@ func (em EmbyApi) UpdateVideoSubList(id string) error {
 	}
 
 	return nil
+}
+
+// GetSubFileData 下载字幕 subExt -> .ass or .srt , 在 API 调试界面 -- SubtitleService
+func (em EmbyApi) GetSubFileData(videoId, mediaSourceId, subIndex, subExt string) (string, error) {
+
+	response, err := em.getNewClient().R().
+		Get(em.embyConfig.Url + "/emby/Videos/" + videoId + "/" + mediaSourceId + "/Subtitles/" + subIndex + "/Stream" + subExt)
+	if err != nil {
+		return "", err
+	}
+
+	return response.String(), nil
 }
 
 func (em EmbyApi) getNewClient() *resty.Client {

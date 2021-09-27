@@ -36,7 +36,7 @@ func TestEmbyHelper_GetItemVideoInfo(t *testing.T) {
 	em := NewEmbyHelper(pkg.GetConfig().EmbyConfig)
 	// 95813 -- 命运夜
 	// 96564 -- The Bad Batch - S01E11
-	videoInfo, err := em.GetItemVideoInfo("95813")
+	videoInfo, err := em.GetItemVideoInfo("145499")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,8 @@ func TestEmbyHelper_GetItemVideoInfoByUserId(t *testing.T) {
 	// 95813 -- 命运夜
 	// 96564 -- The Bad Batch - S01E11
 	// 108766 -- R&M - S05E06
-	videoInfo, err := em.GetItemVideoInfoByUserId("xxxxxxxxxxxxx", "108766")
+	// 145499 -- R&M - S05E10
+	videoInfo, err := em.GetItemVideoInfoByUserId("c248ec6305374192bdf892d4b9739f80", "145499")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,4 +77,15 @@ func TestEmbyHelper_GetUserIdList(t *testing.T) {
 	for i, item := range userIds.Items {
 		println(i, item.Name, item.Id)
 	}
+}
+
+func TestEmbyApi_GetSubFileData(t *testing.T) {
+	em := NewEmbyHelper(pkg.GetConfig().EmbyConfig)
+	// R&M S05E10  2 org english, 5 简英
+	subFileData, err := em.GetSubFileData("145499", "c4678509adb72a8b5034bdac2f1fccde", "5", ".ass")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	println(subFileData)
 }
