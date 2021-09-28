@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/charset"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/axgle/mahonia"
 	"github.com/go-creed/sat"
 	nzlov "github.com/nzlov/chardet"
@@ -231,9 +232,12 @@ func IsWhiteListLang(lang whatlanggo.Lang) bool {
 }
 
 // DetectSubLangAndStatistics 检测语言然后统计
-func DetectSubLangAndStatistics(lines []string, langDict map[int]int, chLines *[]string, otherLines *[]string) {
+func DetectSubLangAndStatistics(oneDialogue subparser.OneDialogue, langDict map[int]int, usefulDialoguseEx *[]subparser.OneDialogueEx, chLines *[]string, otherLines *[]string) {
 
-	for _, line := range lines {
+	var oneDialogueEx subparser.OneDialogueEx
+	oneDialogueEx.StartTime = oneDialogue.StartTime
+	oneDialogueEx.EndTime = oneDialogue.EndTime
+	for _, line := range oneDialogue.Lines {
 		info := whatlanggo.DetectWithOptions(line, GetLangOptions())
 		tmpLang := -1
 		if IsWhiteListLang(info.Lang) == true {
@@ -254,7 +258,19 @@ func DetectSubLangAndStatistics(lines []string, langDict map[int]int, chLines *[
 		} else {
 			*otherLines = append(*otherLines, line)
 		}
+		switch info.Lang {
+		case whatlanggo.Cmn:
+			oneDialogueEx.ChLine = line
+		case whatlanggo.Eng:
+			oneDialogueEx.EnLine = line
+		case whatlanggo.Kor:
+			oneDialogueEx.KrLine = line
+		case whatlanggo.Jpn:
+			oneDialogueEx.JpLine = line
+		}
 	}
+
+	*usefulDialoguseEx = append(*usefulDialoguseEx, oneDialogueEx)
 }
 
 // SubLangStatistics2SubLangType 由分析的信息转换为具体是什么字幕的语言类型
@@ -280,6 +296,7 @@ func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map
 	isChsCount := 0
 	if hasChinese {
 		for _, line := range chLines {
+			// 判断是简体还是繁体
 			if chDict.IsChs(line, 0.9) == true {
 				isChsCount++
 			}

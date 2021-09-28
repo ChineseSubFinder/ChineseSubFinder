@@ -1,10 +1,15 @@
 package sub_timeline_fixer
 
 import (
+	"errors"
+	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
-	"path"
+	"github.com/james-bowman/nlp"
+	"github.com/james-bowman/nlp/measures/pairwise"
+	"gonum.org/v1/gonum/mat"
+
 	"sort"
 	"strings"
 	"time"
@@ -40,6 +45,23 @@ func StopWordCounter(instring string, per int) []string {
 	return stopWords
 }
 
+// NewTFIDF 初始化 TF-IDF
+func NewTFIDF(testCorpus []string) (*nlp.Pipeline, mat.Matrix, error) {
+	newCountVectoriser := nlp.NewCountVectoriser(StopWords...)
+	transformer := nlp.NewTfidfTransformer()
+	// set k (the number of dimensions following truncation) to 4
+	reducer := nlp.NewTruncatedSVD(4)
+	lsiPipeline := nlp.NewPipeline(newCountVectoriser, transformer, reducer)
+	// Transform the corpus into an LSI fitting the model to the documents in the process
+	lsi, err := lsiPipeline.FitTransform(testCorpus...)
+	if err != nil {
+		return nil, lsi, errors.New(fmt.Sprintf("Failed to process testCorpus documents because %v", err))
+	}
+
+	return lsiPipeline, lsi, nil
+}
+
+// GetOffsetTime 暂时只支持英文的基准字幕，源字幕必须是双语中英字幕
 func GetOffsetTime(baseEngSubFPath, srcSubFPath string) (time.Duration, error) {
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 	bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(baseEngSubFPath)
@@ -56,8 +78,49 @@ func GetOffsetTime(baseEngSubFPath, srcSubFPath string) (time.Duration, error) {
 	if bFind == false {
 		return 0, nil
 	}
-	// TODO 需要加息文件的时候 DetermineFileTypeFromFile，给出 CHLines、OtherLines 的对应在哪一个时间段
-	// CHLines、OtherLines 也就是要调整这两个的输出类型
+
+	print(infoSrc)
+
+	// 构建基准语料库，目前阶段只需要考虑是 En 的就行了
+	var baseCorpus = make([]string, 0)
+	for _, oneDialogueEx := range infoBase.DialoguesEx {
+		baseCorpus = append(baseCorpus, oneDialogueEx.EnLine)
+	}
+	// 初始化
+	pipline, tfidf, err := NewTFIDF(baseCorpus)
+	if err != nil {
+		return 0, err
+	}
+	// 开始比较相似度，默认认为是 Ch_en 就行了
+	for _, oneDialogueEx := range infoSrc.DialoguesEx {
+		// run the query through the same pipeline that was fitted to the corpus and
+		// to project it into the same dimensional space
+		queryVector, err := pipline.Transform(oneDialogueEx.EnLine)
+		if err != nil {
+			return 0, err
+		}
+
+		// iterate over document feature vectors (columns) in the LSI matrix and compare
+		// with the query vector for similarity.  Similarity is determined by the difference
+		// between the angles of the vectors known as the cosine similarity
+		highestSimilarity := -1.0
+		// 匹配上的基准的索引
+		var baseIndex int
+		_, docs := tfidf.Dims()
+		for i := 0; i < docs; i++ {
+			similarity := pairwise.CosineSimilarity(queryVector.(mat.ColViewer).ColView(0), tfidf.(mat.ColViewer).ColView(i))
+			if similarity > highestSimilarity {
+				baseIndex = i
+				highestSimilarity = similarity
+			}
+		}
+
+		println(fmt.Sprintf("Src %s-%s '%s' <--> Base %s-%s '%s'",
+			oneDialogueEx.StartTime, oneDialogueEx.EndTime, oneDialogueEx.EnLine,
+			infoBase.DialoguesEx[baseIndex].StartTime, infoBase.DialoguesEx[baseIndex].EndTime, baseCorpus[baseIndex]))
+	}
+
+	return 0, nil
 }
 
 type StopWordsPair struct {

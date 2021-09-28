@@ -57,6 +57,9 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	subFileInfo := subparser.FileInfo{}
 	subFileInfo.Ext = nowExt
 	subFileInfo.Dialogues = make([]subparser.OneDialogue, 0)
+
+	// 剔除 {\fn微软雅黑\fs14}C'mon, Rick. We're -- We're almost there. {} 这一段
+	var reFont = regexp.MustCompile(`(?m)^{\S*}`)
 	// 这里需要统计一共有几个 \N，以及这个数量在整体行数中的比例，这样就知道是不是双语字幕了
 	countLineFeed := 0
 	for _, oneDial := range matched {
@@ -75,6 +78,8 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 				// 这样说明有两行字幕，也就是双语啦
 				countLineFeed++
 			}
+			// 剔除 {\fn微软雅黑\fs14}C'mon, Rick. We're -- We're almost there. {} 这一段
+			text = reFont.ReplaceAllString(text, "")
 			odl.Lines = append(odl.Lines, text)
 		}
 		subFileInfo.Dialogues = append(subFileInfo.Dialogues, odl)
@@ -87,13 +92,16 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	var chLines = make([]string, 0)
 	// 抽取出所有的第二语言对话
 	var otherLines = make([]string, 0)
+	// 抽取出来的对话数组，为了后续用来匹配和修改时间轴
+	var usefulDialogueExs = make([]subparser.OneDialogueEx, 0)
 	for _, dialogue := range subFileInfo.Dialogues {
-		language.DetectSubLangAndStatistics(dialogue.Lines, langDict, &chLines, &otherLines)
+		language.DetectSubLangAndStatistics(dialogue, langDict, &usefulDialogueExs, &chLines, &otherLines)
 	}
 	// 从统计出来的字典，找出 Top 1 或者 2 的出来，然后计算出是什么语言的字幕
 	detectLang := language.SubLangStatistics2SubLangType(float32(countLineFeed), float32(len(matched)), langDict, chLines)
 	subFileInfo.Lang = detectLang
 	subFileInfo.Data = inBytes
+	subFileInfo.DialoguesEx = usefulDialogueExs
 	subFileInfo.CHLines = chLines
 	subFileInfo.OtherLines = otherLines
 	return true, &subFileInfo, nil

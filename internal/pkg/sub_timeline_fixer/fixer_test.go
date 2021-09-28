@@ -40,6 +40,24 @@ func TestStopWordCounter(t *testing.T) {
 	println(info.Name)
 }
 
+func TestGetOffsetTime(t *testing.T) {
+	testDataPath := "../../../TestData/FixTimeline"
+	testRootDir, err := pkg.CopyTestData(testDataPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	enSubFile := path.Join(testRootDir, "R&M S05E01 - English.srt")
+	ch_enSubFile := path.Join(testRootDir, "R&M S05E01 - 简英.srt")
+
+	time, err := GetOffsetTime(enSubFile, ch_enSubFile)
+	if err != nil {
+		return
+	}
+
+	print(time)
+}
+
 func TestTFIDF(t *testing.T) {
 	testCorpus := []string{
 		"The quick brown fox jumped over the lazy dog",
