@@ -91,23 +91,39 @@ func GetOffsetTime(baseEngSubFPath, srcSubFPath string) (time.Duration, error) {
 	if err != nil {
 		return 0, err
 	}
+	// 基线的长度
+	_, docsLength := tfidf.Dims()
 	// 开始比较相似度，默认认为是 Ch_en 就行了
-	for _, oneDialogueEx := range infoSrc.DialoguesEx {
+	for srcIndex, srcOneDialogueEx := range infoSrc.DialoguesEx {
+
+		// 这里只考虑 英文 的语言
+		if srcOneDialogueEx.EnLine == "" {
+			continue
+		}
 		// run the query through the same pipeline that was fitted to the corpus and
 		// to project it into the same dimensional space
-		queryVector, err := pipline.Transform(oneDialogueEx.EnLine)
+		queryVector, err := pipline.Transform(srcOneDialogueEx.EnLine)
 		if err != nil {
 			return 0, err
 		}
-
 		// iterate over document feature vectors (columns) in the LSI matrix and compare
 		// with the query vector for similarity.  Similarity is determined by the difference
 		// between the angles of the vectors known as the cosine similarity
 		highestSimilarity := -1.0
 		// 匹配上的基准的索引
 		var baseIndex int
-		_, docs := tfidf.Dims()
-		for i := 0; i < docs; i++ {
+		// 这里理论上需要把所有的基线遍历一次，但是，一般来说，两个字幕不可能差距在 50 行
+		// 这样的好处是有助于提高搜索的性能
+		// 那么就以当前的 src 的位置，向前、向后各 50 来遍历
+		nowMaxScanLength := srcIndex + 50
+		nowMinScanLength := srcIndex - 50
+		if nowMinScanLength < 0 {
+			nowMinScanLength = 0
+		}
+		if nowMaxScanLength > docsLength {
+			nowMaxScanLength = docsLength
+		}
+		for i := nowMinScanLength; i < nowMaxScanLength; i++ {
 			similarity := pairwise.CosineSimilarity(queryVector.(mat.ColViewer).ColView(0), tfidf.(mat.ColViewer).ColView(i))
 			if similarity > highestSimilarity {
 				baseIndex = i
@@ -115,9 +131,9 @@ func GetOffsetTime(baseEngSubFPath, srcSubFPath string) (time.Duration, error) {
 			}
 		}
 
-		println(fmt.Sprintf("Src %s-%s '%s' <--> Base %s-%s '%s'",
-			oneDialogueEx.StartTime, oneDialogueEx.EndTime, oneDialogueEx.EnLine,
-			infoBase.DialoguesEx[baseIndex].StartTime, infoBase.DialoguesEx[baseIndex].EndTime, baseCorpus[baseIndex]))
+		println(fmt.Sprintf("Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
+			baseIndex, infoBase.DialoguesEx[baseIndex].StartTime, infoBase.DialoguesEx[baseIndex].EndTime, baseCorpus[baseIndex],
+			srcIndex, srcOneDialogueEx.StartTime, srcOneDialogueEx.EndTime, srcOneDialogueEx.EnLine))
 	}
 
 	return 0, nil

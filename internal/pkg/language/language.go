@@ -258,15 +258,16 @@ func DetectSubLangAndStatistics(oneDialogue subparser.OneDialogue, langDict map[
 		} else {
 			*otherLines = append(*otherLines, line)
 		}
+		// 这里可能是一个 dialogue 里面有两句话，而且两句话都是一个类型的语言，所以其实需要的是合并
 		switch info.Lang {
 		case whatlanggo.Cmn:
-			oneDialogueEx.ChLine = line
+			oneDialogueEx.ChLine += line + " "
 		case whatlanggo.Eng:
-			oneDialogueEx.EnLine = line
+			oneDialogueEx.EnLine += line + " "
 		case whatlanggo.Kor:
-			oneDialogueEx.KrLine = line
+			oneDialogueEx.KrLine += line + " "
 		case whatlanggo.Jpn:
-			oneDialogueEx.JpLine = line
+			oneDialogueEx.JpLine += line + " "
 		}
 	}
 

@@ -108,12 +108,14 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 					if i == 0 {
 						continue
 					}
+					s = strings.ReplaceAll(s, `\N`, "")
 					odl.Lines = append(odl.Lines, s)
 				}
 			}
 			countLineFeed++
 		} else {
 			// 无，则可以直接添加
+			nowText1 = strings.ReplaceAll(nowText1, `\N`, "")
 			odl.Lines = append(odl.Lines, nowText1)
 		}
 
