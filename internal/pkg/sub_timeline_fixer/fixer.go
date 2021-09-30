@@ -10,15 +10,14 @@ import (
 	"github.com/james-bowman/nlp/measures/pairwise"
 	"gonum.org/v1/gonum/mat"
 
-	"sort"
 	"strings"
 	"time"
 )
 
 // StopWordCounter 停止词统计
-func StopWordCounter(instring string, per int) []string {
+func StopWordCounter(inString string, per int) []string {
 	statisticTimes := make(map[string]int)
-	wordsLength := strings.Fields(instring)
+	wordsLength := strings.Fields(inString)
 
 	for counts, word := range wordsLength {
 		// 判断key是否存在，这个word是字符串，这个counts是统计的word的次数。
@@ -84,15 +83,25 @@ func GetOffsetTime(baseEngSubFPath, srcSubFPath string) (time.Duration, error) {
 	// 构建基准语料库，目前阶段只需要考虑是 En 的就行了
 	var baseCorpus = make([]string, 0)
 	for _, oneDialogueEx := range infoBase.DialoguesEx {
+		if oneDialogueEx.EnLine == "" {
+			continue
+		}
 		baseCorpus = append(baseCorpus, oneDialogueEx.EnLine)
 	}
 	// 初始化
-	pipline, tfidf, err := NewTFIDF(baseCorpus)
+	pipLine, tfidf, err := NewTFIDF(baseCorpus)
 	if err != nil {
 		return 0, err
 	}
+
+	/*
+		确认两个字幕间的偏移，暂定的方案是两边都连续匹配上 5 个索引，再抽取一个对话的时间进行修正计算
+	*/
+	maxCompareDialogue := 5
 	// 基线的长度
 	_, docsLength := tfidf.Dims()
+	var matchIndexList = make([]MatchIndex, 0)
+	sc := NewSubCompare(maxCompareDialogue)
 	// 开始比较相似度，默认认为是 Ch_en 就行了
 	for srcIndex, srcOneDialogueEx := range infoSrc.DialoguesEx {
 
@@ -102,7 +111,7 @@ func GetOffsetTime(baseEngSubFPath, srcSubFPath string) (time.Duration, error) {
 		}
 		// run the query through the same pipeline that was fitted to the corpus and
 		// to project it into the same dimensional space
-		queryVector, err := pipline.Transform(srcOneDialogueEx.EnLine)
+		queryVector, err := pipLine.Transform(srcOneDialogueEx.EnLine)
 		if err != nil {
 			return 0, err
 		}
@@ -131,33 +140,25 @@ func GetOffsetTime(baseEngSubFPath, srcSubFPath string) (time.Duration, error) {
 			}
 		}
 
-		println(fmt.Sprintf("Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
+		if sc.Add(baseIndex, srcIndex) == false {
+			sc.Clear()
+			continue
+		}
+		if sc.Check() == false {
+			continue
+		}
+
+		startBaseIndex, startSrcIndex := sc.GetStartIndex()
+		matchIndexList = append(matchIndexList, MatchIndex{
+			BaseNowIndex: startBaseIndex,
+			SrcNowIndex:  startSrcIndex,
+		})
+
+		println(fmt.Sprintf("Similarity: %f Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
+			highestSimilarity,
 			baseIndex, infoBase.DialoguesEx[baseIndex].StartTime, infoBase.DialoguesEx[baseIndex].EndTime, baseCorpus[baseIndex],
 			srcIndex, srcOneDialogueEx.StartTime, srcOneDialogueEx.EndTime, srcOneDialogueEx.EnLine))
 	}
 
 	return 0, nil
 }
-
-type StopWordsPair struct {
-	Name  string
-	Count int
-}
-
-type StopWordsPairList []StopWordsPair
-
-func (a StopWordsPairList) Len() int           { return len(a) }
-func (a StopWordsPairList) Less(i, j int) bool { return a[i].Count < a[j].Count }
-func (a StopWordsPairList) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func sortMapByValue(m map[string]int) StopWordsPairList {
-	p := make(StopWordsPairList, len(m))
-	i := 0
-	for k, v := range m {
-		p[i] = StopWordsPair{k, v}
-		i++
-	}
-	sort.Sort(sort.Reverse(p))
-	return p
-}
-
-var StopWords = []string{"a", "about", "above", "above", "across", "after", "afterwards", "again", "against", "all", "almost", "alone", "along", "already", "also", "although", "always", "am", "among", "amongst", "amoungst", "amount", "an", "and", "another", "any", "anyhow", "anyone", "anything", "anyway", "anywhere", "are", "around", "as", "at", "back", "be", "became", "because", "become", "becomes", "becoming", "been", "before", "beforehand", "behind", "being", "below", "beside", "besides", "between", "beyond", "bill", "both", "bottom", "but", "by", "call", "can", "cannot", "cant", "co", "con", "could", "couldnt", "cry", "de", "describe", "detail", "do", "done", "down", "due", "during", "each", "eg", "eight", "either", "eleven", "else", "elsewhere", "empty", "enough", "etc", "even", "ever", "every", "everyone", "everything", "everywhere", "except", "few", "fifteen", "fify", "fill", "find", "fire", "first", "five", "for", "former", "formerly", "forty", "found", "four", "from", "front", "full", "further", "get", "give", "go", "had", "has", "hasnt", "have", "he", "hence", "her", "here", "hereafter", "hereby", "herein", "hereupon", "hers", "herself", "him", "himself", "his", "how", "however", "hundred", "ie", "if", "in", "inc", "indeed", "interest", "into", "is", "it", "its", "itself", "keep", "last", "latter", "latterly", "least", "less", "ltd", "made", "many", "may", "me", "meanwhile", "might", "mill", "mine", "more", "moreover", "most", "mostly", "move", "much", "must", "my", "myself", "name", "namely", "neither", "never", "nevertheless", "next", "nine", "no", "nobody", "none", "noone", "nor", "not", "nothing", "now", "nowhere", "of", "off", "often", "on", "once", "one", "only", "onto", "or", "other", "others", "otherwise", "our", "ours", "ourselves", "out", "over", "own", "part", "per", "perhaps", "please", "put", "rather", "re", "same", "see", "seem", "seemed", "seeming", "seems", "serious", "several", "she", "should", "show", "side", "since", "sincere", "six", "sixty", "so", "some", "somehow", "someone", "something", "sometime", "sometimes", "somewhere", "still", "such", "system", "take", "ten", "than", "that", "the", "their", "them", "themselves", "then", "thence", "there", "thereafter", "thereby", "therefore", "therein", "thereupon", "these", "they", "thickv", "thin", "third", "this", "those", "though", "three", "through", "throughout", "thru", "thus", "to", "together", "too", "top", "toward", "towards", "twelve", "twenty", "two", "un", "under", "until", "up", "upon", "us", "very", "via", "was", "we", "well", "were", "what", "whatever", "when", "whence", "whenever", "where", "whereafter", "whereas", "whereby", "wherein", "whereupon", "wherever", "whether", "which", "while", "whither", "who", "whoever", "whole", "whom", "whose", "why", "will", "with", "within", "without", "would", "yet", "you", "your", "yours", "yourself", "yourselves"}
