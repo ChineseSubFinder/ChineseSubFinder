@@ -465,6 +465,7 @@ func (s Supplier) JugDownloadBtn(doc *goquery.Document) (bool, string) {
 
 	const btnDown0 = "#down"
 	const btnDown1 = "button.down"
+	const btnDown2 = "button.btn"
 	// 是否有下载按钮
 	hasDownBtn := true
 	downBtn := doc.Find(btnDown0)
@@ -480,9 +481,21 @@ func (s Supplier) JugDownloadBtn(doc *goquery.Document) (bool, string) {
 			hasDownBtn = false
 		} else {
 			hasDownBtn = true
+			return true, btnDown1
 		}
 	}
-	return hasDownBtn, btnDown1
+	// 新的一种下载按钮的判断
+	if hasDownBtn == false {
+		downBtn = doc.Find(btnDown2)
+		if len(downBtn.Nodes) < 1 {
+			hasDownBtn = false
+		} else {
+			hasDownBtn = true
+			return hasDownBtn, btnDown2
+		}
+	}
+
+	return false, btnDown1
 }
 
 func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWaterWall bool, btnElemenString string) (*HdContent, error) {

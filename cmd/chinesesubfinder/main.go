@@ -196,6 +196,8 @@ func DownLoadStart(httpProxy string) {
 		log.Errorln("RefreshEmbySubList", err)
 		return
 	}
+
+	rod_helper.Clear()
 }
 
 var (

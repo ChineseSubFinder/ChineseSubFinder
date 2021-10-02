@@ -44,3 +44,7 @@ func TestNewBrowserFromDocker(t *testing.T) {
 		_ = page.Close()
 	}()
 }
+
+func TestClear(t *testing.T) {
+	Clear()
+}
