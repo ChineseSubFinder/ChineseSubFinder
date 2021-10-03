@@ -3,6 +3,7 @@ package sub_timeline_fixer
 import (
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
@@ -152,13 +153,63 @@ func GetOffsetTime(baseEngSubFPath, srcSubFPath string) (time.Duration, error) {
 		matchIndexList = append(matchIndexList, MatchIndex{
 			BaseNowIndex: startBaseIndex,
 			SrcNowIndex:  startSrcIndex,
+			Similarity:   highestSimilarity,
 		})
 
-		println(fmt.Sprintf("Similarity: %f Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
-			highestSimilarity,
-			baseIndex, infoBase.DialoguesEx[baseIndex].StartTime, infoBase.DialoguesEx[baseIndex].EndTime, baseCorpus[baseIndex],
-			srcIndex, srcOneDialogueEx.StartTime, srcOneDialogueEx.EndTime, srcOneDialogueEx.EnLine))
+		//println(fmt.Sprintf("Similarity: %f Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
+		//	highestSimilarity,
+		//	baseIndex, infoBase.DialoguesEx[baseIndex].StartTime, infoBase.DialoguesEx[baseIndex].EndTime, baseCorpus[baseIndex],
+		//	srcIndex, srcOneDialogueEx.StartTime, srcOneDialogueEx.EndTime, srcOneDialogueEx.EnLine))
+	}
+	println("---------------------------------------------")
+	timeFormat := ""
+	if infoBase.Ext == common.SubExtASS || infoBase.Ext == common.SubExtSSA {
+		timeFormat = timeFormatAss
+	} else {
+		timeFormat = timeFormatSrt
+	}
+	// 上面找出了连续匹配 maxCompareDialogue：N 次的字幕语句块
+	for _, matchIndexItem := range matchIndexList {
+
+		for i := 0; i < maxCompareDialogue; i++ {
+
+			tmpBaseIndex := matchIndexItem.BaseNowIndex + i
+			tmpSrcIndex := matchIndexItem.SrcNowIndex + i
+
+			srtTimeStart, err := time.Parse(timeFormat, infoSrc.DialoguesEx[tmpSrcIndex].StartTime)
+			if err != nil {
+				println("srtTimeStart", err)
+				continue
+			}
+			srtTimeEnd, err := time.Parse(timeFormat, infoSrc.DialoguesEx[tmpSrcIndex].EndTime)
+			if err != nil {
+				println("srtTimeEnd", err)
+				continue
+			}
+			baseTimeStart, err := time.Parse(timeFormat, infoBase.DialoguesEx[tmpBaseIndex].StartTime)
+			if err != nil {
+				println("baseTimeStart", err)
+				continue
+			}
+			baseTimeEnd, err := time.Parse(timeFormat, infoBase.DialoguesEx[tmpBaseIndex].EndTime)
+			if err != nil {
+				println("baseTimeEnd", err)
+				continue
+			}
+
+			TimeDiffStart := baseTimeStart.Sub(srtTimeStart)
+			TimeDiffEnd := baseTimeEnd.Sub(srtTimeEnd)
+
+			println(fmt.Sprintf("Diff Start-End: %s - %s Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
+				TimeDiffStart, TimeDiffEnd,
+				tmpBaseIndex, infoBase.DialoguesEx[tmpBaseIndex].StartTime, infoBase.DialoguesEx[tmpBaseIndex].EndTime, baseCorpus[tmpBaseIndex],
+				tmpSrcIndex, infoSrc.DialoguesEx[tmpSrcIndex].StartTime, infoSrc.DialoguesEx[tmpSrcIndex].EndTime, infoSrc.DialoguesEx[tmpSrcIndex].EnLine))
+		}
+		println("---------------------------------------------")
 	}
 
 	return 0, nil
 }
+
+const timeFormatAss = "15:04:05.00"
+const timeFormatSrt = "15:04:05,000"
