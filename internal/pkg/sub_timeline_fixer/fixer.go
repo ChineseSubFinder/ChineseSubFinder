@@ -11,6 +11,7 @@ import (
 	"github.com/grd/stat"
 	"github.com/james-bowman/nlp"
 	"github.com/james-bowman/nlp/measures/pairwise"
+	"github.com/mndrix/tukey"
 	"gonum.org/v1/gonum/mat"
 	"strings"
 	"time"
@@ -166,6 +167,8 @@ func GetOffsetTime(baseEngSubFPath, srcSubFPath string) (time.Duration, error) {
 
 	var startDiffTimeLineData = make([]opts.LineData, 0)
 	var endDiffTimeLineData = make([]opts.LineData, 0)
+	var tmpStartDiffTime = make([]float64, 0)
+	var tmpEndDiffTime = make([]float64, 0)
 	var startDiffTimeList = make(stat.Float64Slice, 0)
 	var endDiffTimeList = make(stat.Float64Slice, 0)
 	var xAxis = make([]string, 0)
@@ -205,24 +208,68 @@ func GetOffsetTime(baseEngSubFPath, srcSubFPath string) (time.Duration, error) {
 			startDiffTimeLineData = append(startDiffTimeLineData, opts.LineData{Value: TimeDiffStart.Seconds()})
 			endDiffTimeLineData = append(endDiffTimeLineData, opts.LineData{Value: TimeDiffEnd.Seconds()})
 
+			tmpStartDiffTime = append(tmpStartDiffTime, TimeDiffStart.Seconds())
+			tmpEndDiffTime = append(tmpEndDiffTime, TimeDiffEnd.Seconds())
+
 			startDiffTimeList = append(startDiffTimeList, TimeDiffStart.Seconds())
 			endDiffTimeList = append(endDiffTimeList, TimeDiffEnd.Seconds())
 
 			xAxis = append(xAxis, fmt.Sprintf("%d_%d", mIndex, i))
 
-			println(fmt.Sprintf("Diff Start-End: %s - %s Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
-				TimeDiffStart, TimeDiffEnd,
-				tmpBaseIndex, infoBase.DialoguesEx[tmpBaseIndex].StartTime, infoBase.DialoguesEx[tmpBaseIndex].EndTime, infoBase.DialoguesEx[tmpBaseIndex].EnLine,
-				tmpSrcIndex, infoSrc.DialoguesEx[tmpSrcIndex].StartTime, infoSrc.DialoguesEx[tmpSrcIndex].EndTime, infoSrc.DialoguesEx[tmpSrcIndex].EnLine))
+			//println(fmt.Sprintf("Diff Start-End: %s - %s Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
+			//	TimeDiffStart, TimeDiffEnd,
+			//	tmpBaseIndex, infoBase.DialoguesEx[tmpBaseIndex].StartTime, infoBase.DialoguesEx[tmpBaseIndex].EndTime, infoBase.DialoguesEx[tmpBaseIndex].EnLine,
+			//	tmpSrcIndex, infoSrc.DialoguesEx[tmpSrcIndex].StartTime, infoSrc.DialoguesEx[tmpSrcIndex].EndTime, infoSrc.DialoguesEx[tmpSrcIndex].EnLine))
 		}
-		println("---------------------------------------------")
+		//println("---------------------------------------------")
 	}
 
-	mean := stat.Mean(startDiffTimeList)
-	sd := stat.Sd(startDiffTimeList)
+	oldMean := stat.Mean(startDiffTimeList)
+	oldSd := stat.Sd(startDiffTimeList)
+	newMean := -1.0
+	newSd := -1.0
+	per := 1.0
+
+	// 如果 SD 较大的时候才需要剔除
+	if oldSd > 0.1 {
+		var outliersMap = make(map[float64]int, 0)
+		outliers, _, _ := tukey.Outliers(0.1, tmpStartDiffTime)
+		for _, outlier := range outliers {
+			outliersMap[outlier] = 0
+		}
+		var newStartDiffTimeList = make([]float64, 0)
+		for _, f := range tmpStartDiffTime {
+
+			_, ok := outliersMap[f]
+			if ok == true {
+				continue
+			}
+
+			newStartDiffTimeList = append(newStartDiffTimeList, f)
+		}
+
+		orgLen := startDiffTimeList.Len()
+		startDiffTimeList = make(stat.Float64Slice, 0)
+		for _, f := range newStartDiffTimeList {
+			startDiffTimeList = append(startDiffTimeList, f)
+		}
+		newLen := startDiffTimeList.Len()
+
+		per = float64(newLen) / float64(orgLen)
+
+		newMean = stat.Mean(startDiffTimeList)
+		newSd = stat.Sd(startDiffTimeList)
+	}
+
+	if newMean == -1.0 {
+		newMean = oldMean
+	}
+	if newSd == -1.0 {
+		newSd = oldSd
+	}
 
 	err = SaveStaticLine("bar.html", infoBase.Name, infoSrc.Name,
-		mean, sd, xAxis,
+		per, oldMean, oldSd, newMean, newSd, xAxis,
 		startDiffTimeLineData, endDiffTimeLineData)
 	if err != nil {
 		return 0, err
