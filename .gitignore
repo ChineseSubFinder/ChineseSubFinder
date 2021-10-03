@@ -41,3 +41,4 @@
 /cmd/chinesesubfinder/Logs
 /cmd/chinesesubfinder/settings.db
 /TestData/FixTimeline/test
+/internal/pkg/sub_timeline_fixer/bar.html

@@ -38,7 +38,7 @@ func TestEmbyHelper_GetItemVideoInfo(t *testing.T) {
 	// 96564 -- The Bad Batch - S01E11
 	// R&M S05E10  2 org english, 5 简英 145499
 	// 基地 S01E03 166840
-	videoInfo, err := em.GetItemVideoInfo("166840")
+	videoInfo, err := em.GetItemVideoInfo("145499")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,8 +86,9 @@ func TestEmbyApi_GetSubFileData(t *testing.T) {
 	// R&M S05E10  2 org english, 5 简英					"145499", "c4678509adb72a8b5034bdac2f1fccde", "5", ".ass"
 	// 基地 S01E03		2=eng 	6=chi 	45=简英			"166840", "d6c68ec6097aeceb9f5c1d82add66213", "2", ".ass"
 
+	subFileData, err := em.GetSubFileData("145499", "c4678509adb72a8b5034bdac2f1fccde", "4", ".ass")
 	//subFileData, err := em.GetSubFileData("145499", "c4678509adb72a8b5034bdac2f1fccde", "5", ".ass")
-	subFileData, err := em.GetSubFileData("166840", "d6c68ec6097aeceb9f5c1d82add66213", "45", ".ass")
+	//subFileData, err := em.GetSubFileData("166840", "d6c68ec6097aeceb9f5c1d82add66213", "45", ".ass")
 	if err != nil {
 		t.Fatal(err)
 	}

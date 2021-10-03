@@ -13,10 +13,11 @@ require (
 	github.com/bodgit/sevenzip v1.1.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-creed/sat v1.0.3
+	github.com/go-echarts/go-echarts/v2 v2.2.4
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/go-rod/rod v0.101.7
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/james-bowman/nlp v0.0.0-20210511120306-26d441fa0ded // indirect
+	github.com/james-bowman/nlp v0.0.0-20210511120306-26d441fa0ded
 	github.com/james-bowman/sparse v0.0.0-20210729090128-1e6c7dd483e9 // indirect
 	github.com/jinzhu/now v1.1.2
 	github.com/jonboulle/clockwork v0.2.2 // indirect
@@ -32,7 +33,6 @@ require (
 	github.com/nzlov/chardet v0.0.0-20190815145004-022cbcf483f9
 	github.com/panjf2000/ants/v2 v2.4.5
 	github.com/pelletier/go-toml v1.8.1 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca
 	github.com/sirupsen/logrus v1.8.1
@@ -49,7 +49,7 @@ require (
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
 	golang.org/x/sys v0.0.0-20210616094352-59db8d763f22 // indirect
 	golang.org/x/text v0.3.6
-	gonum.org/v1/gonum v0.9.3 // indirect
+	gonum.org/v1/gonum v0.9.3
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/errgo.v2 v2.1.0
 	gopkg.in/ini.v1 v1.62.0 // indirect
