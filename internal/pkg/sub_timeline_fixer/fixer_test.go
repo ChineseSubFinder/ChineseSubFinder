@@ -47,22 +47,38 @@ func TestGetOffsetTime(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	//enSubFile := path.Join(testRootDir, "R&M S05E01 - English.srt")
-	//ch_enSubFile := path.Join(testRootDir, "R&M S05E01 - 简英.srt")
+	enSubFile := path.Join(testRootDir, "R&M S05E01 - English.srt")
+	ch_enSubFile := path.Join(testRootDir, "R&M S05E01 - 简英.srt")
 
 	//enSubFile := path.Join(testRootDir, "R&M S05E10 - English.ass")
 	//ch_enSubFile := path.Join(testRootDir, "R&M S05E10 - 简英.ass")
 	//ch_enSubFile := path.Join(testRootDir, "R&M S05E10 - 简英-shooter.ass")
 
-	enSubFile := path.Join(testRootDir, "基地 S01E03 - English.ass")
-	ch_enSubFile := path.Join(testRootDir, "基地 S01E03 - 简英.ass")
+	//enSubFile := path.Join(testRootDir, "基地 S01E03 - English.ass")
+	//ch_enSubFile := path.Join(testRootDir, "基地 S01E03 - 简英.ass")
 
-	time, err := GetOffsetTime(enSubFile, ch_enSubFile)
+	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
+	bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(enSubFile)
 	if err != nil {
-		return
+		t.Fatal(err)
+	}
+	if bFind == false {
+		t.Fatal("sub not match")
+	}
+	bFind, infoSrc, err := subParserHub.DetermineFileTypeFromFile(ch_enSubFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bFind == false {
+		t.Fatal("sub not match")
 	}
 
-	print(time)
+	time, err := GetOffsetTime(infoBase, infoSrc, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	println(fmt.Sprintf("GetOffsetTime: %fs", time))
 }
 
 func TestTFIDF(t *testing.T) {

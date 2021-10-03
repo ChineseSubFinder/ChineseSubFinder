@@ -4,9 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/grd/stat"
 	"github.com/james-bowman/nlp"
@@ -64,23 +62,11 @@ func NewTFIDF(testCorpus []string) (*nlp.Pipeline, mat.Matrix, error) {
 }
 
 // GetOffsetTime 暂时只支持英文的基准字幕，源字幕必须是双语中英字幕
-func GetOffsetTime(baseEngSubFPath, srcSubFPath string) (time.Duration, error) {
-	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
-	bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(baseEngSubFPath)
-	if err != nil {
-		return 0, err
-	}
-	if bFind == false {
-		return 0, nil
-	}
-	bFind, infoSrc, err := subParserHub.DetermineFileTypeFromFile(srcSubFPath)
-	if err != nil {
-		return 0, err
-	}
-	if bFind == false {
-		return 0, nil
-	}
+func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFPath string) (float64, error) {
 
+	if staticLineFPath == "" {
+		staticLineFPath = "bar.html"
+	}
 	// 构建基准语料库，目前阶段只需要考虑是 En 的就行了
 	var baseCorpus = make([]string, 0)
 	for _, oneDialogueEx := range infoBase.DialoguesEx {
@@ -233,7 +219,7 @@ func GetOffsetTime(baseEngSubFPath, srcSubFPath string) (time.Duration, error) {
 	// 如果 SD 较大的时候才需要剔除
 	if oldSd > 0.1 {
 		var outliersMap = make(map[float64]int, 0)
-		outliers, _, _ := tukey.Outliers(0.1, tmpStartDiffTime)
+		outliers, _, _ := tukey.Outliers(0.3, tmpStartDiffTime)
 		for _, outlier := range outliers {
 			outliersMap[outlier] = 0
 		}
@@ -268,14 +254,14 @@ func GetOffsetTime(baseEngSubFPath, srcSubFPath string) (time.Duration, error) {
 		newSd = oldSd
 	}
 
-	err = SaveStaticLine("bar.html", infoBase.Name, infoSrc.Name,
+	err = SaveStaticLine(staticLineFPath, infoBase.Name, infoSrc.Name,
 		per, oldMean, oldSd, newMean, newSd, xAxis,
 		startDiffTimeLineData, endDiffTimeLineData)
 	if err != nil {
 		return 0, err
 	}
 
-	return 0, nil
+	return newMean, nil
 }
 
 const timeFormatAss = "15:04:05.00"
