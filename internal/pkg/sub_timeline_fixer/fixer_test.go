@@ -47,15 +47,15 @@ func TestGetOffsetTime(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	//enSubFile := path.Join(testRootDir, "R&M S05E01 - English.srt")
-	//ch_enSubFile := path.Join(testRootDir, "R&M S05E01 - 简英.srt")
+	enSubFile := path.Join(testRootDir, "R&M S05E01 - English.srt")
+	ch_enSubFile := path.Join(testRootDir, "R&M S05E01 - 简英.srt")
 
 	//enSubFile := path.Join(testRootDir, "R&M S05E10 - English.ass")
 	//ch_enSubFile := path.Join(testRootDir, "R&M S05E10 - 简英.ass")
 	//ch_enSubFile := path.Join(testRootDir, "R&M S05E10 - 简英-shooter.ass")
 
-	enSubFile := path.Join(testRootDir, "基地 S01E03 - English.ass")
-	ch_enSubFile := path.Join(testRootDir, "基地 S01E03 - 简英.ass")
+	//enSubFile := path.Join(testRootDir, "基地 S01E03 - English.ass")
+	//ch_enSubFile := path.Join(testRootDir, "基地 S01E03 - 简英.ass")
 
 	time, err := GetOffsetTime(enSubFile, ch_enSubFile)
 	if err != nil {
