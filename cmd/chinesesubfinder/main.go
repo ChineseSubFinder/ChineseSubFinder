@@ -210,4 +210,4 @@ var (
 	但是， goreleaser 却不支持这样，会提示源码被改了，无法进行编译发布
 	除非不发布编译还是 Linux 和 Windows 程序，这样就能做到 tag 与 程序内部输出版本一致。
 */
-const appVersion = "v0.17.2"
+const appVersion = "v0.17.4"

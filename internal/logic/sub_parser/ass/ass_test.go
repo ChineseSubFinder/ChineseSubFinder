@@ -26,7 +26,7 @@ func TestParser_DetermineFileTypeFromFile(t *testing.T) {
 		wantLang types.Language
 	}{
 		{name: "1", args: args{filePath: path.Join(testRootDir, "[xunlei]_0_C3A5CUsers5CAdministrator5CDesktop5CThe Boss Baby Family Business_S0E0.ass")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimpleEnglish},
-		{name: "2", args: args{filePath: path.Join(testRootDir, "Loki - S01E01 - Glorious Purpose WEBDL-1080p Proper.chs[subhd].ass")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimple},
+		{name: "2", args: args{filePath: path.Join(testRootDir, "Loki - S01E01 - Glorious Purpose WEBDL-1080p Proper.chs[subhd].ass")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimpleEnglish},
 		{name: "3", args: args{filePath: path.Join(testRootDir, "oslo.2021.1080p.web.h264-naisu.简体&英文.ass")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimpleEnglish},
 		{name: "4", args: args{filePath: path.Join(testRootDir, "oslo.2021.1080p.web.h264-naisu.繁体&英文.ass")}, wantNil: false, wantErr: false, wantLang: types.ChineseTraditionalEnglish},
 		{name: "5", args: args{filePath: path.Join(testRootDir, "oslo.2021.1080p.web.h264-naisu.繁体.ass")}, wantNil: false, wantErr: false, wantLang: types.ChineseTraditional},
@@ -48,7 +48,9 @@ func TestParser_DetermineFileTypeFromFile(t *testing.T) {
 			if got == nil && tt.wantNil == true {
 
 			} else if got != nil && tt.wantNil == false {
-
+				if got.Lang != tt.wantLang {
+					t.Fatal("not wanted lang")
+				}
 			} else {
 				t.Fatal("DetermineFileTypeFromFile got:", got, "wantNil:", tt.wantNil)
 			}

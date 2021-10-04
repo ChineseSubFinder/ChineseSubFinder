@@ -2,11 +2,11 @@ package srt
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"io/ioutil"
 	"path/filepath"
-	"regexp"
 	"strings"
 )
 
@@ -48,18 +48,15 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	allString := string(inBytes)
 	// 注意，需要替换掉 \r 不然正则表达式会有问题
 	allString = strings.ReplaceAll(allString, "\r", "")
-	re := regexp.MustCompile(regString)
+
 	// 找到 start end text
-	matched := re.FindAllStringSubmatch(allString, -1)
+	matched := sub_parser.ReMatchDialogueSRT.FindAllStringSubmatch(allString, -1)
 	if len(matched) < 1 {
 		return false, nil, nil
 	}
 	subFileInfo := subparser.FileInfo{}
 	subFileInfo.Ext = nowExt
 	subFileInfo.Dialogues = make([]subparser.OneDialogue, 0)
-
-	// 剔除 {\fn微软雅黑\fs14}C'mon, Rick. We're -- We're almost there. {} 这一段
-	var reFont = regexp.MustCompile(`(?m)^{\S*}`)
 	// 这里需要统计一共有几个 \N，以及这个数量在整体行数中的比例，这样就知道是不是双语字幕了
 	countLineFeed := 0
 	for _, oneDial := range matched {
@@ -79,7 +76,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 				countLineFeed++
 			}
 			// 剔除 {\fn微软雅黑\fs14}C'mon, Rick. We're -- We're almost there. {} 这一段
-			text = reFont.ReplaceAllString(text, "")
+			text = sub_parser.ReMatchBrace.ReplaceAllString(text, "")
 			text = strings.ReplaceAll(text, `\N`, "")
 			odl.Lines = append(odl.Lines, text)
 		}
@@ -107,5 +104,3 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	subFileInfo.OtherLines = otherLines
 	return true, &subFileInfo, nil
 }
-
-const regString = `(\d+)\n([\d:,]+)\s+-{2}\>\s+([\d:,]+)\n([\s\S]*?(\n{2}|$))`

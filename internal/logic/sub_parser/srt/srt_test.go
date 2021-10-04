@@ -26,6 +26,7 @@ func TestParser_DetermineFileType(t *testing.T) {
 	}{
 		{name: "1", args: args{filePath: path.Join(testRootDir, "[zimuku]_5_Loki.S01E02.The.Variant.1080p.DSNP.WEB-DL.DDP5.1.Atmos.H.264-CM.chs&eng.srt")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimpleEnglish},
 		{name: "2", args: args{filePath: path.Join(testRootDir, "[zimuku]_5_Loki.S01E03.Lamentis.1080p.DSNP.WEB-DL.DDP5.1.H.264-TOMMY.chs&eng.srt")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimpleEnglish},
+		{name: "3", args: args{filePath: path.Join(testRootDir, "Bridge of Spies (2015) (1080p BluRay x265 Silence).zh-cn.srt")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimpleEnglish},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -45,6 +46,9 @@ func TestParser_DetermineFileType(t *testing.T) {
 
 			} else if got != nil && tt.wantNil == false {
 
+				if got.Lang != tt.wantLang {
+					t.Fatal("not wanted lang")
+				}
 			} else {
 				t.Fatal("DetermineFileTypeFromFile got:", got, "wantNil:", tt.wantNil)
 			}

@@ -264,5 +264,14 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFPath string
 	return newMean, nil
 }
 
+// FixSubTimeline 校正时间轴
+func FixSubTimeline(infoSrc *subparser.FileInfo, offsetTime float64, desSaveSubFPath string) {
+
+	/*
+		从解析的实例中，正常来说是可以匹配出所有的 Dialogue 对话的 Start 和 End time 的信息
+		然后找到对应的字幕的文件，进行文件内容的替换来做时间轴的校正
+	*/
+}
+
 const timeFormatAss = "15:04:05.00"
 const timeFormatSrt = "15:04:05,000"

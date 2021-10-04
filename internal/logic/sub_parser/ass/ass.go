@@ -2,11 +2,11 @@ package ass
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"io/ioutil"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 )
@@ -48,9 +48,8 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	allString := string(inBytes)
 	// 注意，需要替换掉 \r 不然正则表达式会有问题
 	allString = strings.ReplaceAll(allString, "\r", "")
-	re := regexp.MustCompile(regString)
 	// 找到 start end text
-	matched := re.FindAllStringSubmatch(allString, -1)
+	matched := sub_parser.ReMatchDialogueASS.FindAllStringSubmatch(allString, -1)
 	if len(matched) < 1 {
 		return false, nil, nil
 	}
@@ -94,16 +93,14 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 		// nowText 优先移除 \h 这个是替换空格， \h 是让两个词在一行，不换行显示
 		nowText = strings.ReplaceAll(nowText, `\h`, " ")
 		// nowText 这个需要先把 {} 花括号内的内容给移除
-		var re = regexp.MustCompile(`(?m)((?i){[^}]*})`)
-		nowText1 := re.ReplaceAllString(nowText, "")
+		nowText1 := sub_parser.ReMatchBrace.ReplaceAllString(nowText, "")
 		nowText1 = strings.TrimRight(nowText1, "\r")
 		// 然后判断是否有 \N 或者 \n
 		// 直接把 \n 替换为 \N 来解析
 		nowText1 = strings.ReplaceAll(nowText1, `\n`, `\N`)
 		if strings.Contains(nowText1, `\N`) {
 			// 有，那么就需要再次切割，一般是双语字幕
-			var re2 = regexp.MustCompile(`(?i)(.*)\\N(.*)`)
-			for _, matched2 := range re2.FindAllStringSubmatch(nowText1, -1) {
+			for _, matched2 := range sub_parser.ReCutDoubleLanguage.FindAllStringSubmatch(nowText1, -1) {
 				for i, s := range matched2 {
 					if i == 0 {
 						continue
@@ -145,9 +142,6 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 }
 
 const (
-	// 字幕文件对话的每一行
-	//regString = `Dialogue: [^,.]*[0-9]*,([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),[^,.]*,[^,.]*,[0-9]*,[0-9]*,[0-9]*,[^,.]*,(.*)`
-	regString = `Dialogue: [^,.]*[0-9]*,([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([^,.]*),[^,.]*,[0-9]*,[0-9]*,[0-9]*,[^,.]*,(.*)`
 	// 匹配 ass 文件中的 Style 变量
 	regString4Style = `(?m)^Style:\s*(\w+),`
 )
