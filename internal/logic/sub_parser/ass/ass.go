@@ -71,6 +71,26 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 			nameMap[nowStyleName]++
 		}
 	}
+	/*
+		现在可能会遇到两种可能出现的双语字幕：
+		1.
+			一个 Dialogue 中，直接描述两个语言
+		2.
+			排序的目标是找出 Name 有几种，一般来说都是 Default 一种
+			但是目前也会有用这个 Name 来做双语标记的
+			比如相同的时间点：一个 Name 是 Chs Subtitle
+							一个 Name 是 Eng Subtitle
+			那么排序来说，就应该是 Top1、2 两个
+
+		但是之前是为了剔除某一些特效动画，进行排序后只找 Top 1，但是遇到上面 2 的情况
+		解析就只读取到一个语言的字幕了
+
+		那么现在的解决方案就是，一开始先进行 Name 的统计。
+		然后统计是否有一个相同的时间段，出现了两个 Dialogue，比如：
+		0:01:01.00-0:01:11.00 这个时间段，一共有两个 Dialogue 使用了，然后需要统计这种情况占比所有的 Dialogue 的比例
+		如果比例很高，那么就认为是情况 2 的双语字幕
+		如果没有那么多，或者就没得。就任务是情况 1 的双语字幕，这个也不能说就是双语字幕，只不过走之前的逻辑就够了。
+	*/
 	mapByValue := sortMapByValue(nameMap)
 	// 先读取一次字幕文件
 	for _, oneLine := range matched {

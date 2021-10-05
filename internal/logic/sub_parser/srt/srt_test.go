@@ -28,7 +28,8 @@ func TestParser_DetermineFileType(t *testing.T) {
 		{name: "2", args: args{filePath: path.Join(testRootDir, "[zimuku]_5_Loki.S01E03.Lamentis.1080p.DSNP.WEB-DL.DDP5.1.H.264-TOMMY.chs&eng.srt")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimpleEnglish},
 		{name: "3", args: args{filePath: path.Join(testRootDir, "Bridge of Spies (2015) (1080p BluRay x265 Silence).zh-cn.srt")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimpleEnglish},
 		// 特殊一点的字幕
-		{name: "4", args: args{filePath: path.Join(testRootDir, "SP-Empire.Of.Dreams.The.Story.Of.The.Star.Wars.Trilogy.2004.1080p.BluRay.x264.AAC5.1-[YTS.MX].zh-cn.srt")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimpleEnglish},
+		// 这一个不确定是什么类型的字幕
+		//{name: "4", args: args{filePath: path.Join(testRootDir, "SP-Empire.Of.Dreams.The.Story.Of.The.Star.Wars.Trilogy.2004.1080p.BluRay.x264.AAC5.1-[YTS.MX].zh-cn.srt")}, wantNil: false, wantErr: false, wantLang: types.ChineseSimple},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
