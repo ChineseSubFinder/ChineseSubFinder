@@ -2,6 +2,11 @@ package sub_parser
 
 import "regexp"
 
+const (
+	// 匹配 ass 文件中的 Style 变量
+	regString4Style = `(?m)^Style:\s*(\w+),`
+)
+
 // ReMatchBrace 匹配花括号中的内容
 var ReMatchBrace = regexp.MustCompile(`(?m)((?i){[^}]*})`)
 

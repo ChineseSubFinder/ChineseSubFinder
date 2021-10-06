@@ -11,13 +11,14 @@ require (
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
 	github.com/beevik/etree v1.1.0
 	github.com/bodgit/sevenzip v1.1.0
+	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-creed/sat v1.0.3
 	github.com/go-echarts/go-echarts/v2 v2.2.4
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/go-rod/rod v0.101.7
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/grd/stat v0.0.0-20130623202159-138af3fd5012 // indirect
+	github.com/grd/stat v0.0.0-20130623202159-138af3fd5012
 	github.com/james-bowman/nlp v0.0.0-20210511120306-26d441fa0ded
 	github.com/james-bowman/sparse v0.0.0-20210729090128-1e6c7dd483e9 // indirect
 	github.com/jinzhu/now v1.1.2
@@ -30,7 +31,7 @@ require (
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/middelink/go-parse-torrent-name v0.0.0-20190301154245-3ff4efacd4c4
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
-	github.com/mndrix/tukey v0.0.0-20160623155716-3069bc506243 // indirect
+	github.com/mndrix/tukey v0.0.0-20160623155716-3069bc506243
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/nzlov/chardet v0.0.0-20190815145004-022cbcf483f9
 	github.com/panjf2000/ants/v2 v2.4.5

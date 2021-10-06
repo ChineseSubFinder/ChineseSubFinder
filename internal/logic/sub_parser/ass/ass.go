@@ -5,9 +5,9 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"github.com/emirpasic/gods/maps/treemap"
 	"io/ioutil"
 	"path/filepath"
-	"sort"
 	"strings"
 )
 
@@ -59,7 +59,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	// 这里需要统计一共有几个 \N，以及这个数量在整体行数中的比例，这样就知道是不是双语字幕了
 	countLineFeed := 0
 	// 有意义的对话统计数，排除 Style 类型
-	usefullDialogueCount := 0
+	usefullyDialogueCount := 0
 	// 先进行字幕 StyleName 的出现次数排序，找到最多的，就是常规字幕的，不是特效的
 	var nameMap = make(map[string]int)
 	for _, oneLine := range matched {
@@ -92,51 +92,12 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 		如果没有那么多，或者就没得。就任务是情况 1 的双语字幕，这个也不能说就是双语字幕，只不过走之前的逻辑就够了。
 	*/
 	mapByValue := sortMapByValue(nameMap)
-	// 先读取一次字幕文件
-	for _, oneLine := range matched {
-		// 排除特效内容，只统计有意义的对话部分
-		if strings.Contains(oneLine[0], mapByValue[0].Name) == false {
-			continue
-		}
-		usefullDialogueCount++
-
-		startTime := oneLine[1]
-		endTime := oneLine[2]
-		nowStyleName := oneLine[3]
-		nowText := oneLine[4]
-		odl := subparser.OneDialogue{
-			StyleName: nowStyleName,
-			StartTime: startTime,
-			EndTime:   endTime,
-		}
-		odl.Lines = make([]string, 0)
-		// nowText 优先移除 \h 这个是替换空格， \h 是让两个词在一行，不换行显示
-		nowText = strings.ReplaceAll(nowText, `\h`, " ")
-		// nowText 这个需要先把 {} 花括号内的内容给移除
-		nowText1 := sub_parser.ReMatchBrace.ReplaceAllString(nowText, "")
-		nowText1 = strings.TrimRight(nowText1, "\r")
-		// 然后判断是否有 \N 或者 \n
-		// 直接把 \n 替换为 \N 来解析
-		nowText1 = strings.ReplaceAll(nowText1, `\n`, `\N`)
-		if strings.Contains(nowText1, `\N`) {
-			// 有，那么就需要再次切割，一般是双语字幕
-			for _, matched2 := range sub_parser.ReCutDoubleLanguage.FindAllStringSubmatch(nowText1, -1) {
-				for i, s := range matched2 {
-					if i == 0 {
-						continue
-					}
-					s = strings.ReplaceAll(s, `\N`, "")
-					odl.Lines = append(odl.Lines, s)
-				}
-			}
-			countLineFeed++
-		} else {
-			// 无，则可以直接添加
-			nowText1 = strings.ReplaceAll(nowText1, `\N`, "")
-			odl.Lines = append(odl.Lines, nowText1)
-		}
-
-		subFileInfo.Dialogues = append(subFileInfo.Dialogues, odl)
+	if p.detectOneOrTwoLineDialogue(matched) == true {
+		// 情况1
+		usefullyDialogueCount, countLineFeed = p.oneLineSubDialogueParser1(matched, mapByValue, &subFileInfo)
+	} else {
+		// 情况2
+		usefullyDialogueCount, countLineFeed = p.oneLineSubDialogueParser2(matched, mapByValue, &subFileInfo)
 	}
 	// 再分析
 	// 需要判断每一个 Line 是啥语言，[语言的code]次数
@@ -148,11 +109,13 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	var otherLines = make([]string, 0)
 	// 抽取出来的对话数组，为了后续用来匹配和修改时间轴
 	var usefulDialogueExs = make([]subparser.OneDialogueEx, 0)
+	// 在这之前需要把 subFileInfo.Dialogues 的内容填好，Lines 这里如果是单种语言应该就是一个元素，如果是双语就需要拆分成两个元素
+	// 这样向后传递就简单了，也统一了
 	for _, dialogue := range subFileInfo.Dialogues {
 		language.DetectSubLangAndStatistics(dialogue, langDict, &usefulDialogueExs, &chLines, &otherLines)
 	}
 	// 从统计出来的字典，找出 Top 1 或者 2 的出来，然后计算出是什么语言的字幕
-	detectLang := language.SubLangStatistics2SubLangType(float32(countLineFeed), float32(usefullDialogueCount), langDict, chLines)
+	detectLang := language.SubLangStatistics2SubLangType(float32(countLineFeed), float32(usefullyDialogueCount), langDict, chLines)
 	subFileInfo.Lang = detectLang
 	subFileInfo.Data = inBytes
 	subFileInfo.DialoguesEx = usefulDialogueExs
@@ -161,27 +124,144 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	return true, &subFileInfo, nil
 }
 
-const (
-	// 匹配 ass 文件中的 Style 变量
-	regString4Style = `(?m)^Style:\s*(\w+),`
-)
+// oneLineSubDialogueParser1 情况 1 时候的解析器
+func (p Parser) oneLineSubDialogueParser1(matched [][]string, mapByValue StyleNameInfos, subFileInfo *subparser.FileInfo) (int, int) {
 
-type StyleNameInfo struct {
-	Name  string
-	Count int
-}
-type StyleNameInfos []StyleNameInfo
+	var countLineFeed = 0
+	var usefullyDialogueCount = 0
+	// 先读取一次字幕文件
+	for _, oneLine := range matched {
+		// 排除特效内容，只统计有意义的对话部分
+		if strings.Contains(oneLine[0], mapByValue[0].Name) == false {
+			continue
+		}
+		usefullyDialogueCount++
 
-func (a StyleNameInfos) Len() int           { return len(a) }
-func (a StyleNameInfos) Less(i, j int) bool { return a[i].Count < a[j].Count }
-func (a StyleNameInfos) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func sortMapByValue(m map[string]int) StyleNameInfos {
-	p := make(StyleNameInfos, len(m))
-	i := 0
-	for k, v := range m {
-		p[i] = StyleNameInfo{k, v}
-		i++
+		startTime := oneLine[1]
+		endTime := oneLine[2]
+		nowStyleName := oneLine[3]
+		nowText := oneLine[4]
+		odl := subparser.OneDialogue{
+			StyleName: nowStyleName,
+			StartTime: startTime,
+			EndTime:   endTime,
+		}
+		odl.Lines = make([]string, 0)
+		countLineFeed = p.parseOneDialogueText(nowText, &odl, countLineFeed)
+
+		subFileInfo.Dialogues = append(subFileInfo.Dialogues, odl)
 	}
-	sort.Sort(sort.Reverse(p))
-	return p
+	return usefullyDialogueCount, countLineFeed
+}
+
+// oneLineSubDialogueParser2 情况 2 时候的解析器
+func (p Parser) oneLineSubDialogueParser2(matched [][]string, mapByValue StyleNameInfos, subFileInfo *subparser.FileInfo) (int, int) {
+
+	var countLineFeed = 0
+	var usefullyDialogueCount = 0
+	//var timeMap = make(map[string]subparser.OneDialogue, 0)
+	// 更换数据结构的原因是为了能够使用顺序，go 内置的 map 不是顺序的，是随机的，会导致后续的逻辑出问题
+	var timeMap = treemap.NewWithStringComparator()
+	// 先读取一次字幕文件
+	for _, oneLine := range matched {
+
+		usefullyDialogueCount++
+		// 这里可能会统计到特效的部分，但是这里忽略这个问题，因为目标不是这个
+		// 统计 Dialogue 的开始和结束时间
+		startTime := oneLine[1]
+		endTime := oneLine[2]
+		nowStyleName := oneLine[3]
+		nowText := oneLine[4]
+		mergeTime := startTime + "_" + endTime
+		value, ok := timeMap.Get(mergeTime)
+		if ok == false {
+			// 首次新增
+			odl := subparser.OneDialogue{
+				StyleName: nowStyleName,
+				StartTime: startTime,
+				EndTime:   endTime,
+			}
+			odl.Lines = make([]string, 0)
+			countLineFeed = p.parseOneDialogueText(nowText, &odl, countLineFeed)
+			timeMap.Put(mergeTime, odl)
+		} else {
+			// 双语
+			odl := value.(subparser.OneDialogue)
+			countLineFeed = p.parseOneDialogueText(nowText, &odl, countLineFeed)
+			timeMap.Put(mergeTime, odl)
+		}
+	}
+
+	for _, value := range timeMap.Values() {
+		odl := value.(subparser.OneDialogue)
+		subFileInfo.Dialogues = append(subFileInfo.Dialogues, odl)
+	}
+
+	return usefullyDialogueCount, countLineFeed
+}
+
+// parseOneDialogueText 对话的对白内容解析
+func (p Parser) parseOneDialogueText(nowText string, odl *subparser.OneDialogue, countLineFeed int) int {
+	// nowText 优先移除 \h 这个是替换空格， \h 是让两个词在一行，不换行显示
+	nowText = strings.ReplaceAll(nowText, `\h`, " ")
+	// nowText 这个需要先把 {} 花括号内的内容给移除
+	nowText1 := sub_parser.ReMatchBrace.ReplaceAllString(nowText, "")
+	nowText1 = strings.TrimRight(nowText1, "\r")
+	// 然后判断是否有 \N 或者 \n
+	// 直接把 \n 替换为 \N 来解析
+	nowText1 = strings.ReplaceAll(nowText1, `\n`, `\N`)
+	if strings.Contains(nowText1, `\N`) {
+		// 有，那么就需要再次切割，一般是双语字幕
+		for _, matched2 := range sub_parser.ReCutDoubleLanguage.FindAllStringSubmatch(nowText1, -1) {
+			for i, s := range matched2 {
+				if i == 0 {
+					continue
+				}
+				s = strings.ReplaceAll(s, `\N`, "")
+				odl.Lines = append(odl.Lines, s)
+			}
+		}
+		countLineFeed++
+	} else {
+		// 无，则可以直接添加
+		nowText1 = strings.ReplaceAll(nowText1, `\N`, "")
+		odl.Lines = append(odl.Lines, nowText1)
+	}
+	return countLineFeed
+}
+
+// detectOneOrTwoLineDialogue 优先检测一次字幕文件，可能存在的双语字幕的情况，是 1 还是 2 ，详细解释看调用此函数前的解释
+func (p Parser) detectOneOrTwoLineDialogue(matched [][]string) bool {
+	/*
+		这里判断的方法粗暴一点，直接判断两个 Dialogue 都是一个时间段的比例是多少，达到了就是情况2，不是就是情况1
+	*/
+	allDialogue := len(matched)
+	twoLine := 0
+	var timeMap = make(map[string]int, 0)
+	// 先读取一次字幕文件
+	for _, oneLine := range matched {
+		// 这里可能会统计到特效的部分，但是这里忽略这个问题，因为目标不是这个
+		// 统计 Dialogue 的开始和结束时间
+		startTime := oneLine[1]
+		endTime := oneLine[2]
+
+		mergeTime := startTime + "_" + endTime
+		_, ok := timeMap[mergeTime]
+		if ok == false {
+			timeMap[mergeTime] = 1
+		} else {
+			timeMap[mergeTime]++
+			if timeMap[mergeTime] == 2 {
+				twoLine++
+			}
+		}
+	}
+	// 目前看到的文件大概再 47% 以上，考虑到更多的“注释”、“特效”,至少有 38% 就够了
+	per := float64(twoLine) / float64(allDialogue)
+	if per > 0.38 {
+		// 使用情况2的字幕分析方式
+		return false
+	}
+	// 使用情况1的字幕分析方式
+	return true
 }
