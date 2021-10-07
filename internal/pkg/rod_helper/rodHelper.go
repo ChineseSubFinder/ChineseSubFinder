@@ -116,12 +116,12 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 // ReloadBrowser 提前把浏览器下载好
 func ReloadBrowser() {
 	newBrowser, err := NewBrowser("", true)
-	if err != nil {
-		return
-	}
 	defer func() {
 		_ = newBrowser.Close()
 	}()
+	if err != nil {
+		return
+	}
 	page, err := NewPageNavigate(newBrowser, "https://www.baidu.com", 30*time.Second, 5)
 	if err != nil {
 		return
