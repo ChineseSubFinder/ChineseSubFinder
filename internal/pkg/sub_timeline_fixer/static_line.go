@@ -15,7 +15,7 @@ func SaveStaticLine(saveFPath string, infoBaseName, infoSrcName string,
 	// 2.设置 标题 和 子标题
 	bar.SetGlobalOptions(charts.WithTitleOpts(opts.Title{
 		Title:    infoBaseName + " <-->" + infoSrcName,
-		Subtitle: fmt.Sprintf("One Dialogue Start-End(Blue and Green) Base -> Src Start (newLen / orgLen = %f) OldMean: %f OldSD: %f -- NewMean: %f NewSD: %f", per, oldMean, OldSd, NewMean, NewSd),
+		Subtitle: fmt.Sprintf("One Dialogue Start-End(Blue and Green) Base -> Src Start (newLen / orgLen = %f) \r\nOldMean: %f OldSD: %f -- NewMean: %f NewSD: %f", per, oldMean, OldSd, NewMean, NewSd),
 	}))
 
 	// 3.设置 数据组

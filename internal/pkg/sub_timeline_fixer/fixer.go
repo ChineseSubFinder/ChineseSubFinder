@@ -151,23 +151,19 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFPath string
 
 			baseTimeStart, err := time.Parse(timeFormat, infoBase.DialoguesEx[tmpBaseIndex].StartTime)
 			if err != nil {
-				println("baseTimeStart", err)
-				continue
+				return 0, err
 			}
 			baseTimeEnd, err := time.Parse(timeFormat, infoBase.DialoguesEx[tmpBaseIndex].EndTime)
 			if err != nil {
-				println("baseTimeEnd", err)
-				continue
+				return 0, err
 			}
 			srtTimeStart, err := time.Parse(timeFormat, infoSrc.DialoguesEx[tmpSrcIndex].StartTime)
 			if err != nil {
-				println("srtTimeStart", err)
-				continue
+				return 0, err
 			}
 			srtTimeEnd, err := time.Parse(timeFormat, infoSrc.DialoguesEx[tmpSrcIndex].EndTime)
 			if err != nil {
-				println("srtTimeEnd", err)
-				continue
+				return 0, err
 			}
 
 			TimeDiffStart := baseTimeStart.Sub(srtTimeStart)
