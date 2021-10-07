@@ -1,13 +1,11 @@
 package sub_timeline_fixer
 
 import (
-	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/grd/stat"
-	"github.com/james-bowman/nlp"
 	"github.com/james-bowman/nlp/measures/pairwise"
 	"github.com/mndrix/tukey"
 	"gonum.org/v1/gonum/mat"
@@ -43,22 +41,6 @@ func StopWordCounter(inString string, per int) []string {
 	}
 
 	return stopWords
-}
-
-// NewTFIDF 初始化 TF-IDF
-func NewTFIDF(testCorpus []string) (*nlp.Pipeline, mat.Matrix, error) {
-	newCountVectoriser := nlp.NewCountVectoriser(StopWords...)
-	transformer := nlp.NewTfidfTransformer()
-	// set k (the number of dimensions following truncation) to 4
-	reducer := nlp.NewTruncatedSVD(4)
-	lsiPipeline := nlp.NewPipeline(newCountVectoriser, transformer, reducer)
-	// Transform the corpus into an LSI fitting the model to the documents in the process
-	lsi, err := lsiPipeline.FitTransform(testCorpus...)
-	if err != nil {
-		return nil, lsi, errors.New(fmt.Sprintf("Failed to process testCorpus documents because %v", err))
-	}
-
-	return lsiPipeline, lsi, nil
 }
 
 // GetOffsetTime 暂时只支持英文的基准字幕，源字幕必须是双语中英字幕
@@ -271,6 +253,7 @@ func FixSubTimeline(infoSrc *subparser.FileInfo, offsetTime float64, desSaveSubF
 		从解析的实例中，正常来说是可以匹配出所有的 Dialogue 对话的 Start 和 End time 的信息
 		然后找到对应的字幕的文件，进行文件内容的替换来做时间轴的校正
 	*/
+
 }
 
 const timeFormatAss = "15:04:05.00"
