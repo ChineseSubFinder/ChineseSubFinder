@@ -66,7 +66,8 @@ func TestEmbyHelper_UpdateVideoSubList(t *testing.T) {
 	// 96564 -- The Bad Batch - S01E11
 	// 81873 -- R&M - S05E01
 	// 145499 -- R&M - S05E10
-	err := em.UpdateVideoSubList("145499")
+	// 166840 -- 基地 S01E03
+	err := em.UpdateVideoSubList("166840")
 	if err != nil {
 		t.Fatal(err)
 	}

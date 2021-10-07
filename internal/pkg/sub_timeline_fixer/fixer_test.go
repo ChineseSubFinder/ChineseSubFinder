@@ -50,12 +50,12 @@ func TestGetOffsetTime(t *testing.T) {
 	//enSubFile := path.Join(testRootDir, "R&M S05E01 - English.srt")
 	//ch_enSubFile := path.Join(testRootDir, "R&M S05E01 - 简英.srt")
 
-	enSubFile := path.Join(testRootDir, "R&M S05E10 - English.ass")
-	ch_enSubFile := path.Join(testRootDir, "R&M S05E10 - 简英.ass")
+	//enSubFile := path.Join(testRootDir, "R&M S05E10 - English.ass")
+	//ch_enSubFile := path.Join(testRootDir, "R&M S05E10 - 简英.ass")
 	//ch_enSubFile := path.Join(testRootDir, "R&M S05E10 - 简英-shooter.ass")
 
-	//enSubFile := path.Join(testRootDir, "基地 S01E03 - English.ass")
-	//ch_enSubFile := path.Join(testRootDir, "基地 S01E03 - 简英.ass")
+	enSubFile := path.Join(testRootDir, "基地 S01E03 - English.ass")
+	ch_enSubFile := path.Join(testRootDir, "基地 S01E03 - 简英.ass")
 
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 	bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(enSubFile)
@@ -78,7 +78,7 @@ func TestGetOffsetTime(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = FixSubTimeline(infoSrc, time, "Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.chinese(简英,fix).ass")
+	err = FixSubTimeline(infoSrc, time, "Foundation (2021) - S01E03 - The Mathematician’s Ghost WEBDL-1080p.chinese(简英,fix).ass")
 	if err != nil {
 		t.Fatal(err)
 	}
