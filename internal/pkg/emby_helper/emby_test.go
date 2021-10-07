@@ -64,7 +64,9 @@ func TestEmbyHelper_UpdateVideoSubList(t *testing.T) {
 	em := NewEmbyHelper(pkg.GetConfig().EmbyConfig)
 	// 95813 -- 命运夜
 	// 96564 -- The Bad Batch - S01E11
-	err := em.UpdateVideoSubList("95813")
+	// 81873 -- R&M - S05E01
+	// 145499 -- R&M - S05E10
+	err := em.UpdateVideoSubList("145499")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,4 +96,13 @@ func TestEmbyApi_GetSubFileData(t *testing.T) {
 	}
 
 	println(subFileData)
+}
+
+func TestEmbyApi_RefreshRecentlyVideoInfo(t *testing.T) {
+
+	em := NewEmbyHelper(pkg.GetConfig().EmbyConfig)
+	err := em.RefreshRecentlyVideoInfo()
+	if err != nil {
+		t.Fatal("RefreshRecentlyVideoInfo() error = " + err.Error())
+	}
 }

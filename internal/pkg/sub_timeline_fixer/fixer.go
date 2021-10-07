@@ -9,6 +9,7 @@ import (
 	"github.com/james-bowman/nlp/measures/pairwise"
 	"github.com/mndrix/tukey"
 	"gonum.org/v1/gonum/mat"
+	"os"
 	"strings"
 	"time"
 )
@@ -44,10 +45,10 @@ func StopWordCounter(inString string, per int) []string {
 }
 
 // GetOffsetTime 暂时只支持英文的基准字幕，源字幕必须是双语中英字幕
-func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFPath string) (float64, error) {
+func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath string) (float64, error) {
 
-	if staticLineFPath == "" {
-		staticLineFPath = "bar.html"
+	if staticLineFileSavePath == "" {
+		staticLineFileSavePath = "bar.html"
 	}
 	// 构建基准语料库，目前阶段只需要考虑是 En 的就行了
 	var baseCorpus = make([]string, 0)
@@ -232,7 +233,7 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFPath string
 		newSd = oldSd
 	}
 
-	err = SaveStaticLine(staticLineFPath, infoBase.Name, infoSrc.Name,
+	err = SaveStaticLine(staticLineFileSavePath, infoBase.Name, infoSrc.Name,
 		per, oldMean, oldSd, newMean, newSd, xAxis,
 		startDiffTimeLineData, endDiffTimeLineData)
 	if err != nil {
@@ -243,13 +244,51 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFPath string
 }
 
 // FixSubTimeline 校正时间轴
-func FixSubTimeline(infoSrc *subparser.FileInfo, offsetTime float64, desSaveSubFPath string) {
+func FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) error {
 
 	/*
 		从解析的实例中，正常来说是可以匹配出所有的 Dialogue 对话的 Start 和 End time 的信息
 		然后找到对应的字幕的文件，进行文件内容的替换来做时间轴的校正
 	*/
+	// 偏移时间
+	offsetTime := time.Duration(inOffsetTime*1000) * time.Millisecond
+	timeFormat := ""
+	if infoSrc.Ext == common.SubExtASS || infoSrc.Ext == common.SubExtSSA {
+		timeFormat = timeFormatAss
+	} else {
+		timeFormat = timeFormatSrt
+	}
+	fixContent := infoSrc.Content
+	for _, srcOneDialogue := range infoSrc.Dialogues {
 
+		timeStart, err := time.Parse(timeFormat, srcOneDialogue.StartTime)
+		if err != nil {
+			return err
+		}
+		timeEnd, err := time.Parse(timeFormat, srcOneDialogue.EndTime)
+		if err != nil {
+			return err
+		}
+
+		fixTimeStart := timeStart.Add(offsetTime)
+		fixTimeEnd := timeEnd.Add(offsetTime)
+
+		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.StartTime, fixTimeStart.Format(timeFormat))
+		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.EndTime, fixTimeEnd.Format(timeFormat))
+	}
+
+	dstFile, err := os.Create(desSaveSubFileFullPath)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = dstFile.Close()
+	}()
+	_, err = dstFile.WriteString(fixContent)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 const timeFormatAss = "15:04:05.00"

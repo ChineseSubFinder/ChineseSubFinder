@@ -27,7 +27,7 @@ func NewEmbyHelper(embyConfig emby.EmbyConfig) *EmbyApi {
 		em.embyConfig.LimitCount = common.EmbyApiGetItemsLimitMin
 	}
 	em.threads = 6
-	em.timeOut = 30 * time.Second
+	em.timeOut = 60 * time.Second
 	return &em
 }
 

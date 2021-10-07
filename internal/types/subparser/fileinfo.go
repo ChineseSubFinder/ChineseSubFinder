@@ -3,6 +3,7 @@ package subparser
 import "github.com/allanpk716/ChineseSubFinder/internal/types"
 
 type FileInfo struct {
+	Content       string          // 字幕的内容
 	FromWhereSite string          // 从那个网站下载的
 	Name          string          // 字幕的名称，注意，这里需要额外的赋值，不会自动检测
 	Ext           string          // 字幕的后缀名

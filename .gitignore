@@ -42,3 +42,5 @@
 /cmd/chinesesubfinder/settings.db
 /TestData/FixTimeline/test
 /internal/pkg/sub_timeline_fixer/bar.html
+/internal/pkg/sub_timeline_fixer/*.srt
+/internal/pkg/sub_timeline_fixer/*.ass
