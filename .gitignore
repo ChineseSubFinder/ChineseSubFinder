@@ -44,3 +44,6 @@
 /internal/pkg/sub_timeline_fixer/bar.html
 /internal/pkg/sub_timeline_fixer/*.srt
 /internal/pkg/sub_timeline_fixer/*.ass
+/internal/logic/sub_timeline_fixer/config.yaml
+/internal/pkg/emby_api/config.yaml
+

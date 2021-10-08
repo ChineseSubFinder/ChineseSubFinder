@@ -47,9 +47,6 @@ func StopWordCounter(inString string, per int) []string {
 // GetOffsetTime 暂时只支持英文的基准字幕，源字幕必须是双语中英字幕
 func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath string) (float64, error) {
 
-	if staticLineFileSavePath == "" {
-		staticLineFileSavePath = "bar.html"
-	}
 	// 构建基准语料库，目前阶段只需要考虑是 En 的就行了
 	var baseCorpus = make([]string, 0)
 	for _, oneDialogueEx := range infoBase.DialoguesEx {
@@ -127,6 +124,14 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath
 		//	baseIndex, infoBase.DialoguesEx[baseIndex].StartTime, infoBase.DialoguesEx[baseIndex].EndTime, baseCorpus[baseIndex],
 		//	srcIndex, srcOneDialogueEx.StartTime, srcOneDialogueEx.EndTime, srcOneDialogueEx.EnLine))
 	}
+
+	// 这里需要考虑，找到的连续 5 句话匹配的有多少句，占比整体所有的 Dialogue 是多少，太低也需要跳过
+	matchIndexLineCount := len(matchIndexList) * maxCompareDialogue
+	perMatch := float64(matchIndexLineCount) / float64(len(infoSrc.DialoguesEx))
+	if perMatch > 0.5 {
+
+	}
+
 	timeFormat := ""
 	if infoBase.Ext == common.SubExtASS || infoBase.Ext == common.SubExtSSA {
 		timeFormat = timeFormatAss
@@ -233,11 +238,15 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath
 		newSd = oldSd
 	}
 
-	err = SaveStaticLine(staticLineFileSavePath, infoBase.Name, infoSrc.Name,
-		per, oldMean, oldSd, newMean, newSd, xAxis,
-		startDiffTimeLineData, endDiffTimeLineData)
-	if err != nil {
-		return 0, err
+	// 不为空的时候，生成调试文件
+	if staticLineFileSavePath != "" {
+		//staticLineFileSavePath = "bar.html"
+		err = SaveStaticLine(staticLineFileSavePath, infoBase.Name, infoSrc.Name,
+			per, oldMean, oldSd, newMean, newSd, xAxis,
+			startDiffTimeLineData, endDiffTimeLineData)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	return newMean, nil

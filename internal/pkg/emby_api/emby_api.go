@@ -1,4 +1,4 @@
-package emby_helper
+package emby_api
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ type EmbyApi struct {
 	timeOut    time.Duration
 }
 
-func NewEmbyHelper(embyConfig emby.EmbyConfig) *EmbyApi {
+func NewEmbyApi(embyConfig emby.EmbyConfig) *EmbyApi {
 	em := EmbyApi{}
 	em.embyConfig = embyConfig
 	if em.embyConfig.LimitCount < common.EmbyApiGetItemsLimitMin ||
@@ -27,7 +27,7 @@ func NewEmbyHelper(embyConfig emby.EmbyConfig) *EmbyApi {
 		em.embyConfig.LimitCount = common.EmbyApiGetItemsLimitMin
 	}
 	em.threads = 6
-	em.timeOut = 60 * time.Second
+	em.timeOut = 5 * 60 * time.Second
 	return &em
 }
 
