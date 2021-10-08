@@ -100,31 +100,31 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	infoSrc.Name = ch_enSubFile.FileName
 
 	// 把原始的文件缓存下来
-	if pkg.IsDir(infoBase.Name) == false {
-		err = os.MkdirAll(infoBase.Name, os.ModePerm)
+	if pkg.IsDir(path.Join(tmpFolder, infoBase.Name)) == false {
+		err = os.MkdirAll(path.Join(tmpFolder, infoBase.Name), os.ModePerm)
 		if err != nil {
 			return false, err
 		}
 	}
-	offsetTime, err := sub_timeline_fixer.GetOffsetTime(infoBase, infoSrc, path.Join(infoBase.Name, "bar.html"))
+	offsetTime, err := sub_timeline_fixer.GetOffsetTime(infoBase, infoSrc, path.Join(tmpFolder, infoBase.Name, "bar.html"))
 	if err != nil {
 		return false, err
 	}
 	// 偏移很小就无视了
 	if offsetTime < 0.2 {
-		_ = pkg.ClearFolder(infoBase.Name)
+		_ = pkg.ClearFolder(path.Join(tmpFolder, infoBase.Name))
 		return false, nil
 	}
 
-	err = s.saveOrgSubFile(path.Join(infoBase.Name, infoBase.Name+infoBase.Ext), infoBase.Content)
+	err = s.saveOrgSubFile(path.Join(tmpFolder, infoBase.Name, infoBase.Name+infoBase.Ext), infoBase.Content)
 	if err != nil {
 		return false, err
 	}
-	err = s.saveOrgSubFile(path.Join(infoBase.Name, infoSrc.Name+infoSrc.Ext), infoSrc.Content)
+	err = s.saveOrgSubFile(path.Join(tmpFolder, infoBase.Name, infoSrc.Name+infoSrc.Ext), infoSrc.Content)
 	if err != nil {
 		return false, err
 	}
-	err = sub_timeline_fixer.FixSubTimeline(infoSrc, offsetTime, path.Join(infoBase.Name, infoBase.Name+".chinese(fix)"+ch_enSubFile.Ext))
+	err = sub_timeline_fixer.FixSubTimeline(infoSrc, offsetTime, path.Join(tmpFolder, infoBase.Name, infoBase.Name+".chinese(fix)"+ch_enSubFile.Ext))
 	if err != nil {
 		return false, err
 	}
@@ -147,3 +147,5 @@ func (s SubTimelineFixerHelper) saveOrgSubFile(desSaveSubFileFullPath string, co
 
 	return nil
 }
+
+const tmpFolder = "tmpSubFix"

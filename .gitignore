@@ -47,3 +47,4 @@
 /internal/logic/sub_timeline_fixer/config.yaml
 /internal/pkg/emby_api/config.yaml
 
+/internal/logic/sub_timeline_fixer/tmpSubFix
