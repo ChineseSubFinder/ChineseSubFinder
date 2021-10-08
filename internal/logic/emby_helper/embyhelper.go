@@ -27,7 +27,7 @@ func NewEmbyHelper(embyConfig emby.EmbyConfig) *EmbyHelper {
 	em := EmbyHelper{EmbyConfig: embyConfig}
 	em.embyApi = embyHelper.NewEmbyHelper(embyConfig)
 	em.threads = 6
-	em.timeOut = 5 * time.Second
+	em.timeOut = 60 * time.Second
 	return &em
 }
 
@@ -261,10 +261,10 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 			if info.VideoInfo.DateCreated.Add(dayRange7Days).After(currentTime) == false && haveInsideChineseSub == true {
 				continue
 			}
-			// 如果创建了三个月，还是没有字幕，那么也不进行下载了
-			if info.VideoInfo.DateCreated.Add(dayRange3Months).After(currentTime) == false {
-				continue
-			}
+			//// 如果创建了三个月，还是没有字幕，那么也不进行下载了
+			//if info.VideoInfo.DateCreated.Add(dayRange3Months).After(currentTime) == false {
+			//	continue
+			//}
 			// 没有中文字幕就加入下载列表
 			noSubVideoList = append(noSubVideoList, info)
 		} else {
