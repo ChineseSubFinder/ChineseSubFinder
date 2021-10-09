@@ -28,6 +28,7 @@ type SubFormatChanger struct {
 func NewSubFormatChanger(movieRootDir string, seriesRootDir string) *SubFormatChanger {
 
 	formatter := SubFormatChanger{movieRootDir: movieRootDir, seriesRootDir: seriesRootDir}
+	// TODO 如果字幕格式新增了实现，这里也需要添加对应的实例
 	// 初始化支持的 formatter
 	// normal
 	formatter.formatter = make(map[string]ifaces.ISubFormatter)

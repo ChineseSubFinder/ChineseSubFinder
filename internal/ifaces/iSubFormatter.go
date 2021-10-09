@@ -2,10 +2,12 @@ package ifaces
 
 import "github.com/allanpk716/ChineseSubFinder/internal/types"
 
+// ISubFormatter 如果新增了更多的字幕命名格式化的实现，需要找所有以下 to do 去增加实现
+// TODO 如果字幕格式新增了实现，这里也需要添加对应的实例
 type ISubFormatter interface {
 	// GetFormatterName 当前的 formatter 是那个
 	GetFormatterName() string
-	// 需要转换为 FormatterName 使用
+	// GetFormatterFormatterName 需要转换为 FormatterName 使用
 	GetFormatterFormatterName() int
 	// IsMatchThisFormat 是否满足当前实现接口的字幕命名格式 - 是否符合规则、fileNameWithOutExt string, subExt string, subLang types.Language, extraSubPreName string
 	IsMatchThisFormat(subName string) (bool, string, string, types.Language, string)

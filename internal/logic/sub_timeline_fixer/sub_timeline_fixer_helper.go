@@ -8,6 +8,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
+	formatterEmby "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/emby"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/normal"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
@@ -22,21 +24,31 @@ type SubTimelineFixerHelper struct {
 	embyHelper   *emby_helper.EmbyHelper
 	EmbyConfig   emby.EmbyConfig
 	subParserHub *sub_parser_hub.SubParserHub
-	subFormatter ifaces.ISubFormatter //	字幕格式化命名的实现
+	formatter    map[string]ifaces.ISubFormatter
 	threads      int
 	timeOut      time.Duration
 }
 
-func NewSubTimelineFixerHelper(embyConfig emby.EmbyConfig, inSubFormatter ifaces.ISubFormatter) *SubTimelineFixerHelper {
+func NewSubTimelineFixerHelper(embyConfig emby.EmbyConfig) *SubTimelineFixerHelper {
 	sub := SubTimelineFixerHelper{
 		EmbyConfig:   embyConfig,
 		embyHelper:   emby_helper.NewEmbyHelper(embyConfig),
 		embyApi:      embyHelper.NewEmbyApi(embyConfig),
 		subParserHub: sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
-		subFormatter: inSubFormatter,
+		formatter:    make(map[string]ifaces.ISubFormatter),
 		threads:      6,
 		timeOut:      60 * time.Second,
 	}
+	// TODO 如果字幕格式新增了实现，这里也需要添加对应的实例
+	// 初始化支持的 formatter
+	// normal
+	sub.formatter = make(map[string]ifaces.ISubFormatter)
+	normalM := normal.NewFormatter()
+	sub.formatter[normalM.GetFormatterName()] = normalM
+	// emby
+	embyM := formatterEmby.NewFormatter()
+	sub.formatter[embyM.GetFormatterName()] = embyM
+
 	return &sub
 }
 
@@ -133,15 +145,19 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 		return false, err
 	}
 	// 写入校准时间轴后的字幕
-	bMatch, fileNameWithOutExt, subExt, subLang, extraSubName := s.subFormatter.IsMatchThisFormat(infoSrc.Name)
-	if bMatch == false {
-		return false, nil
-	}
-	subNewName, _, _ := s.subFormatter.GenerateMixSubNameBase(fileNameWithOutExt, subExt, subLang, extraSubName+"-fix")
-	desFixSubFileFullPath := path.Join(cacheTmpPath, subNewName)
-	err = sub_timeline_fixer.FixSubTimeline(infoSrc, offsetTime, desFixSubFileFullPath)
-	if err != nil {
-		return false, err
+	for _, formatter := range s.formatter {
+		// 符合已知的字幕命名格式，不符合就跳过，都跳过也行，就不做任何操作而已
+		bMatch, fileNameWithOutExt, subExt, subLang, extraSubName := formatter.IsMatchThisFormat(infoSrc.Name)
+		if bMatch == false {
+			continue
+		}
+		// 生成对应字幕命名格式的，字幕命名。这里注意，normal 的时候， extraSubName+"-fix" 是无效的，不会被设置，也就是直接覆盖之前的字幕了。
+		subNewName, _, _ := formatter.GenerateMixSubNameBase(fileNameWithOutExt, subExt, subLang, extraSubName+"-fix")
+		desFixSubFileFullPath := path.Join(cacheTmpPath, subNewName)
+		err = sub_timeline_fixer.FixSubTimeline(infoSrc, offsetTime, desFixSubFileFullPath)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil
