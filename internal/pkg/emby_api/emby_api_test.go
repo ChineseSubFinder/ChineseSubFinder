@@ -39,7 +39,7 @@ func TestEmbyHelper_GetItemVideoInfo(t *testing.T) {
 	// R&M S05E10  2 org english, 5 简英 145499
 	// 基地 S01E03 166840
 	// 算牌人 166837
-	videoInfo, err := em.GetItemVideoInfo("166837")
+	videoInfo, err := em.GetItemVideoInfo("172412")
 	if err != nil {
 		t.Fatal(err)
 	}

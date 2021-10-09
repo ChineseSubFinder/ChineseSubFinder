@@ -2,6 +2,7 @@ package sub_timeline_fixer
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
@@ -12,6 +13,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"os"
 	"path"
+	"strings"
 	"time"
 )
 
@@ -20,16 +22,18 @@ type SubTimelineFixerHelper struct {
 	embyHelper   *emby_helper.EmbyHelper
 	EmbyConfig   emby.EmbyConfig
 	subParserHub *sub_parser_hub.SubParserHub
+	subFormatter ifaces.ISubFormatter //	字幕格式化命名的实现
 	threads      int
 	timeOut      time.Duration
 }
 
-func NewSubTimelineFixerHelper(embyConfig emby.EmbyConfig) *SubTimelineFixerHelper {
+func NewSubTimelineFixerHelper(embyConfig emby.EmbyConfig, inSubFormatter ifaces.ISubFormatter) *SubTimelineFixerHelper {
 	sub := SubTimelineFixerHelper{
 		EmbyConfig:   embyConfig,
 		embyHelper:   emby_helper.NewEmbyHelper(embyConfig),
 		embyApi:      embyHelper.NewEmbyApi(embyConfig),
 		subParserHub: sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
+		subFormatter: inSubFormatter,
 		threads:      6,
 		timeOut:      60 * time.Second,
 	}
@@ -99,32 +103,43 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	}
 	infoSrc.Name = ch_enSubFile.FileName
 
-	// 把原始的文件缓存下来
-	if pkg.IsDir(path.Join(tmpFolder, infoBase.Name)) == false {
-		err = os.MkdirAll(path.Join(tmpFolder, infoBase.Name), os.ModePerm)
+	infoBaseNameWithOutExt := strings.Replace(infoBase.Name, path.Ext(infoBase.Name), "", -1)
+	infoSrcNameWithOutExt := strings.Replace(infoSrc.Name, path.Ext(infoSrc.Name), "", -1)
+
+	// 把原始的文件缓存下来，新建缓存的文件夹
+	cacheTmpPath := path.Join(tmpFolder, infoBaseNameWithOutExt)
+	if pkg.IsDir(cacheTmpPath) == false {
+		err = os.MkdirAll(cacheTmpPath, os.ModePerm)
 		if err != nil {
 			return false, err
 		}
 	}
-	offsetTime, err := sub_timeline_fixer.GetOffsetTime(infoBase, infoSrc, path.Join(tmpFolder, infoBase.Name, "bar.html"))
+	offsetTime, err := sub_timeline_fixer.GetOffsetTime(infoBase, infoSrc, path.Join(cacheTmpPath, infoSrcNameWithOutExt+"-bar.html"))
 	if err != nil {
 		return false, err
 	}
 	// 偏移很小就无视了
-	if offsetTime < 0.2 {
-		_ = pkg.ClearFolder(path.Join(tmpFolder, infoBase.Name))
+	if offsetTime < 0.2 && offsetTime > -0.2 {
+		_ = os.RemoveAll(cacheTmpPath)
 		return false, nil
 	}
-
-	err = s.saveOrgSubFile(path.Join(tmpFolder, infoBase.Name, infoBase.Name+infoBase.Ext), infoBase.Content)
+	// 写入内置字幕、外置字幕原始文件
+	err = s.saveOrgSubFile(path.Join(cacheTmpPath, infoBaseNameWithOutExt+".chinese(inside)"+infoBase.Ext), infoBase.Content)
 	if err != nil {
 		return false, err
 	}
-	err = s.saveOrgSubFile(path.Join(tmpFolder, infoBase.Name, infoSrc.Name+infoSrc.Ext), infoSrc.Content)
+	err = s.saveOrgSubFile(path.Join(cacheTmpPath, infoSrc.Name), infoSrc.Content)
 	if err != nil {
 		return false, err
 	}
-	err = sub_timeline_fixer.FixSubTimeline(infoSrc, offsetTime, path.Join(tmpFolder, infoBase.Name, infoBase.Name+".chinese(fix)"+ch_enSubFile.Ext))
+	// 写入校准时间轴后的字幕
+	bMatch, fileNameWithOutExt, subExt, subLang, extraSubName := s.subFormatter.IsMatchThisFormat(infoSrc.Name)
+	if bMatch == false {
+		return false, nil
+	}
+	subNewName, _, _ := s.subFormatter.GenerateMixSubNameBase(fileNameWithOutExt, subExt, subLang, extraSubName+"-fix")
+	desFixSubFileFullPath := path.Join(cacheTmpPath, subNewName)
+	err = sub_timeline_fixer.FixSubTimeline(infoSrc, offsetTime, desFixSubFileFullPath)
 	if err != nil {
 		return false, err
 	}

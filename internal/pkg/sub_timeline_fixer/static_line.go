@@ -23,8 +23,14 @@ func SaveStaticLine(saveFPath string, infoBaseName, infoSrcName string,
 		AddSeries("Start Time Diff", startDiffTimeLineData).
 		AddSeries("End Time Diff", endDiffTimeLineData)
 	// 4.绘图 生成html
-	f, _ := os.Create(saveFPath)
-	err := bar.Render(f)
+	f, err := os.Create(saveFPath)
+	defer func() {
+		_ = f.Close()
+	}()
+	if err != nil {
+		return err
+	}
+	err = bar.Render(f)
 	if err != nil {
 		return err
 	}

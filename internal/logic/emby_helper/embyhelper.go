@@ -336,7 +336,7 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 				tmpFileName = strings.ReplaceAll(tmpFileName, types.Sub_Ext_Mark_Default, "")
 				tmpFileName = strings.ReplaceAll(tmpFileName, types.Sub_Ext_Mark_Forced, "")
 				tmpFileNameWithOutExt = strings.ReplaceAll(tmpFileName, path.Ext(tmpFileName), "")
-				exSubList = append(exSubList, *emby.NewSubInfo(tmpFileNameWithOutExt, "."+stream.Codec, stream.Index))
+				exSubList = append(exSubList, *emby.NewSubInfo(tmpFileNameWithOutExt+"."+stream.Codec, "."+stream.Codec, stream.Index))
 			} else {
 				continue
 			}
@@ -359,7 +359,7 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 		if err != nil {
 			return false, nil, nil, err
 		}
-		tmpInSubInfo := emby.NewSubInfo(videoFileNameWithOutExt, tmpExt, InsideEngSubIndex)
+		tmpInSubInfo := emby.NewSubInfo(videoFileNameWithOutExt+tmpExt, tmpExt, InsideEngSubIndex)
 		tmpInSubInfo.Content = []byte(subFileData)
 		inSubList = append(inSubList, *tmpInSubInfo)
 	}
