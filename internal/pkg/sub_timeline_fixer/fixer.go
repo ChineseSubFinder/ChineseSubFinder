@@ -253,7 +253,7 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath
 }
 
 // FixSubTimeline 校正时间轴
-func FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) error {
+func FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) (string, error) {
 
 	/*
 		从解析的实例中，正常来说是可以匹配出所有的 Dialogue 对话的 Start 和 End time 的信息
@@ -272,11 +272,11 @@ func FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSu
 
 		timeStart, err := time.Parse(timeFormat, srcOneDialogue.StartTime)
 		if err != nil {
-			return err
+			return "", err
 		}
 		timeEnd, err := time.Parse(timeFormat, srcOneDialogue.EndTime)
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		fixTimeStart := timeStart.Add(offsetTime)
@@ -288,16 +288,16 @@ func FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSu
 
 	dstFile, err := os.Create(desSaveSubFileFullPath)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer func() {
 		_ = dstFile.Close()
 	}()
 	_, err = dstFile.WriteString(fixContent)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return fixContent, nil
 }
 
 const timeFormatAss = "15:04:05.00"

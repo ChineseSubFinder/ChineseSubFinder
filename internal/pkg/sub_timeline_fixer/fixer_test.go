@@ -78,7 +78,7 @@ func TestGetOffsetTime(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = FixSubTimeline(infoSrc, time, "Foundation (2021) - S01E03 - The Mathematician’s Ghost WEBDL-1080p.chinese(简英,fix).ass")
+	_, err = FixSubTimeline(infoSrc, time, "Foundation (2021) - S01E03 - The Mathematician’s Ghost WEBDL-1080p.chinese(简英,fix).ass")
 	if err != nil {
 		t.Fatal(err)
 	}

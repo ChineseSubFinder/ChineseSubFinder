@@ -8,7 +8,7 @@ import (
 func TestSubTimelineFixerHelper_FixRecentlyItemsSubTimeline(t *testing.T) {
 	config := pkg.GetConfig()
 	fixer := NewSubTimelineFixerHelper(config.EmbyConfig)
-	err := fixer.FixRecentlyItemsSubTimeline()
+	err := fixer.FixRecentlyItemsSubTimeline(config.MovieFolder, config.SeriesFolder)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,7 +22,7 @@ func TestSubTimelineFixerHelper_fixOneVideoSub(t *testing.T) {
 	// 145499 -- R&M - S05E10
 	config := pkg.GetConfig()
 	fixer := NewSubTimelineFixerHelper(config.EmbyConfig)
-	err := fixer.fixOneVideoSub("145499")
+	err := fixer.fixOneVideoSub("145499", "")
 	if err != nil {
 		t.Fatal(err)
 	}

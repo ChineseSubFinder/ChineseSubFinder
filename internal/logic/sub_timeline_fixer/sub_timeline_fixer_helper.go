@@ -7,7 +7,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
-	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
 	formatterEmby "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/normal"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
@@ -20,7 +19,6 @@ import (
 )
 
 type SubTimelineFixerHelper struct {
-	embyApi      *embyHelper.EmbyApi
 	embyHelper   *emby_helper.EmbyHelper
 	EmbyConfig   emby.EmbyConfig
 	subParserHub *sub_parser_hub.SubParserHub
@@ -33,7 +31,6 @@ func NewSubTimelineFixerHelper(embyConfig emby.EmbyConfig) *SubTimelineFixerHelp
 	sub := SubTimelineFixerHelper{
 		EmbyConfig:   embyConfig,
 		embyHelper:   emby_helper.NewEmbyHelper(embyConfig),
-		embyApi:      embyHelper.NewEmbyApi(embyConfig),
 		subParserHub: sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
 		formatter:    make(map[string]ifaces.ISubFormatter),
 		threads:      6,
@@ -52,23 +49,36 @@ func NewSubTimelineFixerHelper(embyConfig emby.EmbyConfig) *SubTimelineFixerHelp
 	return &sub
 }
 
-func (s SubTimelineFixerHelper) FixRecentlyItemsSubTimeline() error {
+func (s SubTimelineFixerHelper) FixRecentlyItemsSubTimeline(movieRootDir, seriesRootDir string) error {
 
-	items, err := s.embyApi.GetRecentlyItems()
+	movieList, seriesList, err := s.embyHelper.GetRecentlyAddVideoList(movieRootDir, seriesRootDir)
 	if err != nil {
 		return err
 	}
-	for _, item := range items.Items {
-		err = s.fixOneVideoSub(item.Id)
+	// 先做电影的字幕校正、然后才是连续剧的
+	for _, info := range movieList {
+		// path.Dir 在 Windows 有梗，所以换个方式获取路径
+		videoRootPath := strings.ReplaceAll(info.VideoFileFullPath, info.VideoFileName, "")
+		err = s.fixOneVideoSub(info.VideoInfo.Id, videoRootPath)
 		if err != nil {
 			return err
+		}
+	}
+	for _, infos := range seriesList {
+		for _, info := range infos {
+			// path.Dir 在 Windows 有梗，所以换个方式获取路径
+			videoRootPath := strings.ReplaceAll(info.VideoFileFullPath, info.VideoFileName, "")
+			err = s.fixOneVideoSub(info.VideoInfo.Id, videoRootPath)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
 }
 
-func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string) error {
+func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath string) error {
 	// internalEngSub 默认第一个是 srt 然后第二个是 ass，就不要去遍历了
 	found, internalEngSub, exCh_EngSub, err := s.embyHelper.GetInternalEngSubAndExChineseEnglishSub(videoId)
 	if err != nil {
@@ -84,34 +94,45 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string) error {
 			inSelectSubIndex = 0
 		}
 
-		bFound, err := s.fixSubTimeline(internalEngSub[inSelectSubIndex], exSubInfo)
+		bFound, subFixInfos, err := s.fixSubTimeline(internalEngSub[inSelectSubIndex], exSubInfo)
 		if err != nil {
 			return err
 		}
 		if bFound == false {
 			continue
 		}
+		// 调试的时候用
+		if videoRootPath == "" {
+			return nil
+		}
+		for _, info := range subFixInfos {
+			// 写入 fix 后的字幕文件覆盖之前的字幕文件
+			err = s.saveSubFile(path.Join(videoRootPath, info.FileName), info.FixContent)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
 }
 
-func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubFile emby.SubInfo) (bool, error) {
+func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubFile emby.SubInfo) (bool, []sub_timeline_fixer.SubFixInfo, error) {
 
 	bFind, infoBase, err := s.subParserHub.DetermineFileTypeFromBytes(enSubFile.Content, enSubFile.Ext)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 	if bFind == false {
-		return false, nil
+		return false, nil, nil
 	}
 	infoBase.Name = enSubFile.FileName
 	bFind, infoSrc, err := s.subParserHub.DetermineFileTypeFromBytes(ch_enSubFile.Content, ch_enSubFile.Ext)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 	if bFind == false {
-		return false, nil
+		return false, nil, nil
 	}
 	infoSrc.Name = ch_enSubFile.FileName
 
@@ -119,32 +140,35 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	infoSrcNameWithOutExt := strings.Replace(infoSrc.Name, path.Ext(infoSrc.Name), "", -1)
 
 	// 把原始的文件缓存下来，新建缓存的文件夹
-	cacheTmpPath := path.Join(tmpFolder, infoBaseNameWithOutExt)
+	cacheTmpPath := path.Join(tmpSubFixCacheFolder, infoBaseNameWithOutExt)
 	if pkg.IsDir(cacheTmpPath) == false {
 		err = os.MkdirAll(cacheTmpPath, os.ModePerm)
 		if err != nil {
-			return false, err
+			return false, nil, err
 		}
 	}
 	offsetTime, err := sub_timeline_fixer.GetOffsetTime(infoBase, infoSrc, path.Join(cacheTmpPath, infoSrcNameWithOutExt+"-bar.html"))
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 	// 偏移很小就无视了
 	if offsetTime < 0.2 && offsetTime > -0.2 {
 		_ = os.RemoveAll(cacheTmpPath)
-		return false, nil
+		return false, nil, nil
 	}
 	// 写入内置字幕、外置字幕原始文件
-	err = s.saveOrgSubFile(path.Join(cacheTmpPath, infoBaseNameWithOutExt+".chinese(inside)"+infoBase.Ext), infoBase.Content)
+	err = s.saveSubFile(path.Join(cacheTmpPath, infoBaseNameWithOutExt+".chinese(inside)"+infoBase.Ext), infoBase.Content)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
-	err = s.saveOrgSubFile(path.Join(cacheTmpPath, infoSrc.Name), infoSrc.Content)
+	err = s.saveSubFile(path.Join(cacheTmpPath, infoSrc.Name), infoSrc.Content)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 	// 写入校准时间轴后的字幕
+
+	var subFixInfos = make([]sub_timeline_fixer.SubFixInfo, 0)
+
 	for _, formatter := range s.formatter {
 		// 符合已知的字幕命名格式，不符合就跳过，都跳过也行，就不做任何操作而已
 		bMatch, fileNameWithOutExt, subExt, subLang, extraSubName := formatter.IsMatchThisFormat(infoSrc.Name)
@@ -154,16 +178,17 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 		// 生成对应字幕命名格式的，字幕命名。这里注意，normal 的时候， extraSubName+"-fix" 是无效的，不会被设置，也就是直接覆盖之前的字幕了。
 		subNewName, _, _ := formatter.GenerateMixSubNameBase(fileNameWithOutExt, subExt, subLang, extraSubName+"-fix")
 		desFixSubFileFullPath := path.Join(cacheTmpPath, subNewName)
-		err = sub_timeline_fixer.FixSubTimeline(infoSrc, offsetTime, desFixSubFileFullPath)
+		fixContent, err := sub_timeline_fixer.FixSubTimeline(infoSrc, offsetTime, desFixSubFileFullPath)
 		if err != nil {
-			return false, err
+			return false, nil, err
 		}
+		subFixInfos = append(subFixInfos, *sub_timeline_fixer.NewSubFixInfo(infoSrc.Name, fixContent))
 	}
 
-	return true, nil
+	return true, subFixInfos, nil
 }
 
-func (s SubTimelineFixerHelper) saveOrgSubFile(desSaveSubFileFullPath string, content string) error {
+func (s SubTimelineFixerHelper) saveSubFile(desSaveSubFileFullPath string, content string) error {
 	dstFile, err := os.Create(desSaveSubFileFullPath)
 	if err != nil {
 		return err
@@ -179,4 +204,4 @@ func (s SubTimelineFixerHelper) saveOrgSubFile(desSaveSubFileFullPath string, co
 	return nil
 }
 
-const tmpFolder = "tmpSubFix"
+const tmpSubFixCacheFolder = "SubFixCache"
