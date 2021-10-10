@@ -11,6 +11,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	formatterEmby "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/normal"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
@@ -115,11 +116,13 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath str
 		for _, info := range subFixInfos {
 			// 写入 fix 后的字幕文件覆盖之前的字幕文件
 			desFixedSubFullName := path.Join(videoRootPath, info.FileName)
-			err = s.saveSubFile(desFixedSubFullName, info.FixContent)
-			if err != nil {
-				return err
-			}
 			log_helper.GetLogger().Debugln("Sub Timeline fixed:", desFixedSubFullName)
+			continue
+			//err = s.saveSubFile(desFixedSubFullName, info.FixContent)
+			//if err != nil {
+			//	return err
+			//}
+			//log_helper.GetLogger().Debugln("Sub Timeline fixed:", desFixedSubFullName)
 		}
 	}
 
@@ -137,9 +140,10 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	}
 	infoBase.Name = enSubFile.FileName
 	/*
-		这里发现一个梗，内置的英文字幕导出的时候，很可能单个 Dialogue 会有 \N 在中间，需要单独去除，拼接成一句话
-		否则后续的两个字幕文件的对白匹配识别的时候会有问题，因为残缺语句
+		这里发现一个梗，内置的英文字幕导出的时候，有可能需要合并多个 Dialogue，见
+		internal/pkg/sub_helper/sub_helper.go 中 MergeMultiDialogue4EngSubtitle 的实现
 	*/
+	sub_helper.MergeMultiDialogue4EngSubtitle(infoBase)
 
 	bFind, infoSrc, err := s.subParserHub.DetermineFileTypeFromBytes(ch_enSubFile.Content, ch_enSubFile.Ext)
 	if err != nil {

@@ -312,6 +312,23 @@ func DeleteOneSeasonSubCacheFolder(seriesDir string) error {
 	return nil
 }
 
+/*
+	只针对英文字幕进行合并分散的 Dialogues
+	会遇到这样的字幕，如下
+	2line-The Card Counter (2021) WEBDL-1080p.chinese(inside).ass
+	它的对白一句话分了两个 dialogue 去做。这样做后续字幕时间轴校正就会遇到问题，因为只有一半，匹配占比会很低
+	(每一个 Dialogue 的首字母需要分析，大写和小写的占比是多少，统计一下，正常的，和上述特殊的)
+	那么，就需要额外的逻辑去对 DialoguesEx 进行额外的推断
+	暂时考虑的方案是，英文对白每一句的开头应该是英文大写字幕，如果是小写字幕，就应该与上语句合并，且每一句的字符长度有大于一定才触发
+*/
+func MergeMultiDialogue4EngSubtitle(inSubParser *subparser.FileInfo) {
+	merger := NewDialogueMerger()
+	for _, dialogueEx := range inSubParser.DialoguesEx {
+		merger.Add(dialogueEx)
+	}
+	inSubParser.DialoguesEx = merger.Get()
+}
+
 var (
 	regOneSeasonSubFolderNameMatch = regexp.MustCompile(`(?m)^Sub_S\dE0`)
 )

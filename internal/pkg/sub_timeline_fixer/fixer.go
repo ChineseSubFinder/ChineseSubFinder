@@ -130,9 +130,12 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath
 	matchIndexLineCount := len(matchIndexList) * maxCompareDialogue
 	perMatch := float64(matchIndexLineCount) / float64(len(infoSrc.DialoguesEx))
 	if perMatch < 0.1 {
-		log_helper.GetLogger().Debugln("The proportion of matching dialogue is relatively low(< 10%), Skip",
+		log_helper.GetLogger().Debugln("Sequence match 5 dialogues (< 10%), Skip",
 			fmt.Sprintf("%f", perMatch), infoSrc.Name)
 		return 0, nil
+	} else {
+		log_helper.GetLogger().Debugln("Sequence match 5 dialogues:",
+			fmt.Sprintf("%f", perMatch), infoSrc.Name)
 	}
 
 	timeFormat := ""
