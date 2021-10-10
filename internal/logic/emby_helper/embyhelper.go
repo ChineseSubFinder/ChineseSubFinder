@@ -305,20 +305,18 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 	// 获取是否有内置的英文字幕，如果没有则无需继续往下
 	/*
 		这里有个梗，读取到的英文内置字幕很可能是残缺的，比如，基地 S01E04 Eng 第一个 Default Forced Sub，就不对，内容的 Dialogue 很少。
-		然后第二个 Eng 字幕才对。那么考虑到兼容性， 可能后续有短视频，也就不能简单的按 Dialogue 的多少去衡量。大概会做一个功能。
-		读取到视频的总长度，然后再分析 Dialogue 的时间出现的部分与整体时间轴的占比，又或者是 Dialogue 之间的连续成都分析，这个有待测试。
+		然后第二个 Eng 字幕才对。那么考虑到兼容性， 可能后续有短视频，也就不能简单的按 Dialogue 的多少去衡量。大概会做一个功能。方案有两个：
+		1. 读取到视频的总长度，然后再分析 Dialogue 的时间出现的部分与整体时间轴的占比，又或者是 Dialogue 之间的连续成都分析，这个有待测试。
+		2. 还有一个更加粗暴的方案，把所有的 Eng 都识别出来，然后找最多的 Dialogue 来做为正确的来使用（够粗暴吧）
 	*/
-	haveInsideEngSub := false
-	InsideEngSubIndex := 0
+	var insideEngSUbIndexList = make([]int, 0)
 	for _, stream := range videoInfo.MediaStreams {
 		if stream.IsExternal == false && stream.Language == "eng" && stream.Codec == "subrip" {
-			haveInsideEngSub = true
-			InsideEngSubIndex = stream.Index
-			break
+			insideEngSUbIndexList = append(insideEngSUbIndexList, stream.Index)
 		}
 	}
 	// 没有找到则跳过
-	if haveInsideEngSub == false {
+	if len(insideEngSUbIndexList) == 0 {
 		return false, nil, nil, nil
 	}
 	// 再内置英文字幕能找到的前提下，就可以先找中文的外置字幕，目前版本只能考虑双语字幕
@@ -351,10 +349,37 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 	if len(exSubList) == 0 {
 		return false, nil, nil, nil
 	}
-	// 把之前 Internal 英文字幕的 SubInfo 实例的信息补充完整
-	// 但是也不是绝对的，因为后续去 emby 下载字幕的时候，需要与外置字幕的后缀名一致
-	// 这里开始去下载字幕
-	// 先下载内置的文的
+	/*
+		把之前 Internal 英文字幕的 SubInfo 实例的信息补充完整
+		但是也不是绝对的，因为后续去 emby 下载字幕的时候，需要与外置字幕的后缀名一致
+		这里开始去下载字幕
+		先下载内置的文的
+		因为上面下载内置英文字幕的梗，所以，需要预先下载多个内置的英文字幕下来，用体积最大（相同后缀名）的那个来作为最后的输出
+	*/
+	// 那么现在先下载相同格式（.srt）的两个字幕
+	InsideEngSubIndex := 0
+	if len(insideEngSUbIndexList) == 1 {
+		// 如果就找到一个内置字幕，就默认这个
+		InsideEngSubIndex = insideEngSUbIndexList[0]
+	} else {
+		// 如果找到不止一个就需要判断
+		var tmpSubContentLenList = make([]int, 0)
+		for _, index := range insideEngSUbIndexList {
+			subFileData, err := em.embyApi.GetSubFileData(videoId, mediaSourcesId, fmt.Sprintf("%d", index), common.SubExtSRT)
+			if err != nil {
+				return false, nil, nil, err
+			}
+			tmpSubContentLenList = append(tmpSubContentLenList, len(subFileData))
+		}
+		maxContentLen := -1
+		for index, contentLen := range tmpSubContentLenList {
+			if maxContentLen < contentLen {
+				maxContentLen = contentLen
+				InsideEngSubIndex = insideEngSUbIndexList[index]
+			}
+		}
+	}
+	// 这里才是下载最佳的那个字幕
 	for i := 0; i < 2; i++ {
 		tmpExt := common.SubExtSRT
 		if i == 1 {
