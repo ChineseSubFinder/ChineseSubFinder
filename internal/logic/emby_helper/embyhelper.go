@@ -303,6 +303,11 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 	videoFileNameWithOutExt := strings.ReplaceAll(videoFileName, path.Ext(videoFileName), "")
 	// TODO 后续会新增一个功能，从视频中提取音频文件，然后识别转为字符，再进行与字幕的匹配
 	// 获取是否有内置的英文字幕，如果没有则无需继续往下
+	/*
+		这里有个梗，读取到的英文内置字幕很可能是残缺的，比如，基地 S01E04 Eng 第一个 Default Forced Sub，就不对，内容的 Dialogue 很少。
+		然后第二个 Eng 字幕才对。那么考虑到兼容性， 可能后续有短视频，也就不能简单的按 Dialogue 的多少去衡量。大概会做一个功能。
+		读取到视频的总长度，然后再分析 Dialogue 的时间出现的部分与整体时间轴的占比，又或者是 Dialogue 之间的连续成都分析，这个有待测试。
+	*/
 	haveInsideEngSub := false
 	InsideEngSubIndex := 0
 	for _, stream := range videoInfo.MediaStreams {

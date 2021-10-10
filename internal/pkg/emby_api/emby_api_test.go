@@ -32,21 +32,6 @@ func TestEmbyHelper_GetItemsAncestors(t *testing.T) {
 	println(items[0].Name, items[0].Path)
 }
 
-func TestEmbyHelper_GetItemVideoInfo(t *testing.T) {
-	em := NewEmbyApi(pkg.GetConfig().EmbyConfig)
-	// 95813 -- 命运夜
-	// 96564 -- The Bad Batch - S01E11
-	// R&M S05E10  2 org english, 5 简英 145499
-	// 基地 S01E03 166840
-	// 算牌人 166837
-	videoInfo, err := em.GetItemVideoInfo("172412")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	println(videoInfo.Name, videoInfo.Path)
-}
-
 func TestEmbyHelper_GetItemVideoInfoByUserId(t *testing.T) {
 	em := NewEmbyApi(pkg.GetConfig().EmbyConfig)
 	// 95813 -- 命运夜
@@ -85,12 +70,29 @@ func TestEmbyHelper_GetUserIdList(t *testing.T) {
 	}
 }
 
+func TestEmbyHelper_GetItemVideoInfo(t *testing.T) {
+	em := NewEmbyApi(pkg.GetConfig().EmbyConfig)
+	// 95813 -- 命运夜
+	// 96564 -- The Bad Batch - S01E11
+	// R&M S05E10  2 org english, 5 简英 145499
+	// 基地 S01E03 166840
+	// 基地 S01E04 173354
+	// 算牌人 166837
+	videoInfo, err := em.GetItemVideoInfo("173354")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	println(videoInfo.Name, videoInfo.Path, videoInfo.MediaSources[0].Id)
+}
+
 func TestEmbyApi_GetSubFileData(t *testing.T) {
 	em := NewEmbyApi(pkg.GetConfig().EmbyConfig)
 	// R&M S05E10  2 org english, 5 简英					"145499", "c4678509adb72a8b5034bdac2f1fccde", "5", ".ass"
 	// 基地 S01E03		2=eng 	6=chi 	45=简英			"166840", "d6c68ec6097aeceb9f5c1d82add66213", "2", ".ass"
+	// 基地 S01E04		2=eng 	6=chi 	45=简英			"173354", "c08f514cc1708f3fadea56e489da33db", "2", ".ass"
 
-	subFileData, err := em.GetSubFileData("145499", "c4678509adb72a8b5034bdac2f1fccde", "4", ".ass")
+	subFileData, err := em.GetSubFileData("173354", "c08f514cc1708f3fadea56e489da33db", "3", ".ass")
 	//subFileData, err := em.GetSubFileData("145499", "c4678509adb72a8b5034bdac2f1fccde", "5", ".ass")
 	//subFileData, err := em.GetSubFileData("166840", "d6c68ec6097aeceb9f5c1d82add66213", "45", ".ass")
 	if err != nil {
