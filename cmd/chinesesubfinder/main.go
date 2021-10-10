@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
@@ -144,6 +145,7 @@ func DownLoadStart(httpProxy string) {
 		log.Infoln("Download One End...")
 		notify_center.Notify.Send()
 		pkg.CloseChrome()
+		rod_helper.Clear()
 	}()
 	notify_center.Notify.Clear()
 
@@ -197,7 +199,23 @@ func DownLoadStart(httpProxy string) {
 		return
 	}
 
-	rod_helper.Clear()
+	// 开始字幕的统一校正
+	log.Infoln("Auto Fix Sub Timeline Start...")
+	fixer := sub_timeline_fixer.NewSubTimelineFixerHelper(config.EmbyConfig)
+	err = fixer.FixRecentlyItemsSubTimeline(config.MovieFolder, config.SeriesFolder)
+	if err != nil {
+		log.Errorln("FixRecentlyItemsSubTimeline", err)
+		return
+	}
+	log.Infoln("Auto Fix Sub Timeline End")
+
+	// 再次刷新
+	// 刷新 Emby 的字幕，下载完毕字幕了，就统一刷新一下
+	err = downloader.RefreshEmbySubList()
+	if err != nil {
+		log.Errorln("RefreshEmbySubList", err)
+		return
+	}
 }
 
 var (
@@ -210,4 +228,4 @@ var (
 	但是， goreleaser 却不支持这样，会提示源码被改了，无法进行编译发布
 	除非不发布、编译 Linux 和 Windows 程序，这样就能做到 tag 与 程序内部输出版本一致。
 */
-const appVersion = "v0.17.5"
+const appVersion = "v0.18.0"

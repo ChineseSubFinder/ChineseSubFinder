@@ -5,4 +5,5 @@ type EmbyConfig struct {
 	ApiKey      string //	相应的 API Key
 	LimitCount  int    //	最多获取多少更新的内容
 	SkipWatched bool   // 	跳过看过的视频，这里会读取所有 Emby 的 User 看过的列表，默认 false
+	FixTimeLine bool   // 	开启校正字幕时间轴，默认 false
 }

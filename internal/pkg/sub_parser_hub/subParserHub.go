@@ -53,6 +53,15 @@ func (p SubParserHub) DetermineFileTypeFromFile(filePath string) (bool, *subpars
 
 // DetermineFileTypeFromBytes 确定字幕文件的类型，是双语字幕或者某一种语言等等信息，如果返回 nil ，那么就说明都没有字幕的格式匹配上
 func (p SubParserHub) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool, *subparser.FileInfo, error) {
+
+	/*
+		会遇到这样的字幕，如下
+		2line-The Card Counter (2021) WEBDL-1080p.chinese(inside).ass
+		它的对白一句话分了两个 dialogue 去做。这样做后续字幕时间轴校正就会遇到问题，因为只有一半，匹配占比会很低
+		那么，就需要额外的逻辑去对 DialoguesEx 进行额外的推断
+		暂时考虑的方案是，英文对白每一句的开头应该是英文大写字幕，如果是小写字幕，就应该与上语句合并，且每一句的字符长度有大于一定才触发
+	*/
+
 	for _, parser := range p.Parser {
 		bFind, subFileInfo, err := parser.DetermineFileTypeFromBytes(inBytes, nowExt)
 		if err != nil {

@@ -3,6 +3,7 @@ package sub_timeline_fixer
 import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/grd/stat"
@@ -128,8 +129,10 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath
 	// 这里需要考虑，找到的连续 5 句话匹配的有多少句，占比整体所有的 Dialogue 是多少，太低也需要跳过
 	matchIndexLineCount := len(matchIndexList) * maxCompareDialogue
 	perMatch := float64(matchIndexLineCount) / float64(len(infoSrc.DialoguesEx))
-	if perMatch > 0.5 {
-
+	if perMatch < 0.1 {
+		log_helper.GetLogger().Debugln("The proportion of matching dialogue is relatively low(< 10%), Skip",
+			fmt.Sprintf("%f", perMatch), infoSrc.Name)
+		return 0, nil
 	}
 
 	timeFormat := ""

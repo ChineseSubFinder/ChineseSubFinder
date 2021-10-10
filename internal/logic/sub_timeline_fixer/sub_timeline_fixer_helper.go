@@ -1,12 +1,14 @@
 package sub_timeline_fixer
 
 import (
+	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	formatterEmby "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/normal"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
@@ -50,6 +52,11 @@ func NewSubTimelineFixerHelper(embyConfig emby.EmbyConfig) *SubTimelineFixerHelp
 }
 
 func (s SubTimelineFixerHelper) FixRecentlyItemsSubTimeline(movieRootDir, seriesRootDir string) error {
+
+	// 首先得开启，不然就直接跳过不执行
+	if s.EmbyConfig.FixTimeLine == false {
+		return nil
+	}
 
 	movieList, seriesList, err := s.embyHelper.GetRecentlyAddVideoList(movieRootDir, seriesRootDir)
 	if err != nil {
@@ -103,14 +110,16 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath str
 		}
 		// 调试的时候用
 		if videoRootPath == "" {
-			return nil
+			continue
 		}
 		for _, info := range subFixInfos {
 			// 写入 fix 后的字幕文件覆盖之前的字幕文件
-			err = s.saveSubFile(path.Join(videoRootPath, info.FileName), info.FixContent)
+			desFixedSubFullName := path.Join(videoRootPath, info.FileName)
+			err = s.saveSubFile(desFixedSubFullName, info.FixContent)
 			if err != nil {
 				return err
 			}
+			log_helper.GetLogger().Debugln("Sub Timeline fixed:", desFixedSubFullName)
 		}
 	}
 
@@ -127,6 +136,11 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 		return false, nil, nil
 	}
 	infoBase.Name = enSubFile.FileName
+	/*
+		这里发现一个梗，内置的英文字幕导出的时候，很可能单个 Dialogue 会有 \N 在中间，需要单独去除，拼接成一句话
+		否则后续的两个字幕文件的对白匹配识别的时候会有问题，因为残缺语句
+	*/
+
 	bFind, infoSrc, err := s.subParserHub.DetermineFileTypeFromBytes(ch_enSubFile.Content, ch_enSubFile.Ext)
 	if err != nil {
 		return false, nil, err
@@ -147,15 +161,6 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 			return false, nil, err
 		}
 	}
-	offsetTime, err := sub_timeline_fixer.GetOffsetTime(infoBase, infoSrc, path.Join(cacheTmpPath, infoSrcNameWithOutExt+"-bar.html"))
-	if err != nil {
-		return false, nil, err
-	}
-	// 偏移很小就无视了
-	if offsetTime < 0.2 && offsetTime > -0.2 {
-		_ = os.RemoveAll(cacheTmpPath)
-		return false, nil, nil
-	}
 	// 写入内置字幕、外置字幕原始文件
 	err = s.saveSubFile(path.Join(cacheTmpPath, infoBaseNameWithOutExt+".chinese(inside)"+infoBase.Ext), infoBase.Content)
 	if err != nil {
@@ -165,10 +170,19 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	if err != nil {
 		return false, nil, err
 	}
+	offsetTime, err := sub_timeline_fixer.GetOffsetTime(infoBase, infoSrc, path.Join(cacheTmpPath, infoSrcNameWithOutExt+"-bar.html"))
+	if err != nil {
+		return false, nil, err
+	}
+	if offsetTime != 0 {
+		log_helper.GetLogger().Debugln(infoSrc.Name, "offset time is", fmt.Sprintf("%f", offsetTime), "s")
+	}
+	// 偏移很小就无视了
+	if offsetTime < 0.2 && offsetTime > -0.2 {
+		return false, nil, nil
+	}
 	// 写入校准时间轴后的字幕
-
 	var subFixInfos = make([]sub_timeline_fixer.SubFixInfo, 0)
-
 	for _, formatter := range s.formatter {
 		// 符合已知的字幕命名格式，不符合就跳过，都跳过也行，就不做任何操作而已
 		bMatch, fileNameWithOutExt, subExt, subLang, extraSubName := formatter.IsMatchThisFormat(infoSrc.Name)
