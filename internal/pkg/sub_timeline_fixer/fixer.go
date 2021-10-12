@@ -3,6 +3,7 @@ package sub_timeline_fixer
 import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -46,8 +47,9 @@ func StopWordCounter(inString string, per int) []string {
 }
 
 // GetOffsetTime 暂时只支持英文的基准字幕，源字幕必须是双语中英字幕
-func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath string) (float64, error) {
+func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) (float64, error) {
 
+	var debugInfos = make([]string, 0)
 	// 构建基准语料库，目前阶段只需要考虑是 En 的就行了
 	var baseCorpus = make([]string, 0)
 	for _, oneDialogueEx := range infoBase.DialoguesEx {
@@ -130,10 +132,15 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath
 	matchIndexLineCount := len(matchIndexList) * maxCompareDialogue
 	perMatch := float64(matchIndexLineCount) / float64(len(infoSrc.DialoguesEx))
 	if perMatch < 0.1 {
+		debugInfos = append(debugInfos, "Sequence match 5 dialogues (< 10%), Skip",
+			fmt.Sprintf(" %f", perMatch), infoSrc.Name)
+
 		log_helper.GetLogger().Debugln("Sequence match 5 dialogues (< 10%), Skip",
 			fmt.Sprintf("%f", perMatch), infoSrc.Name)
 		return 0, nil
 	} else {
+		debugInfos = append(debugInfos, "Sequence match 5 dialogues:",
+			fmt.Sprintf(" %f", perMatch), infoSrc.Name)
 		log_helper.GetLogger().Debugln("Sequence match 5 dialogues:",
 			fmt.Sprintf("%f", perMatch), infoSrc.Name)
 	}
@@ -192,11 +199,15 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath
 
 			xAxis = append(xAxis, fmt.Sprintf("%d_%d", mIndex, i))
 
+			debugInfos = append(debugInfos, "bs "+infoBase.DialoguesEx[tmpBaseIndex].StartTime+" <-> "+infoBase.DialoguesEx[tmpBaseIndex].EndTime)
+			debugInfos = append(debugInfos, "sc "+infoSrc.DialoguesEx[tmpSrcIndex].StartTime+" <-> "+infoSrc.DialoguesEx[tmpSrcIndex].EndTime)
+			debugInfos = append(debugInfos, "StartDiffTime: "+fmt.Sprintf("%f", TimeDiffStart.Seconds()))
 			//println(fmt.Sprintf("Diff Start-End: %s - %s Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
 			//	TimeDiffStart, TimeDiffEnd,
 			//	tmpBaseIndex, infoBase.DialoguesEx[tmpBaseIndex].StartTime, infoBase.DialoguesEx[tmpBaseIndex].EndTime, infoBase.DialoguesEx[tmpBaseIndex].EnLine,
 			//	tmpSrcIndex, infoSrc.DialoguesEx[tmpSrcIndex].StartTime, infoSrc.DialoguesEx[tmpSrcIndex].EndTime, infoSrc.DialoguesEx[tmpSrcIndex].EnLine))
 		}
+		debugInfos = append(debugInfos, "---------------------------------------------")
 		//println("---------------------------------------------")
 	}
 
@@ -250,6 +261,13 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath
 		err = SaveStaticLine(staticLineFileSavePath, infoBase.Name, infoSrc.Name,
 			per, oldMean, oldSd, newMean, newSd, xAxis,
 			startDiffTimeLineData, endDiffTimeLineData)
+		if err != nil {
+			return 0, err
+		}
+	}
+	// 输出调试的匹配时间轴信息的列表
+	if debugInfoFileSavePath != "" {
+		err = pkg.WriteStrings2File(debugInfoFileSavePath, debugInfos)
 		if err != nil {
 			return 0, err
 		}

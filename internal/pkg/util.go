@@ -424,3 +424,22 @@ func OSCheck() bool {
 func FixWindowPathBackSlash(path string) string {
 	return strings.Replace(path, string(filepath.Separator), "/", -1)
 }
+
+func WriteStrings2File(desfilePath string, strings []string) error {
+	dstFile, err := os.Create(desfilePath)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = dstFile.Close()
+	}()
+	allString := ""
+	for _, s := range strings {
+		allString += s + "\r\n"
+	}
+	_, err = dstFile.WriteString(allString)
+	if err != nil {
+		return err
+	}
+	return nil
+}
