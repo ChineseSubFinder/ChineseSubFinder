@@ -109,4 +109,7 @@ EmbyConfig:
 ## 可能遇到的问题
 
 * 如果 Emby 没有进行新加入媒体文件的扫描，本功能是无法正常使用的
+
 * subhd、zimuku 报错、提示异常增多，需要设置 Threads: 1
+
+* [ChineseSubFinder在Dokcer bridge网络下，与EMBY（套件安装）的通信配置](https://github.com/allanpk716/ChineseSubFinder/issues/75)
