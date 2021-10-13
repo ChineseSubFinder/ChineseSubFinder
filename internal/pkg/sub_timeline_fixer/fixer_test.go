@@ -12,6 +12,7 @@ import (
 	"github.com/james-bowman/nlp/measures/pairwise"
 	"gonum.org/v1/gonum/mat"
 	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -49,7 +50,8 @@ func TestGetOffsetTime(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	testRootDirYes := filepath.Join(testRootDir, "yes")
+	testRootDirNo := filepath.Join(testRootDir, "no")
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
 	type args struct {
@@ -66,17 +68,14 @@ func TestGetOffsetTime(t *testing.T) {
 		/*
 			这里有几个比较理想的字幕时间轴校正的示例
 		*/
-		{name: "R&M S05E01", args: args{enSubFile: path.Join(testRootDir, "R&M S05E01 - English.srt"),
-			ch_enSubFile:           path.Join(testRootDir, "R&M S05E01 - 简英.srt"),
+		{name: "R&M S05E01", args: args{enSubFile: path.Join(testRootDirYes, "R&M S05E01 - English.srt"),
+			ch_enSubFile:           path.Join(testRootDirYes, "R&M S05E01 - 简英.srt"),
 			staticLineFileSavePath: "bar.html"}, want: -6.42981818181818, wantErr: false},
-		{name: "R&M S05E10", args: args{enSubFile: path.Join(testRootDir, "R&M S05E10 - English.ass"),
-			ch_enSubFile:           path.Join(testRootDir, "R&M S05E10 - 简英.ass"),
+		{name: "R&M S05E10", args: args{enSubFile: path.Join(testRootDirYes, "R&M S05E10 - English.ass"),
+			ch_enSubFile:           path.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
 			staticLineFileSavePath: "bar.html"}, want: -6.335985401459854, wantErr: false},
-		{name: "R&M S05E10-shooter", args: args{enSubFile: path.Join(testRootDir, "R&M S05E10 - English.ass"),
-			ch_enSubFile:           path.Join(testRootDir, "R&M S05E10 - 简英-shooter.ass"),
-			staticLineFileSavePath: "bar.html"}, want: -6.335985401459854, wantErr: false},
-		{name: "基地 S01E03", args: args{enSubFile: path.Join(testRootDir, "基地 S01E03 - English.ass"),
-			ch_enSubFile:           path.Join(testRootDir, "基地 S01E03 - 简英.ass"),
+		{name: "基地 S01E03", args: args{enSubFile: path.Join(testRootDirYes, "基地 S01E03 - English.ass"),
+			ch_enSubFile:           path.Join(testRootDirYes, "基地 S01E03 - 简英.ass"),
 			staticLineFileSavePath: "bar.html"}, want: -32.09061538461539, wantErr: false},
 		/*
 			WTF,这部剧集
@@ -84,59 +83,83 @@ func TestGetOffsetTime(t *testing.T) {
 			内置的英文字幕时间轴是歪的，所以修正完了就错了
 		*/
 		{name: "Dan Brown's The Lost Symbol - S01E01", args: args{
-			enSubFile:              path.Join(testRootDir, tmpSubDataFolderName, "Dan Brown's The Lost Symbol - S01E01 - As Above, So Below WEBDL-720p", "Dan Brown's The Lost Symbol - S01E01 - As Above, So Below WEBDL-720p.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDir, tmpSubDataFolderName, "Dan Brown's The Lost Symbol - S01E01 - As Above, So Below WEBDL-720p", "Dan Brown's The Lost Symbol - S01E01 - As Above, So Below WEBDL-720p.chinese(简英,shooter).ass"),
+			enSubFile:              path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E01.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E01.chinese(简英,shooter).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 1.3217821782178225, wantErr: false},
 		{name: "Dan Brown's The Lost Symbol - S01E02", args: args{
-			enSubFile:              path.Join(testRootDir, tmpSubDataFolderName, "Dan Brown's The Lost Symbol - S01E02 - The Araf WEBDL-1080p", "Dan Brown's The Lost Symbol - S01E02 - The Araf WEBDL-1080p.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDir, tmpSubDataFolderName, "Dan Brown's The Lost Symbol - S01E02 - The Araf WEBDL-1080p", "Dan Brown's The Lost Symbol - S01E02 - The Araf WEBDL-1080p.chinese(简英,subhd).ass"),
+			enSubFile:              path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E02.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E02.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -0.5253383458646617, wantErr: false},
 		{name: "Dan Brown's The Lost Symbol - S01E03", args: args{
-			enSubFile:              path.Join(testRootDir, tmpSubDataFolderName, "Dan Brown's The Lost Symbol - S01E03 - Murmuration WEBDL-1080p", "Dan Brown's The Lost Symbol - S01E03 - Murmuration WEBDL-1080p.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDir, tmpSubDataFolderName, "Dan Brown's The Lost Symbol - S01E03 - Murmuration WEBDL-1080p", "Dan Brown's The Lost Symbol - S01E03 - Murmuration WEBDL-1080p.chinese(简英,shooter).ass"),
-			staticLineFileSavePath: "bar.html"},
-			want: -0.505656, wantErr: false},
-		{name: "Dan Brown's The Lost Symbol - S01E03", args: args{
-			enSubFile:              path.Join(testRootDir, tmpSubDataFolderName, "Dan Brown's The Lost Symbol - S01E03 - Murmuration WEBDL-1080p", "Dan Brown's The Lost Symbol - S01E03 - Murmuration WEBDL-1080p.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDir, tmpSubDataFolderName, "Dan Brown's The Lost Symbol - S01E03 - Murmuration WEBDL-1080p", "Dan Brown's The Lost Symbol - S01E03 - Murmuration WEBDL-1080p.chinese(繁英,xunlei).ass"),
+			enSubFile:              path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E03.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E03.chinese(繁英,xunlei).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -0.505656, wantErr: false},
 		{name: "Dan Brown's The Lost Symbol - S01E04", args: args{
-			enSubFile:              path.Join(testRootDir, tmpSubDataFolderName, "Dan Brown's The Lost Symbol - S01E04 - L'Enfant Orientation WEBDL-1080p", "Dan Brown's The Lost Symbol - S01E04 - L'Enfant Orientation WEBDL-1080p.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDir, tmpSubDataFolderName, "Dan Brown's The Lost Symbol - S01E04 - L'Enfant Orientation WEBDL-1080p", "Dan Brown's The Lost Symbol - S01E04 - L'Enfant Orientation WEBDL-1080p.chinese(简英,zimuku).ass"),
+			enSubFile:              path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E04.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E04.chinese(简英,zimuku).ass"),
 			staticLineFileSavePath: "bar.html"},
-			want: -0.505656, wantErr: false},
+			want: -0.633415, wantErr: false},
 		/*
-
-		 */
+			只有一个是字幕下载了一个错误的，其他的无需修正
+		*/
 		{name: "Don't Breathe 2 (2021) - shooter-srt", args: args{
-			enSubFile:              path.Join(testRootDir, tmpSubDataFolderName, "Don't Breathe 2 (2021) WEBDL-1080p Proper", "Don't Breathe 2 (2021) WEBDL-1080p Proper.chinese(inside).srt"),
-			ch_enSubFile:           path.Join(testRootDir, tmpSubDataFolderName, "Don't Breathe 2 (2021) WEBDL-1080p Proper", "Don't Breathe 2 (2021) WEBDL-1080p Proper.chinese(简英,shooter).srt"),
+			enSubFile:              path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).srt"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,shooter).srt"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Don't Breathe 2 (2021) - subhd-srt error matched sub", args: args{
-			enSubFile:              path.Join(testRootDir, tmpSubDataFolderName, "Don't Breathe 2 (2021) WEBDL-1080p Proper", "Don't Breathe 2 (2021) WEBDL-1080p Proper.chinese(inside).srt"),
-			ch_enSubFile:           path.Join(testRootDir, tmpSubDataFolderName, "Don't Breathe 2 (2021) WEBDL-1080p Proper", "Don't Breathe 2 (2021) WEBDL-1080p Proper.chinese(简英,subhd).srt"),
+			enSubFile:              path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).srt"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,subhd).srt"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Don't Breathe 2 (2021) - xunlei-ass", args: args{
-			enSubFile:              path.Join(testRootDir, tmpSubDataFolderName, "Don't Breathe 2 (2021) WEBDL-1080p Proper", "Don't Breathe 2 (2021) WEBDL-1080p Proper.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDir, tmpSubDataFolderName, "Don't Breathe 2 (2021) WEBDL-1080p Proper", "Don't Breathe 2 (2021) WEBDL-1080p Proper.chinese(简英,xunlei).ass"),
+			enSubFile:              path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,xunlei).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Don't Breathe 2 (2021) - zimuku-ass", args: args{
-			enSubFile:              path.Join(testRootDir, tmpSubDataFolderName, "Don't Breathe 2 (2021) WEBDL-1080p Proper", "Don't Breathe 2 (2021) WEBDL-1080p Proper.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDir, tmpSubDataFolderName, "Don't Breathe 2 (2021) WEBDL-1080p Proper", "Don't Breathe 2 (2021) WEBDL-1080p Proper.chinese(简英,zimuku).ass"),
+			enSubFile:              path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		/*
+			只有一个是字幕下载了一个错误的，其他的无需修正
+		*/
+		{name: "Foundation (2021) - S01E01", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Foundation (2021) - S01E01.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Foundation (2021) - S01E01.chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Foundation (2021) - S01E02", args: args{
+			enSubFile:              path.Join(testRootDirYes, "Foundation (2021) - S01E02.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirYes, "Foundation (2021) - S01E02.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: -30.624840, wantErr: false},
+		{name: "Foundation (2021) - S01E03", args: args{
+			enSubFile:              path.Join(testRootDirYes, "Foundation (2021) - S01E03.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirYes, "Foundation (2021) - S01E03.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: -32.085037037037054, wantErr: false},
+		{name: "Foundation (2021) - S01E04", args: args{
+			enSubFile:              path.Join(testRootDirYes, "Foundation (2021) - S01E04.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirYes, "Foundation (2021) - S01E04.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: -36.885074, wantErr: false},
+		{name: "Foundation (2021) - S01E04", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Foundation (2021) - S01E04.chinese(inside).srt"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Foundation (2021) - S01E04.chinese(繁英,shooter).srt"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 	}
 
 	s := NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{
-		MaxCompareDialogue: 5,
+		MaxCompareDialogue: 3,
 		MaxStartTimeDiffSD: 0.1,
 		MinMatchedPercent:  0.1,
+		MinOffset:          0.1,
 	})
 
 	for _, tt := range tests {
@@ -168,7 +191,7 @@ func TestGetOffsetTime(t *testing.T) {
 			*/
 			sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
 
-			bok, got, _, err := s.GetOffsetTime(infoBase, infoSrc, tt.args.ch_enSubFile+"-bar.html", tt.args.ch_enSubFile+".log")
+			bok, got, sd, err := s.GetOffsetTime(infoBase, infoSrc, tt.args.ch_enSubFile+"-bar.html", tt.args.ch_enSubFile+".log")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTime() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -192,7 +215,7 @@ func TestGetOffsetTime(t *testing.T) {
 
 			}
 
-			println(fmt.Sprintf("GetOffsetTime: %fs", got))
+			println(fmt.Sprintf("GetOffsetTime: %fs SD:%f", got, sd))
 		})
 	}
 }

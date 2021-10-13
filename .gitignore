@@ -51,3 +51,4 @@
 /internal/logic/sub_timeline_fixer/SubFixCache
 /internal/logic/sub_timeline_fixer/Logs
 /internal/pkg/sub_timeline_fixer/Logs
+/internal/pkg/sub_timeline_fixer/config.yaml
