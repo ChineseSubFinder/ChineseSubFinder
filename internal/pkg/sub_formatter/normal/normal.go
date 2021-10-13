@@ -81,10 +81,13 @@ func (f Formatter) GenerateMixSubName(videoFileName, subExt string, subLang type
 }
 
 func (f Formatter) GenerateMixSubNameBase(fileNameWithOutExt, subExt string, subLang types.Language, extraSubPreName string) (string, string, string) {
+	// 这里传入字幕后缀名的时候，可能会带有 default 或者 forced 字段，需要剔除
+	nowSubExt := strings.ReplaceAll(subExt, types.Sub_Ext_Mark_Default, "")
+	nowSubExt = strings.ReplaceAll(subExt, types.Sub_Ext_Mark_Forced, "")
 
-	subNewName := fileNameWithOutExt + "." + types.ChineseAbbr_639_1 + subExt
-	subNewNameWithDefault := fileNameWithOutExt + "." + types.ChineseAbbr_639_1 + types.Sub_Ext_Mark_Default + subExt
-	subNewNameWithForced := fileNameWithOutExt + "." + types.ChineseAbbr_639_1 + types.Sub_Ext_Mark_Forced + subExt
+	subNewName := fileNameWithOutExt + "." + types.ChineseAbbr_639_1 + nowSubExt
+	subNewNameWithDefault := fileNameWithOutExt + "." + types.ChineseAbbr_639_1 + types.Sub_Ext_Mark_Default + nowSubExt
+	subNewNameWithForced := fileNameWithOutExt + "." + types.ChineseAbbr_639_1 + types.Sub_Ext_Mark_Forced + nowSubExt
 
 	return subNewName, subNewNameWithDefault, subNewNameWithForced
 }

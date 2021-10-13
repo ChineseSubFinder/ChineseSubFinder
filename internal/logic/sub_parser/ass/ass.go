@@ -207,6 +207,7 @@ func (p Parser) parseOneDialogueText(nowText string, odl *subparser.OneDialogue,
 	nowText = strings.ReplaceAll(nowText, `\h`, " ")
 	// nowText 这个需要先把 {} 花括号内的内容给移除
 	nowText1 := sub_parser.ReMatchBrace.ReplaceAllString(nowText, "")
+	nowText1 = sub_parser.ReMatchBracket.ReplaceAllString(nowText, "")
 	nowText1 = strings.TrimRight(nowText1, "\r")
 	// 然后判断是否有 \N 或者 \n
 	// 直接把 \n 替换为 \N 来解析

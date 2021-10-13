@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/sub_timeline_fiexer"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/grd/stat"
@@ -16,8 +17,18 @@ import (
 	"time"
 )
 
+type SubTimelineFixer struct {
+	fixerConfig sub_timeline_fiexer.SubTimelineFixerConfig
+}
+
+func NewSubTimelineFixer(fixerConfig sub_timeline_fiexer.SubTimelineFixerConfig) *SubTimelineFixer {
+	return &SubTimelineFixer{
+		fixerConfig: fixerConfig,
+	}
+}
+
 // StopWordCounter 停止词统计
-func StopWordCounter(inString string, per int) []string {
+func (s *SubTimelineFixer) StopWordCounter(inString string, per int) []string {
 	statisticTimes := make(map[string]int)
 	wordsLength := strings.Fields(inString)
 
@@ -47,40 +58,51 @@ func StopWordCounter(inString string, per int) []string {
 }
 
 // GetOffsetTime 暂时只支持英文的基准字幕，源字幕必须是双语中英字幕
-func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) (float64, error) {
+func (s *SubTimelineFixer) GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) (bool, float64, float64, error) {
 
 	var debugInfos = make([]string, 0)
 	// 构建基准语料库，目前阶段只需要考虑是 En 的就行了
 	var baseCorpus = make([]string, 0)
-	for _, oneDialogueEx := range infoBase.DialoguesEx {
+	var baseDialogueFilterMap = make(map[int]int, 0)
+	/*
+		这里原来的写法是所有的 base 的都放进去匹配，这样会带来一些不必要的对白
+		需要剔除空白。那么就需要建立一个转换的字典
+	*/
+	for index, oneDialogueEx := range infoBase.DialoguesEx {
+		if oneDialogueEx.EnLine == "" {
+			continue
+		}
 		baseCorpus = append(baseCorpus, oneDialogueEx.EnLine)
+		baseDialogueFilterMap[len(baseCorpus)-1] = index
 	}
 	// 初始化
 	pipLine, tfidf, err := NewTFIDF(baseCorpus)
 	if err != nil {
-		return 0, err
+		return false, 0, 0, err
 	}
 
 	/*
 		确认两个字幕间的偏移，暂定的方案是两边都连续匹配上 5 个索引，再抽取一个对话的时间进行修正计算
 	*/
-	maxCompareDialogue := 5
+	maxCompareDialogue := s.fixerConfig.MaxCompareDialogue
 	// 基线的长度
 	_, docsLength := tfidf.Dims()
 	var matchIndexList = make([]MatchIndex, 0)
 	sc := NewSubCompare(maxCompareDialogue)
 	// 开始比较相似度，默认认为是 Ch_en 就行了
-	for srcIndex, srcOneDialogueEx := range infoSrc.DialoguesEx {
+	for srcIndex := 0; srcIndex < len(infoSrc.DialoguesEx); {
 
+		srcOneDialogueEx := infoSrc.DialoguesEx[srcIndex]
 		// 这里只考虑 英文 的语言
 		if srcOneDialogueEx.EnLine == "" {
+			srcIndex++
 			continue
 		}
 		// run the query through the same pipeline that was fitted to the corpus and
 		// to project it into the same dimensional space
 		queryVector, err := pipLine.Transform(srcOneDialogueEx.EnLine)
 		if err != nil {
-			return 0, err
+			return false, 0, 0, err
 		}
 		// iterate over document feature vectors (columns) in the LSI matrix and compare
 		// with the query vector for similarity.  Similarity is determined by the difference
@@ -107,42 +129,33 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath
 			}
 		}
 
+		startBaseIndex, startSrcIndex := sc.GetStartIndex()
 		if sc.Add(baseIndex, srcIndex) == false {
 			sc.Clear()
-			sc.Add(baseIndex, srcIndex)
+			srcIndex = startSrcIndex + 1
+			continue
+			//sc.Add(baseIndex, srcIndex)
 		}
 		if sc.Check() == false {
+			srcIndex++
 			continue
+		} else {
+			sc.Clear()
 		}
 
-		startBaseIndex, startSrcIndex := sc.GetStartIndex()
 		matchIndexList = append(matchIndexList, MatchIndex{
 			BaseNowIndex: startBaseIndex,
-			SrcNowIndex:  startSrcIndex,
-			Similarity:   highestSimilarity,
+			//BaseNowIndex: baseDialogueFilterMap[startBaseIndex],
+			SrcNowIndex: startSrcIndex,
+			Similarity:  highestSimilarity,
 		})
 
 		//println(fmt.Sprintf("Similarity: %f Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
 		//	highestSimilarity,
 		//	baseIndex, infoBase.DialoguesEx[baseIndex].StartTime, infoBase.DialoguesEx[baseIndex].EndTime, baseCorpus[baseIndex],
 		//	srcIndex, srcOneDialogueEx.StartTime, srcOneDialogueEx.EndTime, srcOneDialogueEx.EnLine))
-	}
 
-	// 这里需要考虑，找到的连续 5 句话匹配的有多少句，占比整体所有的 Dialogue 是多少，太低也需要跳过
-	matchIndexLineCount := len(matchIndexList) * maxCompareDialogue
-	perMatch := float64(matchIndexLineCount) / float64(len(infoSrc.DialoguesEx))
-	if perMatch < 0.1 {
-		debugInfos = append(debugInfos, "Sequence match 5 dialogues (< 10%), Skip",
-			fmt.Sprintf(" %f", perMatch), infoSrc.Name)
-
-		log_helper.GetLogger().Debugln("Sequence match 5 dialogues (< 10%), Skip",
-			fmt.Sprintf("%f", perMatch), infoSrc.Name)
-		return 0, nil
-	} else {
-		debugInfos = append(debugInfos, "Sequence match 5 dialogues:",
-			fmt.Sprintf(" %f", perMatch), infoSrc.Name)
-		log_helper.GetLogger().Debugln("Sequence match 5 dialogues:",
-			fmt.Sprintf("%f", perMatch), infoSrc.Name)
+		srcIndex++
 	}
 
 	timeFormat := ""
@@ -165,24 +178,25 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath
 
 		for i := 0; i < maxCompareDialogue; i++ {
 			// 这里会统计连续的这 5 句话的时间差
-			tmpBaseIndex := matchIndexItem.BaseNowIndex + i
+			//tmpBaseIndex := matchIndexItem.BaseNowIndex + i
+			tmpBaseIndex := baseDialogueFilterMap[matchIndexItem.BaseNowIndex+i]
 			tmpSrcIndex := matchIndexItem.SrcNowIndex + i
 
 			baseTimeStart, err := time.Parse(timeFormat, infoBase.DialoguesEx[tmpBaseIndex].StartTime)
 			if err != nil {
-				return 0, err
+				return false, 0, 0, err
 			}
 			baseTimeEnd, err := time.Parse(timeFormat, infoBase.DialoguesEx[tmpBaseIndex].EndTime)
 			if err != nil {
-				return 0, err
+				return false, 0, 0, err
 			}
 			srtTimeStart, err := time.Parse(timeFormat, infoSrc.DialoguesEx[tmpSrcIndex].StartTime)
 			if err != nil {
-				return 0, err
+				return false, 0, 0, err
 			}
 			srtTimeEnd, err := time.Parse(timeFormat, infoSrc.DialoguesEx[tmpSrcIndex].EndTime)
 			if err != nil {
-				return 0, err
+				return false, 0, 0, err
 			}
 
 			TimeDiffStart := baseTimeStart.Sub(srtTimeStart)
@@ -262,22 +276,46 @@ func GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath
 			per, oldMean, oldSd, newMean, newSd, xAxis,
 			startDiffTimeLineData, endDiffTimeLineData)
 		if err != nil {
-			return 0, err
+			return false, 0, 0, err
 		}
 	}
+
+	// 跳过的逻辑是 mean 是 0 ，那么现在如果判断有问题，缓存的调试文件继续生成，然后强制返回 0 来跳过后续的逻辑
+	// 这里需要考虑，找到的连续 5 句话匹配的有多少句，占比整体所有的 Dialogue 是多少，太低也需要跳过
+	matchIndexLineCount := len(matchIndexList) * maxCompareDialogue
+	//perMatch := float64(matchIndexLineCount) / float64(len(infoSrc.DialoguesEx))
+	perMatch := float64(matchIndexLineCount) / float64(len(baseCorpus))
+	if perMatch < s.fixerConfig.MinMatchedPercent {
+		tmpContent := fmt.Sprintf("Sequence match %d dialogues (< %f%%), Skip,", s.fixerConfig.MaxCompareDialogue, s.fixerConfig.MinMatchedPercent*100) + fmt.Sprintf(" %f%% ", perMatch*100) + infoSrc.Name
+
+		debugInfos = append(debugInfos, tmpContent)
+
+		log_helper.GetLogger().Debugln(tmpContent)
+	} else {
+		tmpContent := fmt.Sprintf("Sequence match %d dialogues,", s.fixerConfig.MaxCompareDialogue) + fmt.Sprintf(" %f%% ", perMatch*100) + infoSrc.Name
+
+		debugInfos = append(debugInfos, tmpContent)
+
+		log_helper.GetLogger().Debugln(tmpContent)
+	}
+
 	// 输出调试的匹配时间轴信息的列表
 	if debugInfoFileSavePath != "" {
 		err = pkg.WriteStrings2File(debugInfoFileSavePath, debugInfos)
 		if err != nil {
-			return 0, err
+			return false, 0, 0, err
 		}
 	}
+	// 虽然有条件判断是认为有问题的，但是返回值还是要填写除去的
+	if perMatch < s.fixerConfig.MinMatchedPercent {
+		return false, newMean, newSd, nil
+	}
 
-	return newMean, nil
+	return true, newMean, newSd, nil
 }
 
 // FixSubTimeline 校正时间轴
-func FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) (string, error) {
+func (s *SubTimelineFixer) FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) (string, error) {
 
 	/*
 		从解析的实例中，正常来说是可以匹配出所有的 Dialogue 对话的 Start 和 End time 的信息

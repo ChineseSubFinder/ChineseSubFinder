@@ -23,7 +23,8 @@ func NewSubCompare(maxCompareDialogue int) *SubCompare {
 	return &sc
 }
 
-// Add 添加元素进来比较
+// Add 添加元素进来比较，这里有个细节，如果理论上需要判断是 Index 是 1-5 ，那么如果 1 add了，2 add 失败的时候，是应该清理后再 add 2
+// 还有一种情况，从 1-5，添加到 4 的时候false了，那么应该回退到 2 进行 add，而不是从 4 开始
 func (s *SubCompare) Add(baseNowIndex, srcNowIndex int) bool {
 	// 如果是第一次 Add 的话，就直接把后续需要匹配的 Index 字典的 Key 信息建立好
 	// 再次调用本方法的时候就是 check 是否需要加的 key 存在于 字典 Key 中即可
@@ -59,6 +60,7 @@ func (s *SubCompare) Add(baseNowIndex, srcNowIndex int) bool {
 }
 
 // Check 是否 Add 的元素已经足够满足 maxCompareDialogue 的数量要求了
+// 这里有个细节，如果理论上需要判断是 Index 是 1-5 ，如果 add 5 check 的时候 false，那么应该清理后，回退到 2 进行 add，而不是 6 开始
 func (s *SubCompare) Check() bool {
 	if len(s.baseIndexList) == 0 && len(s.srcIndexList) == 0 {
 		return true

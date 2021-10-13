@@ -15,6 +15,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/sub_timeline_fiexer"
 	"os"
 	"path"
 	"path/filepath"
@@ -23,22 +24,26 @@ import (
 )
 
 type SubTimelineFixerHelper struct {
-	embyHelper   *emby_helper.EmbyHelper
-	EmbyConfig   emby.EmbyConfig
-	subParserHub *sub_parser_hub.SubParserHub
-	formatter    map[string]ifaces.ISubFormatter
-	threads      int
-	timeOut      time.Duration
+	embyHelper       *emby_helper.EmbyHelper
+	EmbyConfig       emby.EmbyConfig
+	FixerConfig      sub_timeline_fiexer.SubTimelineFixerConfig
+	subParserHub     *sub_parser_hub.SubParserHub
+	subTimelineFixer *sub_timeline_fixer.SubTimelineFixer
+	formatter        map[string]ifaces.ISubFormatter
+	threads          int
+	timeOut          time.Duration
 }
 
-func NewSubTimelineFixerHelper(embyConfig emby.EmbyConfig) *SubTimelineFixerHelper {
+func NewSubTimelineFixerHelper(embyConfig emby.EmbyConfig, subTimelineFixerConfig sub_timeline_fiexer.SubTimelineFixerConfig) *SubTimelineFixerHelper {
 	sub := SubTimelineFixerHelper{
-		EmbyConfig:   embyConfig,
-		embyHelper:   emby_helper.NewEmbyHelper(embyConfig),
-		subParserHub: sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
-		formatter:    make(map[string]ifaces.ISubFormatter),
-		threads:      6,
-		timeOut:      60 * time.Second,
+		EmbyConfig:       embyConfig,
+		FixerConfig:      subTimelineFixerConfig,
+		embyHelper:       emby_helper.NewEmbyHelper(embyConfig),
+		subParserHub:     sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
+		subTimelineFixer: sub_timeline_fixer.NewSubTimelineFixer(subTimelineFixerConfig),
+		formatter:        make(map[string]ifaces.ISubFormatter),
+		threads:          6,
+		timeOut:          60 * time.Second,
 	}
 	// TODO 如果字幕格式新增了实现，这里也需要添加对应的实例
 	// 初始化支持的 formatter
@@ -154,6 +159,11 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 		return false, nil, nil
 	}
 	infoSrc.Name = ch_enSubFile.FileName
+	/*
+		这里发现一个梗，内置的英文字幕导出的时候，有可能需要合并多个 Dialogue，见
+		internal/pkg/sub_helper/sub_helper.go 中 MergeMultiDialogue4EngSubtitle 的实现
+	*/
+	sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
 
 	infoBaseNameWithOutExt := strings.Replace(infoBase.Name, path.Ext(infoBase.Name), "", -1)
 	infoSrcNameWithOutExt := strings.Replace(infoSrc.Name, path.Ext(infoSrc.Name), "", -1)
@@ -175,15 +185,24 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	if err != nil {
 		return false, nil, err
 	}
-	offsetTime, err := sub_timeline_fixer.GetOffsetTime(infoBase, infoSrc, path.Join(cacheTmpPath, infoSrcNameWithOutExt+"-bar.html"), path.Join(cacheTmpPath, infoSrcNameWithOutExt+".log"))
-	if err != nil {
-		return false, nil, err
-	}
+	bok, offsetTime, sd, err := s.subTimelineFixer.GetOffsetTime(infoBase, infoSrc, path.Join(cacheTmpPath, infoSrcNameWithOutExt+"-bar.html"), path.Join(cacheTmpPath, infoSrcNameWithOutExt+".log"))
 	if offsetTime != 0 {
 		log_helper.GetLogger().Debugln(infoSrc.Name, "offset time is", fmt.Sprintf("%f", offsetTime), "s")
 	}
+
+	if sd > s.FixerConfig.MaxStartTimeDiffSD {
+		log_helper.GetLogger().Debugln(infoSrc.Name, "Start Time Diff SD, skip", fmt.Sprintf("%f", sd))
+	} else {
+		log_helper.GetLogger().Debugln(infoSrc.Name, "Start Time Diff SD", fmt.Sprintf("%f", sd))
+	}
+
+	if err != nil || bok == false {
+		return false, nil, err
+	}
+
 	// 偏移很小就无视了
-	if offsetTime < 0.2 && offsetTime > -0.2 {
+	if offsetTime < s.FixerConfig.MinOffset && offsetTime > -s.FixerConfig.MinOffset {
+		log_helper.GetLogger().Debugln(infoSrc.Name, fmt.Sprintf("Min Offset Config is %f, skip ", s.FixerConfig.MinOffset), fmt.Sprintf("now is %f", offsetTime))
 		return false, nil, nil
 	}
 	// 写入校准时间轴后的字幕
@@ -197,7 +216,7 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 		// 生成对应字幕命名格式的，字幕命名。这里注意，normal 的时候， extraSubName+"-fix" 是无效的，不会被设置，也就是直接覆盖之前的字幕了。
 		subNewName, _, _ := formatter.GenerateMixSubNameBase(fileNameWithOutExt, subExt, subLang, extraSubName+"-fix")
 		desFixSubFileFullPath := path.Join(cacheTmpPath, subNewName)
-		fixContent, err := sub_timeline_fixer.FixSubTimeline(infoSrc, offsetTime, desFixSubFileFullPath)
+		fixContent, err := s.subTimelineFixer.FixSubTimeline(infoSrc, offsetTime, desFixSubFileFullPath)
 		if err != nil {
 			return false, nil, err
 		}

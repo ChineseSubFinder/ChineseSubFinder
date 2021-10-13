@@ -10,6 +10,8 @@ const (
 // ReMatchBrace 匹配花括号中的内容
 var ReMatchBrace = regexp.MustCompile(`(?m)((?i){[^}]*})`)
 
+var ReMatchBracket = regexp.MustCompile(`(?m)((?i)\[[^]]*\])`)
+
 var ReCutDoubleLanguage = regexp.MustCompile(`(?i)(.*)\\N(.*)`)
 
 // 字幕文件对话的每一行

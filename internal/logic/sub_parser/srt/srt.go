@@ -78,6 +78,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 			}
 			// 剔除 {\fn微软雅黑\fs14}C'mon, Rick. We're -- We're almost there. {} 这一段
 			text = sub_parser.ReMatchBrace.ReplaceAllString(text, "")
+			text = sub_parser.ReMatchBracket.ReplaceAllString(nowText, "")
 			text = strings.ReplaceAll(text, `\N`, "")
 			odl.Lines = append(odl.Lines, text)
 		}
