@@ -9,7 +9,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sqlite"
 	"gorm.io/gorm"
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 	"sync"
 )
@@ -62,7 +62,7 @@ func InitDb() error {
 you need implement getDbName() in file: internal/dao/init.go `))
 	}
 
-	dbDir := path.Dir(nowDbFileName)
+	dbDir := filepath.Dir(nowDbFileName)
 	if pkg.IsDir(dbDir) == false {
 		_ = os.MkdirAll(dbDir, os.ModePerm)
 	}

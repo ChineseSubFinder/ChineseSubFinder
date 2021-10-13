@@ -17,6 +17,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -66,7 +67,7 @@ func (s SubTimelineFixerHelper) FixRecentlyItemsSubTimeline(movieRootDir, series
 	// 先做电影的字幕校正、然后才是连续剧的
 	for _, info := range movieList {
 		// path.Dir 在 Windows 有梗，所以换个方式获取路径
-		videoRootPath := strings.ReplaceAll(info.VideoFileFullPath, info.VideoFileName, "")
+		videoRootPath := filepath.Dir(info.VideoFileFullPath)
 		err = s.fixOneVideoSub(info.VideoInfo.Id, videoRootPath)
 		if err != nil {
 			return err
@@ -75,7 +76,7 @@ func (s SubTimelineFixerHelper) FixRecentlyItemsSubTimeline(movieRootDir, series
 	for _, infos := range seriesList {
 		for _, info := range infos {
 			// path.Dir 在 Windows 有梗，所以换个方式获取路径
-			videoRootPath := strings.ReplaceAll(info.VideoFileFullPath, info.VideoFileName, "")
+			videoRootPath := filepath.Dir(info.VideoFileFullPath)
 			err = s.fixOneVideoSub(info.VideoInfo.Id, videoRootPath)
 			if err != nil {
 				return err
@@ -174,7 +175,7 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	if err != nil {
 		return false, nil, err
 	}
-	offsetTime, err := sub_timeline_fixer.GetOffsetTime(infoBase, infoSrc, path.Join(cacheTmpPath, infoSrcNameWithOutExt+"-bar.html"))
+	offsetTime, err := sub_timeline_fixer.GetOffsetTime(infoBase, infoSrc, path.Join(cacheTmpPath, infoSrcNameWithOutExt+"-bar.html"), path.Join(cacheTmpPath, infoSrcNameWithOutExt+".log"))
 	if err != nil {
 		return false, nil, err
 	}
