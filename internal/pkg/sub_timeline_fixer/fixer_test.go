@@ -324,7 +324,7 @@ func TestGetOffsetTime(t *testing.T) {
 			//}
 
 			if bok == true && got != 0 {
-				_, err = s.FixSubTimeline(infoSrc, got, tt.args.ch_enSubFile+"-fix"+infoBase.Ext)
+				_, err = s.FixSubTimeline(infoSrc, got, tt.args.ch_enSubFile+FixMask+infoBase.Ext)
 				if err != nil {
 					t.Fatal(err)
 				}

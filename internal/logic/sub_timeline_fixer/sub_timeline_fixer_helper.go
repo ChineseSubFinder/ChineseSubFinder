@@ -108,7 +108,10 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath str
 		if exSubInfo.Ext == common.SubExtSRT {
 			inSelectSubIndex = 0
 		}
-
+		// 修正过的字幕有标记，将不会再次修复
+		if strings.Contains(exSubInfo.FileName, sub_timeline_fixer.FixMask) == true {
+			continue
+		}
 		bFound, subFixInfos, err := s.fixSubTimeline(internalEngSub[inSelectSubIndex], exSubInfo)
 		if err != nil {
 			return err
@@ -221,7 +224,7 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 			hasDefault = true
 		}
 		// 生成对应字幕命名格式的，字幕命名。这里注意，normal 的时候， extraSubName+"-fix" 是无效的，不会被设置，也就是直接覆盖之前的字幕了。
-		subNewName, subNewNameDefault, _ := formatter.GenerateMixSubNameBase(fileNameWithOutExt, subExt, subLang, extraSubName+"-fix")
+		subNewName, subNewNameDefault, _ := formatter.GenerateMixSubNameBase(fileNameWithOutExt, subExt, subLang, extraSubName+sub_timeline_fixer.FixMask)
 
 		desFixSubFileFullPath := ""
 		if hasDefault == true {

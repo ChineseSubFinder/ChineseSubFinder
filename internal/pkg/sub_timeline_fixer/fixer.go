@@ -364,3 +364,5 @@ func (s *SubTimelineFixer) FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetT
 
 const timeFormatAss = "15:04:05.00"
 const timeFormatSrt = "15:04:05,000"
+
+const FixMask = "-fix"
