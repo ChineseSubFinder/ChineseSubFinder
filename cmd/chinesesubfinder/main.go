@@ -201,7 +201,7 @@ func DownLoadStart(httpProxy string) {
 
 	// 开始字幕的统一校正
 	log.Infoln("Auto Fix Sub Timeline Start...")
-	fixer := sub_timeline_fixer.NewSubTimelineFixerHelper(config.EmbyConfig)
+	fixer := sub_timeline_fixer.NewSubTimelineFixerHelper(config.EmbyConfig, config.SubTimelineFixerConfig)
 	err = fixer.FixRecentlyItemsSubTimeline(config.MovieFolder, config.SeriesFolder)
 	if err != nil {
 		log.Errorln("FixRecentlyItemsSubTimeline", err)
