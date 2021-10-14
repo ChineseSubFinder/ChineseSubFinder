@@ -167,7 +167,7 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
 
 	infoBaseNameWithOutExt := strings.Replace(infoBase.Name, path.Ext(infoBase.Name), "", -1)
-	infoSrcNameWithOutExt := strings.Replace(infoSrc.Name, path.Ext(infoSrc.Name), "", -1)
+	//infoSrcNameWithOutExt := strings.Replace(infoSrc.Name, path.Ext(infoSrc.Name), "", -1)
 
 	// 把原始的文件缓存下来，新建缓存的文件夹
 	cacheTmpPath := path.Join(tmpSubFixCacheFolder, infoBaseNameWithOutExt)
@@ -186,7 +186,7 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	if err != nil {
 		return false, nil, err
 	}
-	bok, offsetTime, sd, err := s.subTimelineFixer.GetOffsetTime(infoBase, infoSrc, path.Join(cacheTmpPath, infoSrcNameWithOutExt+"-bar.html"), path.Join(cacheTmpPath, infoSrcNameWithOutExt+".log"))
+	bok, offsetTime, sd, err := s.subTimelineFixer.GetOffsetTime(infoBase, infoSrc, path.Join(cacheTmpPath, infoSrc.Name+"-bar.html"), path.Join(cacheTmpPath, infoSrc.Name+".log"))
 	if offsetTime != 0 {
 		log_helper.GetLogger().Debugln(infoSrc.Name, "offset time is", fmt.Sprintf("%f", offsetTime), "s")
 	}

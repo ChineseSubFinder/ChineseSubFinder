@@ -166,6 +166,75 @@ func TestGetOffsetTime(t *testing.T) {
 			ch_enSubFile:           path.Join(testRootDirNo, "The Card Counter (2021).chinese(简英,shooter).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0.224844, wantErr: false},
+		/*
+			Kingdom Ashin of the North
+		*/
+		{name: "Kingdom Ashin of the North - error matched sub", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Kingdom Ashin of the North (2021).chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Kingdom Ashin of the North (2021).chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		/*
+			Only Murders in the Building
+		*/
+		{name: "Only Murders in the Building - S01E06", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Only Murders in the Building - S01E06.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Only Murders in the Building - S01E06.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Only Murders in the Building - S01E08", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Only Murders in the Building - S01E08.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Only Murders in the Building - S01E08.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		/*
+			Ted Lasso
+		*/
+		{name: "Ted Lasso - S02E09", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E09", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E10", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E10", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E10", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(简英,shooter).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E11", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E11", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E12", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E12", args: args{
+			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(简英,shooter).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
 	}
 
 	s := NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{
