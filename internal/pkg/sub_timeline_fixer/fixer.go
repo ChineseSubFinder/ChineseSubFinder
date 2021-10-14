@@ -286,13 +286,13 @@ func (s *SubTimelineFixer) GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, 
 	//perMatch := float64(matchIndexLineCount) / float64(len(infoSrc.DialoguesEx))
 	perMatch := float64(matchIndexLineCount) / float64(len(baseCorpus))
 	if perMatch < s.fixerConfig.MinMatchedPercent {
-		tmpContent := infoSrc.Name + fmt.Sprintf("Sequence match %d dialogues (< %f%%), Skip,", s.fixerConfig.MaxCompareDialogue, s.fixerConfig.MinMatchedPercent*100) + fmt.Sprintf(" %f%% ", perMatch*100)
+		tmpContent := infoSrc.Name + fmt.Sprintf(" Sequence match %d dialogues (< %f%%), Skip,", s.fixerConfig.MaxCompareDialogue, s.fixerConfig.MinMatchedPercent*100) + fmt.Sprintf(" %f%% ", perMatch*100)
 
 		debugInfos = append(debugInfos, tmpContent)
 
 		log_helper.GetLogger().Debugln(tmpContent)
 	} else {
-		tmpContent := infoSrc.Name + fmt.Sprintf("Sequence match %d dialogues,", s.fixerConfig.MaxCompareDialogue) + fmt.Sprintf(" %f%% ", perMatch*100)
+		tmpContent := infoSrc.Name + fmt.Sprintf(" Sequence match %d dialogues,", s.fixerConfig.MaxCompareDialogue) + fmt.Sprintf(" %f%% ", perMatch*100)
 
 		debugInfos = append(debugInfos, tmpContent)
 
