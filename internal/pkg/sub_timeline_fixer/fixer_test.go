@@ -153,6 +153,19 @@ func TestGetOffsetTime(t *testing.T) {
 			ch_enSubFile:           path.Join(testRootDirNo, "Foundation (2021) - S01E04.chinese(繁英,shooter).srt"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
+		/*
+			The Card Counter
+		*/
+		{name: "The Card Counter", args: args{
+			enSubFile:              path.Join(testRootDirNo, "The Card Counter (2021).chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "The Card Counter (2021).chinese(简英,xunlei).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "The Card Counter", args: args{
+			enSubFile:              path.Join(testRootDirNo, "The Card Counter (2021).chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "The Card Counter (2021).chinese(简英,shooter).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0.224844, wantErr: false},
 	}
 
 	s := NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{

@@ -190,9 +190,10 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	if offsetTime != 0 {
 		log_helper.GetLogger().Debugln(infoSrc.Name, "offset time is", fmt.Sprintf("%f", offsetTime), "s")
 	}
-
+	// 超过 SD 阈值了
 	if sd > s.FixerConfig.MaxStartTimeDiffSD {
 		log_helper.GetLogger().Debugln(infoSrc.Name, "Start Time Diff SD, skip", fmt.Sprintf("%f", sd))
+		return false, nil, nil
 	} else {
 		log_helper.GetLogger().Debugln(infoSrc.Name, "Start Time Diff SD", fmt.Sprintf("%f", sd))
 	}
