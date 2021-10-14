@@ -97,6 +97,7 @@ EmbyConfig:
     ApiKey: 123456789
     LimitCount: 3000
     SkipWatched: false
+    FixTimeLine: false
 ```
 
 * Url，Emby 的地址，目前只支持内网路径，且必须是 http
@@ -105,6 +106,8 @@ EmbyConfig:
 * SkipWatched，默认值是 false，如果是 true 的时候，跳过Emby 任意用户看过的视频不进行字幕的搜索下载
 
 > SkipWatched，这个功能是什么意思呢，你可以这样理解。你的 Emby 有两个用户，他们共享看一样的电影目录。假设，一个人**看完**了电影 A，那么是不是可以假设他使用了一个他**满意**的字幕去看的，那么 SkipWatched: true 的时候就会排除这个视频，不去再下载字幕了。同理，如果另一个人看了视频 B，以此类推。简单来说就是效率极高，也有风险，这个需要自己去思考一下，就不展开了。
+
+* FixTimeLine，默认不开启字幕时间轴的修正。详细见，[字幕时间轴校正](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3.md)
 
 ## 可能遇到的问题
 
