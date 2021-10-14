@@ -14,6 +14,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
+	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/sub_timeline_fiexer"
 	"os"
@@ -213,9 +214,21 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 		if bMatch == false {
 			continue
 		}
+		// 是否包含 default 关键词，暂时无需判断 forced
+		hasDefault := false
+		if strings.Contains(strings.ToLower(infoSrc.Name), types.Sub_Ext_Mark_Default) == true {
+			hasDefault = true
+		}
 		// 生成对应字幕命名格式的，字幕命名。这里注意，normal 的时候， extraSubName+"-fix" 是无效的，不会被设置，也就是直接覆盖之前的字幕了。
-		subNewName, _, _ := formatter.GenerateMixSubNameBase(fileNameWithOutExt, subExt, subLang, extraSubName+"-fix")
-		desFixSubFileFullPath := path.Join(cacheTmpPath, subNewName)
+		subNewName, subNewNameDefault, _ := formatter.GenerateMixSubNameBase(fileNameWithOutExt, subExt, subLang, extraSubName+"-fix")
+
+		desFixSubFileFullPath := ""
+		if hasDefault == true {
+			desFixSubFileFullPath = path.Join(cacheTmpPath, subNewNameDefault)
+
+		} else {
+			desFixSubFileFullPath = path.Join(cacheTmpPath, subNewName)
+		}
 		fixContent, err := s.subTimelineFixer.FixSubTimeline(infoSrc, offsetTime, desFixSubFileFullPath)
 		if err != nil {
 			return false, nil, err
