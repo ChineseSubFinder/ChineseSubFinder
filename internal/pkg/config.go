@@ -23,6 +23,9 @@ func GetConfig() *types.Config {
 		for _, customExt := range strings.Split(config.CustomVideoExts, ",") {
 			customVideoExts = append(customVideoExts, "."+customExt)
 		}
+
+		// 这里进行 Default 值的判断
+		config.SubTimelineFixerConfig.CheckDefault()
 	})
 	return config
 }

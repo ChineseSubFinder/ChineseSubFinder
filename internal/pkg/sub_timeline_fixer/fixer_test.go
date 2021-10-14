@@ -126,7 +126,7 @@ func TestGetOffsetTime(t *testing.T) {
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		/*
-			只有一个是字幕下载了一个错误的，其他的无需修正
+			基地
 		*/
 		{name: "Foundation (2021) - S01E01", args: args{
 			enSubFile:              path.Join(testRootDirNo, "Foundation (2021) - S01E01.chinese(inside).ass"),
@@ -271,5 +271,3 @@ func TestTFIDF(t *testing.T) {
 	fmt.Printf("Matched '%s'", testCorpus[matched])
 	// Output: Matched 'The quick brown fox jumped over the lazy dog'
 }
-
-const tmpSubDataFolderName = "SubFixCache"

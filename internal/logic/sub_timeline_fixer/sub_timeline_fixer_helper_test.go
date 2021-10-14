@@ -8,7 +8,7 @@ import (
 func TestSubTimelineFixerHelper_FixRecentlyItemsSubTimeline(t *testing.T) {
 	// 单独执行这个，第一次是有效的，第二次，就没得效果了，原因是已经替换字幕了啊，当然就不会修正了啊。你懂的
 	config := pkg.GetConfig()
-	fixer := NewSubTimelineFixerHelper(config.EmbyConfig)
+	fixer := NewSubTimelineFixerHelper(config.EmbyConfig, config.SubTimelineFixerConfig)
 	err := fixer.FixRecentlyItemsSubTimeline(config.MovieFolder, config.SeriesFolder)
 	if err != nil {
 		t.Fatal(err)
@@ -23,7 +23,7 @@ func TestSubTimelineFixerHelper_fixOneVideoSub(t *testing.T) {
 	// 81873 -- R&M - S05E01
 	// 145499 -- R&M - S05E10
 	config := pkg.GetConfig()
-	fixer := NewSubTimelineFixerHelper(config.EmbyConfig)
+	fixer := NewSubTimelineFixerHelper(config.EmbyConfig, config.SubTimelineFixerConfig)
 	err := fixer.fixOneVideoSub("173354", "")
 	if err != nil {
 		t.Fatal(err)
