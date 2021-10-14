@@ -235,6 +235,40 @@ func TestGetOffsetTime(t *testing.T) {
 			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(简英,shooter).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
+		/*
+			The Protégé
+		*/
+		{name: "The Protégé", args: args{
+			enSubFile:              path.Join(testRootDirNo, "The Protégé (2021).chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "The Protégé (2021).chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "The Protégé", args: args{
+			enSubFile:              path.Join(testRootDirNo, "The Protégé (2021).chinese(inside).srt"),
+			ch_enSubFile:           path.Join(testRootDirNo, "The Protégé (2021).chinese(简英,shooter).srt"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		/*
+			The Witcher Nightmare of the Wolf
+		*/
+		{name: "The Witcher Nightmare of the Wolf", args: args{
+			enSubFile:              path.Join(testRootDirNo, "The Witcher Nightmare of the Wolf.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "The Witcher Nightmare of the Wolf.chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		/*
+			What If…!
+		*/
+		{name: "What If…! - S01E07", args: args{
+			enSubFile:              path.Join(testRootDirNo, "What If…! - S01E07.chinese(inside).ass"),
+			ch_enSubFile:           path.Join(testRootDirNo, "What If…! - S01E07.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "What If…! - S01E09", args: args{
+			enSubFile:              path.Join(testRootDirNo, "What If…! - S01E09.chinese(inside).srt"),
+			ch_enSubFile:           path.Join(testRootDirNo, "What If…! - S01E09.chinese(简英,shooter).srt"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
 	}
 
 	s := NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{
