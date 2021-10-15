@@ -9,7 +9,6 @@ import (
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
@@ -179,7 +178,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		// -----------------------------------------------------
 		// 构建每个字幕站点下载者的实例
 		var subSupplierHub = subSupplier.NewSubSupplierHub(
-			subhd.NewSupplier(d.reqParam),
+			//subhd.NewSupplier(d.reqParam),
 			zimuku.NewSupplier(d.reqParam),
 			xunlei.NewSupplier(d.reqParam),
 			shooter.NewSupplier(d.reqParam),
@@ -271,7 +270,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		var subSupplierHub *subSupplier.SubSupplierHub
 		subSupplierHub = subSupplier.NewSubSupplierHub(
 			zimuku.NewSupplier(d.reqParam),
-			subhd.NewSupplier(d.reqParam),
+			//subhd.NewSupplier(d.reqParam),
 			xunlei.NewSupplier(d.reqParam),
 			shooter.NewSupplier(d.reqParam),
 		)

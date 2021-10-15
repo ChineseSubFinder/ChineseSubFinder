@@ -328,7 +328,6 @@ func TestGetOffsetTime(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-
 			}
 
 			println(fmt.Sprintf("GetOffsetTime: %fs SD:%f", got, sd))
