@@ -102,6 +102,19 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath str
 	if found == false {
 		return nil
 	}
+	// 需要先把原有的外置字幕带有 -fix 的删除，然后再做修正
+	// 不然如果调整了条件，之前修复的本次其实就不修正了，那么就会“残留”下来，误以为是本次配置的信息导致的
+	for _, exSubInfo := range exCh_EngSub {
+		// 没有编辑的就跳过
+		if strings.Contains(exSubInfo.FileName, sub_timeline_fixer.FixMask) == false {
+			continue
+		}
+		err = os.Remove(filepath.Join(videoRootPath, exSubInfo.FileName))
+		if err != nil {
+			return err
+		}
+	}
+
 	// 从外置双语（中英）字幕中找对对应的内置 srt 字幕进行匹配比较
 	for _, exSubInfo := range exCh_EngSub {
 		inSelectSubIndex := 1
