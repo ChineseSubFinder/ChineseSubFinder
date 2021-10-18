@@ -34,3 +34,5 @@ jobs:
           push: true
           tags: |
             allanpk716/chinesesubfinder:dev1014b05
+          build-args: |
+            VERSION=dev1014b05
