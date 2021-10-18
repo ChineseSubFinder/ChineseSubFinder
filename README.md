@@ -3,6 +3,8 @@
 本项目的初衷仅仅是想自动化搞定**限定条件**下 **中文** 字幕下载。
 
 > 开发中，可能有不兼容性的调整（配置文件字段变更）
+>
+> v0.18.x 开始，暂时屏蔽了 subhd 的下载接口，后续下载字幕功能有待评估。
 
 ## Why？
 
@@ -68,6 +70,7 @@
 
 ## 版本
 
+* v0.18.x 新增，[字幕时间轴自动校正](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3.md)。暂时屏蔽 subhd 下载逻辑  -- 2021年10月17日
 * v0.17.x 新增，代理检测模块，程序启动的时候会去 check 代理是否正常 -- 2021年9月22日
 * v0.16.x 新增，启动容器/程序时，是否开始搜索并下载选项功能见[讨论](https://github.com/allanpk716/ChineseSubFinder/issues/50) -- 2021年9月18日
 * v0.15.x 新增，[强制扫描所有的视频文件下载字幕](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%BC%BA%E5%88%B6%E6%89%AB%E6%8F%8F%E6%89%80%E6%9C%89%E7%9A%84%E8%A7%86%E9%A2%91%E6%96%87%E4%BB%B6%E4%B8%8B%E8%BD%BD%E5%AD%97%E5%B9%95.md)功能，但是依然跳过中文视频。 -- 2021年9月17日
