@@ -42,5 +42,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:${{ steps.set-version.outputs.version }}
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:latest
+          build-args: |
+            VERSION=${{steps.version_step.outputs.version}}
 
 

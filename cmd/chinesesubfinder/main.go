@@ -20,7 +20,7 @@ func init() {
 
 	log = log_helper.GetLogger()
 
-	log.Infoln("ChineseSubFinder Version:", appVersion)
+	log.Infoln("ChineseSubFinder Version:", AppVersion)
 
 	if pkg.OSCheck() == false {
 		panic(`only support Linux and Windows, if you want support MacOS, 
@@ -229,4 +229,4 @@ var (
 	但是， goreleaser 却不支持这样，会提示源码被改了，无法进行编译发布
 	除非不发布、编译 Linux 和 Windows 程序，这样就能做到 tag 与 程序内部输出版本一致。
 */
-const appVersion = "v0.18.0"
+var AppVersion = "unknow"
