@@ -22,16 +22,16 @@ func TestUnArchiveFile(t *testing.T) {
 }
 
 func tetUnArchive(t *testing.T, testRootDir string, missionName string) {
-	fileFPath := path.Join(testRootDir, missionName)
-	desPath := path.Join(testRootDir, strings.ReplaceAll(filepath.Ext(missionName), ".", ""))
+	fileFPath := filepath.Join(testRootDir, missionName)
+	desPath := filepath.Join(testRootDir, strings.ReplaceAll(filepath.Ext(missionName), ".", ""))
 	err := UnArchiveFile(fileFPath, desPath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pkg.IsFile(path.Join(desPath, subASS)) == false {
+	if pkg.IsFile(filepath.Join(desPath, subASS)) == false {
 		t.Fatal(missionName, " unArchive failed")
 	}
-	if pkg.IsFile(path.Join(desPath, subSRT)) == false {
+	if pkg.IsFile(filepath.Join(desPath, subSRT)) == false {
 		t.Fatal(missionName, " unArchive failed")
 	}
 }

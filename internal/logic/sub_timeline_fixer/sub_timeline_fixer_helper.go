@@ -138,7 +138,7 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath str
 		}
 		for _, info := range subFixInfos {
 			// 写入 fix 后的字幕文件覆盖之前的字幕文件
-			desFixedSubFullName := path.Join(videoRootPath, subNewName)
+			desFixedSubFullName := filepath.Join(videoRootPath, subNewName)
 			err = s.saveSubFile(desFixedSubFullName, info.FixContent)
 			if err != nil {
 				return err
@@ -184,7 +184,7 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	//infoSrcNameWithOutExt := strings.Replace(infoSrc.Name, path.Ext(infoSrc.Name), "", -1)
 
 	// 把原始的文件缓存下来，新建缓存的文件夹
-	cacheTmpPath := path.Join(tmpSubFixCacheFolder, infoBaseNameWithOutExt)
+	cacheTmpPath := filepath.Join(tmpSubFixCacheFolder, infoBaseNameWithOutExt)
 	if pkg.IsDir(cacheTmpPath) == false {
 		err = os.MkdirAll(cacheTmpPath, os.ModePerm)
 		if err != nil {
@@ -192,15 +192,15 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 		}
 	}
 	// 写入内置字幕、外置字幕原始文件
-	err = s.saveSubFile(path.Join(cacheTmpPath, infoBaseNameWithOutExt+".chinese(inside)"+infoBase.Ext), infoBase.Content)
+	err = s.saveSubFile(filepath.Join(cacheTmpPath, infoBaseNameWithOutExt+".chinese(inside)"+infoBase.Ext), infoBase.Content)
 	if err != nil {
 		return false, nil, fixedSubName, err
 	}
-	err = s.saveSubFile(path.Join(cacheTmpPath, infoSrc.Name), infoSrc.Content)
+	err = s.saveSubFile(filepath.Join(cacheTmpPath, infoSrc.Name), infoSrc.Content)
 	if err != nil {
 		return false, nil, fixedSubName, err
 	}
-	bok, offsetTime, sd, err := s.subTimelineFixer.GetOffsetTime(infoBase, infoSrc, path.Join(cacheTmpPath, infoSrc.Name+"-bar.html"), path.Join(cacheTmpPath, infoSrc.Name+".log"))
+	bok, offsetTime, sd, err := s.subTimelineFixer.GetOffsetTime(infoBase, infoSrc, filepath.Join(cacheTmpPath, infoSrc.Name+"-bar.html"), filepath.Join(cacheTmpPath, infoSrc.Name+".log"))
 	if offsetTime != 0 {
 		log_helper.GetLogger().Debugln(infoSrc.Name, "offset time is", fmt.Sprintf("%f", offsetTime), "s")
 	}
@@ -240,11 +240,11 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 		desFixSubFileFullPath := ""
 		if hasDefault == true {
 			fixedSubName = subNewNameDefault
-			desFixSubFileFullPath = path.Join(cacheTmpPath, subNewNameDefault)
+			desFixSubFileFullPath = filepath.Join(cacheTmpPath, subNewNameDefault)
 
 		} else {
 			fixedSubName = subNewName
-			desFixSubFileFullPath = path.Join(cacheTmpPath, subNewName)
+			desFixSubFileFullPath = filepath.Join(cacheTmpPath, subNewName)
 		}
 		fixContent, err := s.subTimelineFixer.FixSubTimeline(infoSrc, offsetTime, desFixSubFileFullPath)
 		if err != nil {

@@ -11,7 +11,6 @@ import (
 	"github.com/james-bowman/nlp"
 	"github.com/james-bowman/nlp/measures/pairwise"
 	"gonum.org/v1/gonum/mat"
-	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -27,7 +26,7 @@ func TestStopWordCounter(t *testing.T) {
 
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
-	bFind, info, err := subParserHub.DetermineFileTypeFromFile(path.Join(testRootDir, "R&M S05E10 - English.srt"))
+	bFind, info, err := subParserHub.DetermineFileTypeFromFile(filepath.Join(testRootDir, "R&M S05E10 - English.srt"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,14 +67,14 @@ func TestGetOffsetTime(t *testing.T) {
 		/*
 			这里有几个比较理想的字幕时间轴校正的示例
 		*/
-		{name: "R&M S05E01", args: args{enSubFile: path.Join(testRootDirYes, "R&M S05E01 - English.srt"),
-			ch_enSubFile:           path.Join(testRootDirYes, "R&M S05E01 - 简英.srt"),
+		{name: "R&M S05E01", args: args{enSubFile: filepath.Join(testRootDirYes, "R&M S05E01 - English.srt"),
+			ch_enSubFile:           filepath.Join(testRootDirYes, "R&M S05E01 - 简英.srt"),
 			staticLineFileSavePath: "bar.html"}, want: -6.42981818181818, wantErr: false},
-		{name: "R&M S05E10", args: args{enSubFile: path.Join(testRootDirYes, "R&M S05E10 - English.ass"),
-			ch_enSubFile:           path.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
+		{name: "R&M S05E10", args: args{enSubFile: filepath.Join(testRootDirYes, "R&M S05E10 - English.ass"),
+			ch_enSubFile:           filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
 			staticLineFileSavePath: "bar.html"}, want: -6.335985401459854, wantErr: false},
-		{name: "基地 S01E03", args: args{enSubFile: path.Join(testRootDirYes, "基地 S01E03 - English.ass"),
-			ch_enSubFile:           path.Join(testRootDirYes, "基地 S01E03 - 简英.ass"),
+		{name: "基地 S01E03", args: args{enSubFile: filepath.Join(testRootDirYes, "基地 S01E03 - English.ass"),
+			ch_enSubFile:           filepath.Join(testRootDirYes, "基地 S01E03 - 简英.ass"),
 			staticLineFileSavePath: "bar.html"}, want: -32.09061538461539, wantErr: false},
 		/*
 			WTF,这部剧集
@@ -83,190 +82,190 @@ func TestGetOffsetTime(t *testing.T) {
 			内置的英文字幕时间轴是歪的，所以修正完了就错了
 		*/
 		{name: "Dan Brown's The Lost Symbol - S01E01", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E01.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E01.chinese(简英,shooter).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E01.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E01.chinese(简英,shooter).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 1.3217821782178225, wantErr: false},
 		{name: "Dan Brown's The Lost Symbol - S01E02", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E02.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E02.chinese(简英,subhd).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E02.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E02.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -0.5253383458646617, wantErr: false},
 		{name: "Dan Brown's The Lost Symbol - S01E03", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E03.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E03.chinese(繁英,xunlei).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E03.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E03.chinese(繁英,xunlei).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -0.505656, wantErr: false},
 		{name: "Dan Brown's The Lost Symbol - S01E04", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E04.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E04.chinese(简英,zimuku).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E04.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E04.chinese(简英,zimuku).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -0.633415, wantErr: false},
 		/*
 			只有一个是字幕下载了一个错误的，其他的无需修正
 		*/
 		{name: "Don't Breathe 2 (2021) - shooter-srt", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).srt"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,shooter).srt"),
+			enSubFile:              filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).srt"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,shooter).srt"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Don't Breathe 2 (2021) - subhd-srt error matched sub", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).srt"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,subhd).srt"),
+			enSubFile:              filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).srt"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,subhd).srt"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Don't Breathe 2 (2021) - xunlei-ass", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,xunlei).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,xunlei).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Don't Breathe 2 (2021) - zimuku-ass", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,zimuku).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,zimuku).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		/*
 			基地
 		*/
 		{name: "Foundation (2021) - S01E01", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Foundation (2021) - S01E01.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Foundation (2021) - S01E01.chinese(简英,zimuku).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Foundation (2021) - S01E01.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Foundation (2021) - S01E01.chinese(简英,zimuku).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Foundation (2021) - S01E02", args: args{
-			enSubFile:              path.Join(testRootDirYes, "Foundation (2021) - S01E02.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirYes, "Foundation (2021) - S01E02.chinese(简英,subhd).ass"),
+			enSubFile:              filepath.Join(testRootDirYes, "Foundation (2021) - S01E02.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirYes, "Foundation (2021) - S01E02.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -30.624840, wantErr: false},
 		{name: "Foundation (2021) - S01E03", args: args{
-			enSubFile:              path.Join(testRootDirYes, "Foundation (2021) - S01E03.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirYes, "Foundation (2021) - S01E03.chinese(简英,subhd).ass"),
+			enSubFile:              filepath.Join(testRootDirYes, "Foundation (2021) - S01E03.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirYes, "Foundation (2021) - S01E03.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -32.085037037037054, wantErr: false},
 		{name: "Foundation (2021) - S01E04", args: args{
-			enSubFile:              path.Join(testRootDirYes, "Foundation (2021) - S01E04.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirYes, "Foundation (2021) - S01E04.chinese(简英,subhd).ass"),
+			enSubFile:              filepath.Join(testRootDirYes, "Foundation (2021) - S01E04.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirYes, "Foundation (2021) - S01E04.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -36.885074, wantErr: false},
 		{name: "Foundation (2021) - S01E04", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Foundation (2021) - S01E04.chinese(inside).srt"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Foundation (2021) - S01E04.chinese(繁英,shooter).srt"),
+			enSubFile:              filepath.Join(testRootDirNo, "Foundation (2021) - S01E04.chinese(inside).srt"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Foundation (2021) - S01E04.chinese(繁英,shooter).srt"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		/*
 			The Card Counter
 		*/
 		{name: "The Card Counter", args: args{
-			enSubFile:              path.Join(testRootDirNo, "The Card Counter (2021).chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "The Card Counter (2021).chinese(简英,xunlei).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "The Card Counter (2021).chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "The Card Counter (2021).chinese(简英,xunlei).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "The Card Counter", args: args{
-			enSubFile:              path.Join(testRootDirNo, "The Card Counter (2021).chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "The Card Counter (2021).chinese(简英,shooter).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "The Card Counter (2021).chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "The Card Counter (2021).chinese(简英,shooter).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0.224844, wantErr: false},
 		/*
 			Kingdom Ashin of the North
 		*/
 		{name: "Kingdom Ashin of the North - error matched sub", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Kingdom Ashin of the North (2021).chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Kingdom Ashin of the North (2021).chinese(简英,subhd).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Kingdom Ashin of the North (2021).chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Kingdom Ashin of the North (2021).chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		/*
 			Only Murders in the Building
 		*/
 		{name: "Only Murders in the Building - S01E06", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Only Murders in the Building - S01E06.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Only Murders in the Building - S01E06.chinese(简英,subhd).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Only Murders in the Building - S01E06.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Only Murders in the Building - S01E06.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Only Murders in the Building - S01E08", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Only Murders in the Building - S01E08.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Only Murders in the Building - S01E08.chinese(简英,subhd).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Only Murders in the Building - S01E08.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Only Murders in the Building - S01E08.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		/*
 			Ted Lasso
 		*/
 		{name: "Ted Lasso - S02E09", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(简英,subhd).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Ted Lasso - S02E09", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(简英,zimuku).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(简英,zimuku).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Ted Lasso - S02E10", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(简英,subhd).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Ted Lasso - S02E10", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(简英,zimuku).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(简英,zimuku).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Ted Lasso - S02E10", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(简英,shooter).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(简英,shooter).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Ted Lasso - S02E11", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(简英,subhd).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Ted Lasso - S02E11", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(简英,zimuku).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(简英,zimuku).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Ted Lasso - S02E12", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(简英,subhd).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "Ted Lasso - S02E12", args: args{
-			enSubFile:              path.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(简英,shooter).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(简英,shooter).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		/*
 			The Protégé
 		*/
 		{name: "The Protégé", args: args{
-			enSubFile:              path.Join(testRootDirNo, "The Protégé (2021).chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "The Protégé (2021).chinese(简英,zimuku).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "The Protégé (2021).chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "The Protégé (2021).chinese(简英,zimuku).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "The Protégé", args: args{
-			enSubFile:              path.Join(testRootDirNo, "The Protégé (2021).chinese(inside).srt"),
-			ch_enSubFile:           path.Join(testRootDirNo, "The Protégé (2021).chinese(简英,shooter).srt"),
+			enSubFile:              filepath.Join(testRootDirNo, "The Protégé (2021).chinese(inside).srt"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "The Protégé (2021).chinese(简英,shooter).srt"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		/*
 			The Witcher Nightmare of the Wolf
 		*/
 		{name: "The Witcher Nightmare of the Wolf", args: args{
-			enSubFile:              path.Join(testRootDirNo, "The Witcher Nightmare of the Wolf.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "The Witcher Nightmare of the Wolf.chinese(简英,zimuku).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "The Witcher Nightmare of the Wolf.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "The Witcher Nightmare of the Wolf.chinese(简英,zimuku).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		/*
 			What If…!
 		*/
 		{name: "What If…! - S01E07", args: args{
-			enSubFile:              path.Join(testRootDirNo, "What If…! - S01E07.chinese(inside).ass"),
-			ch_enSubFile:           path.Join(testRootDirNo, "What If…! - S01E07.chinese(简英,subhd).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "What If…! - S01E07.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "What If…! - S01E07.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 		{name: "What If…! - S01E09", args: args{
-			enSubFile:              path.Join(testRootDirNo, "What If…! - S01E09.chinese(inside).srt"),
-			ch_enSubFile:           path.Join(testRootDirNo, "What If…! - S01E09.chinese(简英,shooter).srt"),
+			enSubFile:              filepath.Join(testRootDirNo, "What If…! - S01E09.chinese(inside).srt"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "What If…! - S01E09.chinese(简英,shooter).srt"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 	}

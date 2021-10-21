@@ -18,7 +18,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/jinzhu/now"
 	"io/ioutil"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -209,7 +208,7 @@ func GetSeriesList(dir string) ([]string, error) {
 			}
 			continue
 		}
-		fullPath := path.Join(dir, curFile.Name())
+		fullPath := filepath.Join(dir, curFile.Name())
 		seriesDirList = append(seriesDirList, fullPath)
 	}
 

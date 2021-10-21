@@ -64,7 +64,7 @@ func TestNewDialogueMerger(t *testing.T) {
 	}
 
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
-	bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(path.Join(testRootDir, "2line-The Card Counter (2021) WEBDL-1080p.chinese(inside).ass"))
+	bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(filepath.Join(testRootDir, "2line-The Card Counter (2021) WEBDL-1080p.chinese(inside).ass"))
 	if err != nil {
 		t.Fatal(err)
 	}

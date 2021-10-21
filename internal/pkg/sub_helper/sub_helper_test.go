@@ -17,7 +17,7 @@ func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pkg.IsDir(path.Join(testRootDir, "Sub_S1E0")) == true {
+	if pkg.IsDir(filepath.Join(testRootDir, "Sub_S1E0")) == true {
 		t.Fatal("Sub_S1E0 not delete")
 	}
 }

@@ -53,3 +53,4 @@
 /internal/pkg/sub_timeline_fixer/Logs
 /internal/pkg/sub_timeline_fixer/config.yaml
 /SubFixCache
+/TestData/ffmpeg/test

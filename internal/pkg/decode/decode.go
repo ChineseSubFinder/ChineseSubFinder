@@ -9,7 +9,6 @@ import (
 	PTN "github.com/middelink/go-parse-torrent-name"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -118,17 +117,17 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 		upperName := strings.ToLower(fi.Name())
 		if upperName == MetadataMovieXml {
 			// 找 movie.xml
-			movieXmlFPath = path.Join(dirPth, fi.Name())
+			movieXmlFPath = filepath.Join(dirPth, fi.Name())
 			break
 		} else if upperName == movieNfoFileName {
 			// movieName.nfo 文件
-			movieNameNfoFPath = path.Join(dirPth, fi.Name())
+			movieNameNfoFPath = filepath.Join(dirPth, fi.Name())
 			break
 		} else {
 			// 找 *.nfo，很可能是 movie.nfo
 			ok := strings.HasSuffix(fi.Name(), suffixNameNfo)
 			if ok {
-				nfoFilePath = path.Join(dirPth, fi.Name())
+				nfoFilePath = filepath.Join(dirPth, fi.Name())
 			}
 		}
 	}
@@ -179,13 +178,13 @@ func GetImdbInfo4SeriesDir(seriesDir string) (types.VideoIMDBInfo, error) {
 		upperName := strings.ToUpper(fi.Name())
 		if upperName == strings.ToUpper(MetadateTVNfo) {
 			// 连续剧的 nfo 文件
-			nfoFilePath = path.Join(seriesDir, fi.Name())
+			nfoFilePath = filepath.Join(seriesDir, fi.Name())
 			break
 		} else {
 			// 找 *.nfo
 			ok := strings.HasSuffix(fi.Name(), suffixNameNfo)
 			if ok {
-				nfoFilePath = path.Join(seriesDir, fi.Name())
+				nfoFilePath = filepath.Join(seriesDir, fi.Name())
 			}
 		}
 	}
@@ -208,7 +207,7 @@ func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoIMDBInfo, error
 	EpNfoFileName := filepath.Base(oneEpFPath)
 	EpNfoFileName = strings.ReplaceAll(EpNfoFileName, filepath.Ext(oneEpFPath), suffixNameNfo)
 	// 全路径
-	EpNfoFPath := path.Join(EPdir, EpNfoFileName)
+	EpNfoFPath := filepath.Join(EPdir, EpNfoFileName)
 	//
 	imdbInfo := types.VideoIMDBInfo{}
 	doc := etree.NewDocument()

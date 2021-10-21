@@ -12,7 +12,6 @@ import (
 	"golang.org/x/text/transform"
 	"io"
 	"io/ioutil"
-	"path"
 	"path/filepath"
 	"strings"
 )
@@ -126,7 +125,7 @@ func processOneFile(f archiver.File, notUTF8 bool, desRootPath string) error {
 		//读取到最终的缓冲区中
 		chunk = append(chunk, buf[:n]...)
 	}
-	err := utils.OutputFile(path.Join(desRootPath, decodeName), chunk)
+	err := utils.OutputFile(filepath.Join(desRootPath, decodeName), chunk)
 	if err != nil {
 		return err
 	}
@@ -164,7 +163,7 @@ func un7zOneFile(file *sevenzip.File, desRootPath string) error {
 	}
 	decodeName := file.Name
 	decodeName = filepath.Base(decodeName)
-	err = utils.OutputFile(path.Join(desRootPath, decodeName), data)
+	err = utils.OutputFile(filepath.Join(desRootPath, decodeName), data)
 	if err != nil {
 		return err
 	}

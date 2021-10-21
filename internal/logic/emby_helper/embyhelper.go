@@ -75,10 +75,10 @@ func (em *EmbyHelper) GetRecentlyAddVideoList(movieRootDir, seriesRootDir string
 	}
 	// 拼接绝对路径
 	for i, info := range noSubMovieList {
-		noSubMovieList[i].VideoFileFullPath = path.Join(movieRootDir, info.VideoFileRelativePath)
+		noSubMovieList[i].VideoFileFullPath = filepath.Join(movieRootDir, info.VideoFileRelativePath)
 	}
 	for i, info := range noSubSeriesList {
-		noSubSeriesList[i].VideoFileFullPath = path.Join(seriesRootDir, info.VideoFileRelativePath)
+		noSubSeriesList[i].VideoFileFullPath = filepath.Join(seriesRootDir, info.VideoFileRelativePath)
 	}
 	// 需要将连续剧零散的每一集，进行合并到一个连续剧下面，也就是这个连续剧有那些需要更新的
 	var seriesMap = make(map[string][]emby.EmbyMixInfo)

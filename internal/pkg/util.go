@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -105,7 +104,7 @@ func AddBaseUrl(baseUrl, url string) string {
 func GetDebugFolder() (string, error) {
 	if defDebugFolder == "" {
 		nowProcessRoot, _ := os.Getwd()
-		nowProcessRoot = path.Join(nowProcessRoot, common.DebugFolder)
+		nowProcessRoot = filepath.Join(nowProcessRoot, common.DebugFolder)
 		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err
@@ -120,7 +119,7 @@ func GetDebugFolder() (string, error) {
 func GetRootTmpFolder() (string, error) {
 	if defTmpFolder == "" {
 		nowProcessRoot, _ := os.Getwd()
-		nowProcessRoot = path.Join(nowProcessRoot, common.TmpFolder)
+		nowProcessRoot = filepath.Join(nowProcessRoot, common.TmpFolder)
 		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err
@@ -168,7 +167,7 @@ func GetTmpFolder(folderName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	tmpFolderFullPath := path.Join(rootPath, folderName)
+	tmpFolderFullPath := filepath.Join(rootPath, folderName)
 	err = os.MkdirAll(tmpFolderFullPath, os.ModePerm)
 	if err != nil {
 		return "", err
@@ -345,8 +344,8 @@ func CopyDir(src string, dst string) error {
 		return err
 	}
 	for _, fd := range fds {
-		srcfp := path.Join(src, fd.Name())
-		dstfp := path.Join(dst, fd.Name())
+		srcfp := filepath.Join(src, fd.Name())
+		dstfp := filepath.Join(dst, fd.Name())
 
 		if fd.IsDir() {
 			if err = CopyDir(srcfp, dstfp); err != nil {
@@ -364,8 +363,8 @@ func CopyDir(src string, dst string) error {
 // CopyTestData 单元测试前把测试的数据 copy 一份出来操作，src 目录中默认应该有一个 org 原始数据文件夹，然后需要复制一份 test 文件夹出来
 func CopyTestData(srcDir string) (string, error) {
 	// 测试数据的文件夹
-	orgDir := path.Join(srcDir, "org")
-	testDir := path.Join(srcDir, "test")
+	orgDir := filepath.Join(srcDir, "org")
+	testDir := filepath.Join(srcDir, "test")
 
 	if IsDir(testDir) == true {
 		err := ClearFolder(testDir)

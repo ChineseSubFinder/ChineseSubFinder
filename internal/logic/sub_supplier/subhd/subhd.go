@@ -644,7 +644,7 @@ search:
 		//截圖保存
 		nowProcessRoot, err := pkg.GetDebugFolder()
 		if err == nil {
-			page.MustScreenshot(path.Join(nowProcessRoot, "result.png"))
+			page.MustScreenshot(filepath.Join(nowProcessRoot, "result.png"))
 		} else {
 			s.log.Errorln("model.GetDebugFolder", err)
 		}

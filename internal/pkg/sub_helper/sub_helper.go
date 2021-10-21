@@ -14,7 +14,6 @@ import (
 	"github.com/go-rod/rod/lib/utils"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -40,7 +39,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 	// 基于以上两点，写了一堆啰嗦的逻辑···
 	for i := range subInfos {
 		// 先存下来，保存是时候需要前缀，前缀就是从那个网站下载来的
-		nowFileSaveFullPath := path.Join(tmpFolderFullPath, GetFrontNameAndOrgName(&subInfos[i]))
+		nowFileSaveFullPath := filepath.Join(tmpFolderFullPath, GetFrontNameAndOrgName(&subInfos[i]))
 		err = utils.OutputFile(nowFileSaveFullPath, subInfos[i].Data)
 		if err != nil {
 			log_helper.GetLogger().Errorln("getFrontNameAndOrgName - OutputFile", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
@@ -63,7 +62,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 		} else {
 			// 那么就是需要解压的文件了
 			// 解压，给一个单独的文件夹
-			unzipTmpFolder := path.Join(tmpFolderFullPath, subInfos[i].FromWhere)
+			unzipTmpFolder := filepath.Join(tmpFolderFullPath, subInfos[i].FromWhere)
 			err = os.MkdirAll(unzipTmpFolder, os.ModePerm)
 			if err != nil {
 				return nil, err
@@ -83,7 +82,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 			// 这里需要给这些下载到的文件进行改名，加是从那个网站来的前缀，后续好查找
 			for _, fileFullPath := range subFileFullPaths {
 				newSubName := AddFrontName(subInfos[i], filepath.Base(fileFullPath))
-				newSubNameFullPath := path.Join(tmpFolderFullPath, newSubName)
+				newSubNameFullPath := filepath.Join(tmpFolderFullPath, newSubName)
 				// 改名
 				err = os.Rename(fileFullPath, newSubNameFullPath)
 				if err != nil {

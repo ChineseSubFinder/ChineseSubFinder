@@ -25,7 +25,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"os"
-	"path"
 	"path/filepath"
 	"sync"
 )
@@ -296,7 +295,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 			} else {
 				// 先进性 emby_helper api 的操作，读取需要更新字幕的项目
 				seriesInfo, organizeSubFiles, err = subSupplierHub.DownloadSub4SeriesFromEmby(
-					path.Join(dir, inData.OneVideoFullPath),
+					filepath.Join(dir, inData.OneVideoFullPath),
 					d.seriesSubNeedDlMap[inData.OneVideoFullPath], inData.Index)
 				if err != nil {
 					d.log.Errorln("subSupplierHub.DownloadSub4Series", inData.OneVideoFullPath, err)
@@ -514,9 +513,9 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSub
 		}
 		for _, sub := range subs {
 			subFileName := filepath.Base(sub)
-			newSeasonSubRootPath := path.Join(seriesInfo.DirPath, "Sub_"+seasonKey)
+			newSeasonSubRootPath := filepath.Join(seriesInfo.DirPath, "Sub_"+seasonKey)
 			_ = os.MkdirAll(newSeasonSubRootPath, os.ModePerm)
-			newSubFullPath := path.Join(newSeasonSubRootPath, subFileName)
+			newSubFullPath := filepath.Join(newSeasonSubRootPath, subFileName)
 			err := pkg.CopyFile(sub, newSubFullPath)
 			if err != nil {
 				d.log.Errorln("saveFullSeasonSub", subFileName, err)
@@ -547,13 +546,13 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	videoRootPath := filepath.Dir(videoFileFullPath)
 	subNewName, subNewNameWithDefault, _ := d.subFormatter.GenerateMixSubName(videoFileFullPath, finalSubFile.Ext, finalSubFile.Lang, extraSubPreName)
 
-	desSubFullPath := path.Join(videoRootPath, subNewName)
+	desSubFullPath := filepath.Join(videoRootPath, subNewName)
 	if setDefault == true {
 		// 先判断没有 default 的字幕是否存在了，在的话，先删除，然后再写入
 		if pkg.IsFile(desSubFullPath) == true {
 			_ = os.Remove(desSubFullPath)
 		}
-		desSubFullPath = path.Join(videoRootPath, subNewNameWithDefault)
+		desSubFullPath = filepath.Join(videoRootPath, subNewNameWithDefault)
 	}
 
 	if skipExistFile == true {
@@ -580,14 +579,14 @@ func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) e
 
 	// 需要进行字幕文件的缓存
 	// 把缓存的文件夹新建出来
-	desFolderFullPath := path.Join(desFolder, common.SubTmpFolderName)
+	desFolderFullPath := filepath.Join(desFolder, common.SubTmpFolderName)
 	err := os.MkdirAll(desFolderFullPath, os.ModePerm)
 	if err != nil {
 		return err
 	}
 	// 复制下载在 tmp 文件夹中的字幕文件到视频文件夹下面
 	for _, subFile := range subFiles {
-		newFn := path.Join(desFolderFullPath, filepath.Base(subFile))
+		newFn := filepath.Join(desFolderFullPath, filepath.Base(subFile))
 		err = pkg.CopyFile(subFile, newFn)
 		if err != nil {
 			return err

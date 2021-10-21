@@ -12,7 +12,6 @@ import (
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/mholt/archiver/v3"
 	"os"
-	"path"
 	"path/filepath"
 	"sync"
 	"time"
@@ -164,15 +163,15 @@ func newPage(browser *rod.Browser) (*rod.Page, error) {
 func releaseAdblock() (string, error) {
 
 	adblockFolderPath := filepath.Join(os.TempDir(), "chinesesubfinder")
-	err := os.MkdirAll(path.Join(adblockFolderPath), os.ModePerm)
+	err := os.MkdirAll(filepath.Join(adblockFolderPath), os.ModePerm)
 	if err != nil {
 		return "", err
 	}
-	desPath := path.Join(adblockFolderPath, "RunAdblock")
+	desPath := filepath.Join(adblockFolderPath, "RunAdblock")
 	// 清理之前缓存的信息
 	_ = pkg.ClearFolder(desPath)
 	// 具体把 adblock zip 解压下载到哪里
-	outZipFileFPath := path.Join(adblockFolderPath, "adblock.zip")
+	outZipFileFPath := filepath.Join(adblockFolderPath, "adblock.zip")
 	adblockZipFile, err := os.Create(outZipFileFPath)
 	if err != nil {
 		return "", err
@@ -191,7 +190,7 @@ func releaseAdblock() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return path.Join(desPath, adblockInsideName), err
+	return filepath.Join(desPath, adblockInsideName), err
 }
 
 const adblockInsideName = "adblock"
