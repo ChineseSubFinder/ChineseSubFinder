@@ -109,6 +109,10 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath str
 		if strings.Contains(exSubInfo.FileName, sub_timeline_fixer.FixMask) == false {
 			continue
 		}
+
+		if videoRootPath == "" {
+			continue
+		}
 		err = os.Remove(filepath.Join(videoRootPath, exSubInfo.FileName))
 		if err != nil {
 			return err

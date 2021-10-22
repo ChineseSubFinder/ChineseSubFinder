@@ -31,6 +31,14 @@ const (
 	ChineseAbbr_639_2B = "chi"
 )
 
+// 如何 639_2B 标准的语言，暂时是用在 ffmpeg 的识别视频资源上
+const (
+	Lang_639_2B_Chinese = "chi"
+	Lang_639_2B_English = "eng"
+	Lang_639_2B_Japan   = "jpn"
+	Lang_639_2B_Korean  = "kor"
+)
+
 const (
 	Sub_Ext_Mark_Default = ".default" // 指定这个字幕是默认的
 	Sub_Ext_Mark_Forced  = ".forced"  // 指定这个字幕是强制的

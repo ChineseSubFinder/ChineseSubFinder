@@ -58,11 +58,11 @@ func main() {
 
 	// 判断文件夹是否存在
 	if pkg.IsDir(config.MovieFolder) == false {
-		log.Errorln("MovieFolder not found")
+		log.Errorln("MovieFolder not found --", config.MovieFolder)
 		return
 	}
 	if pkg.IsDir(config.SeriesFolder) == false {
-		log.Errorln("SeriesFolder not found")
+		log.Errorln("SeriesFolder not found --", config.SeriesFolder)
 		return
 	}
 	// 读取到的文件夹信息展示

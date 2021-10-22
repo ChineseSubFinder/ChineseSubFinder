@@ -176,6 +176,23 @@ func ChineseISOString2Lang(chineseStr string) types.Language {
 	}
 }
 
+// ISOString2SupportLang 从 639-2/B 的语言缩写字符串转换为内部的 Language 类型，值支持
+// https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+func ISOString2SupportLang(isoString string) types.Language {
+	switch isoString {
+	case types.Lang_639_2B_Chinese:
+		return types.ChineseSimple
+	case types.Lang_639_2B_English:
+		return types.English
+	case types.Lang_639_2B_Japan:
+		return types.Japanese
+	case types.Lang_639_2B_Korean:
+		return types.Korean
+	default:
+		return types.Unknow
+	}
+}
+
 // ChineseString2Lang 将 中文描述：简、繁、简英 转换为 types.Language
 func ChineseString2Lang(chineseStr string) types.Language {
 	switch chineseStr {

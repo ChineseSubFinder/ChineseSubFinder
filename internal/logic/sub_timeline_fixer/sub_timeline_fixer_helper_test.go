@@ -22,9 +22,10 @@ func TestSubTimelineFixerHelper_fixOneVideoSub(t *testing.T) {
 	// 基地 S01E04 173354
 	// 81873 -- R&M - S05E01
 	// 145499 -- R&M - S05E10
+	// 178071 -- The Night House
 	config := pkg.GetConfig()
 	fixer := NewSubTimelineFixerHelper(config.EmbyConfig, config.SubTimelineFixerConfig)
-	err := fixer.fixOneVideoSub("173354", "")
+	err := fixer.fixOneVideoSub("178071", "")
 	if err != nil {
 		t.Fatal(err)
 	}

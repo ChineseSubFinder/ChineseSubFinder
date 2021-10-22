@@ -3,7 +3,7 @@ package srt
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
-	"path"
+	"path/filepath"
 	"testing"
 )
 
