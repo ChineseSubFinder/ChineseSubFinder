@@ -3,6 +3,8 @@ package ffmpeg_helper
 import (
 	"bytes"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/tidwall/gjson"
 	"os/exec"
 	"path/filepath"
@@ -10,7 +12,7 @@ import (
 	"strings"
 )
 
-func GetFFMPEGInfo(videoFileFullPath string) error {
+func GetFFMPEGInfo(videoFileFullPath string) (string, error) {
 
 	const args = "-v error -show_format -show_streams -print_format json"
 	cmdArgs := strings.Fields(args)
@@ -22,18 +24,14 @@ func GetFFMPEGInfo(videoFileFullPath string) error {
 	cmd.Stdout = buf
 	err := cmd.Start()
 	if err != nil {
-		return err
+		return "", err
 	}
 	err = cmd.Wait()
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	// 将获取到的反馈 json 字符串进行解析
-	println(buf.String())
-	println(filepath.Dir(videoFileFullPath))
-
-	return nil
+	return buf.String(), nil
 }
 
 // parseJsonString2GetFFMPEGInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引
@@ -72,7 +70,7 @@ func parseJsonString2GetFFMPEGInfo(videoFileFullPath, inputFFProbeString string)
 			continue
 		}
 		// 这里需要区分是字幕还是音频
-		if oneCodecType.String() == "subtitle" {
+		if oneCodecType.String() == codecTypeSub {
 			// 字幕
 			// 这里非必须解析到 language 字段，把所有的都导出来，然后通过额外字幕语言判断即可
 			oneDurationTS := gjson.Get(inputFFProbeString, fmt.Sprintf("streams.%d.duration_ts", i))
@@ -88,6 +86,10 @@ func parseJsonString2GetFFMPEGInfo(videoFileFullPath, inputFFProbeString string)
 			nowLanguageString := ""
 			if oneLanguage.Exists() == true {
 				nowLanguageString = oneLanguage.String()
+				// 只导出 中、英、日、韩
+				if language.IsSupportISOString(nowLanguageString) == false {
+					continue
+				}
 			}
 			subInfo := NewSubtitileInfo(int(oneIndex.Num), oneCodecName.String(), oneCodecType.String(),
 				oneTimeBase.String(), oneStartTime.String(),
@@ -95,10 +97,14 @@ func parseJsonString2GetFFMPEGInfo(videoFileFullPath, inputFFProbeString string)
 
 			ffmpegInfo.SubtitleInfoList = append(ffmpegInfo.SubtitleInfoList, *subInfo)
 
-		} else if oneCodecType.String() == "audio" {
+		} else if oneCodecType.String() == codecTypeAudio {
 			// 音频
 			// 这里必要要能够解析到 language 字段
 			if oneLanguage.Exists() == false {
+				continue
+			}
+			// 只导出 中、英、日、韩
+			if language.IsSupportISOString(oneLanguage.String()) == false {
 				continue
 			}
 			audioInfo := NewAudioInfo(int(oneIndex.Num), oneCodecName.String(), oneCodecType.String(),
@@ -133,22 +139,46 @@ func getAudioAndSubExportArgs(videoFileFullPath string, ffmpegInfo *FFMPEGInfo) 
 	*/
 	var subArgs = make([]string, 0)
 	var audioArgs = make([]string, 0)
-
+	// 基础的输入视频参数
 	subArgs = append(subArgs, "-i")
 	audioArgs = append(audioArgs, "-i")
-
 	subArgs = append(subArgs, videoFileFullPath)
 	audioArgs = append(audioArgs, videoFileFullPath)
-
-	subArgs = append(subArgs, "-vn")
-	subArgs = append(subArgs, "-an")
+	// 字幕导出的参数构建
+	subArgs = append(subArgs, "-vn") // 不输出视频流
+	subArgs = append(subArgs, "-an") // 不输出音频流
 	for _, subtitleInfo := range ffmpegInfo.SubtitleInfoList {
-		addSubMapArg(subArgs, subtitleInfo.Index, filepath.Join())
+		addSubMapArg(&subArgs, subtitleInfo.Index,
+			filepath.Join(ffmpegInfo.GetCacheFolderFPath(), subtitleInfo.GetName()+common.SubExtSRT))
+		addSubMapArg(&subArgs, subtitleInfo.Index,
+			filepath.Join(ffmpegInfo.GetCacheFolderFPath(), subtitleInfo.GetName()+common.SubExtASS))
 	}
+	// 音频导出的参数构建
+	audioArgs = append(audioArgs, "-vn")
+	for _, audioInfo := range ffmpegInfo.AudioInfoList {
+		addAudioMapArg(&audioArgs, audioInfo.Index,
+			filepath.Join(ffmpegInfo.GetCacheFolderFPath(), audioInfo.GetName()+extMP3))
+	}
+
+	return audioArgs, subArgs
 }
 
-func addSubMapArg(subArgs []string, index int, subSaveFullPath string) {
-	subArgs = append(subArgs, "-map")
-	subArgs = append(subArgs, fmt.Sprintf("0:%d", index))
-	subArgs = append(subArgs, subSaveFullPath)
+func addSubMapArg(subArgs *[]string, index int, subSaveFullPath string) {
+	*subArgs = append(*subArgs, "-map")
+	*subArgs = append(*subArgs, fmt.Sprintf("0:%d", index))
+	*subArgs = append(*subArgs, subSaveFullPath)
 }
+
+func addAudioMapArg(subArgs *[]string, index int, audioSaveFullPath string) {
+	*subArgs = append(*subArgs, "-map")
+	*subArgs = append(*subArgs, fmt.Sprintf("0:%d", index))
+	*subArgs = append(*subArgs, "-f")
+	*subArgs = append(*subArgs, "mp3")
+	*subArgs = append(*subArgs, audioSaveFullPath)
+}
+
+const (
+	codecTypeSub   = "subtitle"
+	codecTypeAudio = "audio"
+	extMP3         = ".mp3"
+)
