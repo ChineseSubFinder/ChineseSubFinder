@@ -4,15 +4,19 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/tidwall/gjson"
+	"os"
 	"os/exec"
 	"path/filepath"
 
 	"strings"
 )
 
-func GetFFMPEGInfo(videoFileFullPath string) (string, error) {
+// GetFFMPEGInfo 获取 视频的 FFMPEG 信息，包含音频和字幕
+// 优先会导出 中、英、日、韩 类型的，字幕如果没有语言类型，则也导出，然后需要额外的字幕语言的判断去辅助标记（读取文件内容）
+func GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInfo, error) {
 
 	const args = "-v error -show_format -show_streams -print_format json"
 	cmdArgs := strings.Fields(args)
@@ -24,14 +28,30 @@ func GetFFMPEGInfo(videoFileFullPath string) (string, error) {
 	cmd.Stdout = buf
 	err := cmd.Start()
 	if err != nil {
-		return "", err
+		return false, nil, err
 	}
 	err = cmd.Wait()
 	if err != nil {
-		return "", err
+		return false, nil, err
+	}
+	// 解析得到的字符串反馈
+	bok, ffMPEGInfo := parseJsonString2GetFFMPEGInfo(videoFileFullPath, buf.String())
+	// 判断这个视频是否已经导出过内置的字幕和音频文件了
+	if pkg.IsDir(ffMPEGInfo.GetCacheFolderFPath()) == false {
+		// 说明缓存不存在，需要导出，这里需要注意，如果导出识别了，这个文件夹要清理掉
+		// 这样下一次过来只要判断存在文件夹就可以认为是导出过了
+
+		// 先创建文件夹
+		err = os.MkdirAll(ffMPEGInfo.GetCacheFolderFPath(), os.ModePerm)
+		if err != nil {
+			return false, nil, err
+		}
+
+	} else {
+		// 说明缓存文件存在了，无需导出了
 	}
 
-	return buf.String(), nil
+	return bok, ffMPEGInfo, nil
 }
 
 // parseJsonString2GetFFMPEGInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引

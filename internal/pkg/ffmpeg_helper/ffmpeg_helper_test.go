@@ -10,14 +10,12 @@ import (
 func TestGetFFMPEGInfo(t *testing.T) {
 	videoFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 5\\Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.mkv"
 
-	jsonString, err := GetFFMPEGInfo(videoFile)
+	bok, ffmpegInfo, err := GetFFMPEGInfo(videoFile)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	bok, ffmpegInfo := parseJsonString2GetFFMPEGInfo(videoFile, jsonString)
 	if bok == false {
-		t.Fatal("parseJsonString2GetFFMPEGInfo is false")
+		t.Fatal("GetFFMPEGInfo = false")
 	}
 
 	subArgs, audioArgs := getAudioAndSubExportArgs(videoFile, ffmpegInfo)
