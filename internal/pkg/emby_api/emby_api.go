@@ -113,6 +113,10 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 			}).
 			SetResult(&recItems).
 			Get(em.embyConfig.Url + "/emby/Items")
+
+		if err != nil {
+			return emby.EmbyRecentlyItems{}, err
+		}
 	} else {
 
 		var userIds emby.EmbyUsers
