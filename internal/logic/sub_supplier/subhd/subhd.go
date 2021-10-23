@@ -77,12 +77,12 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
 	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy, true)
-	defer func() {
-		_ = browser.Close()
-	}()
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		_ = browser.Close()
+	}()
 	var subInfos = make([]supplier.SubInfo, 0)
 	var subList = make([]HdListItem, 0)
 	for value := range seriesInfo.NeedDlSeasonDict {
@@ -192,12 +192,12 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInf
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
 	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy, true)
-	defer func() {
-		_ = browser.Close()
-	}()
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		_ = browser.Close()
+	}()
 	var subInfos []supplier.SubInfo
 	detailPageUrl, err := s.step0(browser, keyword)
 	if err != nil {

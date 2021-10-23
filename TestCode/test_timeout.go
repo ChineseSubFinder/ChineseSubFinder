@@ -93,14 +93,14 @@ func goStep(inData InputData) error {
 			}()
 
 			browser, err := rod_helper.NewBrowser("", true)
-			defer func() {
-				_ = browser.Close()
-				println(inData.Index, in, "browser closed")
-			}()
 			if err != nil {
 				println(inData.Index, in, "rod_helper.NewBrowser", err)
 				return
 			}
+			defer func() {
+				_ = browser.Close()
+				println(inData.Index, in, "browser closed")
+			}()
 			ontTime := false
 
 			for {
@@ -154,14 +154,14 @@ func goStep(inData InputData) error {
 
 func oneStep(inData InputData) error {
 	browser, err := rod_helper.NewBrowser("", true)
-	defer func() {
-		_ = browser.Close()
-		println(inData.Index, "browser closed")
-	}()
 	if err != nil {
 		println(inData.Index, "rod_helper.NewBrowser", err)
 		return err
 	}
+	defer func() {
+		_ = browser.Close()
+		println(inData.Index, "browser closed")
+	}()
 	page, err := rod_helper.NewPageNavigate(browser, "https://www.baidu.com", 10*time.Second, 5)
 	if err != nil {
 		return err
