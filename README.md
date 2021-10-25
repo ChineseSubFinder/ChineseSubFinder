@@ -18,6 +18,10 @@
 
 本程序有什么功能见: [功能](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/功能.md)
 
+## 前置要求
+
+如果想顺利的用起来，还是对电影、连续剧的目录有一定的要求的。见文档，[电影的推荐目录结构](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E7%94%B5%E5%BD%B1%E5%92%8C%E8%BF%9E%E7%BB%AD%E5%89%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E7%A4%BA%E4%BE%8B.md)
+
 ## How to use
 
 有两个文档可以参考：
@@ -39,6 +43,10 @@
 * [物理路径与 docker 容器路劲映射指导](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E7%89%A9%E7%90%86%E8%B7%AF%E5%BE%84%E4%B8%8E%20docker%20%E5%AE%B9%E5%99%A8%E8%B7%AF%E5%8A%B2%E6%98%A0%E5%B0%84%E6%8C%87%E5%AF%BC.md)
 
 如果文档没有及时更新，或者描述含糊、歧义的，欢迎提 [ISSUES](https://github.com/allanpk716/ChineseSubFinder/issues)。
+
+## 问题列表
+
+如果遇到问题了，可以先看看这里总结的问题，如果未能解决，依然可以继续提问。[问题列表](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E9%97%AE%E9%A2%98%E5%88%97%E8%A1%A8.md)
 
 ## 其他文档
 
