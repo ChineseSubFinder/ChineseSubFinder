@@ -437,7 +437,7 @@ func (s Supplier) step2(subInfo *SubInfo) error {
 	re := regexp.MustCompile(`<a\s+id="down1"\s+href="([^"]*/dld/[\w]+\.html)"`)
 	matched := re.FindAllStringSubmatch(resp.String(), -1)
 	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
-		s.log.Debug(detailUrl)
+		s.log.Warnln("Step2,sub download url not found", detailUrl)
 		return common.ZiMuKuDownloadUrlStep2NotFound
 	}
 	if strings.Contains(matched[0][1], "://") {
@@ -466,7 +466,7 @@ func (s Supplier) step3(subDownloadPageUrl string) (string, []byte, error) {
 	re := regexp.MustCompile(`<li><a\s+rel="nofollow"\s+href="([^"]*/download/[^"]+)"`)
 	matched := re.FindAllStringSubmatch(resp.String(), -1)
 	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
-		s.log.Debug(subDownloadPageUrl)
+		s.log.Debugln("Step3,sub download url not found", subDownloadPageUrl)
 		return "", nil, common.ZiMuKuDownloadUrlStep3NotFound
 	}
 	var filename string
@@ -481,7 +481,7 @@ func (s Supplier) step3(subDownloadPageUrl string) (string, []byte, error) {
 		}
 		return filename, data, nil
 	}
-	s.log.Debug(subDownloadPageUrl)
+	s.log.Debugln("Step3,sub download url not found", subDownloadPageUrl)
 	return "", nil, common.ZiMuKuDownloadUrlStep3AllFailed
 }
 

@@ -290,13 +290,13 @@ func (s *SubTimelineFixer) GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, 
 
 		debugInfos = append(debugInfos, tmpContent)
 
-		log_helper.GetLogger().Debugln(tmpContent)
+		log_helper.GetLogger().Infoln(tmpContent)
 	} else {
 		tmpContent := infoSrc.Name + fmt.Sprintf(" Sequence match %d dialogues,", s.fixerConfig.MaxCompareDialogue) + fmt.Sprintf(" %f%% ", perMatch*100)
 
 		debugInfos = append(debugInfos, tmpContent)
 
-		log_helper.GetLogger().Debugln(tmpContent)
+		log_helper.GetLogger().Infoln(tmpContent)
 	}
 
 	// 输出调试的匹配时间轴信息的列表

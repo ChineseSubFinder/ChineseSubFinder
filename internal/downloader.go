@@ -110,6 +110,18 @@ func (d *Downloader) GetUpdateVideoListFromEmby(movieRootDir, seriesRootDir stri
 	for _, info := range movieList {
 		d.movieFileFullPathList = append(d.movieFileFullPathList, info.VideoFileFullPath)
 	}
+	// 输出调试信息
+	log_helper.GetLogger().Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap Start")
+	for s, _ := range d.seriesSubNeedDlMap {
+		log_helper.GetLogger().Debugln(s)
+	}
+	log_helper.GetLogger().Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap End")
+
+	log_helper.GetLogger().Debugln("GetUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList Start")
+	for s := range d.movieFileFullPathList {
+		log_helper.GetLogger().Debugln(s)
+	}
+	log_helper.GetLogger().Debugln("GetUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList End")
 
 	return nil
 }
@@ -123,7 +135,9 @@ func (d Downloader) RefreshEmbySubList() error {
 	bRefresh := false
 	defer func() {
 		if bRefresh == true {
-			d.log.Infoln("Refresh Emby Sub List")
+			d.log.Infoln("Refresh Emby Sub List Success")
+		} else {
+			d.log.Errorln("Refresh Emby Sub List Error")
 		}
 	}()
 

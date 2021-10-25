@@ -45,14 +45,19 @@ func (em *EmbyHelper) GetRecentlyAddVideoList(movieRootDir, seriesRootDir string
 	if err != nil {
 		return nil, nil, err
 	}
+
+	log_helper.GetLogger().Debugln("GetRecentlyAddVideoList - GetRecentlyItems Count", len(items.Items))
+
 	// 分类
 	for _, item := range items.Items {
-		if item.Type == "Episode" {
+		if item.Type == videoTypeEpisode {
 			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
 			EpisodeIdList = append(EpisodeIdList, item.Id)
-		} else if item.Type == "Movie" {
+		} else if item.Type == videoTypeMovie {
 			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
 			MovieIdList = append(MovieIdList, item.Id)
+		} else {
+			log_helper.GetLogger().Debugln("GetRecentlyItems - Is not a goal video type:", item.Type, item.Name)
 		}
 	}
 	// 过滤出有效的电影、连续剧的资源出来
@@ -469,3 +474,8 @@ type OutData struct {
 	Info *emby.EmbyMixInfo
 	Err  error
 }
+
+const (
+	videoTypeEpisode = "Episode"
+	videoTypeMovie   = "Movie"
+)

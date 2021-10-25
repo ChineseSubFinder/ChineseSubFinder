@@ -1,6 +1,7 @@
 package log_helper
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/sirupsen/logrus"
 	easy "github.com/t-tomalak/logrus-easy-formatter"
@@ -40,9 +41,18 @@ func NewLogHelper(appName string, level logrus.Level, maxAge time.Duration, rota
 
 	return Logger
 }
+
 func GetLogger() *logrus.Logger {
 	logOnce.Do(func() {
-		logger = NewLogHelper("ChineseSubFinder", logrus.DebugLevel, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
+
+		var level logrus.Level
+		if pkg.GetConfig().DebugMode == true {
+			level = logrus.DebugLevel
+		} else {
+			level = logrus.InfoLevel
+		}
+
+		logger = NewLogHelper("ChineseSubFinder", level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
 	})
 	return logger
 }

@@ -147,7 +147,7 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath str
 			if err != nil {
 				return err
 			}
-			log_helper.GetLogger().Debugln("Sub Timeline fixed:", desFixedSubFullName)
+			log_helper.GetLogger().Infoln("Sub Timeline fixed:", desFixedSubFullName)
 		}
 	}
 
@@ -206,14 +206,14 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	}
 	bok, offsetTime, sd, err := s.subTimelineFixer.GetOffsetTime(infoBase, infoSrc, filepath.Join(cacheTmpPath, infoSrc.Name+"-bar.html"), filepath.Join(cacheTmpPath, infoSrc.Name+".log"))
 	if offsetTime != 0 {
-		log_helper.GetLogger().Debugln(infoSrc.Name, "offset time is", fmt.Sprintf("%f", offsetTime), "s")
+		log_helper.GetLogger().Infoln(infoSrc.Name, "offset time is", fmt.Sprintf("%f", offsetTime), "s")
 	}
 	// 超过 SD 阈值了
 	if sd > s.FixerConfig.MaxStartTimeDiffSD {
-		log_helper.GetLogger().Debugln(infoSrc.Name, "Start Time Diff SD, skip", fmt.Sprintf("%f", sd))
+		log_helper.GetLogger().Infoln(infoSrc.Name, "Start Time Diff SD, skip", fmt.Sprintf("%f", sd))
 		return false, nil, fixedSubName, nil
 	} else {
-		log_helper.GetLogger().Debugln(infoSrc.Name, "Start Time Diff SD", fmt.Sprintf("%f", sd))
+		log_helper.GetLogger().Infoln(infoSrc.Name, "Start Time Diff SD", fmt.Sprintf("%f", sd))
 	}
 
 	if err != nil || bok == false {
@@ -222,7 +222,7 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 
 	// 偏移很小就无视了
 	if offsetTime < s.FixerConfig.MinOffset && offsetTime > -s.FixerConfig.MinOffset {
-		log_helper.GetLogger().Debugln(infoSrc.Name, fmt.Sprintf("Min Offset Config is %f, skip ", s.FixerConfig.MinOffset), fmt.Sprintf("now is %f", offsetTime))
+		log_helper.GetLogger().Infoln(infoSrc.Name, fmt.Sprintf("Min Offset Config is %f, skip ", s.FixerConfig.MinOffset), fmt.Sprintf("now is %f", offsetTime))
 		return false, nil, fixedSubName, nil
 	}
 	// 写入校准时间轴后的字幕

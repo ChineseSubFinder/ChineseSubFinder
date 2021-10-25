@@ -150,13 +150,13 @@ func OneSeriesDlSubInAllSite(Suppliers []ifaces.ISupplier, seriesInfo *series.Se
 		log_helper.GetLogger().Infoln(i, "DlSub End", seriesInfo.DirPath)
 	}()
 	log_helper.GetLogger().Infoln(i, "DlSub Start", seriesInfo.DirPath)
-	log_helper.GetLogger().Debugln(seriesInfo.Name, "IMDB ID:", seriesInfo.ImdbId, "NeedDownloadSubs:", len(seriesInfo.NeedDlEpsKeyList))
+	log_helper.GetLogger().Infoln(seriesInfo.Name, "IMDB ID:", seriesInfo.ImdbId, "NeedDownloadSubs:", len(seriesInfo.NeedDlEpsKeyList))
 	var outSUbInfos = make([]supplier.SubInfo, 0)
 	if len(seriesInfo.NeedDlEpsKeyList) < 1 {
 		return outSUbInfos
 	}
 	for key := range seriesInfo.NeedDlEpsKeyList {
-		log_helper.GetLogger().Debugln(key)
+		log_helper.GetLogger().Infoln(key)
 	}
 	// 同时进行查询
 	subInfosChannel := make(chan []supplier.SubInfo)

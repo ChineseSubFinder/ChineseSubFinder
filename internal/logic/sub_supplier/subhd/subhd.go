@@ -24,7 +24,6 @@ import (
 	"math"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -619,7 +618,7 @@ search:
 				abs(int(colorAG)-int(colorBG)) > threshold ||
 				abs(int(colorAB)-int(colorBB)) > threshold {
 				distance += float64(i)
-				s.log.Debug("對比完畢, 偏移量:", distance)
+				s.log.Debugln("對比完畢, 偏移量:", distance)
 				break search
 			}
 		}

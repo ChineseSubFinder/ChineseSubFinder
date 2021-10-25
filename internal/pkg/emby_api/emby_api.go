@@ -38,6 +38,8 @@ func (em EmbyApi) RefreshRecentlyVideoInfo() error {
 		return err
 	}
 
+	log_helper.GetLogger().Debugln("RefreshRecentlyVideoInfo - GetRecentlyItems Count", len(items.Items))
+
 	updateFunc := func(i interface{}) error {
 		tmpId := i.(string)
 		return em.UpdateVideoSubList(tmpId)
@@ -99,6 +101,8 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 	var recItemExsitMap = make(map[string]emby.EmbyRecentlyItem)
 	var err error
 	if em.embyConfig.SkipWatched == false {
+		log_helper.GetLogger().Debugln("Emby Setting SkipWatched = false")
+
 		// 默认是不指定某一个User的视频列表
 		_, err = em.getNewClient().R().
 			SetQueryParams(map[string]string{
@@ -118,6 +122,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 			return emby.EmbyRecentlyItems{}, err
 		}
 	} else {
+		log_helper.GetLogger().Debugln("Emby Setting SkipWatched = true")
 
 		var userIds emby.EmbyUsers
 		userIds, err = em.GetUserIdList()
@@ -169,6 +174,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 		}
 
 		for id := range recItemExsitMap {
+			log_helper.GetLogger().Debugln("Skip Watched Video:", recItemMap[id].Type, recItemMap[id].Name)
 			delete(recItemMap, id)
 		}
 
