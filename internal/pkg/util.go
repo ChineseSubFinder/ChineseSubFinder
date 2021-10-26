@@ -3,6 +3,7 @@ package pkg
 import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	browser "github.com/allanpk716/fake-useragent"
@@ -102,32 +103,32 @@ func AddBaseUrl(baseUrl, url string) string {
 }
 
 func GetDebugFolder() (string, error) {
-	if defDebugFolder == "" {
+	if global_value.DefDebugFolder == "" {
 		nowProcessRoot, _ := os.Getwd()
 		nowProcessRoot = filepath.Join(nowProcessRoot, common.DebugFolder)
 		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err
 		}
-		defDebugFolder = nowProcessRoot
+		global_value.DefDebugFolder = nowProcessRoot
 		return nowProcessRoot, err
 	}
-	return defDebugFolder, nil
+	return global_value.DefDebugFolder, nil
 }
 
 // GetRootTmpFolder 获取缓存的根目录，每一个视频的缓存将在其中额外新建子集文件夹
 func GetRootTmpFolder() (string, error) {
-	if defTmpFolder == "" {
+	if global_value.DefTmpFolder == "" {
 		nowProcessRoot, _ := os.Getwd()
 		nowProcessRoot = filepath.Join(nowProcessRoot, common.TmpFolder)
 		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err
 		}
-		defTmpFolder = nowProcessRoot
+		global_value.DefTmpFolder = nowProcessRoot
 		return nowProcessRoot, err
 	}
-	return defTmpFolder, nil
+	return global_value.DefTmpFolder, nil
 }
 
 // ClearRootTmpFolder 清理缓存的根目录，将里面的子文件夹一并清理
@@ -276,23 +277,23 @@ func SearchMatchedVideoFile(dir string) ([]string, error) {
 // IsWantedVideoExtDef 后缀名是否符合规则
 func IsWantedVideoExtDef(fileName string) bool {
 
-	if len(wantedExtMap) < 1 {
-		defExtMap[common.VideoExtMp4] = common.VideoExtMp4
-		defExtMap[common.VideoExtMkv] = common.VideoExtMkv
-		defExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
-		defExtMap[common.VideoExtIso] = common.VideoExtIso
+	if len(global_value.WantedExtMap) < 1 {
+		global_value.DefExtMap[common.VideoExtMp4] = common.VideoExtMp4
+		global_value.DefExtMap[common.VideoExtMkv] = common.VideoExtMkv
+		global_value.DefExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
+		global_value.DefExtMap[common.VideoExtIso] = common.VideoExtIso
 
-		wantedExtMap[common.VideoExtMp4] = common.VideoExtMp4
-		wantedExtMap[common.VideoExtMkv] = common.VideoExtMkv
-		wantedExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
-		wantedExtMap[common.VideoExtIso] = common.VideoExtIso
+		global_value.WantedExtMap[common.VideoExtMp4] = common.VideoExtMp4
+		global_value.WantedExtMap[common.VideoExtMkv] = common.VideoExtMkv
+		global_value.WantedExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
+		global_value.WantedExtMap[common.VideoExtIso] = common.VideoExtIso
 
-		for _, videoExt := range customVideoExts {
-			wantedExtMap[videoExt] = videoExt
+		for _, videoExt := range global_value.CustomVideoExts {
+			global_value.WantedExtMap[videoExt] = videoExt
 		}
 	}
 	fileExt := strings.ToLower(filepath.Ext(fileName))
-	_, bFound := wantedExtMap[fileExt]
+	_, bFound := global_value.WantedExtMap[fileExt]
 	return bFound
 }
 

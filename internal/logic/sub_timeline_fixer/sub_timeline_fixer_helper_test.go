@@ -1,13 +1,13 @@
 package sub_timeline_fixer
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
 	"testing"
 )
 
 func TestSubTimelineFixerHelper_FixRecentlyItemsSubTimeline(t *testing.T) {
 	// 单独执行这个，第一次是有效的，第二次，就没得效果了，原因是已经替换字幕了啊，当然就不会修正了啊。你懂的
-	config := pkg.GetConfig()
+	config := config.GetConfig()
 	fixer := NewSubTimelineFixerHelper(config.EmbyConfig, config.SubTimelineFixerConfig)
 	err := fixer.FixRecentlyItemsSubTimeline(config.MovieFolder, config.SeriesFolder)
 	if err != nil {
@@ -23,7 +23,7 @@ func TestSubTimelineFixerHelper_fixOneVideoSub(t *testing.T) {
 	// 81873 -- R&M - S05E01
 	// 145499 -- R&M - S05E10
 	// 178071 -- The Night House
-	config := pkg.GetConfig()
+	config := config.GetConfig()
 	fixer := NewSubTimelineFixerHelper(config.EmbyConfig, config.SubTimelineFixerConfig)
 	err := fixer.fixOneVideoSub("178071", "")
 	if err != nil {

@@ -1,13 +1,13 @@
 package emby_api
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
 	"testing"
 )
 
 func TestEmbyHelper_GetRecentlyItems(t *testing.T) {
 
-	em := NewEmbyApi(pkg.GetConfig().EmbyConfig)
+	em := NewEmbyApi(config.GetConfig().EmbyConfig)
 	items, err := em.GetRecentlyItems()
 	if err != nil {
 		t.Fatal(err)
@@ -19,7 +19,7 @@ func TestEmbyHelper_GetRecentlyItems(t *testing.T) {
 }
 
 func TestEmbyHelper_GetItemsAncestors(t *testing.T) {
-	em := NewEmbyApi(pkg.GetConfig().EmbyConfig)
+	em := NewEmbyApi(config.GetConfig().EmbyConfig)
 	items, err := em.GetItemAncestors("96564")
 	if err != nil {
 		t.Fatal(err)
@@ -33,7 +33,7 @@ func TestEmbyHelper_GetItemsAncestors(t *testing.T) {
 }
 
 func TestEmbyHelper_GetItemVideoInfoByUserId(t *testing.T) {
-	em := NewEmbyApi(pkg.GetConfig().EmbyConfig)
+	em := NewEmbyApi(config.GetConfig().EmbyConfig)
 	// 95813 -- 命运夜
 	// 96564 -- The Bad Batch - S01E11
 	// 108766 -- R&M - S05E06
@@ -47,7 +47,7 @@ func TestEmbyHelper_GetItemVideoInfoByUserId(t *testing.T) {
 }
 
 func TestEmbyHelper_UpdateVideoSubList(t *testing.T) {
-	em := NewEmbyApi(pkg.GetConfig().EmbyConfig)
+	em := NewEmbyApi(config.GetConfig().EmbyConfig)
 	// 95813 -- 命运夜
 	// 96564 -- The Bad Batch - S01E11
 	// 81873 -- R&M - S05E01
@@ -63,7 +63,7 @@ func TestEmbyHelper_UpdateVideoSubList(t *testing.T) {
 }
 
 func TestEmbyHelper_GetUserIdList(t *testing.T) {
-	em := NewEmbyApi(pkg.GetConfig().EmbyConfig)
+	em := NewEmbyApi(config.GetConfig().EmbyConfig)
 	userIds, err := em.GetUserIdList()
 	if err != nil {
 		t.Fatal(err)
@@ -74,7 +74,7 @@ func TestEmbyHelper_GetUserIdList(t *testing.T) {
 }
 
 func TestEmbyHelper_GetItemVideoInfo(t *testing.T) {
-	em := NewEmbyApi(pkg.GetConfig().EmbyConfig)
+	em := NewEmbyApi(config.GetConfig().EmbyConfig)
 	// 95813 -- 命运夜
 	// 96564 -- The Bad Batch - S01E11
 	// R&M S05E10  2 org english, 5 简英 145499
@@ -90,7 +90,7 @@ func TestEmbyHelper_GetItemVideoInfo(t *testing.T) {
 }
 
 func TestEmbyApi_GetSubFileData(t *testing.T) {
-	em := NewEmbyApi(pkg.GetConfig().EmbyConfig)
+	em := NewEmbyApi(config.GetConfig().EmbyConfig)
 	// R&M S05E10  2 org english, 5 简英					"145499", "c4678509adb72a8b5034bdac2f1fccde", "5", ".ass"
 	// 基地 S01E03		2=eng 	6=chi 	45=简英			"166840", "d6c68ec6097aeceb9f5c1d82add66213", "2", ".ass"
 	// 基地 S01E04		2=eng 	6=chi 	45=简英			"173354", "c08f514cc1708f3fadea56e489da33db", "2", ".ass"
@@ -107,7 +107,7 @@ func TestEmbyApi_GetSubFileData(t *testing.T) {
 
 func TestEmbyApi_RefreshRecentlyVideoInfo(t *testing.T) {
 
-	em := NewEmbyApi(pkg.GetConfig().EmbyConfig)
+	em := NewEmbyApi(config.GetConfig().EmbyConfig)
 	err := em.RefreshRecentlyVideoInfo()
 	if err != nil {
 		t.Fatal("RefreshRecentlyVideoInfo() error = " + err.Error())

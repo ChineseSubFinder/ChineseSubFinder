@@ -2,7 +2,7 @@ package subhd
 
 import (
 	series_helper2 "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"testing"
 )
@@ -78,7 +78,7 @@ func TestSupplier_getSubListFromKeyword4Movie(t *testing.T) {
 
 func getReqParam() types.ReqParam {
 
-	config := pkg.GetConfig()
+	config := config.GetConfig()
 	req := types.ReqParam{}
 	if config.UseProxy == true {
 		req.HttpProxy = config.HttpProxy

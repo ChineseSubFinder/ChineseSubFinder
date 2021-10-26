@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"testing"
@@ -18,7 +18,7 @@ func TestDownloader_DownloadSub4Movie(t *testing.T) {
 	//dirRoot := "X:\\电影\\冰海陷落 (2018)"
 	dirRoot := "X:\\电影\\The Boss Baby Family Business (2021)"
 	//dirRoot := "X:\\电影"
-	config := pkg.GetConfig()
+	config := config.GetConfig()
 	dl := NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter), types.ReqParam{
 		SaveMultiSub:    true,
 		SubTypePriority: 1,
@@ -49,7 +49,7 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 	//dirRoot := "X:\\连续剧\\黄石 (2018)"
 	//dirRoot := "X:\\连续剧"
 
-	config := pkg.GetConfig()
+	config := config.GetConfig()
 	// 如果需要调试 Emby 一定需要 dirRoot := "X:\\连续剧"
 	dl := NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter), types.ReqParam{
 		SaveMultiSub:    true,
@@ -68,7 +68,7 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 
 func TestDownloader_GetUpdateVideoListFromEmby(t *testing.T) {
 	var err error
-	config := pkg.GetConfig()
+	config := config.GetConfig()
 	dl := NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter), types.ReqParam{
 		SaveMultiSub:    true,
 		SubTypePriority: 1,

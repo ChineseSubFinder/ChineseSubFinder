@@ -1,7 +1,7 @@
 package log_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/sirupsen/logrus"
 	easy "github.com/t-tomalak/logrus-easy-formatter"
@@ -46,7 +46,7 @@ func GetLogger() *logrus.Logger {
 	logOnce.Do(func() {
 
 		var level logrus.Level
-		if pkg.GetConfig().DebugMode == true {
+		if config.GetConfig().DebugMode == true {
 			level = logrus.DebugLevel
 		} else {
 			level = logrus.InfoLevel

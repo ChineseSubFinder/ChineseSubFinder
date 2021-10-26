@@ -1,7 +1,8 @@
-package pkg
+package config
 
 import (
 	"errors"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/spf13/viper"
 	"strings"
@@ -21,7 +22,7 @@ func GetConfig() *types.Config {
 		}
 		// 读取用户自定义的视频后缀名列表
 		for _, customExt := range strings.Split(config.CustomVideoExts, ",") {
-			customVideoExts = append(customVideoExts, "."+customExt)
+			global_value.CustomVideoExts = append(global_value.CustomVideoExts, "."+customExt)
 		}
 
 		// 这里进行 Default 值的判断

@@ -118,8 +118,8 @@ func (d *Downloader) GetUpdateVideoListFromEmby(movieRootDir, seriesRootDir stri
 	log_helper.GetLogger().Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap End")
 
 	log_helper.GetLogger().Debugln("GetUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList Start")
-	for s := range d.movieFileFullPathList {
-		log_helper.GetLogger().Debugln(s)
+	for s, value := range d.movieFileFullPathList {
+		log_helper.GetLogger().Debugln(s, value)
 	}
 	log_helper.GetLogger().Debugln("GetUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList End")
 
