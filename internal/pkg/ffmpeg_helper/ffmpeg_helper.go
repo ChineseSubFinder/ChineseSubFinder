@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/tidwall/gjson"
@@ -16,7 +15,6 @@ import (
 )
 
 type FFMPEGHelper struct {
-
 }
 
 func NewFFMPEGHelper() *FFMPEGHelper {
@@ -60,15 +58,19 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 	}()
 
 	// 判断这个视频是否已经导出过内置的字幕和音频文件了
-	if pkg.IsDir(ffMPEGInfo.GetCacheFolderFPath()) == false {
+	if ffMPEGInfo.IsExported() == false {
 		// 说明缓存不存在，需要导出，这里需要注意，如果导出失败了，这个文件夹要清理掉
-		// 这样下一次过来只要判断存在文件夹就可以认为是导出过了
-
-		// 先创建文件夹
+		// 先删除一个这个文件夹
+		err = os.RemoveAll(ffMPEGInfo.GetCacheFolderFPath())
+		if err != nil {
+			bok = false
+			return bok, nil, err
+		}
+		// 然后创建文件夹
 		err = os.MkdirAll(ffMPEGInfo.GetCacheFolderFPath(), os.ModePerm)
 		if err != nil {
 			bok = false
-			return false, nil, err
+			return bok, nil, err
 		}
 		// 开始导出
 		// 构建导出的命令参数
@@ -78,18 +80,15 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 		if err != nil {
 			log_helper.GetLogger().Errorln("exportAudioAndSubtitles", execErrorString)
 			bok = false
-			return false, nil, err
+			return bok, nil, err
 		}
-
-	} else {
-		// 说明缓存文件存在了，无需导出了
 	}
 
 	return bok, ffMPEGInfo, nil
 }
 
 // parseJsonString2GetFFMPEGInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引
-func (f *FFMPEGHelper)parseJsonString2GetFFMPEGInfo(videoFileFullPath, inputFFProbeString string) (bool, *FFMPEGInfo) {
+func (f *FFMPEGHelper) parseJsonString2GetFFMPEGInfo(videoFileFullPath, inputFFProbeString string) (bool, *FFMPEGInfo) {
 
 	streamsValue := gjson.Get(inputFFProbeString, "streams.#")
 	if streamsValue.Exists() == false {
@@ -175,7 +174,7 @@ func (f *FFMPEGHelper)parseJsonString2GetFFMPEGInfo(videoFileFullPath, inputFFPr
 }
 
 // exportAudioAndSubtitles 导出音频和字幕文件
-func (f *FFMPEGHelper)exportAudioAndSubtitles(subArgs, audioArgs []string) (string, error) {
+func (f *FFMPEGHelper) exportAudioAndSubtitles(subArgs, audioArgs []string) (string, error) {
 
 	// 这里导出依赖的是 ffmpeg 这个程序，需要的是构建导出的语句
 	execErrorString, err := f.execFFMPEG(subArgs)
@@ -190,7 +189,7 @@ func (f *FFMPEGHelper)exportAudioAndSubtitles(subArgs, audioArgs []string) (stri
 	return "", nil
 }
 
-func (f *FFMPEGHelper)execFFMPEG(cmds []string) (string, error) {
+func (f *FFMPEGHelper) execFFMPEG(cmds []string) (string, error) {
 
 	cmd := exec.Command("ffmpeg", cmds...)
 	buf := bytes.NewBufferString("")
@@ -209,7 +208,7 @@ func (f *FFMPEGHelper)execFFMPEG(cmds []string) (string, error) {
 	return "", nil
 }
 
-func (f *FFMPEGHelper)getAudioAndSubExportArgs(videoFileFullPath string, ffmpegInfo *FFMPEGInfo) ([]string, []string) {
+func (f *FFMPEGHelper) getAudioAndSubExportArgs(videoFileFullPath string, ffmpegInfo *FFMPEGInfo) ([]string, []string) {
 
 	/*
 		导出多个字幕
@@ -218,6 +217,10 @@ func (f *FFMPEGHelper)getAudioAndSubExportArgs(videoFileFullPath string, ffmpegI
 		ffmpeg.exe -i xx.mp4 -vn -map 0:1 -ss 00:1:27 -f mp3 -t 28 audio.mp3
 		导出音频，转换为 mp3 格式
 		ffmpeg.exe -i xx.mp4 -vn -map 0:1 -f mp3 audio.mp3
+		导出音频，转换为 16000k 16bit 单通道 采样率的 test.pcm
+		ffmpeg.exe -i xx.mp4 -vn -map 0:1 -ss 00:1:27 -t 28 -acodec pcm_s16le -f s16le -ac 1 -ar 16000 test.pcm
+		截取字幕的时间片段
+		ffmpeg.exe -i "subs-3.srt" -ss 00:1:27 -t 28 subs-3-cut-from-org.srt
 	*/
 	var subArgs = make([]string, 0)
 	var audioArgs = make([]string, 0)
@@ -239,23 +242,30 @@ func (f *FFMPEGHelper)getAudioAndSubExportArgs(videoFileFullPath string, ffmpegI
 	audioArgs = append(audioArgs, "-vn")
 	for _, audioInfo := range ffmpegInfo.AudioInfoList {
 		f.addAudioMapArg(&audioArgs, audioInfo.Index,
-			filepath.Join(ffmpegInfo.GetCacheFolderFPath(), audioInfo.GetName()+extMP3))
+			filepath.Join(ffmpegInfo.GetCacheFolderFPath(), audioInfo.GetName()+extPCM))
 	}
 
 	return audioArgs, subArgs
 }
 
-func (f *FFMPEGHelper)addSubMapArg(subArgs *[]string, index int, subSaveFullPath string) {
+func (f *FFMPEGHelper) addSubMapArg(subArgs *[]string, index int, subSaveFullPath string) {
 	*subArgs = append(*subArgs, "-map")
 	*subArgs = append(*subArgs, fmt.Sprintf("0:%d", index))
 	*subArgs = append(*subArgs, subSaveFullPath)
 }
 
-func (f *FFMPEGHelper)addAudioMapArg(subArgs *[]string, index int, audioSaveFullPath string) {
+func (f *FFMPEGHelper) addAudioMapArg(subArgs *[]string, index int, audioSaveFullPath string) {
+	// -acodec pcm_s16le -f s16le -ac 1 -ar 16000
 	*subArgs = append(*subArgs, "-map")
 	*subArgs = append(*subArgs, fmt.Sprintf("0:%d", index))
+	*subArgs = append(*subArgs, "-acodec")
+	*subArgs = append(*subArgs, "pcm_s16le")
 	*subArgs = append(*subArgs, "-f")
-	*subArgs = append(*subArgs, "mp3")
+	*subArgs = append(*subArgs, "s16le")
+	*subArgs = append(*subArgs, "-ac")
+	*subArgs = append(*subArgs, "1")
+	*subArgs = append(*subArgs, "-ar")
+	*subArgs = append(*subArgs, "16000")
 	*subArgs = append(*subArgs, audioSaveFullPath)
 }
 
@@ -263,4 +273,5 @@ const (
 	codecTypeSub   = "subtitle"
 	codecTypeAudio = "audio"
 	extMP3         = ".mp3"
+	extPCM         = ".pcm"
 )
