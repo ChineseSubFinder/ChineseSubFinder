@@ -10,7 +10,8 @@ import (
 func TestGetFFMPEGInfo(t *testing.T) {
 	videoFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 5\\Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.mkv"
 
-	bok, ffmpegInfo, err := GetFFMPEGInfo(videoFile)
+	f := NewFFMPEGHelper()
+	bok, ffmpegInfo, err := f.GetFFMPEGInfo(videoFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -18,7 +19,7 @@ func TestGetFFMPEGInfo(t *testing.T) {
 		t.Fatal("GetFFMPEGInfo = false")
 	}
 
-	subArgs, audioArgs := getAudioAndSubExportArgs(videoFile, ffmpegInfo)
+	subArgs, audioArgs := f.getAudioAndSubExportArgs(videoFile, ffmpegInfo)
 	println(len(subArgs), len(audioArgs))
 }
 
@@ -54,9 +55,12 @@ func Test_parseJsonString2GetFFMPEGInfo(t *testing.T) {
 		{name: "千与千寻", args: args{videoFileFullPath: "123", input: readString(filepath.Join(testRootDir, "千与千寻-video_stream.json"))},
 			want: true, subs: 2, audios: 3},
 	}
+
+	f := NewFFMPEGHelper()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := parseJsonString2GetFFMPEGInfo(tt.args.videoFileFullPath, tt.args.input)
+			got, got1 := f.parseJsonString2GetFFMPEGInfo(tt.args.videoFileFullPath, tt.args.input)
 			if got != tt.want {
 				t.Errorf("parseJsonString2GetFFMPEGInfo() got = %v, want %v", got, tt.want)
 			}

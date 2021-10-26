@@ -6,6 +6,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/tidwall/gjson"
 	"os"
 	"os/exec"
@@ -14,9 +15,17 @@ import (
 	"strings"
 )
 
+type FFMPEGHelper struct {
+
+}
+
+func NewFFMPEGHelper() *FFMPEGHelper {
+	return &FFMPEGHelper{}
+}
+
 // GetFFMPEGInfo 获取 视频的 FFMPEG 信息，包含音频和字幕
 // 优先会导出 中、英、日、韩 类型的，字幕如果没有语言类型，则也导出，然后需要额外的字幕语言的判断去辅助标记（读取文件内容）
-func GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInfo, error) {
+func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInfo, error) {
 
 	const args = "-v error -show_format -show_streams -print_format json"
 	cmdArgs := strings.Fields(args)
@@ -35,15 +44,40 @@ func GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInfo, error) {
 		return false, nil, err
 	}
 	// 解析得到的字符串反馈
-	bok, ffMPEGInfo := parseJsonString2GetFFMPEGInfo(videoFileFullPath, buf.String())
+	bok, ffMPEGInfo := f.parseJsonString2GetFFMPEGInfo(videoFileFullPath, buf.String())
+	if bok == false {
+		return false, nil, nil
+	}
+	// 在函数调用完毕后，判断是否需要清理
+	defer func() {
+		if bok == false && ffMPEGInfo != nil {
+			err := os.RemoveAll(ffMPEGInfo.GetCacheFolderFPath())
+			if err != nil {
+				log_helper.GetLogger().Errorln("GetFFMPEGInfo - RemoveAll", err.Error())
+				return
+			}
+		}
+	}()
+
 	// 判断这个视频是否已经导出过内置的字幕和音频文件了
 	if pkg.IsDir(ffMPEGInfo.GetCacheFolderFPath()) == false {
-		// 说明缓存不存在，需要导出，这里需要注意，如果导出识别了，这个文件夹要清理掉
+		// 说明缓存不存在，需要导出，这里需要注意，如果导出失败了，这个文件夹要清理掉
 		// 这样下一次过来只要判断存在文件夹就可以认为是导出过了
 
 		// 先创建文件夹
 		err = os.MkdirAll(ffMPEGInfo.GetCacheFolderFPath(), os.ModePerm)
 		if err != nil {
+			bok = false
+			return false, nil, err
+		}
+		// 开始导出
+		// 构建导出的命令参数
+		subArgs, audioArgs := f.getAudioAndSubExportArgs(videoFileFullPath, ffMPEGInfo)
+		// 执行导出
+		execErrorString, err := f.exportAudioAndSubtitles(subArgs, audioArgs)
+		if err != nil {
+			log_helper.GetLogger().Errorln("exportAudioAndSubtitles", execErrorString)
+			bok = false
 			return false, nil, err
 		}
 
@@ -55,7 +89,7 @@ func GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInfo, error) {
 }
 
 // parseJsonString2GetFFMPEGInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引
-func parseJsonString2GetFFMPEGInfo(videoFileFullPath, inputFFProbeString string) (bool, *FFMPEGInfo) {
+func (f *FFMPEGHelper)parseJsonString2GetFFMPEGInfo(videoFileFullPath, inputFFProbeString string) (bool, *FFMPEGInfo) {
 
 	streamsValue := gjson.Get(inputFFProbeString, "streams.#")
 	if streamsValue.Exists() == false {
@@ -141,13 +175,41 @@ func parseJsonString2GetFFMPEGInfo(videoFileFullPath, inputFFProbeString string)
 }
 
 // exportAudioAndSubtitles 导出音频和字幕文件
-func exportAudioAndSubtitles(videoFileFullPath string, ffmpegInfo *FFMPEGInfo) error {
+func (f *FFMPEGHelper)exportAudioAndSubtitles(subArgs, audioArgs []string) (string, error) {
 
 	// 这里导出依赖的是 ffmpeg 这个程序，需要的是构建导出的语句
-	return nil
+	execErrorString, err := f.execFFMPEG(subArgs)
+	if err != nil {
+		return execErrorString, err
+	}
+	execErrorString, err = f.execFFMPEG(audioArgs)
+	if err != nil {
+		return execErrorString, err
+	}
+
+	return "", nil
 }
 
-func getAudioAndSubExportArgs(videoFileFullPath string, ffmpegInfo *FFMPEGInfo) ([]string, []string) {
+func (f *FFMPEGHelper)execFFMPEG(cmds []string) (string, error) {
+
+	cmd := exec.Command("ffmpeg", cmds...)
+	buf := bytes.NewBufferString("")
+	//指定输出位置
+	cmd.Stderr = buf
+	cmd.Stdout = buf
+	err := cmd.Start()
+	if err != nil {
+		return buf.String(), err
+	}
+	err = cmd.Wait()
+	if err != nil {
+		return buf.String(), err
+	}
+
+	return "", nil
+}
+
+func (f *FFMPEGHelper)getAudioAndSubExportArgs(videoFileFullPath string, ffmpegInfo *FFMPEGInfo) ([]string, []string) {
 
 	/*
 		导出多个字幕
@@ -168,28 +230,28 @@ func getAudioAndSubExportArgs(videoFileFullPath string, ffmpegInfo *FFMPEGInfo) 
 	subArgs = append(subArgs, "-vn") // 不输出视频流
 	subArgs = append(subArgs, "-an") // 不输出音频流
 	for _, subtitleInfo := range ffmpegInfo.SubtitleInfoList {
-		addSubMapArg(&subArgs, subtitleInfo.Index,
+		f.addSubMapArg(&subArgs, subtitleInfo.Index,
 			filepath.Join(ffmpegInfo.GetCacheFolderFPath(), subtitleInfo.GetName()+common.SubExtSRT))
-		addSubMapArg(&subArgs, subtitleInfo.Index,
+		f.addSubMapArg(&subArgs, subtitleInfo.Index,
 			filepath.Join(ffmpegInfo.GetCacheFolderFPath(), subtitleInfo.GetName()+common.SubExtASS))
 	}
 	// 音频导出的参数构建
 	audioArgs = append(audioArgs, "-vn")
 	for _, audioInfo := range ffmpegInfo.AudioInfoList {
-		addAudioMapArg(&audioArgs, audioInfo.Index,
+		f.addAudioMapArg(&audioArgs, audioInfo.Index,
 			filepath.Join(ffmpegInfo.GetCacheFolderFPath(), audioInfo.GetName()+extMP3))
 	}
 
 	return audioArgs, subArgs
 }
 
-func addSubMapArg(subArgs *[]string, index int, subSaveFullPath string) {
+func (f *FFMPEGHelper)addSubMapArg(subArgs *[]string, index int, subSaveFullPath string) {
 	*subArgs = append(*subArgs, "-map")
 	*subArgs = append(*subArgs, fmt.Sprintf("0:%d", index))
 	*subArgs = append(*subArgs, subSaveFullPath)
 }
 
-func addAudioMapArg(subArgs *[]string, index int, audioSaveFullPath string) {
+func (f *FFMPEGHelper)addAudioMapArg(subArgs *[]string, index int, audioSaveFullPath string) {
 	*subArgs = append(*subArgs, "-map")
 	*subArgs = append(*subArgs, fmt.Sprintf("0:%d", index))
 	*subArgs = append(*subArgs, "-f")
