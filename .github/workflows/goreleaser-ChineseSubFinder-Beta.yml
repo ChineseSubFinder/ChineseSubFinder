@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - v*.*-Beta*
-      - v*.*-Beta-Exe*
+      - v*.*-Exe-Beta*
   workflow_dispatch:
 
 jobs:
