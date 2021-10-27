@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/tidwall/gjson"
@@ -60,17 +61,20 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 	// 判断这个视频是否已经导出过内置的字幕和音频文件了
 	if ffMPEGInfo.IsExported() == false {
 		// 说明缓存不存在，需要导出，这里需要注意，如果导出失败了，这个文件夹要清理掉
-		// 先删除一个这个文件夹
-		err = os.RemoveAll(ffMPEGInfo.GetCacheFolderFPath())
-		if err != nil {
-			bok = false
-			return bok, nil, err
-		}
-		// 然后创建文件夹
-		err = os.MkdirAll(ffMPEGInfo.GetCacheFolderFPath(), os.ModePerm)
-		if err != nil {
-			bok = false
-			return bok, nil, err
+		if pkg.IsDir(ffMPEGInfo.GetCacheFolderFPath()) == true {
+			// 如果存在则，先清空一个这个文件夹
+			err = pkg.ClearFolder(ffMPEGInfo.GetCacheFolderFPath())
+			if err != nil {
+				bok = false
+				return bok, nil, err
+			}
+		} else {
+			// 如果不存在则，创建文件夹
+			err = os.MkdirAll(ffMPEGInfo.GetCacheFolderFPath(), os.ModePerm)
+			if err != nil {
+				bok = false
+				return bok, nil, err
+			}
 		}
 		// 开始导出
 		// 构建导出的命令参数
