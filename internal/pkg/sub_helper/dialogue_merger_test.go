@@ -5,7 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
-	"path"
+	"path/filepath"
 	"testing"
 )
 

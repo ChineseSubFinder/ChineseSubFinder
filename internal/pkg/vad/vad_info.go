@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// GetVADInfo 分析音频文件，得到 VAD 分析信息
+// GetVADInfo 分析音频文件，得到 VAD 分析信息，看样子是不支持并发的，只能单线程使用
 func GetVADInfo(audioInfo AudioInfo) ([]VADInfo, error) {
 
 	var (

@@ -75,7 +75,7 @@ func (h HotFix001) Process() (interface{}, error) {
 	// 连续剧
 	var seriesSubFiles = make([]string, 0)
 	for _, oneSeriesDir := range seriesDirList {
-		seriesSubFiles, err = sub_helper.SearchMatchedSubFile(oneSeriesDir)
+		seriesSubFiles, err = sub_helper.SearchMatchedSubFileByDir(oneSeriesDir)
 		if err != nil {
 			return outStruct, err
 		}

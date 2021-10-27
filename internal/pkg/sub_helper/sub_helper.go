@@ -74,7 +74,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 				continue
 			}
 			// 搜索这个目录下的所有符合字幕格式的文件
-			subFileFullPaths, err := SearchMatchedSubFile(unzipTmpFolder)
+			subFileFullPaths, err := SearchMatchedSubFileByDir(unzipTmpFolder)
 			if err != nil {
 				log_helper.GetLogger().Errorln("searchMatchedSubFile", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
 				continue
@@ -195,8 +195,8 @@ func AddFrontName(info supplier.SubInfo, orgName string) string {
 	return "[" + info.FromWhere + "]_" + strconv.FormatInt(info.TopN, 10) + "_" + orgName
 }
 
-// SearchMatchedSubFile 搜索符合后缀名的视频文件，排除 Sub_SxE0 这样的文件夹中的文件
-func SearchMatchedSubFile(dir string) ([]string, error) {
+// SearchMatchedSubFileByDir 搜索符合后缀名的视频文件，排除 Sub_SxE0 这样的文件夹中的文件
+func SearchMatchedSubFileByDir(dir string) ([]string, error) {
 	// 这里有个梗，会出现 __MACOSX 这类文件夹，那么里面会有一样的文件，需要用文件大小排除一下，至少大于 1 kb 吧
 	var fileFullPathList = make([]string, 0)
 	pathSep := string(os.PathSeparator)
@@ -213,7 +213,7 @@ func SearchMatchedSubFile(dir string) ([]string, error) {
 				continue
 			}
 			// 内层的错误就无视了
-			oneList, _ := SearchMatchedSubFile(fullPath)
+			oneList, _ := SearchMatchedSubFileByDir(fullPath)
 			if oneList != nil {
 				fileFullPathList = append(fileFullPathList, oneList...)
 			}
@@ -228,6 +228,46 @@ func SearchMatchedSubFile(dir string) ([]string, error) {
 		}
 	}
 	return fileFullPathList, nil
+}
+
+// SearchMatchedSubFileByOneVideo 搜索这个视频当前目录下匹配的字幕
+func SearchMatchedSubFileByOneVideo(oneVideoFullPath string) ([]string, error) {
+	dir := filepath.Dir(oneVideoFullPath)
+	fileName := filepath.Base(oneVideoFullPath)
+	fileName = strings.ToLower(fileName)
+	fileName = strings.ReplaceAll(fileName, filepath.Ext(fileName), "")
+	pathSep := string(os.PathSeparator)
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	var matchedSubs = make([]string, 0)
+
+	for _, curFile := range files {
+		if curFile.IsDir() {
+			continue
+		}
+		// 这里就是文件了
+		if curFile.Size() < 1000 {
+			continue
+		}
+		// 判断的时候用小写的，后续重命名的时候用原有的名称
+		nowFileName := strings.ToLower(curFile.Name())
+		// 后缀名得对
+		if sub_parser_hub.IsSubExtWanted(filepath.Ext(nowFileName)) == false {
+			continue
+		}
+		// 字幕文件名应该包含 视频文件名（无后缀）
+		if strings.Contains(nowFileName, fileName) == false {
+			continue
+		}
+
+		oldPath := dir + pathSep + curFile.Name()
+		matchedSubs = append(matchedSubs, oldPath)
+	}
+
+	return matchedSubs, nil
 }
 
 // SearchVideoMatchSubFileAndRemoveExtMark 找到找个视频目录下相匹配的字幕，同时去除这些字幕中 .default 或者 .forced 的标记。注意这两个标记不应该同时出现，否则无法正确去除

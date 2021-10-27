@@ -39,7 +39,7 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title, forcedScanAnd
 		return nil, err
 	}
 	// 搜索所有的字幕
-	subFiles, err := sub_helper.SearchMatchedSubFile(seriesDir)
+	subFiles, err := sub_helper.SearchMatchedSubFileByDir(seriesDir)
 	if err != nil {
 		return nil, err
 	}
