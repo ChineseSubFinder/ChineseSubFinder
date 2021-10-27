@@ -6,17 +6,33 @@ env:
 before:
   hooks:
     - go mod tidy
+    - sudo apt-get install gcc-multilib
+    - sudo apt-get install -y *-w64-x86-*
 builds:
-  - env:
-      - CGO_ENABLED=0
+  - id: linux-build
+    env:
+      - CGO_ENABLED=1
     goos:
-      - windows
       - linux
     goarch:
       - amd64
     main: ./cmd/chinesesubfinder/main.go
     ldflags:
       - -s -w -X main.AppVersion=v{{.Version}}
+
+  - id: windows-build
+    env:
+      - CGO_ENABLED=1
+      - CXX=x86_64-w64-mingw32-g++
+      - CC=x86_64-w64-mingw32-gcc
+    goos:
+      - windows
+    goarch:
+      - amd64
+    main: ./cmd/chinesesubfinder/main.go
+    ldflags:
+      - -s -w -X main.AppVersion=v{{.Version}}
+
 
 archives:
   - id: archive

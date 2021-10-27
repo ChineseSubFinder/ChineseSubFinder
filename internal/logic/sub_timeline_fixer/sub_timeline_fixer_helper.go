@@ -14,6 +14,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/sub_timeline_fiexer"
@@ -89,6 +90,9 @@ func (s SubTimelineFixerHelper) FixRecentlyItemsSubTimeline(movieRootDir, series
 			}
 		}
 	}
+
+	// 强制调用，测试 CGO=1 编译问题
+	println(vad.Mode)
 
 	return nil
 }
