@@ -7,8 +7,7 @@ before:
   hooks:
     - go mod tidy
     - sudo apt install gcc-multilib
-    - sudo apt install gcc-mingw-w64
-    - sudo apt install binutils-mingw-w64
+    - sudo apt install gcc-mingw-w64-x86-64
 builds:
   - id: linux-build
     env:
