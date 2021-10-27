@@ -6,9 +6,14 @@ env:
 before:
   hooks:
     - go mod tidy
+    - sudo apt install gcc-multilib
+    - sudo apt install gcc-mingw-w64
+    - sudo apt install binutils-mingw-w64
 builds:
   - env:
       - CGO_ENABLED=1
+      - CXX=x86_64-w64-mingw32-g++
+      - CC=x86_64-w64-mingw32-gcc
     goos:
       - windows
       - linux
