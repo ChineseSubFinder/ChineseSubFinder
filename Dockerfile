@@ -33,5 +33,4 @@ COPY --from=builder /homelab/buildspace/config.yaml.sample /app/config.yaml
 VOLUME /config /media
 
 CMD [""]
-
-ENTRYPOINT  cd /app && exec s6-setuidgid abc ./chinesesubfinder
+ENTRYPOINT [""]
