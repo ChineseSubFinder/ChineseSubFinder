@@ -3,14 +3,18 @@ package ffmpeg_helper
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"path/filepath"
 	"strings"
 )
 
 type FFMPEGInfo struct {
-	VideoFullPath    string
-	AudioInfoList    []AudioInfo
-	SubtitleInfoList []SubtitleInfo
+	VideoFullPath    string                // 视频文件的路径
+	AudioInfoList    []AudioInfo           // 内置音频列表
+	SubtitleInfoList []SubtitleInfo        // 内置字幕列表
+	ExternalSubInfos []*subparser.FileInfo // 外置字幕列表
 }
 
 func NewFFMPEGInfo(videoFullPath string) *FFMPEGInfo {
@@ -18,6 +22,7 @@ func NewFFMPEGInfo(videoFullPath string) *FFMPEGInfo {
 		VideoFullPath:    videoFullPath,
 		AudioInfoList:    make([]AudioInfo, 0),
 		SubtitleInfoList: make([]SubtitleInfo, 0),
+		ExternalSubInfos: make([]*subparser.FileInfo, 0),
 	}
 }
 
@@ -64,6 +69,26 @@ func (f *FFMPEGInfo) IsExported() bool {
 	}
 
 	return true
+}
+
+// GetExternalSubInfos 获取外置的字幕信息
+func (f *FFMPEGInfo) GetExternalSubInfos(subParserHub *sub_parser_hub.SubParserHub) error {
+	subFiles, err := sub_helper.SearchMatchedSubFileByOneVideo(f.VideoFullPath)
+	if err != nil {
+		return err
+	}
+	for _, subFile := range subFiles {
+		bok, subInfo, err := subParserHub.DetermineFileTypeFromFile(subFile)
+		if err != nil {
+			return err
+		}
+		if bok == false {
+			continue
+		}
+		f.ExternalSubInfos = append(f.ExternalSubInfos, subInfo)
+	}
+
+	return nil
 }
 
 const cacheFolder = "csf-cache"

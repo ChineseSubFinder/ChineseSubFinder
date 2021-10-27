@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/tidwall/gjson"
 	"os"
 	"os/exec"
@@ -16,10 +19,13 @@ import (
 )
 
 type FFMPEGHelper struct {
+	subParserHub *sub_parser_hub.SubParserHub // 字幕内容的解析器
 }
 
 func NewFFMPEGHelper() *FFMPEGHelper {
-	return &FFMPEGHelper{}
+	return &FFMPEGHelper{
+		subParserHub: sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
+	}
 }
 
 // GetFFMPEGInfo 获取 视频的 FFMPEG 信息，包含音频和字幕
@@ -86,6 +92,11 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 			bok = false
 			return bok, nil, err
 		}
+	}
+	// 查找当前这个视频外置字幕列表
+	err = ffMPEGInfo.GetExternalSubInfos(f.subParserHub)
+	if err != nil {
+		return false, nil, err
 	}
 
 	return bok, ffMPEGInfo, nil
