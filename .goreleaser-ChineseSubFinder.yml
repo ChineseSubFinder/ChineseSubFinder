@@ -19,8 +19,8 @@ builds:
       - amd64
     main: ./cmd/chinesesubfinder/main.go
     ldflags:
-      - -s -w -X main.AppVersion=v{{.Version}
-        -
+      - -s -w -X main.AppVersion=v{{.Version}}
+
   - id: windows-build
     env:
       - CGO_ENABLED=1
