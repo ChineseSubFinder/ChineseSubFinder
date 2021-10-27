@@ -16,7 +16,7 @@ RUN cd ./cmd/chinesesubfinder \
     && go build -ldflags="-s -w -X main.AppVersion=${VERSION}" -o /app/chinesesubfinder
 
 # 运行时环境
-FROM jrottenberg/ffmpeg:4.1-alpine
+FROM jrottenberg/ffmpeg:4.4-ubuntu
 
 ENV TZ=Asia/Shanghai \
     PUID=1026 PGID=100

@@ -9,6 +9,7 @@ before:
     - sudo apt install gcc-multilib
     - sudo apt install gcc-mingw-w64
     - sudo apt install binutils-mingw-w64
+    - sudo apt install build-essential
 builds:
   - id: linux-build
     env:
