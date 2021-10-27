@@ -16,13 +16,21 @@ RUN cd ./cmd/chinesesubfinder \
     && go build -ldflags="-s -w -X main.AppVersion=${VERSION}" -o /app/chinesesubfinder
 
 # 运行时环境
-FROM jrottenberg/ffmpeg:4.1-alpine
+#FROM jrottenberg/ffmpeg:4.4-alpine
+FROM jrottenberg/ffmpeg:4.4-ubuntu
 
 ENV TZ=Asia/Shanghai \
     PUID=1026 PGID=100
 
-RUN apk update --no-cache \
-    && apk add --no-cache ca-certificates tzdata libc6-compat libgcc libstdc++
+#RUN apk update --no-cache \
+#    && apk add --no-cache ca-certificates tzdata libc6-compat libgcc libstdc++
+
+RUN apt-get update && \
+        apt-get install --no-install-recommends -y \
+        # C、C++ 支持库
+        libgcc-6-dev libstdc++6 \
+        ca-certificates
+
 
 COPY Docker/root/ /
 # 主程序
