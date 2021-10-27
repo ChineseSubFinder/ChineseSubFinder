@@ -16,21 +16,21 @@ RUN cd ./cmd/chinesesubfinder \
     && go build -ldflags="-s -w -X main.AppVersion=${VERSION}" -o /app/chinesesubfinder
 
 # 运行时环境
-#FROM jrottenberg/ffmpeg:4.4-alpine
-FROM jrottenberg/ffmpeg:4.4-ubuntu
+FROM jrottenberg/ffmpeg:4.4-alpine
+
+# Add s6-overlay
+ENV S6_OVERLAY_VERSION=v1.22.1.0 \
+    GO_DNSMASQ_VERSION=1.0.7
+
+RUN apk add --update --no-cache bind-tools curl libcap && \
+    curl -sSL https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-amd64.tar.gz \
+    | tar xfz - -C /
 
 ENV TZ=Asia/Shanghai \
     PUID=1026 PGID=100
 
-#RUN apk update --no-cache \
-#    && apk add --no-cache ca-certificates tzdata libc6-compat libgcc libstdc++
-
-RUN apt-get update && \
-        apt-get install --no-install-recommends -y \
-        # C、C++ 支持库
-        libgcc-6-dev libstdc++6 \
-        ca-certificates
-
+RUN apk update --no-cache \
+   && apk add --no-cache ca-certificates tzdata libc6-compat libgcc libstdc++ wget \
 
 COPY Docker/root/ /
 # 主程序
