@@ -3,7 +3,7 @@ ARG VERSION=0.0.10
 LABEL stage=gobuilder
 
 # 开始编译
-ENV CGO_ENABLED 0
+ENV CGO_ENABLED 1
 ENV GO111MODULE=on
 ENV GOOS linux
 ENV GOPROXY https://goproxy.cn,direct
@@ -16,24 +16,13 @@ RUN cd ./cmd/chinesesubfinder \
     && go build -ldflags="-s -w -X main.AppVersion=${VERSION}" -o /app/chinesesubfinder
 
 # 运行时环境
-FROM jrottenberg/ffmpeg:4.1-ubuntu
+FROM jrottenberg/ffmpeg:4.1-alpine
 
 ENV TZ=Asia/Shanghai \
     PUID=1026 PGID=100
 
-RUN
-    # sed -i "s@http://archive.ubuntu.com@http://mirrors.aliyun.com@g" /etc/apt/sources.list && rm -Rf /var/lib/apt/lists/* && \
-    apt-get update && \
-    apt-get install --no-install-recommends -y \
-    # C、C++ 支持库
-    libgcc-6-dev libstdc++6 \
-    wget \
-    # cleanup
-    && apt-get clean \
-    && rm -rf \
-       /tmp/* \
-       /var/lib/apt/lists/* \
-       /var/tmp/*
+RUN apk update --no-cache \
+    && apk add --no-cache ca-certificates tzdata libc6-compat libgcc libstdc++
 
 COPY Docker/root/ /
 # 主程序
