@@ -37,20 +37,29 @@ func (f *FFMPEGInfo) IsExported() bool {
 		return false
 	}
 	// 字幕都要导出了
-	for _, subtitleInfo := range f.SubtitleInfoList {
+	for index, subtitleInfo := range f.SubtitleInfoList {
 
-		if pkg.IsFile(filepath.Join(nowCacheFolder, subtitleInfo.GetName()+common.SubExtSRT)) == false {
+		subSrtFPath := filepath.Join(nowCacheFolder, subtitleInfo.GetName()+common.SubExtSRT)
+		if pkg.IsFile(subSrtFPath) == false {
 			return false
+		} else {
+			f.SubtitleInfoList[index].FullPath = subSrtFPath
 		}
-		if pkg.IsFile(filepath.Join(nowCacheFolder, subtitleInfo.GetName()+common.SubExtASS)) == false {
+		subASSFPath := filepath.Join(nowCacheFolder, subtitleInfo.GetName()+common.SubExtASS)
+		if pkg.IsFile(subASSFPath) == false {
 			return false
+		} else {
+			f.SubtitleInfoList[index].FullPath = subASSFPath
 		}
+
 	}
 	// 音频是否导出了
-	for _, audioInfo := range f.AudioInfoList {
-
-		if pkg.IsFile(filepath.Join(nowCacheFolder, audioInfo.GetName()+extPCM)) == false {
+	for index, audioInfo := range f.AudioInfoList {
+		audioFPath := filepath.Join(nowCacheFolder, audioInfo.GetName()+extPCM)
+		if pkg.IsFile(audioFPath) == false {
 			return false
+		} else {
+			f.AudioInfoList[index].FullPath = audioFPath
 		}
 	}
 

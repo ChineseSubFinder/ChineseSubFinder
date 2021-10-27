@@ -16,9 +16,10 @@ type SubtitleInfo struct {
 	duration   string
 	language   string
 	content    string
+	FullPath   string
 }
 
-func NewSubtitileInfo(index int, codecName, codecType, timeBase, startTime string, durationTS int, duration, language string) *SubtitleInfo {
+func NewSubtitleInfo(index int, codecName, codecType, timeBase, startTime string, durationTS int, duration, language string) *SubtitleInfo {
 	return &SubtitleInfo{
 		Index:      index,
 		CodecName:  codecName,

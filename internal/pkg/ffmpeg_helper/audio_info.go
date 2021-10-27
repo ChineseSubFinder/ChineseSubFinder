@@ -13,6 +13,7 @@ type AudioInfo struct {
 	timeBase  string
 	startTime string
 	language  string
+	FullPath  string
 }
 
 func NewAudioInfo(index int, codecName, codecType, timeBase, startTime, language string) *AudioInfo {

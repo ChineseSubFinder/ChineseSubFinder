@@ -144,7 +144,7 @@ func (f *FFMPEGHelper) parseJsonString2GetFFMPEGInfo(videoFileFullPath, inputFFP
 					continue
 				}
 			}
-			subInfo := NewSubtitileInfo(int(oneIndex.Num), oneCodecName.String(), oneCodecType.String(),
+			subInfo := NewSubtitleInfo(int(oneIndex.Num), oneCodecName.String(), oneCodecType.String(),
 				oneTimeBase.String(), oneStartTime.String(),
 				int(oneDurationTS.Num), oneDuration.String(), nowLanguageString)
 
