@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - v*.*-Beta*
+      - v*.*-Beta-Docker*
   workflow_dispatch:
 
 jobs:
