@@ -161,7 +161,7 @@ func DownLoadStart(httpProxy string) {
 	defer func() {
 		log.Infoln("Download One End...")
 		notify_center.Notify.Send()
-		pkg.CloseChrome()
+		//pkg.CloseChrome()
 		rod_helper.Clear()
 	}()
 

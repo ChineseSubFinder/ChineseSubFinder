@@ -16,35 +16,18 @@ RUN cd ./cmd/chinesesubfinder \
     && go build -ldflags="-s -w -X main.AppVersion=${VERSION}" -o /app/chinesesubfinder
 
 # 运行时环境
-FROM lsiobase/ubuntu:bionic
+FROM jrottenberg/ffmpeg:4.1-ubuntu
 
 ENV TZ=Asia/Shanghai \
     PUID=1026 PGID=100
 
-RUN ln -s /root/.cache/rod/chromium-856583/chrome-linux/chrome /usr/bin/chrome && \
+RUN
     # sed -i "s@http://archive.ubuntu.com@http://mirrors.aliyun.com@g" /etc/apt/sources.list && rm -Rf /var/lib/apt/lists/* && \
     apt-get update && \
     apt-get install --no-install-recommends -y \
     # C、C++ 支持库
     libgcc-6-dev libstdc++6 \
-    # chromium dependencies
-    libnss3 \
-    libxss1 \
-    libasound2 \
-    libxtst6 \
-    libgtk-3-0 \
-    libgbm1 \
-    ca-certificates \
     wget \
-    # fonts
-    fonts-liberation fonts-noto-color-emoji fonts-noto-cjk \
-    # processs reaper
-    dumb-init \
-    # headful mode support, for example: $ xvfb-run chromium-browser --remote-debugging-port=9222
-    xvfb \
-    xorg gtk2-engines-pixbuf \
-    dbus-x11 xfonts-base xfonts-100dpi xfonts-75dpi xfonts-cyrillic xfonts-scalable \
-    imagemagick x11-apps \
     # cleanup
     && apt-get clean \
     && rm -rf \
