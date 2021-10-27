@@ -3,7 +3,7 @@ ARG VERSION=0.0.10
 LABEL stage=gobuilder
 
 # 开始编译
-ENV CGO_ENABLED 0
+ENV CGO_ENABLED 1
 ENV GO111MODULE=on
 ENV GOOS linux
 ENV GOPROXY https://goproxy.cn,direct
