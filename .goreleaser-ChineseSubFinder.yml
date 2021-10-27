@@ -10,18 +10,29 @@ before:
     - sudo apt install gcc-mingw-w64
     - sudo apt install binutils-mingw-w64
 builds:
-  - env:
+  - id: windows-build
+    env:
       - CGO_ENABLED=1
       - CXX=x86_64-w64-mingw32-g++
       - CC=x86_64-w64-mingw32-gcc
     goos:
       - windows
-      - linux
     goarch:
       - amd64
     main: ./cmd/chinesesubfinder/main.go
     ldflags:
       - -s -w -X main.AppVersion=v{{.Version}}
+
+  - id: linux-build
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/chinesesubfinder/main.go
+    ldflags:
+      - -s -w -X main.AppVersion=v{{.Version}
 
 archives:
   - id: archive
