@@ -9,7 +9,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/proxy_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
@@ -162,7 +161,7 @@ func DownLoadStart(httpProxy string) {
 		log.Infoln("Download One End...")
 		notify_center.Notify.Send()
 		//pkg.CloseChrome()
-		rod_helper.Clear()
+		//rod_helper.Clear()
 	}()
 
 	log.Infoln("Download One Started...")

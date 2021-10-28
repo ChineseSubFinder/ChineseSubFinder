@@ -91,9 +91,12 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 	if err != nil {
 		return nil, err
 	}
-	page.MustSetUserAgent(&proto.NetworkSetUserAgentOverride{
+	err = page.SetUserAgent(&proto.NetworkSetUserAgentOverride{
 		UserAgent: random_useragent.RandomUserAgent(true),
 	})
+	if err != nil {
+		return nil, err
+	}
 	page = page.Timeout(timeOut)
 	nowRetryTimes := 0
 	for nowRetryTimes <= maxRetryTimes {
@@ -132,23 +135,24 @@ func ReloadBrowser() {
 
 // Clear 清理缓存
 func Clear() {
-	l := launcher.New().
-		Headless(false).
-		Devtools(true)
+	_ = rod.Try(func() {
+		l := launcher.New().
+			Headless(false).
+			Devtools(true)
 
-	defer l.Cleanup() // remove launcher.FlagUserDataDir
+		defer l.Cleanup() // remove launcher.FlagUserDataDir
 
-	url := l.MustLaunch()
-
-	// Trace shows verbose debug information for each action executed
-	// Slowmotion is a debug related function that waits 2 seconds between
-	// each action, making it easier to inspect what your code is doing.
-	browser := rod.New().
-		ControlURL(url).
-		Trace(true).
-		SlowMotion(2 * time.Second).
-		MustConnect()
-	defer browser.MustClose()
+		url := l.MustLaunch()
+		// Trace shows verbose debug information for each action executed
+		// Slowmotion is a debug related function that waits 2 seconds between
+		// each action, making it easier to inspect what your code is doing.
+		browser := rod.New().
+			ControlURL(url).
+			Trace(true).
+			SlowMotion(2 * time.Second).
+			MustConnect()
+		defer browser.MustClose()
+	})
 }
 
 func newPage(browser *rod.Browser) (*rod.Page, error) {
