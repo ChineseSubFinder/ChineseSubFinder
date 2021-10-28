@@ -64,6 +64,7 @@ func (s SubTimelineFixerHelper) FixRecentlyItemsSubTimeline(movieRootDir, series
 
 	// 首先得开启，不然就直接跳过不执行
 	if s.EmbyConfig.FixTimeLine == false {
+		log_helper.GetLogger().Debugf("EmbyConfig.FixTimeLine = false, Skip")
 		return nil
 	}
 
@@ -71,6 +72,21 @@ func (s SubTimelineFixerHelper) FixRecentlyItemsSubTimeline(movieRootDir, series
 	if err != nil {
 		return err
 	}
+
+	// 输出调试信息
+	log_helper.GetLogger().Debugln("FixRecentlyItemsSubTimeline - DebugInfo - movieList Start")
+	for s, _ := range movieList {
+		log_helper.GetLogger().Debugln(s)
+	}
+	log_helper.GetLogger().Debugln("FixRecentlyItemsSubTimeline - DebugInfo - movieList End")
+
+	log_helper.GetLogger().Debugln("FixRecentlyItemsSubTimeline - DebugInfo - seriesList Start")
+	for s, value := range seriesList {
+		log_helper.GetLogger().Debugln(s, value)
+	}
+	log_helper.GetLogger().Debugln("FixRecentlyItemsSubTimeline - DebugInfo - seriesList End")
+
+	log_helper.GetLogger().Debugln("Start movieList fix Timeline")
 	// 先做电影的字幕校正、然后才是连续剧的
 	for _, info := range movieList {
 		// path.Dir 在 Windows 有梗，所以换个方式获取路径
@@ -80,6 +96,9 @@ func (s SubTimelineFixerHelper) FixRecentlyItemsSubTimeline(movieRootDir, series
 			return err
 		}
 	}
+	log_helper.GetLogger().Debugln("End movieList fix Timeline")
+
+	log_helper.GetLogger().Debugln("Start seriesList fix Timeline")
 	for _, infos := range seriesList {
 		for _, info := range infos {
 			// path.Dir 在 Windows 有梗，所以换个方式获取路径
@@ -90,9 +109,10 @@ func (s SubTimelineFixerHelper) FixRecentlyItemsSubTimeline(movieRootDir, series
 			}
 		}
 	}
+	log_helper.GetLogger().Debugln("End seriesList fix Timeline")
 
 	// 强制调用，测试 CGO=1 编译问题
-	println(vad.Mode)
+	log_helper.GetLogger().Debugln("VAD Mode", vad.Mode)
 
 	return nil
 }
