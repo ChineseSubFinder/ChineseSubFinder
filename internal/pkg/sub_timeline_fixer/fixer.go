@@ -160,9 +160,9 @@ func (s *SubTimelineFixer) GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, 
 
 	timeFormat := ""
 	if infoBase.Ext == common.SubExtASS || infoBase.Ext == common.SubExtSSA {
-		timeFormat = timeFormatAss
+		timeFormat = common.TimeFormatAss
 	} else {
-		timeFormat = timeFormatSrt
+		timeFormat = common.TimeFormatSrt
 	}
 
 	var startDiffTimeLineData = make([]opts.LineData, 0)
@@ -325,9 +325,9 @@ func (s *SubTimelineFixer) FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetT
 	offsetTime := time.Duration(inOffsetTime*1000) * time.Millisecond
 	timeFormat := ""
 	if infoSrc.Ext == common.SubExtASS || infoSrc.Ext == common.SubExtSSA {
-		timeFormat = timeFormatAss
+		timeFormat = common.TimeFormatAss
 	} else {
-		timeFormat = timeFormatSrt
+		timeFormat = common.TimeFormatSrt
 	}
 	fixContent := infoSrc.Content
 	for _, srcOneDialogue := range infoSrc.Dialogues {
@@ -361,8 +361,5 @@ func (s *SubTimelineFixer) FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetT
 	}
 	return fixContent, nil
 }
-
-const timeFormatAss = "15:04:05.00"
-const timeFormatSrt = "15:04:05,000"
 
 const FixMask = "-fix"

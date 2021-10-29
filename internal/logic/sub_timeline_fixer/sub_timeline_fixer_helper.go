@@ -75,14 +75,14 @@ func (s SubTimelineFixerHelper) FixRecentlyItemsSubTimeline(movieRootDir, series
 
 	// 输出调试信息
 	log_helper.GetLogger().Debugln("FixRecentlyItemsSubTimeline - DebugInfo - movieList Start")
-	for s, _ := range movieList {
-		log_helper.GetLogger().Debugln(s)
+	for s, value := range movieList {
+		log_helper.GetLogger().Debugln(s, value)
 	}
 	log_helper.GetLogger().Debugln("FixRecentlyItemsSubTimeline - DebugInfo - movieList End")
 
 	log_helper.GetLogger().Debugln("FixRecentlyItemsSubTimeline - DebugInfo - seriesList Start")
-	for s, value := range seriesList {
-		log_helper.GetLogger().Debugln(s, value)
+	for s, _ := range seriesList {
+		log_helper.GetLogger().Debugln(s)
 	}
 	log_helper.GetLogger().Debugln("FixRecentlyItemsSubTimeline - DebugInfo - seriesList End")
 
@@ -118,14 +118,19 @@ func (s SubTimelineFixerHelper) FixRecentlyItemsSubTimeline(movieRootDir, series
 }
 
 func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath string) error {
+	log_helper.GetLogger().Debugln("fixOneVideoSub VideoROotPath:", videoRootPath)
 	// internalEngSub 默认第一个是 srt 然后第二个是 ass，就不要去遍历了
 	found, internalEngSub, exCh_EngSub, err := s.embyHelper.GetInternalEngSubAndExChineseEnglishSub(videoId)
 	if err != nil {
 		return err
 	}
+
 	if found == false {
+		log_helper.GetLogger().Debugln("GetInternalEngSubAndExChineseEnglishSub - found == false")
 		return nil
 	}
+
+	log_helper.GetLogger().Debugln("internalEngSub:", len(internalEngSub), "exCh_EngSub:", len(exCh_EngSub))
 	// 需要先把原有的外置字幕带有 -fix 的删除，然后再做修正
 	// 不然如果调整了条件，之前修复的本次其实就不修正了，那么就会“残留”下来，误以为是本次配置的信息导致的
 	for _, exSubInfo := range exCh_EngSub {
@@ -134,10 +139,15 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath str
 			continue
 		}
 
+		subFileNeedRemove := filepath.Join(videoRootPath, exSubInfo.FileName)
+
 		if videoRootPath == "" {
+			log_helper.GetLogger().Debugln("videoRootPath == \"\", Skip Remove:", subFileNeedRemove)
 			continue
 		}
-		err = os.Remove(filepath.Join(videoRootPath, exSubInfo.FileName))
+
+		log_helper.GetLogger().Debugln("Remove fixed sub:", subFileNeedRemove)
+		err = os.Remove(subFileNeedRemove)
 		if err != nil {
 			return err
 		}
@@ -153,15 +163,19 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath str
 		if strings.Contains(exSubInfo.FileName, sub_timeline_fixer.FixMask) == true {
 			continue
 		}
+
+		log_helper.GetLogger().Debugln("fixSubTimeline start")
 		bFound, subFixInfos, subNewName, err := s.fixSubTimeline(internalEngSub[inSelectSubIndex], exSubInfo)
 		if err != nil {
 			return err
 		}
 		if bFound == false {
+			log_helper.GetLogger().Debugln("fixSubTimeline bFound == false", exSubInfo.FileName)
 			continue
 		}
 		// 调试的时候用
 		if videoRootPath == "" {
+			log_helper.GetLogger().Debugln("videoRootPath == \"\", Skip fix sub:", exSubInfo.FileName)
 			continue
 		}
 		for _, info := range subFixInfos {
@@ -180,6 +194,7 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath str
 
 func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubFile emby.SubInfo) (bool, []sub_timeline_fixer.SubFixInfo, string, error) {
 	fixedSubName := ""
+	log_helper.GetLogger().Debugln("fixSubTimeline - DetermineFileTypeFromBytes", enSubFile.FileName)
 	bFind, infoBase, err := s.subParserHub.DetermineFileTypeFromBytes(enSubFile.Content, enSubFile.Ext)
 	if err != nil {
 		return false, nil, fixedSubName, err
@@ -194,6 +209,7 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	*/
 	sub_helper.MergeMultiDialogue4EngSubtitle(infoBase)
 
+	log_helper.GetLogger().Debugln("fixSubTimeline - DetermineFileTypeFromBytes", ch_enSubFile.FileName)
 	bFind, infoSrc, err := s.subParserHub.DetermineFileTypeFromBytes(ch_enSubFile.Content, ch_enSubFile.Ext)
 	if err != nil {
 		return false, nil, fixedSubName, err

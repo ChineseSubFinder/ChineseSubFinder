@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"io/ioutil"
 	"path/filepath"
@@ -52,6 +53,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	// 找到 start end text
 	matched := sub_parser.ReMatchDialogueSRT.FindAllStringSubmatch(allString, -1)
 	if len(matched) < 1 {
+		log_helper.GetLogger().Debugln("DetermineFileTypeFromBytes can't found Dialogues, Skip")
 		return false, nil, nil
 	}
 	subFileInfo := subparser.FileInfo{}
