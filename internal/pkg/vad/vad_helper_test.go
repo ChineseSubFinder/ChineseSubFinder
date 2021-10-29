@@ -11,10 +11,11 @@ func TestGetVADInfo(t *testing.T) {
 		SampleRate:   16000,
 		BitDepth:     16,
 	}
-	vadInfo, err := GetVADInfoFromAudio(audioInfo)
+	vadInfos, err := GetVADInfoFromAudio(audioInfo)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	println(len(vadInfo))
+	println(vadInfos[0].Time.Milliseconds())
+	println(vadInfos[1].Time.Milliseconds())
 }

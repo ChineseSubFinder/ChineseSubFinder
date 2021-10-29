@@ -12,6 +12,7 @@ import (
 )
 
 // GetVADInfoFromAudio 分析音频文件，得到 VAD 分析信息，看样子是不支持并发的，只能单线程使用
+// 无需使用插值的函数
 func GetVADInfoFromAudio(audioInfo AudioInfo) ([]VADInfo, error) {
 
 	var (
@@ -54,12 +55,12 @@ func GetVADInfoFromAudio(audioInfo AudioInfo) ([]VADInfo, error) {
 	report := func() {
 		t := time.Duration(offset) * time.Second / time.Duration(audioInfo.SampleRate) / 2
 		//log.Printf("Frame: %v, offset: %v, Active: %v, t = %v", frameIndex, offset, frameActive, t)
-		vadInfos = append(vadInfos, VADInfo{
-			Frame:  frameIndex,
-			Offset: offset,
-			Active: frameActive,
-			Time:   t,
-		})
+		vadInfos = append(vadInfos, *NewVADInfo(
+			frameIndex,
+			offset,
+			frameActive,
+			t,
+		))
 	}
 
 	for {
@@ -88,8 +89,10 @@ func GetVADInfoFromAudio(audioInfo AudioInfo) ([]VADInfo, error) {
 func GetVADInfoFromSubtitle(subFileInfo *subparser.FileInfo) ([]VADInfo, error) {
 
 	var vadInfos = make([]VADInfo, 0)
-	// 考虑的是外置字幕，所以就应该是有中文的
+
 	for _, oneDialogueEx := range subFileInfo.DialoguesEx {
+
+		// 考虑的是外置字幕，所以就应该是有中文的
 		if oneDialogueEx.ChLine == "" {
 			continue
 		}
