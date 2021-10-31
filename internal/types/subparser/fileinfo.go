@@ -35,3 +35,8 @@ type OneDialogueEx struct {
 	KrLine    string
 	JpLine    string
 }
+
+const (
+	Sub_Ext_Mark_Default = ".default" // 指定这个字幕是默认的
+	Sub_Ext_Mark_Forced  = ".forced"  // 指定这个字幕是强制的
+)

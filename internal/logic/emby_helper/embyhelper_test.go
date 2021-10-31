@@ -42,29 +42,3 @@ func TestEmbyHelper_GetInternalEngSubAndExSub(t *testing.T) {
 
 	println(internalEngSub[0].FileName, exCh_EngSub[0].FileName)
 }
-
-func TestEmbyHelper_langStringOK(t *testing.T) {
-
-	type args struct {
-		inLang string
-	}
-
-	config := config.GetConfig()
-	em := NewEmbyHelper(config.EmbyConfig)
-
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{name: "00", args: args{inLang: "chinese(简英,subhd)"}, want: true},
-		{name: "01", args: args{inLang: "chinese(简英,xunlei)"}, want: true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := em.langStringOK(tt.args.inLang); got != tt.want {
-				t.Errorf("langStringOK() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}

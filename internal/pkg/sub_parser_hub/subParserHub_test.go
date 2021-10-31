@@ -4,7 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
-	"path"
+	"path/filepath"
 	"testing"
 )
 
@@ -40,6 +40,54 @@ func TestSubParserHub_IsSubHasChinese(t *testing.T) {
 
 			if got := subParserHub.IsSubHasChinese(tt.args.filePath); got != tt.want {
 				t.Errorf("IsSubHasChinese() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsEmbySubChineseLangStringWanted(t *testing.T) {
+	type args struct {
+		inLangString string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{name: "00", args: args{inLangString: "chinese(简英,subhd)"}, want: true},
+		{name: "01", args: args{inLangString: "chinese(简英,xunlei)"}, want: true},
+		{name: "02", args: args{inLangString: "chi"}, want: true},
+		{name: "03", args: args{inLangString: "chs"}, want: true},
+		{name: "04", args: args{inLangString: "cht"}, want: true},
+
+		{name: "05", args: args{inLangString: "zh-hans"}, want: true},
+		{name: "06", args: args{inLangString: "zh-hant"}, want: true},
+		{name: "07", args: args{inLangString: "zh-CN"}, want: true},
+		{name: "08", args: args{inLangString: "zh-TW"}, want: true},
+		{name: "09", args: args{inLangString: "zh-sg"}, want: true},
+		{name: "10", args: args{inLangString: "zh-my"}, want: true},
+		{name: "11", args: args{inLangString: "zh-hk"}, want: true},
+		{name: "12", args: args{inLangString: "zh-mo"}, want: true},
+
+		{name: "13", args: args{inLangString: "zh"}, want: true},
+		{name: "14", args: args{inLangString: "en"}, want: true},
+		{name: "15", args: args{inLangString: "ko"}, want: true},
+		{name: "16", args: args{inLangString: "ja"}, want: true},
+
+		{name: "17", args: args{inLangString: "zho"}, want: true},
+		{name: "18", args: args{inLangString: "eng"}, want: true},
+		{name: "19", args: args{inLangString: "kor"}, want: true},
+		{name: "20", args: args{inLangString: "jpn"}, want: true},
+
+		{name: "21", args: args{inLangString: "chi"}, want: true},
+		{name: "22", args: args{inLangString: "eng"}, want: true},
+		{name: "23", args: args{inLangString: "kor"}, want: true},
+		{name: "24", args: args{inLangString: "jpn"}, want: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsEmbySubChineseLangStringWanted(tt.args.inLangString); got != tt.want {
+				t.Errorf("IsEmbySubChineseLangStringWanted() = %v, want %v", got, tt.want)
 			}
 		})
 	}

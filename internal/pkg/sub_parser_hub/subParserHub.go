@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	languageConst "github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"path/filepath"
 	"regexp"
@@ -122,4 +123,60 @@ func IsSubExtWanted(subName string) bool {
 	default:
 		return false
 	}
+}
+
+// IsEmbySubCodecWanted 从 Emby api 拿到字幕的 sub 类型 string (Codec) 是否是符合本程序要求的
+func IsEmbySubCodecWanted(inSubCodec string) bool {
+
+	tmpString := strings.ToLower(inSubCodec)
+	if tmpString == common.SubTypeSRT ||
+		tmpString == common.SubTypeASS ||
+		tmpString == common.SubTypeSSA {
+		return true
+	}
+
+	return false
+}
+
+// IsEmbySubChineseLangStringWanted 是否是 Emby 自己解析出来的中文语言类型
+func IsEmbySubChineseLangStringWanted(inLangString string) bool {
+
+	tmpString := strings.ToLower(inLangString)
+	nextString := tmpString
+	spStrings := strings.Split(tmpString, "[")
+	if len(spStrings) > 1 {
+		// 去除 chi[xunlie] 类似的标记
+		nextString = spStrings[0]
+	} else {
+		// 去除 chinese（简英,zimuku）
+		spStrings = strings.Split(tmpString, "(")
+		if len(spStrings) > 1 {
+			nextString = spStrings[0]
+		}
+	}
+
+	// 先判断 ISO 标准的和变种的支持列表
+	if language.IsSupportISOString(nextString) == true {
+		return true
+	}
+	// 再判断之前支持的列表
+	switch nextString {
+	case languageConst.Emby_chinese_chs,
+		languageConst.Emby_chinese_cht,
+		languageConst.Emby_chinese_chi:
+		// chi chs cht
+		return true
+	case replaceLangString(languageConst.Emby_chinese):
+		// chinese，这个比较特殊，是本程序定义的 chinese 的字段，再 Emby API 下特殊的字幕命名字段
+		return true
+	default:
+		return false
+	}
+}
+
+func replaceLangString(inString string) string {
+	tmpString := strings.ToLower(inString)
+	one := strings.ReplaceAll(tmpString, ".", "")
+	two := strings.ReplaceAll(one, "_", "")
+	return two
 }

@@ -56,7 +56,8 @@ func TestEmbyHelper_UpdateVideoSubList(t *testing.T) {
 	// 166840 -- 基地 S01E03
 	// 173354 -- 基地 S01E04
 	// 172412 -- Dan Brown's The Lost Symbol S01E01
-	err := em.UpdateVideoSubList("173354")
+	// 194046 -- 窃贼军团
+	err := em.UpdateVideoSubList("194046")
 	if err != nil {
 		t.Fatal(err)
 	}

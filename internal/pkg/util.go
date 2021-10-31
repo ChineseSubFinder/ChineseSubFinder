@@ -47,6 +47,7 @@ func NewHttpClient(_reqParam ...types.ReqParam) *resty.Client {
 
 	httpClient := resty.New()
 	httpClient.SetTimeout(common.HTMLTimeOut)
+	httpClient.SetRetryCount(2)
 	if HttpProxy != "" {
 		httpClient.SetProxy(HttpProxy)
 	} else {

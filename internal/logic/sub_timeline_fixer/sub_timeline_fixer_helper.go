@@ -16,8 +16,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/sub_timeline_fiexer"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"os"
 	"path"
 	"path/filepath"
@@ -120,7 +120,7 @@ func (s SubTimelineFixerHelper) FixRecentlyItemsSubTimeline(movieRootDir, series
 func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath string) error {
 	log_helper.GetLogger().Debugln("fixOneVideoSub VideoROotPath:", videoRootPath)
 	// internalEngSub 默认第一个是 srt 然后第二个是 ass，就不要去遍历了
-	found, internalEngSub, exCh_EngSub, err := s.embyHelper.GetInternalEngSubAndExChineseEnglishSub(videoId)
+	found, internalEngSub, containChineseSubFile, err := s.embyHelper.GetInternalEngSubAndExChineseEnglishSub(videoId)
 	if err != nil {
 		return err
 	}
@@ -130,10 +130,10 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath str
 		return nil
 	}
 
-	log_helper.GetLogger().Debugln("internalEngSub:", len(internalEngSub), "exCh_EngSub:", len(exCh_EngSub))
+	log_helper.GetLogger().Debugln("internalEngSub:", len(internalEngSub), "containChineseSubFile:", len(containChineseSubFile))
 	// 需要先把原有的外置字幕带有 -fix 的删除，然后再做修正
 	// 不然如果调整了条件，之前修复的本次其实就不修正了，那么就会“残留”下来，误以为是本次配置的信息导致的
-	for _, exSubInfo := range exCh_EngSub {
+	for _, exSubInfo := range containChineseSubFile {
 		// 没有编辑的就跳过
 		if strings.Contains(exSubInfo.FileName, sub_timeline_fixer.FixMask) == false {
 			continue
@@ -154,7 +154,7 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath str
 	}
 
 	// 从外置双语（中英）字幕中找对对应的内置 srt 字幕进行匹配比较
-	for _, exSubInfo := range exCh_EngSub {
+	for _, exSubInfo := range containChineseSubFile {
 		inSelectSubIndex := 1
 		if exSubInfo.Ext == common.SubExtSRT {
 			inSelectSubIndex = 0
@@ -192,7 +192,8 @@ func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath str
 	return nil
 }
 
-func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubFile emby.SubInfo) (bool, []sub_timeline_fixer.SubFixInfo, string, error) {
+// fixSubTimeline 修复时间轴，containChineseSubFile 这里可能是，只要是带有中文的都算，简体、繁体、简英、繁英，需要后续额外的判断
+func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, containChineseSubFile emby.SubInfo) (bool, []sub_timeline_fixer.SubFixInfo, string, error) {
 	fixedSubName := ""
 	log_helper.GetLogger().Debugln("fixSubTimeline - DetermineFileTypeFromBytes", enSubFile.FileName)
 	bFind, infoBase, err := s.subParserHub.DetermineFileTypeFromBytes(enSubFile.Content, enSubFile.Ext)
@@ -209,15 +210,15 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 	*/
 	sub_helper.MergeMultiDialogue4EngSubtitle(infoBase)
 
-	log_helper.GetLogger().Debugln("fixSubTimeline - DetermineFileTypeFromBytes", ch_enSubFile.FileName)
-	bFind, infoSrc, err := s.subParserHub.DetermineFileTypeFromBytes(ch_enSubFile.Content, ch_enSubFile.Ext)
+	log_helper.GetLogger().Debugln("fixSubTimeline - DetermineFileTypeFromBytes", containChineseSubFile.FileName)
+	bFind, infoSrc, err := s.subParserHub.DetermineFileTypeFromBytes(containChineseSubFile.Content, containChineseSubFile.Ext)
 	if err != nil {
 		return false, nil, fixedSubName, err
 	}
 	if bFind == false {
 		return false, nil, fixedSubName, nil
 	}
-	infoSrc.Name = ch_enSubFile.FileName
+	infoSrc.Name = containChineseSubFile.FileName
 	/*
 		这里发现一个梗，内置的英文字幕导出的时候，有可能需要合并多个 Dialogue，见
 		internal/pkg/sub_helper/sub_helper.go 中 MergeMultiDialogue4EngSubtitle 的实现
@@ -271,11 +272,12 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, ch_enSubF
 		// 符合已知的字幕命名格式，不符合就跳过，都跳过也行，就不做任何操作而已
 		bMatch, fileNameWithOutExt, subExt, subLang, extraSubName := formatter.IsMatchThisFormat(infoSrc.Name)
 		if bMatch == false {
+			log_helper.GetLogger().Debugln(fmt.Sprintf("%s IsMatchThisFormat == false, Skip, %s", formatter.GetFormatterName(), infoSrc.Name))
 			continue
 		}
 		// 是否包含 default 关键词，暂时无需判断 forced
 		hasDefault := false
-		if strings.Contains(strings.ToLower(infoSrc.Name), language.Sub_Ext_Mark_Default) == true {
+		if strings.Contains(strings.ToLower(infoSrc.Name), subparser.Sub_Ext_Mark_Default) == true {
 			hasDefault = true
 		}
 		// 生成对应字幕命名格式的，字幕命名。这里注意，normal 的时候， extraSubName+"-fix" 是无效的，不会被设置，也就是直接覆盖之前的字幕了。

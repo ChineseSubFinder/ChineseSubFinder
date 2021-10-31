@@ -5,8 +5,10 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/panjf2000/ants/v2"
 	"golang.org/x/net/context"
 	"path"
@@ -245,7 +247,9 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 			// 首先找到外置的字幕文件
 			if stream.IsExternal == true && stream.IsTextSubtitleStream == true && stream.SupportsExternalStream == true {
 				// 然后字幕的格式以及语言命名要符合本程序的定义，有字幕
-				if em.subTypeStringOK(stream.Codec) == true && em.langStringOK(stream.Language) == true {
+				if sub_parser_hub.IsEmbySubCodecWanted(stream.Codec) == true &&
+					sub_parser_hub.IsEmbySubChineseLangStringWanted(stream.Language) == true {
+
 					haveExternalChineseSub = true
 					break
 				} else {
@@ -256,7 +260,9 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 		// 内置中文字幕
 		haveInsideChineseSub := false
 		for _, stream := range info.VideoInfo.MediaStreams {
-			if stream.IsExternal == false && (stream.Language == "chi" || stream.Language == "cht" || stream.Language == "chs") {
+			if stream.IsExternal == false &&
+				sub_parser_hub.IsEmbySubChineseLangStringWanted(stream.Language) {
+
 				haveInsideChineseSub = true
 				break
 			}
@@ -288,7 +294,7 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 	return noSubVideoList, nil
 }
 
-// GetInternalEngSubAndExChineseEnglishSub 获取对应 videoId 的内置英文字幕，外置中（简体、繁体）英字幕
+// GetInternalEngSubAndExChineseEnglishSub 获取对应 videoId 的内置英文字幕，外置中文字幕（只要是带有中文的都算，简体、繁体、简英、繁英，需要后续额外的判断）字幕
 func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (bool, []emby.SubInfo, []emby.SubInfo, error) {
 
 	// 先刷新以下这个资源，避免找到的字幕不存在了
@@ -316,7 +322,7 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 	*/
 	var insideEngSUbIndexList = make([]int, 0)
 	for _, stream := range videoInfo.MediaStreams {
-		if stream.IsExternal == false && stream.Language == "eng" && stream.Codec == "subrip" {
+		if stream.IsExternal == false && stream.Language == language.Emby_English_eng && stream.Codec == streamCodec {
 			insideEngSUbIndexList = append(insideEngSUbIndexList, stream.Index)
 		}
 	}
@@ -334,15 +340,13 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 		// 首先找到外置的字幕文件
 		if stream.IsExternal == true && stream.IsTextSubtitleStream == true && stream.SupportsExternalStream == true {
 			// 然后字幕的格式以及语言命名要符合本程序的定义，有字幕
-			if em.subTypeStringOK(stream.Codec) == true &&
-				em.langStringOK(stream.Language) == true &&
-				// 只支持 简英、繁英
-				(strings.Contains(stream.Language, language.MatchLangChsEn) == true || strings.Contains(stream.Language, language.MatchLangChtEn) == true) {
+			if sub_parser_hub.IsEmbySubCodecWanted(stream.Codec) == true &&
+				sub_parser_hub.IsEmbySubChineseLangStringWanted(stream.Language) == true {
 
 				tmpFileName := filepath.Base(stream.Path)
 				// 去除 .default 或者 .forced
-				tmpFileName = strings.ReplaceAll(tmpFileName, language.Sub_Ext_Mark_Default, "")
-				tmpFileName = strings.ReplaceAll(tmpFileName, language.Sub_Ext_Mark_Forced, "")
+				tmpFileName = strings.ReplaceAll(tmpFileName, subparser.Sub_Ext_Mark_Default, "")
+				tmpFileName = strings.ReplaceAll(tmpFileName, subparser.Sub_Ext_Mark_Forced, "")
 				tmpFileNameWithOutExt = strings.ReplaceAll(tmpFileName, path.Ext(tmpFileName), "")
 				exSubList = append(exSubList, *emby.NewSubInfo(tmpFileNameWithOutExt+"."+stream.Codec, "."+stream.Codec, stream.Index))
 			} else {
@@ -411,61 +415,6 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 	return true, inSubList, exSubList, nil
 }
 
-// langStringOK 从 Emby api 拿到字幕的 MyLanguage string是否是符合本程序要求的
-func (em *EmbyHelper) langStringOK(inLang string) bool {
-
-	tmpString := strings.ToLower(inLang)
-	nextString := tmpString
-	// 去除 [xunlie] 类似的标记
-	spStrings := strings.Split(tmpString, "[")
-	if len(spStrings) > 1 {
-		nextString = spStrings[0]
-	} else {
-		spStrings = strings.Split(tmpString, "(")
-		if len(spStrings) > 1 {
-			nextString = spStrings[0]
-		}
-	}
-	switch nextString {
-	// 早期版本支持的语言类型，现在弃用
-	case em.replaceLangString(language.Emby_chi),
-		em.replaceLangString(language.Emby_chn),
-		em.replaceLangString(language.Emby_chs),
-		em.replaceLangString(language.Emby_cht),
-		em.replaceLangString(language.Emby_chs_en),
-		em.replaceLangString(language.Emby_cht_en),
-		em.replaceLangString(language.Emby_chs_jp),
-		em.replaceLangString(language.Emby_cht_jp),
-		em.replaceLangString(language.Emby_chs_kr),
-		em.replaceLangString(language.Emby_cht_kr):
-		return true
-	case em.replaceLangString(language.Emby_chinese):
-		return true
-	default:
-		return false
-	}
-}
-
-// subTypeStringOK 从 Emby api 拿到字幕的 sub 类型 string (Codec) 是否是符合本程序要求的
-func (em *EmbyHelper) subTypeStringOK(inSubType string) bool {
-
-	tmpString := strings.ToLower(inSubType)
-	if tmpString == common.SubTypeSRT ||
-		tmpString == common.SubTypeASS ||
-		tmpString == common.SubTypeSSA {
-		return true
-	}
-
-	return false
-}
-
-func (em *EmbyHelper) replaceLangString(inString string) string {
-	tmpString := strings.ToLower(inString)
-	one := strings.ReplaceAll(tmpString, ".", "")
-	two := strings.ReplaceAll(one, "_", "")
-	return two
-}
-
 type InputData struct {
 	Id string
 	Wg *sync.WaitGroup
@@ -479,4 +428,5 @@ type OutData struct {
 const (
 	videoTypeEpisode = "Episode"
 	videoTypeMovie   = "Movie"
+	streamCodec      = "subrip"
 )

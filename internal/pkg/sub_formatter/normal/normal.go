@@ -3,9 +3,11 @@ package normal
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
+	languageConst "github.com/allanpk716/ChineseSubFinder/internal/types/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -29,13 +31,20 @@ func (f Formatter) GetFormatterFormatterName() int {
 }
 
 // IsMatchThisFormat 是否满足当前实现接口的字幕命名格式 - 是否符合规则、fileNameWithOutExt string, subExt string, subLang types.MyLanguage, extraSubPreName string
-func (f Formatter) IsMatchThisFormat(subName string) (bool, string, string, language.MyLanguage, string) {
+func (f Formatter) IsMatchThisFormat(subName string) (bool, string, string, languageConst.MyLanguage, string) {
 	/*
 		Emby 的命名规则比较特殊，而且本程序就是做中文字幕下载的，所以，下面的正则表达式比较特殊
+		见本程序内 internal/types/language/ISOLanguage.go 这里的支持 ISO 规范和中文编码变种
+		见文档、讨论：
+		https://emby.media/community/index.php?/topic/94504-current-chinese-subtitle-filter-not-so-accurate-and-hope-improve-like-this/
+		https://en.wikipedia.org/wiki/Chinese_Wikipedia#Automatic_conversion_between_traditional_and_simplified_Chinese_characters
+		https://stackoverflow.com/questions/18902072/what-standard-do-language-codes-of-the-form-zh-hans-belong-to
 	*/
-	var re = regexp.MustCompile(`(?m)\.(\bzh\b|\bzho\b|\bchi\b)(\.\S+)`)
+	//subName = strings.ToLower(subName)
+	var re = regexp.MustCompile(language.ISOSupportRegexRule())
 	matched := re.FindAllStringSubmatch(subName, -1)
 	/*
+		详细看测试用例
 		The Boss Baby Family Business (2021) WEBDL-1080p.zh.ass
 		The Boss Baby Family Business (2021) WEBDL-1080p.zh.default.ass
 		The Boss Baby Family Business (2021) WEBDL-1080p.zh.forced.ass
@@ -51,27 +60,22 @@ func (f Formatter) IsMatchThisFormat(subName string) (bool, string, string, lang
 		[0][2]	.ass
 	*/
 	if matched == nil || len(matched) < 1 || len(matched[0]) < 3 {
-		return false, "", "", language.Unknown, ""
+		return false, "", "", languageConst.Unknown, ""
 	}
-	var subLang language.MyLanguage
+	var subLang languageConst.MyLanguage
 	var extraSubPreName string
 	fileNameWithOutExt := strings.ReplaceAll(subName, matched[0][0], "")
 	subExt := matched[0][2]
-	//var subLangStr = matched[0][1]
+	var subLangStr = matched[0][1]
 	extraSubPreName = ""
 	// 这里有一个点，是直接从 zh zho ch 去转换成中文语言就行了，还是要做字幕的语言识别
 	// 目前倾向于这里用后面的逻辑
-	//subLang = language.ChineseISOString2Lang(subLangStr)
-	bFind, file, err := f.subParser.DetermineFileTypeFromFile(subName)
-	if err != nil || bFind == false {
-		return false, "", "", 0, ""
-	}
-	subLang = file.Lang
+	subLang = language.ISOString2SupportLang(subLangStr)
 	return true, fileNameWithOutExt, subExt, subLang, extraSubPreName
 }
 
 // GenerateMixSubName 通过视频和字幕信息，生成当前实现接口的字幕命名格式。extraSubPreName 一般是填写字幕网站，不填写则留空 - 新名称、新名称带有 default 标记，新名称带有 forced 标记
-func (f Formatter) GenerateMixSubName(videoFileName, subExt string, subLang language.MyLanguage, extraSubPreName string) (string, string, string) {
+func (f Formatter) GenerateMixSubName(videoFileName, subExt string, subLang languageConst.MyLanguage, extraSubPreName string) (string, string, string) {
 	/*
 		这里会生成类似的文件名 xxxx.zh
 	*/
@@ -80,14 +84,14 @@ func (f Formatter) GenerateMixSubName(videoFileName, subExt string, subLang lang
 	return f.GenerateMixSubNameBase(videoFileNameWithOutExt, subExt, subLang, extraSubPreName)
 }
 
-func (f Formatter) GenerateMixSubNameBase(fileNameWithOutExt, subExt string, subLang language.MyLanguage, extraSubPreName string) (string, string, string) {
+func (f Formatter) GenerateMixSubNameBase(fileNameWithOutExt, subExt string, subLang languageConst.MyLanguage, extraSubPreName string) (string, string, string) {
 	// 这里传入字幕后缀名的时候，可能会带有 default 或者 forced 字段，需要剔除
-	nowSubExt := strings.ReplaceAll(subExt, language.Sub_Ext_Mark_Default, "")
-	nowSubExt = strings.ReplaceAll(subExt, language.Sub_Ext_Mark_Forced, "")
+	nowSubExt := strings.ReplaceAll(subExt, subparser.Sub_Ext_Mark_Default, "")
+	nowSubExt = strings.ReplaceAll(subExt, subparser.Sub_Ext_Mark_Forced, "")
 
-	subNewName := fileNameWithOutExt + "." + language.ISO_639_1_Chinese + nowSubExt
-	subNewNameWithDefault := fileNameWithOutExt + "." + language.ISO_639_1_Chinese + language.Sub_Ext_Mark_Default + nowSubExt
-	subNewNameWithForced := fileNameWithOutExt + "." + language.ISO_639_1_Chinese + language.Sub_Ext_Mark_Forced + nowSubExt
+	subNewName := fileNameWithOutExt + "." + languageConst.ISO_639_1_Chinese + nowSubExt
+	subNewNameWithDefault := fileNameWithOutExt + "." + languageConst.ISO_639_1_Chinese + subparser.Sub_Ext_Mark_Default + nowSubExt
+	subNewNameWithForced := fileNameWithOutExt + "." + languageConst.ISO_639_1_Chinese + subparser.Sub_Ext_Mark_Forced + nowSubExt
 
 	return subNewName, subNewNameWithDefault, subNewNameWithForced
 }

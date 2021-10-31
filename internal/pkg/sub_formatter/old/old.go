@@ -3,6 +3,7 @@ package old
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"path/filepath"
 	"strings"
 )
@@ -115,7 +116,7 @@ func makeMixSubExtString(orgFileNameWithOutExt, lang string, ext, site string, b
 
 	tmpDefault := ""
 	if beDefault == true {
-		tmpDefault = language.Emby_default
+		tmpDefault = subparser.Sub_Ext_Mark_Default
 	}
 
 	if site == "" {

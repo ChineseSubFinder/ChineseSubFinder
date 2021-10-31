@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	language2 "github.com/allanpk716/ChineseSubFinder/internal/types/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -74,8 +75,8 @@ func (f Formatter) GenerateMixSubName(videoFileName, subExt string, subLang lang
 
 func (f Formatter) GenerateMixSubNameBase(fileNameWithOutExt, subExt string, subLang language2.MyLanguage, extraSubPreName string) (string, string, string) {
 	// 这里传入字幕后缀名的时候，可能会带有 default 或者 forced 字段，需要剔除
-	nowSubExt := strings.ReplaceAll(subExt, language2.Sub_Ext_Mark_Default, "")
-	nowSubExt = strings.ReplaceAll(subExt, language2.Sub_Ext_Mark_Forced, "")
+	nowSubExt := strings.ReplaceAll(subExt, subparser.Sub_Ext_Mark_Default, "")
+	nowSubExt = strings.ReplaceAll(subExt, subparser.Sub_Ext_Mark_Forced, "")
 	note := ""
 	// extraSubPreName 那个字幕网站下载的
 	if extraSubPreName != "" {
@@ -83,8 +84,8 @@ func (f Formatter) GenerateMixSubNameBase(fileNameWithOutExt, subExt string, sub
 	}
 
 	subNewName := fileNameWithOutExt + language2.Emby_chinese + "(" + language.Lang2ChineseString(subLang) + note + ")" + nowSubExt
-	subNewNameWithDefault := fileNameWithOutExt + language2.Emby_chinese + "(" + language.Lang2ChineseString(subLang) + note + ")" + language2.Sub_Ext_Mark_Default + nowSubExt
-	subNewNameWithForced := fileNameWithOutExt + language2.Emby_chinese + "(" + language.Lang2ChineseString(subLang) + note + ")" + language2.Sub_Ext_Mark_Forced + nowSubExt
+	subNewNameWithDefault := fileNameWithOutExt + language2.Emby_chinese + "(" + language.Lang2ChineseString(subLang) + note + ")" + subparser.Sub_Ext_Mark_Default + nowSubExt
+	subNewNameWithForced := fileNameWithOutExt + language2.Emby_chinese + "(" + language.Lang2ChineseString(subLang) + note + ")" + subparser.Sub_Ext_Mark_Forced + nowSubExt
 
 	return subNewName, subNewNameWithDefault, subNewNameWithForced
 }
