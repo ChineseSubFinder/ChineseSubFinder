@@ -76,7 +76,7 @@ func (f Formatter) GenerateMixSubName(videoFileName, subExt string, subLang lang
 func (f Formatter) GenerateMixSubNameBase(fileNameWithOutExt, subExt string, subLang language2.MyLanguage, extraSubPreName string) (string, string, string) {
 	// 这里传入字幕后缀名的时候，可能会带有 default 或者 forced 字段，需要剔除
 	nowSubExt := strings.ReplaceAll(subExt, subparser.Sub_Ext_Mark_Default, "")
-	nowSubExt = strings.ReplaceAll(subExt, subparser.Sub_Ext_Mark_Forced, "")
+	nowSubExt = strings.ReplaceAll(nowSubExt, subparser.Sub_Ext_Mark_Forced, "")
 	note := ""
 	// extraSubPreName 那个字幕网站下载的
 	if extraSubPreName != "" {

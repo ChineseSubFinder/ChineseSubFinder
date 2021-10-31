@@ -8,7 +8,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/panjf2000/ants/v2"
 	"golang.org/x/net/context"
 	"path"
@@ -345,8 +344,8 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 
 				tmpFileName := filepath.Base(stream.Path)
 				// 去除 .default 或者 .forced
-				tmpFileName = strings.ReplaceAll(tmpFileName, subparser.Sub_Ext_Mark_Default, "")
-				tmpFileName = strings.ReplaceAll(tmpFileName, subparser.Sub_Ext_Mark_Forced, "")
+				//tmpFileName = strings.ReplaceAll(tmpFileName, subparser.Sub_Ext_Mark_Default, "")
+				//tmpFileName = strings.ReplaceAll(tmpFileName, subparser.Sub_Ext_Mark_Forced, "")
 				tmpFileNameWithOutExt = strings.ReplaceAll(tmpFileName, path.Ext(tmpFileName), "")
 				exSubList = append(exSubList, *emby.NewSubInfo(tmpFileNameWithOutExt+"."+stream.Codec, "."+stream.Codec, stream.Index))
 			} else {
