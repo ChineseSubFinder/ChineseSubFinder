@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/sirupsen/logrus"
@@ -100,7 +101,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 				continue
 			}
 
-			onSub := supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, types.ChineseSimple, file.Link, 0, shooter.Delay, subExt, data)
+			onSub := supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, language.ChineseSimple, file.Link, 0, shooter.Delay, subExt, data)
 			outSubInfoList = append(outSubInfoList, *onSub)
 			// 如果够了那么多个字幕就返回
 			if len(outSubInfoList) >= s.topic {

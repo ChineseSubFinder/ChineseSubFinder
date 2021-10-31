@@ -8,7 +8,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	language2 "github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod/lib/utils"
@@ -301,17 +301,17 @@ func SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath string) error {
 				continue
 			}
 			// 得包含 .default. 找个关键词
-			if strings.Contains(nowFileName, types.Sub_Ext_Mark_Default+".") == true {
+			if strings.Contains(nowFileName, language2.Sub_Ext_Mark_Default+".") == true {
 				oldPath := dir + pathSep + curFile.Name()
-				newPath := dir + pathSep + strings.ReplaceAll(curFile.Name(), types.Sub_Ext_Mark_Default+".", ".")
+				newPath := dir + pathSep + strings.ReplaceAll(curFile.Name(), language2.Sub_Ext_Mark_Default+".", ".")
 				err = os.Rename(oldPath, newPath)
 				if err != nil {
 					return err
 				}
-			} else if strings.Contains(nowFileName, types.Sub_Ext_Mark_Forced+".") == true {
+			} else if strings.Contains(nowFileName, language2.Sub_Ext_Mark_Forced+".") == true {
 				// 得包含 .forced. 找个关键词
 				oldPath := dir + pathSep + curFile.Name()
-				newPath := dir + pathSep + strings.ReplaceAll(curFile.Name(), types.Sub_Ext_Mark_Forced+".", ".")
+				newPath := dir + pathSep + strings.ReplaceAll(curFile.Name(), language2.Sub_Ext_Mark_Forced+".", ".")
 				err = os.Rename(oldPath, newPath)
 				if err != nil {
 					return err

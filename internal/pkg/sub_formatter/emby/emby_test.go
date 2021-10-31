@@ -3,7 +3,7 @@ package emby
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	subCommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"testing"
 )
 
@@ -27,50 +27,50 @@ func TestFormatter_IsMatchThisFormat(t *testing.T) {
 		want  bool
 		want1 string
 		want2 string
-		want3 types.Language
+		want3 language.MyLanguage
 		want4 string
 	}{
 		{name: "00", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简英,subhd).ass"},
 			want:  true,
 			want1: fileWithOutExt,
 			want2: ".ass",
-			want3: types.ChineseSimpleEnglish,
+			want3: language.ChineseSimpleEnglish,
 			want4: "subhd"},
 		{name: "01", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简英,xunlei).default.ass"},
 			want:  true,
 			want1: fileWithOutExt,
 			want2: ".default.ass",
-			want3: types.ChineseSimpleEnglish,
+			want3: language.ChineseSimpleEnglish,
 			want4: "xunlei"},
 		{name: "02", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简英,zimuku).forced.ass"},
 			want:  true,
 			want1: fileWithOutExt,
 			want2: ".forced.ass",
-			want3: types.ChineseSimpleEnglish,
+			want3: language.ChineseSimpleEnglish,
 			want4: "zimuku"},
 		{name: "10", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简日).ass"},
 			want:  true,
 			want1: fileWithOutExt,
 			want2: ".ass",
-			want3: types.ChineseSimpleJapanese,
+			want3: language.ChineseSimpleJapanese,
 			want4: ""},
 		{name: "11", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简).default.ass"},
 			want:  true,
 			want1: fileWithOutExt,
 			want2: ".default.ass",
-			want3: types.ChineseSimple,
+			want3: language.ChineseSimple,
 			want4: ""},
 		{name: "12", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese(繁英).forced.ass"},
 			want:  true,
 			want1: fileWithOutExt,
 			want2: ".forced.ass",
-			want3: types.ChineseTraditionalEnglish,
+			want3: language.ChineseTraditionalEnglish,
 			want4: ""},
 		{name: "03", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese.ass"},
 			want:  false,
 			want1: "",
 			want2: "",
-			want3: types.Unknow,
+			want3: language.Unknown,
 			want4: ""},
 	}
 	for _, tt := range tests {
@@ -104,7 +104,7 @@ func TestFormatter_GenerateMixSubName(t *testing.T) {
 	type args struct {
 		videoFileName   string
 		subExt          string
-		subLang         types.Language
+		subLang         language.MyLanguage
 		extraSubPreName string
 	}
 	tests := []struct {
@@ -114,15 +114,15 @@ func TestFormatter_GenerateMixSubName(t *testing.T) {
 		want1 string
 		want2 string
 	}{
-		{name: "zh_shooter", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: types.ChineseSimple, extraSubPreName: "shooter"},
+		{name: "zh_shooter", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: language.ChineseSimple, extraSubPreName: "shooter"},
 			want:  videoFileNamePre + ".chinese(简,shooter).ass",
 			want1: videoFileNamePre + ".chinese(简,shooter).default.ass",
 			want2: videoFileNamePre + ".chinese(简,shooter).forced.ass"},
-		{name: "zh_en_shooter", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: types.ChineseSimpleEnglish, extraSubPreName: "shooter"},
+		{name: "zh_en_shooter", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: language.ChineseSimpleEnglish, extraSubPreName: "shooter"},
 			want:  videoFileNamePre + ".chinese(简英,shooter).ass",
 			want1: videoFileNamePre + ".chinese(简英,shooter).default.ass",
 			want2: videoFileNamePre + ".chinese(简英,shooter).forced.ass"},
-		{name: "zh_en", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: types.ChineseSimpleEnglish, extraSubPreName: ""},
+		{name: "zh_en", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: language.ChineseSimpleEnglish, extraSubPreName: ""},
 			want:  videoFileNamePre + ".chinese(简英).ass",
 			want1: videoFileNamePre + ".chinese(简英).default.ass",
 			want2: videoFileNamePre + ".chinese(简英).forced.ass"},

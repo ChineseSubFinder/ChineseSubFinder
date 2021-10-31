@@ -14,7 +14,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/normal"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"os"
 	"strings"
 )
@@ -109,12 +109,12 @@ func (s SubFormatChanger) autoDetectAndChange(outStruct *RenameResults, fitSubNa
 		// 转换格式后，需要保留之前的 default 或者 forced
 		findDefault := false
 		findForce := false
-		if strings.Contains(subExt, types.Sub_Ext_Mark_Default) == true {
-			subExt = strings.Replace(subExt, types.Sub_Ext_Mark_Default, "", -1)
+		if strings.Contains(subExt, language.Sub_Ext_Mark_Default) == true {
+			subExt = strings.Replace(subExt, language.Sub_Ext_Mark_Default, "", -1)
 			findDefault = true
 		}
-		if strings.Contains(subExt, types.Sub_Ext_Mark_Forced) == true {
-			subExt = strings.Replace(subExt, types.Sub_Ext_Mark_Forced, "", -1)
+		if strings.Contains(subExt, language.Sub_Ext_Mark_Forced) == true {
+			subExt = strings.Replace(subExt, language.Sub_Ext_Mark_Forced, "", -1)
 			findForce = true
 		}
 		// 通过传入的目标格式化 formatter 的名称去调用

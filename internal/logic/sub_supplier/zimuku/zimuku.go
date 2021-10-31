@@ -12,6 +12,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	language2 "github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/sirupsen/logrus"
@@ -249,7 +250,7 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 	// 首先过滤出中文的字幕，同时需要满足是支持的字幕
 	var tmpSubInfo = make([]SubInfo, 0)
 	for _, subInfo := range subInfos {
-		tmpLang := language.LangConverter(subInfo.Lang)
+		tmpLang := language.LangConverter4Sub_Supplier(subInfo.Lang)
 		if language.HasChineseLang(tmpLang) == true && sub_parser_hub.IsSubTypeWanted(subInfo.Ext) == true {
 			tmpSubInfo = append(tmpSubInfo, subInfo)
 		}
@@ -260,7 +261,7 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 			if len(tmpSubInfo) >= s.topic {
 				break
 			}
-			tmpLang := language.LangConverter(subInfo.Lang)
+			tmpLang := language.LangConverter4Sub_Supplier(subInfo.Lang)
 			if language.HasChineseLang(tmpLang) == false {
 				tmpSubInfo = append(tmpSubInfo, subInfo)
 			}
@@ -276,7 +277,7 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 		}
 		// 默认都是包含中文字幕的，然后具体使用的时候再进行区分
 
-		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, types.ChineseSimple, pkg.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
+		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, language2.ChineseSimple, pkg.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
 			0, filepath.Ext(fileName), data)
 
 		oneSubInfo.Season = subInfo.Season

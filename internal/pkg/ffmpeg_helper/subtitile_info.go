@@ -3,7 +3,7 @@ package ffmpeg_helper
 import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	language2 "github.com/allanpk716/ChineseSubFinder/internal/types/language"
 )
 
 type SubtitleInfo struct {
@@ -39,7 +39,7 @@ func (s *SubtitleInfo) SetContent(content string) error {
 }
 
 // GetLanguage 获取字幕语言的类型
-func (s SubtitleInfo) GetLanguage() types.Language {
+func (s SubtitleInfo) GetLanguage() language2.MyLanguage {
 	return language.ISOString2SupportLang(s.language)
 }
 

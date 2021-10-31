@@ -82,7 +82,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	for _, v := range jsonList.Sublist {
 		if len(v.Scid) > 0 && v.Scid != "" {
 			// 符合中文语言的先加入列表
-			tmpLang := language.LangConverter(v.Language)
+			tmpLang := language.LangConverter4Sub_Supplier(v.Language)
 			if language.HasChineseLang(tmpLang) == true && sub_parser_hub.IsSubTypeWanted(v.Sname) == true {
 				tmpXunLeiSubListChinese = append(tmpXunLeiSubListChinese, v)
 			}
@@ -96,7 +96,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 				break
 			}
 			if len(v.Scid) > 0 && v.Scid != "" {
-				tmpLang := language.LangConverter(v.Language)
+				tmpLang := language.LangConverter4Sub_Supplier(v.Language)
 				if language.HasChineseLang(tmpLang) == false {
 					tmpXunLeiSubListChinese = append(tmpXunLeiSubListChinese, v)
 				}
@@ -105,7 +105,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	}
 	// 再开始下载字幕
 	for i, v := range tmpXunLeiSubListChinese {
-		tmpLang := language.LangConverter(v.Language)
+		tmpLang := language.LangConverter4Sub_Supplier(v.Language)
 		data, filename, err := pkg.DownFile(v.Surl)
 		if err != nil {
 			s.log.Errorln("xunlei pkg.DownFile:", err)

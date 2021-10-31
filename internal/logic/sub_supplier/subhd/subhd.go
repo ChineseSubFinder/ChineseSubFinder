@@ -13,6 +13,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod"
@@ -126,7 +127,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 			s.log.Errorln("subhd step2Ex", err)
 			continue
 		}
-		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, types.ChineseSimple, pkg.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0,
+		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple, pkg.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0,
 			0, hdContent.Ext, hdContent.Data)
 		oneSubInfo.Season = item.Season
 		oneSubInfo.Episode = item.Episode
@@ -218,7 +219,7 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInf
 			s.log.Errorln("subhd step2Ex", err)
 			return nil, err
 		}
-		subInfos = append(subInfos, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, types.ChineseSimple, pkg.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
+		subInfos = append(subInfos, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple, pkg.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
 	}
 
 	return subInfos, nil

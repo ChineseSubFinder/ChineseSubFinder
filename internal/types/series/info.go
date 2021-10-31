@@ -1,7 +1,7 @@
 package series
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"time"
 )
 
@@ -36,7 +36,7 @@ type SubInfo struct {
 	Title        string
 	Season       int
 	Episode      int
-	Language     types.Language
+	Language     language.MyLanguage
 	Dir          string // 这里需要记录字幕的位置，因为需要在同级目录匹配相应的视频才行
 	FileFullPath string // 字幕文件的全路径
 }

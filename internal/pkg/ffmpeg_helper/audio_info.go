@@ -3,7 +3,7 @@ package ffmpeg_helper
 import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	language2 "github.com/allanpk716/ChineseSubFinder/internal/types/language"
 )
 
 type AudioInfo struct {
@@ -28,7 +28,7 @@ func NewAudioInfo(index int, codecName, codecType, timeBase, startTime, language
 }
 
 // GetLanguage 获取音频的语言类型
-func (a AudioInfo) GetLanguage() types.Language {
+func (a AudioInfo) GetLanguage() language2.MyLanguage {
 	return language.ISOString2SupportLang(a.language)
 }
 

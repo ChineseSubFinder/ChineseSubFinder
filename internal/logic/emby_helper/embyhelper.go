@@ -5,8 +5,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/panjf2000/ants/v2"
 	"golang.org/x/net/context"
 	"path"
@@ -337,12 +337,12 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 			if em.subTypeStringOK(stream.Codec) == true &&
 				em.langStringOK(stream.Language) == true &&
 				// 只支持 简英、繁英
-				(strings.Contains(stream.Language, types.MatchLangChsEn) == true || strings.Contains(stream.Language, types.MatchLangChtEn) == true) {
+				(strings.Contains(stream.Language, language.MatchLangChsEn) == true || strings.Contains(stream.Language, language.MatchLangChtEn) == true) {
 
 				tmpFileName := filepath.Base(stream.Path)
 				// 去除 .default 或者 .forced
-				tmpFileName = strings.ReplaceAll(tmpFileName, types.Sub_Ext_Mark_Default, "")
-				tmpFileName = strings.ReplaceAll(tmpFileName, types.Sub_Ext_Mark_Forced, "")
+				tmpFileName = strings.ReplaceAll(tmpFileName, language.Sub_Ext_Mark_Default, "")
+				tmpFileName = strings.ReplaceAll(tmpFileName, language.Sub_Ext_Mark_Forced, "")
 				tmpFileNameWithOutExt = strings.ReplaceAll(tmpFileName, path.Ext(tmpFileName), "")
 				exSubList = append(exSubList, *emby.NewSubInfo(tmpFileNameWithOutExt+"."+stream.Codec, "."+stream.Codec, stream.Index))
 			} else {
@@ -411,7 +411,7 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 	return true, inSubList, exSubList, nil
 }
 
-// langStringOK 从 Emby api 拿到字幕的 Language string是否是符合本程序要求的
+// langStringOK 从 Emby api 拿到字幕的 MyLanguage string是否是符合本程序要求的
 func (em *EmbyHelper) langStringOK(inLang string) bool {
 
 	tmpString := strings.ToLower(inLang)
@@ -427,18 +427,19 @@ func (em *EmbyHelper) langStringOK(inLang string) bool {
 		}
 	}
 	switch nextString {
-	case em.replaceLangString(types.Emby_chi),
-		em.replaceLangString(types.Emby_chn),
-		em.replaceLangString(types.Emby_chs),
-		em.replaceLangString(types.Emby_cht),
-		em.replaceLangString(types.Emby_chs_en),
-		em.replaceLangString(types.Emby_cht_en),
-		em.replaceLangString(types.Emby_chs_jp),
-		em.replaceLangString(types.Emby_cht_jp),
-		em.replaceLangString(types.Emby_chs_kr),
-		em.replaceLangString(types.Emby_cht_kr):
+	// 早期版本支持的语言类型，现在弃用
+	case em.replaceLangString(language.Emby_chi),
+		em.replaceLangString(language.Emby_chn),
+		em.replaceLangString(language.Emby_chs),
+		em.replaceLangString(language.Emby_cht),
+		em.replaceLangString(language.Emby_chs_en),
+		em.replaceLangString(language.Emby_cht_en),
+		em.replaceLangString(language.Emby_chs_jp),
+		em.replaceLangString(language.Emby_cht_jp),
+		em.replaceLangString(language.Emby_chs_kr),
+		em.replaceLangString(language.Emby_cht_kr):
 		return true
-	case em.replaceLangString(types.Emby_chinese):
+	case em.replaceLangString(language.Emby_chinese):
 		return true
 	default:
 		return false

@@ -3,7 +3,7 @@ package normal
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	subCommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"testing"
 )
 
@@ -27,32 +27,32 @@ func TestFormatter_IsMatchThisFormat(t *testing.T) {
 		want  bool
 		want1 string
 		want2 string
-		want3 types.Language
+		want3 language.MyLanguage
 		want4 string
 	}{
 		{name: "00", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.zh.ass"},
 			want:  true,
 			want1: fileWithOutExt,
 			want2: ".ass",
-			want3: types.ChineseSimple,
+			want3: language.ChineseSimple,
 			want4: ""},
 		{name: "01", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.zh.default.ass"},
 			want:  true,
 			want1: fileWithOutExt,
 			want2: ".default.ass",
-			want3: types.ChineseSimple,
+			want3: language.ChineseSimple,
 			want4: ""},
 		{name: "02", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.zh.forced.ass"},
 			want:  true,
 			want1: fileWithOutExt,
 			want2: ".forced.ass",
-			want3: types.ChineseSimple,
+			want3: language.ChineseSimple,
 			want4: ""},
 		{name: "03", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.cn.ass"},
 			want:  false,
 			want1: "",
 			want2: "",
-			want3: types.Unknow,
+			want3: language.Unknown,
 			want4: ""},
 	}
 	for _, tt := range tests {
@@ -86,7 +86,7 @@ func TestFormatter_GenerateMixSubName(t *testing.T) {
 	type args struct {
 		videoFileName   string
 		subExt          string
-		subLang         types.Language
+		subLang         language.MyLanguage
 		extraSubPreName string
 	}
 	tests := []struct {
@@ -96,15 +96,15 @@ func TestFormatter_GenerateMixSubName(t *testing.T) {
 		want1 string
 		want2 string
 	}{
-		{name: "zh", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: types.ChineseSimple, extraSubPreName: ""},
+		{name: "zh", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: language.ChineseSimple, extraSubPreName: ""},
 			want:  videoFileNamePre + ".zh.ass",
 			want1: videoFileNamePre + ".zh.default.ass",
 			want2: videoFileNamePre + ".zh.forced.ass"},
-		{name: "zh_shooter", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: types.ChineseSimple, extraSubPreName: "shooter"},
+		{name: "zh_shooter", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: language.ChineseSimple, extraSubPreName: "shooter"},
 			want:  videoFileNamePre + ".zh.ass",
 			want1: videoFileNamePre + ".zh.default.ass",
 			want2: videoFileNamePre + ".zh.forced.ass"},
-		{name: "zh_shooter2", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: types.ChineseSimpleEnglish, extraSubPreName: "shooter"},
+		{name: "zh_shooter2", args: args{videoFileName: videoFileName, subExt: common.SubExtASS, subLang: language.ChineseSimpleEnglish, extraSubPreName: "shooter"},
 			want:  videoFileNamePre + ".zh.ass",
 			want1: videoFileNamePre + ".zh.default.ass",
 			want2: videoFileNamePre + ".zh.forced.ass"},

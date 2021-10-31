@@ -2,7 +2,7 @@ package old
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"path/filepath"
 	"strings"
 )
@@ -42,22 +42,22 @@ func IsOldVersionSubPrefixName(subFileName string) (bool, string, string) {
 	// 一种的保存了多字幕 SaveMultiSub: true
 	// 先判断 单字幕
 	switch nowExt {
-	case types.Emby_chs:
-		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChs, subTypeExt, "", true)
-	case types.Emby_cht:
-		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangCht, subTypeExt, "", false)
-	case types.Emby_chs_en:
-		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChsEn, subTypeExt, "", true)
-	case types.Emby_cht_en:
-		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChtEn, subTypeExt, "", false)
-	case types.Emby_chs_jp:
-		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChsJp, subTypeExt, "", true)
-	case types.Emby_cht_jp:
-		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChtJp, subTypeExt, "", false)
-	case types.Emby_chs_kr:
-		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChsKr, subTypeExt, "", true)
-	case types.Emby_cht_kr:
-		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, types.MatchLangChtKr, subTypeExt, "", false)
+	case language.Emby_chs:
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, language.MatchLangChs, subTypeExt, "", true)
+	case language.Emby_cht:
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, language.MatchLangCht, subTypeExt, "", false)
+	case language.Emby_chs_en:
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, language.MatchLangChsEn, subTypeExt, "", true)
+	case language.Emby_cht_en:
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, language.MatchLangChtEn, subTypeExt, "", false)
+	case language.Emby_chs_jp:
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, language.MatchLangChsJp, subTypeExt, "", true)
+	case language.Emby_cht_jp:
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, language.MatchLangChtJp, subTypeExt, "", false)
+	case language.Emby_chs_kr:
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, language.MatchLangChsKr, subTypeExt, "", true)
+	case language.Emby_cht_kr:
+		return true, orgMixExt, makeMixSubExtString(orgFileNameWithOutOrgMixExt, language.MatchLangChtKr, subTypeExt, "", false)
 	}
 	// 再判断 多字幕情况
 	spStrings := strings.Split(nowExt, "[")
@@ -67,25 +67,25 @@ func IsOldVersionSubPrefixName(subFileName string) (bool, string, string) {
 	// 分两段来判断是否符合标准
 	// 第一段
 	firstOk := true
-	lang := types.MatchLangChs
+	lang := language.MatchLangChs
 	site := ""
 	switch spStrings[0] {
-	case types.Emby_chs:
-		lang = types.MatchLangChs
-	case types.Emby_cht:
-		lang = types.MatchLangCht
-	case types.Emby_chs_en:
-		lang = types.MatchLangChsEn
-	case types.Emby_cht_en:
-		lang = types.MatchLangChtEn
-	case types.Emby_chs_jp:
-		lang = types.MatchLangChsJp
-	case types.Emby_cht_jp:
-		lang = types.MatchLangChtJp
-	case types.Emby_chs_kr:
-		lang = types.MatchLangChsKr
-	case types.Emby_cht_kr:
-		lang = types.MatchLangChtKr
+	case language.Emby_chs:
+		lang = language.MatchLangChs
+	case language.Emby_cht:
+		lang = language.MatchLangCht
+	case language.Emby_chs_en:
+		lang = language.MatchLangChsEn
+	case language.Emby_cht_en:
+		lang = language.MatchLangChtEn
+	case language.Emby_chs_jp:
+		lang = language.MatchLangChsJp
+	case language.Emby_cht_jp:
+		lang = language.MatchLangChtJp
+	case language.Emby_chs_kr:
+		lang = language.MatchLangChsKr
+	case language.Emby_cht_kr:
+		lang = language.MatchLangChtKr
 	default:
 		firstOk = false
 	}
@@ -115,11 +115,11 @@ func makeMixSubExtString(orgFileNameWithOutExt, lang string, ext, site string, b
 
 	tmpDefault := ""
 	if beDefault == true {
-		tmpDefault = types.Emby_default
+		tmpDefault = language.Emby_default
 	}
 
 	if site == "" {
-		return orgFileNameWithOutExt + types.Emby_chinese + "(" + lang + ")" + tmpDefault + ext
+		return orgFileNameWithOutExt + language.Emby_chinese + "(" + lang + ")" + tmpDefault + ext
 	}
-	return orgFileNameWithOutExt + types.Emby_chinese + "(" + lang + "," + site + ")" + tmpDefault + ext
+	return orgFileNameWithOutExt + language.Emby_chinese + "(" + lang + "," + site + ")" + tmpDefault + ext
 }
