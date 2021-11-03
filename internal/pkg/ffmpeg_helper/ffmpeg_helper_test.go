@@ -60,13 +60,13 @@ func Test_parseJsonString2GetFFMPEGInfo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := f.parseJsonString2GetFFMPEGInfo(tt.args.videoFileFullPath, tt.args.input)
+			got, got1 := f.parseJsonString2GetFFProbeInfo(tt.args.videoFileFullPath, tt.args.input)
 			if got != tt.want {
-				t.Errorf("parseJsonString2GetFFMPEGInfo() got = %v, want %v", got, tt.want)
+				t.Errorf("parseJsonString2GetFFProbeInfo() got = %v, want %v", got, tt.want)
 			}
 
 			if len(got1.AudioInfoList) != tt.audios || len(got1.SubtitleInfoList) != tt.subs {
-				t.Fatal("parseJsonString2GetFFMPEGInfo result List < 1")
+				t.Fatal("parseJsonString2GetFFProbeInfo result List < 1")
 			}
 		})
 	}
@@ -76,7 +76,7 @@ func TestFFMPEGHelper_ExportAudioArgsByTimeRange(t *testing.T) {
 
 	audioFullPath := "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"
 	startTimeString := "0:1:27"
-	timeLeng := "28"
+	timeLeng := "28.2"
 	outAudioFullPath := "C:\\Tmp\\Rick and Morty - S05E10\\英_1_cut.pcm"
 
 	f := NewFFMPEGHelper()
@@ -86,4 +86,17 @@ func TestFFMPEGHelper_ExportAudioArgsByTimeRange(t *testing.T) {
 		println(timeRange)
 		t.Fatal(err)
 	}
+}
+
+func TestFFMPEGHelper_GetAudioInfo(t *testing.T) {
+
+	audioFullPath := "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"
+
+	f := NewFFMPEGHelper()
+	bok, duration, err := f.GetAudioInfo(audioFullPath)
+	if err != nil || bok == false {
+		t.Fatal(err)
+	}
+
+	println(duration)
 }

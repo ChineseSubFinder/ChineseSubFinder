@@ -1,6 +1,7 @@
 package subparser
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 )
 
@@ -16,6 +17,14 @@ type FileInfo struct {
 	DialoguesEx   []OneDialogueEx     // 整个字幕文件的所有对话，这里会把一句话中支持的 中、英、韩、日 四国语言给分离出来
 	CHLines       []string            // 抽取出所有的中文对话
 	OtherLines    []string            // 抽取出所有的第二语言对话，可能是英文、韩文、日文
+}
+
+func (f FileInfo) GetTimeFormat() string {
+	if f.Ext == common.SubExtASS || f.Ext == common.SubExtSSA {
+		return common.TimeFormatAss
+	} else {
+		return common.TimeFormatSrt
+	}
 }
 
 // OneDialogue 一句对话

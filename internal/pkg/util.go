@@ -18,6 +18,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // NewHttpClient 新建一个 resty 的对象
@@ -443,4 +444,14 @@ func WriteStrings2File(desfilePath string, strings []string) error {
 		return err
 	}
 	return nil
+}
+
+func Time2Number(inTime time.Time) float64 {
+	outSecend := 0.0
+	outSecend += float64(inTime.Hour() * 60 * 60)
+	outSecend += float64(inTime.Minute() * 60)
+	outSecend += float64(inTime.Second())
+	outSecend += float64(inTime.Nanosecond()) / 1000 / 1000 / 1000
+
+	return outSecend
 }

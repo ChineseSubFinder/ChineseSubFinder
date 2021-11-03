@@ -39,7 +39,7 @@ func GetTimeRange(inVADInfos []VADInfo, starttime, timeRange int) []VADInfo {
 	return outVADInfos
 }
 
-// InsertVADInfo 得到的是 VAD 状态变换的节点，中间缺失了连续的 VAD 点信息，使用本函数可以进行插值
+// InsertVADInfo 整个函数待定，未必会实现。得到的是 VAD 状态变换的节点，中间缺失了连续的 VAD 点信息，使用本函数可以进行插值
 func InsertVADInfo(inVADInfos []VADInfo, duration int) []VADInfo {
 
 	var outVADInfos = make([]VADInfo, 0)

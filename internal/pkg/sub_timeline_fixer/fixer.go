@@ -2,8 +2,8 @@ package sub_timeline_fixer
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/sub_timeline_fiexer"
@@ -19,12 +19,14 @@ import (
 )
 
 type SubTimelineFixer struct {
-	fixerConfig sub_timeline_fiexer.SubTimelineFixerConfig
+	fixerConfig  sub_timeline_fiexer.SubTimelineFixerConfig
+	ffmpegHelper *ffmpeg_helper.FFMPEGHelper
 }
 
 func NewSubTimelineFixer(fixerConfig sub_timeline_fiexer.SubTimelineFixerConfig) *SubTimelineFixer {
 	return &SubTimelineFixer{
-		fixerConfig: fixerConfig,
+		fixerConfig:  fixerConfig,
+		ffmpegHelper: ffmpeg_helper.NewFFMPEGHelper(),
 	}
 }
 
@@ -67,12 +69,7 @@ func (s *SubTimelineFixer) FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetT
 	*/
 	// 偏移时间
 	offsetTime := time.Duration(inOffsetTime*1000) * time.Millisecond
-	timeFormat := ""
-	if infoSrc.Ext == common.SubExtASS || infoSrc.Ext == common.SubExtSSA {
-		timeFormat = common.TimeFormatAss
-	} else {
-		timeFormat = common.TimeFormatSrt
-	}
+	timeFormat := infoSrc.GetTimeFormat()
 	fixContent := infoSrc.Content
 	for _, srcOneDialogue := range infoSrc.Dialogues {
 
@@ -213,12 +210,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 		srcIndex++
 	}
 
-	timeFormat := ""
-	if infoBase.Ext == common.SubExtASS || infoBase.Ext == common.SubExtSSA {
-		timeFormat = common.TimeFormatAss
-	} else {
-		timeFormat = common.TimeFormatSrt
-	}
+	timeFormat := infoBase.GetTimeFormat()
 
 	var startDiffTimeLineData = make([]opts.LineData, 0)
 	var endDiffTimeLineData = make([]opts.LineData, 0)
@@ -370,9 +362,52 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 }
 
 // GetOffsetTimeV2 使用 VAD 检测语音是否有人声，输出连续的点标记，再通过 SimHash 进行匹配，找到最佳的偏移时间
-func (s *SubTimelineFixer) GetOffsetTimeV2(audioInfo vad.AudioInfo, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) error {
+func (s *SubTimelineFixer) GetOffsetTimeV2(audioInfo vad.AudioInfo, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) (bool, float64, float64, error) {
 
-	return nil
+	/*
+		分割字幕成若干段，然后得到若干段的时间轴，将这些段从字幕文字转换成 VADInfo
+		从上面若干段时间轴，把音频给分割成多段
+		然后使用 simhash 的进行比较，输出分析的曲线图等信息
+	*/
+
+	bok, duration, err := s.ffmpegHelper.GetAudioInfo(audioInfo.FileFullPath)
+	if err != nil || bok == false {
+		return false, 0, 0, err
+	}
+
+	/*
+		这里的字幕要求是完整的一个字幕
+		1. 抽取字幕的时间片段的时候，暂定，前 15% 和后 15% 要避开，前奏、主题曲、结尾曲
+		2. 将整个字幕，抽取连续 5 句对话为一个单元，提取时间片段信息
+	*/
+
+	timeFormat := infoSrc.GetTimeFormat()
+	for _, oneDialogueEx := range infoSrc.DialoguesEx {
+
+		oneDialogueExTimeStart, err := time.Parse(timeFormat, oneDialogueEx.StartTime)
+		if err != nil {
+			return false, 0, 0, err
+		}
+		oneDialogueExTimeEnd, err := time.Parse(timeFormat, oneDialogueEx.EndTime)
+		if err != nil {
+			return false, 0, 0, err
+		}
+
+		oneStart := pkg.Time2Number(oneDialogueExTimeStart)
+		oneEnd := pkg.Time2Number(oneDialogueExTimeEnd)
+
+		if duration*0.15 > oneStart || duration*(1.0-0.15) < oneStart {
+			continue
+		}
+		if oneDialogueEx.ChLine == "" {
+			continue
+		}
+
+		//baseCorpus = append(baseCorpus, oneDialogueEx.EnLine)
+		//baseDialogueFilterMap[len(baseCorpus)-1] = index
+	}
+
+	return false, -1, -1, nil
 }
 
 const FixMask = "-fix"

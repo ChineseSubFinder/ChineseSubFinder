@@ -14,6 +14,7 @@ type AudioInfo struct {
 	startTime string
 	language  string
 	FullPath  string
+	Duration  float64
 }
 
 func NewAudioInfo(index int, codecName, codecType, timeBase, startTime, language string) *AudioInfo {
@@ -24,6 +25,7 @@ func NewAudioInfo(index int, codecName, codecType, timeBase, startTime, language
 		timeBase:  timeBase,
 		startTime: startTime,
 		language:  language,
+		Duration:  0,
 	}
 }
 

@@ -2,6 +2,7 @@ package ffmpeg_helper
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
@@ -49,7 +50,7 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 		return false, nil, err
 	}
 	// 解析得到的字符串反馈
-	bok, ffMPEGInfo := f.parseJsonString2GetFFMPEGInfo(videoFileFullPath, buf.String())
+	bok, ffMPEGInfo := f.parseJsonString2GetFFProbeInfo(videoFileFullPath, buf.String())
 	if bok == false {
 		return false, nil, nil
 	}
@@ -102,6 +103,33 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 	return bok, ffMPEGInfo, nil
 }
 
+func (f *FFMPEGHelper) GetAudioInfo(audioFileFullPath string) (bool, float64, error) {
+
+	const args = "-v error -show_format -show_streams -print_format json -f s16le -ac 1 -ar 16000"
+	cmdArgs := strings.Fields(args)
+	cmdArgs = append(cmdArgs, audioFileFullPath)
+	cmd := exec.Command("ffprobe", cmdArgs...)
+	buf := bytes.NewBufferString("")
+	//指定输出位置
+	cmd.Stderr = buf
+	cmd.Stdout = buf
+	err := cmd.Start()
+	if err != nil {
+		return false, 0, err
+	}
+	err = cmd.Wait()
+	if err != nil {
+		return false, 0, err
+	}
+
+	bok, duration := f.parseJsonString2GetAudioInfo(buf.String())
+	if bok == false {
+		return false, 0, errors.New("ffprobe get " + audioFileFullPath + " duration error")
+	}
+
+	return true, duration, nil
+}
+
 // ExportAudioArgsByTimeRange 根据输入的时间轴导出音频分段信息
 func (f *FFMPEGHelper) ExportAudioArgsByTimeRange(audioFullPath string, startTimeString, timeLeng, outAudioFullPath string) (string, error) {
 
@@ -120,8 +148,8 @@ func (f *FFMPEGHelper) ExportAudioArgsByTimeRange(audioFullPath string, startTim
 	return "", nil
 }
 
-// parseJsonString2GetFFMPEGInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引
-func (f *FFMPEGHelper) parseJsonString2GetFFMPEGInfo(videoFileFullPath, inputFFProbeString string) (bool, *FFMPEGInfo) {
+// parseJsonString2GetFFProbeInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引
+func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFFProbeString string) (bool, *FFMPEGInfo) {
 
 	streamsValue := gjson.Get(inputFFProbeString, "streams.#")
 	if streamsValue.Exists() == false {
@@ -204,6 +232,16 @@ func (f *FFMPEGHelper) parseJsonString2GetFFMPEGInfo(videoFileFullPath, inputFFP
 	}
 
 	return true, ffmpegInfo
+}
+
+// parseJsonString2GetAudioInfo 获取 pcm 音频的长度
+func (f *FFMPEGHelper) parseJsonString2GetAudioInfo(inputFFProbeString string) (bool, float64) {
+
+	durationValue := gjson.Get(inputFFProbeString, "format.duration")
+	if durationValue.Exists() == false {
+		return false, 0
+	}
+	return true, durationValue.Float()
 }
 
 // exportAudioAndSubtitles 导出音频和字幕文件
@@ -289,6 +327,7 @@ func (f *FFMPEGHelper) getAudioExportArgsByTimeRange(audioFullPath string, start
 	/*
 		ffmpeg.exe -ar 16000 -ac 1 -f s16le -i aa.pcm -ss 00:1:27 -t 28 -acodec pcm_s16le -f s16le -ac 1 -ar 16000 bb.pcm
 
+		ffmpeg.exe -i aa.srt -ss 00:1:27 -t 28 bb.srt
 	*/
 
 	var audioArgs = make([]string, 0)

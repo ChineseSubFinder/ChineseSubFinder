@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/sub_timeline_fiexer"
 	"github.com/james-bowman/nlp"
 	"github.com/james-bowman/nlp/measures/pairwise"
@@ -43,7 +44,7 @@ func TestStopWordCounter(t *testing.T) {
 	println(info.Name)
 }
 
-func TestGetOffsetTime(t *testing.T) {
+func TestGetOffsetTimeV1(t *testing.T) {
 	testDataPath := "../../../TestData/FixTimeline"
 	testRootDir, err := pkg.CopyTestData(testDataPath)
 	if err != nil {
@@ -384,4 +385,60 @@ func TestTFIDF(t *testing.T) {
 
 	fmt.Printf("Matched '%s'", testCorpus[matched])
 	// Output: Matched 'The quick brown fox jumped over the lazy dog'
+}
+
+func TestSubTimelineFixer_GetOffsetTimeV2(t *testing.T) {
+
+	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
+
+	type fields struct {
+		fixerConfig sub_timeline_fiexer.SubTimelineFixerConfig
+	}
+	type args struct {
+		audioInfo              vad.AudioInfo
+		subFilePath            string
+		staticLineFileSavePath string
+		debugInfoFileSavePath  string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    bool
+		want1   float64
+		want2   float64
+		wantErr bool
+	}{
+		{name: "Rick and Morty - S05E10", args: args{audioInfo: vad.AudioInfo{FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"}, subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &SubTimelineFixer{
+				fixerConfig: tt.fields.fixerConfig,
+			}
+
+			bok, fileInfo, err := subParserHub.DetermineFileTypeFromFile(tt.args.subFilePath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if bok == false {
+				t.Fatal("DetermineFileTypeFromFile == false")
+			}
+
+			got, got1, got2, err := s.GetOffsetTimeV2(tt.args.audioInfo, fileInfo, tt.args.staticLineFileSavePath, tt.args.debugInfoFileSavePath)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetOffsetTimeV2() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("GetOffsetTimeV2() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("GetOffsetTimeV2() got1 = %v, want %v", got1, tt.want1)
+			}
+			if got2 != tt.want2 {
+				t.Errorf("GetOffsetTimeV2() got2 = %v, want %v", got2, tt.want2)
+			}
+		})
+	}
 }
