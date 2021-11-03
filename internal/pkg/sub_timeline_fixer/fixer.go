@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/sub_timeline_fiexer"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -57,8 +58,62 @@ func (s *SubTimelineFixer) StopWordCounter(inString string, per int) []string {
 	return stopWords
 }
 
-// GetOffsetTime 暂时只支持英文的基准字幕，源字幕必须是双语中英字幕
-func (s *SubTimelineFixer) GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) (bool, float64, float64, error) {
+// FixSubTimeline 校正时间轴
+func (s *SubTimelineFixer) FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) (string, error) {
+
+	/*
+		从解析的实例中，正常来说是可以匹配出所有的 Dialogue 对话的 Start 和 End time 的信息
+		然后找到对应的字幕的文件，进行文件内容的替换来做时间轴的校正
+	*/
+	// 偏移时间
+	offsetTime := time.Duration(inOffsetTime*1000) * time.Millisecond
+	timeFormat := ""
+	if infoSrc.Ext == common.SubExtASS || infoSrc.Ext == common.SubExtSSA {
+		timeFormat = common.TimeFormatAss
+	} else {
+		timeFormat = common.TimeFormatSrt
+	}
+	fixContent := infoSrc.Content
+	for _, srcOneDialogue := range infoSrc.Dialogues {
+
+		timeStart, err := time.Parse(timeFormat, srcOneDialogue.StartTime)
+		if err != nil {
+			return "", err
+		}
+		timeEnd, err := time.Parse(timeFormat, srcOneDialogue.EndTime)
+		if err != nil {
+			return "", err
+		}
+
+		fixTimeStart := timeStart.Add(offsetTime)
+		fixTimeEnd := timeEnd.Add(offsetTime)
+
+		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.StartTime, fixTimeStart.Format(timeFormat))
+		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.EndTime, fixTimeEnd.Format(timeFormat))
+	}
+
+	dstFile, err := os.Create(desSaveSubFileFullPath)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = dstFile.Close()
+	}()
+	_, err = dstFile.WriteString(fixContent)
+	if err != nil {
+		return "", err
+	}
+	return fixContent, nil
+}
+
+/*
+	对于 V1 版本的字幕时间轴校正来说，是有特殊的前置要求的
+	1. 视频要有英文字幕
+	2. 外置的字幕必须是中文的双语字幕（简英、繁英）
+*/
+
+// GetOffsetTimeV1 暂时只支持英文的基准字幕，源字幕必须是双语中英字幕
+func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) (bool, float64, float64, error) {
 
 	var debugInfos = make([]string, 0)
 	// 构建基准语料库，目前阶段只需要考虑是 En 的就行了
@@ -314,52 +369,10 @@ func (s *SubTimelineFixer) GetOffsetTime(infoBase, infoSrc *subparser.FileInfo, 
 	return true, newMean, newSd, nil
 }
 
-// FixSubTimeline 校正时间轴
-func (s *SubTimelineFixer) FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) (string, error) {
+// GetOffsetTimeV2 使用 VAD 检测语音是否有人声，输出连续的点标记，再通过 SimHash 进行匹配，找到最佳的偏移时间
+func (s *SubTimelineFixer) GetOffsetTimeV2(audioInfo vad.AudioInfo, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) error {
 
-	/*
-		从解析的实例中，正常来说是可以匹配出所有的 Dialogue 对话的 Start 和 End time 的信息
-		然后找到对应的字幕的文件，进行文件内容的替换来做时间轴的校正
-	*/
-	// 偏移时间
-	offsetTime := time.Duration(inOffsetTime*1000) * time.Millisecond
-	timeFormat := ""
-	if infoSrc.Ext == common.SubExtASS || infoSrc.Ext == common.SubExtSSA {
-		timeFormat = common.TimeFormatAss
-	} else {
-		timeFormat = common.TimeFormatSrt
-	}
-	fixContent := infoSrc.Content
-	for _, srcOneDialogue := range infoSrc.Dialogues {
-
-		timeStart, err := time.Parse(timeFormat, srcOneDialogue.StartTime)
-		if err != nil {
-			return "", err
-		}
-		timeEnd, err := time.Parse(timeFormat, srcOneDialogue.EndTime)
-		if err != nil {
-			return "", err
-		}
-
-		fixTimeStart := timeStart.Add(offsetTime)
-		fixTimeEnd := timeEnd.Add(offsetTime)
-
-		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.StartTime, fixTimeStart.Format(timeFormat))
-		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.EndTime, fixTimeEnd.Format(timeFormat))
-	}
-
-	dstFile, err := os.Create(desSaveSubFileFullPath)
-	if err != nil {
-		return "", err
-	}
-	defer func() {
-		_ = dstFile.Close()
-	}()
-	_, err = dstFile.WriteString(fixContent)
-	if err != nil {
-		return "", err
-	}
-	return fixContent, nil
+	return nil
 }
 
 const FixMask = "-fix"

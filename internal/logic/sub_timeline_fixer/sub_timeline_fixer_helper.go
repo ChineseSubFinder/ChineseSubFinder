@@ -245,7 +245,7 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, containCh
 	if err != nil {
 		return false, nil, fixedSubName, err
 	}
-	bok, offsetTime, sd, err := s.subTimelineFixer.GetOffsetTime(infoBase, infoSrc, filepath.Join(cacheTmpPath, infoSrc.Name+"-bar.html"), filepath.Join(cacheTmpPath, infoSrc.Name+".log"))
+	bok, offsetTime, sd, err := s.subTimelineFixer.GetOffsetTimeV1(infoBase, infoSrc, filepath.Join(cacheTmpPath, infoSrc.Name+"-bar.html"), filepath.Join(cacheTmpPath, infoSrc.Name+".log"))
 	if offsetTime != 0 {
 		log_helper.GetLogger().Infoln(infoSrc.Name, "offset time is", fmt.Sprintf("%f", offsetTime), "s")
 	}

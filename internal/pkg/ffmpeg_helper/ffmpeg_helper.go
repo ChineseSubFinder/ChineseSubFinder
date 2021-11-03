@@ -102,6 +102,24 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 	return bok, ffMPEGInfo, nil
 }
 
+// ExportAudioArgsByTimeRange 根据输入的时间轴导出音频分段信息
+func (f *FFMPEGHelper) ExportAudioArgsByTimeRange(audioFullPath string, startTimeString, timeLeng, outAudioFullPath string) (string, error) {
+
+	if pkg.IsFile(outAudioFullPath) == true {
+		err := os.Remove(outAudioFullPath)
+		if err != nil {
+			return "", err
+		}
+	}
+	args := f.getAudioExportArgsByTimeRange(audioFullPath, startTimeString, timeLeng, outAudioFullPath)
+	execFFMPEG, err := f.execFFMPEG(args)
+	if err != nil {
+		return execFFMPEG, err
+	}
+
+	return "", nil
+}
+
 // parseJsonString2GetFFMPEGInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引
 func (f *FFMPEGHelper) parseJsonString2GetFFMPEGInfo(videoFileFullPath, inputFFProbeString string) (bool, *FFMPEGInfo) {
 
@@ -204,6 +222,7 @@ func (f *FFMPEGHelper) exportAudioAndSubtitles(subArgs, audioArgs []string) (str
 	return "", nil
 }
 
+// execFFMPEG 执行 ffmpeg 命令
 func (f *FFMPEGHelper) execFFMPEG(cmds []string) (string, error) {
 
 	cmd := exec.Command("ffmpeg", cmds...)
@@ -223,6 +242,7 @@ func (f *FFMPEGHelper) execFFMPEG(cmds []string) (string, error) {
 	return "", nil
 }
 
+// getAudioAndSubExportArgs 构建从原始视频导出字幕、音频的 ffmpeg 的参数
 func (f *FFMPEGHelper) getAudioAndSubExportArgs(videoFileFullPath string, ffmpegInfo *FFMPEGInfo) ([]string, []string) {
 
 	/*
@@ -263,12 +283,53 @@ func (f *FFMPEGHelper) getAudioAndSubExportArgs(videoFileFullPath string, ffmpeg
 	return audioArgs, subArgs
 }
 
+// getAudioAndSubExportArgsByTimeRange 导出某个时间范围内的音频和字幕文件文件 startTimeString 00:1:27 timeLeng 向后多少秒
+func (f *FFMPEGHelper) getAudioExportArgsByTimeRange(audioFullPath string, startTimeString, timeLeng, outAudioFullPath string) []string {
+
+	/*
+		ffmpeg.exe -ar 16000 -ac 1 -f s16le -i aa.pcm -ss 00:1:27 -t 28 -acodec pcm_s16le -f s16le -ac 1 -ar 16000 bb.pcm
+
+	*/
+
+	var audioArgs = make([]string, 0)
+	// 指定读取的音频文件编码格式
+	audioArgs = append(audioArgs, "-ar")
+	audioArgs = append(audioArgs, "16000")
+	audioArgs = append(audioArgs, "-ac")
+	audioArgs = append(audioArgs, "1")
+	audioArgs = append(audioArgs, "-f")
+	audioArgs = append(audioArgs, "s16le")
+
+	audioArgs = append(audioArgs, "-i")
+	audioArgs = append(audioArgs, audioFullPath)
+	audioArgs = append(audioArgs, "-ss")
+	audioArgs = append(audioArgs, startTimeString)
+	audioArgs = append(audioArgs, "-t")
+	audioArgs = append(audioArgs, timeLeng)
+
+	// 指定导出的音频文件编码格式
+	audioArgs = append(audioArgs, "-acodec")
+	audioArgs = append(audioArgs, "pcm_s16le")
+	audioArgs = append(audioArgs, "-f")
+	audioArgs = append(audioArgs, "s16le")
+	audioArgs = append(audioArgs, "-ac")
+	audioArgs = append(audioArgs, "1")
+	audioArgs = append(audioArgs, "-ar")
+	audioArgs = append(audioArgs, "16000")
+
+	audioArgs = append(audioArgs, outAudioFullPath)
+
+	return audioArgs
+}
+
+// addSubMapArg 构建字幕的导出参数
 func (f *FFMPEGHelper) addSubMapArg(subArgs *[]string, index int, subSaveFullPath string) {
 	*subArgs = append(*subArgs, "-map")
 	*subArgs = append(*subArgs, fmt.Sprintf("0:%d", index))
 	*subArgs = append(*subArgs, subSaveFullPath)
 }
 
+// addAudioMapArg 构建音频的导出参数
 func (f *FFMPEGHelper) addAudioMapArg(subArgs *[]string, index int, audioSaveFullPath string) {
 	// -acodec pcm_s16le -f s16le -ac 1 -ar 16000
 	*subArgs = append(*subArgs, "-map")

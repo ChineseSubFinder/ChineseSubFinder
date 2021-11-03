@@ -306,9 +306,9 @@ func TestGetOffsetTime(t *testing.T) {
 			*/
 			sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
 
-			bok, got, sd, err := s.GetOffsetTime(infoBase, infoSrc, tt.args.ch_enSubFile+"-bar.html", tt.args.ch_enSubFile+".log")
+			bok, got, sd, err := s.GetOffsetTimeV1(infoBase, infoSrc, tt.args.ch_enSubFile+"-bar.html", tt.args.ch_enSubFile+".log")
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetOffsetTime() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetOffsetTimeV1() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
@@ -316,10 +316,10 @@ func TestGetOffsetTime(t *testing.T) {
 			if got > tt.want-0.1 && got < tt.want+0.1 {
 
 			} else {
-				t.Errorf("GetOffsetTime() got = %v, want %v", got, tt.want)
+				t.Errorf("GetOffsetTimeV1() got = %v, want %v", got, tt.want)
 			}
 			//if got != tt.want {
-			//	t.Errorf("GetOffsetTime() got = %v, want %v", got, tt.want)
+			//	t.Errorf("GetOffsetTimeV1() got = %v, want %v", got, tt.want)
 			//}
 
 			if bok == true && got != 0 {
@@ -329,7 +329,7 @@ func TestGetOffsetTime(t *testing.T) {
 				}
 			}
 
-			println(fmt.Sprintf("GetOffsetTime: %fs SD:%f", got, sd))
+			println(fmt.Sprintf("GetOffsetTimeV1: %fs SD:%f", got, sd))
 		})
 	}
 }
