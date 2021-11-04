@@ -77,11 +77,10 @@ func TestFFMPEGHelper_ExportAudioArgsByTimeRange(t *testing.T) {
 	audioFullPath := "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"
 	startTimeString := "0:1:27"
 	timeLeng := "28.2"
-	outAudioFullPath := "C:\\Tmp\\Rick and Morty - S05E10\\英_1_cut.pcm"
 
 	f := NewFFMPEGHelper()
 
-	timeRange, err := f.ExportAudioArgsByTimeRange(audioFullPath, startTimeString, timeLeng, outAudioFullPath)
+	_, timeRange, err := f.ExportAudioArgsByTimeRange(audioFullPath, startTimeString, timeLeng)
 	if err != nil {
 		println(timeRange)
 		t.Fatal(err)

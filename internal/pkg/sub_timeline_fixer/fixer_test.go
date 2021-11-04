@@ -424,6 +424,11 @@ func TestSubTimelineFixer_GetOffsetTimeV2(t *testing.T) {
 			if bok == false {
 				t.Fatal("DetermineFileTypeFromFile == false")
 			}
+			/*
+				这里发现一个梗，内置的英文字幕导出的时候，有可能需要合并多个 Dialogue，见
+				internal/pkg/sub_helper/sub_helper.go 中 MergeMultiDialogue4EngSubtitle 的实现
+			*/
+			sub_helper.MergeMultiDialogue4EngSubtitle(fileInfo)
 
 			got, got1, got2, err := s.GetOffsetTimeV2(tt.args.audioInfo, fileInfo, tt.args.staticLineFileSavePath, tt.args.debugInfoFileSavePath)
 			if (err != nil) != tt.wantErr {

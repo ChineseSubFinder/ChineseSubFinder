@@ -130,22 +130,33 @@ func (f *FFMPEGHelper) GetAudioInfo(audioFileFullPath string) (bool, float64, er
 	return true, duration, nil
 }
 
-// ExportAudioArgsByTimeRange 根据输入的时间轴导出音频分段信息
-func (f *FFMPEGHelper) ExportAudioArgsByTimeRange(audioFullPath string, startTimeString, timeLeng, outAudioFullPath string) (string, error) {
+// ExportAudioArgsByTimeRange 根据输入的时间轴导出音频分段信息 "0:1:27" "28.2"
+func (f *FFMPEGHelper) ExportAudioArgsByTimeRange(audioFullPath string, startTimeString, timeLength string) (string, string, error) {
+
+	outStartTimeString := strings.ReplaceAll(startTimeString, ":", "-")
+	outStartTimeString = strings.ReplaceAll(outStartTimeString, ".", "#")
+
+	outTimeLength := strings.ReplaceAll(timeLength, ".", "#")
+
+	frontName := strings.ReplaceAll(filepath.Base(audioFullPath), filepath.Ext(audioFullPath), "")
+
+	outAudioName := frontName + "_" + outStartTimeString + "_" + outTimeLength + filepath.Ext(audioFullPath)
+
+	var outAudioFullPath = filepath.Join(filepath.Dir(audioFullPath), outAudioName)
 
 	if pkg.IsFile(outAudioFullPath) == true {
 		err := os.Remove(outAudioFullPath)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 	}
-	args := f.getAudioExportArgsByTimeRange(audioFullPath, startTimeString, timeLeng, outAudioFullPath)
+	args := f.getAudioExportArgsByTimeRange(audioFullPath, startTimeString, timeLength, outAudioFullPath)
 	execFFMPEG, err := f.execFFMPEG(args)
 	if err != nil {
-		return execFFMPEG, err
+		return "", execFFMPEG, err
 	}
 
-	return "", nil
+	return outAudioFullPath, "", nil
 }
 
 // parseJsonString2GetFFProbeInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引

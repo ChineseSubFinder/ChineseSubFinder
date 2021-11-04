@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	webRTCVAD "github.com/baabaaox/go-webrtcvad"
 	"io"
 	"os"
@@ -81,24 +80,6 @@ func GetVADInfoFromAudio(audioInfo AudioInfo) ([]VADInfo, error) {
 	}
 
 	report()
-
-	return vadInfos, nil
-}
-
-// GetVADInfoFromSubtitle 分析字幕文件(暂时考虑的是外置的字幕)，得到 VAD 分析信息，看样子是不支持并发的，只能单线程使用
-func GetVADInfoFromSubtitle(subFileInfo *subparser.FileInfo, startTime, endIndex int) ([]VADInfo, error) {
-
-	var vadInfos = make([]VADInfo, 0)
-	timeFormat := subFileInfo.GetTimeFormat()
-	println(timeFormat)
-	for _, oneDialogueEx := range subFileInfo.DialoguesEx {
-
-		// 考虑的是外置字幕，所以就应该是有中文的
-		if oneDialogueEx.ChLine == "" {
-			continue
-		}
-
-	}
 
 	return vadInfos, nil
 }

@@ -20,36 +20,11 @@ func NewVADInfo(frame, offset int, active bool, nowTime time.Duration) *VADInfo 
 	}
 }
 
-// GetTimeRange 获取这个 VAD 实例从 startTime，开始，向后多少 ms 的时间段的 VAD 新实例
-func GetTimeRange(inVADInfos []VADInfo, starttime, timeRange int) []VADInfo {
-
-	var outVADInfos = make([]VADInfo, 0)
-
-	startTime := time.Duration(starttime)
-	endTime := time.Duration(starttime + timeRange)
-
-	for _, inVADInfo := range inVADInfos {
-
-		if inVADInfo.Time < startTime || inVADInfo.Time > endTime {
-			continue
-		}
-		outVADInfos = append(outVADInfos, inVADInfo)
+func NewVADInfoBase(active bool, nowTime time.Duration) *VADInfo {
+	return &VADInfo{
+		Active: active,
+		Time:   nowTime,
 	}
-
-	return outVADInfos
-}
-
-// InsertVADInfo 整个函数待定，未必会实现。得到的是 VAD 状态变换的节点，中间缺失了连续的 VAD 点信息，使用本函数可以进行插值
-func InsertVADInfo(inVADInfos []VADInfo, duration int) []VADInfo {
-
-	var outVADInfos = make([]VADInfo, 0)
-
-	// 找到第一句，从这个 StartTime 之前标记为 VAD false
-	if inVADInfos[0].Time != 0 {
-
-	}
-
-	return outVADInfos
 }
 
 const (

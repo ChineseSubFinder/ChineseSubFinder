@@ -446,7 +446,7 @@ func WriteStrings2File(desfilePath string, strings []string) error {
 	return nil
 }
 
-func Time2Number(inTime time.Time) float64 {
+func Time2SecendNumber(inTime time.Time) float64 {
 	outSecend := 0.0
 	outSecend += float64(inTime.Hour() * 60 * 60)
 	outSecend += float64(inTime.Minute() * 60)
@@ -454,4 +454,8 @@ func Time2Number(inTime time.Time) float64 {
 	outSecend += float64(inTime.Nanosecond()) / 1000 / 1000 / 1000
 
 	return outSecend
+}
+
+func Time2Duration(inTime time.Time) time.Duration {
+	return time.Duration(Time2SecendNumber(inTime))
 }

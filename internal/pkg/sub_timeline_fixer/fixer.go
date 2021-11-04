@@ -380,7 +380,8 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(audioInfo vad.AudioInfo, infoSrc *sub
 		1. 抽取字幕的时间片段的时候，暂定，前 15% 和后 15% 要避开，前奏、主题曲、结尾曲
 		2. 将整个字幕，抽取连续 5 句对话为一个单元，提取时间片段信息
 	*/
-
+	subUnitList := make([]SubUnit, 0)
+	oneSubUnit := NewSubUnit()
 	timeFormat := infoSrc.GetTimeFormat()
 	for _, oneDialogueEx := range infoSrc.DialoguesEx {
 
@@ -393,21 +394,51 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(audioInfo vad.AudioInfo, infoSrc *sub
 			return false, 0, 0, err
 		}
 
-		oneStart := pkg.Time2Number(oneDialogueExTimeStart)
-		oneEnd := pkg.Time2Number(oneDialogueExTimeEnd)
+		oneStart := pkg.Time2SecendNumber(oneDialogueExTimeStart)
+		//oneEnd := pkg.Time2SecendNumber(oneDialogueExTimeEnd)
 
-		if duration*0.15 > oneStart || duration*(1.0-0.15) < oneStart {
+		if duration*FrontAndEndPer > oneStart || duration*(1.0-FrontAndEndPer) < oneStart {
 			continue
 		}
-		if oneDialogueEx.ChLine == "" {
-			continue
+		// TODO V2 版本是时间轴校正，必须带有中文
+		//if oneDialogueEx.ChLine == "" {
+		//	continue
+		//}
+		// 低于 5句对白，则添加
+		if oneSubUnit.GetDialogueCount() < SubUnitMaxCount {
+			oneSubUnit.AddAndInsert(oneDialogueExTimeStart, oneDialogueExTimeEnd)
+		} else {
+			subUnitList = append(subUnitList, *oneSubUnit)
+			oneSubUnit = NewSubUnit()
+		}
+	}
+
+	// 开始针对对白单元进行匹配
+	for _, subUnit := range subUnitList {
+		startTimeString, subLeng := subUnit.GetFFMPEGCutRange(ExpandTimeRange)
+
+		outAudioFPath, errString, err := s.ffmpegHelper.ExportAudioArgsByTimeRange(audioInfo.FileFullPath, startTimeString, subLeng)
+		if err != nil {
+			log_helper.GetLogger().Errorln("ExportAudioArgsByTimeRange", errString, err)
+			return false, 0, 0, err
 		}
 
-		//baseCorpus = append(baseCorpus, oneDialogueEx.EnLine)
-		//baseDialogueFilterMap[len(baseCorpus)-1] = index
+		audioVADInfos, err := vad.GetVADInfoFromAudio(vad.AudioInfo{
+			FileFullPath: outAudioFPath,
+			SampleRate:   16000,
+			BitDepth:     16,
+		})
+		if err != nil {
+			return false, 0, 0, err
+		}
+
+		println(len(audioVADInfos))
 	}
 
 	return false, -1, -1, nil
 }
 
 const FixMask = "-fix"
+const FrontAndEndPer = 0.15
+const SubUnitMaxCount = 5
+const ExpandTimeRange = 1 // 从字幕的时间轴片段需要向前和向后多匹配一部分的音频，这里定义的就是这个 range 以分钟为单位， 正负 1 分钟
