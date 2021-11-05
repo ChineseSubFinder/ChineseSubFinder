@@ -2,7 +2,7 @@ package ffmpeg_helper
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
@@ -38,20 +38,20 @@ func (f *FFMPEGInfo) IsExported() bool {
 
 	nowCacheFolder := f.GetCacheFolderFPath()
 	// 首先存储的缓存目录要存在
-	if pkg.IsDir(nowCacheFolder) == false {
+	if my_util.IsDir(nowCacheFolder) == false {
 		return false
 	}
 	// 字幕都要导出了
 	for index, subtitleInfo := range f.SubtitleInfoList {
 
 		subSrtFPath := filepath.Join(nowCacheFolder, subtitleInfo.GetName()+common.SubExtSRT)
-		if pkg.IsFile(subSrtFPath) == false {
+		if my_util.IsFile(subSrtFPath) == false {
 			return false
 		} else {
 			f.SubtitleInfoList[index].FullPath = subSrtFPath
 		}
 		subASSFPath := filepath.Join(nowCacheFolder, subtitleInfo.GetName()+common.SubExtASS)
-		if pkg.IsFile(subASSFPath) == false {
+		if my_util.IsFile(subASSFPath) == false {
 			return false
 		} else {
 			f.SubtitleInfoList[index].FullPath = subASSFPath
@@ -61,7 +61,7 @@ func (f *FFMPEGInfo) IsExported() bool {
 	// 音频是否导出了
 	for index, audioInfo := range f.AudioInfoList {
 		audioFPath := filepath.Join(nowCacheFolder, audioInfo.GetName()+extPCM)
-		if pkg.IsFile(audioFPath) == false {
+		if my_util.IsFile(audioFPath) == false {
 			return false
 		} else {
 			f.AudioInfoList[index].FullPath = audioFPath

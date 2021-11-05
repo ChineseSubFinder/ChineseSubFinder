@@ -7,8 +7,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	formatterEmby "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/normal"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
@@ -230,7 +230,7 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, containCh
 
 	// 把原始的文件缓存下来，新建缓存的文件夹
 	cacheTmpPath := filepath.Join(tmpSubFixCacheFolder, infoBaseNameWithOutExt)
-	if pkg.IsDir(cacheTmpPath) == false {
+	if my_util.IsDir(cacheTmpPath) == false {
 		err = os.MkdirAll(cacheTmpPath, os.ModePerm)
 		if err != nil {
 			return false, nil, fixedSubName, err

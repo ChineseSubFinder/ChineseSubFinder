@@ -1,7 +1,7 @@
 package ass
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"testing"
 )
@@ -9,7 +9,7 @@ import (
 func TestParser_DetermineFileTypeFromFile(t *testing.T) {
 
 	testDataPath := "../../../../TestData/sub_parser"
-	testRootDir, err := pkg.CopyTestData(testDataPath)
+	testRootDir, err := my_util.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)
 	}

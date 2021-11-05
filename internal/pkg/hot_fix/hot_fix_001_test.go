@@ -1,8 +1,7 @@
 package hot_fix
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
-	"path"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"path/filepath"
 	"testing"
 )
@@ -18,7 +17,7 @@ func TestHotFix001_Process(t *testing.T) {
 	testDataPath := "../../../TestData/hotfix/001"
 	movieDir := "movies"
 	seriesDir := "series"
-	testRootDir, err := pkg.CopyTestData(testDataPath)
+	testRootDir, err := my_util.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +42,7 @@ func TestHotFix001_Process(t *testing.T) {
 	// 检查修复的结果是否符合预期
 	var newSubFileNameMap = make(map[string]int)
 	for i, s := range outStruct.RenamedFiles {
-		if pkg.IsFile(s) == false {
+		if my_util.IsFile(s) == false {
 			t.Fatal("renamed file not found:", s)
 		}
 		newSubFileNameMap[filepath.Base(s)] = i

@@ -3,16 +3,15 @@ package sub_formatter
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
-	"path"
 	"testing"
 )
 
 func TestSubFormatChanger_AutoDetectThenChangeTo(t *testing.T) {
 
 	testDataPath := "../../../TestData/sub_format_changer"
-	testRootDir, err := pkg.CopyTestData(testDataPath)
+	testRootDir, err := my_util.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +114,7 @@ func TestSubFormatChangerProcess(t *testing.T) {
 	}
 
 	testDataPath := "../../../TestData/sub_format_changer"
-	testRootDir, err := pkg.CopyTestData(testDataPath)
+	testRootDir, err := my_util.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)
 	}

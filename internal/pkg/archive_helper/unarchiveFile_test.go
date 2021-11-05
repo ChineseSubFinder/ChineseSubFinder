@@ -1,8 +1,7 @@
 package archive_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
-	"path"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -11,7 +10,7 @@ import (
 func TestUnArchiveFile(t *testing.T) {
 
 	testDataPath := "../../../TestData/zips"
-	testRootDir, err := pkg.CopyTestData(testDataPath)
+	testRootDir, err := my_util.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,10 +27,10 @@ func tetUnArchive(t *testing.T, testRootDir string, missionName string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pkg.IsFile(filepath.Join(desPath, subASS)) == false {
+	if my_util.IsFile(filepath.Join(desPath, subASS)) == false {
 		t.Fatal(missionName, " unArchive failed")
 	}
-	if pkg.IsFile(filepath.Join(desPath, subSRT)) == false {
+	if my_util.IsFile(filepath.Join(desPath, subSRT)) == false {
 		t.Fatal(missionName, " unArchive failed")
 	}
 }

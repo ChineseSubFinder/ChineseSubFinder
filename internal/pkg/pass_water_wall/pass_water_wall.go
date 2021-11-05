@@ -3,7 +3,7 @@ package pass_water_wall
 import (
 	"bytes"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/nfnt/resize"
 	"image/jpeg"
@@ -49,7 +49,7 @@ func SimulationTest() {
 	shadowbg := iframe.MustElement("#slideBg").MustResource()
 	//取得原始圖像
 	src := iframe.MustElement("#slideBg").MustProperty("src")
-	fullbg, fileName, err := pkg.DownFile(strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
+	fullbg, fileName, err := my_util.DownFile(strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
 	if err != nil {
 		return
 	}

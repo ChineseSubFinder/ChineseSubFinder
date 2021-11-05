@@ -6,10 +6,10 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
@@ -34,7 +34,7 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title, forcedScanAnd
 		return nil, err
 	}
 	// 搜索所有的视频
-	videoFiles, err := pkg.SearchMatchedVideoFile(seriesDir)
+	videoFiles, err := my_util.SearchMatchedVideoFile(seriesDir)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title, forcedScanAnd
 			log_helper.GetLogger().Warnln("DetermineFileTypeFromFile", subFile, "not support SubType")
 			continue
 		}
-		epsKey := pkg.GetEpisodeKeyName(info.Season, info.Episode)
+		epsKey := my_util.GetEpisodeKeyName(info.Season, info.Episode)
 		oneFileSubInfo := series.SubInfo{
 			Title:        info.Title,
 			Season:       info.Season,
@@ -226,7 +226,7 @@ func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo, forcedScanAndD
 	if forcedScanAndDownloadSub == true {
 		for _, epsInfo := range seriesInfo.EpList {
 			// 添加
-			epsKey := pkg.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
+			epsKey := my_util.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
 			needDlSubEpsList[epsKey] = epsInfo
 			needDlSeasonList[epsInfo.Season] = epsInfo.Season
 		}
@@ -252,7 +252,7 @@ func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo, forcedScanAndD
 
 		if len(epsInfo.SubAlreadyDownloadedList) < 1 || baseTime.Add(dayRange).After(currentTime) == true {
 			// 添加
-			epsKey := pkg.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
+			epsKey := my_util.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
 			needDlSubEpsList[epsKey] = epsInfo
 			needDlSeasonList[epsInfo.Season] = epsInfo.Season
 		} else {
@@ -310,7 +310,7 @@ func getEpsInfoAndSubDic(videoFile string, EpisodeDict map[string]series.Episode
 		log_helper.GetLogger().Errorln("model.GetImdbInfo4OneSeriesEpisode", err)
 		return
 	}
-	epsKey := pkg.GetEpisodeKeyName(info.Season, info.Episode)
+	epsKey := my_util.GetEpisodeKeyName(info.Season, info.Episode)
 	_, ok := EpisodeDict[epsKey]
 	if ok == false {
 		// 初始化

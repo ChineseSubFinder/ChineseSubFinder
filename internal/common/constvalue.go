@@ -35,3 +35,5 @@ const (
 	TimeFormatAss = "15:04:05.00"
 	TimeFormatSrt = "15:04:05,000"
 )
+
+const Ignore = ".ignore"

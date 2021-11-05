@@ -3,7 +3,7 @@ package forced_scan_and_down_sub
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"os"
 	"runtime"
 )
@@ -16,7 +16,7 @@ func CheckSpeFile() (bool, error) {
 		return false, errors.New(fmt.Sprintf(`forced_scan_and_down_sub.getSpeFileName() is empty, not support this OS. 
 you needd implement getSpeFileName() in internal/logic/forced_scan_and_down_sub/forced_scan_and_down_sub.go`))
 	}
-	if pkg.IsFile(nowSpeFileName) == false {
+	if my_util.IsFile(nowSpeFileName) == false {
 		return false, nil
 	}
 	// 先删除这个文件，然后再标记执行该逻辑

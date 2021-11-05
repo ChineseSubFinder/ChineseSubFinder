@@ -6,9 +6,9 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
@@ -127,7 +127,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 			s.log.Errorln("subhd step2Ex", err)
 			continue
 		}
-		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple, pkg.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0,
+		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple, my_util.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0,
 			0, hdContent.Ext, hdContent.Data)
 		oneSubInfo.Season = item.Season
 		oneSubInfo.Episode = item.Episode
@@ -177,7 +177,7 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 		}
 	}
 	// 如果没有，那么就用文件名查找
-	searchKeyword := pkg.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
+	searchKeyword := my_util.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
 	subInfoList, err = s.getSubListFromKeyword4Movie(searchKeyword)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "keyword:", searchKeyword)
@@ -219,7 +219,7 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInf
 			s.log.Errorln("subhd step2Ex", err)
 			return nil, err
 		}
-		subInfos = append(subInfos, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple, pkg.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
+		subInfos = append(subInfos, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple, my_util.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
 	}
 
 	return subInfos, nil
@@ -239,7 +239,7 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, all
 		}
 		subInfo.Season = season
 		subInfo.Episode = episode
-		epsKey := pkg.GetEpisodeKeyName(season, episode)
+		epsKey := my_util.GetEpisodeKeyName(season, episode)
 		_, ok := allSubDict[epsKey]
 		if ok == false {
 			// 初始化
@@ -356,7 +356,7 @@ func (s Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSer
 			notify_center.Notify.Add("subhd_step1", err.Error())
 		}
 	}()
-	detailPageUrl = pkg.AddBaseUrl(common.SubSubHDRootUrl, detailPageUrl)
+	detailPageUrl = my_util.AddBaseUrl(common.SubSubHDRootUrl, detailPageUrl)
 	result, page, err := s.httpGetFromBrowser(browser, detailPageUrl)
 	if err != nil {
 		return nil, err
@@ -426,7 +426,7 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 			notify_center.Notify.Add("subhd_step2Ex", err.Error())
 		}
 	}()
-	subDownloadPageUrl = pkg.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
+	subDownloadPageUrl = my_util.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
 
 	pageString, page, err := s.httpGetFromBrowser(browser, subDownloadPageUrl)
 	if err != nil {
@@ -572,7 +572,7 @@ func (s Supplier) passWaterWall(page *rod.Page) {
 	shadowbg := slideBgEl.MustResource()
 	// 取得原始圖像
 	src := slideBgEl.MustProperty("src")
-	fullbg, _, err := pkg.DownFile(strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
+	fullbg, _, err := my_util.DownFile(strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
 	if err != nil {
 		panic(err)
 	}
@@ -642,7 +642,7 @@ search:
 
 	if s.reqParam.DebugMode == true {
 		//截圖保存
-		nowProcessRoot, err := pkg.GetDebugFolder()
+		nowProcessRoot, err := my_util.GetDebugFolder()
 		if err == nil {
 			page.MustScreenshot(filepath.Join(nowProcessRoot, "result.png"))
 		} else {
@@ -662,7 +662,7 @@ func (s Supplier) httpGetFromBrowser(browser *rod.Browser, inputUrl string) (str
 		return "", nil, err
 	}
 	// 每次搜索间隔在 30-40s
-	time.Sleep(pkg.RandomSecondDuration(5, 10))
+	time.Sleep(my_util.RandomSecondDuration(5, 10))
 
 	return pageString, page, nil
 }

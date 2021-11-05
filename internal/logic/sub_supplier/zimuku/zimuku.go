@@ -5,10 +5,10 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
@@ -149,7 +149,7 @@ func (s Supplier) getSubListFromMovie(fileFPath string) ([]supplier.SubInfo, err
 	}
 
 	// 如果没有，那么就用文件名查找
-	searchKeyword := pkg.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
+	searchKeyword := my_util.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
 	subInfoList, err = s.getSubListFromKeyword(searchKeyword)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "keyword:", searchKeyword)
@@ -195,7 +195,7 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, All
 		}
 		subInfo.Season = season
 		subInfo.Episode = episode
-		epsKey := pkg.GetEpisodeKeyName(season, episode)
+		epsKey := my_util.GetEpisodeKeyName(season, episode)
 		_, ok := allSubDict[epsKey]
 		if ok == false {
 			// 初始化
@@ -277,7 +277,7 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 		}
 		// 默认都是包含中文字幕的，然后具体使用的时候再进行区分
 
-		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, language2.ChineseSimple, pkg.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
+		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, language2.ChineseSimple, my_util.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.SubDownloadPageUrl), 0,
 			0, filepath.Ext(fileName), data)
 
 		oneSubInfo.Season = subInfo.Season
@@ -297,7 +297,7 @@ func (s Supplier) step0(keyword string) (string, error) {
 			notify_center.Notify.Add("zimuku_step0", err.Error())
 		}
 	}()
-	httpClient := pkg.NewHttpClient(s.reqParam)
+	httpClient := my_util.NewHttpClient(s.reqParam)
 	// 第一级界面，有多少个字幕
 	resp, err := httpClient.R().
 		SetQueryParams(map[string]string{
@@ -326,8 +326,8 @@ func (s Supplier) step1(filmDetailPageUrl string) (SubResult, error) {
 			notify_center.Notify.Add("zimuku_step1", err.Error())
 		}
 	}()
-	filmDetailPageUrl = pkg.AddBaseUrl(common.SubZiMuKuRootUrl, filmDetailPageUrl)
-	httpClient := pkg.NewHttpClient(s.reqParam)
+	filmDetailPageUrl = my_util.AddBaseUrl(common.SubZiMuKuRootUrl, filmDetailPageUrl)
+	httpClient := my_util.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
 		Get(filmDetailPageUrl)
 	if err != nil {
@@ -427,8 +427,8 @@ func (s Supplier) step2(subInfo *SubInfo) error {
 			notify_center.Notify.Add("zimuku_step2", err.Error())
 		}
 	}()
-	detailUrl := pkg.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.DetailUrl)
-	httpClient := pkg.NewHttpClient(s.reqParam)
+	detailUrl := my_util.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.DetailUrl)
+	httpClient := my_util.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
 		Get(detailUrl)
 	if err != nil {
@@ -457,8 +457,8 @@ func (s Supplier) step3(subDownloadPageUrl string) (string, []byte, error) {
 			notify_center.Notify.Add("zimuku_step3", err.Error())
 		}
 	}()
-	subDownloadPageUrl = pkg.AddBaseUrl(common.SubZiMuKuRootUrl, subDownloadPageUrl)
-	httpClient := pkg.NewHttpClient(s.reqParam)
+	subDownloadPageUrl = my_util.AddBaseUrl(common.SubZiMuKuRootUrl, subDownloadPageUrl)
+	httpClient := my_util.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
 		Get(subDownloadPageUrl)
 	if err != nil {
@@ -475,7 +475,7 @@ func (s Supplier) step3(subDownloadPageUrl string) (string, []byte, error) {
 
 	s.reqParam.Referer = subDownloadPageUrl
 	for i := 0; i < len(matched); i++ {
-		data, filename, err = pkg.DownFile(pkg.AddBaseUrl(common.SubZiMuKuRootUrl, matched[i][1]), s.reqParam)
+		data, filename, err = my_util.DownFile(my_util.AddBaseUrl(common.SubZiMuKuRootUrl, matched[i][1]), s.reqParam)
 		if err != nil {
 			s.log.Errorln("ZiMuKu step3 DownloadFile", err)
 			continue

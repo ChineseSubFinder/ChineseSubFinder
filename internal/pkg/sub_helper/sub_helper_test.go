@@ -1,7 +1,7 @@
 package sub_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"path/filepath"
 	"testing"
 )
@@ -9,7 +9,7 @@ import (
 func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
 
 	testDataPath := "../../../TestData/sub_helper"
-	testRootDir, err := pkg.CopyTestData(testDataPath)
+	testRootDir, err := my_util.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -17,7 +17,7 @@ func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pkg.IsDir(filepath.Join(testRootDir, "Sub_S1E0")) == true {
+	if my_util.IsDir(filepath.Join(testRootDir, "Sub_S1E0")) == true {
 		t.Fatal("Sub_S1E0 not delete")
 	}
 }
@@ -25,7 +25,7 @@ func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
 func TestSearchMatchedSubFileByOneVideo(t *testing.T) {
 
 	testDataPath := "../../../TestData/sub_helper"
-	testRootDir, err := pkg.CopyTestData(testDataPath)
+	testRootDir, err := my_util.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,7 +1,7 @@
 package ffmpeg_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
@@ -34,7 +34,7 @@ func readString(filePath string) string {
 func Test_parseJsonString2GetFFMPEGInfo(t *testing.T) {
 
 	testDataPath := "../../../TestData/ffmpeg"
-	testRootDir, err := pkg.CopyTestData(testDataPath)
+	testRootDir, err := my_util.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,10 +1,12 @@
 package sub_supplier
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	movieHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/movie_helper"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
@@ -35,6 +37,15 @@ func NewSubSupplierHub(one ifaces.ISupplier, _inSupplier ...ifaces.ISupplier) *S
 
 // DownloadSub4Movie 某一个电影字幕下载，下载完毕后，返回下载缓存每个字幕的位置
 func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, forcedScanAndDownloadSub bool) ([]string, error) {
+
+	if forcedScanAndDownloadSub == false {
+		// 非强制扫描的时候，需要判断这个视频根目录是否有 .ignore 文件，有也跳过
+		if my_util.IsFile(filepath.Join(filepath.Dir(videoFullPath), common.Ignore)) == true {
+			d.log.Infoln("Found", common.Ignore, "Skip", videoFullPath)
+			// 跳过下载字幕
+			return nil, nil
+		}
+	}
 
 	// 跳过中文的电影，不是一定要跳过的
 	skip, err := movieHelper.SkipChineseMovie(videoFullPath, d.Suppliers[0].GetReqParam())
@@ -77,6 +88,15 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, force
 
 // DownloadSub4Series 某一部连续剧的字幕下载，下载完毕后，返回下载缓存每个字幕的位置
 func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int, forcedScanAndDownloadSub bool) (*series.SeriesInfo, map[string][]string, error) {
+
+	if forcedScanAndDownloadSub == false {
+		// 非强制扫描的时候，需要判断这个视频根目录是否有 .ignore 文件，有也跳过
+		if my_util.IsFile(filepath.Join(seriesDirPath, common.Ignore)) == true {
+			d.log.Infoln("Found", common.Ignore, "Skip", seriesDirPath)
+			// 跳过下载字幕
+			return nil, nil, nil
+		}
+	}
 
 	// 跳过中文的连续剧，不是一定要跳过的
 	skip, imdbInfo, err := seriesHelper.SkipChineseSeries(seriesDirPath, d.Suppliers[0].GetReqParam())

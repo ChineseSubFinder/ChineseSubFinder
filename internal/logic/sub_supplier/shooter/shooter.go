@@ -4,8 +4,8 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
@@ -74,7 +74,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 
 	fileName := filepath.Base(filePath)
 
-	httpClient := pkg.NewHttpClient(s.reqParam)
+	httpClient := my_util.NewHttpClient(s.reqParam)
 
 	_, err = httpClient.R().
 		SetFormData(map[string]string{
@@ -95,7 +95,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 				subExt = "." + subExt
 			}
 
-			data, _, err := pkg.DownFile(file.Link)
+			data, _, err := my_util.DownFile(file.Link)
 			if err != nil {
 				s.log.Error(err)
 				continue

@@ -1,7 +1,7 @@
 package forced_scan_and_down_sub
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"os"
 	"testing"
 )
@@ -30,7 +30,7 @@ func TestCheckSpeFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got == false || pkg.IsFile(getSpeFileName()) == true {
+	if got == false || my_util.IsFile(getSpeFileName()) == true {
 		t.Fatal("CheckSpeFile fatal")
 	}
 }

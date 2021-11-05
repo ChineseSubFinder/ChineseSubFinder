@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sqlite"
 	"gorm.io/gorm"
 	"os"
@@ -46,7 +46,7 @@ func DeleteDbFile() error {
 	// 如果是 Linux 则在 /config 目录下
 	nowDbFileName := getDbName()
 
-	if pkg.IsFile(nowDbFileName) == true {
+	if my_util.IsFile(nowDbFileName) == true {
 		return os.Remove(nowDbFileName)
 	}
 	return nil
@@ -63,7 +63,7 @@ you need implement getDbName() in file: internal/dao/init.go `))
 	}
 
 	dbDir := filepath.Dir(nowDbFileName)
-	if pkg.IsDir(dbDir) == false {
+	if my_util.IsDir(dbDir) == false {
 		_ = os.MkdirAll(dbDir, os.ModePerm)
 	}
 	db, err = gorm.Open(sqlite.Open(nowDbFileName), &gorm.Config{})

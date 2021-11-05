@@ -1,4 +1,4 @@
-package pkg
+package my_util
 
 import "testing"
 

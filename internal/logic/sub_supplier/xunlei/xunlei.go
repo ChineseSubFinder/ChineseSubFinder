@@ -4,9 +4,9 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
@@ -67,7 +67,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	if len(cid) == 0 {
 		return outSubList, common.XunLeiCIdIsEmpty
 	}
-	httpClient := pkg.NewHttpClient(s.reqParam)
+	httpClient := my_util.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
 		SetResult(&jsonList).
 		Get(fmt.Sprintf(common.SubXunLeiRootUrl, cid))
@@ -106,7 +106,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	// 再开始下载字幕
 	for i, v := range tmpXunLeiSubListChinese {
 		tmpLang := language.LangConverter4Sub_Supplier(v.Language)
-		data, filename, err := pkg.DownFile(v.Surl)
+		data, filename, err := my_util.DownFile(v.Surl)
 		if err != nil {
 			s.log.Errorln("xunlei pkg.DownFile:", err)
 			continue

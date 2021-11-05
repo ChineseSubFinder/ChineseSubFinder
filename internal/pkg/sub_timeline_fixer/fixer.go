@@ -2,9 +2,9 @@ package sub_timeline_fixer
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/sub_timeline_fiexer"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
@@ -348,7 +348,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 
 	// 输出调试的匹配时间轴信息的列表
 	if debugInfoFileSavePath != "" {
-		err = pkg.WriteStrings2File(debugInfoFileSavePath, debugInfos)
+		err = my_util.WriteStrings2File(debugInfoFileSavePath, debugInfos)
 		if err != nil {
 			return false, 0, 0, err
 		}
@@ -394,7 +394,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(audioInfo vad.AudioInfo, infoSrc *sub
 			return false, 0, 0, err
 		}
 
-		oneStart := pkg.Time2SecendNumber(oneDialogueExTimeStart)
+		oneStart := my_util.Time2SecendNumber(oneDialogueExTimeStart)
 		//oneEnd := pkg.Time2SecendNumber(oneDialogueExTimeEnd)
 
 		if duration*FrontAndEndPer > oneStart || duration*(1.0-FrontAndEndPer) < oneStart {

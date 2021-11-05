@@ -2,7 +2,7 @@ package imdb_helper
 
 import (
 	"github.com/StalkR/imdb"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"strings"
@@ -14,7 +14,7 @@ func GetVideoInfoFromIMDB(imdbID string, _reqParam ...types.ReqParam) (*imdb.Tit
 	if len(_reqParam) > 0 {
 		reqParam = _reqParam[0]
 	}
-	t, err := imdb.NewTitle(pkg.NewHttpClient(reqParam).GetClient(), imdbID)
+	t, err := imdb.NewTitle(my_util.NewHttpClient(reqParam).GetClient(), imdbID)
 	if err != nil {
 		notify_center.Notify.Add("imdb model - imdb.NewTitle :", err.Error())
 		return nil, err

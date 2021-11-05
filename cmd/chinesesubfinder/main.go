@@ -3,10 +3,10 @@ package main
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	config2 "github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/proxy_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
@@ -22,7 +22,7 @@ func init() {
 
 	log.Infoln("ChineseSubFinder Version:", AppVersion)
 
-	if pkg.OSCheck() == false {
+	if my_util.OSCheck() == false {
 		panic(`only support Linux and Windows, if you want support MacOS, 
 you need implement getDbName() in file: internal/dao/init.go 
 and 
@@ -57,11 +57,11 @@ func main() {
 	}
 
 	// 判断文件夹是否存在
-	if pkg.IsDir(config.MovieFolder) == false {
+	if my_util.IsDir(config.MovieFolder) == false {
 		log.Errorln("MovieFolder not found --", config.MovieFolder)
 		return
 	}
-	if pkg.IsDir(config.SeriesFolder) == false {
+	if my_util.IsDir(config.SeriesFolder) == false {
 		log.Errorln("SeriesFolder not found --", config.SeriesFolder)
 		return
 	}

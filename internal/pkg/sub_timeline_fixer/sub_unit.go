@@ -2,7 +2,7 @@ package sub_timeline_fixer
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"math"
 	"time"
@@ -43,7 +43,7 @@ func (s *SubUnit) AddAndInsert(oneSubStartTime, oneSubEndTime time.Time) {
 	perWindows := float64(vad.FrameDuration) / 1000
 	// 不是第一次添加，那么就需要把两句对白中间间隔的 active == false 的插入，插入间隙
 	if len(s.vadList) > 0 {
-		needAddRange := pkg.Time2SecendNumber(oneSubStartTime) - s.GetEndTimeNumber()
+		needAddRange := my_util.Time2SecendNumber(oneSubStartTime) - s.GetEndTimeNumber()
 		for i := 0.0; i < needAddRange; {
 
 			s.vadList = append(s.vadList, *vad.NewVADInfoBase(false, time.Duration((s.GetEndTimeNumber()+i)*math.Pow10(9))))
@@ -56,7 +56,7 @@ func (s *SubUnit) AddAndInsert(oneSubStartTime, oneSubEndTime time.Time) {
 	}
 	s.EndTime = oneSubEndTime
 
-	needAddRange := pkg.Time2SecendNumber(oneSubEndTime) - pkg.Time2SecendNumber(oneSubStartTime)
+	needAddRange := my_util.Time2SecendNumber(oneSubEndTime) - my_util.Time2SecendNumber(oneSubStartTime)
 	for i := 0.0; i < needAddRange; {
 
 		s.vadList = append(s.vadList, *vad.NewVADInfoBase(true, time.Duration((s.GetStartTimeNumber()+i)*math.Pow10(9))))
@@ -73,12 +73,12 @@ func (s SubUnit) GetDialogueCount() int {
 
 // GetStartTimeNumber 获取这个单元的起始时间，单位是秒
 func (s SubUnit) GetStartTimeNumber() float64 {
-	return pkg.Time2SecendNumber(s.StartTime)
+	return my_util.Time2SecendNumber(s.StartTime)
 }
 
 // GetEndTimeNumber 获取这个单元的结束时间，单位是秒
 func (s SubUnit) GetEndTimeNumber() float64 {
-	return pkg.Time2SecendNumber(s.EndTime)
+	return my_util.Time2SecendNumber(s.EndTime)
 }
 
 // GetTimelineRange 开始到结束的时间长度，单位是秒

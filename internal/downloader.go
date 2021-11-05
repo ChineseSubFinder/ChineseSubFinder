@@ -11,9 +11,9 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	subcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
@@ -153,7 +153,7 @@ func (d Downloader) RefreshEmbySubList() error {
 func (d Downloader) DownloadSub4Movie(dir string) error {
 	defer func() {
 		// 所有的电影字幕下载完成，抉择完成，需要清理缓存目录
-		err := pkg.ClearRootTmpFolder()
+		err := my_util.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error("ClearRootTmpFolder", err)
 		}
@@ -164,7 +164,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	// 优先判断特殊的操作
 	if d.needForcedScanAndDownSub == true {
 		// 全扫描
-		d.movieFileFullPathList, err = pkg.SearchMatchedVideoFile(dir)
+		d.movieFileFullPathList, err = my_util.SearchMatchedVideoFile(dir)
 		if err != nil {
 			return err
 		}
@@ -172,7 +172,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 		// 是否是通过 emby_helper api 获取的列表
 		if d.embyHelper == nil {
 			// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
-			d.movieFileFullPathList, err = pkg.SearchMatchedVideoFile(dir)
+			d.movieFileFullPathList, err = my_util.SearchMatchedVideoFile(dir)
 			if err != nil {
 				return err
 			}
@@ -268,7 +268,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	var err error
 	defer func() {
 		// 所有的连续剧字幕下载完成，抉择完成，需要清理缓存目录
-		err := pkg.ClearRootTmpFolder()
+		err := my_util.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error("ClearRootTmpFolder", err)
 		}
@@ -337,7 +337,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 				continue
 			}
 			// 匹配对应的 Eps 去处理
-			seasonEpsKey := pkg.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
+			seasonEpsKey := my_util.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
 			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, fullSeasonSubDict[seasonEpsKey])
 		}
 		// 是否清理全季的缓存字幕文件夹
@@ -520,7 +520,7 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSub
 	var fullSeasonSubDict = make(map[string][]string)
 
 	for _, season := range seriesInfo.SeasonDict {
-		seasonKey := pkg.GetEpisodeKeyName(season, 0)
+		seasonKey := my_util.GetEpisodeKeyName(season, 0)
 		subs, ok := organizeSubFiles[seasonKey]
 		if ok == false {
 			continue
@@ -530,7 +530,7 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSub
 			newSeasonSubRootPath := filepath.Join(seriesInfo.DirPath, "Sub_"+seasonKey)
 			_ = os.MkdirAll(newSeasonSubRootPath, os.ModePerm)
 			newSubFullPath := filepath.Join(newSeasonSubRootPath, subFileName)
-			err := pkg.CopyFile(sub, newSubFullPath)
+			err := my_util.CopyFile(sub, newSubFullPath)
 			if err != nil {
 				d.log.Errorln("saveFullSeasonSub", subFileName, err)
 				continue
@@ -541,7 +541,7 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSub
 				return nil
 			}
 			// 把整季的字幕缓存位置也提供出去，如果之前没有下载到的，这里返回出来的可以补上
-			seasonEpsKey := pkg.GetEpisodeKeyName(gusSeason, gusEpisode)
+			seasonEpsKey := my_util.GetEpisodeKeyName(gusSeason, gusEpisode)
 			_, ok := fullSeasonSubDict[seasonEpsKey]
 			if ok == false {
 				// 初始化
@@ -563,7 +563,7 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	desSubFullPath := filepath.Join(videoRootPath, subNewName)
 	if setDefault == true {
 		// 先判断没有 default 的字幕是否存在了，在的话，先删除，然后再写入
-		if pkg.IsFile(desSubFullPath) == true {
+		if my_util.IsFile(desSubFullPath) == true {
 			_ = os.Remove(desSubFullPath)
 		}
 		desSubFullPath = filepath.Join(videoRootPath, subNewNameWithDefault)
@@ -571,7 +571,7 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 
 	if skipExistFile == true {
 		// 需要判断文件是否存在在，有则跳过
-		if pkg.IsFile(desSubFullPath) == true {
+		if my_util.IsFile(desSubFullPath) == true {
 			d.log.Infoln("OrgSubName:", finalSubFile.Name)
 			d.log.Infoln("Sub Skip DownAt:", desSubFullPath)
 			return nil
@@ -601,7 +601,7 @@ func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) e
 	// 复制下载在 tmp 文件夹中的字幕文件到视频文件夹下面
 	for _, subFile := range subFiles {
 		newFn := filepath.Join(desFolderFullPath, filepath.Base(subFile))
-		err = pkg.CopyFile(subFile, newFn)
+		err = my_util.CopyFile(subFile, newFn)
 		if err != nil {
 			return err
 		}
