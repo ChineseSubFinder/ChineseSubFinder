@@ -75,12 +75,13 @@ func Test_parseJsonString2GetFFMPEGInfo(t *testing.T) {
 func TestFFMPEGHelper_ExportAudioArgsByTimeRange(t *testing.T) {
 
 	audioFullPath := "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"
+	subFullPath := "C:\\Tmp\\Rick and Morty - S05E10\\英_2.srt"
 	startTimeString := "0:1:27"
 	timeLeng := "28.2"
 
 	f := NewFFMPEGHelper()
 
-	_, timeRange, err := f.ExportAudioArgsByTimeRange(audioFullPath, startTimeString, timeLeng)
+	_, _, timeRange, err := f.ExportAudioAndSubArgsByTimeRange(audioFullPath, subFullPath, startTimeString, timeLeng)
 	if err != nil {
 		println(timeRange)
 		t.Fatal(err)

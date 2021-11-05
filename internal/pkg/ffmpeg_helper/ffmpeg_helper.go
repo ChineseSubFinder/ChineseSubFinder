@@ -130,8 +130,8 @@ func (f *FFMPEGHelper) GetAudioInfo(audioFileFullPath string) (bool, float64, er
 	return true, duration, nil
 }
 
-// ExportAudioArgsByTimeRange 根据输入的时间轴导出音频分段信息 "0:1:27" "28.2"
-func (f *FFMPEGHelper) ExportAudioArgsByTimeRange(audioFullPath string, startTimeString, timeLength string) (string, string, error) {
+// ExportAudioAndSubArgsByTimeRange 根据输入的时间轴导出音频分段信息 "0:1:27" "28.2"
+func (f *FFMPEGHelper) ExportAudioAndSubArgsByTimeRange(audioFullPath, subFullPath string, startTimeString, timeLength string) (string, string, string, error) {
 
 	outStartTimeString := strings.ReplaceAll(startTimeString, ":", "-")
 	outStartTimeString = strings.ReplaceAll(outStartTimeString, ".", "#")
@@ -141,22 +141,37 @@ func (f *FFMPEGHelper) ExportAudioArgsByTimeRange(audioFullPath string, startTim
 	frontName := strings.ReplaceAll(filepath.Base(audioFullPath), filepath.Ext(audioFullPath), "")
 
 	outAudioName := frontName + "_" + outStartTimeString + "_" + outTimeLength + filepath.Ext(audioFullPath)
+	outSubName := frontName + "_" + outStartTimeString + "_" + outTimeLength + common.SubExtSRT
 
 	var outAudioFullPath = filepath.Join(filepath.Dir(audioFullPath), outAudioName)
+	var outSubFullPath = filepath.Join(filepath.Dir(audioFullPath), outSubName)
 
+	// 导出音频
 	if my_util.IsFile(outAudioFullPath) == true {
 		err := os.Remove(outAudioFullPath)
 		if err != nil {
-			return "", "", err
+			return "", "", "", err
 		}
 	}
 	args := f.getAudioExportArgsByTimeRange(audioFullPath, startTimeString, timeLength, outAudioFullPath)
 	execFFMPEG, err := f.execFFMPEG(args)
 	if err != nil {
-		return "", execFFMPEG, err
+		return "", "", execFFMPEG, err
+	}
+	// 导出字幕
+	if my_util.IsFile(outSubFullPath) == true {
+		err := os.Remove(outSubFullPath)
+		if err != nil {
+			return "", "", "", err
+		}
+	}
+	args = f.getSubExportArgsByTimeRange(subFullPath, startTimeString, timeLength, outSubFullPath)
+	execFFMPEG, err = f.execFFMPEG(args)
+	if err != nil {
+		return "", "", execFFMPEG, err
 	}
 
-	return outAudioFullPath, "", nil
+	return outAudioFullPath, outSubFullPath, "", nil
 }
 
 // parseJsonString2GetFFProbeInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引
@@ -370,6 +385,23 @@ func (f *FFMPEGHelper) getAudioExportArgsByTimeRange(audioFullPath string, start
 	audioArgs = append(audioArgs, outAudioFullPath)
 
 	return audioArgs
+}
+
+func (f *FFMPEGHelper) getSubExportArgsByTimeRange(subFullPath string, startTimeString, timeLength, outSubFullPath string) []string {
+
+	/*
+		ffmpeg.exe -i aa.srt -ss 00:1:27 -t 28 bb.srt
+	*/
+	var subArgs = make([]string, 0)
+	subArgs = append(subArgs, "-i")
+	subArgs = append(subArgs, subFullPath)
+	subArgs = append(subArgs, "-ss")
+	subArgs = append(subArgs, startTimeString)
+	subArgs = append(subArgs, "-t")
+	subArgs = append(subArgs, timeLength)
+	subArgs = append(subArgs, outSubFullPath)
+
+	return subArgs
 }
 
 // addSubMapArg 构建字幕的导出参数

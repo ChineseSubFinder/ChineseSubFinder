@@ -14,6 +14,7 @@ import (
 	"github.com/mndrix/tukey"
 	"gonum.org/v1/gonum/mat"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -319,7 +320,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 	// 不为空的时候，生成调试文件
 	if staticLineFileSavePath != "" {
 		//staticLineFileSavePath = "bar.html"
-		err = SaveStaticLine(staticLineFileSavePath, infoBase.Name, infoSrc.Name,
+		err = SaveStaticLineV1(staticLineFileSavePath, infoBase.Name, infoSrc.Name,
 			per, oldMean, oldSd, newMean, newSd, xAxis,
 			startDiffTimeLineData, endDiffTimeLineData)
 		if err != nil {
@@ -415,11 +416,12 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(audioInfo vad.AudioInfo, infoSrc *sub
 
 	// 开始针对对白单元进行匹配
 	for _, subUnit := range subUnitList {
-		startTimeString, subLeng := subUnit.GetFFMPEGCutRange(ExpandTimeRange)
 
-		outAudioFPath, errString, err := s.ffmpegHelper.ExportAudioArgsByTimeRange(audioInfo.FileFullPath, startTimeString, subLeng)
+		startTimeString, subLength := subUnit.GetFFMPEGCutRange(ExpandTimeRange)
+
+		outAudioFPath, _, errString, err := s.ffmpegHelper.ExportAudioAndSubArgsByTimeRange(audioInfo.FileFullPath, infoSrc.FileFullPath, startTimeString, subLength)
 		if err != nil {
-			log_helper.GetLogger().Errorln("ExportAudioArgsByTimeRange", errString, err)
+			log_helper.GetLogger().Errorln("ExportAudioAndSubArgsByTimeRange", errString, err)
 			return false, 0, 0, err
 		}
 
@@ -432,13 +434,47 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(audioInfo vad.AudioInfo, infoSrc *sub
 			return false, 0, 0, err
 		}
 
-		println(len(audioVADInfos))
+		var subTimeLineData = make([]opts.LineData, 0)
+		var subxAxis = make([]string, 0)
+		var audioTimeLineData = make([]opts.LineData, 0)
+		var audioxAxis = make([]string, 0)
+
+		for _, vadInfo := range subUnit.VADList {
+
+			subTimeLineData = append(subTimeLineData, opts.LineData{Value: vadInfo.Active})
+			baseTime := subUnit.GetBaseTimeNumber()
+			subxAxis = append(subxAxis, fmt.Sprintf("%f", vadInfo.Time.Seconds()-baseTime))
+		}
+
+		outDir := filepath.Dir(outAudioFPath)
+		outBaseName := filepath.Base(outAudioFPath)
+		outBaseNameWithOutExt := strings.ReplaceAll(outBaseName, filepath.Ext(outBaseName), "")
+
+		subVADStaticLineFullPath := filepath.Join(outDir, outBaseNameWithOutExt+"_sub.html")
+
+		err = SaveStaticLineV2("Sub", subVADStaticLineFullPath, subxAxis, subTimeLineData)
+		if err != nil {
+			return false, 0, 0, err
+		}
+
+		for _, vadInfo := range audioVADInfos {
+
+			audioTimeLineData = append(audioTimeLineData, opts.LineData{Value: vadInfo.Active})
+			audioxAxis = append(audioxAxis, fmt.Sprintf("%f", vadInfo.Time.Seconds()))
+		}
+
+		audioVADStaticLineFullPath := filepath.Join(outDir, outBaseNameWithOutExt+"_audio.html")
+
+		err = SaveStaticLineV2("Audio", audioVADStaticLineFullPath, audioxAxis, audioTimeLineData)
+		if err != nil {
+			return false, 0, 0, err
+		}
 	}
 
 	return false, -1, -1, nil
 }
 
 const FixMask = "-fix"
-const FrontAndEndPer = 0.15
-const SubUnitMaxCount = 5
-const ExpandTimeRange = 1 // 从字幕的时间轴片段需要向前和向后多匹配一部分的音频，这里定义的就是这个 range 以分钟为单位， 正负 1 分钟
+const FrontAndEndPer = 0.15 // 前百分之 15 和后百分之 15 都不进行识别
+const SubUnitMaxCount = 10  // 一个 Sub单元有五句对白
+const ExpandTimeRange = 0   // 从字幕的时间轴片段需要向前和向后多匹配一部分的音频，这里定义的就是这个 range 以分钟为单位， 正负 1 分钟

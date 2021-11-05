@@ -10,6 +10,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"io"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"os"
 	"os/exec"
@@ -457,5 +458,5 @@ func Time2SecendNumber(inTime time.Time) float64 {
 }
 
 func Time2Duration(inTime time.Time) time.Duration {
-	return time.Duration(Time2SecendNumber(inTime))
+	return time.Duration(Time2SecendNumber(inTime) * math.Pow10(9))
 }

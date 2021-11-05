@@ -29,7 +29,7 @@ func NewVADInfoBase(active bool, nowTime time.Duration) *VADInfo {
 
 const (
 	// Mode vad mode，VAD 的模式
-	Mode = 2
+	Mode = 1
 	// FrameDuration frame duration，分析的时间窗口
 	FrameDuration = 10
 )
