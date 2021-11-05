@@ -59,7 +59,7 @@
 
 ## 如何编译此项目
 
-本来想写以下注意事项的，貌似重构后无需 CGO=1 的支持了，只要你找到 cmd\chinesesubfinder\main.go 这个入口文件就好了。
+go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go 这个入口文件就好了。 :joy:
 
 编译代码如下：
 
