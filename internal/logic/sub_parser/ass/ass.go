@@ -2,9 +2,9 @@ package ass
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/emirpasic/gods/maps/treemap"
 	"io/ioutil"
@@ -50,7 +50,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	// 注意，需要替换掉 \r 不然正则表达式会有问题
 	allString = strings.ReplaceAll(allString, "\r", "")
 	// 找到 start end text
-	matched := sub_parser.ReMatchDialogueASS.FindAllStringSubmatch(allString, -1)
+	matched := regex_things.ReMatchDialogueASS.FindAllStringSubmatch(allString, -1)
 	if len(matched) < 1 {
 		log_helper.GetLogger().Debugln("DetermineFileTypeFromBytes can't found Dialogues, Skip")
 		return false, nil, nil
@@ -208,15 +208,15 @@ func (p Parser) parseOneDialogueText(nowText string, odl *subparser.OneDialogue,
 	// nowText 优先移除 \h 这个是替换空格， \h 是让两个词在一行，不换行显示
 	nowText = strings.ReplaceAll(nowText, `\h`, " ")
 	// nowText 这个需要先把 {} 花括号内的内容给移除
-	nowText1 := sub_parser.ReMatchBrace.ReplaceAllString(nowText, "")
-	nowText1 = sub_parser.ReMatchBracket.ReplaceAllString(nowText1, "")
+	nowText1 := regex_things.ReMatchBrace.ReplaceAllString(nowText, "")
+	nowText1 = regex_things.ReMatchBracket.ReplaceAllString(nowText1, "")
 	nowText1 = strings.TrimRight(nowText1, "\r")
 	// 然后判断是否有 \N 或者 \n
 	// 直接把 \n 替换为 \N 来解析
 	nowText1 = strings.ReplaceAll(nowText1, `\n`, `\N`)
 	if strings.Contains(nowText1, `\N`) {
 		// 有，那么就需要再次切割，一般是双语字幕
-		for _, matched2 := range sub_parser.ReCutDoubleLanguage.FindAllStringSubmatch(nowText1, -1) {
+		for _, matched2 := range regex_things.ReCutDoubleLanguage.FindAllStringSubmatch(nowText1, -1) {
 			for i, s := range matched2 {
 				if i == 0 {
 					continue

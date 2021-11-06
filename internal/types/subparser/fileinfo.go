@@ -27,6 +27,27 @@ func (f FileInfo) GetTimeFormat() string {
 	}
 }
 
+// GetDialogueExContent 获取当前字幕文件语言对应索引的对白内容
+// 凡是带有 Eng 的返回 Eng，其他的就与对应语言相关
+func (f FileInfo) GetDialogueExContent(index int) string {
+
+	switch f.Lang {
+	case language.ChineseSimple, language.ChineseTraditional,
+		language.ChineseSimpleJapanese, language.ChineseSimpleKorean,
+		language.ChineseTraditionalJapanese, language.ChineseTraditionalKorean:
+		// 带有中文的，但是又不是中英的
+		return f.DialoguesEx[index].ChLine
+	case language.English, language.ChineseSimpleEnglish, language.ChineseTraditionalEnglish:
+		return f.DialoguesEx[index].EnLine
+	case language.Japanese:
+		return f.DialoguesEx[index].JpLine
+	case language.Korean:
+		return f.DialoguesEx[index].KrLine
+	default:
+		return f.DialoguesEx[index].EnLine
+	}
+}
+
 // OneDialogue 一句对话
 type OneDialogue struct {
 	StartTime string   // 开始时间

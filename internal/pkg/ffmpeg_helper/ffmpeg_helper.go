@@ -20,12 +20,12 @@ import (
 )
 
 type FFMPEGHelper struct {
-	subParserHub *sub_parser_hub.SubParserHub // 字幕内容的解析器
+	SubParserHub *sub_parser_hub.SubParserHub // 字幕内容的解析器
 }
 
 func NewFFMPEGHelper() *FFMPEGHelper {
 	return &FFMPEGHelper{
-		subParserHub: sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
+		SubParserHub: sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
 	}
 }
 
@@ -95,7 +95,7 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 		}
 	}
 	// 查找当前这个视频外置字幕列表
-	err = ffMPEGInfo.GetExternalSubInfos(f.subParserHub)
+	err = ffMPEGInfo.GetExternalSubInfos(f.SubParserHub)
 	if err != nil {
 		return false, nil, err
 	}
@@ -172,6 +172,36 @@ func (f *FFMPEGHelper) ExportAudioAndSubArgsByTimeRange(audioFullPath, subFullPa
 	}
 
 	return outAudioFullPath, outSubFullPath, "", nil
+}
+
+// ExportSubArgsByTimeRange 根据输入的时间轴导出字幕分段信息 "0:1:27" "28.2"
+func (f *FFMPEGHelper) ExportSubArgsByTimeRange(subFullPath string, startTimeString, timeLength string) (string, string, error) {
+
+	outStartTimeString := strings.ReplaceAll(startTimeString, ":", "-")
+	outStartTimeString = strings.ReplaceAll(outStartTimeString, ".", "#")
+
+	outTimeLength := strings.ReplaceAll(timeLength, ".", "#")
+
+	frontName := strings.ReplaceAll(filepath.Base(subFullPath), filepath.Ext(subFullPath), "")
+
+	outSubName := frontName + "_" + outStartTimeString + "_" + outTimeLength + common.SubExtSRT
+
+	var outSubFullPath = filepath.Join(filepath.Dir(subFullPath), outSubName)
+
+	// 导出字幕
+	if my_util.IsFile(outSubFullPath) == true {
+		err := os.Remove(outSubFullPath)
+		if err != nil {
+			return "", "", err
+		}
+	}
+	args := f.getSubExportArgsByTimeRange(subFullPath, startTimeString, timeLength, outSubFullPath)
+	execFFMPEG, err := f.execFFMPEG(args)
+	if err != nil {
+		return "", execFFMPEG, err
+	}
+
+	return outSubFullPath, "", nil
 }
 
 // parseJsonString2GetFFProbeInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引

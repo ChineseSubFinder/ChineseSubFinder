@@ -44,6 +44,58 @@ func TestStopWordCounter(t *testing.T) {
 	println(info.Name)
 }
 
+func TestTFIDF(t *testing.T) {
+	testCorpus := []string{
+		"The quick brown fox jumped over the lazy dog",
+		"hey diddle diddle, the cat and the fiddle",
+		"the cow jumped over the moon",
+		"the little dog laughed to see such fun",
+		"and the dish ran away with the spoon",
+	}
+
+	query := "the brown fox ran around the dog"
+
+	vectoriser := nlp.NewCountVectoriser(StopWords...)
+	transformer := nlp.NewTfidfTransformer()
+
+	// set k (the number of dimensions following truncation) to 4
+	reducer := nlp.NewTruncatedSVD(4)
+
+	lsiPipeline := nlp.NewPipeline(vectoriser, transformer, reducer)
+
+	// Transform the corpus into an LSI fitting the model to the documents in the process
+	lsi, err := lsiPipeline.FitTransform(testCorpus...)
+	if err != nil {
+		fmt.Printf("Failed to process documents because %v", err)
+		return
+	}
+
+	// run the query through the same pipeline that was fitted to the corpus and
+	// to project it into the same dimensional space
+	queryVector, err := lsiPipeline.Transform(query)
+	if err != nil {
+		fmt.Printf("Failed to process documents because %v", err)
+		return
+	}
+
+	// iterate over document feature vectors (columns) in the LSI matrix and compare
+	// with the query vector for similarity.  Similarity is determined by the difference
+	// between the angles of the vectors known as the cosine similarity
+	highestSimilarity := -1.0
+	var matched int
+	_, docs := lsi.Dims()
+	for i := 0; i < docs; i++ {
+		similarity := pairwise.CosineSimilarity(queryVector.(mat.ColViewer).ColView(0), lsi.(mat.ColViewer).ColView(i))
+		if similarity > highestSimilarity {
+			matched = i
+			highestSimilarity = similarity
+		}
+	}
+
+	fmt.Printf("Matched '%s'", testCorpus[matched])
+	// Output: Matched 'The quick brown fox jumped over the lazy dog'
+}
+
 func TestGetOffsetTimeV1(t *testing.T) {
 	testDataPath := "../../../TestData/FixTimeline"
 	testRootDir, err := my_util.CopyTestData(testDataPath)
@@ -79,27 +131,27 @@ func TestGetOffsetTimeV1(t *testing.T) {
 			staticLineFileSavePath: "bar.html"}, want: -32.09061538461539, wantErr: false},
 		/*
 			WTF,这部剧集
-			Dan Brown's The Lost Symbol
+			Dan Brown'timelineFixer The Lost Symbol
 			内置的英文字幕时间轴是歪的，所以修正完了就错了
 		*/
-		{name: "Dan Brown's The Lost Symbol - S01E01", args: args{
-			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E01.chinese(inside).ass"),
-			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E01.chinese(简英,shooter).ass"),
+		{name: "Dan Brown'timelineFixer The Lost Symbol - S01E01", args: args{
+			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E01.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E01.chinese(简英,shooter).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 1.3217821782178225, wantErr: false},
-		{name: "Dan Brown's The Lost Symbol - S01E02", args: args{
-			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E02.chinese(inside).ass"),
-			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E02.chinese(简英,subhd).ass"),
+		{name: "Dan Brown'timelineFixer The Lost Symbol - S01E02", args: args{
+			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E02.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E02.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -0.5253383458646617, wantErr: false},
-		{name: "Dan Brown's The Lost Symbol - S01E03", args: args{
-			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E03.chinese(inside).ass"),
-			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E03.chinese(繁英,xunlei).ass"),
+		{name: "Dan Brown'timelineFixer The Lost Symbol - S01E03", args: args{
+			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E03.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E03.chinese(繁英,xunlei).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -0.505656, wantErr: false},
-		{name: "Dan Brown's The Lost Symbol - S01E04", args: args{
-			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E04.chinese(inside).ass"),
-			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E04.chinese(简英,zimuku).ass"),
+		{name: "Dan Brown'timelineFixer The Lost Symbol - S01E04", args: args{
+			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E04.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E04.chinese(简英,zimuku).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -0.633415, wantErr: false},
 		/*
@@ -271,7 +323,7 @@ func TestGetOffsetTimeV1(t *testing.T) {
 			want: 0, wantErr: false},
 	}
 
-	s := NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{
+	timelineFixer := NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{
 		MaxCompareDialogue: 3,
 		MaxStartTimeDiffSD: 0.1,
 		MinMatchedPercent:  0.1,
@@ -307,7 +359,7 @@ func TestGetOffsetTimeV1(t *testing.T) {
 			*/
 			sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
 
-			bok, got, sd, err := s.GetOffsetTimeV1(infoBase, infoSrc, tt.args.ch_enSubFile+"-bar.html", tt.args.ch_enSubFile+".log")
+			bok, got, sd, err := timelineFixer.GetOffsetTimeV1(infoBase, infoSrc, tt.args.ch_enSubFile+"-bar.html", tt.args.ch_enSubFile+".log")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV1() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -324,7 +376,7 @@ func TestGetOffsetTimeV1(t *testing.T) {
 			//}
 
 			if bok == true && got != 0 {
-				_, err = s.FixSubTimeline(infoSrc, got, tt.args.ch_enSubFile+FixMask+infoBase.Ext)
+				_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.ch_enSubFile+FixMask+infoBase.Ext)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -335,59 +387,106 @@ func TestGetOffsetTimeV1(t *testing.T) {
 	}
 }
 
-func TestTFIDF(t *testing.T) {
-	testCorpus := []string{
-		"The quick brown fox jumped over the lazy dog",
-		"hey diddle diddle, the cat and the fiddle",
-		"the cow jumped over the moon",
-		"the little dog laughed to see such fun",
-		"and the dish ran away with the spoon",
-	}
-
-	query := "the brown fox ran around the dog"
-
-	vectoriser := nlp.NewCountVectoriser(StopWords...)
-	transformer := nlp.NewTfidfTransformer()
-
-	// set k (the number of dimensions following truncation) to 4
-	reducer := nlp.NewTruncatedSVD(4)
-
-	lsiPipeline := nlp.NewPipeline(vectoriser, transformer, reducer)
-
-	// Transform the corpus into an LSI fitting the model to the documents in the process
-	lsi, err := lsiPipeline.FitTransform(testCorpus...)
+func TestGetOffsetTimeV2(t *testing.T) {
+	testDataPath := "../../../TestData/FixTimeline"
+	testRootDir, err := my_util.CopyTestData(testDataPath)
 	if err != nil {
-		fmt.Printf("Failed to process documents because %v", err)
-		return
+		t.Fatal(err)
+	}
+	testRootDirYes := filepath.Join(testRootDir, "yes")
+	//testRootDirNo := filepath.Join(testRootDir, "no")
+	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
+
+	type args struct {
+		enSubFile              string
+		ch_enSubFile           string
+		staticLineFileSavePath string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    float64
+		wantErr bool
+	}{
+		/*
+			这里有几个比较理想的字幕时间轴校正的示例
+		*/
+		{name: "R&M S05E01", args: args{enSubFile: filepath.Join(testRootDirYes, "R&M S05E01 - English.srt"),
+			ch_enSubFile:           filepath.Join(testRootDirYes, "R&M S05E01 - 简英.srt"),
+			staticLineFileSavePath: "bar.html"}, want: -6.42981818181818, wantErr: false},
+		{name: "R&M S05E10", args: args{enSubFile: filepath.Join(testRootDirYes, "R&M S05E10 - English.ass"),
+			ch_enSubFile:           filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
+			staticLineFileSavePath: "bar.html"}, want: -6.335985401459854, wantErr: false},
+		{name: "基地 S01E03", args: args{enSubFile: filepath.Join(testRootDirYes, "基地 S01E03 - English.ass"),
+			ch_enSubFile:           filepath.Join(testRootDirYes, "基地 S01E03 - 简英.ass"),
+			staticLineFileSavePath: "bar.html"}, want: -32.09061538461539, wantErr: false},
 	}
 
-	// run the query through the same pipeline that was fitted to the corpus and
-	// to project it into the same dimensional space
-	queryVector, err := lsiPipeline.Transform(query)
-	if err != nil {
-		fmt.Printf("Failed to process documents because %v", err)
-		return
-	}
+	timelineFixer := NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{
+		MaxCompareDialogue: 3,
+		MaxStartTimeDiffSD: 0.1,
+		MinMatchedPercent:  0.1,
+		MinOffset:          0.1,
+	})
 
-	// iterate over document feature vectors (columns) in the LSI matrix and compare
-	// with the query vector for similarity.  Similarity is determined by the difference
-	// between the angles of the vectors known as the cosine similarity
-	highestSimilarity := -1.0
-	var matched int
-	_, docs := lsi.Dims()
-	for i := 0; i < docs; i++ {
-		similarity := pairwise.CosineSimilarity(queryVector.(mat.ColViewer).ColView(0), lsi.(mat.ColViewer).ColView(i))
-		if similarity > highestSimilarity {
-			matched = i
-			highestSimilarity = similarity
-		}
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 
-	fmt.Printf("Matched '%s'", testCorpus[matched])
-	// Output: Matched 'The quick brown fox jumped over the lazy dog'
+			bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(tt.args.enSubFile)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if bFind == false {
+				t.Fatal("sub not match")
+			}
+			/*
+				这里发现一个梗，内置的英文字幕导出的时候，有可能需要合并多个 Dialogue，见
+				internal/pkg/sub_helper/sub_helper.go 中 MergeMultiDialogue4EngSubtitle 的实现
+			*/
+			//sub_helper.MergeMultiDialogue4EngSubtitle(infoBase)
+
+			bFind, infoSrc, err := subParserHub.DetermineFileTypeFromFile(tt.args.ch_enSubFile)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if bFind == false {
+				t.Fatal("sub not match")
+			}
+			/*
+				这里发现一个梗，内置的英文字幕导出的时候，有可能需要合并多个 Dialogue，见
+				internal/pkg/sub_helper/sub_helper.go 中 MergeMultiDialogue4EngSubtitle 的实现
+			*/
+			//sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
+
+			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(infoBase, infoSrc, tt.args.ch_enSubFile+"-bar.html", tt.args.ch_enSubFile+".log")
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetOffsetTimeV1() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			// 在一个正负范围内都可以接受
+			if got > tt.want-0.1 && got < tt.want+0.1 {
+
+			} else {
+				t.Errorf("GetOffsetTimeV1() got = %v, want %v", got, tt.want)
+			}
+			//if got != tt.want {
+			//	t.Errorf("GetOffsetTimeV1() got = %v, want %v", got, tt.want)
+			//}
+
+			if bok == true && got != 0 {
+				_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.ch_enSubFile+FixMask+infoBase.Ext)
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			println(fmt.Sprintf("GetOffsetTimeV1: %fs SD:%f", got, sd))
+		})
+	}
 }
 
-func TestSubTimelineFixer_GetOffsetTimeV2(t *testing.T) {
+func TestSubTimelineFixer_GetOffsetTimeV3(t *testing.T) {
 
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
@@ -428,21 +527,21 @@ func TestSubTimelineFixer_GetOffsetTimeV2(t *testing.T) {
 				这里发现一个梗，内置的英文字幕导出的时候，有可能需要合并多个 Dialogue，见
 				internal/pkg/sub_helper/sub_helper.go 中 MergeMultiDialogue4EngSubtitle 的实现
 			*/
-			sub_helper.MergeMultiDialogue4EngSubtitle(fileInfo)
+			//sub_helper.MergeMultiDialogue4EngSubtitle(fileInfo)
 
-			got, got1, got2, err := s.GetOffsetTimeV2(tt.args.audioInfo, fileInfo, tt.args.staticLineFileSavePath, tt.args.debugInfoFileSavePath)
+			got, got1, got2, err := s.GetOffsetTimeV3(tt.args.audioInfo, fileInfo, tt.args.staticLineFileSavePath, tt.args.debugInfoFileSavePath)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetOffsetTimeV2() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetOffsetTimeV3() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("GetOffsetTimeV2() got = %v, want %v", got, tt.want)
+				t.Errorf("GetOffsetTimeV3() got = %v, want %v", got, tt.want)
 			}
 			if got1 != tt.want1 {
-				t.Errorf("GetOffsetTimeV2() got1 = %v, want %v", got1, tt.want1)
+				t.Errorf("GetOffsetTimeV3() got1 = %v, want %v", got1, tt.want1)
 			}
 			if got2 != tt.want2 {
-				t.Errorf("GetOffsetTimeV2() got2 = %v, want %v", got2, tt.want2)
+				t.Errorf("GetOffsetTimeV3() got2 = %v, want %v", got2, tt.want2)
 			}
 		})
 	}

@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	browser "github.com/allanpk716/fake-useragent"
 	"github.com/go-resty/resty/v2"
@@ -459,4 +460,38 @@ func Time2SecendNumber(inTime time.Time) float64 {
 
 func Time2Duration(inTime time.Time) time.Duration {
 	return time.Duration(Time2SecendNumber(inTime) * math.Pow10(9))
+}
+
+// ReplaceSpecString 替换特殊的字符
+func ReplaceSpecString(instring string, rep string) string {
+	return regex_things.RegMatchSpString.ReplaceAllString(instring, rep)
+}
+
+func Bool2Int(inBool bool) int {
+	if inBool == true {
+		return 1
+	} else {
+		return 0
+	}
+}
+
+// Round 取整
+func Round(x float64) int64 {
+
+	if x-float64(int64(x)) > 0 {
+		return int64(x) + 1
+	} else {
+		return int64(x)
+	}
+
+	//return int64(math.Floor(x + 0.5))
+}
+
+// MakePowerOfTwo 2的整次幂数 buffer length is not a power of two
+func MakePowerOfTwo(x int64) int64 {
+
+	power := math.Log2(float64(x))
+	tmpRound := Round(power)
+
+	return int64(math.Pow(2, float64(tmpRound)))
 }

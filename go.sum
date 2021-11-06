@@ -65,6 +65,8 @@ github.com/bodgit/sevenzip v1.1.0/go.mod h1:vRCJlX/FVjbcwUG9lyX1YQPbQA4Xxw/7puzc
 github.com/bodgit/windows v1.0.0 h1:rLQ/XjsleZvx4fR1tB/UxQrK+SJ2OFHzfPjLWWOhDIA=
 github.com/bodgit/windows v1.0.0/go.mod h1:a6JLwrB4KrTR5hBpp8FI9/9W9jJfeQ2h4XDXU74ZCdM=
 github.com/boombuler/barcode v1.0.0/go.mod h1:paBWMcWSl3LHKBqUq+rly7CNSldXjb2rDl3JlRe0mD8=
+github.com/brettbuddin/fourier v0.1.1 h1:jjlYBAV018g3B2VH5wGI/XgZE9veEHXS7MmPa4BJgmo=
+github.com/brettbuddin/fourier v0.1.1/go.mod h1:o4lEcyAaNBt8evqo2VXTSpRnZTts9lyzt73uRFtmD70=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=

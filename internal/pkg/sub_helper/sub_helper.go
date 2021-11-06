@@ -17,6 +17,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // OrganizeDlSubFiles 需要从汇总来是网站字幕中，解压对应的压缩包中的字幕出来
@@ -365,6 +366,64 @@ func MergeMultiDialogue4EngSubtitle(inSubParser *subparser.FileInfo) {
 		merger.Add(dialogueEx)
 	}
 	inSubParser.DialoguesEx = merger.Get()
+}
+
+/*
+	GetVADINfoFromSub
+	这里的字幕要求是完整的一个字幕
+	1. 抽取字幕的时间片段的时候，暂定，前 15% 和后 15% 要避开，前奏、主题曲、结尾曲
+	2. 将整个字幕，抽取连续 5 句对话为一个单元，提取时间片段信息
+*/
+func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int) ([]SubUnit, error) {
+
+	srcSubUnitList := make([]SubUnit, 0)
+	srcOneSubUnit := NewSubUnit()
+	srcTimeFormat := infoSrc.GetTimeFormat()
+
+	// srcDuration
+	lastDialogueExTimeEnd, err := time.Parse(srcTimeFormat, infoSrc.DialoguesEx[len(infoSrc.DialoguesEx)-1].EndTime)
+	if err != nil {
+		return nil, err
+	}
+	srcDuration := my_util.Time2SecendNumber(lastDialogueExTimeEnd)
+
+	for index, oneDialogueEx := range infoSrc.DialoguesEx {
+
+		oneDialogueExTimeStart, err := time.Parse(srcTimeFormat, oneDialogueEx.StartTime)
+		if err != nil {
+			return nil, err
+		}
+		oneDialogueExTimeEnd, err := time.Parse(srcTimeFormat, oneDialogueEx.EndTime)
+		if err != nil {
+			return nil, err
+		}
+
+		oneStart := my_util.Time2SecendNumber(oneDialogueExTimeStart)
+		//oneEnd := pkg.Time2SecendNumber(oneDialogueExTimeEnd)
+
+		if FrontAndEndPer > 0 {
+			if srcDuration*FrontAndEndPer > oneStart || srcDuration*(1.0-FrontAndEndPer) < oneStart {
+				continue
+			}
+		}
+
+		// 如果当前的这一句话，为空，或者进过正则表达式剔除特殊字符后为空，则跳过
+		if my_util.ReplaceSpecString(infoSrc.GetDialogueExContent(index), "") == "" {
+			continue
+		}
+		// 低于 5句对白，则添加
+		if srcOneSubUnit.GetDialogueCount() < SubUnitMaxCount {
+			srcOneSubUnit.AddAndInsert(oneDialogueExTimeStart, oneDialogueExTimeEnd)
+		} else {
+			srcSubUnitList = append(srcSubUnitList, *srcOneSubUnit)
+			srcOneSubUnit = NewSubUnit()
+		}
+	}
+	if srcOneSubUnit.GetDialogueCount() > 0 {
+		srcSubUnitList = append(srcSubUnitList, *srcOneSubUnit)
+	}
+
+	return srcSubUnitList, nil
 }
 
 var (

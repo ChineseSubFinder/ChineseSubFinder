@@ -72,6 +72,7 @@ require (
 	github.com/baabaaox/go-webrtcvad v1.0.1 // indirect
 	github.com/bodgit/plumbing v1.1.0 // indirect
 	github.com/bodgit/windows v1.0.0 // indirect
+	github.com/brettbuddin/fourier v0.1.1 // indirect
 	github.com/connesc/cipherio v0.2.1 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/golang/snappy v0.0.3 // indirect

@@ -2,9 +2,9 @@ package srt
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"io/ioutil"
 	"path/filepath"
@@ -51,7 +51,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	allString = strings.ReplaceAll(allString, "\r", "")
 
 	// 找到 start end text
-	matched := sub_parser.ReMatchDialogueSRT.FindAllStringSubmatch(allString, -1)
+	matched := regex_things.ReMatchDialogueSRT.FindAllStringSubmatch(allString, -1)
 	if len(matched) < 1 {
 		log_helper.GetLogger().Debugln("DetermineFileTypeFromBytes can't found Dialogues, Skip")
 		return false, nil, nil
@@ -79,8 +79,8 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 				countLineFeed++
 			}
 			// 剔除 {\fn微软雅黑\fs14}C'mon, Rick. We're -- We're almost there. {} 这一段
-			text = sub_parser.ReMatchBrace.ReplaceAllString(text, "")
-			text = sub_parser.ReMatchBracket.ReplaceAllString(text, "")
+			text = regex_things.ReMatchBrace.ReplaceAllString(text, "")
+			text = regex_things.ReMatchBracket.ReplaceAllString(text, "")
 			text = strings.ReplaceAll(text, `\N`, "")
 			odl.Lines = append(odl.Lines, text)
 		}

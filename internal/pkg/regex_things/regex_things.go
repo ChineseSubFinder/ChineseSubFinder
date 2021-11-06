@@ -1,4 +1,4 @@
-package sub_parser
+package regex_things
 
 import "regexp"
 
@@ -13,6 +13,9 @@ var ReMatchBrace = regexp.MustCompile(`(?m)((?i){[^}]*})`)
 var ReMatchBracket = regexp.MustCompile(`(?m)((?i)\[[^]]*\])`)
 
 var ReCutDoubleLanguage = regexp.MustCompile(`(?i)(.*)\\N(.*)`)
+
+// RegMatchSpString 替换特殊字符
+var RegMatchSpString = regexp.MustCompile(`(?i)[^\w\s]`)
 
 // 字幕文件对话的每一行
 // regStringASS = `Dialogue: [^,.]*[0-9]*,([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),[^,.]*,[^,.]*,[0-9]*,[0-9]*,[0-9]*,[^,.]*,(.*)`
