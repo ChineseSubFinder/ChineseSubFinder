@@ -77,5 +77,5 @@ SeriesFolder: Y:\连续剧
 
 ## 可能遇到的问题
 
-有可能允许的时候崩溃，应该是缺少 GCC 的问题。见 #101
+有可能允许的时候崩溃，应该是缺少 GCC 的问题。见 [#101](https://github.com/allanpk716/ChineseSubFinder/issues/101)
 
