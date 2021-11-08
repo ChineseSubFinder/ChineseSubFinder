@@ -175,7 +175,7 @@ func (f *FFMPEGHelper) ExportAudioAndSubArgsByTimeRange(audioFullPath, subFullPa
 }
 
 // ExportSubArgsByTimeRange 根据输入的时间轴导出字幕分段信息 "0:1:27" "28.2"
-func (f *FFMPEGHelper) ExportSubArgsByTimeRange(subFullPath string, startTimeString, timeLength string) (string, string, error) {
+func (f *FFMPEGHelper) ExportSubArgsByTimeRange(subFullPath, outName string, startTimeString, timeLength string) (string, string, error) {
 
 	outStartTimeString := strings.ReplaceAll(startTimeString, ":", "-")
 	outStartTimeString = strings.ReplaceAll(outStartTimeString, ".", "#")
@@ -184,7 +184,7 @@ func (f *FFMPEGHelper) ExportSubArgsByTimeRange(subFullPath string, startTimeStr
 
 	frontName := strings.ReplaceAll(filepath.Base(subFullPath), filepath.Ext(subFullPath), "")
 
-	outSubName := frontName + "_" + outStartTimeString + "_" + outTimeLength + common.SubExtSRT
+	outSubName := frontName + "_" + outStartTimeString + "_" + outTimeLength + "_" + outName + common.SubExtSRT
 
 	var outSubFullPath = filepath.Join(filepath.Dir(subFullPath), outSubName)
 

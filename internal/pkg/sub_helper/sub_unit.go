@@ -9,12 +9,12 @@ import (
 )
 
 type SubUnit struct {
-	baseTime  time.Time // 这个是基础的时间，后续需要减去这个，不然与导出的片段字幕去对比会有一个起始时间的偏差
-	StartTime time.Time // 这个时间会减去 baseTime 再存储
-	EndTime   time.Time // 这个时间会减去 baseTime 再存储
-	VADList   []vad.VADInfo
-	subCount  int
-	firstAdd  bool
+	baseTime        time.Time // 这个是基础的时间，后续需要减去这个，不然与导出的片段字幕去对比会有一个起始时间的偏差
+	offsetStartTime time.Time // 相对时间，这个时间会减去 baseTime 再存储
+	offsetEndTime   time.Time // 相对时间，这个时间会减去 baseTime 再存储
+	VADList         []vad.VADInfo
+	subCount        int
+	firstAdd        bool
 }
 
 func NewSubUnit() *SubUnit {
@@ -49,11 +49,11 @@ func (s *SubUnit) AddAndInsert(oneSubStartTime, oneSubEndTime time.Time) {
 	if s.firstAdd == false {
 		// 第一次 Add 需要给 baseTime 赋值
 		s.baseTime = oneSubStartTime
-		s.StartTime = s.RealTimeToOffsetTime(oneSubStartTime)
+		s.offsetStartTime = s.RealTimeToOffsetTime(oneSubStartTime)
 		s.firstAdd = true
 	}
 
-	s.EndTime = oneSubEndTime.Add(-my_util.Time2Duration(s.baseTime))
+	s.offsetEndTime = oneSubEndTime.Add(-my_util.Time2Duration(s.baseTime))
 
 	nowStartTime := s.RealTimeToOffsetTime(oneSubStartTime)
 	nowEndTime := s.RealTimeToOffsetTime(oneSubEndTime)
@@ -78,19 +78,30 @@ func (s SubUnit) GetDialogueCount() int {
 
 // GetStartTimeNumber 获取这个单元的起始时间，单位是秒
 func (s SubUnit) GetStartTimeNumber(realOrOffsetTime bool) float64 {
+	return my_util.Time2SecendNumber(s.GetStartTime(realOrOffsetTime))
+}
+
+// GetStartTime 获取这个单元的起始时间
+func (s SubUnit) GetStartTime(realOrOffsetTime bool) time.Time {
 	if realOrOffsetTime == true {
-		return my_util.Time2SecendNumber(s.StartTime.Add(my_util.Time2Duration(s.baseTime)))
+		return s.offsetStartTime.Add(my_util.Time2Duration(s.baseTime))
 	} else {
-		return my_util.Time2SecendNumber(s.StartTime)
+		return s.offsetStartTime
 	}
 }
 
 // GetEndTimeNumber 获取这个单元的结束时间，单位是秒
 func (s SubUnit) GetEndTimeNumber(realOrOffsetTime bool) float64 {
+
+	return my_util.Time2SecendNumber(s.GetEndTime(realOrOffsetTime))
+}
+
+// GetEndTime 获取这个单元的起始时间
+func (s SubUnit) GetEndTime(realOrOffsetTime bool) time.Time {
 	if realOrOffsetTime == true {
-		return my_util.Time2SecendNumber(s.EndTime.Add(my_util.Time2Duration(s.baseTime)))
+		return s.offsetEndTime.Add(my_util.Time2Duration(s.baseTime))
 	} else {
-		return my_util.Time2SecendNumber(s.EndTime)
+		return s.offsetEndTime
 	}
 }
 
@@ -99,6 +110,7 @@ func (s SubUnit) GetTimelineRange() float64 {
 	return s.GetEndTimeNumber(false) - s.GetStartTimeNumber(false)
 }
 
+// GetOffsetTimeNumber 偏移时间，单位是秒
 func (s SubUnit) GetOffsetTimeNumber() float64 {
 	return my_util.Time2SecendNumber(s.baseTime)
 }
@@ -107,14 +119,16 @@ func (s SubUnit) GetOffsetTimeNumber() float64 {
 func (s SubUnit) GetFFMPEGCutRange(expandTimeRange float64) (string, string) {
 
 	var tmpStartTime time.Time
-	if s.GetStartTimeNumber(true)-expandTimeRange*60 < 0 {
+	if s.GetStartTimeNumber(true)-expandTimeRange < 0 {
 		tmpStartTime = time.Time{}
 	} else {
-		tmpStartTime = s.StartTime.Add(time.Duration(expandTimeRange) * time.Minute).Add(my_util.Time2Duration(s.baseTime))
+		startTime := s.GetStartTime(true)
+		subTime := time.Duration(expandTimeRange) * time.Second
+		tmpStartTime = startTime.Add(-subTime)
 	}
 
 	return fmt.Sprintf("%d:%d:%d.%d", tmpStartTime.Hour(), tmpStartTime.Minute(), tmpStartTime.Second(), tmpStartTime.Nanosecond()/1000/1000),
-		fmt.Sprintf("%f", s.GetTimelineRange()+expandTimeRange*60.0)
+		fmt.Sprintf("%f", s.GetTimelineRange()+expandTimeRange)
 }
 
 // RealTimeToOffsetTime 真实时间转偏移时间

@@ -33,7 +33,7 @@ func (d *DialogueMerger) Add(inDialogueEx subparser.OneDialogueEx) bool {
 		if d.lastStartTime == "" {
 			return false
 		}
-		// 这里除了拼接 EnLine，还需要把 EndTime 更新
+		// 这里除了拼接 EnLine，还需要把 offsetEndTime 更新
 		d.dialogueMap[d.lastStartTime].EnLine += " " + inDialogueEx.EnLine
 		d.dialogueMap[d.lastStartTime].EndTime = inDialogueEx.EndTime
 		//d.lastStartTime = ""

@@ -208,8 +208,8 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 
 		//println(fmt.Sprintf("Similarity: %f Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
 		//	highestSimilarity,
-		//	baseIndex, infoBase.DialoguesEx[baseIndex].StartTime, infoBase.DialoguesEx[baseIndex].EndTime, baseCorpus[baseIndex],
-		//	srcIndex, srcOneDialogueEx.StartTime, srcOneDialogueEx.EndTime, srcOneDialogueEx.EnLine))
+		//	baseIndex, infoBase.DialoguesEx[baseIndex].relativelyStartTime, infoBase.DialoguesEx[baseIndex].relativelyEndTime, baseCorpus[baseIndex],
+		//	srcIndex, srcOneDialogueEx.relativelyStartTime, srcOneDialogueEx.relativelyEndTime, srcOneDialogueEx.EnLine))
 
 		srcIndex++
 	}
@@ -269,8 +269,8 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 			debugInfos = append(debugInfos, "StartDiffTime: "+fmt.Sprintf("%f", TimeDiffStart.Seconds()))
 			//println(fmt.Sprintf("Diff Start-End: %s - %s Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
 			//	TimeDiffStart, TimeDiffEnd,
-			//	tmpBaseIndex, infoBase.DialoguesEx[tmpBaseIndex].StartTime, infoBase.DialoguesEx[tmpBaseIndex].EndTime, infoBase.DialoguesEx[tmpBaseIndex].EnLine,
-			//	tmpSrcIndex, infoSrc.DialoguesEx[tmpSrcIndex].StartTime, infoSrc.DialoguesEx[tmpSrcIndex].EndTime, infoSrc.DialoguesEx[tmpSrcIndex].EnLine))
+			//	tmpBaseIndex, infoBase.DialoguesEx[tmpBaseIndex].relativelyStartTime, infoBase.DialoguesEx[tmpBaseIndex].relativelyEndTime, infoBase.DialoguesEx[tmpBaseIndex].EnLine,
+			//	tmpSrcIndex, infoSrc.DialoguesEx[tmpSrcIndex].relativelyStartTime, infoSrc.DialoguesEx[tmpSrcIndex].relativelyEndTime, infoSrc.DialoguesEx[tmpSrcIndex].EnLine))
 		}
 		debugInfos = append(debugInfos, "---------------------------------------------")
 		//println("---------------------------------------------")
@@ -377,9 +377,16 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 
 		startTimeString, subLength := srcSubUnit.GetFFMPEGCutRange(ExpandTimeRange)
 		// 导出当前的字幕文件适合与匹配的范围的临时字幕文件
-		nowTmpSubBaseFPath, errString, err := s.ffmpegHelper.ExportSubArgsByTimeRange(infoBase.FileFullPath, startTimeString, subLength)
+		nowTmpSubBaseFPath, errString, err := s.ffmpegHelper.ExportSubArgsByTimeRange(infoBase.FileFullPath, "base", startTimeString, subLength)
 		if err != nil {
-			log_helper.GetLogger().Errorln("ExportSubArgsByTimeRange", errString, err)
+			log_helper.GetLogger().Errorln("ExportSubArgsByTimeRange base", errString, err)
+			return false, 0, 0, err
+		}
+		// 导出当前的字幕文件适合与匹配的范围的临时字幕文件
+		startTimeString, subLength = srcSubUnit.GetFFMPEGCutRange(0)
+		_, errString, err = s.ffmpegHelper.ExportSubArgsByTimeRange(infoSrc.FileFullPath, "src", startTimeString, subLength)
+		if err != nil {
+			log_helper.GetLogger().Errorln("ExportSubArgsByTimeRange src", errString, err)
 			return false, 0, 0, err
 		}
 
@@ -425,11 +432,11 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 		// base
 		for _, vadInfo := range nowTmpBaseSubVADList.VADList {
 			nowBaseSubTimeLineData = append(nowBaseSubTimeLineData, opts.LineData{Value: vadInfo.Active})
-			baseTime := srcSubUnit.GetOffsetTimeNumber()
+			//baseTime := srcSubUnit.GetOffsetTimeNumber()
 			nowVADInfoTimeNumber := vadInfo.Time.Seconds()
 			//println(fmt.Sprintf("%d - %f", index, nowVADInfoTimeNumber-baseTime))
-			nowOffsetTime := nowVADInfoTimeNumber - baseTime
-			nowBaseSubXAxis = append(nowBaseSubXAxis, fmt.Sprintf("%f", nowOffsetTime))
+			//nowOffsetTime := nowVADInfoTimeNumber// - baseTime
+			nowBaseSubXAxis = append(nowBaseSubXAxis, fmt.Sprintf("%f", nowVADInfoTimeNumber))
 		}
 
 		baseSubVADStaticLineFullPath := filepath.Join(outDir, outBaseNameWithOutExt+"_sub_base.html")
@@ -557,5 +564,5 @@ func (s *SubTimelineFixer) GetOffsetTimeV3(audioInfo vad.AudioInfo, infoSrc *sub
 
 const FixMask = "-fix"
 const FrontAndEndPer = 0.10 // 前百分之 15 和后百分之 15 都不进行识别
-const SubUnitMaxCount = 10  // 一个 Sub单元有五句对白
-const ExpandTimeRange = 0.7 // 从字幕的时间轴片段需要向前和向后多匹配一部分的音频，这里定义的就是这个 range 以分钟为单位， 正负 1 分钟
+const SubUnitMaxCount = 50  // 一个 Sub单元有五句对白
+const ExpandTimeRange = 50  // 从字幕的时间轴片段需要向前和向后多匹配一部分的音频，这里定义的就是这个 range 以分钟为单位， 正负 60 秒
