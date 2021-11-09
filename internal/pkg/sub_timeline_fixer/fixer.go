@@ -384,7 +384,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 		}
 		// 导出当前的字幕文件适合与匹配的范围的临时字幕文件
 		startTimeString, subLength = srcSubUnit.GetFFMPEGCutRange(0)
-		_, errString, err = s.ffmpegHelper.ExportSubArgsByTimeRange(infoSrc.FileFullPath, "src", startTimeString, subLength)
+		nowTmpSubSrcFPath, errString, err := s.ffmpegHelper.ExportSubArgsByTimeRange(infoSrc.FileFullPath, "src", startTimeString, subLength)
 		if err != nil {
 			log_helper.GetLogger().Errorln("ExportSubArgsByTimeRange src", errString, err)
 			return false, 0, 0, err
@@ -409,6 +409,18 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 
 		var nowSrcSubTimeLineData = make([]opts.LineData, 0)
 		var nowSrcSubXAxis = make([]string, 0)
+
+		outDir := filepath.Dir(nowTmpSubBaseFPath)
+
+		outBaseName := filepath.Base(nowTmpSubBaseFPath)
+		outSrcName := filepath.Base(nowTmpSubSrcFPath)
+
+		outBaseNameWithOutExt := strings.ReplaceAll(outBaseName, filepath.Ext(outBaseName), "")
+		outSrcNameWithOutExt := strings.ReplaceAll(outSrcName, filepath.Ext(outSrcName), "")
+
+		srcSubVADStaticLineFullPath := filepath.Join(outDir, outSrcNameWithOutExt+"_sub_src.html")
+		baseSubVADStaticLineFullPath := filepath.Join(outDir, outBaseNameWithOutExt+"_sub_base.html")
+
 		// src
 		for _, vadInfo := range srcSubUnit.VADList {
 			nowSrcSubTimeLineData = append(nowSrcSubTimeLineData, opts.LineData{Value: vadInfo.Active})
@@ -418,12 +430,6 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 			nowOffsetTime := nowVADInfoTimeNumber - baseTime
 			nowSrcSubXAxis = append(nowSrcSubXAxis, fmt.Sprintf("%f", nowOffsetTime))
 		}
-
-		outDir := filepath.Dir(nowTmpSubBaseFPath)
-		outBaseName := filepath.Base(nowTmpSubBaseFPath)
-		outBaseNameWithOutExt := strings.ReplaceAll(outBaseName, filepath.Ext(outBaseName), "")
-
-		srcSubVADStaticLineFullPath := filepath.Join(outDir, outBaseNameWithOutExt+"_sub_src.html")
 
 		err = SaveStaticLineV2("Sub src", srcSubVADStaticLineFullPath, nowSrcSubXAxis, nowSrcSubTimeLineData)
 		if err != nil {
@@ -438,8 +444,6 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 			//nowOffsetTime := nowVADInfoTimeNumber// - baseTime
 			nowBaseSubXAxis = append(nowBaseSubXAxis, fmt.Sprintf("%f", nowVADInfoTimeNumber))
 		}
-
-		baseSubVADStaticLineFullPath := filepath.Join(outDir, outBaseNameWithOutExt+"_sub_base.html")
 
 		err = SaveStaticLineV2("Sub base", baseSubVADStaticLineFullPath, nowBaseSubXAxis, nowBaseSubTimeLineData)
 		if err != nil {
@@ -564,5 +568,5 @@ func (s *SubTimelineFixer) GetOffsetTimeV3(audioInfo vad.AudioInfo, infoSrc *sub
 
 const FixMask = "-fix"
 const FrontAndEndPer = 0.10 // 前百分之 15 和后百分之 15 都不进行识别
-const SubUnitMaxCount = 50  // 一个 Sub单元有五句对白
+const SubUnitMaxCount = 100 // 一个 Sub单元有五句对白
 const ExpandTimeRange = 50  // 从字幕的时间轴片段需要向前和向后多匹配一部分的音频，这里定义的就是这个 range 以分钟为单位， 正负 60 秒

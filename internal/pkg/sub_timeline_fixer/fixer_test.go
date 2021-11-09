@@ -394,12 +394,12 @@ func TestGetOffsetTimeV2(t *testing.T) {
 		t.Fatal(err)
 	}
 	testRootDirYes := filepath.Join(testRootDir, "yes")
-	//testRootDirNo := filepath.Join(testRootDir, "no")
+	testRootDirNo := filepath.Join(testRootDir, "no")
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
 	type args struct {
-		enSubFile              string
-		ch_enSubFile           string
+		baseSubFile            string
+		srcSubFile             string
 		staticLineFileSavePath string
 	}
 	tests := []struct {
@@ -411,15 +411,21 @@ func TestGetOffsetTimeV2(t *testing.T) {
 		/*
 			这里有几个比较理想的字幕时间轴校正的示例
 		*/
-		{name: "R&M S05E01", args: args{enSubFile: filepath.Join(testRootDirYes, "R&M S05E01 - English.srt"),
-			ch_enSubFile:           filepath.Join(testRootDirYes, "R&M S05E01 - 简英.srt"),
+		{name: "R&M S05E01", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E01 - English.srt"),
+			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E01 - 简英.srt"),
 			staticLineFileSavePath: "bar.html"}, want: -6.42981818181818, wantErr: false},
-		{name: "R&M S05E10", args: args{enSubFile: filepath.Join(testRootDirYes, "R&M S05E10 - English.ass"),
-			ch_enSubFile:           filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
+		{name: "R&M S05E10", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E10 - English.ass"),
+			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
 			staticLineFileSavePath: "bar.html"}, want: -6.335985401459854, wantErr: false},
-		{name: "基地 S01E03", args: args{enSubFile: filepath.Join(testRootDirYes, "基地 S01E03 - English.ass"),
-			ch_enSubFile:           filepath.Join(testRootDirYes, "基地 S01E03 - 简英.ass"),
+		{name: "基地 S01E03", args: args{baseSubFile: filepath.Join(testRootDirYes, "基地 S01E03 - English.ass"),
+			srcSubFile:             filepath.Join(testRootDirYes, "基地 S01E03 - 简英.ass"),
 			staticLineFileSavePath: "bar.html"}, want: -32.09061538461539, wantErr: false},
+
+		{name: "Don't Breathe 2 (2021) - shooter-srt", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).srt"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,shooter).srt"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
 	}
 
 	timelineFixer := NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{
@@ -432,7 +438,7 @@ func TestGetOffsetTimeV2(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(tt.args.enSubFile)
+			bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(tt.args.baseSubFile)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -445,7 +451,7 @@ func TestGetOffsetTimeV2(t *testing.T) {
 			*/
 			//sub_helper.MergeMultiDialogue4EngSubtitle(infoBase)
 
-			bFind, infoSrc, err := subParserHub.DetermineFileTypeFromFile(tt.args.ch_enSubFile)
+			bFind, infoSrc, err := subParserHub.DetermineFileTypeFromFile(tt.args.srcSubFile)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -458,7 +464,7 @@ func TestGetOffsetTimeV2(t *testing.T) {
 			*/
 			//sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
 
-			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(infoBase, infoSrc, tt.args.ch_enSubFile+"-bar.html", tt.args.ch_enSubFile+".log")
+			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(infoBase, infoSrc, tt.args.srcSubFile+"-bar.html", tt.args.srcSubFile+".log")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV1() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -475,7 +481,7 @@ func TestGetOffsetTimeV2(t *testing.T) {
 			//}
 
 			if bok == true && got != 0 {
-				_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.ch_enSubFile+FixMask+infoBase.Ext)
+				_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
 				if err != nil {
 					t.Fatal(err)
 				}
