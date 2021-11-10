@@ -3,6 +3,7 @@ package subparser
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
+	"time"
 )
 
 type FileInfo struct {
@@ -19,12 +20,26 @@ type FileInfo struct {
 	OtherLines    []string            // 抽取出所有的第二语言对话，可能是英文、韩文、日文
 }
 
+// GetTimeFormat 获取时间轴的格式化格式
 func (f FileInfo) GetTimeFormat() string {
 	if f.Ext == common.SubExtASS || f.Ext == common.SubExtSSA {
-		return common.TimeFormatAss
+		return common.TimeFormatPoint2
 	} else {
-		return common.TimeFormatSrt
+		return common.TimeFormatPoint3
 	}
+}
+
+// ParseTime 解析字幕时间字符串，这里可能小数点后面有 2-4 位
+func (f FileInfo) ParseTime(inTime string) (time.Time, error) {
+
+	parseTime, err := time.Parse(common.TimeFormatPoint2, inTime)
+	if err != nil {
+		parseTime, err = time.Parse(common.TimeFormatPoint3, inTime)
+		if err != nil {
+			parseTime, err = time.Parse(common.TimeFormatPoint4, inTime)
+		}
+	}
+	return parseTime, err
 }
 
 // GetDialogueExContent 获取当前字幕文件语言对应索引的对白内容

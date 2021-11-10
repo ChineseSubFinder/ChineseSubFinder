@@ -17,7 +17,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // OrganizeDlSubFiles 需要从汇总来是网站字幕中，解压对应的压缩包中的字幕出来
@@ -373,6 +372,8 @@ func MergeMultiDialogue4EngSubtitle(inSubParser *subparser.FileInfo) {
 	这里的字幕要求是完整的一个字幕
 	1. 抽取字幕的时间片段的时候，暂定，前 15% 和后 15% 要避开，前奏、主题曲、结尾曲
 	2. 将整个字幕，抽取连续 5 句对话为一个单元，提取时间片段信息
+	3. 可能还有一个需求，默认的模式是每五句话一个单元，还有一种模式是每一句话向后找到连续的四句话组成一个单元，允许重叠
+		目前看到的情况是前者的抽样率太低，需要使用后者的逻辑
 */
 func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int) ([]SubUnit, error) {
 	if SubUnitMaxCount < 0 {
@@ -380,10 +381,9 @@ func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubU
 	}
 	srcSubUnitList := make([]SubUnit, 0)
 	srcOneSubUnit := NewSubUnit()
-	srcTimeFormat := infoSrc.GetTimeFormat()
 
 	// srcDuration
-	lastDialogueExTimeEnd, err := time.Parse(srcTimeFormat, infoSrc.DialoguesEx[len(infoSrc.DialoguesEx)-1].EndTime)
+	lastDialogueExTimeEnd, err := infoSrc.ParseTime(infoSrc.DialoguesEx[len(infoSrc.DialoguesEx)-1].EndTime)
 	if err != nil {
 		return nil, err
 	}
@@ -391,11 +391,11 @@ func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubU
 
 	for i := 0; i < len(infoSrc.DialoguesEx); i++ {
 
-		oneDialogueExTimeStart, err := time.Parse(srcTimeFormat, infoSrc.DialoguesEx[i].StartTime)
+		oneDialogueExTimeStart, err := infoSrc.ParseTime(infoSrc.DialoguesEx[i].StartTime)
 		if err != nil {
 			return nil, err
 		}
-		oneDialogueExTimeEnd, err := time.Parse(srcTimeFormat, infoSrc.DialoguesEx[i].EndTime)
+		oneDialogueExTimeEnd, err := infoSrc.ParseTime(infoSrc.DialoguesEx[i].EndTime)
 		if err != nil {
 			return nil, err
 		}
@@ -414,10 +414,11 @@ func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubU
 		}
 		// 低于 5句对白，则添加
 		if srcOneSubUnit.GetDialogueCount() < SubUnitMaxCount {
-			srcOneSubUnit.AddAndInsert(oneDialogueExTimeStart, oneDialogueExTimeEnd)
+			srcOneSubUnit.AddAndInsert(oneDialogueExTimeStart, oneDialogueExTimeEnd, i)
 		} else {
 			srcSubUnitList = append(srcSubUnitList, *srcOneSubUnit)
 			srcOneSubUnit = NewSubUnit()
+			i = i - SubUnitMaxCount + SubUnitMaxCount/5
 		}
 	}
 	if srcOneSubUnit.GetDialogueCount() > 0 {

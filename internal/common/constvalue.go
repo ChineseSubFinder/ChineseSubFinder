@@ -32,8 +32,9 @@ const (
 )
 
 const (
-	TimeFormatAss = "15:04:05.00"
-	TimeFormatSrt = "15:04:05,000"
+	TimeFormatPoint2 = "15:04:05.00"
+	TimeFormatPoint3 = "15:04:05,000"
+	TimeFormatPoint4 = "15:04:05,0000"
 )
 
 const Ignore = ".ignore"

@@ -16,6 +16,7 @@ type SubUnit struct {
 	subCount        int
 	firstAdd        bool
 	outVADBytes     []byte
+	outVADFloats    []float64
 }
 
 func NewSubUnit() *SubUnit {
@@ -28,7 +29,7 @@ func NewSubUnit() *SubUnit {
 }
 
 // AddAndInsert 添加一句对白进来,并且填充中间的空白，间隔 10ms
-func (s *SubUnit) AddAndInsert(oneSubStartTime, oneSubEndTime time.Time) {
+func (s *SubUnit) AddAndInsert(oneSubStartTime, oneSubEndTime time.Time, index int) {
 
 	/*
 		这里有个比较有意思的细节，字幕拆分到 dialogue 的时候，可能连续的多个 dialogue 是时间轴连续的
@@ -38,7 +39,6 @@ func (s *SubUnit) AddAndInsert(oneSubStartTime, oneSubEndTime time.Time) {
 		1. 前后各 0.001 秒即可
 		2. 后面这一句向后 0.002 秒（暂时优先考虑这个，容易实现）
 	*/
-	const perWindows = float64(vad.FrameDuration) / 1000
 
 	// 不是第一次添加，那么就需要把两句对白中间间隔的 active == false 的插入，插入间隙
 	if len(s.VADList) > 0 {
@@ -93,8 +93,8 @@ func (s SubUnit) GetDialogueCount() int {
 	return s.subCount
 }
 
-// GetVADSlice 获取 VAD 的 byte 数组信息
-func (s *SubUnit) GetVADSlice() []byte {
+// GetVADByteSlice 获取 VAD 的 byte 数组信息
+func (s *SubUnit) GetVADByteSlice() []byte {
 
 	if len(s.outVADBytes) != len(s.VADList) {
 		s.outVADBytes = make([]byte, len(s.VADList))
@@ -108,6 +108,23 @@ func (s *SubUnit) GetVADSlice() []byte {
 	}
 
 	return s.outVADBytes
+}
+
+// GetVADFloatSlice 获取 VAD 的 float64 数组信息
+func (s *SubUnit) GetVADFloatSlice() []float64 {
+
+	if len(s.outVADFloats) != len(s.VADList) {
+		s.outVADFloats = make([]float64, len(s.VADList))
+		for i := 0; i < len(s.VADList); i++ {
+			if s.VADList[i].Active == true {
+				s.outVADFloats[i] = 1
+			} else {
+				s.outVADFloats[i] = 0
+			}
+		}
+	}
+
+	return s.outVADFloats
 }
 
 // GetStartTimeNumber 获取这个单元的起始时间，单位是秒
@@ -139,6 +156,31 @@ func (s SubUnit) GetEndTime(realOrOffsetTime bool) time.Time {
 	}
 }
 
+// GetIndexTime 当前 Index 的时间
+func (s SubUnit) GetIndexTime(index int, realOrOffsetTime bool) (bool, time.Time) {
+
+	if index >= len(s.VADList) {
+		return false, time.Time{}
+	}
+
+	if realOrOffsetTime == true {
+		return true, time.Time{}.Add(s.VADList[index].Time).Add(my_util.Time2Duration(s.baseTime))
+	} else {
+		return true, time.Time{}.Add(s.VADList[index].Time)
+	}
+}
+
+// GetIndexTimeNumber 当前 Index 的时间
+func (s SubUnit) GetIndexTimeNumber(index int, realOrOffsetTime bool) (bool, float64) {
+
+	bok, outTime := s.GetIndexTime(index, realOrOffsetTime)
+	if bok == false {
+		return false, 0
+	}
+
+	return true, my_util.Time2SecendNumber(outTime)
+}
+
 // GetTimelineRange 开始到结束的时间长度，单位是秒
 func (s SubUnit) GetTimelineRange() float64 {
 	return s.GetEndTimeNumber(false) - s.GetStartTimeNumber(false)
@@ -149,8 +191,9 @@ func (s SubUnit) GetOffsetTimeNumber() float64 {
 	return my_util.Time2SecendNumber(s.baseTime)
 }
 
-// GetFFMPEGCutRange 这里会生成导出 FFMPEG 的参数字段，起始时间和结束的时间长度
-func (s SubUnit) GetFFMPEGCutRange(expandTimeRange float64) (string, string) {
+// GetFFMPEGCutRangeString 这里会生成导出 FFMPEG 的参数字段，起始时间和结束的时间长度
+// 以当前的 VAD 信息为基准，正负 expandTimeRange（秒为单位） 来生成截取的片段时间轴信息
+func (s SubUnit) GetFFMPEGCutRangeString(expandTimeRange float64) (string, string) {
 
 	var tmpStartTime time.Time
 	if s.GetStartTimeNumber(true)-expandTimeRange < 0 {
@@ -165,8 +208,41 @@ func (s SubUnit) GetFFMPEGCutRange(expandTimeRange float64) (string, string) {
 		fmt.Sprintf("%f", s.GetTimelineRange()+expandTimeRange)
 }
 
+// GetExpandRangeIndex 导出扩展的起始时间和结束的时间，整个多出的参数只适用于整体的字幕范围，局部不试用
+// 以当前的 VAD 信息为基准，正负 expandTimeRange（秒为单位） 来生成截取的片段时间轴信息
+// 向左偏移的时候是可知有多少可以移动的，越界就置为 0
+// 向右移动的时候，总长度是未知的，所以返回的值需要在外部重新 Check 是否会越界
+func (s SubUnit) GetExpandRangeIndex(expandTimeRange float64) (int, int) {
+
+	var tmpStartTimeIndex int
+	var tmpEndTimeIndex int
+	// 起始时间 -> Index
+	if s.GetStartTimeNumber(true)-expandTimeRange < 0 {
+		// 向左偏移的时候是可知有多少可以移动的，越界就置为 0
+		tmpStartTimeIndex = 0
+	} else {
+		// 没有越界就直接用得到的毫秒差值去推算 index 的偏移位置
+		startTime := s.GetStartTime(true)
+		subTime := time.Duration(expandTimeRange) * time.Second
+		tmpStartTime := startTime.Add(-subTime)
+		// 需要从秒换算到偏移的 Index 数值，一共多少份
+		tmpStartTimeIndex = int(my_util.Time2SecendNumber(tmpStartTime) / perWindows)
+	}
+	// 结束时间 -> Index
+	// 向右移动的时候，总长度是未知的，所以返回的值需要在外部重新 Check 是否会越界
+	endTime := s.GetEndTime(true)
+	subTime := time.Duration(expandTimeRange) * time.Second
+	tmpEndTime := endTime.Add(subTime)
+	// 需要从秒换算到偏移的 Index 数值，一共多少份
+	tmpEndTimeIndex = int(my_util.Time2SecendNumber(tmpEndTime) / perWindows)
+
+	return tmpStartTimeIndex, tmpEndTimeIndex
+}
+
 // RealTimeToOffsetTime 真实时间转偏移时间
 func (s SubUnit) RealTimeToOffsetTime(realTime time.Time) time.Time {
 	dd := my_util.Time2Duration(s.baseTime)
 	return realTime.Add(-dd)
 }
+
+const perWindows = float64(vad.FrameDuration) / 1000

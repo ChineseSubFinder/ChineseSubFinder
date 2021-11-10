@@ -135,23 +135,23 @@ func TestGetOffsetTimeV1(t *testing.T) {
 			内置的英文字幕时间轴是歪的，所以修正完了就错了
 		*/
 		{name: "Dan Brown'timelineFixer The Lost Symbol - S01E01", args: args{
-			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E01.chinese(inside).ass"),
-			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E01.chinese(简英,shooter).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E01.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E01.chinese(简英,shooter).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 1.3217821782178225, wantErr: false},
 		{name: "Dan Brown'timelineFixer The Lost Symbol - S01E02", args: args{
-			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E02.chinese(inside).ass"),
-			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E02.chinese(简英,subhd).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E02.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E02.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -0.5253383458646617, wantErr: false},
 		{name: "Dan Brown'timelineFixer The Lost Symbol - S01E03", args: args{
-			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E03.chinese(inside).ass"),
-			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E03.chinese(繁英,xunlei).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E03.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E03.chinese(繁英,xunlei).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -0.505656, wantErr: false},
 		{name: "Dan Brown'timelineFixer The Lost Symbol - S01E04", args: args{
-			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E04.chinese(inside).ass"),
-			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown'timelineFixer The Lost Symbol - S01E04.chinese(简英,zimuku).ass"),
+			enSubFile:              filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E04.chinese(inside).ass"),
+			ch_enSubFile:           filepath.Join(testRootDirNo, "Dan Brown's The Lost Symbol - S01E04.chinese(简英,zimuku).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: -0.633415, wantErr: false},
 		/*
@@ -417,9 +417,18 @@ func TestGetOffsetTimeV2(t *testing.T) {
 		{name: "R&M S05E10", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E10 - English.ass"),
 			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
 			staticLineFileSavePath: "bar.html"}, want: -6.335985401459854, wantErr: false},
+
 		{name: "基地 S01E03", args: args{baseSubFile: filepath.Join(testRootDirYes, "基地 S01E03 - English.ass"),
 			srcSubFile:             filepath.Join(testRootDirYes, "基地 S01E03 - 简英.ass"),
 			staticLineFileSavePath: "bar.html"}, want: -32.09061538461539, wantErr: false},
+		{name: "基地 S01E02", args: args{
+			baseSubFile:            filepath.Join(testRootDirYes, "Foundation (2021) - S01E02.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirYes, "Foundation (2021) - S01E02.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"}, want: -36.885074, wantErr: false},
+		{name: "基地 S01E04", args: args{
+			baseSubFile:            filepath.Join(testRootDirYes, "Foundation (2021) - S01E04.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirYes, "Foundation (2021) - S01E04.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"}, want: -36.885074, wantErr: false},
 
 		{name: "Don't Breathe 2 (2021) - shooter-srt", args: args{
 			baseSubFile:            filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).srt"),
