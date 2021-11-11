@@ -536,7 +536,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 	println(fmt.Sprintf("Old Mean: %v SD: %v Per: %v", oldMean, oldSd, per))
 	println(fmt.Sprintf("New Mean: %v SD: %v Per: %v", newMean, newSd, per))
 
-	return false, -1, -1, nil
+	return true, newMean, newSd, nil
 }
 
 // GetOffsetTimeV3 使用 VAD 检测语音是否有人声，输出连续的点标记，再通过 SimHash 进行匹配，找到最佳的偏移时间
