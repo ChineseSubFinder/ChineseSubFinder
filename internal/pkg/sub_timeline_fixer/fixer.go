@@ -380,16 +380,16 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 	for _, srcSubUnit := range srcSubUnitList {
 
 		// 得到当前这个单元推算出来需要提取的字幕时间轴范围，这个是 Base Sub 使用的提取段
-		startTimeString, subLength := srcSubUnit.GetFFMPEGCutRangeString(ExpandTimeRange)
+		startTimeBaseString, subBaseLength, startTimeBaseTime, _ := srcSubUnit.GetFFMPEGCutRangeString(ExpandTimeRange)
 		// 导出当前的字幕文件适合与匹配的范围的临时字幕文件
-		nowTmpSubBaseFPath, errString, err := s.ffmpegHelper.ExportSubArgsByTimeRange(infoBase.FileFullPath, "base", startTimeString, subLength)
+		nowTmpSubBaseFPath, errString, err := s.ffmpegHelper.ExportSubArgsByTimeRange(infoBase.FileFullPath, "base", startTimeBaseString, subBaseLength)
 		if err != nil {
 			log_helper.GetLogger().Errorln("ExportSubArgsByTimeRange base", errString, err)
 			return false, 0, 0, err
 		}
 		// 导出当前的字幕文件适合与匹配的范围的临时字幕文件，这个是 Src Sub 使用的提取段
-		startTimeString, subLength = srcSubUnit.GetFFMPEGCutRangeString(0)
-		nowTmpSubSrcFPath, errString, err := s.ffmpegHelper.ExportSubArgsByTimeRange(infoSrc.FileFullPath, "src", startTimeString, subLength)
+		startTimeSrcString, subSrcLength, _, _ := srcSubUnit.GetFFMPEGCutRangeString(0)
+		nowTmpSubSrcFPath, errString, err := s.ffmpegHelper.ExportSubArgsByTimeRange(infoSrc.FileFullPath, "src", startTimeSrcString, subSrcLength)
 		if err != nil {
 			log_helper.GetLogger().Errorln("ExportSubArgsByTimeRange src", errString, err)
 			return false, 0, 0, err
@@ -403,6 +403,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 			return false, 0, 0, errors.New("DetermineFileTypeFromFile == false")
 		}
 
+		// 这里比较特殊，因为读取的字幕文件是单独切割出来的，所以默认是有偏移的们需要使用不同的函数，把偏移算进去
 		nowTmpBaseSubUnitList, err := sub_helper.GetVADINfoFromSub(nowTmpSubBaseFileInfo, 0, 10000)
 		if err != nil {
 			return false, 0, 0, err
@@ -454,19 +455,36 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 		correlationTM := treemap.NewWith(utils.Float64Comparator)
 		for i := 0; i < len(nowTmpBaseSubVADUnit.VADList); i++ {
 
-			correlation := CalculateCurveCorrelation(srcSubUnit.GetVADFloatSlice(), nowTmpBaseSubVADUnit.GetVADFloatSlice()[], len(srcSubUnit.VADList))
+			// 截取的长度是以当前 srcSubUnit 基准来判断的
+			// 类似滑动窗口的的功能实现
+			windowStartIndex := i
+			windowEndIndex := i + len(srcSubUnit.VADList)
+			if windowEndIndex >= len(nowTmpBaseSubVADUnit.VADList) {
+				break
+			}
+
+			correlation := CalculateCurveCorrelation(nowTmpBaseSubVADUnit.GetVADFloatSlice()[windowStartIndex:windowEndIndex], srcSubUnit.GetVADFloatSlice(), len(srcSubUnit.VADList))
 			correlationTM.Put(correlation, i)
-			println(fmt.Sprintf("%v - %v", i, correlation))
 		}
 		// 找到最大的数值和索引
-		_, tmpMaxIndex := correlationTM.Max() // tmpMaxCorrelation
+		tmpMaxCorrelation, tmpMaxIndex := correlationTM.Max() // tmpMaxCorrelation
+		if tmpMaxCorrelation == nil || tmpMaxIndex == nil {
+			continue
+		}
 		bok, nowBaseIndexTime := nowTmpBaseSubVADUnit.GetIndexTimeNumber(tmpMaxIndex.(int), true)
 		if bok == false {
 			continue
 		}
+		if tmpMaxCorrelation.(float64) <= MinCorrelation {
+			continue
+		}
+
 		nowSrcRealTime := srcSubUnit.GetStartTimeNumber(true)
 		// 时间差值
-		TimeDiffStart := nowBaseIndexTime - nowSrcRealTime
+		TimeDiffStart := nowBaseIndexTime + my_util.Time2SecendNumber(startTimeBaseTime) - nowSrcRealTime
+
+		println(fmt.Sprintf("%v <-> %v <-> %v", tmpMaxIndex, tmpMaxCorrelation, TimeDiffStart))
+
 		tmpStartDiffTime = append(tmpStartDiffTime, TimeDiffStart)
 		startDiffTimeList = append(startDiffTimeList, TimeDiffStart)
 	}
@@ -515,8 +533,8 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 		newSd = oldSd
 	}
 
-	println(fmt.Sprintf("%v <-> %v <-> %v", oldMean, oldSd, per))
-	println(fmt.Sprintf("%v <-> %v <-> %v", newMean, newSd, per))
+	println(fmt.Sprintf("Old Mean: %v SD: %v Per: %v", oldMean, oldSd, per))
+	println(fmt.Sprintf("New Mean: %v SD: %v Per: %v", newMean, newSd, per))
 
 	return false, -1, -1, nil
 }
@@ -547,7 +565,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV3(audioInfo vad.AudioInfo, infoSrc *sub
 	// 开始针对对白单元进行匹配
 	for _, subUnit := range subUnitList {
 
-		startTimeString, subLength := subUnit.GetFFMPEGCutRangeString(ExpandTimeRange)
+		startTimeString, subLength, _, _ := subUnit.GetFFMPEGCutRangeString(ExpandTimeRange)
 		// 导出当前的音频文件适合与匹配的范围的临时音频文件
 		outAudioFPath, _, errString, err := s.ffmpegHelper.ExportAudioAndSubArgsByTimeRange(audioInfo.FileFullPath, infoSrc.FileFullPath, startTimeString, subLength)
 		if err != nil {
@@ -634,7 +652,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV3(audioInfo vad.AudioInfo, infoSrc *sub
 }
 
 const FixMask = "-fix"
-const FrontAndEndPer = 0.10 // 前百分之 15 和后百分之 15 都不进行识别
-const SubUnitMaxCount = 20  // 一个 Sub单元有五句对白
-const ExpandTimeRange = 40  // 从字幕的时间轴片段需要向前和向后多匹配一部分的音频，这里定义的就是这个 range 以分钟为单位， 正负 60 秒
-const MinCorelation = 0.4   // 最低的匹配度
+const FrontAndEndPer = 0.15 // 前百分之 15 和后百分之 15 都不进行识别
+const SubUnitMaxCount = 50  // 一个 Sub单元有五句对白
+const ExpandTimeRange = 50  // 从字幕的时间轴片段需要向前和向后多匹配一部分的音频，这里定义的就是这个 range 以分钟为单位， 正负 60 秒
+const MinCorrelation = 0.8  // 最低的匹配度

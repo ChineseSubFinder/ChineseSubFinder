@@ -7,16 +7,18 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod/lib/utils"
 	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // OrganizeDlSubFiles 需要从汇总来是网站字幕中，解压对应的压缩包中的字幕出来
@@ -207,7 +209,7 @@ func SearchMatchedSubFileByDir(dir string) ([]string, error) {
 		fullPath := dir + pathSep + curFile.Name()
 		if curFile.IsDir() {
 			// 需要排除 Sub_S1E0、Sub_S2E0 这样的整季的字幕文件夹，这里仅仅是缓存，不会被加载的
-			matched := regOneSeasonSubFolderNameMatch.FindAllStringSubmatch(curFile.Name(), -1)
+			matched := regex_things.RegOneSeasonSubFolderNameMatch.FindAllStringSubmatch(curFile.Name(), -1)
 			if len(matched) > 0 {
 				continue
 			}
@@ -334,7 +336,7 @@ func DeleteOneSeasonSubCacheFolder(seriesDir string) error {
 	pathSep := string(os.PathSeparator)
 	for _, curFile := range files {
 		if curFile.IsDir() == true {
-			matched := regOneSeasonSubFolderNameMatch.FindAllStringSubmatch(curFile.Name(), -1)
+			matched := regex_things.RegOneSeasonSubFolderNameMatch.FindAllStringSubmatch(curFile.Name(), -1)
 			if matched == nil || len(matched) < 1 {
 				continue
 			}
@@ -376,6 +378,11 @@ func MergeMultiDialogue4EngSubtitle(inSubParser *subparser.FileInfo) {
 		目前看到的情况是前者的抽样率太低，需要使用后者的逻辑
 */
 func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int) ([]SubUnit, error) {
+	return GetVADINfoFromSubNeedOffsetTime(infoSrc, FrontAndEndPer, SubUnitMaxCount, 0)
+}
+
+// GetVADINfoFromSubNeedOffsetTime 跟上面的函数功能一致，只不过这里可以加一个每一句话固定的偏移时间
+func GetVADINfoFromSubNeedOffsetTime(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, offsetTime float64) ([]SubUnit, error) {
 	if SubUnitMaxCount < 0 {
 		SubUnitMaxCount = 0
 	}
@@ -414,7 +421,12 @@ func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubU
 		}
 		// 低于 5句对白，则添加
 		if srcOneSubUnit.GetDialogueCount() < SubUnitMaxCount {
-			srcOneSubUnit.AddAndInsert(oneDialogueExTimeStart, oneDialogueExTimeEnd, i)
+			// 算上偏移
+			offsetTimeDuration := time.Duration(offsetTime * math.Pow10(9))
+			oneDialogueExTimeStart = oneDialogueExTimeStart.Add(offsetTimeDuration)
+			oneDialogueExTimeEnd = oneDialogueExTimeEnd.Add(offsetTimeDuration)
+			// 如果没有偏移就是 0
+			srcOneSubUnit.AddAndInsert(oneDialogueExTimeStart, oneDialogueExTimeEnd)
 		} else {
 			srcSubUnitList = append(srcSubUnitList, *srcOneSubUnit)
 			srcOneSubUnit = NewSubUnit()
@@ -427,7 +439,3 @@ func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubU
 
 	return srcSubUnitList, nil
 }
-
-var (
-	regOneSeasonSubFolderNameMatch = regexp.MustCompile(`(?m)^Sub_S\dE0`)
-)

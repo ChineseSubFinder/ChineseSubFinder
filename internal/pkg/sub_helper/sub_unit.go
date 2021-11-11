@@ -28,8 +28,8 @@ func NewSubUnit() *SubUnit {
 	}
 }
 
-// AddAndInsert 添加一句对白进来,并且填充中间的空白，间隔 10ms
-func (s *SubUnit) AddAndInsert(oneSubStartTime, oneSubEndTime time.Time, index int) {
+// AddAndInsert 添加一句对白进来,并且填充中间的空白，间隔 10ms。传入的时间是真实的时间
+func (s *SubUnit) AddAndInsert(oneSubStartTime, oneSubEndTime time.Time) {
 
 	/*
 		这里有个比较有意思的细节，字幕拆分到 dialogue 的时候，可能连续的多个 dialogue 是时间轴连续的
@@ -193,7 +193,7 @@ func (s SubUnit) GetOffsetTimeNumber() float64 {
 
 // GetFFMPEGCutRangeString 这里会生成导出 FFMPEG 的参数字段，起始时间和结束的时间长度
 // 以当前的 VAD 信息为基准，正负 expandTimeRange（秒为单位） 来生成截取的片段时间轴信息
-func (s SubUnit) GetFFMPEGCutRangeString(expandTimeRange float64) (string, string) {
+func (s SubUnit) GetFFMPEGCutRangeString(expandTimeRange float64) (string, string, time.Time, float64) {
 
 	var tmpStartTime time.Time
 	if s.GetStartTimeNumber(true)-expandTimeRange < 0 {
@@ -205,7 +205,9 @@ func (s SubUnit) GetFFMPEGCutRangeString(expandTimeRange float64) (string, strin
 	}
 
 	return fmt.Sprintf("%d:%d:%d.%d", tmpStartTime.Hour(), tmpStartTime.Minute(), tmpStartTime.Second(), tmpStartTime.Nanosecond()/1000/1000),
-		fmt.Sprintf("%f", s.GetTimelineRange()+expandTimeRange)
+		fmt.Sprintf("%f", s.GetTimelineRange()+expandTimeRange),
+		tmpStartTime,
+		s.GetTimelineRange() + expandTimeRange
 }
 
 // GetExpandRangeIndex 导出扩展的起始时间和结束的时间，整个多出的参数只适用于整体的字幕范围，局部不试用
