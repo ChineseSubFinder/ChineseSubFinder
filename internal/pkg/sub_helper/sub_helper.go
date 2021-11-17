@@ -354,7 +354,7 @@ func DeleteOneSeasonSubCacheFolder(seriesDir string) error {
 
 /*
 	只针对英文字幕进行合并分散的 Dialogues
-	会遇到这样的字幕，如下
+	会遇到这样的字幕，如下0
 	2line-The Card Counter (2021) WEBDL-1080p.chinese(inside).ass
 	它的对白一句话分了两个 dialogue 去做。这样做后续字幕时间轴校正就会遇到问题，因为只有一半，匹配占比会很低
 	(每一个 Dialogue 的首字母需要分析，大写和小写的占比是多少，统计一下，正常的，和上述特殊的)
@@ -369,20 +369,21 @@ func MergeMultiDialogue4EngSubtitle(inSubParser *subparser.FileInfo) {
 	inSubParser.DialoguesEx = merger.Get()
 }
 
-// GetVADINfoFromSub 跟下面的 GetVADINfoFromSubNeedOffsetTime 函数功能一致
-func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int) ([]SubUnit, error) {
-	return GetVADINfoFromSubNeedOffsetTime(infoSrc, FrontAndEndPer, SubUnitMaxCount, 0)
+// GetVADINfoFromSub 跟下面的 GetVADINfoFromSubNeedOffsetTimeWillInsert 函数功能一致
+func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, insert bool) ([]SubUnit, error) {
+
+	return GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc, FrontAndEndPer, SubUnitMaxCount, 0, insert)
 }
 
 /*
-	GetVADINfoFromSubNeedOffsetTime 只不过这里可以加一个每一句话固定的偏移时间
+	GetVADINfoFromSubNeedOffsetTimeWillInsert 只不过这里可以加一个每一句话固定的偏移时间
 	这里的字幕要求是完整的一个字幕
 	1. 抽取字幕的时间片段的时候，暂定，前 15% 和后 15% 要避开，前奏、主题曲、结尾曲
 	2. 将整个字幕，抽取连续 5 句对话为一个单元，提取时间片段信息
 	3. 可能还有一个需求，默认的模式是每五句话一个单元，还有一种模式是每一句话向后找到连续的四句话组成一个单元，允许重叠
 		目前看到的情况是前者的抽样率太低，需要使用后者的逻辑
 */
-func GetVADINfoFromSubNeedOffsetTime(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, offsetTime float64) ([]SubUnit, error) {
+func GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, offsetTime float64, insert bool) ([]SubUnit, error) {
 	if SubUnitMaxCount < 0 {
 		SubUnitMaxCount = 0
 	}
@@ -426,13 +427,18 @@ func GetVADINfoFromSubNeedOffsetTime(infoSrc *subparser.FileInfo, FrontAndEndPer
 			oneDialogueExTimeStart = oneDialogueExTimeStart.Add(offsetTimeDuration)
 			oneDialogueExTimeEnd = oneDialogueExTimeEnd.Add(offsetTimeDuration)
 			// 如果没有偏移就是 0
-			srcOneSubUnit.AddAndInsert(oneDialogueExTimeStart, oneDialogueExTimeEnd)
+			if insert == true {
+				srcOneSubUnit.AddAndInsert(oneDialogueExTimeStart, oneDialogueExTimeEnd)
+			} else {
+				srcOneSubUnit.Add(oneDialogueExTimeStart, oneDialogueExTimeEnd)
+			}
 		} else {
 			srcSubUnitList = append(srcSubUnitList, *srcOneSubUnit)
 			srcOneSubUnit = NewSubUnit()
 			// TODO 这里决定了插入数据的密度，有待测试
 			//i = i - SubUnitMaxCount + SubUnitMaxCount/5
-			i = i - SubUnitMaxCount + SubUnitMaxCount/2
+			//i = i - SubUnitMaxCount + SubUnitMaxCount/2
+			i = i - SubUnitMaxCount
 		}
 	}
 	if srcOneSubUnit.GetDialogueCount() > 0 {

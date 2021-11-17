@@ -1,10 +1,12 @@
 package sub_helper
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"math"
+	"os"
 	"time"
 )
 
@@ -21,11 +23,31 @@ type SubUnit struct {
 
 func NewSubUnit() *SubUnit {
 	return &SubUnit{
-		VADList:     make([]vad.VADInfo, 0),
-		subCount:    0,
-		firstAdd:    false,
-		outVADBytes: make([]byte, 0),
+		VADList:      make([]vad.VADInfo, 0),
+		subCount:     0,
+		firstAdd:     false,
+		outVADBytes:  make([]byte, 0),
+		outVADFloats: make([]float64, 0),
 	}
+}
+
+func (s *SubUnit) Add(oneSubStartTime, oneSubEndTime time.Time) {
+
+	if s.firstAdd == false {
+		// 第一次 Add 需要给 baseTime 赋值
+		s.baseTime = oneSubStartTime
+		s.offsetStartTime = s.RealTimeToOffsetTime(oneSubStartTime)
+		s.firstAdd = true
+	}
+
+	s.offsetEndTime = oneSubEndTime.Add(-my_util.Time2Duration(s.baseTime))
+
+	// 添加 Start
+	s.VADList = append(s.VADList, *vad.NewVADInfoBase(true, time.Duration((my_util.Time2SecendNumber(oneSubStartTime))*math.Pow10(9))))
+	// 添加 End
+	s.VADList = append(s.VADList, *vad.NewVADInfoBase(false, time.Duration((my_util.Time2SecendNumber(oneSubEndTime))*math.Pow10(9))))
+
+	s.subCount++
 }
 
 // AddAndInsert 添加一句对白进来,并且填充中间的空白，间隔 10ms。传入的时间是真实的时间
@@ -245,6 +267,51 @@ func (s SubUnit) GetExpandRangeIndex(expandTimeRange float64) (int, int) {
 func (s SubUnit) RealTimeToOffsetTime(realTime time.Time) time.Time {
 	dd := my_util.Time2Duration(s.baseTime)
 	return realTime.Add(-dd)
+}
+
+// Save2Txt 导出为 float64 的内容
+func (s SubUnit) Save2Txt(outFileFPath string) error {
+
+	file, err := os.OpenFile(outFileFPath, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	//写入文件时，使用带缓存的 *Writer
+	write := bufio.NewWriter(file)
+	for i := 0; i < len(s.VADList); i++ {
+		active := 0.0
+		if s.VADList[i].Active == true {
+			active = 1.0
+		}
+		_, err = write.WriteString(fmt.Sprintf("%v\n", active))
+		if err != nil {
+			return err
+		}
+	}
+	err = write.Flush()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// IsMatchKey 是否符合“钥匙”的标准
+// features 是至少多少个“凹坑”
+func (s SubUnit) IsMatchKey(features int) bool {
+	nowCount := 0
+	for _, value := range s.GetVADByteSlice() {
+		if value == 0 {
+			nowCount++
+		}
+	}
+
+	if nowCount >= features {
+		return true
+	}
+
+	return false
 }
 
 const perWindows = float64(vad.FrameDuration) / 1000

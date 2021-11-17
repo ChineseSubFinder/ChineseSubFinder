@@ -1,4 +1,4 @@
-package sub_timeline_fixer
+package calculate_curve_correlation
 
 import "testing"
 

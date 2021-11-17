@@ -3,6 +3,7 @@ package sub_timeline_fixer
 import (
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/calculate_curve_correlation"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -10,7 +11,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/sub_timeline_fiexer"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
-	"github.com/brettbuddin/fourier"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/emirpasic/gods/utils"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -368,30 +368,52 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 // GetOffsetTimeV2 使用内置的字幕校正外置的字幕时间轴
 func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) (bool, float64, float64, error) {
 
+	//infoBaseSubUnitList, err := sub_helper.GetVADINfoFromSub(infoBase, 0, 10000)
+	//if err != nil {
+	//	return false, 0, 0, err
+	//}
+	//infoBaseSubUnit := infoBaseSubUnitList[0]
+	//err = infoBaseSubUnit.Save2Txt("C:\\Tmp\\base.txt")
+	//if err != nil {
+	//	return false, 0, 0, err
+	//}
+	//
+	//infoSrcSubUnitList, err := sub_helper.GetVADINfoFromSub(infoSrc, 0, 10000)
+	//if err != nil {
+	//	return false, 0, 0, err
+	//}
+	//infoSrcSubUnit := infoSrcSubUnitList[0]
+	//err = infoSrcSubUnit.Save2Txt("C:\\Tmp\\src.txt")
+	//if err != nil {
+	//	return false, 0, 0, err
+	//}
+
 	// 需要拆分成多个 unit
-	srcSubUnitList, err := sub_helper.GetVADINfoFromSub(infoSrc, FrontAndEndPer, SubUnitMaxCount)
+	srcSubUnitList, err := sub_helper.GetVADINfoFromSub(infoSrc, FrontAndEndPer, SubUnitMaxCount, bInsert)
 	if err != nil {
 		return false, 0, 0, err
 	}
 	// 时间轴差值数组
-	var tmpStartDiffTime = make([]float64, 0)
-	var startDiffTimeList = make(stat.Float64Slice, 0)
+	var tmpCorrelationStartDiffTime = make([]float64, 0)
+	var CorrelationStartDiffTimeList = make(stat.Float64Slice, 0)
 	// 调试功能，开始针对对白单元进行匹配
 	for _, srcSubUnit := range srcSubUnitList {
 
+		// 这里得到的若干份的 srcSubUnit 未必的合适的，需要挑选， 1、0 占比比较明显的，或者说是比较像“钥匙”的 Unit 来继续
+		features := int(float64(len(srcSubUnit.VADList)) * KeyPer)
+		println("-------------------")
+		if srcSubUnit.IsMatchKey(features) == false {
+			println("features:", features, "skip")
+			continue
+		} else {
+			println("features:", features)
+		}
 		// 得到当前这个单元推算出来需要提取的字幕时间轴范围，这个是 Base Sub 使用的提取段
 		startTimeBaseString, subBaseLength, startTimeBaseTime, _ := srcSubUnit.GetFFMPEGCutRangeString(ExpandTimeRange)
 		// 导出当前的字幕文件适合与匹配的范围的临时字幕文件
 		nowTmpSubBaseFPath, errString, err := s.ffmpegHelper.ExportSubArgsByTimeRange(infoBase.FileFullPath, "base", startTimeBaseString, subBaseLength)
 		if err != nil {
 			log_helper.GetLogger().Errorln("ExportSubArgsByTimeRange base", errString, err)
-			return false, 0, 0, err
-		}
-		// 导出当前的字幕文件适合与匹配的范围的临时字幕文件，这个是 Src Sub 使用的提取段
-		startTimeSrcString, subSrcLength, _, _ := srcSubUnit.GetFFMPEGCutRangeString(0)
-		nowTmpSubSrcFPath, errString, err := s.ffmpegHelper.ExportSubArgsByTimeRange(infoSrc.FileFullPath, "src", startTimeSrcString, subSrcLength)
-		if err != nil {
-			log_helper.GetLogger().Errorln("ExportSubArgsByTimeRange src", errString, err)
 			return false, 0, 0, err
 		}
 
@@ -403,53 +425,16 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 			return false, 0, 0, errors.New("DetermineFileTypeFromFile == false")
 		}
 
-		// 这里比较特殊，因为读取的字幕文件是单独切割出来的，所以默认是有偏移的们需要使用不同的函数，把偏移算进去
-		nowTmpBaseSubUnitList, err := sub_helper.GetVADINfoFromSub(nowTmpSubBaseFileInfo, 0, 10000)
+		nowTmpBaseSubUnitList, err := sub_helper.GetVADINfoFromSub(nowTmpSubBaseFileInfo, 0, 10000, bInsert)
 		if err != nil {
 			return false, 0, 0, err
 		}
 		nowTmpBaseSubVADUnit := nowTmpBaseSubUnitList[0]
 
-		var nowBaseSubTimeLineData = make([]opts.LineData, 0)
-		var nowBaseSubXAxis = make([]string, 0)
-
-		var nowSrcSubTimeLineData = make([]opts.LineData, 0)
-		var nowSrcSubXAxis = make([]string, 0)
-
-		outDir := filepath.Dir(nowTmpSubBaseFPath)
-
-		outBaseName := filepath.Base(nowTmpSubBaseFPath)
-		outSrcName := filepath.Base(nowTmpSubSrcFPath)
-
-		outBaseNameWithOutExt := strings.ReplaceAll(outBaseName, filepath.Ext(outBaseName), "")
-		outSrcNameWithOutExt := strings.ReplaceAll(outSrcName, filepath.Ext(outSrcName), "")
-
-		srcSubVADStaticLineFullPath := filepath.Join(outDir, outSrcNameWithOutExt+"_sub_src.html")
-		baseSubVADStaticLineFullPath := filepath.Join(outDir, outBaseNameWithOutExt+"_sub_base.html")
-		// -------------------------------------------------
-		// src 导出中间文件缓存
-		for _, vadInfo := range srcSubUnit.VADList {
-			nowSrcSubTimeLineData = append(nowSrcSubTimeLineData, opts.LineData{Value: vadInfo.Active})
-			baseTime := srcSubUnit.GetOffsetTimeNumber()
-			nowVADInfoTimeNumber := vadInfo.Time.Seconds()
-			nowOffsetTime := nowVADInfoTimeNumber - baseTime
-			nowSrcSubXAxis = append(nowSrcSubXAxis, fmt.Sprintf("%f", nowOffsetTime))
-		}
-		err = SaveStaticLineV2("Sub src", srcSubVADStaticLineFullPath, nowSrcSubXAxis, nowSrcSubTimeLineData)
-		if err != nil {
-			return false, 0, 0, err
-		}
-		// -------------------------------------------------
-		// base 导出中间文件缓存
-		for _, vadInfo := range nowTmpBaseSubVADUnit.VADList {
-			nowBaseSubTimeLineData = append(nowBaseSubTimeLineData, opts.LineData{Value: vadInfo.Active})
-			nowVADInfoTimeNumber := vadInfo.Time.Seconds()
-			nowBaseSubXAxis = append(nowBaseSubXAxis, fmt.Sprintf("%f", nowVADInfoTimeNumber))
-		}
-		err = SaveStaticLineV2("Sub base", baseSubVADStaticLineFullPath, nowBaseSubXAxis, nowBaseSubTimeLineData)
-		if err != nil {
-			return false, 0, 0, err
-		}
+		//nowTmpBaseSubVADUnit, b, f, f2, err2 := s.debugV2(err, nowTmpSubBaseFileInfo, srcSubUnit, errString, infoSrc, nowTmpSubBaseFPath)
+		//if err2 != nil {
+		//	return b, f, f2, err2
+		//}
 		// -------------------------------------------------
 		// 开始匹配
 		correlationTM := treemap.NewWith(utils.Float64Comparator)
@@ -462,8 +447,10 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 			if windowEndIndex >= len(nowTmpBaseSubVADUnit.VADList) {
 				break
 			}
-
-			correlation := CalculateCurveCorrelation(nowTmpBaseSubVADUnit.GetVADFloatSlice()[windowStartIndex:windowEndIndex], srcSubUnit.GetVADFloatSlice(), len(srcSubUnit.VADList))
+			// Correlation
+			compareSrc := srcSubUnit.GetVADFloatSlice()
+			compareBase := nowTmpBaseSubVADUnit.GetVADFloatSlice()[windowStartIndex:windowEndIndex]
+			correlation := calculate_curve_correlation.CalculateCurveCorrelation(compareSrc, compareBase, len(srcSubUnit.VADList))
 			correlationTM.Put(correlation, i)
 		}
 		// 找到最大的数值和索引
@@ -471,7 +458,8 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 		if tmpMaxCorrelation == nil || tmpMaxIndex == nil {
 			continue
 		}
-		bok, nowBaseIndexTime := nowTmpBaseSubVADUnit.GetIndexTimeNumber(tmpMaxIndex.(int), true)
+		// CalculateCurveCorrelation 计算出来的最优解
+		bok, nowCorrelationBaseIndexTime := nowTmpBaseSubVADUnit.GetIndexTimeNumber(tmpMaxIndex.(int), true)
 		if bok == false {
 			continue
 		}
@@ -481,13 +469,84 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 
 		nowSrcRealTime := srcSubUnit.GetStartTimeNumber(true)
 		// 时间差值
-		TimeDiffStart := nowBaseIndexTime + my_util.Time2SecendNumber(startTimeBaseTime) - nowSrcRealTime
+		TimeDiffStartCorrelation := nowCorrelationBaseIndexTime + my_util.Time2SecendNumber(startTimeBaseTime) - nowSrcRealTime
 
-		println(fmt.Sprintf("%v <-> %v <-> %v", tmpMaxIndex, tmpMaxCorrelation, TimeDiffStart))
+		println(fmt.Sprintf("Correlation Index:%v Corre: %v DiffTime %v", tmpMaxIndex, tmpMaxCorrelation, TimeDiffStartCorrelation))
+		println("-------------------")
 
-		tmpStartDiffTime = append(tmpStartDiffTime, TimeDiffStart)
-		startDiffTimeList = append(startDiffTimeList, TimeDiffStart)
+		tmpCorrelationStartDiffTime = append(tmpCorrelationStartDiffTime, TimeDiffStartCorrelation)
+		CorrelationStartDiffTimeList = append(CorrelationStartDiffTimeList, TimeDiffStartCorrelation)
 	}
+
+	outCorrelationFixResult := s.calcMeanAndSD(CorrelationStartDiffTimeList, tmpCorrelationStartDiffTime)
+
+	println(fmt.Sprintf("Old Mean: %v SD: %v Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
+	println(fmt.Sprintf("New Mean: %v SD: %v Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
+
+	return true, outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, nil
+}
+
+// debugV2 V2 版本的调试信息输出
+func (s *SubTimelineFixer) debugV2(err error, nowTmpSubBaseFileInfo *subparser.FileInfo, srcSubUnit sub_helper.SubUnit, errString string, infoSrc *subparser.FileInfo, nowTmpSubBaseFPath string) (sub_helper.SubUnit, bool, float64, float64, error) {
+	// 这里比较特殊，因为读取的字幕文件是单独切割出来的，所以默认是有偏移的们需要使用不同的函数，把偏移算进去
+	nowTmpBaseSubUnitList, err := sub_helper.GetVADINfoFromSub(nowTmpSubBaseFileInfo, 0, 10000, bInsert)
+	if err != nil {
+		return sub_helper.SubUnit{}, false, 0, 0, err
+	}
+	nowTmpBaseSubVADUnit := nowTmpBaseSubUnitList[0]
+
+	// 导出当前的字幕文件适合与匹配的范围的临时字幕文件，这个是 Src Sub 使用的提取段
+	startTimeSrcString, subSrcLength, _, _ := srcSubUnit.GetFFMPEGCutRangeString(0)
+	nowTmpSubSrcFPath, errString, err := s.ffmpegHelper.ExportSubArgsByTimeRange(infoSrc.FileFullPath, "src", startTimeSrcString, subSrcLength)
+	if err != nil {
+		log_helper.GetLogger().Errorln("ExportSubArgsByTimeRange src", errString, err)
+		return sub_helper.SubUnit{}, false, 0, 0, err
+	}
+
+	var nowBaseSubTimeLineData = make([]opts.LineData, 0)
+	var nowBaseSubXAxis = make([]string, 0)
+
+	var nowSrcSubTimeLineData = make([]opts.LineData, 0)
+	var nowSrcSubXAxis = make([]string, 0)
+
+	outDir := filepath.Dir(nowTmpSubBaseFPath)
+
+	outBaseName := filepath.Base(nowTmpSubBaseFPath)
+	outSrcName := filepath.Base(nowTmpSubSrcFPath)
+
+	outBaseNameWithOutExt := strings.ReplaceAll(outBaseName, filepath.Ext(outBaseName), "")
+	outSrcNameWithOutExt := strings.ReplaceAll(outSrcName, filepath.Ext(outSrcName), "")
+
+	srcSubVADStaticLineFullPath := filepath.Join(outDir, outSrcNameWithOutExt+"_sub_src.html")
+	baseSubVADStaticLineFullPath := filepath.Join(outDir, outBaseNameWithOutExt+"_sub_base.html")
+	// -------------------------------------------------
+	// src 导出中间文件缓存
+	for _, vadInfo := range srcSubUnit.VADList {
+		nowSrcSubTimeLineData = append(nowSrcSubTimeLineData, opts.LineData{Value: vadInfo.Active})
+		baseTime := srcSubUnit.GetOffsetTimeNumber()
+		nowVADInfoTimeNumber := vadInfo.Time.Seconds()
+		nowOffsetTime := nowVADInfoTimeNumber - baseTime
+		nowSrcSubXAxis = append(nowSrcSubXAxis, fmt.Sprintf("%f", nowOffsetTime))
+	}
+	err = SaveStaticLineV2("Sub src", srcSubVADStaticLineFullPath, nowSrcSubXAxis, nowSrcSubTimeLineData)
+	if err != nil {
+		return sub_helper.SubUnit{}, false, 0, 0, err
+	}
+	// -------------------------------------------------
+	// base 导出中间文件缓存
+	for _, vadInfo := range nowTmpBaseSubVADUnit.VADList {
+		nowBaseSubTimeLineData = append(nowBaseSubTimeLineData, opts.LineData{Value: vadInfo.Active})
+		nowVADInfoTimeNumber := vadInfo.Time.Seconds()
+		nowBaseSubXAxis = append(nowBaseSubXAxis, fmt.Sprintf("%f", nowVADInfoTimeNumber))
+	}
+	err = SaveStaticLineV2("Sub base", baseSubVADStaticLineFullPath, nowBaseSubXAxis, nowBaseSubTimeLineData)
+	if err != nil {
+		return sub_helper.SubUnit{}, false, 0, 0, err
+	}
+	return nowTmpBaseSubVADUnit, false, 0, 0, nil
+}
+
+func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tmpStartDiffTime []float64) FixResult {
 
 	oldMean := stat.Mean(startDiffTimeList)
 	oldSd := stat.Sd(startDiffTimeList)
@@ -532,16 +591,33 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 	if newSd == -1.0 {
 		newSd = oldSd
 	}
-
-	println(fmt.Sprintf("Old Mean: %v SD: %v Per: %v", oldMean, oldSd, per))
-	println(fmt.Sprintf("New Mean: %v SD: %v Per: %v", newMean, newSd, per))
-
-	return true, newMean, newSd, nil
+	return FixResult{
+		oldMean,
+		oldSd,
+		newMean,
+		newSd,
+		per,
+	}
 }
 
 // GetOffsetTimeV3 使用 VAD 检测语音是否有人声，输出连续的点标记，再通过 SimHash 进行匹配，找到最佳的偏移时间
 func (s *SubTimelineFixer) GetOffsetTimeV3(audioInfo vad.AudioInfo, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) (bool, float64, float64, error) {
 
+	//audioVADInfos, err := vad.GetVADInfoFromAudio(vad.AudioInfo{
+	//	FileFullPath: audioInfo.FileFullPath,
+	//	SampleRate:   16000,
+	//	BitDepth:     16,
+	//})
+	//if err != nil {
+	//	return false, 0, 0, err
+	//}
+	//
+	//subUnit := sub_helper.NewSubUnit()
+	//subUnit.VADList = audioVADInfos
+	//err = subUnit.Save2Txt("C:\\Tmp\\audio.txt")
+	//if err != nil {
+	//	return false, 0, 0, err
+	//}
 	/*
 		分割字幕成若干段，然后得到若干段的时间轴，将这些段从字幕文字转换成 VADInfo
 		从上面若干段时间轴，把音频给分割成多段
@@ -558,7 +634,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV3(audioInfo vad.AudioInfo, infoSrc *sub
 		1. 抽取字幕的时间片段的时候，暂定，前 15% 和后 15% 要避开，前奏、主题曲、结尾曲
 		2. 将整个字幕，抽取连续 5 句对话为一个单元，提取时间片段信息
 	*/
-	subUnitList, err := sub_helper.GetVADINfoFromSub(infoSrc, FrontAndEndPer, SubUnitMaxCount)
+	subUnitList, err := sub_helper.GetVADINfoFromSub(infoSrc, FrontAndEndPer, SubUnitMaxCount, bInsert)
 	if err != nil {
 		return false, 0, 0, err
 	}
@@ -577,7 +653,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV3(audioInfo vad.AudioInfo, infoSrc *sub
 			FileFullPath: outAudioFPath,
 			SampleRate:   16000,
 			BitDepth:     16,
-		})
+		}, false)
 		if err != nil {
 			return false, 0, 0, err
 		}
@@ -603,11 +679,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV3(audioInfo vad.AudioInfo, infoSrc *sub
 
 			subBuf[index] = complex(float64(my_util.Bool2Int(vadInfo.Active)), nowOffsetTime)
 		}
-		// FFT 转换
-		err = fourier.Forward(subBuf)
-		if err != nil {
-			return false, 0, 0, err
-		}
+
 		for i := 0; i < len(subUnit.VADList); i++ {
 			subTimeLineFFTData = append(subTimeLineFFTData, opts.LineData{Value: real(subBuf[i])})
 		}
@@ -631,11 +703,6 @@ func (s *SubTimelineFixer) GetOffsetTimeV3(audioInfo vad.AudioInfo, infoSrc *sub
 			audioBuf[index] = complex(float64(my_util.Bool2Int(vadInfo.Active)), vadInfo.Time.Seconds())
 		}
 
-		// FFT 转换
-		err = fourier.Forward(audioBuf)
-		if err != nil {
-			return false, 0, 0, err
-		}
 		for i := 0; i < len(audioBuf); i++ {
 			audioTimeLineFFTData = append(audioTimeLineFFTData, opts.LineData{Value: real(audioBuf[i])})
 		}
@@ -652,7 +719,10 @@ func (s *SubTimelineFixer) GetOffsetTimeV3(audioInfo vad.AudioInfo, infoSrc *sub
 }
 
 const FixMask = "-fix"
+const bInsert = true        // 是否插入点
 const FrontAndEndPer = 0.15 // 前百分之 15 和后百分之 15 都不进行识别
-const SubUnitMaxCount = 50  // 一个 Sub单元有五句对白
+const SubUnitMaxCount = 10  // 一个 Sub单元有五句对白
 const ExpandTimeRange = 50  // 从字幕的时间轴片段需要向前和向后多匹配一部分的音频，这里定义的就是这个 range 以分钟为单位， 正负 60 秒
-const MinCorrelation = 0.8  // 最低的匹配度
+const KeyPer = 0.1          // 钥匙凹坑的占比
+const MinCorrelation = 0.85 // 最低的匹配度
+const DTW_Radius = 1000     // DTW 半径

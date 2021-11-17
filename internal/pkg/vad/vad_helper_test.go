@@ -11,7 +11,7 @@ func TestGetVADInfo(t *testing.T) {
 		SampleRate:   16000,
 		BitDepth:     16,
 	}
-	vadInfos, err := GetVADInfoFromAudio(audioInfo)
+	vadInfos, err := GetVADInfoFromAudio(audioInfo, false)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -12,7 +12,7 @@ import (
 
 // GetVADInfoFromAudio 分析音频文件，得到 VAD 分析信息，看样子是不支持并发的，只能单线程使用
 // 无需使用插值的函数
-func GetVADInfoFromAudio(audioInfo AudioInfo) ([]VADInfo, error) {
+func GetVADInfoFromAudio(audioInfo AudioInfo, insert bool) ([]VADInfo, error) {
 
 	var (
 		frameIndex  = 0
@@ -73,8 +73,13 @@ func GetVADInfoFromAudio(audioInfo AudioInfo) ([]VADInfo, error) {
 		}
 		if tmpFrameActive != frameActive || offset == 0 {
 			frameActive = tmpFrameActive
+			if insert == false {
+				report()
+			}
 		}
-		report()
+		if insert == true {
+			report()
+		}
 		offset += len(frameBuffer)
 		frameIndex++
 	}

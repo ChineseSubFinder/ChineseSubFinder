@@ -9,6 +9,7 @@ require (
 	github.com/abadojack/whatlanggo v1.0.1
 	github.com/allanpk716/fake-useragent v0.2.1
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
+	github.com/baabaaox/go-webrtcvad v1.0.1
 	github.com/beevik/etree v1.1.0
 	github.com/bodgit/sevenzip v1.1.0
 	github.com/emirpasic/gods v1.12.0
@@ -69,10 +70,8 @@ require (
 	github.com/andybalholm/brotli v1.0.0 // indirect
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
-	github.com/baabaaox/go-webrtcvad v1.0.1 // indirect
 	github.com/bodgit/plumbing v1.1.0 // indirect
 	github.com/bodgit/windows v1.0.0 // indirect
-	github.com/brettbuddin/fourier v0.1.1 // indirect
 	github.com/connesc/cipherio v0.2.1 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
