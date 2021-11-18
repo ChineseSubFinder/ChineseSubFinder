@@ -3,6 +3,7 @@ package sub_helper
 import (
 	"bufio"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/frechet"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"math"
@@ -19,6 +20,7 @@ type SubUnit struct {
 	firstAdd        bool
 	outVADBytes     []byte
 	outVADFloats    []float64
+	IsMatchKey      bool // 是否符合“钥匙”的要求
 }
 
 func NewSubUnit() *SubUnit {
@@ -227,7 +229,7 @@ func (s SubUnit) GetFFMPEGCutRangeString(expandTimeRange float64) (string, strin
 	}
 
 	return fmt.Sprintf("%d:%d:%d.%d", tmpStartTime.Hour(), tmpStartTime.Minute(), tmpStartTime.Second(), tmpStartTime.Nanosecond()/1000/1000),
-		fmt.Sprintf("%f", s.GetTimelineRange()+expandTimeRange),
+		fmt.Sprintf("%f", s.GetTimelineRange()+2*expandTimeRange),
 		tmpStartTime,
 		s.GetTimelineRange() + expandTimeRange
 }
@@ -297,21 +299,50 @@ func (s SubUnit) Save2Txt(outFileFPath string) error {
 	return nil
 }
 
-// IsMatchKey 是否符合“钥匙”的标准
-// features 是至少多少个“凹坑”
-func (s SubUnit) IsMatchKey(features int) bool {
-	nowCount := 0
-	for _, value := range s.GetVADByteSlice() {
-		if value == 0 {
-			nowCount++
+// GetStartVADList 获取起始时间的 VAD List
+func (s SubUnit) GetStartVADList() []vad.VADInfo {
+
+	outVADList := make([]vad.VADInfo, len(s.VADList))
+	for _, value := range s.VADList {
+		outVADList = append(outVADList, value)
+	}
+	return outVADList
+}
+
+// GetFrechetPoint 获取 Frechet 曲线相似度的数据结构 List，whichOne = 0 所有，whichOne = 1 只有 Start 的点
+func (s SubUnit) GetFrechetPoint(whichOne int) []frechet.Point {
+
+	outPoint := make([]frechet.Point, 0)
+	if whichOne == 0 {
+		// 所有点
+		for _, info := range s.VADList {
+			nowX := 0.0
+			if info.Active == true {
+				nowX = 1.0
+			}
+			nowY := info.Time.Seconds()
+			outPoint = append(outPoint, frechet.Point{
+				X: nowX,
+				Y: nowY,
+			})
 		}
-	}
+		return outPoint
 
-	if nowCount >= features {
-		return true
+	} else {
+		// 只有 Start 点
+		for _, info := range s.GetStartVADList() {
+			nowX := 0.0
+			if info.Active == true {
+				nowX = 1.0
+			}
+			nowY := info.Time.Seconds()
+			outPoint = append(outPoint, frechet.Point{
+				X: nowX,
+				Y: nowY,
+			})
+		}
+		return outPoint
 	}
-
-	return false
 }
 
 const perWindows = float64(vad.FrameDuration) / 1000

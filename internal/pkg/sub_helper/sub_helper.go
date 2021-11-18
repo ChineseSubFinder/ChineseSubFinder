@@ -370,9 +370,9 @@ func MergeMultiDialogue4EngSubtitle(inSubParser *subparser.FileInfo) {
 }
 
 // GetVADINfoFromSub 跟下面的 GetVADINfoFromSubNeedOffsetTimeWillInsert 函数功能一致
-func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, insert bool) ([]SubUnit, error) {
+func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, insert bool, kf *KeyFeatures) ([]SubUnit, error) {
 
-	return GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc, FrontAndEndPer, SubUnitMaxCount, 0, insert)
+	return GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc, FrontAndEndPer, SubUnitMaxCount, 0, insert, kf)
 }
 
 /*
@@ -383,11 +383,12 @@ func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubU
 	3. 可能还有一个需求，默认的模式是每五句话一个单元，还有一种模式是每一句话向后找到连续的四句话组成一个单元，允许重叠
 		目前看到的情况是前者的抽样率太低，需要使用后者的逻辑
 */
-func GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, offsetTime float64, insert bool) ([]SubUnit, error) {
+func GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, offsetTime float64, insert bool, kf *KeyFeatures) ([]SubUnit, error) {
 	if SubUnitMaxCount < 0 {
 		SubUnitMaxCount = 0
 	}
 	srcSubUnitList := make([]SubUnit, 0)
+	srcSubDialogueList := make([]subparser.OneDialogueEx, 0)
 	srcOneSubUnit := NewSubUnit()
 
 	// srcDuration
@@ -432,13 +433,36 @@ func GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, Fron
 			} else {
 				srcOneSubUnit.Add(oneDialogueExTimeStart, oneDialogueExTimeEnd)
 			}
+			// 这一个单元的 Dialogue 需要合并起来，才能判断是否符合“钥匙”的要求
+			srcSubDialogueList = append(srcSubDialogueList, infoSrc.DialoguesEx[i])
+
 		} else {
+			// 筹够那么多句话了，需要判断一次是否符合“钥匙”的要求
+			tmpNowMatchKey := IsMatchKey(srcSubDialogueList, kf)
+			srcOneSubUnit.IsMatchKey = tmpNowMatchKey
+			// 用完清空
+			srcSubDialogueList = make([]subparser.OneDialogueEx, 0)
+			// 将拼凑起来的对话组成一个单元进行存储起来
 			srcSubUnitList = append(srcSubUnitList, *srcOneSubUnit)
+			// 然后重置
 			srcOneSubUnit = NewSubUnit()
 			// TODO 这里决定了插入数据的密度，有待测试
-			//i = i - SubUnitMaxCount + SubUnitMaxCount/5
-			//i = i - SubUnitMaxCount + SubUnitMaxCount/2
-			i = i - SubUnitMaxCount
+			//i = i - SubUnitMaxCount
+			if kf == nil {
+				// 走原始的逻辑 i 的赋值逻辑跟之前一样，需要每一次进一步，也就是有重叠的部分出现
+				//i = i - SubUnitMaxCount + SubUnitMaxCount/5
+				//i = i - SubUnitMaxCount + SubUnitMaxCount/2
+				i = i - SubUnitMaxCount
+			} else {
+				if tmpNowMatchKey == false {
+					// 走原始的逻辑 i 的赋值逻辑跟之前一样，需要每一次进一步，也就是有重叠的部分出现
+					i = i - SubUnitMaxCount
+				} else {
+					// 判断了“钥匙”特征，且通过了
+					// i 需要跳过当前已经覆盖的段
+					i = i - SubUnitMaxCount + SubUnitMaxCount/2
+				}
+			}
 		}
 	}
 	if srcOneSubUnit.GetDialogueCount() > 0 {
@@ -446,4 +470,52 @@ func GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, Fron
 	}
 
 	return srcSubUnitList, nil
+}
+
+// IsMatchKey 是否符合“钥匙”的标准
+func IsMatchKey(srcSubDialogueList []subparser.OneDialogueEx, kf *KeyFeatures) bool {
+
+	if kf == nil {
+		return false
+	}
+	/*
+		这里是设置主要依赖的还是数据源，源必须有足够的对白（暂定 50 句），才可能找到这么多信息
+		这里需要匹配的“钥匙”特征，先简单实现为 (这三个需要不交叉时间段)
+			1. 大坑（大于 10s 的对白间隔）至少 1 个
+			2. 中坑（大于 2 且小于 5s 的对白间隔）至少 3 个
+			3. 小坑（大于 1 且小于 2s 的对白间隔）至少 5 个
+	*/
+	dialogueIntervals := make([]float64, 0)
+	tmpFileInfo := subparser.FileInfo{}
+	// 现在需要进行凹坑的识别，一共由多少个，间隔多少
+	for i := 0; i < len(srcSubDialogueList)-1; i++ {
+		startTime, err := tmpFileInfo.ParseTime(srcSubDialogueList[i+1].StartTime)
+		if err != nil {
+			return false
+		}
+		endTime, err := tmpFileInfo.ParseTime(srcSubDialogueList[i].EndTime)
+		if err != nil {
+			return false
+		}
+		// 对话间的时间间隔
+		dialogueIntervals = append(dialogueIntervals, my_util.Time2SecendNumber(startTime)-my_util.Time2SecendNumber(endTime))
+	}
+	// big
+	for _, value := range dialogueIntervals {
+		if kf.Big.Match(value) == true {
+			kf.Big.NowCount++
+		}
+		if kf.Middle.Match(value) == true {
+			kf.Middle.NowCount++
+		}
+		if kf.Small.Match(value) == true {
+			kf.Small.NowCount++
+		}
+	}
+	// 统计到的要 >= 目标的个数
+	if kf.Big.NowCount < kf.Big.LeastCount || kf.Middle.NowCount < kf.Middle.LeastCount || kf.Small.NowCount < kf.Small.LeastCount {
+		return false
+	}
+
+	return true
 }
