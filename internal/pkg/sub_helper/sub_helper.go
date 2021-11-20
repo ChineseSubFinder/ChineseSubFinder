@@ -383,7 +383,7 @@ func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubU
 	3. 可能还有一个需求，默认的模式是每五句话一个单元，还有一种模式是每一句话向后找到连续的四句话组成一个单元，允许重叠
 		目前看到的情况是前者的抽样率太低，需要使用后者的逻辑
 */
-func GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, offsetTime float64, insert bool, kf *KeyFeatures) ([]SubUnit, error) {
+func GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, SkipFrontAndEndPer float64, SubUnitMaxCount int, offsetTime float64, insert bool, kf *KeyFeatures) ([]SubUnit, error) {
 	if SubUnitMaxCount < 0 {
 		SubUnitMaxCount = 0
 	}
@@ -411,8 +411,8 @@ func GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, Fron
 
 		oneStart := my_util.Time2SecendNumber(oneDialogueExTimeStart)
 
-		if FrontAndEndPer > 0 {
-			if srcDuration*FrontAndEndPer > oneStart || srcDuration*(1.0-FrontAndEndPer) < oneStart {
+		if SkipFrontAndEndPer > 0 {
+			if srcDuration*SkipFrontAndEndPer > oneStart || srcDuration*(1.0-SkipFrontAndEndPer) < oneStart {
 				continue
 			}
 		}

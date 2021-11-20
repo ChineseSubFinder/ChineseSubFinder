@@ -732,8 +732,8 @@ func (s *SubTimelineFixer) GetOffsetTimeV3(audioInfo vad.AudioInfo, infoSrc *sub
 const FixMask = "-fix"
 const bInsert = true        // 是否插入点
 const whichOne = 0          // 所有，whichOne = 1 只有 Start 的点
-const FrontAndEndPer = 0.15 // 前百分之 15 和后百分之 15 都不进行识别
-const SubUnitMaxCount = 50  // 一个 Sub单元有五句对白
+const FrontAndEndPer = 0.05 // 前百分之 15 和后百分之 15 都不进行识别
+const SubUnitMaxCount = 30  // 一个 Sub单元有五句对白
 const ExpandTimeRange = 50  // 从字幕的时间轴片段需要向前和向后多匹配一部分的音频，这里定义的就是这个 range 以分钟为单位， 正负 60 秒
 const KeyPer = 0.1          // 钥匙凹坑的占比
 const MinCorrelation = 0.50 // 最低的匹配度
