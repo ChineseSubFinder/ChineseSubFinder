@@ -46,7 +46,7 @@ func (em *EmbyHelper) GetRecentlyAddVideoList(movieRootDir, seriesRootDir string
 	if err != nil {
 		return nil, nil, err
 	}
-
+	log_helper.GetLogger().Debugln("-----------------")
 	log_helper.GetLogger().Debugln("GetRecentlyAddVideoList - GetRecentlyItems Count", len(items.Items))
 
 	// 分类
@@ -58,9 +58,9 @@ func (em *EmbyHelper) GetRecentlyAddVideoList(movieRootDir, seriesRootDir string
 		} else if item.Type == videoTypeMovie {
 			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
 			MovieIdList = append(MovieIdList, item.Id)
-			log_helper.GetLogger().Debugln("Movie:", index, item.SeriesName)
+			log_helper.GetLogger().Debugln("Movie:", index, item.Name)
 		} else {
-			log_helper.GetLogger().Debugln("GetRecentlyItems - Is not a goal video type:", index, item.SeriesName, item.Type)
+			log_helper.GetLogger().Debugln("GetRecentlyItems - Is not a goal video type:", index, item.Name, item.Type)
 		}
 	}
 
@@ -74,10 +74,12 @@ func (em *EmbyHelper) GetRecentlyAddVideoList(movieRootDir, seriesRootDir string
 		return nil, nil, err
 	}
 	// 输出调试信息
+	log_helper.GetLogger().Debugln("-----------------")
 	log_helper.GetLogger().Debugln("filterEmbyVideoList found valid movie", len(filterMovieList))
 	for index, info := range filterMovieList {
 		log_helper.GetLogger().Debugln(index, info.VideoFileName)
 	}
+	log_helper.GetLogger().Debugln("-----------------")
 	log_helper.GetLogger().Debugln("filterEmbyVideoList found valid series", len(filterSeriesList))
 	for index, info := range filterSeriesList {
 		log_helper.GetLogger().Debugln(index, info.VideoFileName)
@@ -94,10 +96,12 @@ func (em *EmbyHelper) GetRecentlyAddVideoList(movieRootDir, seriesRootDir string
 	}
 
 	// 输出调试信息
+	log_helper.GetLogger().Debugln("-----------------")
 	log_helper.GetLogger().Debugln("filterNoChineseSubVideoList found no chinese movie", len(noSubMovieList))
 	for index, info := range filterMovieList {
 		log_helper.GetLogger().Debugln(index, info.VideoFileName)
 	}
+	log_helper.GetLogger().Debugln("-----------------")
 	log_helper.GetLogger().Debugln("filterNoChineseSubVideoList found no chinese series", len(noSubSeriesList))
 	for index, info := range filterSeriesList {
 		log_helper.GetLogger().Debugln(index, info.VideoFileName)
