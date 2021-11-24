@@ -19,7 +19,7 @@ func NewFFTAligner() *FFTAligner {
 	return &FFTAligner{}
 }
 
-// Fit 给出最佳的偏移，还需要根据实际情况进行转换（比如，1 步 是 10 ms）
+// Fit 给出最佳的偏移，还需要根据实际情况进行转换（比如，1 步 是 10 ms）,输入的数组只能是 1 -1 这样的值，需要在外部做好归一化
 func (f FFTAligner) Fit(refFloats, subFloats []float64) (int, float64) {
 	return f.computeArgmax(f.fit(refFloats, subFloats), subFloats)
 }

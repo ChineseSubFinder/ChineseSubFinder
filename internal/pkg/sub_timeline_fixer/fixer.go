@@ -438,7 +438,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 			if windowEndIndex >= len(nowTmpBaseSubVADUnit.VADList) {
 				break
 			}
-			// Correlation
+			// Correlation，尽可能接近 1 就是两个曲线很相似
 			compareSrc := srcSubUnit.GetVADFloatSlice()
 			compareBase := nowTmpBaseSubVADUnit.GetVADFloatSlice()[windowStartIndex:windowEndIndex]
 			correlation := calculate_curve_correlation.CalculateCurveCorrelation(compareSrc, compareBase, len(srcSubUnit.VADList))
@@ -473,6 +473,38 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 
 		tmpCorrelationStartDiffTime = append(tmpCorrelationStartDiffTime, TimeDiffStartCorrelation)
 		CorrelationStartDiffTimeList = append(CorrelationStartDiffTimeList, TimeDiffStartCorrelation)
+	}
+
+	outCorrelationFixResult := s.calcMeanAndSD(CorrelationStartDiffTimeList, tmpCorrelationStartDiffTime)
+	println(fmt.Sprintf("Correlation Old Mean: %v SD: %v Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
+	println(fmt.Sprintf("Correlation New Mean: %v SD: %v Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
+
+	return true, outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, nil
+}
+
+func (s *SubTimelineFixer) GetOffsetTimeV2P(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) (bool, float64, float64, error) {
+
+	// 读取 Base 基准字幕，一次性加载
+	baseSubUnitList, err := sub_helper.GetVADInfoFeatureFromSub(infoBase, 0, 10000, bInsert, kf)
+	if err != nil {
+		return false, 0, 0, err
+	}
+	// 将 Src 目标字幕，拆分成多个 unit，找到关键的“钥匙”去匹配
+	srcSubUnitList, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPer, SubUnitMaxCount, bInsert, kf)
+	if err != nil {
+		return false, 0, 0, err
+	}
+	// 时间轴差值数组
+	var tmpCorrelationStartDiffTime = make([]float64, 0)
+	var CorrelationStartDiffTimeList = make(stat.Float64Slice, 0)
+
+	// 调试功能，开始针对对白单元进行匹配
+	for _, srcSubUnit := range srcSubUnitList {
+
+		if srcSubUnit.IsMatchKey == false {
+			continue
+		}
+
 	}
 
 	outCorrelationFixResult := s.calcMeanAndSD(CorrelationStartDiffTimeList, tmpCorrelationStartDiffTime)

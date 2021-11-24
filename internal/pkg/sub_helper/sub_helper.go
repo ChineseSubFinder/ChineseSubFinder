@@ -451,8 +451,10 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInf
 				确认
 			*/
 			if tmpNowMatchKey == false {
+				// 如果没有匹配上，那么就需要步进的长度短一点
 				i = i - SubUnitMaxCount
 			} else {
+				// 如果匹配上“钥匙”了，就直接向下找另一段
 				i = i - SubUnitMaxCount/2
 			}
 		}

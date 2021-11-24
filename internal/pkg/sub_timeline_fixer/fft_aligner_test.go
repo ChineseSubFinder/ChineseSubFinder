@@ -28,7 +28,7 @@ func TestFFTAligner_Fit(t *testing.T) {
 	const tol = 1e-10
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f := FFTAligner{}
+			f := NewFFTAligner()
 			got, got1 := f.Fit(tt.args.refFloats, tt.args.subFloats)
 			if got != tt.want {
 				t.Errorf("Fit() got = %v, want %v", got, tt.want)
