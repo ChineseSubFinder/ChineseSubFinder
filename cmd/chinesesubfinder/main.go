@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal"
+	commonValue "github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	config2 "github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
@@ -71,7 +72,8 @@ func main() {
 
 	// ------ Hot Fix Start ------
 	// 开始修复
-	log.Infoln("HotFix Start...")
+	log.Infoln("HotFix Start, wait ...")
+	log.Infoln(commonValue.NotifyStringTellUserWait)
 	err := hot_fix.HotFixProcess(types.HotFixParam{
 		MovieRootDir:  config.MovieFolder,
 		SeriesRootDir: config.SeriesFolder,
@@ -91,7 +93,7 @@ func main() {
 		然后需要在数据库中记录本次的转换结果
 	*/
 	log.Infoln("Change Sub Name Format Start...")
-
+	log.Infoln(commonValue.NotifyStringTellUserWait)
 	renameResults, err := sub_formatter.SubFormatChangerProcess(config.MovieFolder, config.SeriesFolder, common.FormatterName(config.SubNameFormatter))
 	// 出错的文件有哪一些
 	for s, i := range renameResults.ErrFiles {

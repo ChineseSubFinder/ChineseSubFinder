@@ -1,6 +1,8 @@
 package common
 
-import "time"
+import (
+	"time"
+)
 
 const HTMLTimeOut = 2 * 60 * time.Second             // HttpClient 超时时间
 const OneVideoProcessTimeOut = 20 * 60 * time.Second // 一部电影、一个连续剧，最多的处理时间
@@ -38,3 +40,7 @@ const (
 )
 
 const Ignore = ".ignore"
+
+const (
+	NotifyStringTellUserWait = "If you have a lot of videos, it may take a lot of time, just wait..."
+)
