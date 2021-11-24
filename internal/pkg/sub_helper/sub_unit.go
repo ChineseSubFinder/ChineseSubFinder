@@ -143,7 +143,7 @@ func (s *SubUnit) GetVADFloatSlice() []float64 {
 			if s.VADList[i].Active == true {
 				s.outVADFloats[i] = 1
 			} else {
-				s.outVADFloats[i] = 0
+				s.outVADFloats[i] = -1
 			}
 		}
 	}
@@ -272,9 +272,9 @@ func (s SubUnit) RealTimeToOffsetTime(realTime time.Time) time.Time {
 }
 
 // Save2Txt 导出为 float64 的内容
-func (s SubUnit) Save2Txt(outFileFPath string) error {
+func (s SubUnit) Save2Txt(outFileFPath string, oneLine bool) error {
 
-	file, err := os.OpenFile(outFileFPath, os.O_WRONLY|os.O_CREATE, 0666)
+	file, err := os.OpenFile(outFileFPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
@@ -286,9 +286,16 @@ func (s SubUnit) Save2Txt(outFileFPath string) error {
 		if s.VADList[i].Active == true {
 			active = 1.0
 		}
-		_, err = write.WriteString(fmt.Sprintf("%v\n", active))
-		if err != nil {
-			return err
+		if oneLine == true {
+			_, err = write.WriteString(fmt.Sprintf("%v", active))
+			if err != nil {
+				return err
+			}
+		} else {
+			_, err = write.WriteString(fmt.Sprintf("%v\n", active))
+			if err != nil {
+				return err
+			}
 		}
 	}
 	err = write.Flush()

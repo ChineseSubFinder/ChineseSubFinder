@@ -7,8 +7,8 @@ type KeyFeatures struct {
 	Small  Feature // 小锯齿
 }
 
-func NewKeyFeatures(big, middle, small Feature) *KeyFeatures {
-	return &KeyFeatures{
+func NewKeyFeatures(big, middle, small Feature) KeyFeatures {
+	return KeyFeatures{
 		big, middle, small,
 	}
 }

@@ -52,9 +52,9 @@ require (
 	github.com/tidwall/gjson v1.9.4
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/ysmood/gson v0.7.0 // indirect
-	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
-	golang.org/x/sys v0.0.0-20210616094352-59db8d763f22 // indirect
-	golang.org/x/text v0.3.6
+	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
+	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
+	golang.org/x/text v0.3.7
 	gonum.org/v1/gonum v0.9.3
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/errgo.v2 v2.1.0
@@ -94,9 +94,9 @@ require (
 	github.com/ysmood/goob v0.3.0 // indirect
 	github.com/ysmood/leakless v0.7.0 // indirect
 	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect
-	golang.org/x/exp v0.0.0-20210220032938-85be41e4509f // indirect
-	golang.org/x/mod v0.3.1-0.20200828183125-ce943fd02449 // indirect
-	golang.org/x/tools v0.0.0-20201124115921-2c860bdd6e78 // indirect
+	golang.org/x/exp v0.0.0-20211123021643-48cbe7f80d7c // indirect
+	golang.org/x/mod v0.6.0-dev.0.20211013180041-c96bc1413d57 // indirect
+	golang.org/x/tools v0.1.8-0.20211029000441-d6a9af8af023 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
 	modernc.org/cc/v3 v3.33.7 // indirect

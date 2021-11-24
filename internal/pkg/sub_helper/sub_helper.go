@@ -369,21 +369,20 @@ func MergeMultiDialogue4EngSubtitle(inSubParser *subparser.FileInfo) {
 	inSubParser.DialoguesEx = merger.Get()
 }
 
-// GetVADINfoFromSub 跟下面的 GetVADINfoFromSubNeedOffsetTimeWillInsert 函数功能一致
-func GetVADINfoFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, insert bool, kf *KeyFeatures) ([]SubUnit, error) {
+// GetVADInfoFeatureFromSub 跟下面的 GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert 函数功能一致
+func GetVADInfoFeatureFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, insert bool, kf KeyFeatures) ([]SubUnit, error) {
 
-	return GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc, FrontAndEndPer, SubUnitMaxCount, 0, insert, kf)
+	return GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc, FrontAndEndPer, SubUnitMaxCount, 0, insert, kf)
 }
 
 /*
-	GetVADINfoFromSubNeedOffsetTimeWillInsert 只不过这里可以加一个每一句话固定的偏移时间
+	GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert 只不过这里可以加一个每一句话固定的偏移时间
 	这里的字幕要求是完整的一个字幕
 	1. 抽取字幕的时间片段的时候，暂定，前 15% 和后 15% 要避开，前奏、主题曲、结尾曲
 	2. 将整个字幕，抽取连续 5 句对话为一个单元，提取时间片段信息
-	3. 可能还有一个需求，默认的模式是每五句话一个单元，还有一种模式是每一句话向后找到连续的四句话组成一个单元，允许重叠
-		目前看到的情况是前者的抽样率太低，需要使用后者的逻辑
+	3. 这里抽取的是特征，也就有额外的逻辑去找这个特征（本程序内会描述为“钥匙”）
 */
-func GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, SkipFrontAndEndPer float64, SubUnitMaxCount int, offsetTime float64, insert bool, kf *KeyFeatures) ([]SubUnit, error) {
+func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, SkipFrontAndEndPer float64, SubUnitMaxCount int, offsetTime float64, insert bool, kf KeyFeatures) ([]SubUnit, error) {
 	if SubUnitMaxCount < 0 {
 		SubUnitMaxCount = 0
 	}
@@ -447,21 +446,14 @@ func GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, Skip
 			// 然后重置
 			srcOneSubUnit = NewSubUnit()
 			// TODO 这里决定了插入数据的密度，有待测试
-			//i = i - SubUnitMaxCount
-			if kf == nil {
-				// 走原始的逻辑 i 的赋值逻辑跟之前一样，需要每一次进一步，也就是有重叠的部分出现
-				//i = i - SubUnitMaxCount + SubUnitMaxCount/5
-				//i = i - SubUnitMaxCount + SubUnitMaxCount/2
+			// i = i - SubUnitMaxCount
+			/*
+				确认
+			*/
+			if tmpNowMatchKey == false {
 				i = i - SubUnitMaxCount
 			} else {
-				if tmpNowMatchKey == false {
-					// 走原始的逻辑 i 的赋值逻辑跟之前一样，需要每一次进一步，也就是有重叠的部分出现
-					i = i - SubUnitMaxCount
-				} else {
-					// 判断了“钥匙”特征，且通过了
-					// i 需要跳过当前已经覆盖的段
-					i = i - SubUnitMaxCount + SubUnitMaxCount/2
-				}
+				i = i - SubUnitMaxCount/2
 			}
 		}
 	}
@@ -473,11 +465,8 @@ func GetVADINfoFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, Skip
 }
 
 // IsMatchKey 是否符合“钥匙”的标准
-func IsMatchKey(srcSubDialogueList []subparser.OneDialogueEx, kf *KeyFeatures) bool {
+func IsMatchKey(srcSubDialogueList []subparser.OneDialogueEx, kf KeyFeatures) bool {
 
-	if kf == nil {
-		return false
-	}
 	/*
 		这里是设置主要依赖的还是数据源，源必须有足够的对白（暂定 50 句），才可能找到这么多信息
 		这里需要匹配的“钥匙”特征，先简单实现为 (这三个需要不交叉时间段)
