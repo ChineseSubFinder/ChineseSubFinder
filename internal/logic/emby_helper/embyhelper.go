@@ -50,17 +50,20 @@ func (em *EmbyHelper) GetRecentlyAddVideoList(movieRootDir, seriesRootDir string
 	log_helper.GetLogger().Debugln("GetRecentlyAddVideoList - GetRecentlyItems Count", len(items.Items))
 
 	// 分类
-	for _, item := range items.Items {
+	for index, item := range items.Items {
 		if item.Type == videoTypeEpisode {
 			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
 			EpisodeIdList = append(EpisodeIdList, item.Id)
+			log_helper.GetLogger().Debugln("Episode:", index, item.SeriesName, item.ParentIndexNumber, item.IndexNumber)
 		} else if item.Type == videoTypeMovie {
 			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
 			MovieIdList = append(MovieIdList, item.Id)
+			log_helper.GetLogger().Debugln("Movie:", index, item.SeriesName)
 		} else {
-			log_helper.GetLogger().Debugln("GetRecentlyItems - Is not a goal video type:", item.Type, item.Name)
+			log_helper.GetLogger().Debugln("GetRecentlyItems - Is not a goal video type:", index, item.SeriesName, item.Type)
 		}
 	}
+
 	// 过滤出有效的电影、连续剧的资源出来
 	filterMovieList, err := em.filterEmbyVideoList(movieFolderName, MovieIdList, true)
 	if err != nil {
@@ -70,6 +73,16 @@ func (em *EmbyHelper) GetRecentlyAddVideoList(movieRootDir, seriesRootDir string
 	if err != nil {
 		return nil, nil, err
 	}
+	// 输出调试信息
+	log_helper.GetLogger().Debugln("filterEmbyVideoList found valid movie", len(filterMovieList))
+	for index, info := range filterMovieList {
+		log_helper.GetLogger().Debugln(index, info.VideoFileName)
+	}
+	log_helper.GetLogger().Debugln("filterEmbyVideoList found valid series", len(filterSeriesList))
+	for index, info := range filterSeriesList {
+		log_helper.GetLogger().Debugln(index, info.VideoFileName)
+	}
+
 	// 将没有字幕的找出来
 	noSubMovieList, err := em.filterNoChineseSubVideoList(filterMovieList)
 	if err != nil {
@@ -79,6 +92,17 @@ func (em *EmbyHelper) GetRecentlyAddVideoList(movieRootDir, seriesRootDir string
 	if err != nil {
 		return nil, nil, err
 	}
+
+	// 输出调试信息
+	log_helper.GetLogger().Debugln("filterNoChineseSubVideoList found no chinese movie", len(noSubMovieList))
+	for index, info := range filterMovieList {
+		log_helper.GetLogger().Debugln(index, info.VideoFileName)
+	}
+	log_helper.GetLogger().Debugln("filterNoChineseSubVideoList found no chinese series", len(noSubSeriesList))
+	for index, info := range filterSeriesList {
+		log_helper.GetLogger().Debugln(index, info.VideoFileName)
+	}
+
 	// 拼接绝对路径
 	for i, info := range noSubMovieList {
 		noSubMovieList[i].VideoFileFullPath = filepath.Join(movieRootDir, info.VideoFileRelativePath)
@@ -275,8 +299,10 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 		}
 		// 比如，创建的时间在3个月内，然后没有额外下载的中文字幕，都符合要求
 		if haveExternalChineseSub == false {
+			// 没有外置字幕
 			// 如果创建了7天，且有内置的中文字幕，那么也不进行下载了
 			if info.VideoInfo.DateCreated.Add(dayRange7Days).After(currentTime) == false && haveInsideChineseSub == true {
+				log_helper.GetLogger().Debugln("Create Over 7 Days, And It Has Inside ChineseSub, Than Skip", info.VideoFileName)
 				continue
 			}
 			//// 如果创建了三个月，还是没有字幕，那么也不进行下载了
@@ -286,8 +312,10 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 			// 没有中文字幕就加入下载列表
 			noSubVideoList = append(noSubVideoList, info)
 		} else {
+			// 有外置字幕
 			// 如果视频发布时间超过两年了，有字幕就直接跳过了，一般字幕稳定了
 			if currentTime.Year()-2 > info.VideoInfo.PremiereDate.Year() {
+				log_helper.GetLogger().Debugln("Create Over 2 Years, And It Has External ChineseSub, Than Skip", info.VideoFileName)
 				continue
 			}
 			// 有中文字幕，且如果在三个月内，则需要继续下载字幕`

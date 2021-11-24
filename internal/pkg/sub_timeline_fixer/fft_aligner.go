@@ -7,6 +7,9 @@ import (
 	"math"
 )
 
+/*
+	复现 https://github.com/smacke/ffsubsync 的算法
+*/
 type FFTAligner struct {
 }
 
