@@ -16,10 +16,14 @@ func TestFFTAligner_Fit(t *testing.T) {
 		want  int
 		want1 float64
 	}{
-		{name: "00", args: args{
+		{name: "2-5", args: args{
 			refFloats: []float64{1, 1, 1, 1, -1, -1, 1},
 			subFloats: []float64{1, 1, -1, -1, 1},
-		}, want: 1, want1: 5},
+		}, want: 2, want1: 5},
+		{name: "3-5", args: args{
+			refFloats: []float64{0, 1, 1, 1, 1, -1, -1, 1},
+			subFloats: []float64{1, 1, -1, -1, 1},
+		}, want: 3, want1: 5},
 	}
 	const tol = 1e-10
 	for _, tt := range tests {
@@ -29,7 +33,7 @@ func TestFFTAligner_Fit(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("Fit() got = %v, want %v", got, tt.want)
 			}
-			if scalar.EqualWithinAbsOrRel(got1, tt.want1, tol, tol) {
+			if scalar.EqualWithinAbsOrRel(got1, tt.want1, tol, tol) == false {
 				t.Errorf("Fit() got1 = %v, want %v", got1, tt.want1)
 			}
 		})
