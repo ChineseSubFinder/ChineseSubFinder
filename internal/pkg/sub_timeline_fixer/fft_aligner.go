@@ -39,11 +39,12 @@ func (f FFTAligner) fit(refFloats, subFloats []float64) []float64 {
 	// ----------------------------------------------------------
 	// 对于 sub 需要在前面补零
 	power2Sub := make([]float64, power2Len)
-	for i := 0; i < extraZeros+len(refFloats); i++ {
+	fillUpZeroLen4Sub := power2Len - len(subFloats)
+	for i := 0; i < fillUpZeroLen4Sub; i++ {
 		power2Sub[i] = 0
 	}
 	for i := 0; i < len(subFloats); i++ {
-		power2Sub[extraZeros+len(subFloats)+i] = subFloats[i]
+		power2Sub[fillUpZeroLen4Sub+i] = subFloats[i]
 	}
 	// 可选择的 FFT 实现 "github.com/brettbuddin/fourier"
 	//subFT := fourier.Forward()
@@ -55,7 +56,7 @@ func (f FFTAligner) fit(refFloats, subFloats []float64) []float64 {
 	for i := 0; i < len(refFloats); i++ {
 		power2Ref[i] = refFloats[i]
 	}
-	for i := 0; i < extraZeros+len(subFloats); i++ {
+	for i := 0; i < power2Len-len(refFloats); i++ {
 		power2Ref[len(refFloats)+i] = 0
 	}
 	// 反转 power2Ref  0, 1，1，0，0 -> 0,0,1,1,0

@@ -17,8 +17,8 @@ func TestFFTAligner_Fit(t *testing.T) {
 		want1 float64
 	}{
 		{name: "00", args: args{
-			refFloats: []float64{1, 1, 1, 1, 0, 0, 1},
-			subFloats: []float64{0, 1, 1, 0, 0, 1, 0},
+			refFloats: []float64{1, 1, 1, 1, -1, -1, 1},
+			subFloats: []float64{1, 1, -1, -1, 1},
 		}, want: 1, want1: 5},
 	}
 	const tol = 1e-10
