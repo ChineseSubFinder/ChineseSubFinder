@@ -159,25 +159,18 @@ func (em *EmbyHelper) filterEmbyVideoList(videoFolderName string, videoIdList []
 			if len(mixInfo.Ancestors) < 2 {
 				return nil, err
 			}
-
 			// 过滤掉不符合要求的
-			ancestorsCount := len(mixInfo.Ancestors)
-			usefulAncestorIndex := ancestorsCount - 2
-			if mixInfo.Ancestors[usefulAncestorIndex].Name != videoFolderName || mixInfo.Ancestors[usefulAncestorIndex].Type != "Folder" {
+			if mixInfo.Ancestors[0].Name != videoFolderName || mixInfo.Ancestors[0].Type != "Folder" {
 				return nil, err
 			}
-
 			// 这个电影的文件夹
 			mixInfo.VideoFolderName = filepath.Base(filepath.Dir(mixInfo.VideoInfo.Path))
 			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
-			// 这里需要注意，仅仅这样是不能够解决嵌套文件夹问题的。
-			//mixInfo.VideoFileRelativePath = filepath.Join(mixInfo.VideoFolderName, mixInfo.VideoFileName)
-			// 需要从上面得到的 Ancestors 对应的“电影”根目录的 index 处，拿到 Path，然后用 info 这个实例的 Path 剪掉前面那个 Path，就是相对路径了
-			mixInfo.VideoFileRelativePath = strings.ReplaceAll(info.Path, mixInfo.Ancestors[usefulAncestorIndex].Path, "")
+			mixInfo.VideoFileRelativePath = filepath.Join(mixInfo.VideoFolderName, mixInfo.VideoFileName)
 		} else {
 			// 连续剧
 			// 过滤掉不符合要求的
-			if len(mixInfo.Ancestors) < 4 {
+			if len(mixInfo.Ancestors) < 3 {
 				return nil, err
 			}
 			// 过滤掉不符合要求的
