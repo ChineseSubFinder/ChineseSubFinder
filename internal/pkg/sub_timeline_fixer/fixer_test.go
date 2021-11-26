@@ -413,7 +413,10 @@ func TestGetOffsetTimeV2(t *testing.T) {
 		*/
 		{name: "R&M S05E01", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E01 - English.srt"),
 			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E01 - 简英.srt"),
-			staticLineFileSavePath: "bar.html"}, want: -6.42981818181818, wantErr: false},
+			staticLineFileSavePath: "bar.html"}, want: -6.32981818181818, wantErr: false},
+		{name: "R&M S05E01-1", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E01 - English.srt"),
+			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E01 - English.srt"),
+			staticLineFileSavePath: "bar.html"}, want: 0, wantErr: false},
 		{name: "R&M S05E10", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E10 - English.ass"),
 			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
 			staticLineFileSavePath: "bar.html"}, want: -6.335985401459854, wantErr: false},
@@ -424,7 +427,7 @@ func TestGetOffsetTimeV2(t *testing.T) {
 		{name: "基地 S01E02", args: args{
 			baseSubFile:            filepath.Join(testRootDirYes, "Foundation (2021) - S01E02.chinese(inside).ass"),
 			srcSubFile:             filepath.Join(testRootDirYes, "Foundation (2021) - S01E02.chinese(简英,subhd).ass"),
-			staticLineFileSavePath: "bar.html"}, want: -36.885074, wantErr: false},
+			staticLineFileSavePath: "bar.html"}, want: -30.624840, wantErr: false},
 		{name: "基地 S01E04", args: args{
 			baseSubFile:            filepath.Join(testRootDirYes, "Foundation (2021) - S01E04.chinese(inside).ass"),
 			srcSubFile:             filepath.Join(testRootDirYes, "Foundation (2021) - S01E04.chinese(简英,subhd).ass"),
@@ -433,6 +436,19 @@ func TestGetOffsetTimeV2(t *testing.T) {
 		{name: "Don't Breathe 2 (2021) - shooter-srt", args: args{
 			baseSubFile:            filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).srt"),
 			srcSubFile:             filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,shooter).srt"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		/*
+			Only Murders in the Building
+		*/
+		{name: "Only Murders in the Building - S01E06", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Only Murders in the Building - S01E06.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Only Murders in the Building - S01E06.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Only Murders in the Building - S01E08", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Only Murders in the Building - S01E08.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Only Murders in the Building - S01E08.chinese(简英,subhd).ass"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 	}
@@ -496,7 +512,7 @@ func TestGetOffsetTimeV2(t *testing.T) {
 				}
 			}
 
-			println(fmt.Sprintf("GetOffsetTimeV1: %fs SD:%f", got, sd))
+			println(fmt.Sprintf("GetOffsetTimeV2: %fs SD:%f", got, sd))
 		})
 	}
 }

@@ -370,9 +370,9 @@ func MergeMultiDialogue4EngSubtitle(inSubParser *subparser.FileInfo) {
 }
 
 // GetVADInfoFeatureFromSub 跟下面的 GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert 函数功能一致
-func GetVADInfoFeatureFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, insert bool, kf KeyFeatures) ([]SubUnit, error) {
+func GetVADInfoFeatureFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, insert bool) ([]SubUnit, error) {
 
-	return GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc, FrontAndEndPer, SubUnitMaxCount, 0, insert, kf)
+	return GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc, FrontAndEndPer, SubUnitMaxCount, 0, insert)
 }
 
 /*
@@ -382,7 +382,7 @@ func GetVADInfoFeatureFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float6
 	2. 将整个字幕，抽取连续 5 句对话为一个单元，提取时间片段信息
 	3. 这里抽取的是特征，也就有额外的逻辑去找这个特征（本程序内会描述为“钥匙”）
 */
-func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, SkipFrontAndEndPer float64, SubUnitMaxCount int, offsetTime float64, insert bool, kf KeyFeatures) ([]SubUnit, error) {
+func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, SkipFrontAndEndPer float64, SubUnitMaxCount int, offsetTime float64, insert bool) ([]SubUnit, error) {
 	if SubUnitMaxCount < 0 {
 		SubUnitMaxCount = 0
 	}
@@ -436,9 +436,6 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInf
 			srcSubDialogueList = append(srcSubDialogueList, infoSrc.DialoguesEx[i])
 
 		} else {
-			// 筹够那么多句话了，需要判断一次是否符合“钥匙”的要求
-			tmpNowMatchKey := IsMatchKey(srcSubDialogueList, kf)
-			srcOneSubUnit.IsMatchKey = tmpNowMatchKey
 			// 用完清空
 			srcSubDialogueList = make([]subparser.OneDialogueEx, 0)
 			// 将拼凑起来的对话组成一个单元进行存储起来
@@ -447,16 +444,6 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInf
 			srcOneSubUnit = NewSubUnit()
 			// TODO 这里决定了插入数据的密度，有待测试
 			// i = i - SubUnitMaxCount
-			/*
-				确认
-			*/
-			if tmpNowMatchKey == false {
-				// 如果没有匹配上，那么就需要步进的长度短一点
-				i = i - SubUnitMaxCount
-			} else {
-				// 如果匹配上“钥匙”了，就直接向下找另一段
-				i = i - SubUnitMaxCount/2
-			}
 		}
 	}
 	if srcOneSubUnit.GetDialogueCount() > 0 {
@@ -464,49 +451,4 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInf
 	}
 
 	return srcSubUnitList, nil
-}
-
-// IsMatchKey 是否符合“钥匙”的标准
-func IsMatchKey(srcSubDialogueList []subparser.OneDialogueEx, kf KeyFeatures) bool {
-
-	/*
-		这里是设置主要依赖的还是数据源，源必须有足够的对白（暂定 50 句），才可能找到这么多信息
-		这里需要匹配的“钥匙”特征，先简单实现为 (这三个需要不交叉时间段)
-			1. 大坑（大于 10s 的对白间隔）至少 1 个
-			2. 中坑（大于 2 且小于 5s 的对白间隔）至少 3 个
-			3. 小坑（大于 1 且小于 2s 的对白间隔）至少 5 个
-	*/
-	dialogueIntervals := make([]float64, 0)
-	tmpFileInfo := subparser.FileInfo{}
-	// 现在需要进行凹坑的识别，一共由多少个，间隔多少
-	for i := 0; i < len(srcSubDialogueList)-1; i++ {
-		startTime, err := tmpFileInfo.ParseTime(srcSubDialogueList[i+1].StartTime)
-		if err != nil {
-			return false
-		}
-		endTime, err := tmpFileInfo.ParseTime(srcSubDialogueList[i].EndTime)
-		if err != nil {
-			return false
-		}
-		// 对话间的时间间隔
-		dialogueIntervals = append(dialogueIntervals, my_util.Time2SecendNumber(startTime)-my_util.Time2SecendNumber(endTime))
-	}
-	// big
-	for _, value := range dialogueIntervals {
-		if kf.Big.Match(value) == true {
-			kf.Big.NowCount++
-		}
-		if kf.Middle.Match(value) == true {
-			kf.Middle.NowCount++
-		}
-		if kf.Small.Match(value) == true {
-			kf.Small.NowCount++
-		}
-	}
-	// 统计到的要 >= 目标的个数
-	if kf.Big.NowCount < kf.Big.LeastCount || kf.Middle.NowCount < kf.Middle.LeastCount || kf.Small.NowCount < kf.Small.LeastCount {
-		return false
-	}
-
-	return true
 }

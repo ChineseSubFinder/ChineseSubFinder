@@ -12,15 +12,14 @@ import (
 )
 
 type SubUnit struct {
-	baseTime        time.Time // 这个是基础的时间，后续需要减去这个，不然与导出的片段字幕去对比会有一个起始时间的偏差
-	offsetStartTime time.Time // 相对时间，这个时间会减去 baseTime 再存储
-	offsetEndTime   time.Time // 相对时间，这个时间会减去 baseTime 再存储
-	VADList         []vad.VADInfo
+	baseTime        time.Time     // 这个是基础的时间，后续需要减去这个，不然与导出的片段字幕去对比会有一个起始时间的偏差
+	offsetStartTime time.Time     // 相对时间，这个时间会减去 baseTime 再存储
+	offsetEndTime   time.Time     // 相对时间，这个时间会减去 baseTime 再存储
+	VADList         []vad.VADInfo // 注意这里存储的是真实时间
 	subCount        int
 	firstAdd        bool
 	outVADBytes     []byte
 	outVADFloats    []float64
-	IsMatchKey      bool // 是否符合“钥匙”的要求
 }
 
 func NewSubUnit() *SubUnit {
@@ -112,6 +111,11 @@ func (s *SubUnit) AddAndInsert(oneSubStartTime, oneSubEndTime time.Time) {
 	s.subCount++
 }
 
+// AddBaseTime 如果 BaseTime 还有偏移，可以在 Add 和 AddAndInsert 逻辑完成后，调用此方法去调整基准时间
+func (s *SubUnit) AddBaseTime(addBaseTime time.Duration) {
+	s.baseTime = s.baseTime.Add(addBaseTime)
+}
+
 // GetDialogueCount 获取这个对白单元由几个对话
 func (s SubUnit) GetDialogueCount() int {
 	return s.subCount
@@ -188,9 +192,9 @@ func (s SubUnit) GetIndexTime(index int, realOrOffsetTime bool) (bool, time.Time
 	}
 
 	if realOrOffsetTime == true {
-		return true, time.Time{}.Add(s.VADList[index].Time).Add(my_util.Time2Duration(s.baseTime))
-	} else {
 		return true, time.Time{}.Add(s.VADList[index].Time)
+	} else {
+		return true, time.Time{}.Add(s.VADList[index].Time).Add(-my_util.Time2Duration(s.baseTime))
 	}
 }
 
