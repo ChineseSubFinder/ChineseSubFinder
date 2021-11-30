@@ -442,8 +442,6 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInf
 			srcSubUnitList = append(srcSubUnitList, *srcOneSubUnit)
 			// 然后重置
 			srcOneSubUnit = NewSubUnit()
-			// TODO 这里决定了插入数据的密度，有待测试
-			// i = i - SubUnitMaxCount
 		}
 	}
 	if srcOneSubUnit.GetDialogueCount() > 0 {

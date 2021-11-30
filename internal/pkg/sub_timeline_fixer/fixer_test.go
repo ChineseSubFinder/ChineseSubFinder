@@ -428,6 +428,24 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 		{name: "R&M S05E10-2", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
 			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
 			staticLineFileSavePath: "bar.html"}, want: 0, wantErr: false},
+
+		{name: "R&M S05E01-2", args: args{
+			baseSubFile:            "C:\\Tmp\\Rick and Morty - S05E01\\英_2.srt",
+			srcSubFile:             "C:\\Tmp\\Rick and Morty - S05E01\\Rick and Morty - S05E01 - Mort Dinner Rick Andre WEBDL-1080p.chinese(简英,zimuku).ass",
+			staticLineFileSavePath: "bar.html"}, want: -6.12981818181818, wantErr: false},
+		{name: "R&M S05E01-2", args: args{
+			baseSubFile:            "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass",
+			srcSubFile:             "C:\\Tmp\\Rick and Morty - S05E01\\Rick and Morty - S05E01 - Mort Dinner Rick Andre WEBDL-1080p.chinese(简英,zimuku).ass",
+			staticLineFileSavePath: "bar.html"}, want: -6.12981818181818, wantErr: false},
+		{name: "R&M S05E01-2", args: args{
+			baseSubFile:            "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass",
+			srcSubFile:             "C:\\Tmp\\Rick and Morty - S05E01\\英_2.srt",
+			staticLineFileSavePath: "bar.html"}, want: -6.12981818181818, wantErr: false},
+
+		{name: "R&M S05E01-2", args: args{
+			baseSubFile:            "C:\\Tmp\\Rick and Morty - S05E10\\英_2.srt",
+			srcSubFile:             "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
+			staticLineFileSavePath: "bar.html"}, want: -6.12981818181818, wantErr: false},
 		/*
 			基地
 		*/
@@ -671,6 +689,24 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			args: args{audioInfo: vad.AudioInfo{
 				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"},
 				subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.chinese(简英,zimuku).ass"},
+			want: true, want1: -6.4,
+		},
+		{name: "Rick and Morty - S05E01 -- 0",
+			args: args{audioInfo: vad.AudioInfo{
+				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm"},
+				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass"},
+			want: true, want1: -6.4,
+		},
+		{name: "Rick and Morty - S05E01 -- 0",
+			args: args{audioInfo: vad.AudioInfo{
+				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm"},
+				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\英_2.srt"},
+			want: true, want1: -6.4,
+		},
+		{name: "Rick and Morty - S05E01 -- 1",
+			args: args{audioInfo: vad.AudioInfo{
+				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm"},
+				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\Rick and Morty - S05E01 - Mort Dinner Rick Andre WEBDL-1080p.chinese(简英,zimuku).ass"},
 			want: true, want1: -6.4,
 		},
 	}
