@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
@@ -387,7 +388,7 @@ func TestGetOffsetTimeV1(t *testing.T) {
 	}
 }
 
-func TestGetOffsetTimeV2(t *testing.T) {
+func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 	testDataPath := "../../../TestData/FixTimeline"
 	testRootDir, err := my_util.CopyTestData(testDataPath)
 	if err != nil {
@@ -413,26 +414,56 @@ func TestGetOffsetTimeV2(t *testing.T) {
 		*/
 		{name: "R&M S05E01", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E01 - English.srt"),
 			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E01 - 简英.srt"),
-			staticLineFileSavePath: "bar.html"}, want: -6.32981818181818, wantErr: false},
+			staticLineFileSavePath: "bar.html"}, want: -6.12981818181818, wantErr: false},
 		{name: "R&M S05E01-1", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E01 - English.srt"),
 			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E01 - English.srt"),
 			staticLineFileSavePath: "bar.html"}, want: 0, wantErr: false},
 		{name: "R&M S05E10", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E10 - English.ass"),
 			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
-			staticLineFileSavePath: "bar.html"}, want: -6.335985401459854, wantErr: false},
+			staticLineFileSavePath: "bar.html"}, want: -6.405985401459854, wantErr: false},
 
-		{name: "基地 S01E03", args: args{baseSubFile: filepath.Join(testRootDirYes, "基地 S01E03 - English.ass"),
-			srcSubFile:             filepath.Join(testRootDirYes, "基地 S01E03 - 简英.ass"),
-			staticLineFileSavePath: "bar.html"}, want: -32.09061538461539, wantErr: false},
-		{name: "基地 S01E02", args: args{
+		{name: "R&M S05E10-1", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
+			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E10 - English.ass"),
+			staticLineFileSavePath: "bar.html"}, want: 6.405985401459854, wantErr: false},
+		{name: "R&M S05E10-2", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
+			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
+			staticLineFileSavePath: "bar.html"}, want: 0, wantErr: false},
+		/*
+			基地
+		*/
+		{name: "Foundation (2021) - S01E01", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Foundation (2021) - S01E01.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Foundation (2021) - S01E01.chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Foundation (2021) - S01E02", args: args{
 			baseSubFile:            filepath.Join(testRootDirYes, "Foundation (2021) - S01E02.chinese(inside).ass"),
 			srcSubFile:             filepath.Join(testRootDirYes, "Foundation (2021) - S01E02.chinese(简英,subhd).ass"),
-			staticLineFileSavePath: "bar.html"}, want: -30.624840, wantErr: false},
-		{name: "基地 S01E04", args: args{
+			staticLineFileSavePath: "bar.html"},
+			want: -30.624840, wantErr: false},
+		{name: "Foundation (2021) - S01E03", args: args{
+			baseSubFile:            filepath.Join(testRootDirYes, "Foundation (2021) - S01E03.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirYes, "Foundation (2021) - S01E03.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: -32.085037037037054, wantErr: false},
+		{name: "Foundation (2021) - S01E04", args: args{
 			baseSubFile:            filepath.Join(testRootDirYes, "Foundation (2021) - S01E04.chinese(inside).ass"),
 			srcSubFile:             filepath.Join(testRootDirYes, "Foundation (2021) - S01E04.chinese(简英,subhd).ass"),
-			staticLineFileSavePath: "bar.html"}, want: -36.885074, wantErr: false},
-
+			staticLineFileSavePath: "bar.html"},
+			want: -36.885074, wantErr: false},
+		{name: "Foundation (2021) - S01E04", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Foundation (2021) - S01E04.chinese(inside).srt"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Foundation (2021) - S01E04.chinese(繁英,shooter).srt"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		/*
+			Don't Breathe 2 (2021)
+		*/
+		{name: "Don't Breathe 2 (2021) - zimuku-ass", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
 		{name: "Don't Breathe 2 (2021) - shooter-srt", args: args{
 			baseSubFile:            filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(inside).srt"),
 			srcSubFile:             filepath.Join(testRootDirNo, "Don't Breathe 2 (2021).chinese(简英,shooter).srt"),
@@ -449,6 +480,88 @@ func TestGetOffsetTimeV2(t *testing.T) {
 		{name: "Only Murders in the Building - S01E08", args: args{
 			baseSubFile:            filepath.Join(testRootDirNo, "Only Murders in the Building - S01E08.chinese(inside).ass"),
 			srcSubFile:             filepath.Join(testRootDirNo, "Only Murders in the Building - S01E08.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		/*
+			Ted Lasso
+		*/
+		{name: "Ted Lasso - S02E09", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E09", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Ted Lasso - S02E09.chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E10", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E10", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E10", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Ted Lasso - S02E10.chinese(简英,shooter).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E11", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E11", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Ted Lasso - S02E11.chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E12", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "Ted Lasso - S02E12", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "Ted Lasso - S02E12.chinese(简英,shooter).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		/*
+			The Protégé
+		*/
+		{name: "The Protégé", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "The Protégé (2021).chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "The Protégé (2021).chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "The Protégé", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "The Protégé (2021).chinese(inside).srt"),
+			srcSubFile:             filepath.Join(testRootDirNo, "The Protégé (2021).chinese(简英,shooter).srt"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		/*
+			The Witcher Nightmare of the Wolf
+		*/
+		{name: "The Witcher Nightmare of the Wolf", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "The Witcher Nightmare of the Wolf.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "The Witcher Nightmare of the Wolf.chinese(简英,zimuku).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		/*
+			What If…!
+		*/
+		{name: "What If…! - S01E07", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "What If…! - S01E07.chinese(inside).ass"),
+			srcSubFile:             filepath.Join(testRootDirNo, "What If…! - S01E07.chinese(简英,subhd).ass"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
+		{name: "What If…! - S01E09", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "What If…! - S01E09.chinese(inside).srt"),
+			srcSubFile:             filepath.Join(testRootDirNo, "What If…! - S01E09.chinese(简英,shooter).srt"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
 	}
@@ -489,35 +602,47 @@ func TestGetOffsetTimeV2(t *testing.T) {
 			*/
 			//sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
 
-			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(infoBase, infoSrc, tt.args.srcSubFile+"-bar.html", tt.args.srcSubFile+".log")
+			// Base，截取的部分要大于 Src 的部分
+			baseUnitList, err := sub_helper.GetVADInfoFeatureFromSub(infoBase, FrontAndEndPerBase, 10000, bInsert)
+			if err != nil {
+				t.Fatal(err)
+			}
+			baseUnit := baseUnitList[0]
+			// Src，截取的部分要小于 Base 的部分
+			srcUnitList, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPerSrc, 10000, bInsert)
+			if err != nil {
+				t.Fatal(err)
+			}
+			srcUnit := srcUnitList[0]
+
+			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(&baseUnit, &srcUnit, nil, 0)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV1() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+			if bok == false {
+				t.Fatal("GetOffsetTimeV2 return false")
+			}
 
-			// 在一个正负范围内都可以接受
-			if got > tt.want-0.1 && got < tt.want+0.1 {
-
+			if got > -0.2 && got < 0.2 && tt.want == 0 {
+				// 如果 offset time > -0.2 且 < 0.2 则认为无需调整时间轴，为0
+			} else if got > tt.want-0.1 && got < tt.want+0.1 {
+				// 在一个正负范围内都可以接受
 			} else {
 				t.Errorf("GetOffsetTimeV1() got = %v, want %v", got, tt.want)
 			}
-			//if got != tt.want {
-			//	t.Errorf("GetOffsetTimeV1() got = %v, want %v", got, tt.want)
+			//if bok == true && got != 0 {
+			//	_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
+			//	if err != nil {
+			//		t.Fatal(err)
+			//	}
 			//}
-
-			if bok == true && got != 0 {
-				_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
-				if err != nil {
-					t.Fatal(err)
-				}
-			}
-
 			println(fmt.Sprintf("GetOffsetTimeV2: %fs SD:%f", got, sd))
 		})
 	}
 }
 
-func TestSubTimelineFixer_GetOffsetTimeV3(t *testing.T) {
+func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
@@ -525,10 +650,8 @@ func TestSubTimelineFixer_GetOffsetTimeV3(t *testing.T) {
 		fixerConfig sub_timeline_fiexer.SubTimelineFixerConfig
 	}
 	type args struct {
-		audioInfo              vad.AudioInfo
-		subFilePath            string
-		staticLineFileSavePath string
-		debugInfoFileSavePath  string
+		audioInfo   vad.AudioInfo
+		subFilePath string
 	}
 	tests := []struct {
 		name    string
@@ -539,7 +662,17 @@ func TestSubTimelineFixer_GetOffsetTimeV3(t *testing.T) {
 		want2   float64
 		wantErr bool
 	}{
-		{name: "Rick and Morty - S05E10", args: args{audioInfo: vad.AudioInfo{FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"}, subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass"}},
+		{name: "Rick and Morty - S05E10 -0 0",
+			args: args{audioInfo: vad.AudioInfo{
+				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"},
+				subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass"},
+		},
+		{name: "Rick and Morty - S05E10 -- 1",
+			args: args{audioInfo: vad.AudioInfo{
+				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"},
+				subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.chinese(简英,zimuku).ass"},
+			want: true, want1: -6.4,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -547,20 +680,41 @@ func TestSubTimelineFixer_GetOffsetTimeV3(t *testing.T) {
 				fixerConfig: tt.fields.fixerConfig,
 			}
 
-			bok, fileInfo, err := subParserHub.DetermineFileTypeFromFile(tt.args.subFilePath)
+			bFind, infoSrc, err := subParserHub.DetermineFileTypeFromFile(tt.args.subFilePath)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if bok == false {
-				t.Fatal("DetermineFileTypeFromFile == false")
+			if bFind == false {
+				t.Fatal("sub not match")
 			}
 			/*
 				这里发现一个梗，内置的英文字幕导出的时候，有可能需要合并多个 Dialogue，见
 				internal/pkg/sub_helper/sub_helper.go 中 MergeMultiDialogue4EngSubtitle 的实现
 			*/
-			//sub_helper.MergeMultiDialogue4EngSubtitle(fileInfo)
+			//sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
+			// Src，截取的部分要小于 Base 的部分
+			srcUnitList, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPerSrc, 10000, bInsert)
+			if err != nil {
+				t.Fatal(err)
+			}
+			srcUnit := srcUnitList[0]
 
-			got, got1, got2, err := s.GetOffsetTimeV3(tt.args.audioInfo, fileInfo, tt.args.staticLineFileSavePath, tt.args.debugInfoFileSavePath)
+			audioVADInfos, err := vad.GetVADInfoFromAudio(vad.AudioInfo{
+				FileFullPath: tt.args.audioInfo.FileFullPath,
+				SampleRate:   16000,
+				BitDepth:     16,
+			}, true)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			f := ffmpeg_helper.NewFFMPEGHelper()
+			bok, duration, err := f.GetAudioInfo(tt.args.audioInfo.FileFullPath)
+			if err != nil || bok == false {
+				t.Fatal(err)
+			}
+
+			got, got1, got2, err := s.GetOffsetTimeV2(nil, &srcUnit, audioVADInfos, duration)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV3() error = %v, wantErr %v", err, tt.wantErr)
 				return

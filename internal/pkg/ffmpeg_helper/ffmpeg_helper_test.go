@@ -8,7 +8,8 @@ import (
 )
 
 func TestGetFFMPEGInfo(t *testing.T) {
-	videoFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 5\\Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.mkv"
+	//videoFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 5\\Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.mkv"
+	videoFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 5\\Rick and Morty - S05E01 - Mort Dinner Rick Andre WEBDL-1080p.mkv"
 
 	f := NewFFMPEGHelper()
 	bok, ffmpegInfo, err := f.GetFFMPEGInfo(videoFile)

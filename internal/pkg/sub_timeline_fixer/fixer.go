@@ -1,6 +1,7 @@
 package sub_timeline_fixer
 
 import (
+	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
@@ -9,14 +10,19 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/sub_timeline_fiexer"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"github.com/emirpasic/gods/maps/treemap"
+	"github.com/emirpasic/gods/utils"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/grd/stat"
 	"github.com/james-bowman/nlp/measures/pairwise"
 	"github.com/mndrix/tukey"
+	"github.com/panjf2000/ants/v2"
+	"golang.org/x/net/context"
 	"gonum.org/v1/gonum/mat"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -362,32 +368,32 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 }
 
 // GetOffsetTimeV2 使用内置的字幕校正外置的字幕时间轴
-func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) (bool, float64, float64, error) {
-
-	// Base，截取的部分要大于 Src 的部分
-	baseUnitList, err := sub_helper.GetVADInfoFeatureFromSub(infoBase, FrontAndEndPerBase, 10000, bInsert)
-	if err != nil {
-		return false, 0, 0, err
-	}
-	baseUnit := baseUnitList[0]
-	// Src，截取的部分要小于 Base 的部分
-	srcUnitList, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPerSrc, 10000, bInsert)
-	if err != nil {
-		return false, 0, 0, err
-	}
-	srcUnit := srcUnitList[0]
+func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit, audioVadList []vad.VADInfo, audioDuration float64) (bool, float64, float64, error) {
 
 	// 时间轴差值数组
 	var tmpStartDiffTimeList = make([]float64, 0)
+	var tmpStartDiffTimeMap = treemap.NewWith(utils.Float64Comparator)
 	var tmpStartDiffTimeListEx = make(stat.Float64Slice, 0)
+	// -------------------------------------------------
+	var bUseSubOrAudioAsBase = true
+	if baseUnit == nil && audioVadList != nil {
+		// 使用 音频 来进行匹配
+		bUseSubOrAudioAsBase = false
+	} else if baseUnit != nil {
+		// 使用 字幕 来进行匹配
+		bUseSubOrAudioAsBase = true
+	} else {
+		return false, 0, 0, errors.New("GetOffsetTimeV2 input baseUnit or AudioVad is nil")
+	}
 
-	fffAligner := NewFFTAligner()
+	// -------------------------------------------------
 	/*
 		开始针对对白单元进行匹配
 		下面的逻辑需要参考 FFT识别流程.jpg 这个图示来理解
 		实际实现的时候，会在上述 srcUnit 上，做一个滑动窗口来做匹配，80% 是窗口，20% 用于移动
 		步长固定在 10 步
 	*/
+	audioFloatList := vad.GetFloatSlice(audioVadList)
 
 	srcVADLen := len(srcUnit.VADList)
 	srcWindowLen := int(float64(srcVADLen) * MatchPer)
@@ -397,23 +403,47 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 	if srcSlideLen <= 0 {
 		srcSlideLen = 1
 	}
-	for i := srcSlideLenHalf; i < srcSlideLen; {
-
+	if oneStep <= 0 {
+		oneStep = 1
+	}
+	insertIndex := 0
+	// -------------------------------------------------
+	fixFunc := func(i interface{}) error {
+		inData := i.(InputData)
 		// -------------------------------------------------
 		// 开始匹配
 		// 这里的对白单元，当前的 Base 进行对比，详细示例见图解。Step 2 中橙色的区域
-		offsetIndex, score := fffAligner.Fit(baseUnit.GetVADFloatSlice(), srcUnit.GetVADFloatSlice()[i:srcWindowLen+i])
-		if offsetIndex < 0 {
-			continue
+		fffAligner := NewFFTAligner()
+		var bok = false
+		var nowBaseStartTime = 0.0
+		var offsetIndex = 0
+		var score = 0.0
+		// 图解，参考 Step 3
+		if bUseSubOrAudioAsBase == false {
+			// 使用 音频 来进行匹配
+			// 去掉头和尾，具体百分之多少，见 FrontAndEndPerBase
+			audioCutLen := int(float64(len(inData.AudioVADList)) * FrontAndEndPerBase)
+			offsetIndex, score = fffAligner.Fit(inData.AudioVADList[audioCutLen:len(inData.AudioVADList)-audioCutLen], inData.SrcUnit.GetVADFloatSlice()[inData.Index:srcWindowLen+inData.Index])
+			if offsetIndex < 0 {
+				return nil
+			}
+			// offsetIndex 这里得到的是 10ms 为一个单位的 Index，把去掉的头部时间偏移加回来
+			nowBaseStartTime = vad.GetAudioIndex2Time(offsetIndex + audioCutLen)
+		} else {
+			// 使用 字幕 来进行匹配
+			offsetIndex, score = fffAligner.Fit(inData.BaseUnit.GetVADFloatSlice(), inData.SrcUnit.GetVADFloatSlice()[inData.Index:srcWindowLen+inData.Index])
+			if offsetIndex < 0 {
+				return nil
+			}
+			bok, nowBaseStartTime = inData.BaseUnit.GetIndexTimeNumber(offsetIndex, true)
+			if bok == false {
+				return nil
+			}
 		}
-		// 图解，Step 3 中，需要从当前的相对
-		bok, nowBaseStartTime := baseUnit.GetIndexTimeNumber(offsetIndex, true)
+		// 需要校正的字幕
+		bok, nowSrcStartTime := inData.SrcUnit.GetIndexTimeNumber(inData.Index, true)
 		if bok == false {
-			continue
-		}
-		bok, nowSrcStartTime := srcUnit.GetIndexTimeNumber(i, true)
-		if bok == false {
-			continue
+			return nil
 		}
 		// 时间差值
 		TimeDiffStartCorrelation := nowBaseStartTime - nowSrcStartTime
@@ -421,48 +451,88 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(infoBase, infoSrc *subparser.FileInfo
 		println("------------")
 		println("OffsetTime:", fmt.Sprintf("%v", TimeDiffStartCorrelation), "offsetIndex:", offsetIndex, "score:", fmt.Sprintf("%v", score))
 
+		mutexFixV2.Lock()
 		tmpStartDiffTimeList = append(tmpStartDiffTimeList, TimeDiffStartCorrelation)
 		tmpStartDiffTimeListEx = append(tmpStartDiffTimeListEx, TimeDiffStartCorrelation)
+		tmpStartDiffTimeMap.Put(score, insertIndex)
+		insertIndex++
+		mutexFixV2.Unlock()
 		// -------------------------------------------------
+		return nil
+	}
+	// -------------------------------------------------
+	antPool, err := ants.NewPoolWithFunc(FixThreads, func(inData interface{}) {
+		data := inData.(InputData)
+		defer data.Wg.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), SubOneUnitProcessTimeOut)
+		defer cancel()
+
+		done := make(chan error, 1)
+		panicChan := make(chan interface{}, 1)
+		go func() {
+			defer func() {
+				if p := recover(); p != nil {
+					panicChan <- p
+				}
+			}()
+
+			done <- fixFunc(inData)
+		}()
+
+		select {
+		case err := <-done:
+			if err != nil {
+				log_helper.GetLogger().Errorln("GetOffsetTimeV2.NewPoolWithFunc done with Error", err.Error())
+			}
+			return
+		case p := <-panicChan:
+			log_helper.GetLogger().Errorln("GetOffsetTimeV2.NewPoolWithFunc got panic", p)
+			return
+		case <-ctx.Done():
+			log_helper.GetLogger().Errorln("GetOffsetTimeV2.NewPoolWithFunc got time out", ctx.Err())
+			return
+		}
+	})
+	if err != nil {
+		return false, 0, 0, err
+	}
+	defer antPool.Release()
+	// -------------------------------------------------
+	wg := sync.WaitGroup{}
+	for i := srcSlideLenHalf; i < srcSlideLen; {
+		wg.Add(1)
+
+		if bUseSubOrAudioAsBase == true {
+			// 使用字幕
+			err = antPool.Invoke(InputData{BaseUnit: *baseUnit, SrcUnit: *srcUnit, Index: i, Wg: &wg})
+		} else {
+			// 使用音频
+			err = antPool.Invoke(InputData{AudioVADList: audioFloatList, SrcUnit: *srcUnit, Index: i, Wg: &wg})
+		}
+
+		if err != nil {
+			log_helper.GetLogger().Errorln("GetOffsetTimeV2 ants.Invoke", err)
+		}
 
 		i += oneStep
 	}
-
+	wg.Wait()
+	// 这里可能遇到匹配的时候没有能够执行够 CompareParts 次，有可能是负数跳过或者时间转换失败导致，前者为主（可能是这两个就是一个东西的时候，或者说没有时间轴偏移的时候）
+	if insertIndex < CompareParts {
+		return false, 0, 0, nil
+	}
 	outCorrelationFixResult := s.calcMeanAndSD(tmpStartDiffTimeListEx, tmpStartDiffTimeList)
 	println(fmt.Sprintf("FFTAligner Old Mean: %v SD: %v Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
 	println(fmt.Sprintf("FFTAligner New Mean: %v SD: %v Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
+
+	value, index := tmpStartDiffTimeMap.Max()
+	println("FFTAligner Max score:", fmt.Sprintf("%v", value.(float64)), "Time:", fmt.Sprintf("%v", tmpStartDiffTimeList[index.(int)]))
 
 	return true, outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, nil
 }
 
 // GetOffsetTimeV3 使用 VAD 检测语音是否有人声，输出连续的点标记，再通过 SimHash 进行匹配，找到最佳的偏移时间
 func (s *SubTimelineFixer) GetOffsetTimeV3(audioInfo vad.AudioInfo, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) (bool, float64, float64, error) {
-
-	//audioVADInfos, err := vad.GetVADInfoFromAudio(vad.AudioInfo{
-	//	FileFullPath: audioInfo.FileFullPath,
-	//	SampleRate:   16000,
-	//	BitDepth:     16,
-	//})
-	//if err != nil {
-	//	return false, 0, 0, err
-	//}
-	//
-	//subUnit := sub_helper.NewSubUnit()
-	//subUnit.VADList = audioVADInfos
-	//err = subUnit.Save2Txt("C:\\Tmp\\audio.txt")
-	//if err != nil {
-	//	return false, 0, 0, err
-	//}
-	/*
-		分割字幕成若干段，然后得到若干段的时间轴，将这些段从字幕文字转换成 VADInfo
-		从上面若干段时间轴，把音频给分割成多段
-		然后使用 simhash 的进行比较，输出分析的曲线图等信息
-	*/
-
-	//bok, duration, err := s.ffmpegHelper.GetAudioInfo(audioInfo.FileFullPath)
-	//if err != nil || bok == false {
-	//	return false, 0, 0, err
-	//}
 
 	/*
 		这里的字幕要求是完整的一个字幕
@@ -554,11 +624,11 @@ func (s *SubTimelineFixer) GetOffsetTimeV3(audioInfo vad.AudioInfo, infoSrc *sub
 }
 
 func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tmpStartDiffTime []float64) FixResult {
-
+	const minValue = -9999.0
 	oldMean := stat.Mean(startDiffTimeList)
 	oldSd := stat.Sd(startDiffTimeList)
-	newMean := -1.0
-	newSd := -1.0
+	newMean := minValue
+	newSd := minValue
 	per := 1.0
 
 	if len(tmpStartDiffTime) < 3 {
@@ -602,10 +672,10 @@ func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tm
 		newSd = stat.Sd(startDiffTimeList)
 	}
 
-	if newMean == -1.0 {
+	if newMean == minValue {
 		newMean = oldMean
 	}
-	if newSd == -1.0 {
+	if newSd == minValue {
 		newSd = oldSd
 	}
 	return FixResult{
@@ -618,11 +688,31 @@ func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tm
 }
 
 const FixMask = "-fix"
-const bInsert = true            // 是否插入点
-const FrontAndEndPerBase = 0.15 // 前百分之 15 和后百分之 15 都不进行识别
-const FrontAndEndPerSrc = 0.20  // 前百分之 20 和后百分之 20 都不进行识别
-const MatchPer = 0.6
-const CompareParts = 10
+const SubOneUnitProcessTimeOut = 60 * 5 * time.Second // 字幕时间轴校正一个单元的超时时间
+const bInsert = true                                  // 是否插入点
+const FrontAndEndPerBase = 0.20                       // 前百分之 15 和后百分之 15 都不进行识别
+const FrontAndEndPerSrc = 0.15                        // 前百分之 20 和后百分之 20 都不进行识别
+const MatchPer = 0.7
+const CompareParts = 5
 
 const SubUnitMaxCount = 100 // 一个 Sub单元有五句对白
 const ExpandTimeRange = 10  // 从字幕的时间轴片段需要向前和向后多匹配一部分的音频，这里定义的就是这个 range 以分钟为单位， 正负 60 秒
+
+const FixThreads = 1 // 字幕校正的并发线程
+
+var mutexFixV2 sync.Mutex
+
+type OutputData struct {
+	TimeDiffStartCorrelation float64 // 计算出来的时间轴偏移时间
+	OffsetIndex              float64 // 在这个匹配的 Window 中的 Index
+	Score                    float64 // 匹配的分数
+	InsertIndex              int     // 第几个 Step
+}
+
+type InputData struct {
+	BaseUnit     sub_helper.SubUnit
+	AudioVADList []float64
+	SrcUnit      sub_helper.SubUnit
+	Index        int
+	Wg           *sync.WaitGroup
+}

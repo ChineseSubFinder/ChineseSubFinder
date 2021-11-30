@@ -242,6 +242,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 			return
 		case p := <-panicChan:
 			d.log.Errorln("DownloadSub4Movie.NewPoolWithFunc got panic", p)
+			return
 		case <-ctx.Done():
 			d.log.Errorln("DownloadSub4Movie.NewPoolWithFunc got time out", ctx.Err())
 			return

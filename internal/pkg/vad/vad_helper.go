@@ -88,3 +88,22 @@ func GetVADInfoFromAudio(audioInfo AudioInfo, insert bool) ([]VADInfo, error) {
 
 	return vadInfos, nil
 }
+
+// GetFloatSlice 返回 1 -1 归一化的数组
+func GetFloatSlice(inVADs []VADInfo) []float64 {
+	outVADFloats := make([]float64, len(inVADs))
+	for i, vad := range inVADs {
+		if vad.Active == true {
+			outVADFloats[i] = 1
+		} else {
+			outVADFloats[i] = -1
+		}
+	}
+
+	return outVADFloats
+}
+
+// GetAudioIndex2Time 从 Audio 的 Index 推算出它所在的时间，返回 float64 的秒
+func GetAudioIndex2Time(index int) float64 {
+	return float64(index*FrameDuration) / 1000.0
+}
