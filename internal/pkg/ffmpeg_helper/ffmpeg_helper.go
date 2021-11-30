@@ -29,6 +29,21 @@ func NewFFMPEGHelper() *FFMPEGHelper {
 	}
 }
 
+// Version 获取版本信息，如果不存在 FFMPEG 和 ffprobe 则报错
+func (f FFMPEGHelper) Version() (string, error) {
+
+	outMsg0, err := f.getVersion("ffmpeg")
+	if err != nil {
+		return "", err
+	}
+	outMsg1, err := f.getVersion("ffprobe")
+	if err != nil {
+		return "", err
+	}
+
+	return outMsg0 + "\r\n" + outMsg1, nil
+}
+
 // GetFFMPEGInfo 获取 视频的 FFMPEG 信息，包含音频和字幕
 // 优先会导出 中、英、日、韩 类型的，字幕如果没有语言类型，则也导出，然后需要额外的字幕语言的判断去辅助标记（读取文件内容）
 func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInfo, error) {
@@ -85,9 +100,9 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 		}
 		// 开始导出
 		// 构建导出的命令参数
-		subArgs, audioArgs := f.getAudioAndSubExportArgs(videoFileFullPath, ffMPEGInfo)
+		audioArgs, subArgs := f.getAudioAndSubExportArgs(videoFileFullPath, ffMPEGInfo)
 		// 执行导出
-		execErrorString, err := f.exportAudioAndSubtitles(subArgs, audioArgs)
+		execErrorString, err := f.exportAudioAndSubtitles(audioArgs, subArgs)
 		if err != nil {
 			log_helper.GetLogger().Errorln("exportAudioAndSubtitles", execErrorString)
 			bok = false
@@ -214,6 +229,12 @@ func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFF
 
 	ffmpegInfo := NewFFMPEGInfo(videoFileFullPath)
 
+	// 进行字幕和音频的缓存，优先当然是导出 中、英、日、韩 相关的字幕和音频
+	// 但是如果都没得这些的时候，那么也需要导出至少一个字幕或者音频，用于字幕的校正
+	cacheAudios := make([]AudioInfo, 0)
+	cacheSubtitleInfos := make([]SubtitleInfo, 0)
+
+
 	for i := 0; i < int(streamsValue.Num); i++ {
 
 		oneIndex := gjson.Get(inputFFProbeString, fmt.Sprintf("streams.%d.index", i))
@@ -258,9 +279,16 @@ func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFF
 				nowLanguageString = oneLanguage.String()
 				// 只导出 中、英、日、韩
 				if language.IsSupportISOString(nowLanguageString) == false {
+
+					subInfo := NewSubtitleInfo(int(oneIndex.Num), oneCodecName.String(), oneCodecType.String(),
+						oneTimeBase.String(), oneStartTime.String(),
+						int(oneDurationTS.Num), oneDuration.String(), nowLanguageString)
+					// 不符合的也存在下来，万一，符合要求的一个都没得的时候，就需要从里面挑几个出来了
+					cacheSubtitleInfos = append(cacheSubtitleInfos, *subInfo)
 					continue
 				}
 			}
+
 			subInfo := NewSubtitleInfo(int(oneIndex.Num), oneCodecName.String(), oneCodecType.String(),
 				oneTimeBase.String(), oneStartTime.String(),
 				int(oneDurationTS.Num), oneDuration.String(), nowLanguageString)
@@ -271,10 +299,20 @@ func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFF
 			// 音频
 			// 这里必要要能够解析到 language 字段
 			if oneLanguage.Exists() == false {
+				// 不符合的也存在下来，万一，符合要求的一个都没得的时候，就需要从里面挑几个出来了
+				audioInfo := NewAudioInfo(int(oneIndex.Num), oneCodecName.String(), oneCodecType.String(),
+					oneTimeBase.String(), oneStartTime.String(), oneLanguage.String())
+
+				cacheAudios = append(cacheAudios, *audioInfo)
 				continue
 			}
 			// 只导出 中、英、日、韩
 			if language.IsSupportISOString(oneLanguage.String()) == false {
+				// 不符合的也存在下来，万一，符合要求的一个都没得的时候，就需要从里面挑几个出来了
+				audioInfo := NewAudioInfo(int(oneIndex.Num), oneCodecName.String(), oneCodecType.String(),
+					oneTimeBase.String(), oneStartTime.String(), oneLanguage.String())
+
+				cacheAudios = append(cacheAudios, *audioInfo)
 				continue
 			}
 			audioInfo := NewAudioInfo(int(oneIndex.Num), oneCodecName.String(), oneCodecType.String(),
@@ -284,6 +322,18 @@ func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFF
 
 		} else {
 			continue
+		}
+	}
+	// 如何没有找到合适的字幕，那么就要把缓存的字幕选一个填充进去
+	if len(ffmpegInfo.SubtitleInfoList) == 0 {
+		if len(cacheSubtitleInfos) != 0 {
+			ffmpegInfo.SubtitleInfoList = append(ffmpegInfo.SubtitleInfoList, cacheSubtitleInfos[0])
+		}
+	}
+	// 如何没有找到合适的音频，那么就要把缓存的音频选一个填充进去
+	if len(ffmpegInfo.AudioInfoList) == 0 {
+		if len(cacheAudios) != 0 {
+			ffmpegInfo.AudioInfoList = append(ffmpegInfo.AudioInfoList, cacheAudios[0])
 		}
 	}
 
@@ -336,7 +386,7 @@ func (f *FFMPEGHelper) execFFMPEG(cmds []string) (string, error) {
 	return "", nil
 }
 
-// getAudioAndSubExportArgs 构建从原始视频导出字幕、音频的 ffmpeg 的参数
+// getAudioAndSubExportArgs 构建从原始视频导出字幕、音频的 ffmpeg 的参数 audioArgs, subArgs
 func (f *FFMPEGHelper) getAudioAndSubExportArgs(videoFileFullPath string, ffmpegInfo *FFMPEGInfo) ([]string, []string) {
 
 	/*
@@ -455,6 +505,26 @@ func (f *FFMPEGHelper) addAudioMapArg(subArgs *[]string, index int, audioSaveFul
 	*subArgs = append(*subArgs, "-ar")
 	*subArgs = append(*subArgs, "16000")
 	*subArgs = append(*subArgs, audioSaveFullPath)
+}
+
+func (f FFMPEGHelper) getVersion(exeName string) (string, error) {
+	const args = "-version"
+	cmdArgs := strings.Fields(args)
+	cmd := exec.Command(exeName, cmdArgs...)
+	buf := bytes.NewBufferString("")
+	//指定输出位置
+	cmd.Stderr = buf
+	cmd.Stdout = buf
+	err := cmd.Start()
+	if err != nil {
+		return "", err
+	}
+	err = cmd.Wait()
+	if err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }
 
 const (

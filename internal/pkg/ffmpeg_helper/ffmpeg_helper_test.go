@@ -101,3 +101,13 @@ func TestFFMPEGHelper_GetAudioInfo(t *testing.T) {
 
 	println(duration)
 }
+
+func TestFFMPEGHelper_Version(t *testing.T) {
+
+	f := FFMPEGHelper{}
+	got, err := f.Version()
+	if err != nil {
+		t.Fatal(err)
+	}
+	println(got)
+}
