@@ -495,3 +495,14 @@ func MakePowerOfTwo(x int64) int64 {
 
 	return int64(math.Pow(2, float64(tmpRound)))
 }
+
+// Make10msMultiple 将传入的秒，规整到 10ms 的倍数，返回依然是 秒
+func Make10msMultiple(input float64) float64 {
+	const bb = 100
+	// 先转到 10 ms 单位，比如传入是 1.912 - > 191.2
+	t10ms := input * bb
+	// 191.2 - > 191.0
+	newT10ms := math.Floor(t10ms)
+	// 转换回来
+	return newT10ms / bb
+}

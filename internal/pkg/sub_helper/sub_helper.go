@@ -1,6 +1,7 @@
 package sub_helper
 
 import (
+	"errors"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/archive_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
@@ -9,6 +10,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod/lib/utils"
@@ -370,9 +372,9 @@ func MergeMultiDialogue4EngSubtitle(inSubParser *subparser.FileInfo) {
 }
 
 // GetVADInfoFeatureFromSub 跟下面的 GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert 函数功能一致
-func GetVADInfoFeatureFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float64, SubUnitMaxCount int, insert bool) ([]SubUnit, error) {
+func GetVADInfoFeatureFromSub(fileInfo *subparser.FileInfo, frontAndEndPer float64, subUnitMaxCount int, insert bool) ([]SubUnit, error) {
 
-	return GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc, FrontAndEndPer, SubUnitMaxCount, 0, insert)
+	return GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo, frontAndEndPer, subUnitMaxCount, 0, insert)
 }
 
 /*
@@ -382,46 +384,52 @@ func GetVADInfoFeatureFromSub(infoSrc *subparser.FileInfo, FrontAndEndPer float6
 	2. 将整个字幕，抽取连续 5 句对话为一个单元，提取时间片段信息
 	3. 这里抽取的是特征，也就有额外的逻辑去找这个特征（本程序内会描述为“钥匙”）
 */
-func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInfo, SkipFrontAndEndPer float64, SubUnitMaxCount int, offsetTime float64, insert bool) ([]SubUnit, error) {
-	if SubUnitMaxCount < 0 {
-		SubUnitMaxCount = 0
+func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileInfo, SkipFrontAndEndPer float64, subUnitMaxCount int, offsetTime float64, insert bool) ([]SubUnit, error) {
+	if subUnitMaxCount < 0 {
+		subUnitMaxCount = 0
 	}
 	srcSubUnitList := make([]SubUnit, 0)
 	srcSubDialogueList := make([]subparser.OneDialogueEx, 0)
 	srcOneSubUnit := NewSubUnit()
 
-	// srcDuration
-	lastDialogueExTimeEnd, err := infoSrc.ParseTime(infoSrc.DialoguesEx[len(infoSrc.DialoguesEx)-1].EndTime)
+	// 最后一个对话的结束时间
+	lastDialogueExTimeEnd, err := fileInfo.ParseTime(fileInfo.DialoguesEx[len(fileInfo.DialoguesEx)-1].EndTime)
 	if err != nil {
 		return nil, err
 	}
-	srcDuration := my_util.Time2SecendNumber(lastDialogueExTimeEnd)
+	// 相当于总时长
+	fullDuration := my_util.Time2SecendNumber(lastDialogueExTimeEnd)
+	// 最低的起始时间，因为可能需要裁剪范围
+	startRangeTimeMin := fullDuration * SkipFrontAndEndPer
+	endRangeTimeMax := fullDuration * (1.0 - SkipFrontAndEndPer)
 
-	for i := 0; i < len(infoSrc.DialoguesEx); i++ {
+	println(startRangeTimeMin)
+	println(endRangeTimeMax)
 
-		oneDialogueExTimeStart, err := infoSrc.ParseTime(infoSrc.DialoguesEx[i].StartTime)
+	for i := 0; i < len(fileInfo.DialoguesEx); i++ {
+
+		oneDialogueExTimeStart, err := fileInfo.ParseTime(fileInfo.DialoguesEx[i].StartTime)
 		if err != nil {
 			return nil, err
 		}
-		oneDialogueExTimeEnd, err := infoSrc.ParseTime(infoSrc.DialoguesEx[i].EndTime)
+		oneDialogueExTimeEnd, err := fileInfo.ParseTime(fileInfo.DialoguesEx[i].EndTime)
 		if err != nil {
 			return nil, err
 		}
 
 		oneStart := my_util.Time2SecendNumber(oneDialogueExTimeStart)
-
 		if SkipFrontAndEndPer > 0 {
-			if srcDuration*SkipFrontAndEndPer > oneStart || srcDuration*(1.0-SkipFrontAndEndPer) < oneStart {
+			if fullDuration*SkipFrontAndEndPer > oneStart || fullDuration*(1.0-SkipFrontAndEndPer) < oneStart {
 				continue
 			}
 		}
 
 		// 如果当前的这一句话，为空，或者进过正则表达式剔除特殊字符后为空，则跳过
-		if my_util.ReplaceSpecString(infoSrc.GetDialogueExContent(i), "") == "" {
+		if my_util.ReplaceSpecString(fileInfo.GetDialogueExContent(i), "") == "" {
 			continue
 		}
 		// 低于 5句对白，则添加
-		if srcOneSubUnit.GetDialogueCount() < SubUnitMaxCount {
+		if srcOneSubUnit.GetDialogueCount() < subUnitMaxCount {
 			// 算上偏移
 			offsetTimeDuration := time.Duration(offsetTime * math.Pow10(9))
 			oneDialogueExTimeStart = oneDialogueExTimeStart.Add(offsetTimeDuration)
@@ -433,7 +441,7 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInf
 				srcOneSubUnit.Add(oneDialogueExTimeStart, oneDialogueExTimeEnd)
 			}
 			// 这一个单元的 Dialogue 需要合并起来，才能判断是否符合“钥匙”的要求
-			srcSubDialogueList = append(srcSubDialogueList, infoSrc.DialoguesEx[i])
+			srcSubDialogueList = append(srcSubDialogueList, fileInfo.DialoguesEx[i])
 
 		} else {
 			// 用完清空
@@ -449,4 +457,103 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(infoSrc *subparser.FileInf
 	}
 
 	return srcSubUnitList, nil
+}
+
+/*
+	GetVADInfosFromSub 将 Sub 文件转换为 VAD List 信息
+*/
+func GetVADInfosFromSub(fileInfo *subparser.FileInfo, SkipFrontAndEndPer float64, pieces int) ([]SubUnit, error) {
+	// 至少分为一份
+	if pieces <= 0 {
+		pieces = 1
+	}
+	outSubUnits := make([]SubUnit, 0)
+	if len(fileInfo.DialoguesEx) <= 0 {
+		return nil, errors.New("GetVADInfosFromSub fileInfo Dialogue Length is 0")
+	}
+	/*
+		先拼凑出完整的一个 VAD List
+		因为 VAD 的窗口是 10ms，那么需要多每一句话按 10 ms 的单位进行取整
+		每一句话开始、结束的时间，需要向下取整
+	*/
+	// 字幕的开始时间
+	subStartTime, err := fileInfo.ParseTime(fileInfo.DialoguesEx[0].StartTime)
+	if err != nil {
+		return nil, err
+	}
+	// 字幕的结束时间
+	subEndTime, err := fileInfo.ParseTime(fileInfo.DialoguesEx[len(fileInfo.DialoguesEx)-1].EndTime)
+	if err != nil {
+		return nil, err
+	}
+	// 字幕的时长，对时间进行向下取整
+	subStartTimeFloor := my_util.Make10msMultiple(my_util.Time2SecendNumber(subStartTime))
+	subEndTimeFloor := my_util.Make10msMultiple(my_util.Time2SecendNumber(subEndTime))
+
+	subFullSecondTimeFloor := subEndTimeFloor - subStartTimeFloor
+	// 根据这个时长就能够得到一个完整的 VAD List，然后再通过每一句对白进行 VAD 值的调整即可，这样就能够保证
+	// 相同的一个字幕因为使用 ffmpeg 导出 srt 和 ass 后的，可能存在总体时间轴不一致的问题
+	// 123.450 - > 12345
+	vadLen := int(subFullSecondTimeFloor * 100)
+	subVADs := make([]vad.VADInfo, vadLen)
+	subStartTimeFloor10ms := subStartTimeFloor * 100
+	for i := 0; i < vadLen; i++ {
+		subVADs[i] = *vad.NewVADInfoBase(false, time.Duration((subStartTimeFloor10ms+float64(i))*math.Pow10(7)))
+	}
+	// 计算出需要截取的片段,起始和结束
+	skipStartIndex := int(float64(vadLen) * SkipFrontAndEndPer)
+	skipEndIndex := vadLen - skipStartIndex
+	// 现在需要从 fileInfo 的每一句对白也就对应一段连续的 VAD active = true 来进行改写，记得向下取整
+	for _, dialogueEx := range fileInfo.DialoguesEx {
+
+		// 字幕的开始时间
+		oneDialogueStartTime, err := fileInfo.ParseTime(dialogueEx.StartTime)
+		if err != nil {
+			return nil, err
+		}
+		// 字幕的结束时间
+		oneDialogueEndTime, err := fileInfo.ParseTime(dialogueEx.EndTime)
+		if err != nil {
+			return nil, err
+		}
+		// 字幕的时长，对时间进行向下取整
+		oneDialogueStartTimeFloor := my_util.Make10msMultiple(my_util.Time2SecendNumber(oneDialogueStartTime))
+		oneDialogueEndTimeFloor := my_util.Make10msMultiple(my_util.Time2SecendNumber(oneDialogueEndTime))
+		// 得到一句对白的时长
+		changeVADStartIndex := int(oneDialogueStartTimeFloor * 100)
+		changeVADEndIndex := int(oneDialogueEndTimeFloor * 100)
+		// 跳过整体的前后百分比
+		if changeVADStartIndex < skipStartIndex {
+			changeVADStartIndex = skipStartIndex
+		}
+		if changeVADEndIndex > skipEndIndex {
+			changeVADEndIndex = skipEndIndex
+		}
+		// 调整之前做好的整体 VAD 的信息，符合 VAD active = true
+		for i := changeVADStartIndex; i < changeVADEndIndex; i++ {
+			subVADs[i].Active = true
+		}
+	}
+	// 整体的 VAD 信息构建完了，现在需要进行切割，分成多份
+	onePartLen := vadLen / pieces
+	// 余下的不要了，暂定
+	//yu := vadLen % pieces
+	for i := 0; i < pieces; i++ {
+		tmpSubUnit := NewSubUnit()
+		tmpVADList := subVADs[i*onePartLen : i*onePartLen+onePartLen]
+		tmpSubUnit.VADList = tmpVADList
+
+		tmpStartTime := time.Time{}
+		tmpStartTime = tmpStartTime.Add(tmpVADList[0].Time)
+		tmpEndTime := time.Time{}
+		tmpEndTime = tmpEndTime.Add(tmpVADList[len(tmpVADList)-1].Time)
+
+		tmpSubUnit.SetBaseTime(tmpStartTime)
+		tmpSubUnit.SetOffsetStartTime(tmpStartTime)
+		tmpSubUnit.SetOffsetEndTime(tmpEndTime)
+
+		outSubUnits = append(outSubUnits, *tmpSubUnit)
+	}
+
+	return outSubUnits, nil
 }

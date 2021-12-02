@@ -72,11 +72,11 @@ func (s *SubUnit) AddAndInsert(oneSubStartTime, oneSubEndTime time.Time) {
 		needAddRange := nowStartOffsetTime - nowEndOffsetTime
 
 		if needAddRange == 0 {
-			// 说明是连续的句子，向后加 0.002 秒
-			addMore := time.Duration((s.GetEndTimeNumber(true) + 0.002) * math.Pow10(9))
+			// 说明是连续的句子，向后加 0.002 秒 addMoreTime
+			addMore := time.Duration((s.GetEndTimeNumber(true) + addMoreTime) * math.Pow10(9))
 			s.VADList = append(s.VADList, *vad.NewVADInfoBase(false, addMore))
 			// 因为是连续的两句话的时间轴，强制插入了一个点，那么就需要在这句话的 Start 部分向后延迟对应的秒数
-			oneSubStartTime = oneSubStartTime.Add(time.Duration(0.002 * math.Pow10(9)))
+			oneSubStartTime = oneSubStartTime.Add(time.Duration(addMoreTime * math.Pow10(9)))
 		} else {
 			for i := 0.0; i < needAddRange; {
 
@@ -114,6 +114,19 @@ func (s *SubUnit) AddAndInsert(oneSubStartTime, oneSubEndTime time.Time) {
 // AddBaseTime 如果 BaseTime 还有偏移，可以在 Add 和 AddAndInsert 逻辑完成后，调用此方法去调整基准时间
 func (s *SubUnit) AddBaseTime(addBaseTime time.Duration) {
 	s.baseTime = s.baseTime.Add(addBaseTime)
+}
+
+// SetBaseTime 设置基准时间
+func (s *SubUnit) SetBaseTime(setBaseTime time.Time) {
+	s.baseTime = setBaseTime
+}
+
+func (s *SubUnit) SetOffsetStartTime(realStartTime time.Time) {
+	s.offsetStartTime = s.RealTimeToOffsetTime(realStartTime)
+}
+
+func (s *SubUnit) SetOffsetEndTime(realEndTime time.Time) {
+	s.offsetEndTime = s.RealTimeToOffsetTime(realEndTime)
 }
 
 // GetDialogueCount 获取这个对白单元由几个对话
@@ -357,3 +370,5 @@ func (s SubUnit) GetFrechetPoint(whichOne int) []frechet.Point {
 }
 
 const perWindows = float64(vad.FrameDuration) / 1000
+
+const addMoreTime = 0.002
