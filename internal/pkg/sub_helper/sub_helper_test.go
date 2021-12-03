@@ -53,12 +53,12 @@ func TestGetVADInfosFromSub(t *testing.T) {
 			len(infoBase.DialoguesEx), len(infoSrc.DialoguesEx)))
 	}
 
-	baseSubUnits, err := GetVADInfosFromSub(infoBase, FrontAndEndPerBase, 1)
+	baseSubUnits, err := GetVADInfoFeatureFromSubNew(infoBase, FrontAndEndPerBase, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	baseSubUnit := baseSubUnits[0]
-	srcSubUnits, err := GetVADInfosFromSub(infoSrc, FrontAndEndPerBase, 1)
+	srcSubUnits, err := GetVADInfoFeatureFromSubNew(infoSrc, FrontAndEndPerBase, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
