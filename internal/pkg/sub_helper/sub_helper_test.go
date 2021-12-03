@@ -26,60 +26,6 @@ func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
 	}
 }
 
-func TestGetVADInfoFeatureFromSub(t *testing.T) {
-
-	// 这两个字幕是一样的，只不过是格式不同而已
-	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
-	baseSubFile := "C:\\Tmp\\Rick and Morty - S05E01\\英_2.srt"
-	srcSubFile := "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass"
-
-	bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(baseSubFile)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if bFind == false {
-		t.Fatal("sub not match")
-	}
-	bFind, infoSrc, err := subParserHub.DetermineFileTypeFromFile(srcSubFile)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if bFind == false {
-		t.Fatal("sub not match")
-	}
-
-	if len(infoBase.DialoguesEx) != len(infoSrc.DialoguesEx) {
-		t.Fatal(fmt.Sprintf("info Base And Src Parse Error, infoBase.DialoguesEx Len = %v, infoSrc.DialoguesEx Len = %v",
-			len(infoBase.DialoguesEx), len(infoSrc.DialoguesEx)))
-	}
-
-	baseUnitList, err := GetVADInfoFeatureFromSub(infoBase, FrontAndEndPerBase, 10000, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	baseUnit := baseUnitList[0]
-	// Src，截取的部分要小于 Base 的部分
-	srcUnitList, err := GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPerBase, 10000, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	srcUnit := srcUnitList[0]
-
-	if len(baseUnit.VADList) != len(srcUnit.VADList) {
-
-		t.Fatal(fmt.Sprintf("VAD List Base And Src Not Same Length, baseUnit.VADList Len = %v, srcUnit.VADList Len = %v",
-			len(baseUnit.VADList), len(srcUnit.VADList)))
-	}
-
-	//for i := 0; i < len(baseUnit.VADList); i++ {
-	//
-	//}
-
-	println("Done")
-}
-
-const FrontAndEndPerBase = 0
-
 func TestGetVADInfosFromSub(t *testing.T) {
 
 	// 这两个字幕是一样的，只不过是格式不同而已
@@ -107,15 +53,29 @@ func TestGetVADInfosFromSub(t *testing.T) {
 			len(infoBase.DialoguesEx), len(infoSrc.DialoguesEx)))
 	}
 
-	baseSubUnits, err := GetVADInfosFromSub(infoBase, 0, 1)
+	baseSubUnits, err := GetVADInfosFromSub(infoBase, FrontAndEndPerBase, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	srcSubUnits, err := GetVADInfosFromSub(infoSrc, 0, 1)
+	baseSubUnit := baseSubUnits[0]
+	srcSubUnits, err := GetVADInfosFromSub(infoSrc, FrontAndEndPerBase, 1)
 	if err != nil {
 		t.Fatal(err)
+	}
+	srcSubUnit := srcSubUnits[0]
+	if len(baseSubUnit.VADList) != len(srcSubUnit.VADList) {
+		t.Fatal(fmt.Sprintf("info Base And Src Parse Error, infoBase.VADList Len = %v, infoSrc.VADList Len = %v",
+			len(baseSubUnit.VADList), len(srcSubUnit.VADList)))
+	}
+
+	for i := 0; i < len(baseSubUnit.VADList); i++ {
+		if baseSubUnit.VADList[i] != srcSubUnit.VADList[i] {
+			println(fmt.Sprintf("base src VADList i=%v, not the same", i))
+		}
 	}
 
 	println(len(baseSubUnits))
 	println(len(srcSubUnits))
 }
+
+const FrontAndEndPerBase = 0

@@ -78,7 +78,7 @@ type EmbyVideoInfo struct {
 			Profile                string  `json:"Profile,omitempty"`
 			Type                   string  `json:"Type"`
 			AspectRatio            string  `json:"AspectRatio,omitempty"`
-			Index                  int     `json:"Index"`
+			Index                  int     `json:"OffsetIndex"`
 			IsExternal             bool    `json:"IsExternal"`
 			IsTextSubtitleStream   bool    `json:"IsTextSubtitleStream"`
 			SupportsExternalStream bool    `json:"SupportsExternalStream"`
@@ -106,7 +106,7 @@ type EmbyVideoInfo struct {
 		Codec                  string `json:"Codec"`
 		Language               string `json:"Language"`
 		DisplayTitle           string `json:"DisplayTitle"`
-		Index                  int    `json:"Index"`
+		Index                  int    `json:"OffsetIndex"`
 		IsExternal             bool   `json:"IsExternal"`
 		IsTextSubtitleStream   bool   `json:"IsTextSubtitleStream"`
 		SupportsExternalStream bool   `json:"SupportsExternalStream"`

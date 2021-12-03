@@ -398,7 +398,7 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 		return nil, err
 	}
 	// 相当于总时长
-	fullDuration := my_util.Time2SecendNumber(lastDialogueExTimeEnd)
+	fullDuration := my_util.Time2SecondNumber(lastDialogueExTimeEnd)
 	// 最低的起始时间，因为可能需要裁剪范围
 	startRangeTimeMin := fullDuration * SkipFrontAndEndPer
 	endRangeTimeMax := fullDuration * (1.0 - SkipFrontAndEndPer)
@@ -417,7 +417,7 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 			return nil, err
 		}
 
-		oneStart := my_util.Time2SecendNumber(oneDialogueExTimeStart)
+		oneStart := my_util.Time2SecondNumber(oneDialogueExTimeStart)
 		if SkipFrontAndEndPer > 0 {
 			if fullDuration*SkipFrontAndEndPer > oneStart || fullDuration*(1.0-SkipFrontAndEndPer) < oneStart {
 				continue
@@ -487,8 +487,8 @@ func GetVADInfosFromSub(fileInfo *subparser.FileInfo, SkipFrontAndEndPer float64
 		return nil, err
 	}
 	// 字幕的时长，对时间进行向下取整
-	subStartTimeFloor := my_util.Make10msMultiple(my_util.Time2SecendNumber(subStartTime))
-	subEndTimeFloor := my_util.Make10msMultiple(my_util.Time2SecendNumber(subEndTime))
+	subStartTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(subStartTime))
+	subEndTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(subEndTime))
 
 	subFullSecondTimeFloor := subEndTimeFloor - subStartTimeFloor
 	// 根据这个时长就能够得到一个完整的 VAD List，然后再通过每一句对白进行 VAD 值的调整即可，这样就能够保证
@@ -504,7 +504,12 @@ func GetVADInfosFromSub(fileInfo *subparser.FileInfo, SkipFrontAndEndPer float64
 	skipStartIndex := int(float64(vadLen) * SkipFrontAndEndPer)
 	skipEndIndex := vadLen - skipStartIndex
 	// 现在需要从 fileInfo 的每一句对白也就对应一段连续的 VAD active = true 来进行改写，记得向下取整
-	for _, dialogueEx := range fileInfo.DialoguesEx {
+	for index, dialogueEx := range fileInfo.DialoguesEx {
+
+		// 如果当前的这一句话，为空，或者进过正则表达式剔除特殊字符后为空，则跳过
+		if my_util.ReplaceSpecString(fileInfo.GetDialogueExContent(index), "") == "" {
+			continue
+		}
 
 		// 字幕的开始时间
 		oneDialogueStartTime, err := fileInfo.ParseTime(dialogueEx.StartTime)
@@ -517,17 +522,21 @@ func GetVADInfosFromSub(fileInfo *subparser.FileInfo, SkipFrontAndEndPer float64
 			return nil, err
 		}
 		// 字幕的时长，对时间进行向下取整
-		oneDialogueStartTimeFloor := my_util.Make10msMultiple(my_util.Time2SecendNumber(oneDialogueStartTime))
-		oneDialogueEndTimeFloor := my_util.Make10msMultiple(my_util.Time2SecendNumber(oneDialogueEndTime))
+		oneDialogueStartTimeFloor := my_util.MakeCeil10msMultipleFromFloat(my_util.Time2SecondNumber(oneDialogueStartTime))
+		oneDialogueEndTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(oneDialogueEndTime))
 		// 得到一句对白的时长
 		changeVADStartIndex := int(oneDialogueStartTimeFloor * 100)
 		changeVADEndIndex := int(oneDialogueEndTimeFloor * 100)
 		// 跳过整体的前后百分比
-		if changeVADStartIndex < skipStartIndex {
-			changeVADStartIndex = skipStartIndex
+		if changeVADStartIndex < skipStartIndex || changeVADEndIndex > skipEndIndex {
+			continue
 		}
-		if changeVADEndIndex > skipEndIndex {
-			changeVADEndIndex = skipEndIndex
+		// 如果上一个对白的最后一个 OffsetIndex 链接着当前这一句的索引的 VAD 信息 active 是 true 就设置为 false
+		lastDialogueEndIndex := changeVADStartIndex - 1
+		if lastDialogueEndIndex >= 0 {
+			if subVADs[lastDialogueEndIndex].Active == true {
+				subVADs[lastDialogueEndIndex].Active = false
+			}
 		}
 		// 调整之前做好的整体 VAD 的信息，符合 VAD active = true
 		for i := changeVADStartIndex; i < changeVADEndIndex; i++ {
@@ -535,12 +544,15 @@ func GetVADInfosFromSub(fileInfo *subparser.FileInfo, SkipFrontAndEndPer float64
 		}
 	}
 	// 整体的 VAD 信息构建完了，现在需要进行切割，分成多份
-	onePartLen := vadLen / pieces
+	// 需要根据去头去尾，调整整体的总长度再进行多分的拆分
+	afterCutVADLen := vadLen - 2*skipStartIndex
+	onePartLen := afterCutVADLen / pieces
 	// 余下的不要了，暂定
 	//yu := vadLen % pieces
 	for i := 0; i < pieces; i++ {
 		tmpSubUnit := NewSubUnit()
-		tmpVADList := subVADs[i*onePartLen : i*onePartLen+onePartLen]
+		// 截取出来当前这一段
+		tmpVADList := subVADs[skipStartIndex+i*onePartLen : skipStartIndex+i*onePartLen+onePartLen]
 		tmpSubUnit.VADList = tmpVADList
 
 		tmpStartTime := time.Time{}

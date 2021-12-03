@@ -448,18 +448,18 @@ func WriteStrings2File(desfilePath string, strings []string) error {
 	return nil
 }
 
-func Time2SecendNumber(inTime time.Time) float64 {
-	outSecend := 0.0
-	outSecend += float64(inTime.Hour() * 60 * 60)
-	outSecend += float64(inTime.Minute() * 60)
-	outSecend += float64(inTime.Second())
-	outSecend += float64(inTime.Nanosecond()) / 1000 / 1000 / 1000
+func Time2SecondNumber(inTime time.Time) float64 {
+	outSecond := 0.0
+	outSecond += float64(inTime.Hour() * 60 * 60)
+	outSecond += float64(inTime.Minute() * 60)
+	outSecond += float64(inTime.Second())
+	outSecond += float64(inTime.Nanosecond()) / 1000 / 1000 / 1000
 
-	return outSecend
+	return outSecond
 }
 
 func Time2Duration(inTime time.Time) time.Duration {
-	return time.Duration(Time2SecendNumber(inTime) * math.Pow10(9))
+	return time.Duration(Time2SecondNumber(inTime) * math.Pow10(9))
 }
 
 // ReplaceSpecString 替换特殊的字符
@@ -496,8 +496,19 @@ func MakePowerOfTwo(x int64) int64 {
 	return int64(math.Pow(2, float64(tmpRound)))
 }
 
-// Make10msMultiple 将传入的秒，规整到 10ms 的倍数，返回依然是 秒
-func Make10msMultiple(input float64) float64 {
+// MakeCeil10msMultipleFromFloat 将传入的秒，规整到 10ms 的倍数，返回依然是 秒，向上取整
+func MakeCeil10msMultipleFromFloat(input float64) float64 {
+	const bb = 100
+	// 先转到 10 ms 单位，比如传入是 1.912 - > 191.2
+	t10ms := input * bb
+	// 191.2 - > 192.0
+	newT10ms := math.Ceil(t10ms)
+	// 转换回来
+	return newT10ms / bb
+}
+
+// MakeFloor10msMultipleFromFloat 将传入的秒，规整到 10ms 的倍数，返回依然是 秒，向下取整
+func MakeFloor10msMultipleFromFloat(input float64) float64 {
 	const bb = 100
 	// 先转到 10 ms 单位，比如传入是 1.912 - > 191.2
 	t10ms := input * bb
@@ -505,4 +516,20 @@ func Make10msMultiple(input float64) float64 {
 	newT10ms := math.Floor(t10ms)
 	// 转换回来
 	return newT10ms / bb
+}
+
+// MakeCeil10msMultipleFromTime 向上取整，规整到 10ms 的倍数
+func MakeCeil10msMultipleFromTime(input time.Time) time.Time {
+
+	nowTime := MakeCeil10msMultipleFromFloat(Time2SecondNumber(input))
+	newTime := time.Time{}.Add(time.Duration(nowTime * math.Pow10(9)))
+	return newTime
+}
+
+// MakeFloor10msMultipleFromTime 向下取整，规整到 10ms 的倍数
+func MakeFloor10msMultipleFromTime(input time.Time) time.Time {
+
+	nowTime := MakeFloor10msMultipleFromFloat(Time2SecondNumber(input))
+	newTime := time.Time{}.Add(time.Duration(nowTime * math.Pow10(9)))
+	return newTime
 }

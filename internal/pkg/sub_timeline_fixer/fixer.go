@@ -395,9 +395,12 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	audioFloatList := vad.GetFloatSlice(audioVadList)
 
 	srcVADLen := len(srcUnit.VADList)
+	// 滑动窗口的长度
 	srcWindowLen := int(float64(srcVADLen) * MatchPer)
 	srcSlideLen := srcVADLen - srcWindowLen
+	// 窗口可以滑动的长度
 	srcSlideLenHalf := srcSlideLen / 2
+	//
 	oneStep := srcSlideLenHalf / CompareParts
 	if srcSlideLen <= 0 {
 		srcSlideLen = 1
@@ -407,6 +410,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	}
 	insertIndex := 0
 	// -------------------------------------------------
+	// 实际 FFT 的匹配逻辑函数
 	fixFunc := func(i interface{}) error {
 		inData := i.(InputData)
 		// -------------------------------------------------
@@ -422,15 +426,17 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 			// 使用 音频 来进行匹配
 			// 去掉头和尾，具体百分之多少，见 FrontAndEndPerBase
 			audioCutLen := int(float64(len(inData.AudioVADList)) * FrontAndEndPerBase)
-			offsetIndex, score = fffAligner.Fit(inData.AudioVADList[audioCutLen:len(inData.AudioVADList)-audioCutLen], inData.SrcUnit.GetVADFloatSlice()[inData.Index:srcWindowLen+inData.Index])
+
+			offsetIndex, score = fffAligner.Fit(inData.AudioVADList[audioCutLen:len(inData.AudioVADList)-audioCutLen], inData.SrcUnit.GetVADFloatSlice()[inData.OffsetIndex:srcWindowLen+inData.OffsetIndex])
 			if offsetIndex < 0 {
 				return nil
 			}
-			// offsetIndex 这里得到的是 10ms 为一个单位的 Index，把去掉的头部时间偏移加回来
+			// offsetIndex 这里得到的是 10ms 为一个单位的 OffsetIndex，把去掉的头部时间偏移加回来，以及第一句话的偏移
 			nowBaseStartTime = vad.GetAudioIndex2Time(offsetIndex + audioCutLen)
+			nowBaseStartTime = nowBaseStartTime + inData.SrcUnit.GetStartTimeNumber(true)
 		} else {
 			// 使用 字幕 来进行匹配
-			offsetIndex, score = fffAligner.Fit(inData.BaseUnit.GetVADFloatSlice(), inData.SrcUnit.GetVADFloatSlice()[inData.Index:srcWindowLen+inData.Index])
+			offsetIndex, score = fffAligner.Fit(inData.BaseUnit.GetVADFloatSlice(), inData.SrcUnit.GetVADFloatSlice()[inData.OffsetIndex:inData.OffsetIndex+srcWindowLen])
 			if offsetIndex < 0 {
 				return nil
 			}
@@ -440,7 +446,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 			}
 		}
 		// 需要校正的字幕
-		bok, nowSrcStartTime := inData.SrcUnit.GetIndexTimeNumber(inData.Index, true)
+		bok, nowSrcStartTime := inData.SrcUnit.GetIndexTimeNumber(inData.OffsetIndex, true)
 		if bok == false {
 			return nil
 		}
@@ -503,10 +509,10 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 
 		if bUseSubOrAudioAsBase == true {
 			// 使用字幕
-			err = antPool.Invoke(InputData{BaseUnit: *baseUnit, SrcUnit: *srcUnit, Index: i, Wg: &wg})
+			err = antPool.Invoke(InputData{BaseUnit: *baseUnit, SrcUnit: *srcUnit, OffsetIndex: i, Wg: &wg})
 		} else {
 			// 使用音频
-			err = antPool.Invoke(InputData{AudioVADList: audioFloatList, SrcUnit: *srcUnit, Index: i, Wg: &wg})
+			err = antPool.Invoke(InputData{AudioVADList: audioFloatList, SrcUnit: *srcUnit, OffsetIndex: i, Wg: &wg})
 		}
 
 		if err != nil {
@@ -596,27 +602,25 @@ func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tm
 
 const FixMask = "-fix"
 const SubOneUnitProcessTimeOut = 60 * 5 * time.Second // 字幕时间轴校正一个单元的超时时间
-const bInsert = true                                  // 是否插入点
-const FrontAndEndPerBase = 0.20                       // 前百分之 15 和后百分之 15 都不进行识别
-const FrontAndEndPerSrc = 0.15                        // 前百分之 20 和后百分之 20 都不进行识别
-const MatchPer = 0.7
+const FrontAndEndPerBase = 0.0                        // 前百分之 15 和后百分之 15 都不进行识别
+const FrontAndEndPerSrc = 0.0                         // 前百分之 20 和后百分之 20 都不进行识别
+const MatchPer = 0.8
 const CompareParts = 5
-
 const FixThreads = 1 // 字幕校正的并发线程
 
 var mutexFixV2 sync.Mutex
 
 type OutputData struct {
 	TimeDiffStartCorrelation float64 // 计算出来的时间轴偏移时间
-	OffsetIndex              float64 // 在这个匹配的 Window 中的 Index
+	OffsetIndex              float64 // 在这个匹配的 Window 中的 OffsetIndex
 	Score                    float64 // 匹配的分数
 	InsertIndex              int     // 第几个 Step
 }
 
 type InputData struct {
-	BaseUnit     sub_helper.SubUnit
-	AudioVADList []float64
-	SrcUnit      sub_helper.SubUnit
-	Index        int
-	Wg           *sync.WaitGroup
+	BaseUnit     sub_helper.SubUnit // 基准 VAD
+	AudioVADList []float64          // 基准 VAD
+	SrcUnit      sub_helper.SubUnit // 需要匹配的 VAD
+	OffsetIndex  int                // 滑动窗体的移动偏移索引
+	Wg           *sync.WaitGroup    // 并发锁
 }

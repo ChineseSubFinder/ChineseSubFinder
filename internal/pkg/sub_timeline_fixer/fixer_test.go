@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/debug_view"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
@@ -440,12 +441,12 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 		{name: "R&M S05E01-2", args: args{
 			baseSubFile:            "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass",
 			srcSubFile:             "C:\\Tmp\\Rick and Morty - S05E01\\英_2.srt",
-			staticLineFileSavePath: "bar.html"}, want: -6.12981818181818, wantErr: false},
+			staticLineFileSavePath: "bar.html"}, want: 0, wantErr: false},
 
 		{name: "R&M S05E01-2", args: args{
 			baseSubFile:            "C:\\Tmp\\Rick and Morty - S05E10\\英_2.srt",
 			srcSubFile:             "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
-			staticLineFileSavePath: "bar.html"}, want: -6.12981818181818, wantErr: false},
+			staticLineFileSavePath: "bar.html"}, want: 0, wantErr: false},
 		/*
 			基地
 		*/
@@ -619,20 +620,39 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 				internal/pkg/sub_helper/sub_helper.go 中 MergeMultiDialogue4EngSubtitle 的实现
 			*/
 			//sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
-
+			// ---------------------------------------------------------------------------------------
 			// Base，截取的部分要大于 Src 的部分
-			baseUnitList, err := sub_helper.GetVADInfoFeatureFromSub(infoBase, FrontAndEndPerBase, 10000, bInsert)
-			if err != nil {
-				t.Fatal(err)
-			}
-			baseUnit := baseUnitList[0]
-			// Src，截取的部分要小于 Base 的部分
-			srcUnitList, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPerSrc, 10000, bInsert)
-			if err != nil {
-				t.Fatal(err)
-			}
-			srcUnit := srcUnitList[0]
+			//baseUnitList, err := sub_helper.GetVADInfosFromSub(infoBase, FrontAndEndPerBase, 1)
+			//if err != nil {
+			//	t.Fatal(err)
+			//}
+			//baseUnit := baseUnitList[0]
 
+			baseUnitList2, err := sub_helper.GetVADInfoFeatureFromSub(infoBase, FrontAndEndPerBase, 100000, true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			baseUnit := baseUnitList2[0]
+			debug_view.SaveDebugChart(baseUnit, "baseUnit", "baseUnit")
+			//debug_view.SaveDebugChart(baseUnit2, "baseUnit2", "baseUnit2")
+			//baseUnit = baseUnitList2[0]
+			// ---------------------------------------------------------------------------------------
+			// Src，截取的部分要小于 Base 的部分
+			//srcUnitList, err := sub_helper.GetVADInfosFromSub(infoSrc, FrontAndEndPerSrc, 1)
+			//if err != nil {
+			//	t.Fatal(err)
+			//}
+			//srcUnit := srcUnitList[0]
+
+			srcUnitList2, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPerSrc, 100000, true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			srcUnit := srcUnitList2[0]
+			debug_view.SaveDebugChart(srcUnit, "srcUnit", "srcUnit")
+			//debug_view.SaveDebugChart(srcUnit2, "srcUnit2", "srcUnit2")
+			//srcUnit = srcUnitList2[0]
+			// ---------------------------------------------------------------------------------------
 			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(&baseUnit, &srcUnit, nil, 0)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV1() error = %v, wantErr %v", err, tt.wantErr)
@@ -684,6 +704,7 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			args: args{audioInfo: vad.AudioInfo{
 				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"},
 				subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass"},
+			want: false, want1: 0,
 		},
 		{name: "Rick and Morty - S05E10 -- 1",
 			args: args{audioInfo: vad.AudioInfo{
@@ -695,13 +716,13 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			args: args{audioInfo: vad.AudioInfo{
 				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm"},
 				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass"},
-			want: true, want1: -6.4,
+			want: false, want1: 0,
 		},
 		{name: "Rick and Morty - S05E01 -- 0",
 			args: args{audioInfo: vad.AudioInfo{
 				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm"},
 				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\英_2.srt"},
-			want: true, want1: -6.4,
+			want: false, want1: 0,
 		},
 		{name: "Rick and Morty - S05E01 -- 1",
 			args: args{audioInfo: vad.AudioInfo{
@@ -729,11 +750,17 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			*/
 			//sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
 			// Src，截取的部分要小于 Base 的部分
-			srcUnitList, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPerSrc, 10000, bInsert)
+			srcUnitList, err := sub_helper.GetVADInfosFromSub(infoSrc, FrontAndEndPerSrc, 1)
 			if err != nil {
 				t.Fatal(err)
 			}
 			srcUnit := srcUnitList[0]
+
+			srcUnitList2, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPerSrc, 10000, true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			srcUnit2 := srcUnitList2[0]
 
 			audioVADInfos, err := vad.GetVADInfoFromAudio(vad.AudioInfo{
 				FileFullPath: tt.args.audioInfo.FileFullPath,
@@ -751,10 +778,16 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			}
 
 			got, got1, got2, err := s.GetOffsetTimeV2(nil, &srcUnit, audioVADInfos, duration)
+			got, got1, got2, err = s.GetOffsetTimeV2(nil, &srcUnit2, audioVADInfos, duration)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV3() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
+			debug_view.SaveDebugChartBase(audioVADInfos, "audioVADInfos", "audioVADInfos")
+			debug_view.SaveDebugChart(srcUnit, "srcUnit", "srcUnit")
+			debug_view.SaveDebugChart(srcUnit2, "srcUnit2", "srcUnit2")
+
 			if got != tt.want {
 				t.Errorf("GetOffsetTimeV3() got = %v, want %v", got, tt.want)
 			}

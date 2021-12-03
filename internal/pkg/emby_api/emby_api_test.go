@@ -43,7 +43,7 @@ func TestEmbyHelper_GetItemVideoInfoByUserId(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	println(videoInfo.Name, videoInfo.Path, "Default Sub Index:", videoInfo.GetDefaultSubIndex())
+	println(videoInfo.Name, videoInfo.Path, "Default Sub OffsetIndex:", videoInfo.GetDefaultSubIndex())
 }
 
 func TestEmbyHelper_UpdateVideoSubList(t *testing.T) {

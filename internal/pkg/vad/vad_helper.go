@@ -103,7 +103,14 @@ func GetFloatSlice(inVADs []VADInfo) []float64 {
 	return outVADFloats
 }
 
-// GetAudioIndex2Time 从 Audio 的 Index 推算出它所在的时间，返回 float64 的秒
+// GetAudioIndex2Time 从 Audio 的 OffsetIndex 推算出它所在的时间，返回 float64 的秒
 func GetAudioIndex2Time(index int) float64 {
 	return float64(index*FrameDuration) / 1000.0
 }
+
+const (
+	// Mode vad mode，VAD 的模式 0-3
+	Mode = 2
+	// FrameDuration frame duration，分析的时间窗口
+	FrameDuration = 10
+)
