@@ -40,7 +40,7 @@ func (s *SubTimelineFixerConfig) CheckDefault() {
 		s.V2_FrontAndEndPerBase = 0.15
 	}
 	if s.V2_FrontAndEndPerSrc <= 0 || s.V2_FrontAndEndPerSrc >= 1.0 {
-		s.V2_FrontAndEndPerSrc = 0.0
+		s.V2_FrontAndEndPerSrc = 0.2
 	}
 	if s.V2_WindowMatchPer <= 0 || s.V2_WindowMatchPer >= 1.0 {
 		s.V2_WindowMatchPer = 0.7

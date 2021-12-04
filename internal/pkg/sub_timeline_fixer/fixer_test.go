@@ -711,7 +711,7 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 		{name: "Foundation - S01E09 -- 0",
 			args: args{audioInfo: vad.AudioInfo{
 				FileFullPath: "C:\\Tmp\\Foundation - S01E09\\英_1.pcm"},
-				subFilePath: "C:\\Tmp\\Foundation - S01E09\\英_2.srt"},
+				subFilePath: "C:\\Tmp\\Foundation - S01E09\\英_2.ass"},
 			want: true, want1: 0,
 		},
 		{name: "Foundation - S01E09 -- 1",
@@ -801,7 +801,7 @@ var timelineFixer = NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConf
 	// V2
 	V2_SubOneUnitProcessTimeOut: 5 * 60,
 	V2_FrontAndEndPerBase:       0.15,
-	V2_FrontAndEndPerSrc:        0.0,
+	V2_FrontAndEndPerSrc:        0.2,
 	V2_WindowMatchPer:           0.7,
 	V2_CompareParts:             5,
 	V2_FixThreads:               3,
