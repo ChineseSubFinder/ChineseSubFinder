@@ -11,8 +11,6 @@ const EmbyApiGetItemsLimitMin = 50
 const EmbyApiGetItemsLimitMax = 50000
 
 const (
-	DebugFolder              = "debugthings"
-	TmpFolder                = "tmpthings"
 	DownloadSubDuring3Months = "2160h"
 	DownloadSubDuring7Days   = "168h"
 )

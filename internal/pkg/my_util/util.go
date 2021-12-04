@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	browser "github.com/allanpk716/fake-useragent"
@@ -104,117 +105,6 @@ func AddBaseUrl(baseUrl, url string) string {
 		return url
 	}
 	return fmt.Sprintf("%s%s", baseUrl, url)
-}
-
-func GetDebugFolder() (string, error) {
-	if global_value.DefDebugFolder == "" {
-		nowProcessRoot, _ := os.Getwd()
-		nowProcessRoot = filepath.Join(nowProcessRoot, common.DebugFolder)
-		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
-		if err != nil {
-			return "", err
-		}
-		global_value.DefDebugFolder = nowProcessRoot
-		return nowProcessRoot, err
-	}
-	return global_value.DefDebugFolder, nil
-}
-
-// GetRootTmpFolder 获取缓存的根目录，每一个视频的缓存将在其中额外新建子集文件夹
-func GetRootTmpFolder() (string, error) {
-	if global_value.DefTmpFolder == "" {
-		nowProcessRoot, _ := os.Getwd()
-		nowProcessRoot = filepath.Join(nowProcessRoot, common.TmpFolder)
-		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
-		if err != nil {
-			return "", err
-		}
-		global_value.DefTmpFolder = nowProcessRoot
-		return nowProcessRoot, err
-	}
-	return global_value.DefTmpFolder, nil
-}
-
-// ClearRootTmpFolder 清理缓存的根目录，将里面的子文件夹一并清理
-func ClearRootTmpFolder() error {
-	nowTmpFolder, err := GetRootTmpFolder()
-	if err != nil {
-		return err
-	}
-
-	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(nowTmpFolder)
-	if err != nil {
-		return err
-	}
-	for _, curFile := range files {
-		fullPath := nowTmpFolder + pathSep + curFile.Name()
-		if curFile.IsDir() {
-			err = os.RemoveAll(fullPath)
-			if err != nil {
-				return err
-			}
-		} else {
-			// 这里就是文件了
-			err = os.Remove(fullPath)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-// GetTmpFolder 获取缓存的文件夹，没有则新建
-func GetTmpFolder(folderName string) (string, error) {
-	rootPath, err := GetRootTmpFolder()
-	if err != nil {
-		return "", err
-	}
-	tmpFolderFullPath := filepath.Join(rootPath, folderName)
-	err = os.MkdirAll(tmpFolderFullPath, os.ModePerm)
-	if err != nil {
-		return "", err
-	}
-	return tmpFolderFullPath, nil
-}
-
-// ClearFolder 清空文件夹
-func ClearFolder(folderName string) error {
-	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(folderName)
-	if err != nil {
-		return err
-	}
-	for _, curFile := range files {
-		fullPath := folderName + pathSep + curFile.Name()
-		if curFile.IsDir() {
-			err = os.RemoveAll(fullPath)
-			if err != nil {
-				return err
-			}
-		} else {
-			// 这里就是文件了
-			err = os.Remove(fullPath)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-// ClearTmpFolder 清理指定的缓存文件夹
-func ClearTmpFolder(folderName string) error {
-
-	nowTmpFolder, err := GetTmpFolder(folderName)
-	if err != nil {
-		return err
-	}
-
-	return ClearFolder(nowTmpFolder)
 }
 
 // IsDir 存在且是文件夹
@@ -372,7 +262,7 @@ func CopyTestData(srcDir string) (string, error) {
 	testDir := filepath.Join(srcDir, "test")
 
 	if IsDir(testDir) == true {
-		err := ClearFolder(testDir)
+		err := my_folder.ClearFolder(testDir)
 		if err != nil {
 			return "", err
 		}

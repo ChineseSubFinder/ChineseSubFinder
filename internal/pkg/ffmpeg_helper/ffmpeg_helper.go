@@ -9,6 +9,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/tidwall/gjson"
@@ -69,10 +70,14 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 	if bok == false {
 		return false, nil, nil
 	}
+	nowCacheFolderPath, err := ffMPEGInfo.GetCacheFolderFPath()
+	if err != nil {
+		return false, nil, err
+	}
 	// 在函数调用完毕后，判断是否需要清理
 	defer func() {
 		if bok == false && ffMPEGInfo != nil {
-			err := os.RemoveAll(ffMPEGInfo.GetCacheFolderFPath())
+			err := os.RemoveAll(nowCacheFolderPath)
 			if err != nil {
 				log_helper.GetLogger().Errorln("GetFFMPEGInfo - RemoveAll", err.Error())
 				return
@@ -83,16 +88,9 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 	// 判断这个视频是否已经导出过内置的字幕和音频文件了
 	if ffMPEGInfo.IsExported() == false {
 		// 说明缓存不存在，需要导出，这里需要注意，如果导出失败了，这个文件夹要清理掉
-		if my_util.IsDir(ffMPEGInfo.GetCacheFolderFPath()) == true {
+		if my_util.IsDir(nowCacheFolderPath) == true {
 			// 如果存在则，先清空一个这个文件夹
-			err = my_util.ClearFolder(ffMPEGInfo.GetCacheFolderFPath())
-			if err != nil {
-				bok = false
-				return bok, nil, err
-			}
-		} else {
-			// 如果不存在则，创建文件夹
-			err = os.MkdirAll(ffMPEGInfo.GetCacheFolderFPath(), os.ModePerm)
+			err = my_folder.ClearFolder(nowCacheFolderPath)
 			if err != nil {
 				bok = false
 				return bok, nil, err
@@ -101,6 +99,12 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 		// 开始导出
 		// 构建导出的命令参数
 		audioArgs, subArgs := f.getAudioAndSubExportArgs(videoFileFullPath, ffMPEGInfo)
+		if audioArgs == nil {
+			return false, nil, errors.New(videoFileFullPath + " exportAudioAndSubtitles audioArgs == nil")
+		}
+		if subArgs == nil {
+			return false, nil, errors.New(videoFileFullPath + " exportAudioAndSubtitles subArgs == nil")
+		}
 		// 执行导出
 		execErrorString, err := f.exportAudioAndSubtitles(audioArgs, subArgs)
 		if err != nil {
@@ -118,6 +122,7 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 	return bok, ffMPEGInfo, nil
 }
 
+// GetAudioInfo 获取音频的长度信息
 func (f *FFMPEGHelper) GetAudioInfo(audioFileFullPath string) (bool, float64, error) {
 
 	const args = "-v error -show_format -show_streams -print_format json -f s16le -ac 1 -ar 16000"
@@ -233,7 +238,6 @@ func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFF
 	// 但是如果都没得这些的时候，那么也需要导出至少一个字幕或者音频，用于字幕的校正
 	cacheAudios := make([]AudioInfo, 0)
 	cacheSubtitleInfos := make([]SubtitleInfo, 0)
-
 
 	for i := 0; i < int(streamsValue.Num); i++ {
 
@@ -411,17 +415,24 @@ func (f *FFMPEGHelper) getAudioAndSubExportArgs(videoFileFullPath string, ffmpeg
 	// 字幕导出的参数构建
 	subArgs = append(subArgs, "-vn") // 不输出视频流
 	subArgs = append(subArgs, "-an") // 不输出音频流
+
+	nowCacheFolderPath, err := ffmpegInfo.GetCacheFolderFPath()
+	if err != nil {
+		log_helper.GetLogger().Errorln("getAudioAndSubExportArgs", videoFileFullPath, err.Error())
+		return nil, nil
+	}
+
 	for _, subtitleInfo := range ffmpegInfo.SubtitleInfoList {
 		f.addSubMapArg(&subArgs, subtitleInfo.Index,
-			filepath.Join(ffmpegInfo.GetCacheFolderFPath(), subtitleInfo.GetName()+common.SubExtSRT))
+			filepath.Join(nowCacheFolderPath, subtitleInfo.GetName()+common.SubExtSRT))
 		f.addSubMapArg(&subArgs, subtitleInfo.Index,
-			filepath.Join(ffmpegInfo.GetCacheFolderFPath(), subtitleInfo.GetName()+common.SubExtASS))
+			filepath.Join(nowCacheFolderPath, subtitleInfo.GetName()+common.SubExtASS))
 	}
 	// 音频导出的参数构建
 	audioArgs = append(audioArgs, "-vn")
 	for _, audioInfo := range ffmpegInfo.AudioInfoList {
 		f.addAudioMapArg(&audioArgs, audioInfo.Index,
-			filepath.Join(ffmpegInfo.GetCacheFolderFPath(), audioInfo.GetName()+extPCM))
+			filepath.Join(nowCacheFolderPath, audioInfo.GetName()+extPCM))
 	}
 
 	return audioArgs, subArgs
