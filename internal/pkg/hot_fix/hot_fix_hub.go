@@ -22,8 +22,8 @@ func HotFixProcess(param types.HotFixParam) error {
 	// 找现在有多少个 hotfix 执行过了
 	var hotFixes []models.HotFix
 	result := dao.GetDb().Find(&hotFixes)
-	if result.Error != nil {
-		return errors.New(fmt.Sprintf("hotfix query all result failed, %s", result.Error))
+	if result == nil || result.Error != nil {
+		return errors.New(fmt.Sprintf("hotfix query all result failed"))
 	}
 	// 数据库中是否有记录，记录了是否有运行都需要判断
 	var hotFixRecord = make(map[string]models.HotFix)

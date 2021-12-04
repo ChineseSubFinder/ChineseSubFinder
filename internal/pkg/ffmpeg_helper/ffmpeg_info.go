@@ -36,7 +36,7 @@ func (f *FFMPEGInfo) GetCacheFolderFPath() (string, error) {
 }
 
 // IsExported 是否已经导出过，如果没有导出或者导出不完整为 false
-func (f *FFMPEGInfo) IsExported() bool {
+func (f *FFMPEGInfo) IsExported(exportType ExportType) bool {
 
 	nowCacheFolder, err := f.GetCacheFolderFPath()
 	if err != nil {
@@ -47,7 +47,51 @@ func (f *FFMPEGInfo) IsExported() bool {
 	if my_util.IsDir(nowCacheFolder) == false {
 		return false
 	}
-	// 字幕都要导出了
+
+	switch exportType {
+	case Audio:
+		// 音频是否导出了
+		done := f.isAudioExported(nowCacheFolder)
+		if done == false {
+			return false
+		}
+		break
+	case Subtitle:
+		// 字幕都要导出了
+		done := f.isSubExported(nowCacheFolder)
+		if done == false {
+			return false
+		}
+	case SubtitleAndAudio:
+		// 音频是否导出了
+		done := f.isAudioExported(nowCacheFolder)
+		if done == false {
+			return false
+		}
+		// 字幕都要导出了
+		done = f.isSubExported(nowCacheFolder)
+		if done == false {
+			return false
+		}
+	default:
+		return false
+	}
+	return true
+}
+
+func (f *FFMPEGInfo) isAudioExported(nowCacheFolder string) bool {
+	for index, audioInfo := range f.AudioInfoList {
+		audioFPath := filepath.Join(nowCacheFolder, audioInfo.GetName()+extPCM)
+		if my_util.IsFile(audioFPath) == false {
+			return false
+		} else {
+			f.AudioInfoList[index].FullPath = audioFPath
+		}
+	}
+	return true
+}
+
+func (f *FFMPEGInfo) isSubExported(nowCacheFolder string) bool {
 	for index, subtitleInfo := range f.SubtitleInfoList {
 
 		subSrtFPath := filepath.Join(nowCacheFolder, subtitleInfo.GetName()+common.SubExtSRT)
@@ -62,19 +106,7 @@ func (f *FFMPEGInfo) IsExported() bool {
 		} else {
 			f.SubtitleInfoList[index].FullPath = subASSFPath
 		}
-
 	}
-	//TODO 音频可以后面再导出，按需。因为优先级最高的还是用字幕修复字幕，然后才是音频修复字幕
-	// 音频是否导出了
-	for index, audioInfo := range f.AudioInfoList {
-		audioFPath := filepath.Join(nowCacheFolder, audioInfo.GetName()+extPCM)
-		if my_util.IsFile(audioFPath) == false {
-			return false
-		} else {
-			f.AudioInfoList[index].FullPath = audioFPath
-		}
-	}
-
 	return true
 }
 

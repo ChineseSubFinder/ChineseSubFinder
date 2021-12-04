@@ -1,7 +1,6 @@
 package srt
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
@@ -29,9 +28,9 @@ func (p Parser) GetParserName() string {
 */
 func (p Parser) DetermineFileTypeFromFile(filePath string) (bool, *subparser.FileInfo, error) {
 	nowExt := filepath.Ext(filePath)
-	if strings.ToLower(nowExt) != common.SubExtSRT {
-		return false, nil, nil
-	}
+	//if strings.ToLower(nowExt) != common.SubExtSRT {
+	//	return false, nil, nil
+	//}
 	fBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return false, nil, err
@@ -52,9 +51,12 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 
 	// 找到 start end text
 	matched := regex_things.ReMatchDialogueSRT.FindAllStringSubmatch(allString, -1)
-	if len(matched) < 1 {
-		log_helper.GetLogger().Debugln("DetermineFileTypeFromBytes can't found Dialogues, Skip")
-		return false, nil, nil
+	if matched == nil || len(matched) < 1 {
+		matched = regex_things.ReMatchDialogueSRT2.FindAllStringSubmatch(allString, -1)
+		if matched == nil || len(matched) < 1 {
+			log_helper.GetLogger().Debugln("DetermineFileTypeFromBytes can't found Dialogues, Skip")
+			return false, nil, nil
+		}
 	}
 	subFileInfo := subparser.FileInfo{}
 	subFileInfo.Content = string(inBytes)

@@ -298,7 +298,7 @@ func (s Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 	// 是否有查找到的结果，至少要有结果。根据这里这样下面才能判断是分析失效了，还是就是没有结果而已
 	re := regexp.MustCompile(`共\s*(\d+)\s*条`)
 	matched := re.FindAllStringSubmatch(result, -1)
-	if len(matched) < 1 {
+	if matched == nil || len(matched) < 1 {
 		return "", common.SubHDStep0SubCountElementNotFound
 	}
 	subCount, err := decode.GetNumber2int(matched[0][0])

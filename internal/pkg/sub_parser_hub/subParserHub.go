@@ -96,7 +96,7 @@ func (p SubParserHub) getFromWhereSite(filePath string) string {
 	fileName := filepath.Base(filePath)
 	var re = regexp.MustCompile(`^\[(\w+)\]_`)
 	matched := re.FindStringSubmatch(fileName)
-	if len(matched) < 1 {
+	if matched == nil || len(matched) < 1 {
 		return ""
 	}
 	return matched[1]

@@ -21,9 +21,11 @@ var RegMatchSpString = regexp.MustCompile(`(?i)[^\w\s]`)
 // regStringASS = `Dialogue: [^,.]*[0-9]*,([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),[^,.]*,[^,.]*,[0-9]*,[0-9]*,[0-9]*,[^,.]*,(.*)`
 const regStringASS = `Dialogue: [^,.]*[0-9]*,([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([^,.]*),[^,.]*,[0-9]*,[0-9]*,[0-9]*,[^,.]*,(.*)`
 const regStringSRT = `(\d+)\n([\d:,]+)\s+-{2}\>\s+([\d:,]+)\n([\s\S]*?(\n{2}|$))`
+const regStringSRT2 = `(\d+)\n([\d:.]+)\s+-{2}\>\s+([\d:.]+)\n([\s\S]*?(\n{2}|$))`
 
-var ReMatchDialogueSRT = regexp.MustCompile(regStringSRT)
 var ReMatchDialogueASS = regexp.MustCompile(regStringASS)
+var ReMatchDialogueSRT = regexp.MustCompile(regStringSRT)
+var ReMatchDialogueSRT2 = regexp.MustCompile(regStringSRT2)
 
 // RegOneSeasonSubFolderNameMatch 每个视频文件夹下的缓存文件夹名称，一个季度的
 var RegOneSeasonSubFolderNameMatch = regexp.MustCompile(`(?m)^Sub_S\dE0`)

@@ -280,12 +280,12 @@ func GetSeasonAndEpisodeFromSubFileName(videoFileName string) (bool, int, int, e
 	// Killing.Eve.S02E01.Do.You.Know.How
 	var re = regexp.MustCompile(`(?m)\.S(\d+)E(\d+)\.`)
 	matched := re.FindAllStringSubmatch(upperName, -1)
-	if len(matched) < 1 {
+	if matched == nil || len(matched) < 1 {
 		// Killing.Eve.S02.Do.You.Know.How
 		// 看看是不是季度字幕打包
 		re = regexp.MustCompile(`(?m)\.S(\d+)\.`)
 		matched = re.FindAllStringSubmatch(upperName, -1)
-		if len(matched) < 1 {
+		if matched == nil || len(matched) < 1 {
 			return false, 0, 0, nil
 		}
 		season, err := GetNumber2int(matched[0][1])
@@ -311,7 +311,7 @@ func GetSeasonAndEpisodeFromSubFileName(videoFileName string) (bool, int, int, e
 func GetNumber2Float(input string) (float32, error) {
 	compile := regexp.MustCompile(regGetNumber)
 	params := compile.FindStringSubmatch(input)
-	if len(params) == 0 {
+	if params == nil || len(params) == 0 {
 		return 0, errors.New("get number not match")
 	}
 	fNum, err := strconv.ParseFloat(params[0], 32)
@@ -324,7 +324,7 @@ func GetNumber2Float(input string) (float32, error) {
 func GetNumber2int(input string) (int, error) {
 	compile := regexp.MustCompile(regGetNumber)
 	params := compile.FindStringSubmatch(input)
-	if len(params) == 0 {
+	if params == nil || len(params) == 0 {
 		return 0, errors.New("get number not match")
 	}
 	fNum, err := strconv.Atoi(params[0])

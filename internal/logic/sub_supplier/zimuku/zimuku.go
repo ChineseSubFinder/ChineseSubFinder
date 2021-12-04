@@ -310,7 +310,7 @@ func (s Supplier) step0(keyword string) (string, error) {
 	// 找到对应影片的详情界面
 	re := regexp.MustCompile(`<p\s+class="tt\s+clearfix"><a\s+href="(/subs/[\w]+\.html)"\s+target="_blank"><b>(.*?)</b></a></p>`)
 	matched := re.FindAllStringSubmatch(resp.String(), -1)
-	if len(matched) < 1 {
+	if matched == nil || len(matched) < 1 {
 		return "", common.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound
 	}
 	// 影片的详情界面 url

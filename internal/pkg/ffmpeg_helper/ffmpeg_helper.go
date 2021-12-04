@@ -47,7 +47,7 @@ func (f FFMPEGHelper) Version() (string, error) {
 
 // GetFFMPEGInfo 获取 视频的 FFMPEG 信息，包含音频和字幕
 // 优先会导出 中、英、日、韩 类型的，字幕如果没有语言类型，则也导出，然后需要额外的字幕语言的判断去辅助标记（读取文件内容）
-func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInfo, error) {
+func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType ExportType) (bool, *FFMPEGInfo, error) {
 
 	const args = "-v error -show_format -show_streams -print_format json"
 	cmdArgs := strings.Fields(args)
@@ -85,8 +85,14 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 		}
 	}()
 
+	// 查找当前这个视频外置字幕列表
+	err = ffMPEGInfo.GetExternalSubInfos(f.SubParserHub)
+	if err != nil {
+		return false, nil, err
+	}
+
 	// 判断这个视频是否已经导出过内置的字幕和音频文件了
-	if ffMPEGInfo.IsExported() == false {
+	if ffMPEGInfo.IsExported(exportType) == false {
 		// 说明缓存不存在，需要导出，这里需要注意，如果导出失败了，这个文件夹要清理掉
 		if my_util.IsDir(nowCacheFolderPath) == true {
 			// 如果存在则，先清空一个这个文件夹
@@ -98,32 +104,21 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string) (bool, *FFMPEGInf
 		}
 		// 开始导出
 		// 构建导出的命令参数
-		audioArgs, subArgs := f.getAudioAndSubExportArgs(videoFileFullPath, ffMPEGInfo)
-		if audioArgs == nil {
-			return false, nil, errors.New(videoFileFullPath + " exportAudioAndSubtitles audioArgs == nil")
-		}
-		if subArgs == nil {
-			return false, nil, errors.New(videoFileFullPath + " exportAudioAndSubtitles subArgs == nil")
-		}
-		// 执行导出
-		execErrorString, err := f.exportAudioAndSubtitles(audioArgs, subArgs)
+		exportAudioArgs, exportSubArgs := f.getAudioAndSubExportArgs(videoFileFullPath, ffMPEGInfo)
+		// 执行导出，音频和内置的字幕
+		execErrorString, err := f.exportAudioAndSubtitles(exportAudioArgs, exportSubArgs, exportType)
 		if err != nil {
 			log_helper.GetLogger().Errorln("exportAudioAndSubtitles", execErrorString)
 			bok = false
 			return bok, nil, err
 		}
 	}
-	// 查找当前这个视频外置字幕列表
-	err = ffMPEGInfo.GetExternalSubInfos(f.SubParserHub)
-	if err != nil {
-		return false, nil, err
-	}
 
 	return bok, ffMPEGInfo, nil
 }
 
-// GetAudioInfo 获取音频的长度信息
-func (f *FFMPEGHelper) GetAudioInfo(audioFileFullPath string) (bool, float64, error) {
+// GetAudioDurationInfo 获取音频的长度信息
+func (f *FFMPEGHelper) GetAudioDurationInfo(audioFileFullPath string) (bool, float64, error) {
 
 	const args = "-v error -show_format -show_streams -print_format json -f s16le -ac 1 -ar 16000"
 	cmdArgs := strings.Fields(args)
@@ -355,16 +350,30 @@ func (f *FFMPEGHelper) parseJsonString2GetAudioInfo(inputFFProbeString string) (
 }
 
 // exportAudioAndSubtitles 导出音频和字幕文件
-func (f *FFMPEGHelper) exportAudioAndSubtitles(subArgs, audioArgs []string) (string, error) {
+func (f *FFMPEGHelper) exportAudioAndSubtitles(audioArgs, subArgs []string, exportType ExportType) (string, error) {
 
 	// 这里导出依赖的是 ffmpeg 这个程序，需要的是构建导出的语句
-	execErrorString, err := f.execFFMPEG(subArgs)
-	if err != nil {
-		return execErrorString, err
-	}
-	execErrorString, err = f.execFFMPEG(audioArgs)
-	if err != nil {
-		return execErrorString, err
+	if exportType == SubtitleAndAudio {
+		execErrorString, err := f.execFFMPEG(audioArgs)
+		if err != nil {
+			return execErrorString, err
+		}
+		execErrorString, err = f.execFFMPEG(subArgs)
+		if err != nil {
+			return execErrorString, err
+		}
+	} else if exportType == Audio {
+		execErrorString, err := f.execFFMPEG(audioArgs)
+		if err != nil {
+			return execErrorString, err
+		}
+	} else if exportType == Subtitle {
+		execErrorString, err := f.execFFMPEG(subArgs)
+		if err != nil {
+			return execErrorString, err
+		}
+	} else {
+		return "", errors.New("FFMPEGHelper ExportType not support")
 	}
 
 	return "", nil
@@ -543,4 +552,12 @@ const (
 	codecTypeAudio = "audio"
 	extMP3         = ".mp3"
 	extPCM         = ".pcm"
+)
+
+type ExportType int
+
+const (
+	Subtitle         ExportType = iota // 导出字幕
+	Audio                              // 导出音频
+	SubtitleAndAudio                   // 导出字幕和音频
 )

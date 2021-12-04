@@ -1,7 +1,6 @@
 package ass
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
@@ -30,9 +29,9 @@ func (p Parser) GetParserName() string {
 */
 func (p Parser) DetermineFileTypeFromFile(filePath string) (bool, *subparser.FileInfo, error) {
 	nowExt := filepath.Ext(filePath)
-	if strings.ToLower(nowExt) != common.SubExtASS && strings.ToLower(nowExt) != common.SubExtSSA {
-		return false, nil, nil
-	}
+	//if strings.ToLower(nowExt) != common.SubExtASS && strings.ToLower(nowExt) != common.SubExtSSA {
+	//	return false, nil, nil
+	//}
 	fBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return false, nil, err
@@ -51,7 +50,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	allString = strings.ReplaceAll(allString, "\r", "")
 	// 找到 start end text
 	matched := regex_things.ReMatchDialogueASS.FindAllStringSubmatch(allString, -1)
-	if len(matched) < 1 {
+	if matched == nil || len(matched) < 1 {
 		log_helper.GetLogger().Debugln("DetermineFileTypeFromBytes can't found Dialogues, Skip")
 		return false, nil, nil
 	}
@@ -217,6 +216,9 @@ func (p Parser) parseOneDialogueText(nowText string, odl *subparser.OneDialogue,
 	if strings.Contains(nowText1, `\N`) {
 		// 有，那么就需要再次切割，一般是双语字幕
 		for _, matched2 := range regex_things.ReCutDoubleLanguage.FindAllStringSubmatch(nowText1, -1) {
+			if matched2 == nil {
+				continue
+			}
 			for i, s := range matched2 {
 				if i == 0 {
 					continue

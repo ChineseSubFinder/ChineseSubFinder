@@ -10,9 +10,10 @@ import (
 func TestGetFFMPEGInfo(t *testing.T) {
 	//videoFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 5\\Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.mkv"
 	videoFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 5\\Rick and Morty - S05E01 - Mort Dinner Rick Andre WEBDL-1080p.mkv"
+	//videoFile := "X:\\连续剧\\Foundation (2021)\\Season 1\\Foundation (2021) - S01E10 - The Leap WEBDL-1080p.mkv"
 
 	f := NewFFMPEGHelper()
-	bok, ffmpegInfo, err := f.GetFFMPEGInfo(videoFile)
+	bok, ffmpegInfo, err := f.GetFFMPEGInfo(videoFile, Audio)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,7 +95,7 @@ func TestFFMPEGHelper_GetAudioInfo(t *testing.T) {
 	audioFullPath := "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"
 
 	f := NewFFMPEGHelper()
-	bok, duration, err := f.GetAudioInfo(audioFullPath)
+	bok, duration, err := f.GetAudioDurationInfo(audioFullPath)
 	if err != nil || bok == false {
 		t.Fatal(err)
 	}
