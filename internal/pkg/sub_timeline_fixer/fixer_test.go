@@ -798,7 +798,7 @@ var timelineFixer = NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConf
 	SubOneUnitProcessTimeOut: 5 * 60,
 	FrontAndEndPerBase:       0.15,
 	FrontAndEndPerSrc:        0.0,
-	MatchPer:                 0.7,
+	WindowMatchPer:           0.7,
 	CompareParts:             5,
 	FixThreads:               3,
 })

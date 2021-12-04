@@ -396,7 +396,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 
 	srcVADLen := len(srcUnit.VADList)
 	// 滑动窗口的长度
-	srcWindowLen := int(float64(srcVADLen) * s.FixerConfig.MatchPer)
+	srcWindowLen := int(float64(srcVADLen) * s.FixerConfig.WindowMatchPer)
 	srcSlideLen := srcVADLen - srcWindowLen
 	// 窗口可以滑动的长度
 	srcSlideLenHalf := srcSlideLen / 2
