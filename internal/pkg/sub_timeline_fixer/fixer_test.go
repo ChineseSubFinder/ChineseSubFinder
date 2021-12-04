@@ -324,13 +324,6 @@ func TestGetOffsetTimeV1(t *testing.T) {
 			want: 0, wantErr: false},
 	}
 
-	timelineFixer := NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{
-		MaxCompareDialogue: 3,
-		MaxStartTimeDiffSD: 0.1,
-		MinMatchedPercent:  0.1,
-		MinOffset:          0.1,
-	})
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
@@ -567,13 +560,6 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			want: 0, wantErr: false},
 	}
 
-	timelineFixer := NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{
-		MaxCompareDialogue: 3,
-		MaxStartTimeDiffSD: 0.1,
-		MinMatchedPercent:  0.1,
-		MinOffset:          0.1,
-	})
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
@@ -609,7 +595,7 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			//	t.Fatal(err)
 			//}
 			//baseUnitOld := baseUnitListOld[0]
-			baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, FrontAndEndPerBase)
+			baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, timelineFixer.FixerConfig.FrontAndEndPerBase)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -620,7 +606,7 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			//	t.Fatal(err)
 			//}
 			//srcUnitOld := srcUnitListOld[0]
-			srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, FrontAndEndPerSrc)
+			srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, timelineFixer.FixerConfig.FrontAndEndPerSrc)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -745,9 +731,6 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &SubTimelineFixer{
-				fixerConfig: tt.fields.fixerConfig,
-			}
 
 			bFind, infoSrc, err := subParserHub.DetermineFileTypeFromFile(tt.args.subFilePath)
 			if err != nil {
@@ -762,7 +745,7 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			*/
 			//sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
 			// Src，截取的部分要小于 Base 的部分
-			srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, FrontAndEndPerSrc)
+			srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, timelineFixer.FixerConfig.FrontAndEndPerSrc)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -776,7 +759,7 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			}
 
 			println("-------New--------")
-			got, got1, sd, err := s.GetOffsetTimeV2(nil, srcUnitNew, audioVADInfos)
+			got, got1, sd, err := timelineFixer.GetOffsetTimeV2(nil, srcUnitNew, audioVADInfos)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV3() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -795,7 +778,7 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 				t.Errorf("GetOffsetTimeV1() got = %v, want %v", got, tt.want)
 			}
 
-			_, err = s.FixSubTimeline(infoSrc, got1, tt.args.subFilePath+FixMask+infoSrc.Ext)
+			_, err = timelineFixer.FixSubTimeline(infoSrc, got1, tt.args.subFilePath+FixMask+infoSrc.Ext)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -804,3 +787,18 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 		})
 	}
 }
+
+var timelineFixer = NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{
+	// V1
+	MaxCompareDialogue: 3,
+	MaxStartTimeDiffSD: 0.1,
+	MinMatchedPercent:  0.1,
+	MinOffset:          0.1,
+	// V2
+	SubOneUnitProcessTimeOut: 5 * 60,
+	FrontAndEndPerBase:       0.15,
+	FrontAndEndPerSrc:        0.0,
+	MatchPer:                 0.7,
+	CompareParts:             5,
+	FixThreads:               3,
+})
