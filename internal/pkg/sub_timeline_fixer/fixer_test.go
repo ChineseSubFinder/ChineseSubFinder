@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/debug_view"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
@@ -608,11 +609,10 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			//	t.Fatal(err)
 			//}
 			//baseUnitOld := baseUnitListOld[0]
-			baseUnitListNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, FrontAndEndPerBase, 1)
+			baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, FrontAndEndPerBase)
 			if err != nil {
 				t.Fatal(err)
 			}
-			baseUnitNew := baseUnitListNew[0]
 			// ---------------------------------------------------------------------------------------
 			// Src，截取的部分要小于 Base 的部分
 			//srcUnitListOld, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPerSrc, 100000, true)
@@ -620,14 +620,13 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			//	t.Fatal(err)
 			//}
 			//srcUnitOld := srcUnitListOld[0]
-			srcUnitListNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, FrontAndEndPerSrc, 1)
+			srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, FrontAndEndPerSrc)
 			if err != nil {
 				t.Fatal(err)
 			}
-			srcUnitNew := srcUnitListNew[0]
 			// ---------------------------------------------------------------------------------------
 			//bok, got, sd, err := timelineFixer.GetOffsetTimeV2(&baseUnitOld, &srcUnitOld, nil, 0)
-			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(&baseUnitNew, &srcUnitNew, nil)
+			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(baseUnitNew, srcUnitNew, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV1() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -763,12 +762,10 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			*/
 			//sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
 			// Src，截取的部分要小于 Base 的部分
-			srcUnitNewList, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, FrontAndEndPerSrc, 1)
+			srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, FrontAndEndPerSrc)
 			if err != nil {
 				t.Fatal(err)
 			}
-			srcUnitNew := srcUnitNewList[0]
-
 			audioVADInfos, err := vad.GetVADInfoFromAudio(vad.AudioInfo{
 				FileFullPath: tt.args.audioInfo.FileFullPath,
 				SampleRate:   16000,
@@ -779,14 +776,14 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			}
 
 			println("-------New--------")
-			got, got1, sd, err := s.GetOffsetTimeV2(nil, &srcUnitNew, audioVADInfos)
+			got, got1, sd, err := s.GetOffsetTimeV2(nil, srcUnitNew, audioVADInfos)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV3() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
-			//debug_view.SaveDebugChartBase(audioVADInfos, "audioVADInfos", "audioVADInfos")
-			//debug_view.SaveDebugChart(srcUnitNew, "srcUnitNew", "srcUnitNew")
+			debug_view.SaveDebugChartBase(audioVADInfos, "audioVADInfos", "audioVADInfos")
+			debug_view.SaveDebugChart(*srcUnitNew, "srcUnitNew", "srcUnitNew")
 			if got != tt.want {
 				t.Errorf("GetOffsetTimeV3() got = %v, want %v", got, tt.want)
 			}

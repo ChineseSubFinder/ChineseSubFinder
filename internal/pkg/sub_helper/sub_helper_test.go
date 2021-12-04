@@ -53,16 +53,14 @@ func TestGetVADInfosFromSub(t *testing.T) {
 			len(infoBase.DialoguesEx), len(infoSrc.DialoguesEx)))
 	}
 
-	baseSubUnits, err := GetVADInfoFeatureFromSubNew(infoBase, FrontAndEndPerBase, 1)
+	baseSubUnit, err := GetVADInfoFeatureFromSubNew(infoBase, FrontAndEndPerBase)
 	if err != nil {
 		t.Fatal(err)
 	}
-	baseSubUnit := baseSubUnits[0]
-	srcSubUnits, err := GetVADInfoFeatureFromSubNew(infoSrc, FrontAndEndPerBase, 1)
+	srcSubUnit, err := GetVADInfoFeatureFromSubNew(infoSrc, FrontAndEndPerBase)
 	if err != nil {
 		t.Fatal(err)
 	}
-	srcSubUnit := srcSubUnits[0]
 	if len(baseSubUnit.VADList) != len(srcSubUnit.VADList) {
 		t.Fatal(fmt.Sprintf("info Base And Src Parse Error, infoBase.VADList Len = %v, infoSrc.VADList Len = %v",
 			len(baseSubUnit.VADList), len(srcSubUnit.VADList)))
@@ -73,9 +71,6 @@ func TestGetVADInfosFromSub(t *testing.T) {
 			println(fmt.Sprintf("base src VADList i=%v, not the same", i))
 		}
 	}
-
-	println(len(baseSubUnits))
-	println(len(srcSubUnits))
 }
 
 const FrontAndEndPerBase = 0

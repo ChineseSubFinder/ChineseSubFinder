@@ -523,7 +523,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	}
 	wg.Wait()
 	// 这里可能遇到匹配的时候没有能够执行够 CompareParts 次，有可能是负数跳过或者时间转换失败导致，前者为主（可能是这两个就是一个东西的时候，或者说没有时间轴偏移的时候）
-	if insertIndex < CompareParts {
+	if insertIndex < CompareParts/2 {
 		return false, 0, 0, nil
 	}
 	outCorrelationFixResult := s.calcMeanAndSD(tmpStartDiffTimeListEx, tmpStartDiffTimeList)
@@ -605,7 +605,7 @@ const SubOneUnitProcessTimeOut = 60 * 5 * time.Second // 字幕时间轴校正�
 
 // 字幕匹配字幕 GetVADInfoFeatureFromSubNew
 const FrontAndEndPerBase = 0.15 // 前百分之 15 和后百分之 15 都不进行识别
-const FrontAndEndPerSrc = 0.20  // 前百分之 20 和后百分之 20 都不进行识别
+const FrontAndEndPerSrc = 0.0   // 前百分之 20 和后百分之 20 都不进行识别
 const MatchPer = 0.7
 const CompareParts = 5
 const FixThreads = 3 // 字幕校正的并发线程

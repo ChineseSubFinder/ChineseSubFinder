@@ -462,12 +462,9 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 /*
 	GetVADInfoFeatureFromSubNew 将 Sub 文件转换为 VAD List 信息
 */
-func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPer float64, pieces int) ([]SubUnit, error) {
-	// 至少分为一份
-	if pieces <= 0 {
-		pieces = 1
-	}
-	outSubUnits := make([]SubUnit, 0)
+func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPer float64) (*SubUnit, error) {
+
+	outSubUnits := NewSubUnit()
 	if len(fileInfo.DialoguesEx) <= 0 {
 		return nil, errors.New("GetVADInfoFeatureFromSubNew fileInfo Dialogue Length is 0")
 	}
@@ -492,8 +489,8 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 	}
 	// 计算出需要截取的片段,起始和结束
 	skipLen := int(float64(vadLen) * SkipFrontAndEndPer)
-	skipStartIndex := int(subStartTimeFloor10ms) + skipLen
-	skipEndIndex := skipStartIndex + (vadLen - 2*skipLen)
+	skipStartIndex := skipLen
+	skipEndIndex := vadLen - skipLen
 	// 现在需要从 fileInfo 的每一句对白也就对应一段连续的 VAD active = true 来进行改写，记得向下取整
 	for index, dialogueEx := range fileInfo.DialoguesEx {
 
@@ -518,10 +515,15 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 		// 得到一句对白的时长
 		changeVADStartIndex := int(oneDialogueStartTimeFloor * 100)
 		changeVADEndIndex := int(oneDialogueEndTimeFloor * 100)
-		// 跳过整体的前后百分比
-		if changeVADStartIndex < skipStartIndex || changeVADEndIndex > skipEndIndex {
+		// 不能超过 最后一句话的时常
+		if changeVADStartIndex > int(subEndTimeFloor*100) {
 			continue
 		}
+		// 也不能比起始的第一句话时间轴更低
+		if changeVADStartIndex < int(subStartTimeFloor10ms) {
+			continue
+		}
+
 		// 如果上一个对白的最后一个 OffsetIndex 链接着当前这一句的索引的 VAD 信息 active 是 true 就设置为 false
 		lastDialogueEndIndex := changeVADStartIndex - int(subStartTimeFloor10ms) - 1
 		if lastDialogueEndIndex >= 0 {
@@ -530,33 +532,31 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 			}
 		}
 		// 调整之前做好的整体 VAD 的信息，符合 VAD active = true
-		for i := changeVADStartIndex - int(subStartTimeFloor10ms); i < changeVADEndIndex-int(subStartTimeFloor10ms); i++ {
+		changerStartIndex := changeVADStartIndex - int(subStartTimeFloor10ms)
+		if changerStartIndex < 0 {
+			continue
+		}
+		changerEndIndex := changeVADEndIndex - int(subStartTimeFloor10ms) - 1
+		if changerEndIndex < 0 {
+			continue
+		}
+		for i := changerStartIndex; i < changerEndIndex; i++ {
 			subVADs[i].Active = true
 		}
 	}
-	// 整体的 VAD 信息构建完了，现在需要进行切割，分成多份
-	// 需要根据去头去尾，调整整体的总长度再进行多分的拆分
-	afterCutVADLen := vadLen - 2*skipLen
-	onePartLen := afterCutVADLen / pieces
-	// 余下的不要了，暂定
-	//yu := vadLen % pieces
-	for i := 0; i < pieces; i++ {
-		tmpSubUnit := NewSubUnit()
-		// 截取出来当前这一段
-		tmpVADList := subVADs[skipStartIndex+i*onePartLen-int(subStartTimeFloor10ms) : skipStartIndex+i*onePartLen+onePartLen-int(subStartTimeFloor10ms)]
-		tmpSubUnit.VADList = tmpVADList
 
-		tmpStartTime := time.Time{}
-		tmpStartTime = tmpStartTime.Add(tmpVADList[0].Time)
-		tmpEndTime := time.Time{}
-		tmpEndTime = tmpEndTime.Add(tmpVADList[len(tmpVADList)-1].Time)
+	// 截取出来当前这一段
+	tmpVADList := subVADs[skipStartIndex:skipEndIndex]
+	outSubUnits.VADList = tmpVADList
 
-		tmpSubUnit.SetBaseTime(tmpStartTime)
-		tmpSubUnit.SetOffsetStartTime(tmpStartTime)
-		tmpSubUnit.SetOffsetEndTime(tmpEndTime)
+	tmpStartTime := time.Time{}
+	tmpStartTime = tmpStartTime.Add(tmpVADList[0].Time)
+	tmpEndTime := time.Time{}
+	tmpEndTime = tmpEndTime.Add(tmpVADList[len(tmpVADList)-1].Time)
 
-		outSubUnits = append(outSubUnits, *tmpSubUnit)
-	}
+	outSubUnits.SetBaseTime(tmpStartTime)
+	outSubUnits.SetOffsetStartTime(tmpStartTime)
+	outSubUnits.SetOffsetEndTime(tmpEndTime)
 
 	return outSubUnits, nil
 }
