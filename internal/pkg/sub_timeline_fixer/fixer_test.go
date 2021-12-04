@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/debug_view"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
@@ -415,11 +413,12 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 		*/
 		{name: "R&M S05E01", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E01 - English.srt"),
 			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E01 - 简英.srt"),
-			staticLineFileSavePath: "bar.html"}, want: -6.12981818181818, wantErr: false},
+			staticLineFileSavePath: "bar.html"}, want: -6.4, wantErr: false},
 		{name: "R&M S05E01-1", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E01 - English.srt"),
 			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E01 - English.srt"),
 			staticLineFileSavePath: "bar.html"}, want: 0, wantErr: false},
-		{name: "R&M S05E10", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E10 - English.ass"),
+
+		{name: "R&M S05E10-0", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E10 - English.ass"),
 			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
 			staticLineFileSavePath: "bar.html"}, want: -6.405985401459854, wantErr: false},
 
@@ -428,24 +427,6 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			staticLineFileSavePath: "bar.html"}, want: 6.405985401459854, wantErr: false},
 		{name: "R&M S05E10-2", args: args{baseSubFile: filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
 			srcSubFile:             filepath.Join(testRootDirYes, "R&M S05E10 - 简英.ass"),
-			staticLineFileSavePath: "bar.html"}, want: 0, wantErr: false},
-
-		{name: "R&M S05E01-2", args: args{
-			baseSubFile:            "C:\\Tmp\\Rick and Morty - S05E01\\英_2.srt",
-			srcSubFile:             "C:\\Tmp\\Rick and Morty - S05E01\\Rick and Morty - S05E01 - Mort Dinner Rick Andre WEBDL-1080p.chinese(简英,zimuku).ass",
-			staticLineFileSavePath: "bar.html"}, want: -6.12981818181818, wantErr: false},
-		{name: "R&M S05E01-2", args: args{
-			baseSubFile:            "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass",
-			srcSubFile:             "C:\\Tmp\\Rick and Morty - S05E01\\Rick and Morty - S05E01 - Mort Dinner Rick Andre WEBDL-1080p.chinese(简英,zimuku).ass",
-			staticLineFileSavePath: "bar.html"}, want: -6.12981818181818, wantErr: false},
-		{name: "R&M S05E01-2", args: args{
-			baseSubFile:            "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass",
-			srcSubFile:             "C:\\Tmp\\Rick and Morty - S05E01\\英_2.srt",
-			staticLineFileSavePath: "bar.html"}, want: 0, wantErr: false},
-
-		{name: "R&M S05E01-2", args: args{
-			baseSubFile:            "C:\\Tmp\\Rick and Morty - S05E10\\英_2.srt",
-			srcSubFile:             "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
 			staticLineFileSavePath: "bar.html"}, want: 0, wantErr: false},
 		/*
 			基地
@@ -622,38 +603,31 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			//sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
 			// ---------------------------------------------------------------------------------------
 			// Base，截取的部分要大于 Src 的部分
-			//baseUnitList, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, FrontAndEndPerBase, 1)
+			//baseUnitListOld, err := sub_helper.GetVADInfoFeatureFromSub(infoBase, FrontAndEndPerBase, 100000, true)
 			//if err != nil {
 			//	t.Fatal(err)
 			//}
-			//baseUnit := baseUnitList[0]
-
-			baseUnitList2, err := sub_helper.GetVADInfoFeatureFromSub(infoBase, FrontAndEndPerBase, 100000, true)
+			//baseUnitOld := baseUnitListOld[0]
+			baseUnitListNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, FrontAndEndPerBase, 1)
 			if err != nil {
 				t.Fatal(err)
 			}
-			baseUnit := baseUnitList2[0]
-			debug_view.SaveDebugChart(baseUnit, "baseUnit", "baseUnit")
-			//debug_view.SaveDebugChart(baseUnit2, "baseUnit2", "baseUnit2")
-			//baseUnit = baseUnitList2[0]
+			baseUnitNew := baseUnitListNew[0]
 			// ---------------------------------------------------------------------------------------
 			// Src，截取的部分要小于 Base 的部分
-			//srcUnitList, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, FrontAndEndPerSrc, 1)
+			//srcUnitListOld, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPerSrc, 100000, true)
 			//if err != nil {
 			//	t.Fatal(err)
 			//}
-			//srcUnit := srcUnitList[0]
-
-			srcUnitList2, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPerSrc, 100000, true)
+			//srcUnitOld := srcUnitListOld[0]
+			srcUnitListNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, FrontAndEndPerSrc, 1)
 			if err != nil {
 				t.Fatal(err)
 			}
-			srcUnit := srcUnitList2[0]
-			debug_view.SaveDebugChart(srcUnit, "srcUnit", "srcUnit")
-			//debug_view.SaveDebugChart(srcUnit2, "srcUnit2", "srcUnit2")
-			//srcUnit = srcUnitList2[0]
+			srcUnitNew := srcUnitListNew[0]
 			// ---------------------------------------------------------------------------------------
-			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(&baseUnit, &srcUnit, nil, 0)
+			//bok, got, sd, err := timelineFixer.GetOffsetTimeV2(&baseUnitOld, &srcUnitOld, nil, 0)
+			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(&baseUnitNew, &srcUnitNew, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV1() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -700,36 +674,51 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 		want2   float64
 		wantErr bool
 	}{
-		{name: "Rick and Morty - S05E10 -- 0",
-			args: args{audioInfo: vad.AudioInfo{
-				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"},
-				subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass"},
-			want: false, want1: 0,
-		},
-		{name: "Rick and Morty - S05E10 -- 1",
-			args: args{audioInfo: vad.AudioInfo{
-				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"},
-				subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.chinese(简英,zimuku).ass"},
-			want: true, want1: -6.4,
-		},
+		// Rick and Morty - S05E01
 		{name: "Rick and Morty - S05E01 -- 0",
 			args: args{audioInfo: vad.AudioInfo{
 				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm"},
 				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass"},
-			want: false, want1: 0,
+			want: true, want1: 0,
 		},
 		{name: "Rick and Morty - S05E01 -- 1",
 			args: args{audioInfo: vad.AudioInfo{
 				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm"},
 				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\英_2.srt"},
-			want: false, want1: 0,
+			want: true, want1: 0,
 		},
 		{name: "Rick and Morty - S05E01 -- 2",
 			args: args{audioInfo: vad.AudioInfo{
 				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm"},
-				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\Rick and Morty - S05E01 - Mort Dinner Rick Andre WEBDL-1080p.chinese(简英,zimuku).ass"},
-			want: true, want1: -6.4,
+				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\R&M S05E01 - 简英.srt"},
+			want: true, want1: -6.1,
 		},
+		{name: "Rick and Morty - S05E01 -- 3",
+			args: args{audioInfo: vad.AudioInfo{
+				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm"},
+				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\R&M S05E01 - 简.ass"},
+			want: true, want1: -6.1,
+		},
+		// Rick and Morty - S05E10
+		{name: "Rick and Morty - S05E10 -- 0",
+			args: args{audioInfo: vad.AudioInfo{
+				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"},
+				subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass"},
+			want: true, want1: 0,
+		},
+		{name: "Rick and Morty - S05E10 -- 1",
+			args: args{audioInfo: vad.AudioInfo{
+				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"},
+				subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.srt"},
+			want: true, want1: 0,
+		},
+		{name: "Rick and Morty - S05E10 -- 2",
+			args: args{audioInfo: vad.AudioInfo{
+				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"},
+				subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\R&M S05E10 - 简英.ass"},
+			want: true, want1: -6.0,
+		},
+		// Foundation - S01E09
 		{name: "Foundation - S01E09 -- 0",
 			args: args{audioInfo: vad.AudioInfo{
 				FileFullPath: "C:\\Tmp\\Foundation - S01E09\\英_1.pcm"},
@@ -745,13 +734,13 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 		{name: "Foundation - S01E09 -- 2",
 			args: args{audioInfo: vad.AudioInfo{
 				FileFullPath: "C:\\Tmp\\Foundation - S01E09\\英_1.pcm"},
-				subFilePath: "C:\\Tmp\\Foundation - S01E09\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p.chinese(简英,zimuku).default.ass"},
-			want: true, want1: 0,
+				subFilePath: "C:\\Tmp\\Foundation - S01E09\\chinese(简英,zimuku).default.ass"},
+			want: true, want1: -30,
 		},
 		{name: "Foundation - S01E09 -- 3",
 			args: args{audioInfo: vad.AudioInfo{
 				FileFullPath: "C:\\Tmp\\Foundation - S01E09\\英_1.pcm"},
-				subFilePath: "C:\\Tmp\\Foundation - S01E09\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p.chinese(简英,zimuku-fix).ass"},
+				subFilePath: "C:\\Tmp\\Foundation - S01E09\\chinese(简英,zimuku-fix).ass"},
 			want: true, want1: 0,
 		},
 	}
@@ -780,12 +769,6 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			}
 			srcUnitNew := srcUnitNewList[0]
 
-			srcUnitOldList, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPerSrc, 10000, true)
-			if err != nil {
-				t.Fatal(err)
-			}
-			srcUnitOld := srcUnitOldList[0]
-
 			audioVADInfos, err := vad.GetVADInfoFromAudio(vad.AudioInfo{
 				FileFullPath: tt.args.audioInfo.FileFullPath,
 				SampleRate:   16000,
@@ -795,32 +778,32 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			f := ffmpeg_helper.NewFFMPEGHelper()
-			bok, duration, err := f.GetAudioInfo(tt.args.audioInfo.FileFullPath)
-			if err != nil || bok == false {
-				t.Fatal(err)
-			}
-
-			got, got1, got2, err := s.GetOffsetTimeV2(nil, &srcUnitNew, audioVADInfos, duration)
-			got, got1, got2, err = s.GetOffsetTimeV2(nil, &srcUnitOld, audioVADInfos, duration)
+			println("-------New--------")
+			got, got1, sd, err := s.GetOffsetTimeV2(nil, &srcUnitNew, audioVADInfos)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV3() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
-			debug_view.SaveDebugChartBase(audioVADInfos, "audioVADInfos", "audioVADInfos")
-			debug_view.SaveDebugChart(srcUnitNew, "srcUnitNew", "srcUnitNew")
-			debug_view.SaveDebugChart(srcUnitOld, "srcUnitOld", "srcUnitOld")
-
+			//debug_view.SaveDebugChartBase(audioVADInfos, "audioVADInfos", "audioVADInfos")
+			//debug_view.SaveDebugChart(srcUnitNew, "srcUnitNew", "srcUnitNew")
 			if got != tt.want {
 				t.Errorf("GetOffsetTimeV3() got = %v, want %v", got, tt.want)
 			}
-			if got1 != tt.want1 {
-				t.Errorf("GetOffsetTimeV3() got1 = %v, want %v", got1, tt.want1)
+			if got1 > -0.2 && got1 < 0.2 && tt.want1 == 0 {
+				// 如果 offset time > -0.2 且 < 0.2 则认为无需调整时间轴，为0
+			} else if got1 > tt.want1-0.1 && got1 < tt.want1+0.1 {
+				// 在一个正负范围内都可以接受
+			} else {
+				t.Errorf("GetOffsetTimeV1() got = %v, want %v", got, tt.want)
 			}
-			if got2 != tt.want2 {
-				t.Errorf("GetOffsetTimeV3() got2 = %v, want %v", got2, tt.want2)
+
+			_, err = s.FixSubTimeline(infoSrc, got1, tt.args.subFilePath+FixMask+infoSrc.Ext)
+			if err != nil {
+				t.Fatal(err)
 			}
+
+			println(fmt.Sprintf("GetOffsetTimeV2: %vs SD:%v", got1, sd))
 		})
 	}
 }

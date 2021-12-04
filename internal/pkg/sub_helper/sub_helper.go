@@ -476,20 +476,10 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 		因为 VAD 的窗口是 10ms，那么需要多每一句话按 10 ms 的单位进行取整
 		每一句话开始、结束的时间，需要向下取整
 	*/
-	// 字幕的开始时间
-	subStartTime, err := fileInfo.ParseTime(fileInfo.DialoguesEx[0].StartTime)
+	subStartTimeFloor, subEndTimeFloor, err := ReadSubStartAndEndTime(fileInfo)
 	if err != nil {
 		return nil, err
 	}
-	// 字幕的结束时间
-	subEndTime, err := fileInfo.ParseTime(fileInfo.DialoguesEx[len(fileInfo.DialoguesEx)-1].EndTime)
-	if err != nil {
-		return nil, err
-	}
-	// 字幕的时长，对时间进行向下取整
-	subStartTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(subStartTime))
-	subEndTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(subEndTime))
-
 	subFullSecondTimeFloor := subEndTimeFloor - subStartTimeFloor
 	// 根据这个时长就能够得到一个完整的 VAD List，然后再通过每一句对白进行 VAD 值的调整即可，这样就能够保证
 	// 相同的一个字幕因为使用 ffmpeg 导出 srt 和 ass 后的，可能存在总体时间轴不一致的问题
@@ -569,4 +559,53 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 	}
 
 	return outSubUnits, nil
+}
+
+func ReadSubStartAndEndTime(fileInfo *subparser.FileInfo) (float64, float64, error) {
+
+	/*
+		因为是先构建完整的时间轴 VAD ，然后再用每一句话去修改对应的 VAD 段
+		那么，如果字幕第一句话时间轴有问题，就会出问题，所以这里返回的时候需要判断是否 StartTime 正确
+		因为可能会有一种情况，读取到的字幕是经过 V1 校正时间的，那么第一句和前几句话，可能时间是 Dialogue: 0,23:59:31.32,23:59:33.23
+		明显时间过大，导致减出来的值是负值，会越界访问
+	*/
+
+	getTimeFunc := func(fileInfo *subparser.FileInfo, startIndex int) (bool, float64, float64, error) {
+		// 字幕的开始时间
+		subStartTime, err := fileInfo.ParseTime(fileInfo.DialoguesEx[startIndex].StartTime)
+		if err != nil {
+			return false, 0, 0, err
+		}
+		// 字幕的结束时间
+		subEndTime, err := fileInfo.ParseTime(fileInfo.DialoguesEx[len(fileInfo.DialoguesEx)-1].EndTime)
+		if err != nil {
+			return false, 0, 0, err
+		}
+		// 字幕的时长，对时间进行向下取整
+		subStartTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(subStartTime))
+		subEndTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(subEndTime))
+
+		if subEndTimeFloor-subStartTimeFloor < 0 {
+			// 说明 StartTime 的数值太大，不正常，超过 EndTime 了，startIndex 需要累加
+			return false, 0, 0, nil
+		}
+
+		return true, subStartTimeFloor, subEndTimeFloor, nil
+	}
+	startIndex := 0
+	var err error
+	var subStartTimeFloor, subEndTimeFloor float64
+	bok := false
+	for bok == false {
+		bok, subStartTimeFloor, subEndTimeFloor, err = getTimeFunc(fileInfo, startIndex)
+		if err != nil {
+			return 0, 0, err
+		}
+		if bok == true {
+			break
+		}
+		startIndex++
+	}
+
+	return subStartTimeFloor, subEndTimeFloor, err
 }

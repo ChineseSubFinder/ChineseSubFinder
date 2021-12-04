@@ -367,7 +367,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 }
 
 // GetOffsetTimeV2 使用内置的字幕校正外置的字幕时间轴
-func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit, audioVadList []vad.VADInfo, audioDuration float64) (bool, float64, float64, error) {
+func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit, audioVadList []vad.VADInfo) (bool, float64, float64, error) {
 
 	// 时间轴差值数组
 	var tmpStartDiffTimeList = make([]float64, 0)
@@ -428,12 +428,13 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 			audioCutLen := int(float64(len(inData.AudioVADList)) * FrontAndEndPerBase)
 
 			offsetIndex, score = fffAligner.Fit(inData.AudioVADList[audioCutLen:len(inData.AudioVADList)-audioCutLen], inData.SrcUnit.GetVADFloatSlice()[inData.OffsetIndex:srcWindowLen+inData.OffsetIndex])
-			if offsetIndex < 0 {
+			realOffsetIndex := offsetIndex + audioCutLen
+			if realOffsetIndex < 0 {
 				return nil
 			}
-			// offsetIndex 这里得到的是 10ms 为一个单位的 OffsetIndex，把去掉的头部时间偏移加回来，以及第一句话的偏移
-			nowBaseStartTime = vad.GetAudioIndex2Time(offsetIndex + audioCutLen)
-			nowBaseStartTime = nowBaseStartTime + inData.SrcUnit.GetStartTimeNumber(true)
+			// offsetIndex 这里得到的是 10ms 为一个单位的 OffsetIndex
+			nowBaseStartTime = vad.GetAudioIndex2Time(realOffsetIndex)
+
 		} else {
 			// 使用 字幕 来进行匹配
 			offsetIndex, score = fffAligner.Fit(inData.BaseUnit.GetVADFloatSlice(), inData.SrcUnit.GetVADFloatSlice()[inData.OffsetIndex:inData.OffsetIndex+srcWindowLen])
@@ -452,7 +453,6 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 		}
 		// 时间差值
 		TimeDiffStartCorrelation := nowBaseStartTime - nowSrcStartTime
-
 		println("------------")
 		println("OffsetTime:", fmt.Sprintf("%v", TimeDiffStartCorrelation), "offsetIndex:", offsetIndex, "score:", fmt.Sprintf("%v", score))
 
@@ -602,11 +602,13 @@ func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tm
 
 const FixMask = "-fix"
 const SubOneUnitProcessTimeOut = 60 * 5 * time.Second // 字幕时间轴校正一个单元的超时时间
-const FrontAndEndPerBase = 0.0                        // 前百分之 15 和后百分之 15 都不进行识别
-const FrontAndEndPerSrc = 0.0                         // 前百分之 20 和后百分之 20 都不进行识别
-const MatchPer = 0.8
+
+// 字幕匹配字幕 GetVADInfoFeatureFromSubNew
+const FrontAndEndPerBase = 0.15 // 前百分之 15 和后百分之 15 都不进行识别
+const FrontAndEndPerSrc = 0.20  // 前百分之 20 和后百分之 20 都不进行识别
+const MatchPer = 0.7
 const CompareParts = 5
-const FixThreads = 1 // 字幕校正的并发线程
+const FixThreads = 3 // 字幕校正的并发线程
 
 var mutexFixV2 sync.Mutex
 
