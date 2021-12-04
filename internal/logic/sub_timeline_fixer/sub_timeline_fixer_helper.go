@@ -250,7 +250,7 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, containCh
 		log_helper.GetLogger().Infoln(infoSrc.Name, "offset time is", fmt.Sprintf("%f", offsetTime), "s")
 	}
 	// 超过 SD 阈值了
-	if sd > s.FixerConfig.MaxStartTimeDiffSD {
+	if sd > s.FixerConfig.V1_MaxStartTimeDiffSD {
 		log_helper.GetLogger().Infoln(infoSrc.Name, "Start Time Diff SD, skip", fmt.Sprintf("%f", sd))
 		return false, nil, fixedSubName, nil
 	} else {
@@ -262,8 +262,8 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, containCh
 	}
 
 	// 偏移很小就无视了
-	if offsetTime < s.FixerConfig.MinOffset && offsetTime > -s.FixerConfig.MinOffset {
-		log_helper.GetLogger().Infoln(infoSrc.Name, fmt.Sprintf("Min Offset Config is %f, skip ", s.FixerConfig.MinOffset), fmt.Sprintf("now is %f", offsetTime))
+	if offsetTime < s.FixerConfig.V1_MinOffset && offsetTime > -s.FixerConfig.V1_MinOffset {
+		log_helper.GetLogger().Infoln(infoSrc.Name, fmt.Sprintf("Min Offset Config is %f, skip ", s.FixerConfig.V1_MinOffset), fmt.Sprintf("now is %f", offsetTime))
 		return false, nil, fixedSubName, nil
 	}
 	// 写入校准时间轴后的字幕

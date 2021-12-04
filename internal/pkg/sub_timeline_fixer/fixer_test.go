@@ -590,23 +590,23 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			//sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
 			// ---------------------------------------------------------------------------------------
 			// Base，截取的部分要大于 Src 的部分
-			//baseUnitListOld, err := sub_helper.GetVADInfoFeatureFromSub(infoBase, FrontAndEndPerBase, 100000, true)
+			//baseUnitListOld, err := sub_helper.GetVADInfoFeatureFromSub(infoBase, V2_FrontAndEndPerBase, 100000, true)
 			//if err != nil {
 			//	t.Fatal(err)
 			//}
 			//baseUnitOld := baseUnitListOld[0]
-			baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, timelineFixer.FixerConfig.FrontAndEndPerBase)
+			baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, timelineFixer.FixerConfig.V2_FrontAndEndPerBase)
 			if err != nil {
 				t.Fatal(err)
 			}
 			// ---------------------------------------------------------------------------------------
 			// Src，截取的部分要小于 Base 的部分
-			//srcUnitListOld, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, FrontAndEndPerSrc, 100000, true)
+			//srcUnitListOld, err := sub_helper.GetVADInfoFeatureFromSub(infoSrc, V2_FrontAndEndPerSrc, 100000, true)
 			//if err != nil {
 			//	t.Fatal(err)
 			//}
 			//srcUnitOld := srcUnitListOld[0]
-			srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, timelineFixer.FixerConfig.FrontAndEndPerSrc)
+			srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, timelineFixer.FixerConfig.V2_FrontAndEndPerSrc)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -745,7 +745,7 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			*/
 			//sub_helper.MergeMultiDialogue4EngSubtitle(infoSrc)
 			// Src，截取的部分要小于 Base 的部分
-			srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, timelineFixer.FixerConfig.FrontAndEndPerSrc)
+			srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, timelineFixer.FixerConfig.V2_FrontAndEndPerSrc)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -790,15 +790,17 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 
 var timelineFixer = NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{
 	// V1
-	MaxCompareDialogue: 3,
-	MaxStartTimeDiffSD: 0.1,
-	MinMatchedPercent:  0.1,
-	MinOffset:          0.1,
+	V1_MaxCompareDialogue: 3,
+	V1_MaxStartTimeDiffSD: 0.1,
+	V1_MinMatchedPercent:  0.1,
+	V1_MinOffset:          0.1,
 	// V2
-	SubOneUnitProcessTimeOut: 5 * 60,
-	FrontAndEndPerBase:       0.15,
-	FrontAndEndPerSrc:        0.0,
-	WindowMatchPer:           0.7,
-	CompareParts:             5,
-	FixThreads:               3,
+	V2_SubOneUnitProcessTimeOut: 5 * 60,
+	V2_FrontAndEndPerBase:       0.15,
+	V2_FrontAndEndPerSrc:        0.0,
+	V2_WindowMatchPer:           0.7,
+	V2_CompareParts:             5,
+	V2_FixThreads:               3,
+	V2_MaxStartTimeDiffSD:       0.1,
+	V2_MinOffset:                0.1,
 })

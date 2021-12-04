@@ -143,7 +143,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 	/*
 		确认两个字幕间的偏移，暂定的方案是两边都连续匹配上 5 个索引，再抽取一个对话的时间进行修正计算
 	*/
-	maxCompareDialogue := s.FixerConfig.MaxCompareDialogue
+	maxCompareDialogue := s.FixerConfig.V1_MaxCompareDialogue
 	// 基线的长度
 	_, docsLength := tfidf.Dims()
 	var matchIndexList = make([]MatchIndex, 0)
@@ -337,14 +337,14 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 	matchIndexLineCount := len(matchIndexList) * maxCompareDialogue
 	//perMatch := float64(matchIndexLineCount) / float64(len(infoSrc.DialoguesEx))
 	perMatch := float64(matchIndexLineCount) / float64(len(baseCorpus))
-	if perMatch < s.FixerConfig.MinMatchedPercent {
-		tmpContent := infoSrc.Name + fmt.Sprintf(" Sequence match %d dialogues (< %f%%), Skip,", s.FixerConfig.MaxCompareDialogue, s.FixerConfig.MinMatchedPercent*100) + fmt.Sprintf(" %f%% ", perMatch*100)
+	if perMatch < s.FixerConfig.V1_MinMatchedPercent {
+		tmpContent := infoSrc.Name + fmt.Sprintf(" Sequence match %d dialogues (< %f%%), Skip,", s.FixerConfig.V1_MaxCompareDialogue, s.FixerConfig.V1_MinMatchedPercent*100) + fmt.Sprintf(" %f%% ", perMatch*100)
 
 		debugInfos = append(debugInfos, tmpContent)
 
 		log_helper.GetLogger().Infoln(tmpContent)
 	} else {
-		tmpContent := infoSrc.Name + fmt.Sprintf(" Sequence match %d dialogues,", s.FixerConfig.MaxCompareDialogue) + fmt.Sprintf(" %f%% ", perMatch*100)
+		tmpContent := infoSrc.Name + fmt.Sprintf(" Sequence match %d dialogues,", s.FixerConfig.V1_MaxCompareDialogue) + fmt.Sprintf(" %f%% ", perMatch*100)
 
 		debugInfos = append(debugInfos, tmpContent)
 
@@ -359,7 +359,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 		}
 	}
 	// 虽然有条件判断是认为有问题的，但是返回值还是要填写除去的
-	if perMatch < s.FixerConfig.MinMatchedPercent {
+	if perMatch < s.FixerConfig.V1_MinMatchedPercent {
 		return false, newMean, newSd, nil
 	}
 
@@ -396,12 +396,12 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 
 	srcVADLen := len(srcUnit.VADList)
 	// 滑动窗口的长度
-	srcWindowLen := int(float64(srcVADLen) * s.FixerConfig.WindowMatchPer)
+	srcWindowLen := int(float64(srcVADLen) * s.FixerConfig.V2_WindowMatchPer)
 	srcSlideLen := srcVADLen - srcWindowLen
 	// 窗口可以滑动的长度
 	srcSlideLenHalf := srcSlideLen / 2
 	//
-	oneStep := srcSlideLenHalf / s.FixerConfig.CompareParts
+	oneStep := srcSlideLenHalf / s.FixerConfig.V2_CompareParts
 	if srcSlideLen <= 0 {
 		srcSlideLen = 1
 	}
@@ -424,8 +424,8 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 		// 图解，参考 Step 3
 		if bUseSubOrAudioAsBase == false {
 			// 使用 音频 来进行匹配
-			// 去掉头和尾，具体百分之多少，见 FrontAndEndPerBase
-			audioCutLen := int(float64(len(inData.AudioVADList)) * s.FixerConfig.FrontAndEndPerBase)
+			// 去掉头和尾，具体百分之多少，见 V2_FrontAndEndPerBase
+			audioCutLen := int(float64(len(inData.AudioVADList)) * s.FixerConfig.V2_FrontAndEndPerBase)
 
 			offsetIndex, score = fffAligner.Fit(inData.AudioVADList[audioCutLen:len(inData.AudioVADList)-audioCutLen], inData.SrcUnit.GetVADFloatSlice()[inData.OffsetIndex:srcWindowLen+inData.OffsetIndex])
 			realOffsetIndex := offsetIndex + audioCutLen
@@ -466,10 +466,10 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 		return nil
 	}
 	// -------------------------------------------------
-	antPool, err := ants.NewPoolWithFunc(s.FixerConfig.FixThreads, func(inData interface{}) {
+	antPool, err := ants.NewPoolWithFunc(s.FixerConfig.V2_FixThreads, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.FixerConfig.SubOneUnitProcessTimeOut)*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.FixerConfig.V2_SubOneUnitProcessTimeOut)*time.Second)
 		defer cancel()
 
 		done := make(chan error, 1)
@@ -522,8 +522,8 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 		i += oneStep
 	}
 	wg.Wait()
-	// 这里可能遇到匹配的时候没有能够执行够 CompareParts 次，有可能是负数跳过或者时间转换失败导致，前者为主（可能是这两个就是一个东西的时候，或者说没有时间轴偏移的时候）
-	if insertIndex < s.FixerConfig.CompareParts/2 {
+	// 这里可能遇到匹配的时候没有能够执行够 V2_CompareParts 次，有可能是负数跳过或者时间转换失败导致，前者为主（可能是这两个就是一个东西的时候，或者说没有时间轴偏移的时候）
+	if insertIndex < s.FixerConfig.V2_CompareParts/2 {
 		return false, 0, 0, nil
 	}
 	outCorrelationFixResult := s.calcMeanAndSD(tmpStartDiffTimeListEx, tmpStartDiffTimeList)
