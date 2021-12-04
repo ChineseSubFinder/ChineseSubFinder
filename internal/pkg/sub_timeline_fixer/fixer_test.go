@@ -614,7 +614,7 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			//bok, got, sd, err := timelineFixer.GetOffsetTimeV2(&baseUnitOld, &srcUnitOld, nil, 0)
 			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(baseUnitNew, srcUnitNew, nil)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetOffsetTimeV1() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetOffsetTimeV2() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if bok == false {
@@ -626,8 +626,12 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			} else if got > tt.want-0.1 && got < tt.want+0.1 {
 				// 在一个正负范围内都可以接受
 			} else {
-				t.Errorf("GetOffsetTimeV1() got = %v, want %v", got, tt.want)
+				t.Errorf("GetOffsetTimeV2() got = %v, want %v", got, tt.want)
 			}
+
+			debug_view.SaveDebugChart(*baseUnitNew, "baseUnitNew", "baseUnitNew")
+			debug_view.SaveDebugChart(*srcUnitNew, "srcUnitNew", "srcUnitNew")
+
 			//if bok == true && got != 0 {
 			//	_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
 			//	if err != nil {
@@ -761,21 +765,21 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			println("-------New--------")
 			got, got1, sd, err := timelineFixer.GetOffsetTimeV2(nil, srcUnitNew, audioVADInfos)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetOffsetTimeV3() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetOffsetTimeV2() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
 			debug_view.SaveDebugChartBase(audioVADInfos, "audioVADInfos", "audioVADInfos")
 			debug_view.SaveDebugChart(*srcUnitNew, "srcUnitNew", "srcUnitNew")
 			if got != tt.want {
-				t.Errorf("GetOffsetTimeV3() got = %v, want %v", got, tt.want)
+				t.Errorf("GetOffsetTimeV2() got = %v, want %v", got, tt.want)
 			}
 			if got1 > -0.2 && got1 < 0.2 && tt.want1 == 0 {
 				// 如果 offset time > -0.2 且 < 0.2 则认为无需调整时间轴，为0
 			} else if got1 > tt.want1-0.1 && got1 < tt.want1+0.1 {
 				// 在一个正负范围内都可以接受
 			} else {
-				t.Errorf("GetOffsetTimeV1() got = %v, want %v", got, tt.want)
+				t.Errorf("GetOffsetTimeV2() got = %v, want %v", got1, tt.want1)
 			}
 
 			_, err = timelineFixer.FixSubTimeline(infoSrc, got1, tt.args.subFilePath+FixMask+infoSrc.Ext)
@@ -802,5 +806,5 @@ var timelineFixer = NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConf
 	V2_CompareParts:             5,
 	V2_FixThreads:               3,
 	V2_MaxStartTimeDiffSD:       0.1,
-	V2_MinOffset:                0.1,
+	V2_MinOffset:                0.2,
 })
