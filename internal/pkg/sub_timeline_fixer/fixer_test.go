@@ -743,20 +743,6 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			if bFind == false {
 				t.Fatal("sub not match")
 			}
-
-			_, err = timelineFixer.FixSubTimeline(infoSrc, 10, "c:\\tmp\\123.ass")
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			bFind, infoSrc, err = subParserHub.DetermineFileTypeFromFile("c:\\tmp\\123.ass")
-			if err != nil {
-				t.Fatal(err)
-			}
-			if bFind == false {
-				t.Fatal("sub not match")
-			}
-
 			/*
 				这里发现一个梗，内置的英文字幕导出的时候，有可能需要合并多个 Dialogue，见
 				internal/pkg/sub_helper/sub_helper.go 中 MergeMultiDialogue4EngSubtitle 的实现
@@ -783,8 +769,8 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 				return
 			}
 
-			debug_view.SaveDebugChartBase(audioVADInfos, "audioVADInfos", "audioVADInfos")
-			debug_view.SaveDebugChart(*srcUnitNew, "srcUnitNew", "srcUnitNew")
+			debug_view.SaveDebugChartBase(audioVADInfos, tt.name+" audioVADInfos", "audioVADInfos")
+			debug_view.SaveDebugChart(*srcUnitNew, tt.name+" srcUnitNew", "srcUnitNew")
 			if got != tt.want {
 				t.Errorf("GetOffsetTimeV2() got = %v, want %v", got, tt.want)
 			}
@@ -815,7 +801,7 @@ var timelineFixer = NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConf
 	// V2
 	V2_SubOneUnitProcessTimeOut: 5 * 60,
 	V2_FrontAndEndPerBase:       0.15,
-	V2_FrontAndEndPerSrc:        0.2,
+	V2_FrontAndEndPerSrc:        0.0,
 	V2_WindowMatchPer:           0.7,
 	V2_CompareParts:             5,
 	V2_FixThreads:               3,

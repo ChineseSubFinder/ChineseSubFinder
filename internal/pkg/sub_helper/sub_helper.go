@@ -493,6 +493,7 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 	skipStartIndex := skipLen
 	skipEndIndex := vadLen - skipLen
 	// 现在需要从 fileInfo 的每一句对白也就对应一段连续的 VAD active = true 来进行改写，记得向下取整
+	lastDialogueIndex := 0
 	for index, dialogueEx := range fileInfo.DialoguesEx {
 
 		// 如果当前的这一句话，为空，或者进过正则表达式剔除特殊字符后为空，则跳过
@@ -524,15 +525,7 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 		if changeVADStartIndex < int(subStartTimeFloor10ms) {
 			continue
 		}
-
-		// 如果上一个对白的最后一个 OffsetIndex 链接着当前这一句的索引的 VAD 信息 active 是 true 就设置为 false
-		lastDialogueEndIndex := changeVADStartIndex - int(subStartTimeFloor10ms) - 1
-		if lastDialogueEndIndex >= 0 {
-			if subVADs[lastDialogueEndIndex].Active == true {
-				subVADs[lastDialogueEndIndex].Active = false
-			}
-		}
-		// 调整之前做好的整体 VAD 的信息，符合 VAD active = true
+		// 当前这句话的开始和结束信息
 		changerStartIndex := changeVADStartIndex - int(subStartTimeFloor10ms)
 		if changerStartIndex < 0 {
 			continue
@@ -541,9 +534,19 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 		if changerEndIndex < 0 {
 			continue
 		}
+		// TODO 还需要改，有问题
+		// 如果上一个对白的最后一个 OffsetIndex 连接着当前这一句的索引的 VAD 信息 active 是 true 就设置为 false
+		if lastDialogueIndex == changerStartIndex {
+			if lastDialogueIndex-1 >= 0 && subVADs[lastDialogueIndex-1].Active == true {
+				subVADs[lastDialogueIndex-1].Active = false
+			}
+		}
+		// 开始根据当前这句话进行 VAD 信息的设置
+		// 调整之前做好的整体 VAD 的信息，符合 VAD active = true
 		for i := changerStartIndex; i < changerEndIndex; i++ {
 			subVADs[i].Active = true
 		}
+		lastDialogueIndex = changerEndIndex
 	}
 
 	// 截取出来当前这一段
