@@ -77,6 +77,12 @@ func (s *SubTimelineFixer) FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetT
 	// 偏移时间
 	offsetTime := time.Duration(inOffsetTime*1000) * time.Millisecond
 	fixContent := infoSrc.Content
+	/*
+		这里进行时间转字符串的时候有一点比较特殊
+		正常来说输出的格式是类似 15:04:05.00
+		那么有个问题，字幕的时间格式是 0:00:12.00， 小时，是个数，除非有跨度到 20 小时的视频，不然小时就应该是个数
+		这就需要一个额外的函数去处理这些情况
+	*/
 	timeFormat := infoSrc.GetTimeFormat()
 	for _, srcOneDialogue := range infoSrc.Dialogues {
 
@@ -92,8 +98,8 @@ func (s *SubTimelineFixer) FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetT
 		fixTimeStart := timeStart.Add(offsetTime)
 		fixTimeEnd := timeEnd.Add(offsetTime)
 
-		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.StartTime, fixTimeStart.Format(timeFormat))
-		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.EndTime, fixTimeEnd.Format(timeFormat))
+		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.StartTime, my_util.Time2SubTimeString(fixTimeStart, timeFormat))
+		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.EndTime, my_util.Time2SubTimeString(fixTimeEnd, timeFormat))
 	}
 
 	dstFile, err := os.Create(desSaveSubFileFullPath)

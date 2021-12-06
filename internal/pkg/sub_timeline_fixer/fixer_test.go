@@ -743,6 +743,20 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			if bFind == false {
 				t.Fatal("sub not match")
 			}
+
+			_, err = timelineFixer.FixSubTimeline(infoSrc, 10, "c:\\tmp\\123.ass")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			bFind, infoSrc, err = subParserHub.DetermineFileTypeFromFile("c:\\tmp\\123.ass")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if bFind == false {
+				t.Fatal("sub not match")
+			}
+
 			/*
 				这里发现一个梗，内置的英文字幕导出的时候，有可能需要合并多个 Dialogue，见
 				internal/pkg/sub_helper/sub_helper.go 中 MergeMultiDialogue4EngSubtitle 的实现

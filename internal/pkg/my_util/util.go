@@ -423,3 +423,28 @@ func MakeFloor10msMultipleFromTime(input time.Time) time.Time {
 	newTime := time.Time{}.Add(time.Duration(nowTime * math.Pow10(9)))
 	return newTime
 }
+
+// Time2SubTimeString 时间转字幕格式的时间字符串
+func Time2SubTimeString(inTime time.Time, timeFormat string) string {
+	/*
+		这里进行时间转字符串的时候有一点比较特殊
+		正常来说输出的格式是类似 15:04:05.00
+		那么有个问题，字幕的时间格式是 0:00:12.00， 小时，是个数，除非有跨度到 20 小时的视频，不然小时就应该是个数
+		这就需要一个额外的函数去处理这些情况
+	*/
+	outTimeString := inTime.Format(timeFormat)
+	if inTime.Hour() > 9 {
+		// 小时，两位数
+		return outTimeString
+	} else {
+		// 小时，一位数
+		items := strings.SplitN(outTimeString, ":", -1)
+		if len(items) == 3 {
+
+			outTimeString = strings.Replace(outTimeString, items[0], fmt.Sprintf("%d", inTime.Hour()), 1)
+			return outTimeString
+		}
+
+		return outTimeString
+	}
+}
