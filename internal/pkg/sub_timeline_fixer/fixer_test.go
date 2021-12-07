@@ -763,31 +763,36 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			}
 
 			println("-------New--------")
-			got, got1, sd, err := timelineFixer.GetOffsetTimeV2(nil, srcUnitNew, audioVADInfos)
+			bok, offsetTime, sd, err := timelineFixer.GetOffsetTimeV2(nil, srcUnitNew, audioVADInfos)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV2() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
-			debug_view.SaveDebugChartBase(audioVADInfos, tt.name+" audioVADInfos", "audioVADInfos")
-			debug_view.SaveDebugChart(*srcUnitNew, tt.name+" srcUnitNew", "srcUnitNew")
-			if got != tt.want {
-				t.Errorf("GetOffsetTimeV2() got = %v, want %v", got, tt.want)
+			//debug_view.SaveDebugChartBase(audioVADInfos, tt.name+" audioVADInfos", "audioVADInfos")
+			//debug_view.SaveDebugChart(*srcUnitNew, tt.name+" srcUnitNew", "srcUnitNew")
+			if bok != tt.want {
+				t.Errorf("GetOffsetTimeV2() bok = %v, want %v", bok, tt.want)
 			}
-			if got1 > -0.2 && got1 < 0.2 && tt.want1 == 0 {
+
+			if sd > timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD {
+
+			}
+
+			if offsetTime > -0.2 && offsetTime < 0.2 && tt.want1 == 0 {
 				// 如果 offset time > -0.2 且 < 0.2 则认为无需调整时间轴，为0
-			} else if got1 > tt.want1-0.1 && got1 < tt.want1+0.1 {
+			} else if offsetTime > tt.want1-0.1 && offsetTime < tt.want1+0.1 {
 				// 在一个正负范围内都可以接受
 			} else {
-				t.Errorf("GetOffsetTimeV2() got = %v, want %v", got1, tt.want1)
+				t.Errorf("GetOffsetTimeV2() bok = %v, want %v", offsetTime, tt.want1)
 			}
 
-			_, err = timelineFixer.FixSubTimeline(infoSrc, got1, tt.args.subFilePath+FixMask+infoSrc.Ext)
-			if err != nil {
-				t.Fatal(err)
-			}
+			//_, err = timelineFixer.FixSubTimeline(infoSrc, offsetTime, tt.args.subFilePath+FixMask+infoSrc.Ext)
+			//if err != nil {
+			//	t.Fatal(err)
+			//}
 
-			println(fmt.Sprintf("GetOffsetTimeV2: %vs SD:%v", got1, sd))
+			println(fmt.Sprintf("GetOffsetTimeV2: %vs SD:%v", offsetTime, sd))
 		})
 	}
 }

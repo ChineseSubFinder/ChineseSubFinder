@@ -58,3 +58,4 @@
 /internal/pkg/sub_timeline_fixer/*.html
 /**/CSF-SubFixCache
 /CSF-DebugThings
+/internal/pkg/sub_timeline_fixer/CSF-DebugThings

@@ -530,20 +530,24 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 		if changerStartIndex < 0 {
 			continue
 		}
-		changerEndIndex := changeVADEndIndex - int(subStartTimeFloor10ms) - 1
+		changerEndIndex := changeVADEndIndex - int(subStartTimeFloor10ms)
 		if changerEndIndex < 0 {
 			continue
 		}
-		// TODO 还需要改，有问题
 		// 如果上一个对白的最后一个 OffsetIndex 连接着当前这一句的索引的 VAD 信息 active 是 true 就设置为 false
 		if lastDialogueIndex == changerStartIndex {
-			if lastDialogueIndex-1 >= 0 && subVADs[lastDialogueIndex-1].Active == true {
-				subVADs[lastDialogueIndex-1].Active = false
+			for i := 1; i <= 10; i++ {
+				if lastDialogueIndex-i >= 0 && subVADs[lastDialogueIndex-i].Active == true {
+					subVADs[lastDialogueIndex-i].Active = false
+				}
 			}
 		}
 		// 开始根据当前这句话进行 VAD 信息的设置
 		// 调整之前做好的整体 VAD 的信息，符合 VAD active = true
-		for i := changerStartIndex; i < changerEndIndex; i++ {
+		if changerEndIndex >= vadLen {
+			changerEndIndex = vadLen - 1
+		}
+		for i := changerStartIndex; i <= changerEndIndex; i++ {
 			subVADs[i].Active = true
 		}
 		lastDialogueIndex = changerEndIndex
