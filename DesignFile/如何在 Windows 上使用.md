@@ -74,3 +74,8 @@ SeriesFolder: Y:\连续剧
 暂时偷个懒，就给网上的教程吧，一般没啥问题的。实在不行，再考虑写一下对应的教程吧。
 
 [开机启动并隐藏 cmd 窗口程序在后台运行 - winsw 使用教程 - P3TERX ZONE](https://p3terx.com/archives/boot-and-hide-the-cmd-window-program-to-run-in-the-background-winsw-tutorial.html)
+
+## 可能遇到的问题
+
+有可能允许的时候崩溃，应该是缺少 GCC 的问题。见 [#101](https://github.com/allanpk716/ChineseSubFinder/issues/101)
+
