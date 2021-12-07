@@ -456,8 +456,10 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 		}
 		// 时间差值
 		TimeDiffStartCorrelation := nowBaseStartTime - nowSrcStartTime
-		println("------------")
-		println("OffsetTime:", fmt.Sprintf("%v", TimeDiffStartCorrelation), "offsetIndex:", offsetIndex, "score:", fmt.Sprintf("%v", score))
+		log_helper.GetLogger().Debugln("------------")
+		log_helper.GetLogger().Debugln("OffsetTime:", fmt.Sprintf("%v", TimeDiffStartCorrelation),
+			"offsetIndex:", offsetIndex,
+			"score:", fmt.Sprintf("%v", score))
 
 		mutexFixV2.Lock()
 		tmpStartDiffTimeList = append(tmpStartDiffTimeList, TimeDiffStartCorrelation)
@@ -530,11 +532,11 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 		return false, 0, 0, nil
 	}
 	outCorrelationFixResult := s.calcMeanAndSD(tmpStartDiffTimeListEx, tmpStartDiffTimeList)
-	println(fmt.Sprintf("FFTAligner Old Mean: %v SD: %v Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
-	println(fmt.Sprintf("FFTAligner New Mean: %v SD: %v Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
+	log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner Old Mean: %v SD: %v Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
+	log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner New Mean: %v SD: %v Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
 
 	value, index := tmpStartDiffTimeMap.Max()
-	println("FFTAligner Max score:", fmt.Sprintf("%v", value.(float64)), "Time:", fmt.Sprintf("%v", tmpStartDiffTimeList[index.(int)]))
+	log_helper.GetLogger().Infoln("FFTAligner Max score:", fmt.Sprintf("%v", value.(float64)), "Time:", fmt.Sprintf("%v", tmpStartDiffTimeList[index.(int)]))
 
 	return true, outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, nil
 }

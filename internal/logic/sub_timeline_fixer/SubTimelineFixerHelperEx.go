@@ -84,6 +84,9 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 			return nil
 		}
 		bProcess, infoSrc, offSetTime, err = s.processByAudio(ffmpegInfo.AudioInfoList[0].FullPath, srcSubFPath)
+		if err != nil {
+			return err
+		}
 	} else {
 		// 使用内置的字幕进行时间轴的校正，这里需要考虑一个问题，内置的字幕可能是有问题的（先考虑一种，就是字幕的长度不对，是一小段的）
 		// 那么就可以比较多个内置字幕的大小选择大的去使用
@@ -106,6 +109,9 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 			baseSubFPath = ffmpegInfo.SubtitleInfoList[0].FullPath
 		}
 		bProcess, infoSrc, offSetTime, err = s.processBySub(baseSubFPath, srcSubFPath)
+		if err != nil {
+			return err
+		}
 	}
 
 	// 开始调整字幕时间轴
@@ -119,7 +125,7 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	}
 
 	log_helper.GetLogger().Infoln("Fix Offset:", offSetTime, srcSubFPath)
-	log_helper.GetLogger().Infoln("BackUp Org SubFile:", offSetTime, srcSubFPath+backUpExt)
+	log_helper.GetLogger().Infoln("BackUp Org SubFile:", offSetTime, srcSubFPath+BackUpExt)
 
 	return nil
 }
@@ -131,7 +137,7 @@ func (s SubTimelineFixerHelperEx) processBySub(baseSubFileFPath, srcSubFileFPath
 		return false, nil, 0, err
 	}
 	if bFind == false {
-		log_helper.GetLogger().Warnln("sub not match --", baseSubFileFPath)
+		log_helper.GetLogger().Warnln("processBySub.DetermineFileTypeFromFile sub not match --", baseSubFileFPath)
 		return false, nil, 0, nil
 	}
 	bFind, infoSrc, err := s.subParserHub.DetermineFileTypeFromFile(srcSubFileFPath)
@@ -139,7 +145,7 @@ func (s SubTimelineFixerHelperEx) processBySub(baseSubFileFPath, srcSubFileFPath
 		return false, nil, 0, err
 	}
 	if bFind == false {
-		log_helper.GetLogger().Warnln("sub not match --", srcSubFileFPath)
+		log_helper.GetLogger().Warnln("processBySub.DetermineFileTypeFromFile sub not match --", srcSubFileFPath)
 		return false, nil, 0, nil
 	}
 	// ---------------------------------------------------------------------------------------
@@ -157,20 +163,19 @@ func (s SubTimelineFixerHelperEx) processBySub(baseSubFileFPath, srcSubFileFPath
 		return false, nil, 0, err
 	}
 	if bok == false {
-		log_helper.GetLogger().Warnln("processSub.GetOffsetTimeV2 return false -- " + baseSubFileFPath + " -- " + srcSubFileFPath)
+		log_helper.GetLogger().Warnln("processSub.GetOffsetTimeV2 return false -- " + baseSubFileFPath)
 		return false, nil, 0, nil
 	}
 	// SD 要达标
 	if sd > s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD {
-		log_helper.GetLogger().Warnln(fmt.Sprintf("skip, processBySub sd: %v > %v -- %s", sd, s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD, srcSubFileFPath))
+		log_helper.GetLogger().Infoln(fmt.Sprintf("skip, processBySub sd: %v > %v", sd, s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD))
 		return false, nil, 0, nil
 	}
 	// 时间偏移的最小值才修正
 	if offsetTime < s.timelineFixer.FixerConfig.V2_MinOffset && offsetTime > -s.timelineFixer.FixerConfig.V2_MinOffset {
-		log_helper.GetLogger().Warnln(fmt.Sprintf("skip, processBySub offset: %v > -%v && %v < %v-- %s",
+		log_helper.GetLogger().Infoln(fmt.Sprintf("Skip, processBySub offset: %v > -%v && %v < %v",
 			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset,
-			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset,
-			srcSubFileFPath))
+			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset))
 		return false, nil, 0, nil
 	}
 
@@ -193,7 +198,7 @@ func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileF
 		return false, nil, 0, err
 	}
 	if bFind == false {
-		log_helper.GetLogger().Warnln("sub not match --", srcSubFileFPath)
+		log_helper.GetLogger().Warnln("processByAudio.DetermineFileTypeFromFile sub not match --", srcSubFileFPath)
 		return false, nil, 0, nil
 	}
 	// ---------------------------------------------------------------------------------------
@@ -207,21 +212,20 @@ func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileF
 		return false, nil, 0, err
 	}
 	if bok == false {
-		log_helper.GetLogger().Warnln("processSub.GetOffsetTimeV2 return false -- " + baseAudioFileFPath + " -- " + srcSubFileFPath)
+		log_helper.GetLogger().Warnln("processSub.GetOffsetTimeV2 return false -- " + baseAudioFileFPath)
 		return false, nil, 0, nil
 	}
 
 	// SD 要达标
 	if sd > s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD {
-		log_helper.GetLogger().Warnln(fmt.Sprintf("processByAudio sd: %v > %v -- %s", sd, s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD, srcSubFileFPath))
+		log_helper.GetLogger().Infoln(fmt.Sprintf("processByAudio sd: %v > %v", sd, s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD))
 		return false, nil, 0, nil
 	}
 	// 时间偏移的最小值才修正
 	if offsetTime < s.timelineFixer.FixerConfig.V2_MinOffset && offsetTime > -s.timelineFixer.FixerConfig.V2_MinOffset {
-		log_helper.GetLogger().Warnln(fmt.Sprintf("skip, processByAudio offset: %v > -%v && %v < %v-- %s",
+		log_helper.GetLogger().Infoln(fmt.Sprintf("skip, processByAudio offset: %v > -%v && %v < %v",
 			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset,
-			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset,
-			srcSubFileFPath))
+			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset))
 		return false, nil, 0, nil
 	}
 
@@ -232,7 +236,7 @@ func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileI
 	/*
 		修复的字幕先存放到缓存目录，然后需要把原有的字幕进行“备份”，改名，然后再替换过来
 	*/
-	subFileName := desSubSaveFPath + tmpExt
+	subFileName := desSubSaveFPath + TmpExt
 	if my_util.IsFile(subFileName) == true {
 		err := os.Remove(subFileName)
 		if err != nil {
@@ -244,14 +248,14 @@ func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileI
 		return err
 	}
 
-	if my_util.IsFile(desSubSaveFPath+backUpExt) == true {
-		err = os.Remove(desSubSaveFPath + backUpExt)
+	if my_util.IsFile(desSubSaveFPath+BackUpExt) == true {
+		err = os.Remove(desSubSaveFPath + BackUpExt)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = os.Rename(desSubSaveFPath, desSubSaveFPath+backUpExt)
+	err = os.Rename(desSubSaveFPath, desSubSaveFPath+BackUpExt)
 	if err != nil {
 		return err
 	}
@@ -264,5 +268,5 @@ func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileI
 	return nil
 }
 
-const tmpExt = ".csf-tmp"
-const backUpExt = ".csf-bk"
+const TmpExt = ".csf-tmp"
+const BackUpExt = ".csf-bk"

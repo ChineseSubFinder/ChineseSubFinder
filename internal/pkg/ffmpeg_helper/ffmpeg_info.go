@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -37,14 +38,31 @@ func (f *FFMPEGInfo) GetCacheFolderFPath() (string, error) {
 // IsExported 是否已经导出过，如果没有导出或者导出不完整为 false
 func (f *FFMPEGInfo) IsExported(exportType ExportType) bool {
 
+	bProcessDone := false
 	nowCacheFolder, err := f.GetCacheFolderFPath()
 	if err != nil {
 		log_helper.GetLogger().Errorln("FFMPEGInfo.IsExported.GetCacheFolderFPath", f.VideoFullPath, err.Error())
 		return false
 	}
+	tmpNowExportedMaskFile := filepath.Join(nowCacheFolder, exportedMakeFileName)
+
+	defer func() {
+		// 函数执行完毕，再进行 check，是否需要删除 exportedMakeFileName 这个文件
+		if bProcessDone == false {
+			// 失败就需要删除这个 exportedMakeFileName 文件
+			if my_util.IsFile(tmpNowExportedMaskFile) == true {
+				_ = os.Remove(tmpNowExportedMaskFile)
+			}
+		}
+	}()
+
 	// 首先存储的缓存目录要存在
 	if my_util.IsDir(nowCacheFolder) == false {
-		return false
+		return bProcessDone
+	}
+
+	if my_util.IsFile(tmpNowExportedMaskFile) == false {
+		return bProcessDone
 	}
 
 	switch exportType {
@@ -52,30 +70,60 @@ func (f *FFMPEGInfo) IsExported(exportType ExportType) bool {
 		// 音频是否导出了
 		done := f.isAudioExported(nowCacheFolder)
 		if done == false {
-			return false
+			return bProcessDone
 		}
 		break
 	case Subtitle:
 		// 字幕都要导出了
 		done := f.isSubExported(nowCacheFolder)
 		if done == false {
-			return false
+			return bProcessDone
 		}
 	case SubtitleAndAudio:
 		// 音频是否导出了
 		done := f.isAudioExported(nowCacheFolder)
 		if done == false {
-			return false
+			return bProcessDone
 		}
 		// 字幕都要导出了
 		done = f.isSubExported(nowCacheFolder)
 		if done == false {
-			return false
+			return bProcessDone
 		}
 	default:
-		return false
+		return bProcessDone
 	}
-	return true
+
+	bProcessDone = true
+
+	return bProcessDone
+}
+
+func (f FFMPEGInfo) CreateExportedMask() error {
+	maskFileFPath, err := f.getExportedMaskFileFPath()
+	if err != nil {
+		return err
+	}
+	if my_util.IsFile(maskFileFPath) == false {
+		create, err := os.Create(maskFileFPath)
+		if err != nil {
+			return err
+		}
+		defer create.Close()
+	}
+
+	return nil
+}
+
+func (f FFMPEGInfo) getExportedMaskFileFPath() (string, error) {
+	nowCacheFolder, err := f.GetCacheFolderFPath()
+	if err != nil {
+		return "", err
+	}
+
+	tmpNowExportedMaskFile := filepath.Join(nowCacheFolder, exportedMakeFileName)
+
+	return tmpNowExportedMaskFile, nil
 }
 
 func (f *FFMPEGInfo) isAudioExported(nowCacheFolder string) bool {
@@ -128,3 +176,6 @@ func (f *FFMPEGInfo) GetExternalSubInfos(subParserHub *sub_parser_hub.SubParserH
 
 	return nil
 }
+
+// 导出成功才生成这个文件
+const exportedMakeFileName = "Exported"

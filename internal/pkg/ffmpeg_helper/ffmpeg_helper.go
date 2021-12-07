@@ -111,6 +111,17 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType Export
 			bok = false
 			return bok, nil, err
 		}
+		// 导出后，需要把现在导出的文件的路径给复制给 ffMPEGInfo 中
+		// 音频是否导出了
+		ffMPEGInfo.isAudioExported(nowCacheFolderPath)
+		// 字幕都要导出了
+		ffMPEGInfo.isSubExported(nowCacheFolderPath)
+		// 创建 exportedMakeFileName 这个文件
+		// 成功，那么就需要生成这个 exportedMakeFileName 文件
+		err = ffMPEGInfo.CreateExportedMask()
+		if err != nil {
+			return false, nil, err
+		}
 	}
 
 	return bok, ffMPEGInfo, nil
@@ -261,6 +272,10 @@ func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFF
 		// 这里需要区分是字幕还是音频
 		if oneCodecType.String() == codecTypeSub {
 			// 字幕
+			// 只解析 subrip 类型的，不支持 hdmv_pgs_subtitle 的字幕导出
+			if oneCodecName.String() != streamCodec_subrip {
+				continue
+			}
 			// 这里非必须解析到 language 字段，把所有的都导出来，然后通过额外字幕语言判断即可
 			oneDurationTS := gjson.Get(inputFFProbeString, fmt.Sprintf("streams.%d.duration_ts", i))
 			oneDuration := gjson.Get(inputFFProbeString, fmt.Sprintf("streams.%d.duration", i))
@@ -431,6 +446,7 @@ func (f *FFMPEGHelper) getAudioAndSubExportArgs(videoFileFullPath string, ffmpeg
 	}
 
 	for _, subtitleInfo := range ffmpegInfo.SubtitleInfoList {
+
 		f.addSubMapArg(&subArgs, subtitleInfo.Index,
 			filepath.Join(nowCacheFolderPath, subtitleInfo.GetName()+common.SubExtSRT))
 		f.addSubMapArg(&subArgs, subtitleInfo.Index,
@@ -560,3 +576,5 @@ const (
 	Audio                              // 导出音频
 	SubtitleAndAudio                   // 导出字幕和音频
 )
+
+const streamCodec_subrip = "subrip"

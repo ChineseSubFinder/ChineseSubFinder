@@ -35,9 +35,16 @@ func TestSubTimelineFixerHelperEx_Process(t *testing.T) {
 				srcSubFPath:       "C:\\WorkSpace\\Go2Hell\\src\\github.com\\allanpk716\\ChineseSubFinder\\internal\\logic\\sub_timeline_fixer\\CSF-SubFixCache\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p\\chinese(简英,zimuku).default.ass"},
 			wantErr: false,
 		},
+		{
+			name: "The Night House (2021)", args: args{
+				videoFileFullPath: "X:\\TestMovie\\The Night House (2021)\\The Night House (2021) Bluray-1080p.mkv",
+				srcSubFPath:       "X:\\TestMovie\\The Night House (2021)\\The Night House (2021) Bluray-1080p.chinese(简英,zimuku).ass"},
+			wantErr: false,
+		},
 	}
 
 	s := NewSubTimelineFixerHelperEx(config.GetConfig().SubTimelineFixerConfig)
+	s.Check()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
