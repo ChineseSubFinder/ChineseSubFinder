@@ -1,6 +1,9 @@
 package types
 
-import "github.com/allanpk716/ChineseSubFinder/internal/types/emby"
+import (
+	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/sub_timeline_fiexer"
+)
 
 // ReqParam 可选择传入的参数
 type ReqParam struct {
@@ -12,6 +15,9 @@ type ReqParam struct {
 	WhenSubSupplierInvalidWebHook string          // 当字幕网站失效的时候，触发的 webhook 地址，默认是 get
 	EmbyConfig                    emby.EmbyConfig // Emby API 高阶设置参数
 	SaveOneSeasonSub              bool            // 保存整个季度的字幕
+
+	SubTimelineFixerConfig sub_timeline_fiexer.SubTimelineFixerConfig // 时间轴校正配置信息
+	FixTimeLine            bool                                       // 	开启校正字幕时间轴，默认 false
 
 	HttpProxy string // HttpClient 相关
 	UserAgent string // HttpClient 相关

@@ -11,6 +11,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -41,6 +42,8 @@ type Downloader struct {
 	subFormatter             ifaces.ISubFormatter          //	字幕格式化命名的实现
 	subNameFormatter         subcommon.FormatterName       // 从 inSubFormatter 推断出来
 	needForcedScanAndDownSub bool                          // 将会强制扫描所有的视频，下载字幕，替换已经存在的字幕，不进行时间段和已存在则跳过的判断。且不会进过 Emby API 的逻辑，智能进行强制去以本程序的方式去扫描。
+
+	subTimelineFixerHelperEx *sub_timeline_fixer.SubTimelineFixerHelperEx // 字幕时间轴校正
 }
 
 func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqParam) *Downloader {
@@ -80,6 +83,13 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqPa
 
 	downloader.movieFileFullPathList = make([]string, 0)
 	downloader.seriesSubNeedDlMap = make(map[string][]emby.EmbyMixInfo)
+
+	// 初始化，字幕校正的实例
+	downloader.subTimelineFixerHelperEx = sub_timeline_fixer.NewSubTimelineFixerHelperEx(downloader.reqParam.SubTimelineFixerConfig)
+
+	if downloader.reqParam.FixTimeLine == true {
+		downloader.subTimelineFixerHelperEx.Check()
+	}
 
 	return &downloader
 }
@@ -161,6 +171,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	}()
 	var err error
 	d.log.Infoln("Download Movie Sub Started...")
+	// -----------------------------------------------------
 	// 优先判断特殊的操作
 	if d.needForcedScanAndDownSub == true {
 		// 全扫描
@@ -185,6 +196,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 			}
 		}
 	}
+	// -----------------------------------------------------
 	// 并发控制
 	movieDlFunc := func(i interface{}) error {
 		inData := i.(InputData)
@@ -216,6 +228,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 
 		return nil
 	}
+	// -----------------------------------------------------
 	antPool, err := ants.NewPoolWithFunc(d.reqParam.Threads, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
@@ -593,6 +606,14 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	}
 	d.log.Infoln("OrgSubName:", finalSubFile.Name)
 	d.log.Infoln("SubDownAt:", desSubFullPath)
+
+	// 然后还需要判断是否需要校正字幕的时间轴
+	if d.reqParam.FixTimeLine == true {
+		err = d.subTimelineFixerHelperEx.Process(videoFileFullPath, desSubFullPath)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

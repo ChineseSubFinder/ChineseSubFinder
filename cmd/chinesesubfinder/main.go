@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal"
 	commonValue "github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	config2 "github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
@@ -157,6 +156,9 @@ func DownLoadStart(httpProxy string) {
 			WhenSubSupplierInvalidWebHook: config.WhenSubSupplierInvalidWebHook,
 			EmbyConfig:                    config.EmbyConfig,
 			SaveOneSeasonSub:              config.SaveOneSeasonSub,
+
+			SubTimelineFixerConfig: config.SubTimelineFixerConfig,
+			FixTimeLine:            config.FixTimeLine,
 		})
 
 	defer func() {
@@ -196,23 +198,6 @@ func DownLoadStart(httpProxy string) {
 		log.Errorln("DownloadSub4Series", err)
 		return
 	}
-	// 刷新 Emby 的字幕，下载完毕字幕了，就统一刷新一下
-	err = downloader.RefreshEmbySubList()
-	if err != nil {
-		log.Errorln("RefreshEmbySubList", err)
-		return
-	}
-
-	// 开始字幕的统一校正
-	log.Infoln("Auto Fix Sub Timeline Start...")
-	fixer := sub_timeline_fixer.NewSubTimelineFixerHelper(config.EmbyConfig, config.SubTimelineFixerConfig)
-	err = fixer.FixRecentlyItemsSubTimeline(config.MovieFolder, config.SeriesFolder)
-	if err != nil {
-		log.Errorln("FixRecentlyItemsSubTimeline", err)
-		return
-	}
-	log.Infoln("Auto Fix Sub Timeline End")
-	// 再次刷新
 	// 刷新 Emby 的字幕，下载完毕字幕了，就统一刷新一下
 	err = downloader.RefreshEmbySubList()
 	if err != nil {

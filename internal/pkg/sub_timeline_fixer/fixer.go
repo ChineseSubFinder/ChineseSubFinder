@@ -3,7 +3,6 @@ package sub_timeline_fixer
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
@@ -26,14 +25,12 @@ import (
 )
 
 type SubTimelineFixer struct {
-	FixerConfig  sub_timeline_fiexer.SubTimelineFixerConfig
-	ffmpegHelper *ffmpeg_helper.FFMPEGHelper
+	FixerConfig sub_timeline_fiexer.SubTimelineFixerConfig
 }
 
 func NewSubTimelineFixer(fixerConfig sub_timeline_fiexer.SubTimelineFixerConfig) *SubTimelineFixer {
 	return &SubTimelineFixer{
-		FixerConfig:  fixerConfig,
-		ffmpegHelper: ffmpeg_helper.NewFFMPEGHelper(),
+		FixerConfig: fixerConfig,
 	}
 }
 

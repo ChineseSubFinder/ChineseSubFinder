@@ -20,6 +20,7 @@ type Config struct {
 	CustomVideoExts               string                                     // 自定义视频扩展名，多个扩展名用英文逗号分隔。是在原有基础上新增。
 	RunAtStartup                  bool                                       // 扫描任务是否在启动程序的时候马上执行 见，https://github.com/allanpk716/ChineseSubFinder/issues/50
 	SubTimelineFixerConfig        sub_timeline_fiexer.SubTimelineFixerConfig // 时间轴校正配置信息
+	FixTimeLine                   bool                                       // 	开启校正字幕时间轴，默认 false
 
 	MovieFolder  string // 电影文件夹
 	SeriesFolder string // 连续剧文件夹
