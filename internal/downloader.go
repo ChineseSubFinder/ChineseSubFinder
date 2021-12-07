@@ -13,7 +13,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	subcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
@@ -154,7 +153,7 @@ func (d Downloader) RefreshEmbySubList() error {
 func (d Downloader) DownloadSub4Movie(dir string) error {
 	defer func() {
 		// 所有的电影字幕下载完成，抉择完成，需要清理缓存目录
-		err := my_folder.ClearRootTmpFolder()
+		err := my_util.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error("ClearRootTmpFolder", err)
 		}
@@ -270,7 +269,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	var err error
 	defer func() {
 		// 所有的连续剧字幕下载完成，抉择完成，需要清理缓存目录
-		err := my_folder.ClearRootTmpFolder()
+		err := my_util.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error("ClearRootTmpFolder", err)
 		}
@@ -423,12 +422,13 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 	}
 
 	var err error
-	// 得到目标视频文件的根目录
-	videoRootPath := filepath.Dir(oneVideoFullPath)
+	// 得到目标视频文件的文件名
+	videoFileName := filepath.Base(oneVideoFullPath)
 	// -------------------------------------------------
 	// 调试缓存，把下载好的字幕写到对应的视频目录下，方便调试
 	if d.reqParam.DebugMode == true {
-		err = d.copySubFile2DesFolder(videoRootPath, organizeSubFiles)
+
+		err = my_util.CopyFiles2DebugFolder([]string{videoFileName}, organizeSubFiles)
 		if err != nil {
 			d.log.Errorln("copySubFile2DesFolder", err)
 		}
@@ -516,7 +516,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 	// -------------------------------------------------
 }
 
-// saveFullSeasonSub 这里就需要单独存储到连续剧每一季的文件夹的特殊文件夹中
+// saveFullSeasonSub 这里就需要单独存储到连续剧每一季的文件夹的特殊文件夹中。需要跟 DeleteOneSeasonSubCacheFolder 关联起来
 func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSubFiles map[string][]string) map[string][]string {
 
 	var fullSeasonSubDict = make(map[string][]string)
@@ -529,12 +529,19 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSub
 		}
 		for _, sub := range subs {
 			subFileName := filepath.Base(sub)
-			newSeasonSubRootPath := filepath.Join(seriesInfo.DirPath, "Sub_"+seasonKey)
-			_ = os.MkdirAll(newSeasonSubRootPath, os.ModePerm)
-			newSubFullPath := filepath.Join(newSeasonSubRootPath, subFileName)
-			err := my_util.CopyFile(sub, newSubFullPath)
+
+			newSeasonSubRootPath, err := my_util.GetDebugFolderByName([]string{
+				filepath.Base(seriesInfo.DirPath),
+				"Sub_" + seasonKey})
 			if err != nil {
-				d.log.Errorln("saveFullSeasonSub", subFileName, err)
+				d.log.Errorln("saveFullSeasonSub.GetDebugFolderByName", subFileName, err)
+				continue
+			}
+
+			newSubFullPath := filepath.Join(newSeasonSubRootPath, subFileName)
+			err = my_util.CopyFile(sub, newSubFullPath)
+			if err != nil {
+				d.log.Errorln("saveFullSeasonSub.CopyFile", subFileName, err)
 				continue
 			}
 			// 从字幕的文件名推断是 哪一季 的 那一集
@@ -586,28 +593,6 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	}
 	d.log.Infoln("OrgSubName:", finalSubFile.Name)
 	d.log.Infoln("SubDownAt:", desSubFullPath)
-
-	return nil
-}
-
-// copySubFile2DesFolder 拷贝字幕文件到目标文件夹
-func (d Downloader) copySubFile2DesFolder(desFolder string, subFiles []string) error {
-
-	// 需要进行字幕文件的缓存
-	// 把缓存的文件夹新建出来
-	desFolderFullPath := filepath.Join(desFolder, common.SubTmpFolderName)
-	err := os.MkdirAll(desFolderFullPath, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	// 复制下载在 tmp 文件夹中的字幕文件到视频文件夹下面
-	for _, subFile := range subFiles {
-		newFn := filepath.Join(desFolderFullPath, filepath.Base(subFile))
-		err = my_util.CopyFile(subFile, newFn)
-		if err != nil {
-			return err
-		}
-	}
 
 	return nil
 }

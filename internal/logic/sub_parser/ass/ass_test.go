@@ -3,6 +3,7 @@ package ass
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
+	"path/filepath"
 	"testing"
 )
 

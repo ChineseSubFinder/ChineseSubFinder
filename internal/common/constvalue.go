@@ -27,8 +27,6 @@ const (
 	VideoExtMkv  = ".mkv"
 	VideoExtRmvb = ".rmvb"
 	VideoExtIso  = ".iso"
-
-	SubTmpFolderName = "subtmp"
 )
 
 const (

@@ -5,7 +5,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	browser "github.com/allanpk716/fake-useragent"
@@ -262,7 +261,7 @@ func CopyTestData(srcDir string) (string, error) {
 	testDir := filepath.Join(srcDir, "test")
 
 	if IsDir(testDir) == true {
-		err := my_folder.ClearFolder(testDir)
+		err := ClearFolder(testDir)
 		if err != nil {
 			return "", err
 		}
