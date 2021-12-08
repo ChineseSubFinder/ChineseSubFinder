@@ -58,8 +58,11 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	var infoSrc *subparser.FileInfo
 	bProcess := false
 	offSetTime := 0.0
+	bok := false
+	var ffmpegInfo *ffmpeg_helper.FFMPEGInfo
+	var err error
 	// 先尝试获取内置字幕的信息
-	bok, ffmpegInfo, err := s.ffmpegHelper.GetFFMPEGInfo(videoFileFullPath, ffmpeg_helper.Subtitle)
+	bok, ffmpegInfo, err = s.ffmpegHelper.GetFFMPEGInfo(videoFileFullPath, ffmpeg_helper.Subtitle)
 	if err != nil {
 		return err
 	}

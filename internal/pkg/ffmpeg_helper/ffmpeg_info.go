@@ -145,6 +145,7 @@ func (f *FFMPEGInfo) isAudioExported(nowCacheFolder string) bool {
 				f.AudioInfoList[index].startTime,
 				f.AudioInfoList[index].language,
 			)
+			tmpOneAudioInfo.FullPath = audioFPath
 			tmpOneAudioInfo.Duration = f.AudioInfoList[index].Duration
 			newAudioInfos = append(newAudioInfos, *tmpOneAudioInfo)
 			// 替换

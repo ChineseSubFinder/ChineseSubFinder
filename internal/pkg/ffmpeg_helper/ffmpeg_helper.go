@@ -273,7 +273,7 @@ func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFF
 		if oneCodecType.String() == codecTypeSub {
 			// 字幕
 			// 只解析 subrip 类型的，不支持 hdmv_pgs_subtitle 的字幕导出
-			if oneCodecName.String() != streamCodec_subrip {
+			if f.isSupportSubCodecName(oneCodecName.String()) == false {
 				continue
 			}
 			// 这里非必须解析到 language 字段，把所有的都导出来，然后通过额外字幕语言判断即可
@@ -348,6 +348,11 @@ func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFF
 		if len(cacheAudios) != 0 {
 			ffmpegInfo.AudioInfoList = append(ffmpegInfo.AudioInfoList, cacheAudios[0])
 		}
+	} else {
+		// 音频只需要导出一个就行了，取第一个
+		newAudioList := make([]AudioInfo, 0)
+		newAudioList = append(newAudioList, ffmpegInfo.AudioInfoList[0])
+		ffmpegInfo.AudioInfoList = newAudioList
 	}
 
 	return true, ffmpegInfo
@@ -562,6 +567,19 @@ func (f FFMPEGHelper) getVersion(exeName string) (string, error) {
 	return buf.String(), nil
 }
 
+// isSupportSubCodecName 是否是 FFMPEG 支持的 CodecName
+func (f FFMPEGHelper) isSupportSubCodecName(name string) bool {
+	switch name {
+	case Subtitle_StreamCodec_subrip,
+		Subtitle_StreamCodec_ass,
+		Subtitle_StreamCodec_ssa,
+		Subtitle_StreamCodec_srt:
+		return true
+	default:
+		return false
+	}
+}
+
 const (
 	codecTypeSub   = "subtitle"
 	codecTypeAudio = "audio"
@@ -577,4 +595,38 @@ const (
 	SubtitleAndAudio                   // 导出字幕和音频
 )
 
-const streamCodec_subrip = "subrip"
+/*
+	FFMPEG 支持的字幕 Codec Name：
+	 ..S... arib_caption         ARIB STD-B24 caption
+	 DES... ass                  ASS (Advanced SSA) subtitle (decoders: ssa ass ) (encoders: ssa ass )
+	 DES... dvb_subtitle         DVB subtitles (decoders: dvbsub ) (encoders: dvbsub )
+	 ..S... dvb_teletext         DVB teletext
+	 DES... dvd_subtitle         DVD subtitles (decoders: dvdsub ) (encoders: dvdsub )
+	 D.S... eia_608              EIA-608 closed captions (decoders: cc_dec )
+	 D.S... hdmv_pgs_subtitle    HDMV Presentation Graphic Stream subtitles (decoders: pgssub )
+	 ..S... hdmv_text_subtitle   HDMV Text subtitle
+	 D.S... jacosub              JACOsub subtitle
+	 D.S... microdvd             MicroDVD subtitle
+	 DES... mov_text             MOV text
+	 D.S... mpl2                 MPL2 subtitle
+	 D.S... pjs                  PJS (Phoenix Japanimation Society) subtitle
+	 D.S... realtext             RealText subtitle
+	 D.S... sami                 SAMI subtitle
+	 ..S... srt                  SubRip subtitle with embedded timing
+	 ..S... ssa                  SSA (SubStation Alpha) subtitle
+	 D.S... stl                  Spruce subtitle format
+	 DES... subrip               SubRip subtitle (decoders: srt subrip ) (encoders: srt subrip )
+	 D.S... subviewer            SubViewer subtitle
+	 D.S... subviewer1           SubViewer v1 subtitle
+	 DES... text                 raw UTF-8 text
+	 ..S... ttml                 Timed Text Markup Language
+	 D.S... vplayer              VPlayer subtitle
+	 DES... webvtt               WebVTT subtitle
+	 DES... xsub                 XSUB
+*/
+const (
+	Subtitle_StreamCodec_subrip = "subrip"
+	Subtitle_StreamCodec_ass    = "ass"
+	Subtitle_StreamCodec_ssa    = "ssa"
+	Subtitle_StreamCodec_srt    = "srt"
+)

@@ -41,6 +41,18 @@ func TestSubTimelineFixerHelperEx_Process(t *testing.T) {
 				srcSubFPath:       "X:\\TestMovie\\The Night House (2021)\\The Night House (2021) Bluray-1080p.chinese(简英,zimuku).ass"},
 			wantErr: false,
 		},
+		{
+			name: "龙猫 (1988)", args: args{
+				videoFileFullPath: "X:\\电影\\龙猫 (1988)\\龙猫 (1988) 1080p DTS.mkv",
+				srcSubFPath:       "X:\\电影\\龙猫 (1988)\\龙猫 (1988) 1080p DTS.chinese(简,zimuku).ass"},
+			wantErr: false,
+		},
+		{
+			name: "千与千寻 (2001)", args: args{
+				videoFileFullPath: "X:\\电影\\千与千寻 (2001)\\千与千寻 (2001) 1080p Opus.mkv",
+				srcSubFPath:       "X:\\电影\\千与千寻 (2001)\\千与千寻 (2001) 1080p Opus.chinese(简英,zimuku).ass"},
+			wantErr: false,
+		},
 	}
 
 	s := NewSubTimelineFixerHelperEx(config.GetConfig().SubTimelineFixerConfig)
