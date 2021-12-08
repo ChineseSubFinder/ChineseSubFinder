@@ -153,6 +153,7 @@ func (f *FFMPEGInfo) isAudioExported(nowCacheFolder string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 

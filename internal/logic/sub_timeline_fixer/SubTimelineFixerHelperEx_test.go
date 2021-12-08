@@ -53,6 +53,18 @@ func TestSubTimelineFixerHelperEx_Process(t *testing.T) {
 				srcSubFPath:       "X:\\电影\\千与千寻 (2001)\\千与千寻 (2001) 1080p Opus.chinese(简英,zimuku).ass"},
 			wantErr: false,
 		},
+		{
+			name: "Red Notice (2021)", args: args{
+				videoFileFullPath: "X:\\电影\\Red Notice (2021)\\Red Notice (2021) WEBRip-1080p.mp4",
+				srcSubFPath:       "X:\\电影\\Red Notice (2021)\\Red Notice (2021) WEBRip-1080p.chinese(简,xunlei).default.ass"},
+			wantErr: false,
+		},
+		{
+			name: "The Last Duel (2021)", args: args{
+				videoFileFullPath: "X:\\电影\\The Last Duel (2021)\\The Last Duel (2021) WEBRip-1080p.mp4",
+				srcSubFPath:       "X:\\电影\\The Last Duel (2021)\\The Last Duel (2021) WEBRip-1080p.chinese(简,shooter).default.srt"},
+			wantErr: false,
+		},
 	}
 
 	s := NewSubTimelineFixerHelperEx(config.GetConfig().SubTimelineFixerConfig)

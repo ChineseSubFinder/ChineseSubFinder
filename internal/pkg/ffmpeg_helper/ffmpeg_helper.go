@@ -104,6 +104,33 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType Export
 		// 开始导出
 		// 构建导出的命令参数
 		exportAudioArgs, exportSubArgs := f.getAudioAndSubExportArgs(videoFileFullPath, ffMPEGInfo)
+
+		// 上面导出的信息，可能是 nil 参数，那么就直接把导出的 List 信息给置为 nil，让后续有依据可以跳出，不继续执行
+		if exportType == Subtitle {
+			if exportSubArgs == nil {
+				ffMPEGInfo.SubtitleInfoList = nil
+				return true, ffMPEGInfo, nil
+			}
+		} else if exportType == Audio {
+			if exportAudioArgs == nil {
+				ffMPEGInfo.AudioInfoList = nil
+				return true, ffMPEGInfo, nil
+			}
+		} else if exportType == SubtitleAndAudio {
+			if exportAudioArgs == nil || exportSubArgs == nil {
+				if exportAudioArgs == nil {
+					ffMPEGInfo.AudioInfoList = nil
+				}
+				if exportSubArgs == nil {
+					ffMPEGInfo.SubtitleInfoList = nil
+				}
+				return true, ffMPEGInfo, nil
+			}
+		} else {
+			log_helper.GetLogger().Errorln("GetFFMPEGInfo.getAudioAndSubExportArgs Not Support ExportType")
+			return false, nil, nil
+		}
+		// 上面的操作为了就是确保后续的导出不会出问题
 		// 执行导出，音频和内置的字幕
 		execErrorString, err := f.exportAudioAndSubtitles(exportAudioArgs, exportSubArgs, exportType)
 		if err != nil {
@@ -371,6 +398,8 @@ func (f *FFMPEGHelper) parseJsonString2GetAudioInfo(inputFFProbeString string) (
 // exportAudioAndSubtitles 导出音频和字幕文件
 func (f *FFMPEGHelper) exportAudioAndSubtitles(audioArgs, subArgs []string, exportType ExportType) (string, error) {
 
+	// 输入的两个数组，有可能是 nil
+
 	// 这里导出依赖的是 ffmpeg 这个程序，需要的是构建导出的语句
 	if exportType == SubtitleAndAudio {
 		execErrorString, err := f.execFFMPEG(audioArgs)
@@ -401,6 +430,9 @@ func (f *FFMPEGHelper) exportAudioAndSubtitles(audioArgs, subArgs []string, expo
 // execFFMPEG 执行 ffmpeg 命令
 func (f *FFMPEGHelper) execFFMPEG(cmds []string) (string, error) {
 
+	if cmds == nil || len(cmds) == 0 {
+		return "", nil
+	}
 	cmd := exec.Command("ffmpeg", cmds...)
 	buf := bytes.NewBufferString("")
 	//指定输出位置
@@ -450,18 +482,29 @@ func (f *FFMPEGHelper) getAudioAndSubExportArgs(videoFileFullPath string, ffmpeg
 		return nil, nil
 	}
 
-	for _, subtitleInfo := range ffmpegInfo.SubtitleInfoList {
+	if len(ffmpegInfo.SubtitleInfoList) == 0 {
+		// 如果没有，就返回空
+		subArgs = nil
+	} else {
+		for _, subtitleInfo := range ffmpegInfo.SubtitleInfoList {
 
-		f.addSubMapArg(&subArgs, subtitleInfo.Index,
-			filepath.Join(nowCacheFolderPath, subtitleInfo.GetName()+common.SubExtSRT))
-		f.addSubMapArg(&subArgs, subtitleInfo.Index,
-			filepath.Join(nowCacheFolderPath, subtitleInfo.GetName()+common.SubExtASS))
+			f.addSubMapArg(&subArgs, subtitleInfo.Index,
+				filepath.Join(nowCacheFolderPath, subtitleInfo.GetName()+common.SubExtSRT))
+			f.addSubMapArg(&subArgs, subtitleInfo.Index,
+				filepath.Join(nowCacheFolderPath, subtitleInfo.GetName()+common.SubExtASS))
+		}
 	}
+
 	// 音频导出的参数构建
 	audioArgs = append(audioArgs, "-vn")
-	for _, audioInfo := range ffmpegInfo.AudioInfoList {
-		f.addAudioMapArg(&audioArgs, audioInfo.Index,
-			filepath.Join(nowCacheFolderPath, audioInfo.GetName()+extPCM))
+	if len(ffmpegInfo.AudioInfoList) == 0 {
+		// 如果没有，就返回空
+		audioArgs = nil
+	} else {
+		for _, audioInfo := range ffmpegInfo.AudioInfoList {
+			f.addAudioMapArg(&audioArgs, audioInfo.Index,
+				filepath.Join(nowCacheFolderPath, audioInfo.GetName()+extPCM))
+		}
 	}
 
 	return audioArgs, subArgs

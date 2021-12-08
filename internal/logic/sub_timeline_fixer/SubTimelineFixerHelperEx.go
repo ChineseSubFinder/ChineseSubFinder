@@ -70,8 +70,12 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 		return errors.New("SubTimelineFixerHelperEx.Process.GetFFMPEGInfo = false Subtitle -- " + videoFileFullPath)
 	}
 	// 内置的字幕，这里只列举一种格式出来，其实会有一个字幕的 srt 和 ass 两种格式都导出存在
-	// len(ffmpegInfo.SubtitleInfoList)
-	if len(ffmpegInfo.SubtitleInfoList) <= 0 {
+	if ffmpegInfo.SubtitleInfoList == nil || len(ffmpegInfo.SubtitleInfoList) <= 0 {
+
+		if ffmpegInfo.AudioInfoList == nil || len(ffmpegInfo.AudioInfoList) == 0 {
+			return errors.New("SubTimelineFixerHelperEx.Process.GetFFMPEGInfo Can`t Find SubTitle And Audio To Export -- " + videoFileFullPath)
+		}
+
 		// 如果内置字幕没有，那么就需要尝试获取音频信息
 		bok, ffmpegInfo, err = s.ffmpegHelper.GetFFMPEGInfo(videoFileFullPath, ffmpeg_helper.Audio)
 		if err != nil {
