@@ -126,16 +126,33 @@ func (f FFMPEGInfo) getExportedMaskFileFPath() (string, error) {
 	return tmpNowExportedMaskFile, nil
 }
 
+// isAudioExported 只需要确认导出了一个音频即可，同时在导出的时候也需要确定只导出一个，且识别出来多个音频，这里会调整到只有一个
 func (f *FFMPEGInfo) isAudioExported(nowCacheFolder string) bool {
+
+	newAudioInfos := make([]AudioInfo, 0)
 	for index, audioInfo := range f.AudioInfoList {
+
 		audioFPath := filepath.Join(nowCacheFolder, audioInfo.GetName()+extPCM)
-		if my_util.IsFile(audioFPath) == false {
-			return false
-		} else {
+		if my_util.IsFile(audioFPath) == true {
+
 			f.AudioInfoList[index].FullPath = audioFPath
+
+			tmpOneAudioInfo := NewAudioInfo(
+				f.AudioInfoList[index].Index,
+				f.AudioInfoList[index].CodecName,
+				f.AudioInfoList[index].CodecType,
+				f.AudioInfoList[index].timeBase,
+				f.AudioInfoList[index].startTime,
+				f.AudioInfoList[index].language,
+			)
+			tmpOneAudioInfo.Duration = f.AudioInfoList[index].Duration
+			newAudioInfos = append(newAudioInfos, *tmpOneAudioInfo)
+			// 替换
+			f.AudioInfoList = newAudioInfos
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 func (f *FFMPEGInfo) isSubExported(nowCacheFolder string) bool {
