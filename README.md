@@ -58,6 +58,7 @@
 * [如何手动刷新 Emby 加载字幕](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%A6%82%E4%BD%95%E6%89%8B%E5%8A%A8%E5%88%B7%E6%96%B0%20Emby%20%E5%8A%A0%E8%BD%BD%E5%AD%97%E5%B9%95.md)
 * [如何判断视频是否需要下载、更新字幕的](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E8%A7%86%E9%A2%91%E6%98%AF%E5%90%A6%E9%9C%80%E8%A6%81%E4%B8%8B%E8%BD%BD%E3%80%81%E6%9B%B4%E6%96%B0%E5%AD%97%E5%B9%95%E7%9A%84.md)
 * [设计](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E8%AE%BE%E8%AE%A1.md)
+* [字幕时间轴校正功能实现解析](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/字幕时间轴校正功能实现解析/字幕时间轴校正功能实现解析.md)
 
 ## 如何编译此项目
 
@@ -114,6 +115,7 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 * [go-rod/rod: A Devtools driver for web automation and scraping](https://github.com/go-rod/rod)
 * [ausaki/subfinder: 字幕查找器](https://github.com/ausaki/subfinder)
 * [golandscape/sat: 高性能简繁体转换](https://github.com/golandscape/sat)
+* [smacke/ffsubsync: Automagically synchronize subtitles with video](https://github.com/smacke/ffsubsync)
 
 
 # 预览图
