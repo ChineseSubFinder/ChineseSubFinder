@@ -55,6 +55,6 @@ func (s *SubTimelineFixerConfig) CheckDefault() {
 		s.V2_MaxStartTimeDiffSD = 0.1
 	}
 	if s.V2_MinOffset <= 0 {
-		s.V2_MinOffset = 0.2
+		s.V2_MinOffset = 0.3
 	}
 }
