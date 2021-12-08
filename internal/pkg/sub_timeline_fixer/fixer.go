@@ -542,11 +542,11 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 }
 
 func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tmpStartDiffTime []float64) FixResult {
-	const minValue = -9999.0
+
 	oldMean := stat.Mean(startDiffTimeList)
 	oldSd := stat.Sd(startDiffTimeList)
-	newMean := minValue
-	newSd := minValue
+	newMean := MinValue
+	newSd := MinValue
 	per := 1.0
 
 	if len(tmpStartDiffTime) < 3 {
@@ -590,10 +590,10 @@ func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tm
 		newSd = stat.Sd(startDiffTimeList)
 	}
 
-	if newMean == minValue {
+	if newMean == MinValue {
 		newMean = oldMean
 	}
-	if newSd == minValue {
+	if newSd == MinValue {
 		newSd = oldSd
 	}
 	return FixResult{
@@ -606,6 +606,7 @@ func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tm
 }
 
 const FixMask = "-fix"
+const MinValue = -9999.0
 
 var mutexFixV2 sync.Mutex
 

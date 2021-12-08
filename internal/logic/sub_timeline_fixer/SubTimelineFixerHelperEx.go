@@ -169,16 +169,8 @@ func (s SubTimelineFixerHelperEx) processBySub(baseSubFileFPath, srcSubFileFPath
 		log_helper.GetLogger().Warnln("processSub.GetOffsetTimeV2 return false -- " + baseSubFileFPath)
 		return false, nil, 0, nil
 	}
-	// SD 要达标
-	if sd > s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD {
-		log_helper.GetLogger().Infoln(fmt.Sprintf("skip, processBySub sd: %v > %v", sd, s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD))
-		return false, nil, 0, nil
-	}
-	// 时间偏移的最小值才修正
-	if offsetTime < s.timelineFixer.FixerConfig.V2_MinOffset && offsetTime > -s.timelineFixer.FixerConfig.V2_MinOffset {
-		log_helper.GetLogger().Infoln(fmt.Sprintf("Skip, processBySub offset: %v > -%v && %v < %v",
-			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset,
-			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset))
+
+	if s.jugOffsetAndSD("processBySub", offsetTime, sd) == false {
 		return false, nil, 0, nil
 	}
 
@@ -219,20 +211,33 @@ func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileF
 		return false, nil, 0, nil
 	}
 
-	// SD 要达标
-	if sd > s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD {
-		log_helper.GetLogger().Infoln(fmt.Sprintf("processByAudio sd: %v > %v", sd, s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD))
-		return false, nil, 0, nil
-	}
-	// 时间偏移的最小值才修正
-	if offsetTime < s.timelineFixer.FixerConfig.V2_MinOffset && offsetTime > -s.timelineFixer.FixerConfig.V2_MinOffset {
-		log_helper.GetLogger().Infoln(fmt.Sprintf("skip, processByAudio offset: %v > -%v && %v < %v",
-			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset,
-			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset))
+	if s.jugOffsetAndSD("processByAudio", offsetTime, sd) == false {
 		return false, nil, 0, nil
 	}
 
 	return true, infoSrc, offsetTime, nil
+}
+
+func (s SubTimelineFixerHelperEx) jugOffsetAndSD(processName string, offsetTime, sd float64) bool {
+	// SD 要达标
+	if sd > s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD {
+		log_helper.GetLogger().Infoln(fmt.Sprintf("skip, %s sd: %v > %v", processName, sd, s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD))
+		return false
+	}
+	// 时间偏移的最小值才修正
+	if offsetTime < s.timelineFixer.FixerConfig.V2_MinOffset && offsetTime > -s.timelineFixer.FixerConfig.V2_MinOffset {
+		log_helper.GetLogger().Infoln(fmt.Sprintf("Skip, %s offset: %v > -%v && %v < %v",
+			processName,
+			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset,
+			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset))
+		return false
+	}
+	// sub_timeline_fixer.calcMeanAndSD 输出的可能的极小值
+	if offsetTime <= sub_timeline_fixer.MinValue+0.1 || offsetTime >= sub_timeline_fixer.MinValue-0.1 {
+		return false
+	}
+
+	return true
 }
 
 func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileInfo, offsetTime float64, desSubSaveFPath string) error {

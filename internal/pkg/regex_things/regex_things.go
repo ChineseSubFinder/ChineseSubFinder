@@ -20,8 +20,8 @@ var RegMatchSpString = regexp.MustCompile(`(?i)[^\w\s]`)
 // 字幕文件对话的每一行
 // regStringASS = `Dialogue: [^,.]*[0-9]*,([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),[^,.]*,[^,.]*,[0-9]*,[0-9]*,[0-9]*,[^,.]*,(.*)`
 const regStringASS = `Dialogue: [^,.]*[0-9]*,([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([1-9]?[0-9]*:[0-9]*:[0-9]*.[0-9]*),([^,.]*),[^,.]*,[0-9]*,[0-9]*,[0-9]*,[^,.]*,(.*)`
-const regStringSRT = `(\d+)\n([\d:,]+)\s+-{2}\>\s+([\d:,]+)\n([\s\S]*?(\n{2}|$))`
-const regStringSRT2 = `(\d+)\n([\d:.]+)\s+-{2}\>\s+([\d:.]+)\n([\s\S]*?(\n{2}|$))`
+const regStringSRT = `(\d+)\n([\d:,]+)\s+-{2}\>\s+([\d:,]+)\n([\s\S]*?(\n{1,2}|$))`
+const regStringSRT2 = `(\d+)\n([\d:.]+)\s+-{2}\>\s+([\d:.]+)\n([\s\S]*?(\n{1,2}|$))`
 
 var ReMatchDialogueASS = regexp.MustCompile(regStringASS)
 var ReMatchDialogueSRT = regexp.MustCompile(regStringSRT)

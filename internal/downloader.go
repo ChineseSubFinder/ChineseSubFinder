@@ -604,6 +604,7 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	if err != nil {
 		return err
 	}
+	d.log.Infoln("----------------------------------")
 	d.log.Infoln("OrgSubName:", finalSubFile.Name)
 	d.log.Infoln("SubDownAt:", desSubFullPath)
 
@@ -612,14 +613,6 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 		err = d.subTimelineFixerHelperEx.Process(videoFileFullPath, desSubFullPath)
 		if err != nil {
 			return err
-		}
-	} else {
-		// 如何不使用时间轴校正的功能，那么就需要把备份的给删除了，免得引起误会
-		if my_util.IsFile(desSubFullPath+sub_timeline_fixer.BackUpExt) == true {
-			err = os.Remove(desSubFullPath + sub_timeline_fixer.BackUpExt)
-			if err != nil {
-				return err
-			}
 		}
 	}
 

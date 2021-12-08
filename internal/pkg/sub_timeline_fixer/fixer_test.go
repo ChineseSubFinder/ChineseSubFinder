@@ -548,6 +548,11 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 		/*
 			What If…!
 		*/
+		{name: "What If…! - S01E01", args: args{
+			baseSubFile:            filepath.Join(testRootDirNo, "What If…! - S01E01_英_2.srt"),
+			srcSubFile:             filepath.Join(testRootDirNo, "What If…! - S01E01 - (简英,shooter).srt"),
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
 		{name: "What If…! - S01E07", args: args{
 			baseSubFile:            filepath.Join(testRootDirNo, "What If…! - S01E07.chinese(inside).ass"),
 			srcSubFile:             filepath.Join(testRootDirNo, "What If…! - S01E07.chinese(简英,subhd).ass"),
@@ -629,8 +634,8 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 				t.Errorf("GetOffsetTimeV2() got = %v, want %v", got, tt.want)
 			}
 
-			debug_view.SaveDebugChart(*baseUnitNew, "baseUnitNew", "baseUnitNew")
-			debug_view.SaveDebugChart(*srcUnitNew, "srcUnitNew", "srcUnitNew")
+			debug_view.SaveDebugChart(*baseUnitNew, tt.name+" -- baseUnitNew", "baseUnitNew")
+			debug_view.SaveDebugChart(*srcUnitNew, tt.name+" -- srcUnitNew", "srcUnitNew")
 
 			//if bok == true && got != 0 {
 			//	_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
