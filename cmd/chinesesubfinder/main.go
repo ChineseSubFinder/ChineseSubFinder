@@ -175,6 +175,13 @@ func DownLoadStart(httpProxy string) {
 	if err != nil {
 		log.Errorln("ReadSpeFile", err)
 	}
+	// 从 csf-bk 文件还原时间轴修复前的字幕文件
+	if downloader.NeedRestoreFixTimeLineBK == true {
+		err = downloader.RestoreFixTimelineBK(config.MovieFolder, config.SeriesFolder)
+		if err != nil {
+			log.Errorln("RestoreFixTimelineBK", err)
+		}
+	}
 	// 刷新 Emby 的字幕，如果下载了字幕倒是没有刷新，则先刷新一次，便于后续的 Emby api 统计逻辑
 	err = downloader.RefreshEmbySubList()
 	if err != nil {

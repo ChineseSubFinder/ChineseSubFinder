@@ -6,6 +6,7 @@ import (
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/forced_scan_and_down_sub"
 	markSystem "github.com/allanpk716/ChineseSubFinder/internal/logic/mark_system"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/restore_fix_timeline_bk"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
@@ -17,6 +18,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	subcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	sub_timeline_fixer_pkg "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
@@ -42,6 +44,7 @@ type Downloader struct {
 	subFormatter             ifaces.ISubFormatter          //	字幕格式化命名的实现
 	subNameFormatter         subcommon.FormatterName       // 从 inSubFormatter 推断出来
 	needForcedScanAndDownSub bool                          // 将会强制扫描所有的视频，下载字幕，替换已经存在的字幕，不进行时间段和已存在则跳过的判断。且不会进过 Emby API 的逻辑，智能进行强制去以本程序的方式去扫描。
+	NeedRestoreFixTimeLineBK bool                          // 从 csf-bk 文件还原时间轴修复前的字幕文件
 
 	subTimelineFixerHelperEx *sub_timeline_fixer.SubTimelineFixerHelperEx // 字幕时间轴校正
 }
@@ -97,11 +100,19 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqPa
 // ReadSpeFile 优先级最高。读取特殊文件，启用一些特殊的功能，比如 forced_scan_and_down_sub
 func (d *Downloader) ReadSpeFile() error {
 	// 理论上是一次性的，用了这个文件就应该没了
-	needProcess, err := forced_scan_and_down_sub.CheckSpeFile()
+	// 强制的字幕扫描
+	needProcess_forced_scan_and_down_sub, err := forced_scan_and_down_sub.CheckSpeFile()
 	if err != nil {
 		return err
 	}
-	d.needForcedScanAndDownSub = needProcess
+	d.needForcedScanAndDownSub = needProcess_forced_scan_and_down_sub
+	// 从 csf-bk 文件还原时间轴修复前的字幕文件
+	needProcess_restore_fix_timeline_bk, err := restore_fix_timeline_bk.CheckSpeFile()
+	if err != nil {
+		return err
+	}
+	d.NeedRestoreFixTimeLineBK = needProcess_restore_fix_timeline_bk
+
 	return nil
 }
 
@@ -423,6 +434,17 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		}
 	}
 	wg.Wait()
+	return nil
+}
+
+func (d Downloader) RestoreFixTimelineBK(moviesDir, seriesDir string) error {
+
+	defer d.log.Infoln("End Restore Fix Timeline BK")
+	d.log.Infoln("Start Restore Fix Timeline BK...")
+	err := sub_timeline_fixer_pkg.Restore(moviesDir, seriesDir)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

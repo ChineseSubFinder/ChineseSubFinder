@@ -1,4 +1,4 @@
-package forced_scan_and_down_sub
+package restore_fix_timeline_bk
 
 import (
 	"errors"
@@ -13,8 +13,8 @@ func CheckSpeFile() (bool, error) {
 
 	nowSpeFileName := getSpeFileName()
 	if nowSpeFileName == "" {
-		return false, errors.New(fmt.Sprintf(`forced_scan_and_down_sub.getSpeFileName() is empty, not support this OS. 
-you needd implement getSpeFileName() in internal/logic/forced_scan_and_down_sub/forced_scan_and_down_sub.go`))
+		return false, errors.New(fmt.Sprintf(`restore_fix_timeline_bk.getSpeFileName() is empty, not support this OS. 
+you needd implement getSpeFileName() in internal/logic/restore_fix_timeline_bk/restore_fix_timeline_bk.go`))
 	}
 	if my_util.IsFile(nowSpeFileName) == false {
 		return false, nil
@@ -41,12 +41,12 @@ func getSpeFileName() string {
 }
 
 /*
-	识别 config 文件夹下面由这个特殊的文件，就会执行强制扫描所有视频文件进行字幕的下载（之前有的字幕会被覆盖）
+	识别 config 文件夹下面由这个特殊的文件，就会执行从 csf-bk 文件还原时间轴修复前的字幕文件
 	对于 Linux 是 /config 文件夹下
 	对于 Windows 是程序根目录下
 	对于 MacOS 需要自行实现
 */
 const (
-	specialFileNameWindows = "ForceFullScanAndDownloadSub"
+	specialFileNameWindows = "RestoreFixTimelineBK"
 	specialFileNameLinux   = "/config/" + specialFileNameWindows
 )

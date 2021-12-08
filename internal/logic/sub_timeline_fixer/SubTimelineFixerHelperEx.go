@@ -132,7 +132,7 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	}
 
 	log_helper.GetLogger().Infoln("Fix Offset:", offSetTime, srcSubFPath)
-	log_helper.GetLogger().Infoln("BackUp Org SubFile:", offSetTime, srcSubFPath+BackUpExt)
+	log_helper.GetLogger().Infoln("BackUp Org SubFile:", offSetTime, srcSubFPath+sub_timeline_fixer.BackUpExt)
 
 	return nil
 }
@@ -248,7 +248,7 @@ func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileI
 	/*
 		修复的字幕先存放到缓存目录，然后需要把原有的字幕进行“备份”，改名，然后再替换过来
 	*/
-	subFileName := desSubSaveFPath + TmpExt
+	subFileName := desSubSaveFPath + sub_timeline_fixer.TmpExt
 	if my_util.IsFile(subFileName) == true {
 		err := os.Remove(subFileName)
 		if err != nil {
@@ -260,14 +260,14 @@ func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileI
 		return err
 	}
 
-	if my_util.IsFile(desSubSaveFPath+BackUpExt) == true {
-		err = os.Remove(desSubSaveFPath + BackUpExt)
+	if my_util.IsFile(desSubSaveFPath+sub_timeline_fixer.BackUpExt) == true {
+		err = os.Remove(desSubSaveFPath + sub_timeline_fixer.BackUpExt)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = os.Rename(desSubSaveFPath, desSubSaveFPath+BackUpExt)
+	err = os.Rename(desSubSaveFPath, desSubSaveFPath+sub_timeline_fixer.BackUpExt)
 	if err != nil {
 		return err
 	}
@@ -279,6 +279,3 @@ func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileI
 
 	return nil
 }
-
-const TmpExt = ".csf-tmp"
-const BackUpExt = ".csf-bk"
