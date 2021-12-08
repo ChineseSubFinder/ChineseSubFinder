@@ -7,6 +7,8 @@
 > 发布的 Beta 版本可能是不稳定的，同时新增功能可能是没有文档支持的。如果没有特殊的需求，不建议使用该版本。
 >
 > v0.18.x 开始，暂时屏蔽了 subhd 的下载接口，后续下载字幕功能有待评估。
+>
+> v0.19.x 开始，升级字幕时间轴校正功能，见 [字幕时间轴校正 V2](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3V2.md)
 
 ## Why？
 
@@ -34,7 +36,7 @@
 高阶设置：
 
 * [高阶设置 - Emby API 支持](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E9%AB%98%E9%98%B6%E8%AE%BE%E7%BD%AE%20-%20Emby%20API%20%E6%94%AF%E6%8C%81.md)
-* [字幕时间轴校正](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3.md)
+* [字幕时间轴校正 V2](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3V2.md)
 * [强制扫描所有的视频文件下载字幕](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/强制扫描所有的视频文件下载字幕.md)
 
 建议了解的文档，特别是对《连续剧目录结构要求》。
@@ -80,6 +82,7 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 
 ## 版本
 
+* v0.19.x 调整，[字幕时间轴校正 V2](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3V2.md) 功能，以及若干细节改动 --2021年12月8日
 * v0.18.x 新增，[字幕时间轴自动校正](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3.md)。暂时屏蔽 subhd 下载逻辑  -- 2021年10月17日
 * v0.17.x 新增，代理检测模块，程序启动的时候会去 check 代理是否正常 -- 2021年9月22日
 * v0.16.x 新增，启动容器/程序时，是否开始搜索并下载选项功能见[讨论](https://github.com/allanpk716/ChineseSubFinder/issues/50) -- 2021年9月18日
