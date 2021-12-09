@@ -563,12 +563,6 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			srcSubFile:             filepath.Join(testRootDirNo, "What If…! - S01E09.chinese(简英,shooter).srt"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
-
-		{name: "What If…! - S01E09", args: args{
-			baseSubFile:            "C:\\WorkSpace\\Go2hell\\src\\github.com\\allanpk716\\ChineseSubFinder\\CSF-SubFixCache\\Blade Runner - Black Lotus - S01E03 - The Human Condition WEBDL-1080p\\英_2.ass",
-			srcSubFile:             "C:\\WorkSpace\\Go2hell\\src\\github.com\\allanpk716\\ChineseSubFinder\\CSF-SubFixCache\\Blade Runner - Black Lotus - S01E03 - The Human Condition WEBDL-1080p\\tar.ass",
-			staticLineFileSavePath: "bar.html"},
-			want: 0, wantErr: false},
 	}
 
 	for _, tt := range tests {
@@ -748,6 +742,84 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 	}
 }
 
+func TestGetOffsetTimeV2_MoreTest(t *testing.T) {
+	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
+
+	type args struct {
+		baseSubFile string
+		srcSubFile  string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    float64
+		wantErr bool
+	}{
+		{name: "R&M S05E01", args: args{
+			baseSubFile: "C:\\Tmp\\BL - S01E03\\英_2.ass",
+			srcSubFile:  "C:\\Tmp\\BL - S01E03\\org.ass",
+		}, want: -4.1, wantErr: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(tt.args.baseSubFile)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if bFind == false {
+				t.Fatal("sub not match")
+			}
+
+			bFind, infoSrc, err := subParserHub.DetermineFileTypeFromFile(tt.args.srcSubFile)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if bFind == false {
+				t.Fatal("sub not match")
+			}
+			// ---------------------------------------------------------------------------------------
+			// Base，截取的部分要大于 Src 的部分
+			baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, timelineFixer.FixerConfig.V2_FrontAndEndPerBase)
+			if err != nil {
+				t.Fatal(err)
+			}
+			// ---------------------------------------------------------------------------------------
+			// Src，截取的部分要小于 Base 的部分
+			srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, timelineFixer.FixerConfig.V2_FrontAndEndPerSrc)
+			if err != nil {
+				t.Fatal(err)
+			}
+			// ---------------------------------------------------------------------------------------
+
+			//bok, got, sd, err := timelineFixer.GetOffsetTimeV1(infoBase, infoSrc, tt.args.srcSubFile+"-bar.html", tt.args.srcSubFile+".log")
+			//if (err != nil) != tt.wantErr {
+			//	t.Errorf("GetOffsetTimeV1() error = %v, wantErr %v", err, tt.wantErr)
+			//	return
+			//}
+			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(baseUnitNew, srcUnitNew, nil)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetOffsetTimeV2() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if bok == false {
+				t.Fatal("GetOffsetTimeV2 return false")
+			}
+
+			debug_view.SaveDebugChart(*baseUnitNew, tt.name+" -- baseUnitNew", "baseUnitNew")
+			debug_view.SaveDebugChart(*srcUnitNew, tt.name+" -- srcUnitNew", "srcUnitNew")
+
+			_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			println(fmt.Sprintf("GetOffsetTimeV2: %fs SD:%f", got, sd))
+		})
+	}
+}
+
 var timelineFixer = NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{
 	// V1
 	V1_MaxCompareDialogue: 3,
@@ -759,7 +831,7 @@ var timelineFixer = NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConf
 	V2_FrontAndEndPerBase:       0.0,
 	V2_FrontAndEndPerSrc:        0.0,
 	V2_WindowMatchPer:           0.8,
-	V2_CompareParts:             8,
+	V2_CompareParts:             3,
 	V2_FixThreads:               3,
 	V2_MaxStartTimeDiffSD:       0.1,
 	V2_MinOffset:                0.2,

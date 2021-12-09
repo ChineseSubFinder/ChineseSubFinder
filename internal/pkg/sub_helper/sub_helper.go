@@ -539,7 +539,7 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 		}
 		// 如果上一个对白的最后一个 OffsetIndex 连接着当前这一句的索引的 VAD 信息 active 是 true 就设置为 false
 		if lastDialogueIndex == changerStartIndex {
-			for i := 1; i <= 10; i++ {
+			for i := 1; i <= 2; i++ {
 				if lastDialogueIndex-i >= 0 && subVADs[lastDialogueIndex-i].Active == true {
 					subVADs[lastDialogueIndex-i].Active = false
 				}
