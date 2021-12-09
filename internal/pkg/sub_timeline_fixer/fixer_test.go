@@ -563,6 +563,12 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			srcSubFile:             filepath.Join(testRootDirNo, "What If…! - S01E09.chinese(简英,shooter).srt"),
 			staticLineFileSavePath: "bar.html"},
 			want: 0, wantErr: false},
+
+		{name: "What If…! - S01E09", args: args{
+			baseSubFile:            "C:\\WorkSpace\\Go2hell\\src\\github.com\\allanpk716\\ChineseSubFinder\\CSF-SubFixCache\\Blade Runner - Black Lotus - S01E03 - The Human Condition WEBDL-1080p\\英_2.ass",
+			srcSubFile:             "C:\\WorkSpace\\Go2hell\\src\\github.com\\allanpk716\\ChineseSubFinder\\CSF-SubFixCache\\Blade Runner - Black Lotus - S01E03 - The Human Condition WEBDL-1080p\\tar.ass",
+			staticLineFileSavePath: "bar.html"},
+			want: 0, wantErr: false},
 	}
 
 	for _, tt := range tests {
@@ -638,10 +644,10 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			debug_view.SaveDebugChart(*srcUnitNew, tt.name+" -- srcUnitNew", "srcUnitNew")
 
 			//if bok == true && got != 0 {
-			//	_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
-			//	if err != nil {
-			//		t.Fatal(err)
-			//	}
+			_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
+			if err != nil {
+				t.Fatal(err)
+			}
 			//}
 			println(fmt.Sprintf("GetOffsetTimeV2: %fs SD:%f", got, sd))
 		})
@@ -675,67 +681,11 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass"},
 			want: true, want1: 0,
 		},
-		{name: "Rick and Morty - S05E01 -- 1",
+		{name: "Rick and Morty - S05E01 -- 0",
 			args: args{audioInfo: vad.AudioInfo{
-				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm"},
-				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\英_2.srt"},
-			want: true, want1: 0,
-		},
-		{name: "Rick and Morty - S05E01 -- 2",
-			args: args{audioInfo: vad.AudioInfo{
-				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm"},
-				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\R&M S05E01 - 简英.srt"},
-			want: true, want1: -6.1,
-		},
-		{name: "Rick and Morty - S05E01 -- 3",
-			args: args{audioInfo: vad.AudioInfo{
-				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm"},
-				subFilePath: "C:\\Tmp\\Rick and Morty - S05E01\\R&M S05E01 - 简.ass"},
-			want: true, want1: -6.1,
-		},
-		// Rick and Morty - S05E10
-		{name: "Rick and Morty - S05E10 -- 0",
-			args: args{audioInfo: vad.AudioInfo{
-				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"},
-				subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass"},
-			want: true, want1: 0,
-		},
-		{name: "Rick and Morty - S05E10 -- 1",
-			args: args{audioInfo: vad.AudioInfo{
-				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"},
-				subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.srt"},
-			want: true, want1: 0,
-		},
-		{name: "Rick and Morty - S05E10 -- 2",
-			args: args{audioInfo: vad.AudioInfo{
-				FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"},
-				subFilePath: "C:\\Tmp\\Rick and Morty - S05E10\\R&M S05E10 - 简英.ass"},
-			want: true, want1: -6.0,
-		},
-		// Foundation - S01E09
-		{name: "Foundation - S01E09 -- 0",
-			args: args{audioInfo: vad.AudioInfo{
-				FileFullPath: "C:\\Tmp\\Foundation - S01E09\\英_1.pcm"},
-				subFilePath: "C:\\Tmp\\Foundation - S01E09\\英_2.ass"},
-			want: true, want1: 0,
-		},
-		{name: "Foundation - S01E09 -- 1",
-			args: args{audioInfo: vad.AudioInfo{
-				FileFullPath: "C:\\Tmp\\Foundation - S01E09\\英_1.pcm"},
-				subFilePath: "C:\\Tmp\\Foundation - S01E09\\简_6.srt"},
-			want: true, want1: 0,
-		},
-		{name: "Foundation - S01E09 -- 2",
-			args: args{audioInfo: vad.AudioInfo{
-				FileFullPath: "C:\\Tmp\\Foundation - S01E09\\英_1.pcm"},
-				subFilePath: "C:\\Tmp\\Foundation - S01E09\\chinese(简英,zimuku).default.ass"},
-			want: true, want1: -30,
-		},
-		{name: "Foundation - S01E09 -- 3",
-			args: args{audioInfo: vad.AudioInfo{
-				FileFullPath: "C:\\Tmp\\Foundation - S01E09\\英_1.pcm"},
-				subFilePath: "C:\\Tmp\\Foundation - S01E09\\chinese(简英,zimuku-fix).ass"},
-			want: true, want1: 0,
+				FileFullPath: "C:\\WorkSpace\\Go2hell\\src\\github.com\\allanpk716\\ChineseSubFinder\\internal\\pkg\\ffmpeg_helper\\CSF-SubFixCache\\Blade Runner - Black Lotus - S01E03 - The Human Condition WEBDL-1080p\\日_1.pcm"},
+				subFilePath: "C:\\WorkSpace\\Go2hell\\src\\github.com\\allanpk716\\ChineseSubFinder\\CSF-SubFixCache\\Blade Runner - Black Lotus - S01E03 - The Human Condition WEBDL-1080p\\tar.ass"},
+			want: true, want1: -5.1,
 		},
 	}
 	for _, tt := range tests {
@@ -780,10 +730,6 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 				t.Errorf("GetOffsetTimeV2() bok = %v, want %v", bok, tt.want)
 			}
 
-			if sd > timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD {
-
-			}
-
 			if offsetTime > -0.2 && offsetTime < 0.2 && tt.want1 == 0 {
 				// 如果 offset time > -0.2 且 < 0.2 则认为无需调整时间轴，为0
 			} else if offsetTime > tt.want1-0.1 && offsetTime < tt.want1+0.1 {
@@ -792,10 +738,10 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 				t.Errorf("GetOffsetTimeV2() bok = %v, want %v", offsetTime, tt.want1)
 			}
 
-			//_, err = timelineFixer.FixSubTimeline(infoSrc, offsetTime, tt.args.subFilePath+FixMask+infoSrc.Ext)
-			//if err != nil {
-			//	t.Fatal(err)
-			//}
+			_, err = timelineFixer.FixSubTimeline(infoSrc, offsetTime, tt.args.subFilePath+FixMask+infoSrc.Ext)
+			if err != nil {
+				t.Fatal(err)
+			}
 
 			println(fmt.Sprintf("GetOffsetTimeV2: %vs SD:%v", offsetTime, sd))
 		})
@@ -810,10 +756,10 @@ var timelineFixer = NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConf
 	V1_MinOffset:          0.1,
 	// V2
 	V2_SubOneUnitProcessTimeOut: 5 * 60,
-	V2_FrontAndEndPerBase:       0.15,
+	V2_FrontAndEndPerBase:       0.0,
 	V2_FrontAndEndPerSrc:        0.0,
-	V2_WindowMatchPer:           0.7,
-	V2_CompareParts:             5,
+	V2_WindowMatchPer:           0.8,
+	V2_CompareParts:             8,
 	V2_FixThreads:               3,
 	V2_MaxStartTimeDiffSD:       0.1,
 	V2_MinOffset:                0.2,

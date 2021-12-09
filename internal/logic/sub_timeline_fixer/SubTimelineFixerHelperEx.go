@@ -170,7 +170,7 @@ func (s SubTimelineFixerHelperEx) processBySub(baseSubFileFPath, srcSubFileFPath
 		return false, nil, 0, err
 	}
 	if bok == false {
-		log_helper.GetLogger().Warnln("processSub.GetOffsetTimeV2 return false -- " + baseSubFileFPath)
+		log_helper.GetLogger().Warnln("processBySub.GetOffsetTimeV2 return false -- " + baseSubFileFPath)
 		return false, nil, 0, nil
 	}
 
@@ -211,7 +211,7 @@ func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileF
 		return false, nil, 0, err
 	}
 	if bok == false {
-		log_helper.GetLogger().Warnln("processSub.GetOffsetTimeV2 return false -- " + baseAudioFileFPath)
+		log_helper.GetLogger().Warnln("processByAudio.GetOffsetTimeV2 return false -- " + baseAudioFileFPath)
 		return false, nil, 0, nil
 	}
 
@@ -225,7 +225,7 @@ func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileF
 func (s SubTimelineFixerHelperEx) jugOffsetAndSD(processName string, offsetTime, sd float64) bool {
 	// SD 要达标
 	if sd > s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD {
-		log_helper.GetLogger().Infoln(fmt.Sprintf("skip, %s sd: %v > %v", processName, sd, s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD))
+		log_helper.GetLogger().Infoln(fmt.Sprintf("Skip, %s sd: %v > %v", processName, sd, s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD))
 		return false
 	}
 	// 时间偏移的最小值才修正
@@ -237,7 +237,9 @@ func (s SubTimelineFixerHelperEx) jugOffsetAndSD(processName string, offsetTime,
 		return false
 	}
 	// sub_timeline_fixer.calcMeanAndSD 输出的可能的极小值
-	if offsetTime <= sub_timeline_fixer.MinValue+0.1 || offsetTime >= sub_timeline_fixer.MinValue-0.1 {
+
+	if my_util.IsEqual(offsetTime, sub_timeline_fixer.MinValue) == true {
+		log_helper.GetLogger().Infoln("Skip, offsetTime == -9999")
 		return false
 	}
 

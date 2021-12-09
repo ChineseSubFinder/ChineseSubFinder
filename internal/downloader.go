@@ -600,7 +600,7 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSub
 
 // 在前面需要进行语言的筛选、排序，这里仅仅是存储， extraSubPreName 这里传递是字幕的网站，有就认为是多字幕的存储。空就是单字幕，单字幕就可以setDefault
 func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile subparser.FileInfo, extraSubPreName string, setDefault bool, skipExistFile bool) error {
-
+	defer d.log.Infoln("----------------------------------")
 	videoRootPath := filepath.Dir(videoFileFullPath)
 	subNewName, subNewNameWithDefault, _ := d.subFormatter.GenerateMixSubName(videoFileFullPath, finalSubFile.Ext, finalSubFile.Lang, extraSubPreName)
 

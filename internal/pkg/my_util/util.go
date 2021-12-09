@@ -447,3 +447,13 @@ func Time2SubTimeString(inTime time.Time, timeFormat string) string {
 		return outTimeString
 	}
 }
+
+// IsEqual 比较 float64
+func IsEqual(f1, f2 float64) bool {
+	const MIN = 0.000001
+	if f1 > f2 {
+		return math.Dim(f1, f2) < MIN
+	} else {
+		return math.Dim(f2, f1) < MIN
+	}
+}
