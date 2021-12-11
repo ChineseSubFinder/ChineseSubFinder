@@ -156,8 +156,8 @@ func IsEmbySubChineseLangStringWanted(inLangString string) bool {
 	}
 
 	// 先判断 ISO 标准的和变种的支持列表
-	if language.IsSupportISOString(nextString) == true {
-		return true
+	if language.IsSupportISOString(nextString) == false {
+		return false
 	}
 	// 再判断之前支持的列表
 	switch nextString {
