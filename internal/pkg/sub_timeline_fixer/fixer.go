@@ -372,22 +372,6 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 // GetOffsetTimeV2 使用内置的字幕校正外置的字幕时间轴
 func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit, audioVadList []vad.VADInfo) (bool, float64, float64, error) {
 
-	// 时间轴差值数组
-	var tmpStartDiffTimeList = make([]float64, 0)
-	var tmpStartDiffTimeMap = treemap.NewWith(utils.Float64Comparator)
-	var tmpStartDiffTimeListEx = make(stat.Float64Slice, 0)
-	// -------------------------------------------------
-	var bUseSubOrAudioAsBase = true
-	if baseUnit == nil && audioVadList != nil {
-		// 使用 音频 来进行匹配
-		bUseSubOrAudioAsBase = false
-	} else if baseUnit != nil {
-		// 使用 字幕 来进行匹配
-		bUseSubOrAudioAsBase = true
-	} else {
-		return false, 0, 0, errors.New("GetOffsetTimeV2 input baseUnit or AudioVad is nil")
-	}
-
 	// -------------------------------------------------
 	/*
 		开始针对对白单元进行匹配
@@ -400,20 +384,71 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	srcVADLen := len(srcUnit.VADList)
 	// 滑动窗口的长度
 	srcWindowLen := int(float64(srcVADLen) * s.FixerConfig.V2_WindowMatchPer)
+	// 滑动的距离
 	srcSlideLen := srcVADLen - srcWindowLen
 	// 窗口可以滑动的长度
-	srcSlideLenHalf := srcSlideLen / 2
-	//
-	oneStep := srcSlideLenHalf / s.FixerConfig.V2_CompareParts
+	srcSlideStartIndex := srcSlideLen / 2
+	// 一步的长度
+	oneStep := srcSlideStartIndex / s.FixerConfig.V2_CompareParts
 	if srcSlideLen <= 0 {
 		srcSlideLen = 1
 	}
 	if oneStep <= 0 {
 		oneStep = 1
 	}
-	insertIndex := 0
 	// -------------------------------------------------
+	windowInfo := WindowInfo{
+		BaseAudioFloatList: audioFloatList,
+		BaseUnit:           baseUnit,
+		SrcUnit:            srcUnit,
+		MatchedTimes:       0,
+		SrcWindowLen:       srcWindowLen,
+		SrcSlideStartIndex: srcSlideStartIndex,
+		SrcSlideLen:        srcSlideLen,
+		OneStep:            oneStep,
+	}
 	// 实际 FFT 的匹配逻辑函数
+	// 时间轴差值数组
+	matchInfo, err := s.slidingWindowProcessor(&windowInfo)
+	if err != nil {
+		return false, 0, 0, err
+	}
+
+	// 这里可能遇到匹配的时候没有能够执行够 V2_CompareParts 次，有可能是负数跳过或者时间转换失败导致，前者为主（可能是这两个就是一个东西的时候，或者说没有时间轴偏移的时候）
+	if len(matchInfo.StartDiffTimeList) < s.FixerConfig.V2_CompareParts/2 {
+		log_helper.GetLogger().Infoln("Can't Match, Parts=", len(matchInfo.StartDiffTimeList), "At Least", s.FixerConfig.V2_CompareParts/2)
+		return false, 0, 0, nil
+	}
+	outCorrelationFixResult := s.calcMeanAndSD(matchInfo.StartDiffTimeListEx, matchInfo.StartDiffTimeList)
+	log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner Old Mean: %v SD: %v Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
+	log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner New Mean: %v SD: %v Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
+
+	value, index := matchInfo.StartDiffTimeMap.Max()
+	log_helper.GetLogger().Infoln("FFTAligner Max score:", fmt.Sprintf("%v", value.(float64)), "Time:", fmt.Sprintf("%v", matchInfo.StartDiffTimeList[index.(int)]))
+
+	return true, outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, nil
+}
+
+// slidingWindowProcessor 滑动窗口计算时间轴偏移
+func (s *SubTimelineFixer) slidingWindowProcessor(windowInfo *WindowInfo) (*MatchInfo, error) {
+
+	// -------------------------------------------------
+	var bUseSubOrAudioAsBase = true
+	if windowInfo.BaseUnit == nil && windowInfo.BaseAudioFloatList != nil {
+		// 使用 音频 来进行匹配
+		bUseSubOrAudioAsBase = false
+	} else if windowInfo.BaseUnit != nil {
+		// 使用 字幕 来进行匹配
+		bUseSubOrAudioAsBase = true
+	} else {
+		return nil, errors.New("GetOffsetTimeV2 input baseUnit or AudioVad is nil")
+	}
+	// -------------------------------------------------
+	outMatchInfo := MatchInfo{
+		StartDiffTimeList:   make([]float64, 0),
+		StartDiffTimeMap:    treemap.NewWith(utils.Float64Comparator),
+		StartDiffTimeListEx: make(stat.Float64Slice, 0),
+	}
 	fixFunc := func(i interface{}) error {
 		inData := i.(InputData)
 		// -------------------------------------------------
@@ -428,9 +463,9 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 		if bUseSubOrAudioAsBase == false {
 			// 使用 音频 来进行匹配
 			// 去掉头和尾，具体百分之多少，见 V2_FrontAndEndPerBase
-			audioCutLen := int(float64(len(inData.AudioVADList)) * s.FixerConfig.V2_FrontAndEndPerBase)
+			audioCutLen := int(float64(len(inData.BaseAudioVADList)) * s.FixerConfig.V2_FrontAndEndPerBase)
 
-			offsetIndex, score = fffAligner.Fit(inData.AudioVADList[audioCutLen:len(inData.AudioVADList)-audioCutLen], inData.SrcUnit.GetVADFloatSlice()[inData.OffsetIndex:srcWindowLen+inData.OffsetIndex])
+			offsetIndex, score = fffAligner.Fit(inData.BaseAudioVADList[audioCutLen:len(inData.BaseAudioVADList)-audioCutLen], inData.SrcUnit.GetVADFloatSlice()[inData.OffsetIndex:windowInfo.SrcWindowLen+inData.OffsetIndex])
 			realOffsetIndex := offsetIndex + audioCutLen
 			if realOffsetIndex < 0 {
 				return nil
@@ -440,7 +475,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 
 		} else {
 			// 使用 字幕 来进行匹配
-			offsetIndex, score = fffAligner.Fit(inData.BaseUnit.GetVADFloatSlice(), inData.SrcUnit.GetVADFloatSlice()[inData.OffsetIndex:inData.OffsetIndex+srcWindowLen])
+			offsetIndex, score = fffAligner.Fit(inData.BaseUnit.GetVADFloatSlice(), inData.SrcUnit.GetVADFloatSlice()[inData.OffsetIndex:inData.OffsetIndex+windowInfo.SrcWindowLen])
 			if offsetIndex < 0 {
 				return nil
 			}
@@ -462,10 +497,10 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 			"score:", fmt.Sprintf("%v", score))
 
 		mutexFixV2.Lock()
-		tmpStartDiffTimeList = append(tmpStartDiffTimeList, TimeDiffStartCorrelation)
-		tmpStartDiffTimeListEx = append(tmpStartDiffTimeListEx, TimeDiffStartCorrelation)
-		tmpStartDiffTimeMap.Put(score, insertIndex)
-		insertIndex++
+		outMatchInfo.StartDiffTimeList = append(outMatchInfo.StartDiffTimeList, TimeDiffStartCorrelation)
+		outMatchInfo.StartDiffTimeListEx = append(outMatchInfo.StartDiffTimeListEx, TimeDiffStartCorrelation)
+		outMatchInfo.StartDiffTimeMap.Put(score, windowInfo.MatchedTimes)
+		windowInfo.MatchedTimes++
 		mutexFixV2.Unlock()
 		// -------------------------------------------------
 		return nil
@@ -504,42 +539,31 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 		}
 	})
 	if err != nil {
-		return false, 0, 0, err
+		return nil, err
 	}
 	defer antPool.Release()
 	// -------------------------------------------------
 	wg := sync.WaitGroup{}
-	for i := srcSlideLenHalf; i < srcSlideLen; {
+	for i := windowInfo.SrcSlideStartIndex; i < windowInfo.SrcSlideLen-1; {
 		wg.Add(1)
 
 		if bUseSubOrAudioAsBase == true {
 			// 使用字幕
-			err = antPool.Invoke(InputData{BaseUnit: *baseUnit, SrcUnit: *srcUnit, OffsetIndex: i, Wg: &wg})
+			err = antPool.Invoke(InputData{BaseUnit: *windowInfo.BaseUnit, SrcUnit: *windowInfo.SrcUnit, OffsetIndex: i, Wg: &wg})
 		} else {
 			// 使用音频
-			err = antPool.Invoke(InputData{AudioVADList: audioFloatList, SrcUnit: *srcUnit, OffsetIndex: i, Wg: &wg})
+			err = antPool.Invoke(InputData{BaseAudioVADList: windowInfo.BaseAudioFloatList, SrcUnit: *windowInfo.SrcUnit, OffsetIndex: i, Wg: &wg})
 		}
 
 		if err != nil {
 			log_helper.GetLogger().Errorln("GetOffsetTimeV2 ants.Invoke", err)
 		}
 
-		i += oneStep
+		i += windowInfo.OneStep
 	}
 	wg.Wait()
-	// 这里可能遇到匹配的时候没有能够执行够 V2_CompareParts 次，有可能是负数跳过或者时间转换失败导致，前者为主（可能是这两个就是一个东西的时候，或者说没有时间轴偏移的时候）
-	if insertIndex < s.FixerConfig.V2_CompareParts/2 {
-		log_helper.GetLogger().Infoln("Can't Match, Parts=", insertIndex, "At Least", s.FixerConfig.V2_CompareParts/2)
-		return false, 0, 0, nil
-	}
-	outCorrelationFixResult := s.calcMeanAndSD(tmpStartDiffTimeListEx, tmpStartDiffTimeList)
-	log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner Old Mean: %v SD: %v Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
-	log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner New Mean: %v SD: %v Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
 
-	value, index := tmpStartDiffTimeMap.Max()
-	log_helper.GetLogger().Infoln("FFTAligner Max score:", fmt.Sprintf("%v", value.(float64)), "Time:", fmt.Sprintf("%v", tmpStartDiffTimeList[index.(int)]))
-
-	return true, outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, nil
+	return &outMatchInfo, nil
 }
 
 func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tmpStartDiffTime []float64) FixResult {
@@ -554,8 +578,8 @@ func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tm
 		return FixResult{
 			oldMean,
 			oldSd,
-			newMean,
-			newSd,
+			oldMean,
+			oldSd,
 			per,
 		}
 	}
@@ -611,17 +635,30 @@ const MinValue = -9999.0
 
 var mutexFixV2 sync.Mutex
 
-type OutputData struct {
-	TimeDiffStartCorrelation float64 // 计算出来的时间轴偏移时间
-	OffsetIndex              float64 // 在这个匹配的 Window 中的 OffsetIndex
-	Score                    float64 // 匹配的分数
-	InsertIndex              int     // 第几个 Step
+// MatchInfo 匹配的信息
+type MatchInfo struct {
+	StartDiffTimeList   []float64
+	StartDiffTimeMap    *treemap.Map
+	StartDiffTimeListEx stat.Float64Slice
 }
 
+// WindowInfo 滑动窗体信息
+type WindowInfo struct {
+	BaseAudioFloatList []float64           // 基准 VAD
+	BaseUnit           *sub_helper.SubUnit // 基准 VAD
+	SrcUnit            *sub_helper.SubUnit // 需要匹配的 VAD
+	MatchedTimes       int                 // 提配上的次数
+	SrcWindowLen       int                 // 滑动窗体长度
+	SrcSlideStartIndex int                 // 滑动起始索引
+	SrcSlideLen        int                 // 滑动距离
+	OneStep            int                 // 每次滑动的长度
+}
+
+// InputData 修复函数传入多线程的数据结构
 type InputData struct {
-	BaseUnit     sub_helper.SubUnit // 基准 VAD
-	AudioVADList []float64          // 基准 VAD
-	SrcUnit      sub_helper.SubUnit // 需要匹配的 VAD
-	OffsetIndex  int                // 滑动窗体的移动偏移索引
-	Wg           *sync.WaitGroup    // 并发锁
+	BaseUnit         sub_helper.SubUnit // 基准 VAD
+	BaseAudioVADList []float64          // 基准 VAD
+	SrcUnit          sub_helper.SubUnit // 需要匹配的 VAD
+	OffsetIndex      int                // 滑动窗体的移动偏移索引
+	Wg               *sync.WaitGroup    // 并发锁
 }
