@@ -38,7 +38,7 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 	var err error
 	//dirRoot := "X:\\连续剧\\隐秘的角落 (2020)"
 	//dirRoot := "X:\\连续剧\\The Bad Batch"
-	dirRoot := "X:\\连续剧\\Loki"
+	//dirRoot := "X:\\连续剧\\Loki"
 	//dirRoot := "X:\\连续剧\\豪斯医生 (2004)"
 	//dirRoot := "X:\\连续剧\\Why Women Kill"
 	//dirRoot := "X:\\连续剧\\Mare of Easttown"
@@ -47,7 +47,7 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 	//dirRoot := "X:\\连续剧\\黑道家族 (1999)"
 	//dirRoot := "X:\\连续剧\\黑镜 (2011)"
 	//dirRoot := "X:\\连续剧\\黄石 (2018)"
-	//dirRoot := "X:\\连续剧"
+	dirRoot := "X:\\连续剧\\少年间谍 (2020)"
 
 	config := config.GetConfig()
 	// 如果需要调试 Emby 一定需要 dirRoot := "X:\\连续剧"
