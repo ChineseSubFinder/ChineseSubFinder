@@ -756,8 +756,8 @@ func TestGetOffsetTimeV2_MoreTest(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "BL S01E03", args: args{
-			baseSubFile: "C:\\tmp\\BL - S01E03\\英_2.ass",
-			srcSubFile:  "C:\\tmp\\BL - S01E03\\org.ass",
+			baseSubFile: "C:\\Tmp\\BL - S01E03\\英_2.ass",
+			srcSubFile:  "C:\\Tmp\\BL - S01E03\\org.ass",
 		}, want: -4.1, wantErr: false},
 	}
 
@@ -829,10 +829,10 @@ var timelineFixer = NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConf
 	// V2
 	V2_SubOneUnitProcessTimeOut: 5 * 60,
 	V2_FrontAndEndPerBase:       0.1,
-	V2_FrontAndEndPerSrc:        0.1,
-	V2_WindowMatchPer:           0.25,
-	V2_CompareParts:             1,
-	V2_FixThreads:               1,
+	V2_FrontAndEndPerSrc:        0.2,
+	V2_WindowMatchPer:           0.2,
+	V2_CompareParts:             3,
+	V2_FixThreads:               2,
 	V2_MaxStartTimeDiffSD:       0.1,
 	V2_MinOffset:                0.2,
 })

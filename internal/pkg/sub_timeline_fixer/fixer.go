@@ -384,49 +384,63 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	srcVADLen := len(srcUnit.VADList)
 	// 滑动窗口的长度
 	srcWindowLen := int(float64(srcVADLen) * s.FixerConfig.V2_WindowMatchPer)
-	// 滑动的距离
-	srcSlideLen := srcVADLen - srcWindowLen
-	// 窗口可以滑动的长度
-	srcSlideStartIndex := srcSlideLen / 2
-	// 一步的长度
-	oneStep := srcSlideStartIndex / s.FixerConfig.V2_CompareParts
-	if srcSlideLen <= 0 {
-		srcSlideLen = 1
-	}
-	if oneStep <= 0 {
-		oneStep = 1
-	}
-	// -------------------------------------------------
-	windowInfo := WindowInfo{
-		BaseAudioFloatList: audioFloatList,
-		BaseUnit:           baseUnit,
-		SrcUnit:            srcUnit,
-		MatchedTimes:       0,
-		SrcWindowLen:       srcWindowLen,
-		SrcSlideStartIndex: srcSlideStartIndex,
-		SrcSlideLen:        srcSlideLen,
-		OneStep:            oneStep,
-	}
-	// 实际 FFT 的匹配逻辑函数
-	// 时间轴差值数组
-	matchInfo, err := s.slidingWindowProcessor(&windowInfo)
-	if err != nil {
-		return false, 0, 0, err
+	// 划分为 4 个区域，每一个部分的长度
+	const parts = 20
+	perPartLen := srcVADLen / parts
+	matchedInfos := make([]MatchInfo, 0)
+	for i := 0; i < parts; i++ {
+
+		// 滑动窗体的起始 Index
+		srcSlideStartIndex := i * perPartLen
+		// 滑动的距离
+		srcSlideLen := perPartLen
+		// 一步的长度
+		oneStep := perPartLen / s.FixerConfig.V2_CompareParts
+		if srcSlideLen <= 0 {
+			srcSlideLen = 1
+		}
+		if oneStep <= 0 {
+			oneStep = 1
+		}
+		// -------------------------------------------------
+		windowInfo := WindowInfo{
+			BaseAudioFloatList: audioFloatList,
+			BaseUnit:           baseUnit,
+			SrcUnit:            srcUnit,
+			MatchedTimes:       0,
+			SrcWindowLen:       srcWindowLen,
+			SrcSlideStartIndex: srcSlideStartIndex,
+			SrcSlideLen:        srcSlideLen,
+			OneStep:            oneStep,
+		}
+		// 实际 FFT 的匹配逻辑函数
+		// 时间轴差值数组
+		matchInfo, err := s.slidingWindowProcessor(&windowInfo)
+		if err != nil {
+			return false, 0, 0, err
+		}
+
+		matchedInfos = append(matchedInfos, *matchInfo)
 	}
 
 	// 这里可能遇到匹配的时候没有能够执行够 V2_CompareParts 次，有可能是负数跳过或者时间转换失败导致，前者为主（可能是这两个就是一个东西的时候，或者说没有时间轴偏移的时候）
-	if len(matchInfo.StartDiffTimeList) < s.FixerConfig.V2_CompareParts/2 {
-		log_helper.GetLogger().Infoln("Can't Match, Parts=", len(matchInfo.StartDiffTimeList), "At Least", s.FixerConfig.V2_CompareParts/2)
-		return false, 0, 0, nil
+	//if len(matchInfo.StartDiffTimeList) < s.FixerConfig.V2_CompareParts/2 {
+	//	log_helper.GetLogger().Infoln("Can't Match, Parts=", len(matchInfo.StartDiffTimeList), "At Least", s.FixerConfig.V2_CompareParts/2)
+	//	return false, 0, 0, nil
+	//}
+
+	for _, matchInfo := range matchedInfos {
+
+		log_helper.GetLogger().Infoln("------------------------------------")
+		outCorrelationFixResult := s.calcMeanAndSD(matchInfo.StartDiffTimeListEx, matchInfo.StartDiffTimeList)
+		log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner Old Mean: %v SD: %v Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
+		log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner New Mean: %v SD: %v Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
+
+		value, index := matchInfo.StartDiffTimeMap.Max()
+		log_helper.GetLogger().Infoln("FFTAligner Max score:", fmt.Sprintf("%v", value.(float64)), "Time:", fmt.Sprintf("%v", matchInfo.StartDiffTimeList[index.(int)]))
 	}
-	outCorrelationFixResult := s.calcMeanAndSD(matchInfo.StartDiffTimeListEx, matchInfo.StartDiffTimeList)
-	log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner Old Mean: %v SD: %v Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
-	log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner New Mean: %v SD: %v Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
 
-	value, index := matchInfo.StartDiffTimeMap.Max()
-	log_helper.GetLogger().Infoln("FFTAligner Max score:", fmt.Sprintf("%v", value.(float64)), "Time:", fmt.Sprintf("%v", matchInfo.StartDiffTimeList[index.(int)]))
-
-	return true, outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, nil
+	return true, 0, 0, nil
 }
 
 // slidingWindowProcessor 滑动窗口计算时间轴偏移
@@ -465,7 +479,11 @@ func (s *SubTimelineFixer) slidingWindowProcessor(windowInfo *WindowInfo) (*Matc
 			// 去掉头和尾，具体百分之多少，见 V2_FrontAndEndPerBase
 			audioCutLen := int(float64(len(inData.BaseAudioVADList)) * s.FixerConfig.V2_FrontAndEndPerBase)
 
-			offsetIndex, score = fffAligner.Fit(inData.BaseAudioVADList[audioCutLen:len(inData.BaseAudioVADList)-audioCutLen], inData.SrcUnit.GetVADFloatSlice()[inData.OffsetIndex:windowInfo.SrcWindowLen+inData.OffsetIndex])
+			srcMaxLen := windowInfo.SrcWindowLen + inData.OffsetIndex
+			if srcMaxLen >= len(inData.SrcUnit.GetVADFloatSlice()) {
+				srcMaxLen = len(inData.SrcUnit.GetVADFloatSlice()) - 1
+			}
+			offsetIndex, score = fffAligner.Fit(inData.BaseAudioVADList[audioCutLen:len(inData.BaseAudioVADList)-audioCutLen], inData.SrcUnit.GetVADFloatSlice()[inData.OffsetIndex:srcMaxLen])
 			realOffsetIndex := offsetIndex + audioCutLen
 			if realOffsetIndex < 0 {
 				return nil
@@ -475,7 +493,12 @@ func (s *SubTimelineFixer) slidingWindowProcessor(windowInfo *WindowInfo) (*Matc
 
 		} else {
 			// 使用 字幕 来进行匹配
-			offsetIndex, score = fffAligner.Fit(inData.BaseUnit.GetVADFloatSlice(), inData.SrcUnit.GetVADFloatSlice()[inData.OffsetIndex:inData.OffsetIndex+windowInfo.SrcWindowLen])
+
+			srcMaxLen := inData.OffsetIndex + windowInfo.SrcWindowLen
+			if srcMaxLen >= len(inData.SrcUnit.GetVADFloatSlice()) {
+				srcMaxLen = len(inData.SrcUnit.GetVADFloatSlice()) - 1
+			}
+			offsetIndex, score = fffAligner.Fit(inData.BaseUnit.GetVADFloatSlice(), inData.SrcUnit.GetVADFloatSlice()[inData.OffsetIndex:srcMaxLen])
 			if offsetIndex < 0 {
 				return nil
 			}
@@ -544,7 +567,7 @@ func (s *SubTimelineFixer) slidingWindowProcessor(windowInfo *WindowInfo) (*Matc
 	defer antPool.Release()
 	// -------------------------------------------------
 	wg := sync.WaitGroup{}
-	for i := windowInfo.SrcSlideStartIndex; i < windowInfo.SrcSlideLen-1; {
+	for i := windowInfo.SrcSlideStartIndex; i < windowInfo.SrcSlideStartIndex+windowInfo.SrcSlideLen-1; {
 		wg.Add(1)
 
 		if bUseSubOrAudioAsBase == true {

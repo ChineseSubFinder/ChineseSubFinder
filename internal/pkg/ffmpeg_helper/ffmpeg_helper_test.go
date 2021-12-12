@@ -9,8 +9,8 @@ import (
 
 func TestGetFFMPEGInfo(t *testing.T) {
 	//videoFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 5\\Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.mkv"
-	//videoFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 5\\Rick and Morty - S05E01 - Mort Dinner Rick Andre WEBDL-1080p.mkv"
-	videoFile := "X:\\TestSeries\\Blade Runner - Black Lotus\\Season 1\\Blade Runner - Black Lotus - S01E03 - The Human Condition WEBDL-1080p.mkv"
+	videoFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 5\\Rick and Morty - S05E01 - Mort Dinner Rick Andre WEBDL-1080p.mkv"
+	//videoFile := "X:\\TestSeries\\Blade Runner - Black Lotus\\Season 1\\Blade Runner - Black Lotus - S01E03 - The Human Condition WEBDL-1080p.mkv"
 	//videoFile := "X:\\连续剧\\Foundation (2021)\\Season 1\\Foundation (2021) - S01E10 - The Leap WEBDL-1080p.mkv"
 
 	f := NewFFMPEGHelper()
