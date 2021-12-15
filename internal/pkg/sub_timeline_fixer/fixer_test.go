@@ -370,7 +370,7 @@ func TestGetOffsetTimeV1(t *testing.T) {
 			//}
 
 			if bok == true && got != 0 {
-				_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.ch_enSubFile+FixMask+infoBase.Ext)
+				_, err = timelineFixer.FixSubTimelineOneOffsetTime(infoSrc, got, tt.args.ch_enSubFile+FixMask+infoBase.Ext)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -638,7 +638,7 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			debug_view.SaveDebugChart(*srcUnitNew, tt.name+" -- srcUnitNew", "srcUnitNew")
 
 			//if bok == true && got != 0 {
-			_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
+			_, err = timelineFixer.FixSubTimelineOneOffsetTime(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -732,7 +732,7 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 				t.Errorf("GetOffsetTimeV2() bok = %v, want %v", offsetTime, tt.want1)
 			}
 
-			_, err = timelineFixer.FixSubTimeline(infoSrc, offsetTime, tt.args.subFilePath+FixMask+infoSrc.Ext)
+			_, err = timelineFixer.FixSubTimelineOneOffsetTime(infoSrc, offsetTime, tt.args.subFilePath+FixMask+infoSrc.Ext)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -810,7 +810,7 @@ func TestGetOffsetTimeV2_MoreTest(t *testing.T) {
 			debug_view.SaveDebugChart(*baseUnitNew, tt.name+" -- baseUnitNew", "baseUnitNew")
 			debug_view.SaveDebugChart(*srcUnitNew, tt.name+" -- srcUnitNew", "srcUnitNew")
 
-			_, err = timelineFixer.FixSubTimeline(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
+			_, err = timelineFixer.FixSubTimelineOneOffsetTime(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
 			if err != nil {
 				t.Fatal(err)
 			}

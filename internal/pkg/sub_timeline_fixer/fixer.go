@@ -64,8 +64,8 @@ func (s *SubTimelineFixer) StopWordCounter(inString string, per int) []string {
 	return stopWords
 }
 
-// FixSubTimeline 校正时间轴
-func (s *SubTimelineFixer) FixSubTimeline(infoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) (string, error) {
+// FixSubTimelineOneOffsetTime 校正整个字幕文件的时间轴，适用于一个偏移值的情况
+func (s *SubTimelineFixer) FixSubTimelineOneOffsetTime(infoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) (string, error) {
 
 	/*
 		从解析的实例中，正常来说是可以匹配出所有的 Dialogue 对话的 Start 和 End time 的信息

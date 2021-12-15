@@ -257,7 +257,7 @@ func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileI
 			return err
 		}
 	}
-	_, err := s.timelineFixer.FixSubTimeline(infoSrc, offsetTime, subFileName)
+	_, err := s.timelineFixer.FixSubTimelineOneOffsetTime(infoSrc, offsetTime, subFileName)
 	if err != nil {
 		return err
 	}

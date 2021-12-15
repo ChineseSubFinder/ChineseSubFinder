@@ -296,7 +296,7 @@ func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, containCh
 			fixedSubName = subNewName
 			desFixSubFileFullPath = filepath.Join(cacheTmpPath, subNewName)
 		}
-		fixContent, err := s.subTimelineFixer.FixSubTimeline(infoSrc, offsetTime, desFixSubFileFullPath)
+		fixContent, err := s.subTimelineFixer.FixSubTimelineOneOffsetTime(infoSrc, offsetTime, desFixSubFileFullPath)
 		if err != nil {
 			return false, nil, fixedSubName, err
 		}
