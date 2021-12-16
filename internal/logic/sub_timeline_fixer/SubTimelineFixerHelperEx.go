@@ -69,8 +69,21 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	if bok == false {
 		return errors.New("SubTimelineFixerHelperEx.Process.GetFFMPEGInfo = false Subtitle -- " + videoFileFullPath)
 	}
+
+	// 这个需要提前考虑，如果只有一个内置的字幕，且这个字幕的大小小于 2kb，那么认为这个字幕是有问题的，就直接切换到 audio 校正
+	oneSubAndIsError := false
+	if len(ffmpegInfo.SubtitleInfoList) == 1 {
+		fi, err := os.Stat(ffmpegInfo.SubtitleInfoList[0].FullPath)
+		if err != nil {
+			oneSubAndIsError = true
+		} else {
+			if fi.Size() <= 2048 {
+				oneSubAndIsError = true
+			}
+		}
+	}
 	// 内置的字幕，这里只列举一种格式出来，其实会有一个字幕的 srt 和 ass 两种格式都导出存在
-	if ffmpegInfo.SubtitleInfoList == nil || len(ffmpegInfo.SubtitleInfoList) <= 0 {
+	if ffmpegInfo.SubtitleInfoList == nil || len(ffmpegInfo.SubtitleInfoList) <= 0 || oneSubAndIsError == true {
 
 		if ffmpegInfo.AudioInfoList == nil || len(ffmpegInfo.AudioInfoList) == 0 {
 			return errors.New("SubTimelineFixerHelperEx.Process.GetFFMPEGInfo Can`t Find SubTitle And Audio To Export -- " + videoFileFullPath)
@@ -97,24 +110,18 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	} else {
 		// 使用内置的字幕进行时间轴的校正，这里需要考虑一个问题，内置的字幕可能是有问题的（先考虑一种，就是字幕的长度不对，是一小段的）
 		// 那么就可以比较多个内置字幕的大小选择大的去使用
-		baseSubFPath := ""
-		if len(ffmpegInfo.SubtitleInfoList) > 1 {
-			// 如果有多个内置的字幕，还是要判断下的，选体积最大的那个吧
-			fileSizes := treemap.NewWith(utils.Int64Comparator)
-			for index, info := range ffmpegInfo.ExternalSubInfos {
-				fi, err := os.Stat(info.FileFullPath)
-				if err != nil {
-					fileSizes.Put(0, index)
-				} else {
-					fileSizes.Put(fi.Size(), index)
-				}
+		// 如果有多个内置的字幕，还是要判断下的，选体积最大的那个吧
+		fileSizes := treemap.NewWith(utils.Int64Comparator)
+		for index, info := range ffmpegInfo.SubtitleInfoList {
+			fi, err := os.Stat(info.FullPath)
+			if err != nil {
+				fileSizes.Put(0, index)
+			} else {
+				fileSizes.Put(fi.Size(), index)
 			}
-			_, index := fileSizes.Max()
-			baseSubFPath = ffmpegInfo.ExternalSubInfos[index.(int)].FileFullPath
-		} else {
-			// 如果只有一个字幕就没必要纠结了，用这个去对比吧
-			baseSubFPath = ffmpegInfo.SubtitleInfoList[0].FullPath
 		}
+		_, index := fileSizes.Max()
+		baseSubFPath := ffmpegInfo.SubtitleInfoList[index.(int)].FullPath
 		bProcess, infoSrc, offSetTime, err = s.processBySub(baseSubFPath, srcSubFPath)
 		if err != nil {
 			return err
