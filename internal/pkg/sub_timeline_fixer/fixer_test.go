@@ -759,6 +759,10 @@ func TestGetOffsetTimeV2_MoreTest(t *testing.T) {
 			baseSubFile: "C:\\Tmp\\BL - S01E03\\英_2.ass",
 			srcSubFile:  "C:\\Tmp\\BL - S01E03\\org.ass",
 		}, want: -4.1, wantErr: false},
+		{name: "Rick and Morty - S05E10", args: args{
+			baseSubFile: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
+			srcSubFile:  "C:\\Tmp\\Rick and Morty - S05E10\\org.ass",
+		}, want: -4.1, wantErr: false},
 	}
 
 	for _, tt := range tests {

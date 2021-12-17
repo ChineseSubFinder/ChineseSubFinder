@@ -388,6 +388,8 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	const parts = 20
 	perPartLen := srcVADLen / parts
 	matchedInfos := make([]MatchInfo, 0)
+
+	subVADBlockInfos := make([]SubVADBlockInfo, 0)
 	for i := 0; i < parts; i++ {
 
 		// 滑动窗体的起始 Index
@@ -413,6 +415,11 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 			SrcSlideLen:        srcSlideLen,
 			OneStep:            oneStep,
 		}
+		subVADBlockInfos = append(subVADBlockInfos, SubVADBlockInfo{
+			Index:      i,
+			StartIndex: srcSlideStartIndex,
+			EndIndex:   srcSlideStartIndex + srcSlideLen,
+		})
 		// 实际 FFT 的匹配逻辑函数
 		// 时间轴差值数组
 		matchInfo, err := s.slidingWindowProcessor(&windowInfo)
@@ -429,18 +436,46 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	//	return false, 0, 0, nil
 	//}
 
-	for _, matchInfo := range matchedInfos {
+	for index, matchInfo := range matchedInfos {
 
 		log_helper.GetLogger().Infoln("------------------------------------")
 		outCorrelationFixResult := s.calcMeanAndSD(matchInfo.StartDiffTimeListEx, matchInfo.StartDiffTimeList)
-		log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner Old Mean: %v SD: %v Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
-		log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner New Mean: %v SD: %v Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
+		log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner Old Mean: %v SD: %f Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
+		log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner New Mean: %v SD: %f Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
 
-		value, index := matchInfo.StartDiffTimeMap.Max()
-		log_helper.GetLogger().Infoln("FFTAligner Max score:", fmt.Sprintf("%v", value.(float64)), "Time:", fmt.Sprintf("%v", matchInfo.StartDiffTimeList[index.(int)]))
+		value, indexMax := matchInfo.StartDiffTimeMap.Max()
+		log_helper.GetLogger().Infoln("FFTAligner Max score:", fmt.Sprintf("%v", value.(float64)), "Time:", fmt.Sprintf("%v", matchInfo.StartDiffTimeList[indexMax.(int)]))
+
+		/*
+			如果 outCorrelationFixResult 的 SD > 0.1，那么大概率这个时间轴的值匹配的有问题，需要向左或者向右找一个值进行继承
+			-4 0.001
+			-4 0.001
+			-4 0.001
+			-200 0.1
+			-4 0.001
+			比如这种情况，那么就需要向左找到 -4 去继承。
+			具体的实现：
+				找到一个 SD > 0.1 的项目，那么就需要从左边和右边同时对比
+				首先是他们的差值要在 1s （绝对值）以内，优先往左边找，如果绝对值成立则判断 SD （SD 必须 < 0.1）
+				如果只是 SD 不成立，那么就继续往左，继续判断差值和 SD。如果都找不到合适的，就要回到”起点“，从右开始找，逻辑一样
+				直到没有找到合适的信息，就报错
+		*/
+		if outCorrelationFixResult.NewSD < 0.1 {
+			continue
+		}
+		// 是否找到合适的继承值
+		bProcess := false
+		// 先往左
+		if index-1 >= 0 {
+			// 说明至少可以往左
+		}
 	}
 
 	return true, 0, 0, nil
+}
+
+func (s SubTimelineFixer) fixOnePart() {
+
 }
 
 // slidingWindowProcessor 滑动窗口计算时间轴偏移
@@ -638,10 +673,10 @@ func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tm
 		newSd = stat.Sd(startDiffTimeList)
 	}
 
-	if newMean == MinValue {
+	if my_util.IsEqual(newMean, MinValue) == true {
 		newMean = oldMean
 	}
-	if newSd == MinValue {
+	if my_util.IsEqual(newSd, MinValue) == true {
 		newSd = oldSd
 	}
 	return FixResult{
@@ -670,7 +705,7 @@ type WindowInfo struct {
 	BaseAudioFloatList []float64           // 基准 VAD
 	BaseUnit           *sub_helper.SubUnit // 基准 VAD
 	SrcUnit            *sub_helper.SubUnit // 需要匹配的 VAD
-	MatchedTimes       int                 // 提配上的次数
+	MatchedTimes       int                 // 匹配上的次数
 	SrcWindowLen       int                 // 滑动窗体长度
 	SrcSlideStartIndex int                 // 滑动起始索引
 	SrcSlideLen        int                 // 滑动距离
@@ -684,4 +719,11 @@ type InputData struct {
 	SrcUnit          sub_helper.SubUnit // 需要匹配的 VAD
 	OffsetIndex      int                // 滑动窗体的移动偏移索引
 	Wg               *sync.WaitGroup    // 并发锁
+}
+
+// SubVADBlockInfo 字幕分块信息
+type SubVADBlockInfo struct {
+	Index      int
+	StartIndex int
+	EndIndex   int
 }
