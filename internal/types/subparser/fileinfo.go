@@ -7,17 +7,18 @@ import (
 )
 
 type FileInfo struct {
-	Content       string              // 字幕的内容
-	FromWhereSite string              // 从那个网站下载的
-	Name          string              // 字幕的名称，注意，这里需要额外的赋值，不会自动检测
-	Ext           string              // 字幕的后缀名
-	Lang          language.MyLanguage // 识别出来的语言
-	FileFullPath  string              // 字幕文件的全路径
-	Data          []byte              // 字幕的二进制文件内容
-	Dialogues     []OneDialogue       // 整个字幕文件的所有对话
-	DialoguesEx   []OneDialogueEx     // 整个字幕文件的所有对话，这里会把一句话中支持的 中、英、韩、日 四国语言给分离出来
-	CHLines       []string            // 抽取出所有的中文对话
-	OtherLines    []string            // 抽取出所有的第二语言对话，可能是英文、韩文、日文
+	Content           string              // 字幕的内容
+	FromWhereSite     string              // 从那个网站下载的
+	Name              string              // 字幕的名称，注意，这里需要额外的赋值，不会自动检测
+	Ext               string              // 字幕的后缀名
+	Lang              language.MyLanguage // 识别出来的语言
+	FileFullPath      string              // 字幕文件的全路径
+	Data              []byte              // 字幕的二进制文件内容
+	Dialogues         []OneDialogue       // 整个字幕文件的所有对话
+	DialoguesFilter   []OneDialogue       // 整个字幕文件的所有对话，过滤掉特殊字符的对白
+	DialoguesFilterEx []OneDialogueEx     // 整个字幕文件的所有对话，过滤掉特殊字符的对白，这里会把一句话中支持的 中、英、韩、日 四国语言给分离出来
+	CHLines           []string            // 抽取出所有的中文对话
+	OtherLines        []string            // 抽取出所有的第二语言对话，可能是英文、韩文、日文
 }
 
 // GetTimeFormat 获取时间轴的格式化格式
@@ -51,15 +52,15 @@ func (f FileInfo) GetDialogueExContent(index int) string {
 		language.ChineseSimpleJapanese, language.ChineseSimpleKorean,
 		language.ChineseTraditionalJapanese, language.ChineseTraditionalKorean:
 		// 带有中文的，但是又不是中英的
-		return f.DialoguesEx[index].ChLine
+		return f.DialoguesFilterEx[index].ChLine
 	case language.English, language.ChineseSimpleEnglish, language.ChineseTraditionalEnglish:
-		return f.DialoguesEx[index].EnLine
+		return f.DialoguesFilterEx[index].EnLine
 	case language.Japanese:
-		return f.DialoguesEx[index].JpLine
+		return f.DialoguesFilterEx[index].JpLine
 	case language.Korean:
-		return f.DialoguesEx[index].KrLine
+		return f.DialoguesFilterEx[index].KrLine
 	default:
-		return f.DialoguesEx[index].EnLine
+		return f.DialoguesFilterEx[index].EnLine
 	}
 }
 

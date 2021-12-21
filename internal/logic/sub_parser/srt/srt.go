@@ -54,7 +54,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	if matched == nil || len(matched) < 1 {
 		matched = regex_things.ReMatchDialogueSRT2.FindAllStringSubmatch(allString, -1)
 		if matched == nil || len(matched) < 1 {
-			log_helper.GetLogger().Debugln("DetermineFileTypeFromBytes can't found Dialogues, Skip")
+			log_helper.GetLogger().Debugln("DetermineFileTypeFromBytes can't found DialoguesFilter, Skip")
 			return false, nil, nil
 		}
 	}
@@ -62,6 +62,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	subFileInfo.Content = string(inBytes)
 	subFileInfo.Ext = nowExt
 	subFileInfo.Dialogues = make([]subparser.OneDialogue, 0)
+	subFileInfo.DialoguesFilter = make([]subparser.OneDialogue, 0)
 	// 这里需要统计一共有几个 \N，以及这个数量在整体行数中的比例，这样就知道是不是双语字幕了
 	countLineFeed := 0
 	for _, oneDial := range matched {
@@ -87,6 +88,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 			odl.Lines = append(odl.Lines, text)
 		}
 		subFileInfo.Dialogues = append(subFileInfo.Dialogues, odl)
+		subFileInfo.DialoguesFilter = append(subFileInfo.DialoguesFilter, odl)
 	}
 	// 再分析
 	// 需要判断每一个 Line 是啥语言，[语言的code]次数
@@ -98,14 +100,14 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	var otherLines = make([]string, 0)
 	// 抽取出来的对话数组，为了后续用来匹配和修改时间轴
 	var usefulDialogueExs = make([]subparser.OneDialogueEx, 0)
-	for _, dialogue := range subFileInfo.Dialogues {
+	for _, dialogue := range subFileInfo.DialoguesFilter {
 		language.DetectSubLangAndStatistics(dialogue, langDict, &usefulDialogueExs, &chLines, &otherLines)
 	}
 	// 从统计出来的字典，找出 Top 1 或者 2 的出来，然后计算出是什么语言的字幕
 	detectLang := language.SubLangStatistics2SubLangType(float32(countLineFeed), float32(len(matched)), langDict, chLines)
 	subFileInfo.Lang = detectLang
 	subFileInfo.Data = inBytes
-	subFileInfo.DialoguesEx = usefulDialogueExs
+	subFileInfo.DialoguesFilterEx = usefulDialogueExs
 	subFileInfo.CHLines = chLines
 	subFileInfo.OtherLines = otherLines
 	return true, &subFileInfo, nil

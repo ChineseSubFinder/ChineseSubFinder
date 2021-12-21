@@ -359,20 +359,20 @@ func DeleteOneSeasonSubCacheFolder(seriesDir string) error {
 }
 
 /*
-	只针对英文字幕进行合并分散的 Dialogues
+	只针对英文字幕进行合并分散的 DialoguesFilter
 	会遇到这样的字幕，如下0
 	2line-The Card Counter (2021) WEBDL-1080p.chinese(inside).ass
 	它的对白一句话分了两个 dialogue 去做。这样做后续字幕时间轴校正就会遇到问题，因为只有一半，匹配占比会很低
 	(每一个 Dialogue 的首字母需要分析，大写和小写的占比是多少，统计一下，正常的，和上述特殊的)
-	那么，就需要额外的逻辑去对 DialoguesEx 进行额外的推断
+	那么，就需要额外的逻辑去对 DialoguesFilterEx 进行额外的推断
 	暂时考虑的方案是，英文对白每一句的开头应该是英文大写字幕，如果是小写字幕，就应该与上语句合并，且每一句的字符长度有大于一定才触发
 */
 func MergeMultiDialogue4EngSubtitle(inSubParser *subparser.FileInfo) {
 	merger := NewDialogueMerger()
-	for _, dialogueEx := range inSubParser.DialoguesEx {
+	for _, dialogueEx := range inSubParser.DialoguesFilterEx {
 		merger.Add(dialogueEx)
 	}
-	inSubParser.DialoguesEx = merger.Get()
+	inSubParser.DialoguesFilterEx = merger.Get()
 }
 
 // GetVADInfoFeatureFromSub 跟下面的 GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert 函数功能一致
@@ -397,7 +397,7 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 	srcOneSubUnit := NewSubUnit()
 
 	// 最后一个对话的结束时间
-	lastDialogueExTimeEnd, err := fileInfo.ParseTime(fileInfo.DialoguesEx[len(fileInfo.DialoguesEx)-1].EndTime)
+	lastDialogueExTimeEnd, err := fileInfo.ParseTime(fileInfo.DialoguesFilterEx[len(fileInfo.DialoguesFilterEx)-1].EndTime)
 	if err != nil {
 		return nil, err
 	}
@@ -410,13 +410,13 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 	println(startRangeTimeMin)
 	println(endRangeTimeMax)
 
-	for i := 0; i < len(fileInfo.DialoguesEx); i++ {
+	for i := 0; i < len(fileInfo.DialoguesFilterEx); i++ {
 
-		oneDialogueExTimeStart, err := fileInfo.ParseTime(fileInfo.DialoguesEx[i].StartTime)
+		oneDialogueExTimeStart, err := fileInfo.ParseTime(fileInfo.DialoguesFilterEx[i].StartTime)
 		if err != nil {
 			return nil, err
 		}
-		oneDialogueExTimeEnd, err := fileInfo.ParseTime(fileInfo.DialoguesEx[i].EndTime)
+		oneDialogueExTimeEnd, err := fileInfo.ParseTime(fileInfo.DialoguesFilterEx[i].EndTime)
 		if err != nil {
 			return nil, err
 		}
@@ -445,7 +445,7 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 				srcOneSubUnit.Add(oneDialogueExTimeStart, oneDialogueExTimeEnd)
 			}
 			// 这一个单元的 Dialogue 需要合并起来，才能判断是否符合“钥匙”的要求
-			srcSubDialogueList = append(srcSubDialogueList, fileInfo.DialoguesEx[i])
+			srcSubDialogueList = append(srcSubDialogueList, fileInfo.DialoguesFilterEx[i])
 
 		} else {
 			// 用完清空
@@ -469,7 +469,7 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPer float64) (*SubUnit, error) {
 
 	outSubUnits := NewSubUnit()
-	if len(fileInfo.DialoguesEx) <= 0 {
+	if len(fileInfo.DialoguesFilterEx) <= 0 {
 		return nil, errors.New("GetVADInfoFeatureFromSubNew fileInfo Dialogue Length is 0")
 	}
 	/*
@@ -497,7 +497,7 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 	skipEndIndex := vadLen - skipLen
 	// 现在需要从 fileInfo 的每一句对白也就对应一段连续的 VAD active = true 来进行改写，记得向下取整
 	lastDialogueIndex := 0
-	for index, dialogueEx := range fileInfo.DialoguesEx {
+	for index, dialogueEx := range fileInfo.DialoguesFilterEx {
 
 		// 如果当前的这一句话，为空，或者进过正则表达式剔除特殊字符后为空，则跳过
 		if my_util.ReplaceSpecString(fileInfo.GetDialogueExContent(index), "") == "" {
@@ -583,12 +583,12 @@ func ReadSubStartAndEndTime(fileInfo *subparser.FileInfo) (float64, float64, err
 
 	getTimeFunc := func(fileInfo *subparser.FileInfo, startIndex int) (bool, float64, float64, error) {
 		// 字幕的开始时间
-		subStartTime, err := fileInfo.ParseTime(fileInfo.DialoguesEx[startIndex].StartTime)
+		subStartTime, err := fileInfo.ParseTime(fileInfo.DialoguesFilterEx[startIndex].StartTime)
 		if err != nil {
 			return false, 0, 0, err
 		}
 		// 字幕的结束时间
-		subEndTime, err := fileInfo.ParseTime(fileInfo.DialoguesEx[len(fileInfo.DialoguesEx)-1].EndTime)
+		subEndTime, err := fileInfo.ParseTime(fileInfo.DialoguesFilterEx[len(fileInfo.DialoguesFilterEx)-1].EndTime)
 		if err != nil {
 			return false, 0, 0, err
 		}

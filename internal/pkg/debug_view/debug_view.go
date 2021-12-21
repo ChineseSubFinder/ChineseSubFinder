@@ -23,7 +23,7 @@ func SaveDebugChartBase(vadList []vad.VADInfo, title, subTitle string) error {
 		Title:    title,
 		Subtitle: subTitle,
 	}))
-	// 构建 X 轴
+	// 构建 XLen 轴
 	xAxis := make([]string, len(vadList))
 	for i := 0; i < len(vadList); i++ {
 		xAxis[i] = fmt.Sprintf("%d", i)

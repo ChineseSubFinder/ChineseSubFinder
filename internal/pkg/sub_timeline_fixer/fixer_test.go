@@ -617,7 +617,7 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 			}
 			// ---------------------------------------------------------------------------------------
 			//bok, got, sd, err := timelineFixer.GetOffsetTimeV2(&baseUnitOld, &srcUnitOld, nil, 0)
-			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(baseUnitNew, srcUnitNew, nil)
+			bok, _, err := timelineFixer.GetOffsetTimeV2(baseUnitNew, srcUnitNew, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV2() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -626,24 +626,24 @@ func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
 				t.Fatal("GetOffsetTimeV2 return false")
 			}
 
-			if got > -0.2 && got < 0.2 && tt.want == 0 {
-				// 如果 offset time > -0.2 且 < 0.2 则认为无需调整时间轴，为0
-			} else if got > tt.want-0.1 && got < tt.want+0.1 {
-				// 在一个正负范围内都可以接受
-			} else {
-				t.Errorf("GetOffsetTimeV2() got = %v, want %v", got, tt.want)
-			}
+			//if got > -0.2 && got < 0.2 && tt.want == 0 {
+			//	// 如果 offset time > -0.2 且 < 0.2 则认为无需调整时间轴，为0
+			//} else if got > tt.want-0.1 && got < tt.want+0.1 {
+			//	// 在一个正负范围内都可以接受
+			//} else {
+			//	t.Errorf("GetOffsetTimeV2() got = %v, want %v", got, tt.want)
+			//}
 
 			debug_view.SaveDebugChart(*baseUnitNew, tt.name+" -- baseUnitNew", "baseUnitNew")
 			debug_view.SaveDebugChart(*srcUnitNew, tt.name+" -- srcUnitNew", "srcUnitNew")
 
 			//if bok == true && got != 0 {
-			_, err = timelineFixer.FixSubTimelineOneOffsetTime(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
-			if err != nil {
-				t.Fatal(err)
-			}
+			//_, err = timelineFixer.FixSubTimelineOneOffsetTime(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
+			//if err != nil {
+			//	t.Fatal(err)
 			//}
-			println(fmt.Sprintf("GetOffsetTimeV2: %fs SD:%f", got, sd))
+			////}
+			//println(fmt.Sprintf("GetOffsetTimeV2: %fs SD:%f", got, sd))
 		})
 	}
 }
@@ -712,7 +712,7 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 			}
 
 			println("-------New--------")
-			bok, offsetTime, sd, err := timelineFixer.GetOffsetTimeV2(nil, srcUnitNew, audioVADInfos)
+			bok, _, err := timelineFixer.GetOffsetTimeV2(nil, srcUnitNew, audioVADInfos)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV2() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -724,20 +724,20 @@ func TestGetOffsetTimeV2_BaseAudio(t *testing.T) {
 				t.Errorf("GetOffsetTimeV2() bok = %v, want %v", bok, tt.want)
 			}
 
-			if offsetTime > -0.2 && offsetTime < 0.2 && tt.want1 == 0 {
-				// 如果 offset time > -0.2 且 < 0.2 则认为无需调整时间轴，为0
-			} else if offsetTime > tt.want1-0.1 && offsetTime < tt.want1+0.1 {
-				// 在一个正负范围内都可以接受
-			} else {
-				t.Errorf("GetOffsetTimeV2() bok = %v, want %v", offsetTime, tt.want1)
-			}
+			//if offsetTime > -0.2 && offsetTime < 0.2 && tt.want1 == 0 {
+			//	// 如果 offset time > -0.2 且 < 0.2 则认为无需调整时间轴，为0
+			//} else if offsetTime > tt.want1-0.1 && offsetTime < tt.want1+0.1 {
+			//	// 在一个正负范围内都可以接受
+			//} else {
+			//	t.Errorf("GetOffsetTimeV2() bok = %v, want %v", offsetTime, tt.want1)
+			//}
 
-			_, err = timelineFixer.FixSubTimelineOneOffsetTime(infoSrc, offsetTime, tt.args.subFilePath+FixMask+infoSrc.Ext)
-			if err != nil {
-				t.Fatal(err)
-			}
+			//_, err = timelineFixer.FixSubTimelineOneOffsetTime(infoSrc, offsetTime, tt.args.subFilePath+FixMask+infoSrc.Ext)
+			//if err != nil {
+			//	t.Fatal(err)
+			//}
 
-			println(fmt.Sprintf("GetOffsetTimeV2: %vs SD:%v", offsetTime, sd))
+			//println(fmt.Sprintf("GetOffsetTimeV2: %vs SD:%v", offsetTime, sd))
 		})
 	}
 }
@@ -762,6 +762,10 @@ func TestGetOffsetTimeV2_MoreTest(t *testing.T) {
 		{name: "Rick and Morty - S05E10", args: args{
 			baseSubFile: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
 			srcSubFile:  "C:\\Tmp\\Rick and Morty - S05E10\\org.ass",
+		}, want: -4.1, wantErr: false},
+		{name: "mix", args: args{
+			baseSubFile: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
+			srcSubFile:  "C:\\Tmp\\BL - S01E03\\org.ass",
 		}, want: -4.1, wantErr: false},
 	}
 
@@ -802,7 +806,7 @@ func TestGetOffsetTimeV2_MoreTest(t *testing.T) {
 			//	t.Errorf("GetOffsetTimeV1() error = %v, wantErr %v", err, tt.wantErr)
 			//	return
 			//}
-			bok, got, sd, err := timelineFixer.GetOffsetTimeV2(baseUnitNew, srcUnitNew, nil)
+			bok, fixedResults, err := timelineFixer.GetOffsetTimeV2(baseUnitNew, srcUnitNew, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV2() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -814,12 +818,11 @@ func TestGetOffsetTimeV2_MoreTest(t *testing.T) {
 			debug_view.SaveDebugChart(*baseUnitNew, tt.name+" -- baseUnitNew", "baseUnitNew")
 			debug_view.SaveDebugChart(*srcUnitNew, tt.name+" -- srcUnitNew", "srcUnitNew")
 
-			_, err = timelineFixer.FixSubTimelineOneOffsetTime(infoSrc, got, tt.args.srcSubFile+FixMask+infoBase.Ext)
+			_, err = timelineFixer.FixSubTimelineByFixResults(infoSrc, srcUnitNew, fixedResults, tt.args.srcSubFile+FixMask+infoBase.Ext)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			println(fmt.Sprintf("GetOffsetTimeV2: %fs SD:%f", got, sd))
 		})
 	}
 }

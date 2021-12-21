@@ -74,7 +74,7 @@ func TestNewDialogueMerger(t *testing.T) {
 	}
 
 	merger := NewDialogueMerger()
-	for _, ex := range infoBase.DialoguesEx {
+	for _, ex := range infoBase.DialoguesFilterEx {
 		merger.Add(ex)
 	}
 	newEx := merger.Get()

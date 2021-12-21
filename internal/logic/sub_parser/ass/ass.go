@@ -51,13 +51,14 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	// 找到 start end text
 	matched := regex_things.ReMatchDialogueASS.FindAllStringSubmatch(allString, -1)
 	if matched == nil || len(matched) < 1 {
-		log_helper.GetLogger().Debugln("DetermineFileTypeFromBytes can't found Dialogues, Skip")
+		log_helper.GetLogger().Debugln("DetermineFileTypeFromBytes can't found DialoguesFilter, Skip")
 		return false, nil, nil
 	}
 	subFileInfo := subparser.FileInfo{}
 	subFileInfo.Content = string(inBytes)
 	subFileInfo.Ext = nowExt
 	subFileInfo.Dialogues = make([]subparser.OneDialogue, 0)
+	subFileInfo.DialoguesFilter = make([]subparser.OneDialogue, 0)
 	// 这里需要统计一共有几个 \N，以及这个数量在整体行数中的比例，这样就知道是不是双语字幕了
 	countLineFeed := 0
 	// 有意义的对话统计数，排除 Style 类型
@@ -94,6 +95,10 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 		如果没有那么多，或者就没得。就任务是情况 1 的双语字幕，这个也不能说就是双语字幕，只不过走之前的逻辑就够了。
 	*/
 	mapByValue := sortMapByValue(nameMap)
+
+	// 把所有的对白缓存下来，其实优先是把时间信息缓存，其他信息无所谓
+	p.oneLineSubDialogueParser0(matched, &subFileInfo)
+
 	if p.detectOneOrTwoLineDialogue(matched) == true {
 		// 情况1
 		usefullyDialogueCount, countLineFeed = p.oneLineSubDialogueParser1(matched, mapByValue, &subFileInfo)
@@ -111,19 +116,36 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	var otherLines = make([]string, 0)
 	// 抽取出来的对话数组，为了后续用来匹配和修改时间轴
 	var usefulDialogueExs = make([]subparser.OneDialogueEx, 0)
-	// 在这之前需要把 subFileInfo.Dialogues 的内容填好，Lines 这里如果是单种语言应该就是一个元素，如果是双语就需要拆分成两个元素
+	// 在这之前需要把 subFileInfo.DialoguesFilter 的内容填好，Lines 这里如果是单种语言应该就是一个元素，如果是双语就需要拆分成两个元素
 	// 这样向后传递就简单了，也统一了
-	for _, dialogue := range subFileInfo.Dialogues {
+	for _, dialogue := range subFileInfo.DialoguesFilter {
 		language.DetectSubLangAndStatistics(dialogue, langDict, &usefulDialogueExs, &chLines, &otherLines)
 	}
 	// 从统计出来的字典，找出 Top 1 或者 2 的出来，然后计算出是什么语言的字幕
 	detectLang := language.SubLangStatistics2SubLangType(float32(countLineFeed), float32(usefullyDialogueCount), langDict, chLines)
 	subFileInfo.Lang = detectLang
 	subFileInfo.Data = inBytes
-	subFileInfo.DialoguesEx = usefulDialogueExs
+	subFileInfo.DialoguesFilterEx = usefulDialogueExs
 	subFileInfo.CHLines = chLines
 	subFileInfo.OtherLines = otherLines
 	return true, &subFileInfo, nil
+}
+
+// oneLineSubDialogueParser0 情况 0 时候的解析器，不过滤，只要是对白都加进去
+func (p Parser) oneLineSubDialogueParser0(matched [][]string, subFileInfo *subparser.FileInfo) {
+
+	for _, oneLine := range matched {
+		startTime := oneLine[1]
+		endTime := oneLine[2]
+		nowStyleName := oneLine[3]
+		odl := subparser.OneDialogue{
+			StyleName: nowStyleName,
+			StartTime: startTime,
+			EndTime:   endTime,
+		}
+		odl.Lines = make([]string, 0)
+		subFileInfo.Dialogues = append(subFileInfo.Dialogues, odl)
+	}
 }
 
 // oneLineSubDialogueParser1 情况 1 时候的解析器
@@ -151,7 +173,7 @@ func (p Parser) oneLineSubDialogueParser1(matched [][]string, mapByValue StyleNa
 		odl.Lines = make([]string, 0)
 		countLineFeed = p.parseOneDialogueText(nowText, &odl, countLineFeed)
 
-		subFileInfo.Dialogues = append(subFileInfo.Dialogues, odl)
+		subFileInfo.DialoguesFilter = append(subFileInfo.DialoguesFilter, odl)
 	}
 	return usefullyDialogueCount, countLineFeed
 }
@@ -196,7 +218,7 @@ func (p Parser) oneLineSubDialogueParser2(matched [][]string, mapByValue StyleNa
 
 	for _, value := range timeMap.Values() {
 		odl := value.(subparser.OneDialogue)
-		subFileInfo.Dialogues = append(subFileInfo.Dialogues, odl)
+		subFileInfo.DialoguesFilter = append(subFileInfo.DialoguesFilter, odl)
 	}
 
 	return usefullyDialogueCount, countLineFeed

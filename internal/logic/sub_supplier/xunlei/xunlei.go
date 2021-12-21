@@ -161,7 +161,7 @@ func (s Supplier) getCid(filePath string) (string, error) {
 		sha1Ctx.Write(buffer)
 	}
 
-	hash = fmt.Sprintf("%X", sha1Ctx.Sum(nil))
+	hash = fmt.Sprintf("%XLen", sha1Ctx.Sum(nil))
 	return hash, nil
 }
 

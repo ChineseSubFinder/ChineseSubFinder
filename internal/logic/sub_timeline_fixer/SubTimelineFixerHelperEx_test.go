@@ -25,13 +25,13 @@ func TestSubTimelineFixerHelperEx_Process(t *testing.T) {
 	}{
 		{
 			name: "Foundation (2021) - S01E09", args: args{
-				videoFileFullPath: "X:\\连续剧\\Foundation (2021)\\Season 1\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p.mkv",
+				videoFileFullPath: "XLen:\\连续剧\\Foundation (2021)\\Season 1\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p.mkv",
 				srcSubFPath:       "C:\\WorkSpace\\Go2Hell\\src\\github.com\\allanpk716\\ChineseSubFinder\\internal\\logic\\sub_timeline_fixer\\CSF-SubFixCache\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p\\chinese(简英,zimuku).default.ass"},
 			wantErr: false,
 		},
 		{
 			name: "Foundation (2021) - S01E09", args: args{
-				videoFileFullPath: "X:\\连续剧\\Foundation (2021)\\Season 1\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p.mkv",
+				videoFileFullPath: "XLen:\\连续剧\\Foundation (2021)\\Season 1\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p.mkv",
 				srcSubFPath:       "C:\\WorkSpace\\Go2Hell\\src\\github.com\\allanpk716\\ChineseSubFinder\\internal\\logic\\sub_timeline_fixer\\CSF-SubFixCache\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p\\chinese(简英,zimuku).default.ass"},
 			wantErr: false,
 		},

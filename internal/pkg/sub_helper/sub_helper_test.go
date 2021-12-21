@@ -48,9 +48,9 @@ func TestGetVADInfosFromSub(t *testing.T) {
 		t.Fatal("sub not match")
 	}
 
-	if len(infoBase.DialoguesEx) != len(infoSrc.DialoguesEx) {
-		t.Fatal(fmt.Sprintf("info Base And Src Parse Error, infoBase.DialoguesEx Len = %v, infoSrc.DialoguesEx Len = %v",
-			len(infoBase.DialoguesEx), len(infoSrc.DialoguesEx)))
+	if len(infoBase.DialoguesFilterEx) != len(infoSrc.DialoguesFilterEx) {
+		t.Fatal(fmt.Sprintf("info Base And Src Parse Error, infoBase.DialoguesFilterEx Len = %v, infoSrc.DialoguesFilterEx Len = %v",
+			len(infoBase.DialoguesFilterEx), len(infoSrc.DialoguesFilterEx)))
 	}
 
 	baseSubUnit, err := GetVADInfoFeatureFromSubNew(infoBase, FrontAndEndPerBase)

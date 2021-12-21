@@ -18,6 +18,7 @@ import (
 	"github.com/panjf2000/ants/v2"
 	"golang.org/x/net/context"
 	"gonum.org/v1/gonum/mat"
+	"math"
 	"os"
 	"strings"
 	"sync"
@@ -113,12 +114,81 @@ func (s *SubTimelineFixer) FixSubTimelineOneOffsetTime(infoSrc *subparser.FileIn
 	return fixContent, nil
 }
 
+// FixSubTimelineByFixResults V2 专用的时间校正函数
+func (s SubTimelineFixer) FixSubTimelineByFixResults(infoSrc *subparser.FileInfo, srcUnitNew *sub_helper.SubUnit, fixedResults []FixResult, desSaveSubFileFullPath string) (string, error) {
+
+	startTime := srcUnitNew.GetStartTime(true)
+	startTimeBaseDouble := my_util.Time2SecondNumber(startTime)
+	/*
+		这里拿到的 fixedResults ，是进行过 V2_FrontAndEndPerSrc 头尾去除
+		那么调整目标字幕的时候，需要考虑截取掉的部分也要算进去
+	*/
+	/*
+		从解析的实例中，正常来说是可以匹配出所有的 Dialogue 对话的 Start 和 End time 的信息
+		然后找到对应的字幕的文件，进行文件内容的替换来做时间轴的校正
+	*/
+	fixContent := infoSrc.Content
+	/*
+		这里进行时间转字符串的时候有一点比较特殊
+		正常来说输出的格式是类似 15:04:05.00
+		那么有个问题，字幕的时间格式是 0:00:12.00， 小时，是个数，除非有跨度到 20 小时的视频，不然小时就应该是个数
+		这就需要一个额外的函数去处理这些情况
+	*/
+	timeFormat := infoSrc.GetTimeFormat()
+	cacheIndex := 0
+	for _, srcOneDialogue := range infoSrc.Dialogues {
+
+		timeStart, err := infoSrc.ParseTime(srcOneDialogue.StartTime)
+		if err != nil {
+			return "", err
+		}
+		timeEnd, err := infoSrc.ParseTime(srcOneDialogue.EndTime)
+		if err != nil {
+			return "", err
+		}
+
+		inOffsetTime := 0.0
+		orgStartTimeDouble := my_util.Time2SecondNumber(timeStart)
+		for cacheIndex < len(fixedResults) {
+
+			inRange, nowOffsetTime := fixedResults[cacheIndex].InRange(startTimeBaseDouble, orgStartTimeDouble)
+			if inRange == false {
+				cacheIndex++
+				continue
+			} else {
+				inOffsetTime = nowOffsetTime
+				break
+			}
+		}
+		// 偏移时间
+		println(inOffsetTime)
+		offsetTime := time.Duration(inOffsetTime*1000) * time.Millisecond
+		fixTimeStart := timeStart.Add(offsetTime)
+		fixTimeEnd := timeEnd.Add(offsetTime)
+
+		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.StartTime, my_util.Time2SubTimeString(fixTimeStart, timeFormat))
+		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.EndTime, my_util.Time2SubTimeString(fixTimeEnd, timeFormat))
+	}
+
+	dstFile, err := os.Create(desSaveSubFileFullPath)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = dstFile.Close()
+	}()
+	_, err = dstFile.WriteString(fixContent)
+	if err != nil {
+		return "", err
+	}
+	return fixContent, nil
+}
+
 /*
 	对于 V1 版本的字幕时间轴校正来说，是有特殊的前置要求的
 	1. 视频要有英文字幕
 	2. 外置的字幕必须是中文的双语字幕（简英、繁英）
 */
-
 // GetOffsetTimeV1 暂时只支持英文的基准字幕，源字幕必须是双语中英字幕
 func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo, staticLineFileSavePath string, debugInfoFileSavePath string) (bool, float64, float64, error) {
 
@@ -130,7 +200,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 		这里原来的写法是所有的 base 的都放进去匹配，这样会带来一些不必要的对白
 		需要剔除空白。那么就需要建立一个转换的字典
 	*/
-	for index, oneDialogueEx := range infoBase.DialoguesEx {
+	for index, oneDialogueEx := range infoBase.DialoguesFilterEx {
 		if oneDialogueEx.EnLine == "" {
 			continue
 		}
@@ -152,9 +222,9 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 	var matchIndexList = make([]MatchIndex, 0)
 	sc := NewSubCompare(maxCompareDialogue)
 	// 开始比较相似度，默认认为是 Ch_en 就行了
-	for srcIndex := 0; srcIndex < len(infoSrc.DialoguesEx); {
+	for srcIndex := 0; srcIndex < len(infoSrc.DialoguesFilterEx); {
 
-		srcOneDialogueEx := infoSrc.DialoguesEx[srcIndex]
+		srcOneDialogueEx := infoSrc.DialoguesFilterEx[srcIndex]
 		// 这里只考虑 英文 的语言
 		if srcOneDialogueEx.EnLine == "" {
 			srcIndex++
@@ -214,7 +284,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 
 		//println(fmt.Sprintf("Similarity: %f Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
 		//	highestSimilarity,
-		//	baseIndex, infoBase.DialoguesEx[baseIndex].relativelyStartTime, infoBase.DialoguesEx[baseIndex].relativelyEndTime, baseCorpus[baseIndex],
+		//	baseIndex, infoBase.DialoguesFilterEx[baseIndex].relativelyStartTime, infoBase.DialoguesFilterEx[baseIndex].relativelyEndTime, baseCorpus[baseIndex],
 		//	srcIndex, srcOneDialogueEx.relativelyStartTime, srcOneDialogueEx.relativelyEndTime, srcOneDialogueEx.EnLine))
 
 		srcIndex++
@@ -237,19 +307,19 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 			tmpBaseIndex := baseDialogueFilterMap[matchIndexItem.BaseNowIndex+i]
 			tmpSrcIndex := matchIndexItem.SrcNowIndex + i
 
-			baseTimeStart, err := infoBase.ParseTime(infoBase.DialoguesEx[tmpBaseIndex].StartTime)
+			baseTimeStart, err := infoBase.ParseTime(infoBase.DialoguesFilterEx[tmpBaseIndex].StartTime)
 			if err != nil {
 				return false, 0, 0, err
 			}
-			baseTimeEnd, err := infoBase.ParseTime(infoBase.DialoguesEx[tmpBaseIndex].EndTime)
+			baseTimeEnd, err := infoBase.ParseTime(infoBase.DialoguesFilterEx[tmpBaseIndex].EndTime)
 			if err != nil {
 				return false, 0, 0, err
 			}
-			srtTimeStart, err := infoBase.ParseTime(infoSrc.DialoguesEx[tmpSrcIndex].StartTime)
+			srtTimeStart, err := infoBase.ParseTime(infoSrc.DialoguesFilterEx[tmpSrcIndex].StartTime)
 			if err != nil {
 				return false, 0, 0, err
 			}
-			srtTimeEnd, err := infoBase.ParseTime(infoSrc.DialoguesEx[tmpSrcIndex].EndTime)
+			srtTimeEnd, err := infoBase.ParseTime(infoSrc.DialoguesFilterEx[tmpSrcIndex].EndTime)
 			if err != nil {
 				return false, 0, 0, err
 			}
@@ -268,13 +338,13 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 
 			xAxis = append(xAxis, fmt.Sprintf("%d_%d", mIndex, i))
 
-			debugInfos = append(debugInfos, "bs "+infoBase.DialoguesEx[tmpBaseIndex].StartTime+" <-> "+infoBase.DialoguesEx[tmpBaseIndex].EndTime)
-			debugInfos = append(debugInfos, "sc "+infoSrc.DialoguesEx[tmpSrcIndex].StartTime+" <-> "+infoSrc.DialoguesEx[tmpSrcIndex].EndTime)
+			debugInfos = append(debugInfos, "bs "+infoBase.DialoguesFilterEx[tmpBaseIndex].StartTime+" <-> "+infoBase.DialoguesFilterEx[tmpBaseIndex].EndTime)
+			debugInfos = append(debugInfos, "sc "+infoSrc.DialoguesFilterEx[tmpSrcIndex].StartTime+" <-> "+infoSrc.DialoguesFilterEx[tmpSrcIndex].EndTime)
 			debugInfos = append(debugInfos, "StartDiffTime: "+fmt.Sprintf("%f", TimeDiffStart.Seconds()))
 			//println(fmt.Sprintf("Diff Start-End: %s - %s Base[%d] %s-%s '%s' <--> Src[%d] %s-%s '%s'",
 			//	TimeDiffStart, TimeDiffEnd,
-			//	tmpBaseIndex, infoBase.DialoguesEx[tmpBaseIndex].relativelyStartTime, infoBase.DialoguesEx[tmpBaseIndex].relativelyEndTime, infoBase.DialoguesEx[tmpBaseIndex].EnLine,
-			//	tmpSrcIndex, infoSrc.DialoguesEx[tmpSrcIndex].relativelyStartTime, infoSrc.DialoguesEx[tmpSrcIndex].relativelyEndTime, infoSrc.DialoguesEx[tmpSrcIndex].EnLine))
+			//	tmpBaseIndex, infoBase.DialoguesFilterEx[tmpBaseIndex].relativelyStartTime, infoBase.DialoguesFilterEx[tmpBaseIndex].relativelyEndTime, infoBase.DialoguesFilterEx[tmpBaseIndex].EnLine,
+			//	tmpSrcIndex, infoSrc.DialoguesFilterEx[tmpSrcIndex].relativelyStartTime, infoSrc.DialoguesFilterEx[tmpSrcIndex].relativelyEndTime, infoSrc.DialoguesFilterEx[tmpSrcIndex].EnLine))
 		}
 		debugInfos = append(debugInfos, "---------------------------------------------")
 		//println("---------------------------------------------")
@@ -338,7 +408,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 	// 跳过的逻辑是 mean 是 0 ，那么现在如果判断有问题，缓存的调试文件继续生成，然后强制返回 0 来跳过后续的逻辑
 	// 这里需要考虑，找到的连续 5 句话匹配的有多少句，占比整体所有的 Dialogue 是多少，太低也需要跳过
 	matchIndexLineCount := len(matchIndexList) * maxCompareDialogue
-	//perMatch := float64(matchIndexLineCount) / float64(len(infoSrc.DialoguesEx))
+	//perMatch := float64(matchIndexLineCount) / float64(len(infoSrc.DialoguesFilterEx))
 	perMatch := float64(matchIndexLineCount) / float64(len(baseCorpus))
 	if perMatch < s.FixerConfig.V1_MinMatchedPercent {
 		tmpContent := infoSrc.Name + fmt.Sprintf(" Sequence match %d dialogues (< %f%%), Skip,", s.FixerConfig.V1_MaxCompareDialogue, s.FixerConfig.V1_MinMatchedPercent*100) + fmt.Sprintf(" %f%% ", perMatch*100)
@@ -370,7 +440,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 }
 
 // GetOffsetTimeV2 使用内置的字幕校正外置的字幕时间轴
-func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit, audioVadList []vad.VADInfo) (bool, float64, float64, error) {
+func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit, audioVadList []vad.VADInfo) (bool, []FixResult, error) {
 
 	// -------------------------------------------------
 	/*
@@ -424,21 +494,17 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 		// 时间轴差值数组
 		matchInfo, err := s.slidingWindowProcessor(&windowInfo)
 		if err != nil {
-			return false, 0, 0, err
+			return false, nil, err
 		}
 
 		matchedInfos = append(matchedInfos, *matchInfo)
 	}
 
-	// 这里可能遇到匹配的时候没有能够执行够 V2_CompareParts 次，有可能是负数跳过或者时间转换失败导致，前者为主（可能是这两个就是一个东西的时候，或者说没有时间轴偏移的时候）
-	//if len(matchInfo.StartDiffTimeList) < s.FixerConfig.V2_CompareParts/2 {
-	//	log_helper.GetLogger().Infoln("Can't Match, Parts=", len(matchInfo.StartDiffTimeList), "At Least", s.FixerConfig.V2_CompareParts/2)
-	//	return false, 0, 0, nil
-	//}
-
+	fixedResults := make([]FixResult, 0)
+	sdLessCount := 0
 	for index, matchInfo := range matchedInfos {
 
-		log_helper.GetLogger().Infoln("------------------------------------")
+		log_helper.GetLogger().Infoln(index, "------------------------------------")
 		outCorrelationFixResult := s.calcMeanAndSD(matchInfo.StartDiffTimeListEx, matchInfo.StartDiffTimeList)
 		log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner Old Mean: %v SD: %f Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
 		log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner New Mean: %v SD: %f Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
@@ -446,36 +512,132 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 		value, indexMax := matchInfo.StartDiffTimeMap.Max()
 		log_helper.GetLogger().Infoln("FFTAligner Max score:", fmt.Sprintf("%v", value.(float64)), "Time:", fmt.Sprintf("%v", matchInfo.StartDiffTimeList[indexMax.(int)]))
 
-		/*
-			如果 outCorrelationFixResult 的 SD > 0.1，那么大概率这个时间轴的值匹配的有问题，需要向左或者向右找一个值进行继承
-			-4 0.001
-			-4 0.001
-			-4 0.001
-			-200 0.1
-			-4 0.001
-			比如这种情况，那么就需要向左找到 -4 去继承。
-			具体的实现：
-				找到一个 SD > 0.1 的项目，那么就需要从左边和右边同时对比
-				首先是他们的差值要在 1s （绝对值）以内，优先往左边找，如果绝对值成立则判断 SD （SD 必须 < 0.1）
-				如果只是 SD 不成立，那么就继续往左，继续判断差值和 SD。如果都找不到合适的，就要回到”起点“，从右开始找，逻辑一样
-				直到没有找到合适的信息，就报错
-		*/
+		outCorrelationFixResult.StartVADIndex = index * perPartLen
+		outCorrelationFixResult.EndVADIndex = index*perPartLen + perPartLen
+		fixedResults = append(fixedResults, outCorrelationFixResult)
+
 		if outCorrelationFixResult.NewSD < 0.1 {
-			continue
-		}
-		// 是否找到合适的继承值
-		bProcess := false
-		// 先往左
-		if index-1 >= 0 {
-			// 说明至少可以往左
+			sdLessCount++
 		}
 	}
 
-	return true, 0, 0, nil
+	// 如果 0.1 sd 以下的占比低于 70% 那么就认为字幕匹配失败
+	perLess := float64(sdLessCount) / float64(len(matchedInfos))
+	if perLess < 0.7 {
+		return false, nil, nil
+	}
+	/*
+		如果 outCorrelationFixResult 的 SD > 0.1，那么大概率这个时间轴的值匹配的有问题，需要向左或者向右找一个值进行继承
+		-4 0.001
+		-4 0.001
+		-4 0.001
+		-200 0.1
+		-4 0.001
+		比如这种情况，那么就需要向左找到 -4 去继承。
+		具体的实现：
+			找到一个 SD > 0.1 的项目，那么就需要从左边和右边同时对比
+			首先是他们的差值要在 0.3s （绝对值）以内，优先往左边找，如果绝对值成立则判断 SD （SD 必须 < 0.1）
+			如果只是 SD 不成立，那么就继续往左，继续判断差值和 SD。
+			如果都找不到合适的，就要回到”起点“，从右开始找，逻辑一样
+			直到没有找到合适的信息，就报错
+	*/
+	// 进行细节的修正
+	for index, fixedResult := range fixedResults {
+		if fixedResult.NewSD >= 0.1 {
+			bok, newMean, newSD, op := s.fixOnePart(index, fixedResults, perPartLen)
+			if bok == true {
+				fixedResults[index].NewMean = newMean
+				fixedResults[index].NewSD = newSD
+				fixedResults[index].OP = op
+			}
+		}
+	}
+
+	return true, fixedResults, nil
 }
 
-func (s SubTimelineFixer) fixOnePart() {
+// fixOnePart 轻微地跳动可以根据左或者右去微调
+func (s SubTimelineFixer) fixOnePart(startIndex int, fixedResults []FixResult, perPartLen int) (bool, float64, float64, OverParts) {
+	op := OverParts{}
+	/*
+		找到这样情况的进行修正
+	*/
+	// 先往左
+	if startIndex-1 >= 0 {
+		// 说明至少可以往左
+		// 如果左边的这个值，与当前值超过了 0.3 的绝对差值，那么是不适合的，就需要往右找
+		if math.Abs(fixedResults[startIndex-1].NewMean-fixedResults[startIndex].NewMean) < 0.3 {
+			// 差值在接受的范围内，那么就使用这个左边的值去校正当前的值
+			return true, fixedResults[startIndex-1].NewMean, fixedResults[startIndex-1].NewSD, OverParts{}
+		}
+	}
 
+	// 那么就需要向右看看
+	//if startIndex+1 < len(fixedResults) {
+	//	// 说明至少可以往右
+	//	// 如果右边的这个值，与当前值超过了 0.3 的绝对差值，那么是不适合的
+	//	if math.Abs(fixedResults[startIndex+1].NewMean-fixedResults[startIndex].NewMean) < 0.3 {
+	//		// 差值在接受的范围内，那么就使用这个左边的值去校正当前的值
+	//		return true, fixedResults[startIndex+1].NewMean, fixedResults[startIndex+1].NewSD, OverParts{}
+	//	}
+	//}
+
+	// 如果上面的理想情况都没有进去，那么就是这个差值很大
+	if fixedResults[startIndex].NewSD > 1 {
+		// SD 比较大，可能当前的位置是值是错误的，那么直接就使用左边的值
+		/*
+			-6.3	0.06
+			-146.85	243.83
+		*/
+		if startIndex-1 >= 0 {
+			return true, fixedResults[startIndex-1].NewMean, fixedResults[startIndex-1].NewSD, OverParts{}
+		}
+	} else {
+		// SD 不是很大，可能就是正常的字幕分段的时间轴偏移的 越接处 !
+		// 那么需要取，越接处，前三和后三，进行均值计算
+		/*
+			-6.21
+			-6.22
+			-6.29	0.06
+
+			-7.13	0.14		越接处
+
+			-7.32
+			-7.31
+			-7.44
+		*/
+		left3Mean := 0.0
+		right3Mean := 0.0
+		// 向左，三个或者三个位置
+		if startIndex-3 >= 0 {
+			left3Mean = float64(fixedResults[startIndex-1].NewMean+fixedResults[startIndex-2].NewMean+fixedResults[startIndex-3].NewMean) / 3.0
+		} else if startIndex-2 >= 0 {
+			left3Mean = float64(fixedResults[startIndex-1].NewMean+fixedResults[startIndex-2].NewMean) / 2.0
+		} else {
+			return false, 0, 0, OverParts{}
+		}
+		// 向右，三个或者三个位置
+		if startIndex+3 >= 0 {
+			right3Mean = float64(fixedResults[startIndex+1].NewMean+fixedResults[startIndex+2].NewMean+fixedResults[startIndex+3].NewMean) / 3.0
+		} else if startIndex+2 >= 0 {
+			right3Mean = float64(fixedResults[startIndex+1].NewMean+fixedResults[startIndex+2].NewMean) / 2.0
+		} else {
+			return false, 0, 0, OverParts{}
+		}
+		// xLen 计算公式见推到公式截图
+		xLen := (fixedResults[startIndex].NewMean*float64(perPartLen) - right3Mean*float64(perPartLen)) / (left3Mean - right3Mean)
+		yLen := float64(perPartLen) - xLen
+
+		op.Has = true
+		op.XLen = xLen
+		op.YLen = yLen
+		op.XMean = left3Mean
+		op.YMean = right3Mean
+
+		return true, fixedResults[startIndex+1].NewMean, fixedResults[startIndex+1].NewSD, op
+	}
+
+	return false, 0, 0, OverParts{}
 }
 
 // slidingWindowProcessor 滑动窗口计算时间轴偏移
@@ -634,11 +796,14 @@ func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tm
 
 	if len(tmpStartDiffTime) < 3 {
 		return FixResult{
+			0,
+			0,
 			oldMean,
 			oldSd,
 			oldMean,
 			oldSd,
 			per,
+			OverParts{},
 		}
 	}
 
@@ -680,11 +845,14 @@ func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tm
 		newSd = oldSd
 	}
 	return FixResult{
+		0,
+		0,
 		oldMean,
 		oldSd,
 		newMean,
 		newSd,
 		per,
+		OverParts{},
 	}
 }
 
@@ -692,38 +860,3 @@ const FixMask = "-fix"
 const MinValue = -9999.0
 
 var mutexFixV2 sync.Mutex
-
-// MatchInfo 匹配的信息
-type MatchInfo struct {
-	StartDiffTimeList   []float64
-	StartDiffTimeMap    *treemap.Map
-	StartDiffTimeListEx stat.Float64Slice
-}
-
-// WindowInfo 滑动窗体信息
-type WindowInfo struct {
-	BaseAudioFloatList []float64           // 基准 VAD
-	BaseUnit           *sub_helper.SubUnit // 基准 VAD
-	SrcUnit            *sub_helper.SubUnit // 需要匹配的 VAD
-	MatchedTimes       int                 // 匹配上的次数
-	SrcWindowLen       int                 // 滑动窗体长度
-	SrcSlideStartIndex int                 // 滑动起始索引
-	SrcSlideLen        int                 // 滑动距离
-	OneStep            int                 // 每次滑动的长度
-}
-
-// InputData 修复函数传入多线程的数据结构
-type InputData struct {
-	BaseUnit         sub_helper.SubUnit // 基准 VAD
-	BaseAudioVADList []float64          // 基准 VAD
-	SrcUnit          sub_helper.SubUnit // 需要匹配的 VAD
-	OffsetIndex      int                // 滑动窗体的移动偏移索引
-	Wg               *sync.WaitGroup    // 并发锁
-}
-
-// SubVADBlockInfo 字幕分块信息
-type SubVADBlockInfo struct {
-	Index      int
-	StartIndex int
-	EndIndex   int
-}
