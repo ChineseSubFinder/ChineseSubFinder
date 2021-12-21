@@ -22,7 +22,7 @@ func InitRouter(router *gin.Engine, cronHelper *cron_helper.CronHelper) {
 
 	router.POST("/change-pwd", middle.CheckAuth(), cbBase.ChangePwdHandler)
 
-	router.POST("/check-path", middle.CheckAuth(), cbBase.CheckPathHandler)
+	router.POST("/check-path", cbBase.CheckPathHandler)
 
 	router.POST("/check-proxy", middle.CheckAuth(), cbBase.CheckProxyHandler)
 
