@@ -41,15 +41,34 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 
 func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 
-	ser := "X:\\连续剧\\The Bad Batch" // tt12708542
+	//ser := "X:\\连续剧\\The Bad Batch" // tt12708542
 	//ser := "X:\\连续剧\\杀死伊芙 (2018)"	// tt12708542
 	//ser := "X:\\连续剧\\Money.Heist"
+	ser := "X:\\连续剧\\黄石 (2018)"
 
 	// 读取本地的视频和字幕信息
 	seriesInfo, err := series_helper2.ReadSeriesInfoFromDir(ser, nil, false)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// 选择某一集去下载
+	//const needDownloadSeason = 4
+	//const needDownloadEp = 5
+	//seriesInfo.NeedDlSeasonDict = make(map[int]int, 0)
+	//seriesInfo.SeasonDict = make(map[int]int, 0)
+	//seriesInfo.NeedDlSeasonDict[needDownloadSeason] = needDownloadSeason
+	//seriesInfo.SeasonDict[needDownloadSeason] = needDownloadSeason
+	//tmp := series.EpisodeInfo{}
+	//for _, value := range seriesInfo.NeedDlEpsKeyList {
+	//	if value.Season == needDownloadSeason && value.Episode == needDownloadEp {
+	//		tmp = value
+	//		break
+	//	}
+	//}
+	//seriesInfo.NeedDlEpsKeyList = make(map[string]series.EpisodeInfo, 0)
+	//seriesInfo.NeedDlEpsKeyList[fmt.Sprintf("S%dE%d", needDownloadSeason, needDownloadEp)] = tmp
+
 	s := NewSupplier()
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)
 	if err != nil {

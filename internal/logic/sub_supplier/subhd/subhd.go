@@ -642,7 +642,7 @@ search:
 
 	if s.reqParam.DebugMode == true {
 		//截圖保存
-		nowProcessRoot, err := my_util.GetDebugFolder()
+		nowProcessRoot, err := my_util.GetRootDebugFolder()
 		if err == nil {
 			page.MustScreenshot(filepath.Join(nowProcessRoot, "result.png"))
 		} else {
