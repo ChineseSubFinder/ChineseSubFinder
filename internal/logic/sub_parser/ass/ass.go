@@ -118,11 +118,12 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	var usefulDialogueExs = make([]subparser.OneDialogueEx, 0)
 	// 在这之前需要把 subFileInfo.DialoguesFilter 的内容填好，Lines 这里如果是单种语言应该就是一个元素，如果是双语就需要拆分成两个元素
 	// 这样向后传递就简单了，也统一了
+	emptyLines := 0
 	for _, dialogue := range subFileInfo.DialoguesFilter {
-		language.DetectSubLangAndStatistics(dialogue, langDict, &usefulDialogueExs, &chLines, &otherLines)
+		emptyLines += language.DetectSubLangAndStatistics(dialogue, langDict, &usefulDialogueExs, &chLines, &otherLines)
 	}
 	// 从统计出来的字典，找出 Top 1 或者 2 的出来，然后计算出是什么语言的字幕
-	detectLang := language.SubLangStatistics2SubLangType(float32(countLineFeed), float32(usefullyDialogueCount), langDict, chLines)
+	detectLang := language.SubLangStatistics2SubLangType(float32(countLineFeed), float32(usefullyDialogueCount-emptyLines), langDict, chLines)
 	subFileInfo.Lang = detectLang
 	subFileInfo.Data = inBytes
 	subFileInfo.DialoguesFilterEx = usefulDialogueExs
