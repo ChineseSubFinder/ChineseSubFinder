@@ -6,6 +6,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
@@ -59,6 +60,12 @@ func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]sup
 
 func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error) {
 
+	defer func() {
+		s.log.Debugln(s.GetSupplierName(), filePath, "End...")
+	}()
+
+	s.log.Debugln(s.GetSupplierName(), filePath, "Start...")
+
 	// 可以提供的字幕查询 eng或者chn
 	const qLan = "Chn"
 	var outSubInfoList []supplier.SubInfo
@@ -75,8 +82,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	fileName := filepath.Base(filePath)
 
 	httpClient := my_util.NewHttpClient(s.reqParam)
-
-	_, err = httpClient.R().
+	resp, err := httpClient.R().
 		SetFormData(map[string]string{
 			"filehash": hash,
 			"pathinfo": fileName,
@@ -86,6 +92,10 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 		SetResult(&jsonList).
 		Post(common.SubShooterRootUrl)
 	if err != nil {
+		if resp != nil {
+			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", filePath, err.Error())
+			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("filePath: %s, resp: %s, error: %s", filePath, resp.String(), err.Error()))
+		}
 		return nil, err
 	}
 	for i, shooter := range jsonList {

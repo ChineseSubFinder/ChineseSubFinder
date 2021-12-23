@@ -55,6 +55,13 @@ func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 }
 
 func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+
+	defer func() {
+		s.log.Debugln(s.GetSupplierName(), seriesInfo.Name, "End...")
+	}()
+
+	s.log.Debugln(s.GetSupplierName(), seriesInfo.Name, "Start...")
+
 	var err error
 	/*
 		去网站搜索的时候，有个比较由意思的逻辑，有些剧集，哪怕只有一季，sonarr 也会给它命名为 Season 1
@@ -68,25 +75,27 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	for value := range seriesInfo.SeasonDict {
 		// 第一级界面，找到影片的详情界面
 		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
+		s.log.Debugln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword)
 		filmDetailPageUrl, err := s.step0(keyword)
 		if err != nil {
-			s.log.Errorln(keyword)
+			s.log.Errorln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword, err)
 			// 如果只是搜索不到，则继续换关键词
 			if err != common.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
 				return nil, err
 			}
-			keyword := seriesInfo.Name
-			s.log.Infoln("Retry", keyword)
+			keyword = seriesInfo.Name
+			s.log.Debugln(s.GetSupplierName(), "step 0", "1 times", "keyword:", keyword)
 			filmDetailPageUrl, err = s.step0(keyword)
 			if err != nil {
-				s.log.Errorln(keyword)
+				s.log.Errorln(s.GetSupplierName(), "1 times", "keyword:", keyword, err)
 				return nil, err
 			}
 		}
 		// 第二级界面，有多少个字幕
+		s.log.Debugln(s.GetSupplierName(), "step 1", filmDetailPageUrl)
 		subResult, err := s.step1(filmDetailPageUrl)
 		if err != nil {
-			s.log.Errorln("step1", filmDetailPageUrl)
+			s.log.Errorln(s.GetSupplierName(), "step 1", filmDetailPageUrl, err)
 			return nil, err
 		}
 
@@ -113,6 +122,11 @@ func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]sup
 
 func (s Supplier) getSubListFromMovie(fileFPath string) ([]supplier.SubInfo, error) {
 
+	defer func() {
+		s.log.Debugln(s.GetSupplierName(), fileFPath, "End...")
+	}()
+
+	s.log.Debugln(s.GetSupplierName(), fileFPath, "Start...")
 	/*
 		虽然是传入视频文件路径，但是其实需要读取对应的视频文件目录下的
 		movie.xml 以及 *.nfo，找到 IMDB id
@@ -241,7 +255,7 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 	for i := range subInfos {
 		err = s.step2(&subInfos[i])
 		if err != nil {
-			s.log.Error(err)
+			s.log.Error(s.GetSupplierName(), "step 2", subInfos[i].Name, err)
 			continue
 		}
 	}
@@ -272,7 +286,7 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 	for i, subInfo := range tmpSubInfo {
 		fileName, data, err := s.step3(subInfo.SubDownloadPageUrl)
 		if err != nil {
-			s.log.Error(err)
+			s.log.Error(s.GetSupplierName(), "step 3", err)
 			continue
 		}
 		// 默认都是包含中文字幕的，然后具体使用的时候再进行区分

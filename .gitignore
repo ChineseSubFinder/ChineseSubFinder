@@ -50,3 +50,5 @@
 /internal/pkg/ffmpeg_helper/Logs
 /internal/pkg/sub_timeline_fixer/*.html
 
+/internal/logic/sub_supplier/shooter/Logs
+/internal/logic/sub_supplier/xunlei/Logs

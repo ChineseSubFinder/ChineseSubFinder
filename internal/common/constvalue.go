@@ -40,3 +40,5 @@ const Ignore = ".ignore"
 const (
 	NotifyStringTellUserWait = "If you have a lot of videos, it may take a lot of time, just wait..."
 )
+
+const QueueName = "Queue"

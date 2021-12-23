@@ -25,7 +25,7 @@ func TestSubTimelineFixerHelper_fixOneVideoSub(t *testing.T) {
 	// 178071 -- The Night House
 	config := config.GetConfig()
 	fixer := NewSubTimelineFixerHelper(config.EmbyConfig, config.SubTimelineFixerConfig)
-	err := fixer.fixOneVideoSub("178071", "XLen:\\电影\\The Night House (2021)")
+	err := fixer.fixOneVideoSub("178071", "X:\\电影\\The Night House (2021)")
 	if err != nil {
 		t.Fatal(err)
 	}

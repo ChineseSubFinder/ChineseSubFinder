@@ -25,7 +25,7 @@ import (
 
 // NewHttpClient 新建一个 resty 的对象
 func NewHttpClient(_reqParam ...types.ReqParam) *resty.Client {
-	//const defUserAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS XLen 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"
+	//const defUserAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"
 	//const defUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41"
 	// 随机的 Browser
 	defUserAgent := browser.Random()

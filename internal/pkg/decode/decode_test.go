@@ -23,7 +23,7 @@ func Test_get_IMDB_movie_xml(t *testing.T) {
 func Test_get_IMDB_nfo(t *testing.T) {
 	wantid := "tt0993840"
 	wantyear := "2021"
-	dirPth := "XLen:\\电影\\Army of the Dead (2021)\\Army of the Dead (2021) WEBDL-1080p.nfo"
+	dirPth := "X:\\电影\\Army of the Dead (2021)\\Army of the Dead (2021) WEBDL-1080p.nfo"
 	imdbInfo, err := getImdbAndYearNfo(dirPth, "movie")
 	if err != nil {
 		t.Error(err)
@@ -38,12 +38,12 @@ func Test_get_IMDB_nfo(t *testing.T) {
 
 func Test_GetVideoInfoFromFileFullPath(t *testing.T) {
 
-	subTitle := "XLen:\\电影\\Spiral From the Book of Saw (2021)\\Spiral From the Book of Saw (2021) WEBDL-1080p.mkv"
+	subTitle := "X:\\电影\\Spiral From the Book of Saw (2021)\\Spiral From the Book of Saw (2021) WEBDL-1080p.mkv"
 	//subTitle := "人之怒 WEBDL-1080p.mkv"
 	//subTitle := "機動戦士Zガンダム WEBDL-1080p.mkv"
 	//subTitle := "机动战士Z高达：星之继承者 (2005) 1080p TrueHD.mkv"
-	//subTitle := "XLen:\\连续剧\\The Bad Batch\\Season 1\\The Bad Batch - S01E01 - Aftermath WEBDL-1080p.mkv"
-	//subTitle := "XLen:\\连续剧\\Money.Heist\\Season 1\\Money.Heist.S01E01.SPANISH.WEBRip.x264-ION10.zh-cn.ssa"
+	//subTitle := "X:\\连续剧\\The Bad Batch\\Season 1\\The Bad Batch - S01E01 - Aftermath WEBDL-1080p.mkv"
+	//subTitle := "X:\\连续剧\\Money.Heist\\Season 1\\Money.Heist.S01E01.SPANISH.WEBRip.x264-ION10.zh-cn.ssa"
 	//subTitle := "Spiral.From.the.Book.of.Saw.2021.1080p.WEBRip.x264-RARBG.chi.srt"
 	//subTitle := "Spiral.From.the.Book.of.Saw.2021.1080p.WEBRip.x264-RARBG.eng.srt"
 	//subTitle := "东城梅尔 第一季第一集【YYeTs字幕组 简繁英双语字幕】Mare.of.Easttown.S01E01.Miss.Lady.Hawk.Herself.720p/1080p.AMZN.WEB-DL.DDP5.1.H.264-TEPES"

@@ -23,19 +23,19 @@ import (
 func OneMovieDlSubInAllSite(Suppliers []ifaces.ISupplier, oneVideoFullPath string, i int) []supplier.SubInfo {
 
 	defer func() {
-		log_helper.GetLogger().Infoln(i, "DlSub End", oneVideoFullPath)
+		log_helper.GetLogger().Infoln(common.QueueName, i, "DlSub End", oneVideoFullPath)
 	}()
 
 	var outSUbInfos = make([]supplier.SubInfo, 0)
 	// 同时进行查询
 	subInfosChannel := make(chan []supplier.SubInfo)
-	log_helper.GetLogger().Infoln(i, "DlSub Start", oneVideoFullPath)
+	log_helper.GetLogger().Infoln(common.QueueName, i, "DlSub Start", oneVideoFullPath)
 	for _, oneSupplier := range Suppliers {
 		nowSupplier := oneSupplier
 		go func() {
 			subInfos, err := OneMovieDlSubInOneSite(oneVideoFullPath, i, nowSupplier)
 			if err != nil {
-				log_helper.GetLogger().Errorln(i, nowSupplier.GetSupplierName(), "oneMovieDlSubInOneSite", err)
+				log_helper.GetLogger().Errorln(common.QueueName, i, nowSupplier.GetSupplierName(), "oneMovieDlSubInOneSite", err)
 			}
 			subInfosChannel <- subInfos
 		}()
@@ -53,9 +53,9 @@ func OneMovieDlSubInAllSite(Suppliers []ifaces.ISupplier, oneVideoFullPath strin
 // OneMovieDlSubInOneSite 一部电影在一个站点下载字幕
 func OneMovieDlSubInOneSite(oneVideoFullPath string, i int, supplier ifaces.ISupplier) ([]supplier.SubInfo, error) {
 	defer func() {
-		log_helper.GetLogger().Infoln(i, supplier.GetSupplierName(), "End...")
+		log_helper.GetLogger().Infoln(common.QueueName, i, supplier.GetSupplierName(), "End...")
 	}()
-	log_helper.GetLogger().Infoln(i, supplier.GetSupplierName(), "Start...")
+	log_helper.GetLogger().Infoln(common.QueueName, i, supplier.GetSupplierName(), "Start...")
 	subInfos, err := supplier.GetSubListFromFile4Movie(oneVideoFullPath)
 	if err != nil {
 		return nil, err

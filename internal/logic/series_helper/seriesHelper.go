@@ -146,17 +146,18 @@ func SkipChineseSeries(seriesRootPath string, _reqParam ...types.ReqParam) (bool
 
 // OneSeriesDlSubInAllSite 一部连续剧在所有的网站下载相应的字幕
 func OneSeriesDlSubInAllSite(Suppliers []ifaces.ISupplier, seriesInfo *series.SeriesInfo, i int) []supplier.SubInfo {
+
 	defer func() {
 		log_helper.GetLogger().Infoln(i, "DlSub End", seriesInfo.DirPath)
 	}()
-	log_helper.GetLogger().Infoln(i, "DlSub Start", seriesInfo.DirPath)
-	log_helper.GetLogger().Infoln(seriesInfo.Name, "IMDB ID:", seriesInfo.ImdbId, "NeedDownloadSubs:", len(seriesInfo.NeedDlEpsKeyList))
+	log_helper.GetLogger().Infoln(common.QueueName, i, "DlSub Start", seriesInfo.DirPath)
+	log_helper.GetLogger().Infoln(common.QueueName, i, seriesInfo.Name, "IMDB ID:", seriesInfo.ImdbId, "NeedDownloadSubs:", len(seriesInfo.NeedDlEpsKeyList))
 	var outSUbInfos = make([]supplier.SubInfo, 0)
 	if len(seriesInfo.NeedDlEpsKeyList) < 1 {
 		return outSUbInfos
 	}
 	for key := range seriesInfo.NeedDlEpsKeyList {
-		log_helper.GetLogger().Infoln(key)
+		log_helper.GetLogger().Infoln(common.QueueName, i, seriesInfo.Name, "-", key)
 	}
 	// 同时进行查询
 	subInfosChannel := make(chan []supplier.SubInfo)
@@ -166,14 +167,14 @@ func OneSeriesDlSubInAllSite(Suppliers []ifaces.ISupplier, seriesInfo *series.Se
 			var subInfos []supplier.SubInfo
 			defer func() {
 				subInfosChannel <- subInfos
-				log_helper.GetLogger().Infoln(i, nowSupplier.GetSupplierName(), "End...")
+				log_helper.GetLogger().Infoln(common.QueueName, i, nowSupplier.GetSupplierName(), "End...")
 			}()
 
-			log_helper.GetLogger().Infoln(i, nowSupplier.GetSupplierName(), "Start...")
+			log_helper.GetLogger().Infoln(common.QueueName, i, nowSupplier.GetSupplierName(), "Start...")
 			// 一次性把这一部连续剧的所有字幕下载完
 			subInfos, err := nowSupplier.GetSubListFromFile4Series(seriesInfo)
 			if err != nil {
-				log_helper.GetLogger().Errorln(i, nowSupplier.GetSupplierName(), "GetSubListFromFile4Series", err)
+				log_helper.GetLogger().Errorln(common.QueueName, i, nowSupplier.GetSupplierName(), "GetSubListFromFile4Series", err)
 			}
 			// 把后缀名给改好
 			sub_helper.ChangeVideoExt2SubExt(subInfos)

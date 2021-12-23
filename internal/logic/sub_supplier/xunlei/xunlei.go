@@ -60,12 +60,18 @@ func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]sup
 
 func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error) {
 
+	defer func() {
+		s.log.Debugln(s.GetSupplierName(), filePath, "End...")
+	}()
+
+	s.log.Debugln(s.GetSupplierName(), filePath, "Start...")
+
 	cid, err := s.getCid(filePath)
 	var jsonList SublistSliceXunLei
 	var tmpXunLeiSubListChinese = make([]SublistXunLei, 0)
 	var outSubList []supplier.SubInfo
 	if len(cid) == 0 {
-		return outSubList, common.XunLeiCIdIsEmpty
+		return nil, common.XunLeiCIdIsEmpty
 	}
 	httpClient := my_util.NewHttpClient(s.reqParam)
 	resp, err := httpClient.R().
@@ -73,10 +79,10 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 		Get(fmt.Sprintf(common.SubXunLeiRootUrl, cid))
 	if err != nil {
 		if resp != nil {
-			s.log.Errorln("xunlei NewHttpClient:", resp.String())
-			notify_center.Notify.Add("xunlei NewHttpClient", fmt.Sprintf("resp: %s, error: %s", resp.String(), err.Error()))
+			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", filePath, err.Error())
+			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("filePath: %s, resp: %s, error: %s", filePath, resp.String(), err.Error()))
 		}
-		return outSubList, err
+		return nil, err
 	}
 	// 剔除空的
 	for _, v := range jsonList.Sublist {
@@ -161,7 +167,7 @@ func (s Supplier) getCid(filePath string) (string, error) {
 		sha1Ctx.Write(buffer)
 	}
 
-	hash = fmt.Sprintf("%XLen", sha1Ctx.Sum(nil))
+	hash = fmt.Sprintf("%X", sha1Ctx.Sum(nil))
 	return hash, nil
 }
 

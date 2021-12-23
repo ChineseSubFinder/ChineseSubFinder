@@ -6,7 +6,7 @@ import (
 
 func Test_searchBackUpSubFile(t *testing.T) {
 
-	dir := "XLen:\\连续剧"
+	dir := "X:\\连续剧"
 	files, err := searchBackUpSubFile(dir)
 	if err != nil {
 		t.Fatal(err)
@@ -16,7 +16,7 @@ func Test_searchBackUpSubFile(t *testing.T) {
 
 func TestRestore(t *testing.T) {
 
-	err := Restore("XLen:\\电影", "XLen:\\连续剧")
+	err := Restore("X:\\电影", "X:\\连续剧")
 	if err != nil {
 		t.Fatal(err)
 	}
