@@ -172,7 +172,7 @@ func (s SubTimelineFixerHelperEx) processBySub(baseSubFileFPath, srcSubFileFPath
 		return false, nil, 0, err
 	}
 	// ---------------------------------------------------------------------------------------
-	bok, offsetTime, sd, err := s.timelineFixer.GetOffsetTimeV2(baseUnitNew, srcUnitNew, nil)
+	bok, _, err := s.timelineFixer.GetOffsetTimeV2(baseUnitNew, srcUnitNew, nil)
 	if err != nil {
 		return false, nil, 0, err
 	}
@@ -181,11 +181,11 @@ func (s SubTimelineFixerHelperEx) processBySub(baseSubFileFPath, srcSubFileFPath
 		return false, nil, 0, nil
 	}
 
-	if s.jugOffsetAndSD("processBySub", offsetTime, sd) == false {
-		return false, nil, 0, nil
-	}
+	//if s.jugOffsetAndSD("processBySub", offsetTime, sd) == false {
+	//	return false, nil, 0, nil
+	//}
 
-	return true, infoSrc, offsetTime, nil
+	return true, infoSrc, 0, nil
 }
 
 func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileFPath string) (bool, *subparser.FileInfo, float64, error) {
@@ -213,7 +213,7 @@ func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileF
 		return false, nil, 0, err
 	}
 	// ---------------------------------------------------------------------------------------
-	bok, offsetTime, sd, err := s.timelineFixer.GetOffsetTimeV2(nil, srcUnitNew, audioVADInfos)
+	bok, _, err := s.timelineFixer.GetOffsetTimeV2(nil, srcUnitNew, audioVADInfos)
 	if err != nil {
 		return false, nil, 0, err
 	}
@@ -222,11 +222,11 @@ func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileF
 		return false, nil, 0, nil
 	}
 
-	if s.jugOffsetAndSD("processByAudio", offsetTime, sd) == false {
-		return false, nil, 0, nil
-	}
+	//if s.jugOffsetAndSD("processByAudio", offsetTime, sd) == false {
+	//	return false, nil, 0, nil
+	//}
 
-	return true, infoSrc, offsetTime, nil
+	return true, infoSrc, 0, nil
 }
 
 func (s SubTimelineFixerHelperEx) jugOffsetAndSD(processName string, offsetTime, sd float64) bool {

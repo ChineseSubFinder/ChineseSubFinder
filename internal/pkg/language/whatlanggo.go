@@ -30,12 +30,22 @@ func IsWhiteListLang(lang whatlanggo.Lang) bool {
 }
 
 // DetectSubLangAndStatistics 检测语言然后统计
-func DetectSubLangAndStatistics(oneDialogue subparser.OneDialogue, langDict map[int]int, usefulDialoguseEx *[]subparser.OneDialogueEx, chLines *[]string, otherLines *[]string) {
+func DetectSubLangAndStatistics(oneDialogue subparser.OneDialogue, langDict map[int]int,
+	usefulDialoguseEx *[]subparser.OneDialogueEx, chLines *[]string, otherLines *[]string) int {
 
 	var oneDialogueEx subparser.OneDialogueEx
 	oneDialogueEx.StartTime = oneDialogue.StartTime
 	oneDialogueEx.EndTime = oneDialogue.EndTime
+
+	emptyLine := 0
+
 	for _, line := range oneDialogue.Lines {
+
+		if line == "" {
+			emptyLine++
+			continue
+		}
+
 		info := whatlanggo.DetectWithOptions(line, GetLangOptions())
 		tmpLang := -1
 		if IsWhiteListLang(info.Lang) == true {
@@ -70,6 +80,8 @@ func DetectSubLangAndStatistics(oneDialogue subparser.OneDialogue, langDict map[
 	}
 
 	*usefulDialoguseEx = append(*usefulDialoguseEx, oneDialogueEx)
+
+	return emptyLine
 }
 
 // SubLangStatistics2SubLangType 由分析的信息转换为具体是什么字幕的语言类型
@@ -148,6 +160,10 @@ func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map
 	} else {
 		// 如果比例达不到，那么就是单语言，所以最多的那个就是当前的语言
 		// 这里的字典是有可能出现
+		/*
+			这里的 AllLines 需要考虑一点，字幕内有很多特殊的背景声音旁白
+			那么会再上面提出的时候，直接把这一句话设置为空，那么这里所有的对白数量应该减去这些被检测为空的对白
+		*/
 		if hasChinese {
 			// 那么起码要占比 80% 对吧
 			perLines = float32(countChinese) / AllLines
