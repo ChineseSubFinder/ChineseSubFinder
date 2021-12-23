@@ -81,14 +81,15 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 			s.log.Errorln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword, err)
 			// 如果只是搜索不到，则继续换关键词
 			if err != common.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
-				return nil, err
+				s.log.Errorln(s.GetSupplierName(), "ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound", keyword, err)
+				continue
 			}
 			keyword = seriesInfo.Name
 			s.log.Debugln(s.GetSupplierName(), "step 0", "1 times", "keyword:", keyword)
 			filmDetailPageUrl, err = s.step0(keyword)
 			if err != nil {
 				s.log.Errorln(s.GetSupplierName(), "1 times", "keyword:", keyword, err)
-				return nil, err
+				continue
 			}
 		}
 		// 第二级界面，有多少个字幕
@@ -96,7 +97,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 		subResult, err := s.step1(filmDetailPageUrl)
 		if err != nil {
 			s.log.Errorln(s.GetSupplierName(), "step 1", filmDetailPageUrl, err)
-			return nil, err
+			continue
 		}
 
 		if AllSeasonSubResult.Title == "" {

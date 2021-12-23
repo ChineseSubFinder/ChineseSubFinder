@@ -177,7 +177,8 @@ func (s Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier.
 	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 		one, err := s.getSubListFromFile(episodeInfo.FileFullPath)
 		if err != nil {
-			return nil, err
+			s.log.Errorln(s.GetSupplierName(), "getSubListFromFile", episodeInfo.FileFullPath)
+			continue
 		}
 		// 需要赋值给字幕结构
 		for i, _ := range one {
