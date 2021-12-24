@@ -175,6 +175,12 @@ func (s Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier.
 			s.log.Errorln(s.GetSupplierName(), "getSubListFromFile", episodeInfo.FileFullPath)
 			continue
 		}
+		if one == nil {
+			// 没有搜索到字幕
+			s.log.Infoln(s.GetSupplierName(), "Not Find Sub can be download",
+				episodeInfo.Title, episodeInfo.Season, episodeInfo.Episode)
+			continue
+		}
 		// 需要赋值给字幕结构
 		for i, _ := range one {
 			one[i].Season = episodeInfo.Season
