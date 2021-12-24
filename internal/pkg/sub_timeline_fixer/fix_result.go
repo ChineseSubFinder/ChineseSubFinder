@@ -20,12 +20,15 @@ type FixResult struct {
 
 func (f FixResult) InRange(baseTimeDouble, timeStartDouble float64) (bool, float64) {
 
-	if baseTimeDouble+float64(f.StartVADIndex) <= timeStartDouble &&
-		baseTimeDouble+float64(f.EndVADIndex) >= timeStartDouble {
+	startVad2Second := f.StartVADIndex / 100
+	endVad2Second := f.EndVADIndex / 100
+
+	if baseTimeDouble+float64(startVad2Second) <= timeStartDouble &&
+		timeStartDouble <= baseTimeDouble+float64(endVad2Second) {
 		// 在当前的范围内
 		if f.OP.Has == true {
 			// 这里需要特殊处理，因为这个越接处，还需要二分
-			if timeStartDouble <= baseTimeDouble+float64(f.StartVADIndex)+f.OP.XLen {
+			if timeStartDouble <= baseTimeDouble+float64(startVad2Second)+f.OP.XLen/100 {
 				return true, f.OP.XMean
 			} else {
 				return true, f.OP.YMean
@@ -35,13 +38,11 @@ func (f FixResult) InRange(baseTimeDouble, timeStartDouble float64) (bool, float
 			return true, f.NewMean
 
 		}
-	} else if baseTimeDouble+float64(f.StartVADIndex) > timeStartDouble {
+	} else if timeStartDouble < baseTimeDouble+float64(startVad2Second) {
 		// 小于当前的范围
 		return true, f.NewMean
-	} else if timeStartDouble > baseTimeDouble+float64(f.EndVADIndex) {
-		// 大于当前的范围
-		return true, f.NewMean
 	} else {
+		// 大于当前的范围
 		return false, 0
 	}
 }

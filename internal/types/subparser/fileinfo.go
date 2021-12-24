@@ -2,8 +2,8 @@ package subparser
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
-	"time"
 )
 
 type FileInfo struct {
@@ -28,19 +28,6 @@ func (f FileInfo) GetTimeFormat() string {
 	} else {
 		return common.TimeFormatPoint3
 	}
-}
-
-// ParseTime 解析字幕时间字符串，这里可能小数点后面有 2-4 位
-func (f FileInfo) ParseTime(inTime string) (time.Time, error) {
-
-	parseTime, err := time.Parse(common.TimeFormatPoint2, inTime)
-	if err != nil {
-		parseTime, err = time.Parse(common.TimeFormatPoint3, inTime)
-		if err != nil {
-			parseTime, err = time.Parse(common.TimeFormatPoint4, inTime)
-		}
-	}
-	return parseTime, err
 }
 
 // GetDialogueExContent 获取当前字幕文件语言对应索引的对白内容
@@ -70,6 +57,29 @@ type OneDialogue struct {
 	EndTime   string   // 结束时间
 	StyleName string   // StyleName
 	Lines     []string // 台词
+}
+
+type OneDialogueByStartTime []OneDialogue
+
+func (d OneDialogueByStartTime) Len() int {
+	return len(d)
+}
+
+func (d OneDialogueByStartTime) Swap(i, j int) {
+	d[i], d[j] = d[j], d[i]
+}
+
+func (d OneDialogueByStartTime) Less(i, j int) bool {
+
+	subStartTimeI, err := my_util.ParseTime(d[i].StartTime)
+	if err != nil {
+		return false
+	}
+	subStartTimeJ, err := my_util.ParseTime(d[j].StartTime)
+	if err != nil {
+		return false
+	}
+	return my_util.Time2SecondNumber(subStartTimeI) < my_util.Time2SecondNumber(subStartTimeJ)
 }
 
 // OneDialogueEx 一句对话，这里会把一句话中支持的 中、英、韩、日 四国语言给分离出来

@@ -397,7 +397,7 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 	srcOneSubUnit := NewSubUnit()
 
 	// 最后一个对话的结束时间
-	lastDialogueExTimeEnd, err := fileInfo.ParseTime(fileInfo.DialoguesFilterEx[len(fileInfo.DialoguesFilterEx)-1].EndTime)
+	lastDialogueExTimeEnd, err := my_util.ParseTime(fileInfo.DialoguesFilterEx[len(fileInfo.DialoguesFilterEx)-1].EndTime)
 	if err != nil {
 		return nil, err
 	}
@@ -412,11 +412,11 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 
 	for i := 0; i < len(fileInfo.DialoguesFilterEx); i++ {
 
-		oneDialogueExTimeStart, err := fileInfo.ParseTime(fileInfo.DialoguesFilterEx[i].StartTime)
+		oneDialogueExTimeStart, err := my_util.ParseTime(fileInfo.DialoguesFilterEx[i].StartTime)
 		if err != nil {
 			return nil, err
 		}
-		oneDialogueExTimeEnd, err := fileInfo.ParseTime(fileInfo.DialoguesFilterEx[i].EndTime)
+		oneDialogueExTimeEnd, err := my_util.ParseTime(fileInfo.DialoguesFilterEx[i].EndTime)
 		if err != nil {
 			return nil, err
 		}
@@ -505,12 +505,12 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 		}
 
 		// 字幕的开始时间
-		oneDialogueStartTime, err := fileInfo.ParseTime(dialogueEx.StartTime)
+		oneDialogueStartTime, err := my_util.ParseTime(dialogueEx.StartTime)
 		if err != nil {
 			return nil, err
 		}
 		// 字幕的结束时间
-		oneDialogueEndTime, err := fileInfo.ParseTime(dialogueEx.EndTime)
+		oneDialogueEndTime, err := my_util.ParseTime(dialogueEx.EndTime)
 		if err != nil {
 			return nil, err
 		}
@@ -583,12 +583,12 @@ func ReadSubStartAndEndTime(fileInfo *subparser.FileInfo) (float64, float64, err
 
 	getTimeFunc := func(fileInfo *subparser.FileInfo, startIndex int) (bool, float64, float64, error) {
 		// 字幕的开始时间
-		subStartTime, err := fileInfo.ParseTime(fileInfo.DialoguesFilterEx[startIndex].StartTime)
+		subStartTime, err := my_util.ParseTime(fileInfo.DialoguesFilterEx[startIndex].StartTime)
 		if err != nil {
 			return false, 0, 0, err
 		}
 		// 字幕的结束时间
-		subEndTime, err := fileInfo.ParseTime(fileInfo.DialoguesFilterEx[len(fileInfo.DialoguesFilterEx)-1].EndTime)
+		subEndTime, err := my_util.ParseTime(fileInfo.DialoguesFilterEx[len(fileInfo.DialoguesFilterEx)-1].EndTime)
 		if err != nil {
 			return false, 0, 0, err
 		}

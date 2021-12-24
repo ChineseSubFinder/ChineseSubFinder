@@ -20,6 +20,7 @@ import (
 	"gonum.org/v1/gonum/mat"
 	"math"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -84,11 +85,11 @@ func (s *SubTimelineFixer) FixSubTimelineOneOffsetTime(infoSrc *subparser.FileIn
 	timeFormat := infoSrc.GetTimeFormat()
 	for _, srcOneDialogue := range infoSrc.Dialogues {
 
-		timeStart, err := infoSrc.ParseTime(srcOneDialogue.StartTime)
+		timeStart, err := my_util.ParseTime(srcOneDialogue.StartTime)
 		if err != nil {
 			return "", err
 		}
-		timeEnd, err := infoSrc.ParseTime(srcOneDialogue.EndTime)
+		timeEnd, err := my_util.ParseTime(srcOneDialogue.EndTime)
 		if err != nil {
 			return "", err
 		}
@@ -136,13 +137,21 @@ func (s SubTimelineFixer) FixSubTimelineByFixResults(infoSrc *subparser.FileInfo
 	*/
 	timeFormat := infoSrc.GetTimeFormat()
 	cacheIndex := 0
-	for _, srcOneDialogue := range infoSrc.Dialogues {
+	/*
+		这里的理想情况是 Dialogues，每一句话都是递增的对白时间
+		但是实际情况可能是，前面几个对白是特效、音乐的备注，那么他们的跨度可以很大
+		然后才到正常的对话对白，这样就出现不是递增的时间对白情况
+		那么就需要对 Dialogues 进行排序，然后再进行处理
+	*/
+	sort.Sort(subparser.OneDialogueByStartTime(infoSrc.Dialogues))
 
-		timeStart, err := infoSrc.ParseTime(srcOneDialogue.StartTime)
+	for index, srcOneDialogue := range infoSrc.Dialogues {
+
+		timeStart, err := my_util.ParseTime(srcOneDialogue.StartTime)
 		if err != nil {
 			return "", err
 		}
-		timeEnd, err := infoSrc.ParseTime(srcOneDialogue.EndTime)
+		timeEnd, err := my_util.ParseTime(srcOneDialogue.EndTime)
 		if err != nil {
 			return "", err
 		}
@@ -153,6 +162,8 @@ func (s SubTimelineFixer) FixSubTimelineByFixResults(infoSrc *subparser.FileInfo
 
 			inRange, nowOffsetTime := fixedResults[cacheIndex].InRange(startTimeBaseDouble, orgStartTimeDouble)
 			if inRange == false {
+				// 大于当前的范围，递增一个区间进行再次的判断
+				// 但是需要确定的是，递增出来的这个区间的 Index 是有效的，如果是无效的，那么就使用最后一个区间的偏移时间
 				cacheIndex++
 				continue
 			} else {
@@ -160,13 +171,17 @@ func (s SubTimelineFixer) FixSubTimelineByFixResults(infoSrc *subparser.FileInfo
 				break
 			}
 		}
+		if cacheIndex >= len(fixedResults) {
+			// 下一个区间的 Index 已经越界了，那么就使用最后一个区间的偏移
+			inOffsetTime = fixedResults[len(fixedResults)-1].NewMean
+		}
 		// 偏移时间
-		println(inOffsetTime)
+		println(index, inOffsetTime)
 		offsetTime := time.Duration(inOffsetTime*1000) * time.Millisecond
 		fixTimeStart := timeStart.Add(offsetTime)
 		fixTimeEnd := timeEnd.Add(offsetTime)
 
-		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.StartTime, my_util.Time2SubTimeString(fixTimeStart, timeFormat))
+		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.StartTime, "Index:"+fmt.Sprintf("%d-", index)+my_util.Time2SubTimeString(fixTimeStart, timeFormat))
 		fixContent = strings.ReplaceAll(fixContent, srcOneDialogue.EndTime, my_util.Time2SubTimeString(fixTimeEnd, timeFormat))
 	}
 
@@ -307,19 +322,19 @@ func (s *SubTimelineFixer) GetOffsetTimeV1(infoBase, infoSrc *subparser.FileInfo
 			tmpBaseIndex := baseDialogueFilterMap[matchIndexItem.BaseNowIndex+i]
 			tmpSrcIndex := matchIndexItem.SrcNowIndex + i
 
-			baseTimeStart, err := infoBase.ParseTime(infoBase.DialoguesFilterEx[tmpBaseIndex].StartTime)
+			baseTimeStart, err := my_util.ParseTime(infoBase.DialoguesFilterEx[tmpBaseIndex].StartTime)
 			if err != nil {
 				return false, 0, 0, err
 			}
-			baseTimeEnd, err := infoBase.ParseTime(infoBase.DialoguesFilterEx[tmpBaseIndex].EndTime)
+			baseTimeEnd, err := my_util.ParseTime(infoBase.DialoguesFilterEx[tmpBaseIndex].EndTime)
 			if err != nil {
 				return false, 0, 0, err
 			}
-			srtTimeStart, err := infoBase.ParseTime(infoSrc.DialoguesFilterEx[tmpSrcIndex].StartTime)
+			srtTimeStart, err := my_util.ParseTime(infoSrc.DialoguesFilterEx[tmpSrcIndex].StartTime)
 			if err != nil {
 				return false, 0, 0, err
 			}
-			srtTimeEnd, err := infoBase.ParseTime(infoSrc.DialoguesFilterEx[tmpSrcIndex].EndTime)
+			srtTimeEnd, err := my_util.ParseTime(infoSrc.DialoguesFilterEx[tmpSrcIndex].EndTime)
 			if err != nil {
 				return false, 0, 0, err
 			}
@@ -543,7 +558,8 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	*/
 	// 进行细节的修正
 	for index, fixedResult := range fixedResults {
-		if fixedResult.NewSD >= 0.1 {
+		// SD 大于 0.1 或者是 当前的 NewMean 与上一个点的 NewMean 差值大于 0.3
+		if fixedResult.NewSD >= 0.1 || (index > 1 && math.Abs(fixedResult.NewMean-fixedResults[index-1].NewMean) > 0.3) {
 			bok, newMean, newSD, op := s.fixOnePart(index, fixedResults, perPartLen)
 			if bok == true {
 				fixedResults[index].NewMean = newMean
@@ -571,16 +587,6 @@ func (s SubTimelineFixer) fixOnePart(startIndex int, fixedResults []FixResult, p
 			return true, fixedResults[startIndex-1].NewMean, fixedResults[startIndex-1].NewSD, OverParts{}
 		}
 	}
-
-	// 那么就需要向右看看
-	//if startIndex+1 < len(fixedResults) {
-	//	// 说明至少可以往右
-	//	// 如果右边的这个值，与当前值超过了 0.3 的绝对差值，那么是不适合的
-	//	if math.Abs(fixedResults[startIndex+1].NewMean-fixedResults[startIndex].NewMean) < 0.3 {
-	//		// 差值在接受的范围内，那么就使用这个左边的值去校正当前的值
-	//		return true, fixedResults[startIndex+1].NewMean, fixedResults[startIndex+1].NewSD, OverParts{}
-	//	}
-	//}
 
 	// 如果上面的理想情况都没有进去，那么就是这个差值很大
 	if fixedResults[startIndex].NewSD > 1 {

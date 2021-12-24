@@ -457,3 +457,16 @@ func IsEqual(f1, f2 float64) bool {
 		return math.Dim(f2, f1) < MIN
 	}
 }
+
+// ParseTime 解析字幕时间字符串，这里可能小数点后面有 2-4 位
+func ParseTime(inTime string) (time.Time, error) {
+
+	parseTime, err := time.Parse(common.TimeFormatPoint2, inTime)
+	if err != nil {
+		parseTime, err = time.Parse(common.TimeFormatPoint3, inTime)
+		if err != nil {
+			parseTime, err = time.Parse(common.TimeFormatPoint4, inTime)
+		}
+	}
+	return parseTime, err
+}
