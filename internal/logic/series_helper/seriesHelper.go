@@ -1,6 +1,7 @@
 package series_helper
 
 import (
+	"fmt"
 	"github.com/StalkR/imdb"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
@@ -144,8 +145,8 @@ func SkipChineseSeries(seriesRootPath string, _reqParam ...types.ReqParam) (bool
 	}
 }
 
-// OneSeriesDlSubInAllSite 一部连续剧在所有的网站下载相应的字幕
-func OneSeriesDlSubInAllSite(Suppliers []ifaces.ISupplier, seriesInfo *series.SeriesInfo, i int) []supplier.SubInfo {
+// DownloadSubtitleInAllSiteByOneSeries 一部连续剧，在所有的网站，下载相应的字幕
+func DownloadSubtitleInAllSiteByOneSeries(Suppliers []ifaces.ISupplier, seriesInfo *series.SeriesInfo, i int) []supplier.SubInfo {
 
 	defer func() {
 		log_helper.GetLogger().Infoln(i, "DlSub End", seriesInfo.DirPath)
@@ -188,6 +189,35 @@ func OneSeriesDlSubInAllSite(Suppliers []ifaces.ISupplier, seriesInfo *series.Se
 	}
 
 	return outSUbInfos
+}
+
+// SetTheSpecifiedEps2Download 设置指定的 Eps 去下载，可以方便调试或者是后续新功能，能够手动指定 Eps 下载字幕
+func SetTheSpecifiedEps2Download(seriesInfo *series.SeriesInfo, epsMap map[int]int) {
+
+	seriesInfo.NeedDlSeasonDict = make(map[int]int, 0)
+	seriesInfo.SeasonDict = make(map[int]int, 0)
+
+	nowNeedDlEpsKeyList := make(map[string]series.EpisodeInfo, 0)
+	for needDownloadSeason, needDownloadEp := range epsMap {
+
+		// 选择某一集去下载
+		seriesInfo.NeedDlSeasonDict[needDownloadSeason] = needDownloadSeason
+		seriesInfo.SeasonDict[needDownloadSeason] = needDownloadSeason
+		tmp := series.EpisodeInfo{}
+		for _, value := range seriesInfo.NeedDlEpsKeyList {
+			if value.Season == needDownloadSeason && value.Episode == needDownloadEp {
+				tmp = value
+				// 缓存下来
+				nowNeedDlEpsKeyList[fmt.Sprintf("S%dE%d", needDownloadSeason, needDownloadEp)] = tmp
+				break
+			}
+		}
+	}
+	// 一次性写进去
+	seriesInfo.NeedDlEpsKeyList = make(map[string]series.EpisodeInfo, 0)
+	for s, info := range nowNeedDlEpsKeyList {
+		seriesInfo.NeedDlEpsKeyList[s] = info
+	}
 }
 
 // GetSeriesList 获取这个目录下的所有文件夹名称，默认为一个连续剧的目录的List

@@ -238,7 +238,8 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, All
 			value[0].Episode = epsInfo.Episode
 			subInfoNeedDownload = append(subInfoNeedDownload, value[0])
 		} else {
-			s.log.Infoln("ZiMuKu Not Find Sub can be download", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
+			s.log.Infoln(s.GetSupplierName(), "Not Find Sub can be download",
+				epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 		}
 	}
 	// 全季的字幕列表，也拼进去，后面进行下载

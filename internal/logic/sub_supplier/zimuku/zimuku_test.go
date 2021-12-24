@@ -52,22 +52,11 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// 选择某一集去下载
-	//const needDownloadSeason = 4
-	//const needDownloadEp = 5
-	//seriesInfo.NeedDlSeasonDict = make(map[int]int, 0)
-	//seriesInfo.SeasonDict = make(map[int]int, 0)
-	//seriesInfo.NeedDlSeasonDict[needDownloadSeason] = needDownloadSeason
-	//seriesInfo.SeasonDict[needDownloadSeason] = needDownloadSeason
-	//tmp := series.EpisodeInfo{}
-	//for _, value := range seriesInfo.NeedDlEpsKeyList {
-	//	if value.Season == needDownloadSeason && value.Episode == needDownloadEp {
-	//		tmp = value
-	//		break
-	//	}
-	//}
-	//seriesInfo.NeedDlEpsKeyList = make(map[string]series.EpisodeInfo, 0)
-	//seriesInfo.NeedDlEpsKeyList[fmt.Sprintf("S%dE%d", needDownloadSeason, needDownloadEp)] = tmp
+	// 可以指定几集去调试
+	epsMap := make(map[int]int, 0)
+	epsMap[4] = 5
+	epsMap[1] = 4
+	series_helper2.SetTheSpecifiedEps2Download(seriesInfo, epsMap)
 
 	s := NewSupplier()
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)

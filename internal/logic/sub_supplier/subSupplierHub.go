@@ -143,7 +143,7 @@ func (d SubSupplierHub) DownloadSub4SeriesFromEmby(seriesDirPath string, seriesL
 
 func (d SubSupplierHub) dlSubFromSeriesInfo(seriesDirPath string, index int, seriesInfo *series.SeriesInfo, err error) (map[string][]string, error) {
 	// 下载好的字幕
-	subInfos := seriesHelper.OneSeriesDlSubInAllSite(d.Suppliers, seriesInfo, index)
+	subInfos := seriesHelper.DownloadSubtitleInAllSiteByOneSeries(d.Suppliers, seriesInfo, index)
 	// 整理字幕，比如解压什么的
 	// 每一集 SxEx - 对应解压整理后的字幕列表
 	organizeSubFiles, err := sub_helper.OrganizeDlSubFiles(filepath.Base(seriesDirPath), subInfos)
