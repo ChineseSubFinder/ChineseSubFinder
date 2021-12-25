@@ -815,8 +815,11 @@ func TestGetOffsetTimeV2_MoreTest(t *testing.T) {
 				t.Fatal("GetOffsetTimeV2 return false")
 			}
 
-			debug_view.SaveDebugChart(*baseUnitNew, tt.name+" -- baseUnitNew", "baseUnitNew")
-			debug_view.SaveDebugChart(*srcUnitNew, tt.name+" -- srcUnitNew", "srcUnitNew")
+			//debug_view.SaveDebugChart(*baseUnitNew, tt.name+" -- baseUnitNew", "baseUnitNew")
+			//debug_view.SaveDebugChart(*srcUnitNew, tt.name+" -- srcUnitNew", "srcUnitNew")
+
+			println("baseUnitNew:", fmt.Sprintf("%f", baseUnitNew.GetStartTimeNumber(true)))
+			println("srcUnitNew:", fmt.Sprintf("%f", srcUnitNew.GetStartTimeNumber(true)))
 
 			_, err = timelineFixer.FixSubTimelineByFixResults(infoSrc, srcUnitNew, fixedResults, tt.args.srcSubFile+FixMask+infoBase.Ext)
 			if err != nil {
@@ -839,7 +842,7 @@ var timelineFixer = NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConf
 	V2_FrontAndEndPerSrc:        0.2,
 	V2_WindowMatchPer:           0.2,
 	V2_CompareParts:             3,
-	V2_FixThreads:               2,
+	V2_FixThreads:               1,
 	V2_MaxStartTimeDiffSD:       0.1,
 	V2_MinOffset:                0.2,
 })

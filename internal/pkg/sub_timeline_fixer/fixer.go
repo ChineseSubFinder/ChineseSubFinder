@@ -470,7 +470,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	// 滑动窗口的长度
 	srcWindowLen := int(float64(srcVADLen) * s.FixerConfig.V2_WindowMatchPer)
 	// 划分为 4 个区域，每一个部分的长度
-	const parts = 20
+	const parts = 10
 	perPartLen := srcVADLen / parts
 	matchedInfos := make([]MatchInfo, 0)
 
@@ -517,6 +517,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 
 	fixedResults := make([]FixResult, 0)
 	sdLessCount := 0
+	// 这里的是 matchedInfos 是顺序的
 	for index, matchInfo := range matchedInfos {
 
 		log_helper.GetLogger().Infoln(index, "------------------------------------")
@@ -541,6 +542,19 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	if perLess < 0.7 {
 		return false, nil, nil
 	}
+
+	// matchedInfos 与 fixedResults 是对等的关系，fixedResults 中是计算过 Mean 的值，而 matchedInfos 有原始的值
+	for i, info := range matchedInfos {
+		for j := 0; j < len(info.IndexMatchWindowInfoMap); j++ {
+
+			value, bFound := info.IndexMatchWindowInfoMap[j]
+			if bFound == false {
+				continue
+			}
+
+			fixedResults[i].MatchWindowInfos = append(fixedResults[i].MatchWindowInfos, value)
+		}
+	}
 	/*
 		如果 outCorrelationFixResult 的 SD > 0.1，那么大概率这个时间轴的值匹配的有问题，需要向左或者向右找一个值进行继承
 		-4 0.001
@@ -560,11 +574,10 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	for index, fixedResult := range fixedResults {
 		// SD 大于 0.1 或者是 当前的 NewMean 与上一个点的 NewMean 差值大于 0.3
 		if fixedResult.NewSD >= 0.1 || (index > 1 && math.Abs(fixedResult.NewMean-fixedResults[index-1].NewMean) > 0.3) {
-			bok, newMean, newSD, op := s.fixOnePart(index, fixedResults, perPartLen)
+			bok, newMean, newSD := s.fixOnePart(index, fixedResults)
 			if bok == true {
 				fixedResults[index].NewMean = newMean
 				fixedResults[index].NewSD = newSD
-				fixedResults[index].OP = op
 			}
 		}
 	}
@@ -573,8 +586,8 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 }
 
 // fixOnePart 轻微地跳动可以根据左或者右去微调
-func (s SubTimelineFixer) fixOnePart(startIndex int, fixedResults []FixResult, perPartLen int) (bool, float64, float64, OverParts) {
-	op := OverParts{}
+func (s SubTimelineFixer) fixOnePart(startIndex int, fixedResults []FixResult) (bool, float64, float64) {
+
 	/*
 		找到这样情况的进行修正
 	*/
@@ -584,7 +597,7 @@ func (s SubTimelineFixer) fixOnePart(startIndex int, fixedResults []FixResult, p
 		// 如果左边的这个值，与当前值超过了 0.3 的绝对差值，那么是不适合的，就需要往右找
 		if math.Abs(fixedResults[startIndex-1].NewMean-fixedResults[startIndex].NewMean) < 0.3 {
 			// 差值在接受的范围内，那么就使用这个左边的值去校正当前的值
-			return true, fixedResults[startIndex-1].NewMean, fixedResults[startIndex-1].NewSD, OverParts{}
+			return true, fixedResults[startIndex-1].NewMean, fixedResults[startIndex-1].NewSD
 		}
 	}
 
@@ -596,7 +609,7 @@ func (s SubTimelineFixer) fixOnePart(startIndex int, fixedResults []FixResult, p
 			-146.85	243.83
 		*/
 		if startIndex-1 >= 0 {
-			return true, fixedResults[startIndex-1].NewMean, fixedResults[startIndex-1].NewSD, OverParts{}
+			return true, fixedResults[startIndex-1].NewMean, fixedResults[startIndex-1].NewSD
 		}
 	} else {
 		// SD 不是很大，可能就是正常的字幕分段的时间轴偏移的 越接处 !
@@ -620,7 +633,7 @@ func (s SubTimelineFixer) fixOnePart(startIndex int, fixedResults []FixResult, p
 		} else if startIndex-2 >= 0 {
 			left3Mean = float64(fixedResults[startIndex-1].NewMean+fixedResults[startIndex-2].NewMean) / 2.0
 		} else {
-			return false, 0, 0, OverParts{}
+			return false, 0, 0
 		}
 		// 向右，三个或者三个位置
 		if startIndex+3 >= 0 {
@@ -628,22 +641,30 @@ func (s SubTimelineFixer) fixOnePart(startIndex int, fixedResults []FixResult, p
 		} else if startIndex+2 >= 0 {
 			right3Mean = float64(fixedResults[startIndex+1].NewMean+fixedResults[startIndex+2].NewMean) / 2.0
 		} else {
-			return false, 0, 0, OverParts{}
+			return false, 0, 0
 		}
-		// xLen 计算公式见推到公式截图
-		xLen := (fixedResults[startIndex].NewMean*float64(perPartLen) - right3Mean*float64(perPartLen)) / (left3Mean - right3Mean)
-		yLen := float64(perPartLen) - xLen
+		// 将这个匹配的段中的子分段的时间轴偏移都进行一次计算，推算出到底是怎么样的配比可以得到这样的偏移结论
+		for i, info := range fixedResults[startIndex].MatchWindowInfos {
 
-		op.Has = true
-		op.XLen = xLen
-		op.YLen = yLen
-		op.XMean = left3Mean
-		op.YMean = right3Mean
+			perPartLen := info.EndVADIndex - info.StartVADIndex
+			op := OverParts{}
+			// xLen 计算公式见推到公式截图
+			xLen := (info.TimeDiffStartCorrelation*float64(perPartLen) - right3Mean*float64(perPartLen)) / (left3Mean - right3Mean)
+			yLen := float64(perPartLen) - xLen
 
-		return true, fixedResults[startIndex+1].NewMean, fixedResults[startIndex+1].NewSD, op
+			op.XLen = xLen
+			op.YLen = yLen
+			op.XMean = left3Mean
+			op.YMean = right3Mean
+
+			fixedResults[startIndex].IsOverParts = true
+			fixedResults[startIndex].MatchWindowInfos[i].OP = op
+		}
+
+		return true, fixedResults[startIndex+1].NewMean, fixedResults[startIndex+1].NewSD
 	}
 
-	return false, 0, 0, OverParts{}
+	return false, 0, 0
 }
 
 // slidingWindowProcessor 滑动窗口计算时间轴偏移
@@ -662,9 +683,10 @@ func (s *SubTimelineFixer) slidingWindowProcessor(windowInfo *WindowInfo) (*Matc
 	}
 	// -------------------------------------------------
 	outMatchInfo := MatchInfo{
-		StartDiffTimeList:   make([]float64, 0),
-		StartDiffTimeMap:    treemap.NewWith(utils.Float64Comparator),
-		StartDiffTimeListEx: make(stat.Float64Slice, 0),
+		IndexMatchWindowInfoMap: make(map[int]MatchWindowInfo, 0),
+		StartDiffTimeList:       make([]float64, 0),
+		StartDiffTimeMap:        treemap.NewWith(utils.Float64Comparator),
+		StartDiffTimeListEx:     make(stat.Float64Slice, 0),
 	}
 	fixFunc := func(i interface{}) error {
 		inData := i.(InputData)
@@ -676,13 +698,14 @@ func (s *SubTimelineFixer) slidingWindowProcessor(windowInfo *WindowInfo) (*Matc
 		var nowBaseStartTime = 0.0
 		var offsetIndex = 0
 		var score = 0.0
+		srcMaxLen := 0
 		// 图解，参考 Step 3
 		if bUseSubOrAudioAsBase == false {
 			// 使用 音频 来进行匹配
 			// 去掉头和尾，具体百分之多少，见 V2_FrontAndEndPerBase
 			audioCutLen := int(float64(len(inData.BaseAudioVADList)) * s.FixerConfig.V2_FrontAndEndPerBase)
 
-			srcMaxLen := windowInfo.SrcWindowLen + inData.OffsetIndex
+			srcMaxLen = windowInfo.SrcWindowLen + inData.OffsetIndex
 			if srcMaxLen >= len(inData.SrcUnit.GetVADFloatSlice()) {
 				srcMaxLen = len(inData.SrcUnit.GetVADFloatSlice()) - 1
 			}
@@ -697,7 +720,7 @@ func (s *SubTimelineFixer) slidingWindowProcessor(windowInfo *WindowInfo) (*Matc
 		} else {
 			// 使用 字幕 来进行匹配
 
-			srcMaxLen := inData.OffsetIndex + windowInfo.SrcWindowLen
+			srcMaxLen = inData.OffsetIndex + windowInfo.SrcWindowLen
 			if srcMaxLen >= len(inData.SrcUnit.GetVADFloatSlice()) {
 				srcMaxLen = len(inData.SrcUnit.GetVADFloatSlice()) - 1
 			}
@@ -723,6 +746,10 @@ func (s *SubTimelineFixer) slidingWindowProcessor(windowInfo *WindowInfo) (*Matc
 			"score:", fmt.Sprintf("%v", score))
 
 		mutexFixV2.Lock()
+		// 这里的未必的顺序的，所以才有 IndexMatchWindowInfoMap 的存在的意义
+		outMatchInfo.IndexMatchWindowInfoMap[inData.Index] = MatchWindowInfo{TimeDiffStartCorrelation: TimeDiffStartCorrelation,
+			StartVADIndex: inData.OffsetIndex,
+			EndVADIndex:   srcMaxLen}
 		outMatchInfo.StartDiffTimeList = append(outMatchInfo.StartDiffTimeList, TimeDiffStartCorrelation)
 		outMatchInfo.StartDiffTimeListEx = append(outMatchInfo.StartDiffTimeListEx, TimeDiffStartCorrelation)
 		outMatchInfo.StartDiffTimeMap.Put(score, windowInfo.MatchedTimes)
@@ -770,15 +797,16 @@ func (s *SubTimelineFixer) slidingWindowProcessor(windowInfo *WindowInfo) (*Matc
 	defer antPool.Release()
 	// -------------------------------------------------
 	wg := sync.WaitGroup{}
+	index := 0
 	for i := windowInfo.SrcSlideStartIndex; i < windowInfo.SrcSlideStartIndex+windowInfo.SrcSlideLen-1; {
 		wg.Add(1)
 
 		if bUseSubOrAudioAsBase == true {
 			// 使用字幕
-			err = antPool.Invoke(InputData{BaseUnit: *windowInfo.BaseUnit, SrcUnit: *windowInfo.SrcUnit, OffsetIndex: i, Wg: &wg})
+			err = antPool.Invoke(InputData{Index: index, BaseUnit: *windowInfo.BaseUnit, SrcUnit: *windowInfo.SrcUnit, OffsetIndex: i, Wg: &wg})
 		} else {
 			// 使用音频
-			err = antPool.Invoke(InputData{BaseAudioVADList: windowInfo.BaseAudioFloatList, SrcUnit: *windowInfo.SrcUnit, OffsetIndex: i, Wg: &wg})
+			err = antPool.Invoke(InputData{Index: index, BaseAudioVADList: windowInfo.BaseAudioFloatList, SrcUnit: *windowInfo.SrcUnit, OffsetIndex: i, Wg: &wg})
 		}
 
 		if err != nil {
@@ -786,6 +814,7 @@ func (s *SubTimelineFixer) slidingWindowProcessor(windowInfo *WindowInfo) (*Matc
 		}
 
 		i += windowInfo.OneStep
+		index++
 	}
 	wg.Wait()
 
@@ -809,7 +838,8 @@ func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tm
 			oldMean,
 			oldSd,
 			per,
-			OverParts{},
+			false,
+			make([]MatchWindowInfo, 0),
 		}
 	}
 
@@ -858,7 +888,8 @@ func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tm
 		newMean,
 		newSd,
 		per,
-		OverParts{},
+		false,
+		make([]MatchWindowInfo, 0),
 	}
 }
 
