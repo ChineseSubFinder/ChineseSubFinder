@@ -4,6 +4,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
+	"math"
+	"time"
 )
 
 type FileInfo struct {
@@ -49,6 +51,31 @@ func (f FileInfo) GetDialogueExContent(index int) string {
 	default:
 		return f.DialoguesFilterEx[index].EnLine
 	}
+}
+
+// ChangeDialoguesFilterExTimeByFramerateRatio 根据帧数比率调整时间轴 对应 ffsubsync -- SubtitleScaler
+func (f *FileInfo) ChangeDialoguesFilterExTimeByFramerateRatio(framerateRatio float64) error {
+
+	timeFormat := f.GetTimeFormat()
+	for i := 0; i < len(f.DialoguesFilterEx); i++ {
+
+		oneDialogue := f.DialoguesFilterEx[i]
+		timeStart, err := my_util.ParseTime(oneDialogue.StartTime)
+		if err != nil {
+			return err
+		}
+		timeEnd, err := my_util.ParseTime(oneDialogue.EndTime)
+		if err != nil {
+			return err
+		}
+		scaleTimeStart := timeStart.Add(time.Duration(my_util.Time2SecondNumber(timeStart) * framerateRatio * math.Pow10(9)))
+		scaleTimeEnd := timeEnd.Add(time.Duration(my_util.Time2SecondNumber(timeEnd) * framerateRatio * math.Pow10(9)))
+
+		my_util.Time2SubTimeString(scaleTimeStart, timeFormat)
+		my_util.Time2SubTimeString(scaleTimeEnd, timeFormat)
+	}
+
+	return nil
 }
 
 // OneDialogue 一句对话

@@ -507,7 +507,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 		})
 		// 实际 FFT 的匹配逻辑函数
 		// 时间轴差值数组
-		matchInfo, err := s.slidingWindowProcessor(&windowInfo)
+		matchInfo, err := s.slidingWindowProcessorV2(&windowInfo)
 		if err != nil {
 			return false, nil, err
 		}
@@ -521,7 +521,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	for index, matchInfo := range matchedInfos {
 
 		log_helper.GetLogger().Infoln(index, "------------------------------------")
-		outCorrelationFixResult := s.calcMeanAndSD(matchInfo.StartDiffTimeListEx, matchInfo.StartDiffTimeList)
+		outCorrelationFixResult := s.calcMeanAndSDV2(matchInfo.StartDiffTimeListEx, matchInfo.StartDiffTimeList)
 		log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner Old Mean: %v SD: %f Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
 		log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner New Mean: %v SD: %f Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
 
@@ -574,7 +574,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	for index, fixedResult := range fixedResults {
 		// SD 大于 0.1 或者是 当前的 NewMean 与上一个点的 NewMean 差值大于 0.3
 		if fixedResult.NewSD >= 0.1 || (index > 1 && math.Abs(fixedResult.NewMean-fixedResults[index-1].NewMean) > 0.3) {
-			bok, newMean, newSD := s.fixOnePart(index, fixedResults)
+			bok, newMean, newSD := s.fixOnePartV2(index, fixedResults)
 			if bok == true {
 				fixedResults[index].NewMean = newMean
 				fixedResults[index].NewSD = newSD
@@ -585,8 +585,8 @@ func (s *SubTimelineFixer) GetOffsetTimeV2(baseUnit, srcUnit *sub_helper.SubUnit
 	return true, fixedResults, nil
 }
 
-// fixOnePart 轻微地跳动可以根据左或者右去微调
-func (s SubTimelineFixer) fixOnePart(startIndex int, fixedResults []FixResult) (bool, float64, float64) {
+// fixOnePartV2 轻微地跳动可以根据左或者右去微调
+func (s SubTimelineFixer) fixOnePartV2(startIndex int, fixedResults []FixResult) (bool, float64, float64) {
 
 	/*
 		找到这样情况的进行修正
@@ -667,8 +667,8 @@ func (s SubTimelineFixer) fixOnePart(startIndex int, fixedResults []FixResult) (
 	return false, 0, 0
 }
 
-// slidingWindowProcessor 滑动窗口计算时间轴偏移
-func (s *SubTimelineFixer) slidingWindowProcessor(windowInfo *WindowInfo) (*MatchInfo, error) {
+// slidingWindowProcessorV2 滑动窗口计算时间轴偏移
+func (s *SubTimelineFixer) slidingWindowProcessorV2(windowInfo *WindowInfo) (*MatchInfo, error) {
 
 	// -------------------------------------------------
 	var bUseSubOrAudioAsBase = true
@@ -821,7 +821,7 @@ func (s *SubTimelineFixer) slidingWindowProcessor(windowInfo *WindowInfo) (*Matc
 	return &outMatchInfo, nil
 }
 
-func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tmpStartDiffTime []float64) FixResult {
+func (s *SubTimelineFixer) calcMeanAndSDV2(startDiffTimeList stat.Float64Slice, tmpStartDiffTime []float64) FixResult {
 
 	oldMean := stat.Mean(startDiffTimeList)
 	oldSd := stat.Sd(startDiffTimeList)
@@ -891,6 +891,184 @@ func (s *SubTimelineFixer) calcMeanAndSD(startDiffTimeList stat.Float64Slice, tm
 		false,
 		make([]MatchWindowInfo, 0),
 	}
+}
+
+// GetOffsetTimeV3 使用内置的字幕校正外置的字幕时间轴
+func (s *SubTimelineFixer) GetOffsetTimeV3(infoBase, infoSrc, orgFix *subparser.FileInfo, audioVadList []vad.VADInfo) error {
+
+	// -------------------------------------------------
+	var bUseSubOrAudioAsBase = true
+	if infoBase == nil && audioVadList != nil {
+		// 使用 音频 来进行匹配
+		bUseSubOrAudioAsBase = false
+	} else if infoBase != nil {
+		// 使用 字幕 来进行匹配
+		bUseSubOrAudioAsBase = true
+	} else {
+		return errors.New("GetOffsetTimeV2 input baseUnit or AudioVad is nil")
+	}
+	// -------------------------------------------------
+	audioFloatList := vad.GetFloatSlice(audioVadList)
+	baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, 0)
+	if err != nil {
+		return err
+	}
+	srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, 0)
+	if err != nil {
+		return err
+	}
+	/*
+		上面直接得到所有的输入源，都是完整的一个文件，字幕 or 音频
+		然后根据字幕文件每一个对白进行匹配，这里就使用 V2_FrontAndEndPerSrc 进行字幕的选择，不打算从第一句话开始
+		那么假如 一共有 100 句话，V2_FrontAndEndPerSrc 是 0.2，那么就是从 20 - 80 句话进行匹配计算
+		然后 < 20 的就继承 20 的偏移，> 80 的就继承 80 的偏移即可
+		那么现在就需要从对白中开始遍历
+	*/
+	fffAligner := NewFFTAligner()
+	err2, done := s.caleOne(0.1, srcUnitNew, fffAligner, baseUnitNew)
+	if done {
+		return err2
+	}
+	err2, done = s.caleOne(0.2, srcUnitNew, fffAligner, baseUnitNew)
+	if done {
+		return err2
+	}
+
+	skipSubLen := int(float64(len(infoSrc.DialoguesFilter)) * s.FixerConfig.V2_FrontAndEndPerSrc)
+
+	sort.Sort(subparser.OneDialogueByStartTime(infoSrc.DialoguesFilter))
+	sort.Sort(subparser.OneDialogueByStartTime(orgFix.DialoguesFilter))
+
+	for i := 0; i < len(infoSrc.DialoguesFilter); i++ {
+
+		// 得到的是真实的时间
+		srcOneDialogueNow := infoSrc.DialoguesFilter[i]
+		srcTimeStartNow, err := my_util.ParseTime(srcOneDialogueNow.StartTime)
+		if err != nil {
+			return err
+		}
+		orgFixOneDialogueNow := orgFix.DialoguesFilter[i]
+		orgFixTimeStartNow, err := my_util.ParseTime(orgFixOneDialogueNow.StartTime)
+		if err != nil {
+			return err
+		}
+
+		println("Index:", i, "srcTimeStartOrg:", srcTimeStartNow.Format("15:04:05.000"),
+			"src-fix-offset:", my_util.Time2SecondNumber(orgFixTimeStartNow)-my_util.Time2SecondNumber(srcTimeStartNow))
+	}
+	println("------------------")
+	for i := skipSubLen; i < len(infoSrc.DialoguesFilter)-skipSubLen-1; i++ {
+
+		var bok = false
+		var nowBaseStartTime = 0.0
+		var offsetIndex = 0
+		var score = 0.0
+		const next = 20
+		const secondRange = 45
+		// -------------------------------------------------
+		srcOneDialogueNow := infoSrc.DialoguesFilter[i]
+		iNext := i + next
+		if iNext >= len(infoSrc.DialoguesFilter)-skipSubLen-1 {
+			iNext = len(infoSrc.DialoguesFilter) - skipSubLen - 1
+		}
+		srcOneDialogueNext := infoSrc.DialoguesFilter[iNext]
+		// 得到的是真实的时间
+		srcTimeStartNow, err := my_util.ParseTime(srcOneDialogueNow.StartTime)
+		if err != nil {
+			return err
+		}
+		srcTimeEndNext, err := my_util.ParseTime(srcOneDialogueNext.EndTime)
+		if err != nil {
+			return err
+		}
+		orgFixOneDialogueNow := orgFix.DialoguesFilter[i]
+		orgFixTimeStartNow, err := my_util.ParseTime(orgFixOneDialogueNow.StartTime)
+		if err != nil {
+			return err
+		}
+		// -------------------------------------------------
+		// 需要转换为 VAD 的对应 Index，需要减去 baseTime，然后根据 10ms 进行计算
+		// -------------------------------------------------
+		// Src
+		srcStartOffsetTimeNow := srcUnitNew.RealTimeToOffsetTime(srcTimeStartNow)
+		srcStartTimeVADIndexNow := int(my_util.Time2SecondNumber(srcStartOffsetTimeNow) * 100)
+
+		srcEndOffsetTimeNext := srcUnitNew.RealTimeToOffsetTime(srcTimeEndNext)
+		srcEndTimeVADIndexNext := int(my_util.Time2SecondNumber(srcEndOffsetTimeNext) * 100)
+		// -------------------------------------------------
+		if bUseSubOrAudioAsBase == false {
+			// 使用 音频 来进行匹配
+
+		} else {
+			// 使用 字幕 来进行匹配
+			// -------------------------------------------------
+			// Base
+			baseStartOffsetTimeNow := baseUnitNew.RealTimeToOffsetTime(srcTimeStartNow).Add(-secondRange * time.Second)
+			baseStartTimeVADIndexNow := int(my_util.Time2SecondNumber(baseStartOffsetTimeNow) * 100)
+
+			baseEndOffsetTimeNext := baseUnitNew.RealTimeToOffsetTime(srcTimeEndNext).Add(secondRange * time.Second)
+			baseEndTimeVADIndexNext := int(my_util.Time2SecondNumber(baseEndOffsetTimeNext) * 100)
+			if baseEndTimeVADIndexNext >= len(baseUnitNew.VADList)-1 {
+				baseEndTimeVADIndexNext = len(baseUnitNew.VADList) - 1
+			}
+			// -------------------------------------------------
+			offsetIndex, score = fffAligner.Fit(baseUnitNew.GetVADFloatSlice()[baseStartTimeVADIndexNow:baseEndTimeVADIndexNext], srcUnitNew.GetVADFloatSlice()[srcStartTimeVADIndexNow:srcEndTimeVADIndexNext])
+			if offsetIndex < 0 {
+				//return nil
+				continue
+			}
+			bok, nowBaseStartTime = baseUnitNew.GetIndexTimeNumber(baseStartTimeVADIndexNow+offsetIndex, true)
+			if bok == false {
+				return nil
+			}
+		}
+		// 需要校正的字幕
+		bok, nowSrcStartTime := srcUnitNew.GetIndexTimeNumber(srcStartTimeVADIndexNow, true)
+		if bok == false {
+			return nil
+		}
+		// 时间差值
+		TimeDiffStartCorrelation := nowBaseStartTime - nowSrcStartTime
+
+		println("Index:", i, "srcTimeStartOrg:", srcTimeStartNow.Format("15:04:05.000"),
+			"OffsetTime:", TimeDiffStartCorrelation, "Score:", score,
+			"ChangedTime:", srcTimeStartNow.Add(time.Duration(TimeDiffStartCorrelation*1000)*time.Millisecond).Format("15:04:05.000"),
+			"OrgFixTime:", orgFixTimeStartNow.Format("15:04:05.000"),
+			"src-fix-offset:", my_util.Time2SecondNumber(orgFixTimeStartNow)-my_util.Time2SecondNumber(srcTimeStartNow))
+	}
+
+	//if baseStartTimeVADIndexNow > 3600000 {
+	//	baseStartTimeVADIndexNow = 0
+	//}
+
+	println(len(audioFloatList))
+	println(len(baseUnitNew.VADList))
+	println(len(srcUnitNew.VADList))
+
+	return nil
+}
+
+func (s *SubTimelineFixer) caleOne(cutPer float64, srcUnitNew *sub_helper.SubUnit, fffAligner *FFTAligner, baseUnitNew *sub_helper.SubUnit) (error, bool) {
+	srcVADLen := len(srcUnitNew.VADList)
+	srcCutStartIndex := int(float64(srcVADLen) * cutPer)
+	offsetIndexAll, scoreAll := fffAligner.Fit(baseUnitNew.GetVADFloatSlice(), srcUnitNew.GetVADFloatSlice()[srcCutStartIndex:srcVADLen-srcCutStartIndex])
+	bok, nowBaseStartTime := baseUnitNew.GetIndexTimeNumber(0+offsetIndexAll, true)
+	if bok == false {
+		return nil, true
+	}
+	// 需要校正的字幕
+	bok, nowSrcStartTime := srcUnitNew.GetIndexTimeNumber(srcCutStartIndex, true)
+	if bok == false {
+		return nil, true
+	}
+	// 时间差值
+	TimeDiffStartCorrelation := nowBaseStartTime - nowSrcStartTime
+	bok, srcIndexCutTime := srcUnitNew.GetIndexTime(srcCutStartIndex, true)
+	if bok == false {
+		return nil, true
+	}
+	println(srcIndexCutTime.Format("15:04:05.000"), TimeDiffStartCorrelation, scoreAll)
+	return nil, false
 }
 
 const FixMask = "-fix"
