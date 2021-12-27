@@ -693,7 +693,7 @@ func (s *SubTimelineFixer) slidingWindowProcessorV2(windowInfo *WindowInfo) (*Ma
 		// -------------------------------------------------
 		// 开始匹配
 		// 这里的对白单元，当前的 Base 进行对比，详细示例见图解。Step 2 中橙色的区域
-		fffAligner := NewFFTAligner()
+		fffAligner := NewFFTAligner(DefaultMaxOffsetSeconds, SampleRate)
 		var bok = false
 		var nowBaseStartTime = 0.0
 		var offsetIndex = 0
@@ -924,7 +924,7 @@ func (s *SubTimelineFixer) GetOffsetTimeV3(infoBase, infoSrc, orgFix *subparser.
 		然后 < 20 的就继承 20 的偏移，> 80 的就继承 80 的偏移即可
 		那么现在就需要从对白中开始遍历
 	*/
-	fffAligner := NewFFTAligner()
+	fffAligner := NewFFTAligner(DefaultMaxOffsetSeconds, SampleRate)
 	err2, done := s.caleOne(0.1, srcUnitNew, fffAligner, baseUnitNew)
 	if done {
 		return err2

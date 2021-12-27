@@ -7,7 +7,7 @@ import (
 )
 
 func TestGss(t *testing.T) {
-	f := func(x float64) float64 {
+	f := func(x float64, b bool) float64 {
 		tmp := x - 2
 		return tmp * tmp
 	}

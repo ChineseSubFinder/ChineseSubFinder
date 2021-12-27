@@ -57,9 +57,9 @@ func (f FileInfo) GetDialogueExContent(index int) string {
 func (f *FileInfo) ChangeDialoguesFilterExTimeByFramerateRatio(framerateRatio float64) error {
 
 	timeFormat := f.GetTimeFormat()
-	for i := 0; i < len(f.DialoguesFilterEx); i++ {
+	for i := 0; i < len(f.DialoguesFilter); i++ {
 
-		oneDialogue := f.DialoguesFilterEx[i]
+		oneDialogue := f.DialoguesFilter[i]
 		timeStart, err := my_util.ParseTime(oneDialogue.StartTime)
 		if err != nil {
 			return err
@@ -68,11 +68,14 @@ func (f *FileInfo) ChangeDialoguesFilterExTimeByFramerateRatio(framerateRatio fl
 		if err != nil {
 			return err
 		}
-		scaleTimeStart := timeStart.Add(time.Duration(my_util.Time2SecondNumber(timeStart) * framerateRatio * math.Pow10(9)))
-		scaleTimeEnd := timeEnd.Add(time.Duration(my_util.Time2SecondNumber(timeEnd) * framerateRatio * math.Pow10(9)))
+		timeStartNumber := my_util.Time2SecondNumber(timeStart)
+		timeEndNumber := my_util.Time2SecondNumber(timeEnd)
 
-		my_util.Time2SubTimeString(scaleTimeStart, timeFormat)
-		my_util.Time2SubTimeString(scaleTimeEnd, timeFormat)
+		scaleTimeStart := time.Time{}.Add(time.Duration(timeStartNumber * framerateRatio * math.Pow10(9)))
+		scaleTimeEnd := time.Time{}.Add(time.Duration(timeEndNumber * framerateRatio * math.Pow10(9)))
+
+		f.DialoguesFilter[i].StartTime = my_util.Time2SubTimeString(scaleTimeStart, timeFormat)
+		f.DialoguesFilter[i].EndTime = my_util.Time2SubTimeString(scaleTimeEnd, timeFormat)
 	}
 
 	return nil

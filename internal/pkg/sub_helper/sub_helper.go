@@ -481,6 +481,8 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 	if err != nil {
 		return nil, err
 	}
+	// 如果想要从 0 时间点开始算，那么 subStartTimeFloor 这个值就需要重置到0
+	subStartTimeFloor = 0
 	subFullSecondTimeFloor := subEndTimeFloor - subStartTimeFloor
 	// 根据这个时长就能够得到一个完整的 VAD List，然后再通过每一句对白进行 VAD 值的调整即可，这样就能够保证
 	// 相同的一个字幕因为使用 ffmpeg 导出 srt 和 ass 后的，可能存在总体时间轴不一致的问题

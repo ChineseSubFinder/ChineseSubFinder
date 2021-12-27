@@ -13,15 +13,25 @@ import (
 	复现 https://github.com/smacke/ffsubsync 的 FFTAligner 算法
 */
 type FFTAligner struct {
+	maxOffsetSamples int
 }
 
-func NewFFTAligner() *FFTAligner {
-	return &FFTAligner{}
+func NewFFTAligner(maxOffsetSeconds, sampleRate int) *FFTAligner {
+
+	maxOffsetSamples := maxOffsetSeconds * sampleRate
+	if maxOffsetSamples < 0 {
+		maxOffsetSamples = -maxOffsetSamples
+	}
+	return &FFTAligner{
+		maxOffsetSamples: maxOffsetSamples,
+	}
 }
 
 // Fit 给出最佳的偏移，还需要根据实际情况进行转换（比如，1 步 是 10 ms）,输入的数组只能是 1 -1 这样的值，需要在外部做好归一化
 func (f FFTAligner) Fit(refFloats, subFloats []float64) (int, float64) {
-	return f.computeArgmax(f.fit(refFloats, subFloats), subFloats)
+
+	convolve := f.fit(refFloats, subFloats)
+	return f.computeArgmax(f.eliminateExtremeOffsetsFromSolutions(convolve, subFloats), subFloats)
 }
 
 // fit 返回 convolve
@@ -73,6 +83,27 @@ func (f FFTAligner) fit(refFloats, subFloats []float64) []float64 {
 	floats.Scale(1/float64(len(power2Ref)), convolve)
 
 	return convolve
+}
+
+func (f FFTAligner) eliminateExtremeOffsetsFromSolutions(convolve, subSting []float64) []float64 {
+	if f.maxOffsetSamples == 0 {
+		return convolve
+	}
+
+	convolveCopy := convolve
+	offsetFun := func(offset int) int {
+		return len(convolveCopy) - 1 + offset - len(subSting)
+	}
+	s1 := offsetFun(-f.maxOffsetSamples)
+	s2 := offsetFun(f.maxOffsetSamples)
+	for i := 0; i < s1; i++ {
+		convolveCopy[i] = math.NaN()
+	}
+	for i := s2; i < len(convolveCopy); i++ {
+		convolveCopy[i] = math.NaN()
+	}
+
+	return convolveCopy
 }
 
 // computeArgmax 找对最优偏移，还需要根据实际情况进行转换（比如，1 步 是 10 ms）
