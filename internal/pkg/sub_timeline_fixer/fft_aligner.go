@@ -37,8 +37,6 @@ func (f FFTAligner) Fit(refFloats, subFloats []float64) (int, float64) {
 // fit 返回 convolve
 func (f FFTAligner) fit(refFloats, subFloats []float64) []float64 {
 
-	// 先初始化一个 fft 共用实例
-	fftIns := fourier.NewFFT(1000)
 	// 计算出一维矩阵的长度
 	totalBits := math.Log2(float64(len(refFloats)) + float64(len(subFloats)))
 	totalLength := int(math.Pow(2, math.Ceil(totalBits)))
@@ -58,6 +56,8 @@ func (f FFTAligner) fit(refFloats, subFloats []float64) []float64 {
 	}
 	// 可选择的 FFT 实现 "github.com/brettbuddin/fourier"
 	//subFT := fourier.Forward()
+	// 先初始化一个 fft 共用实例
+	fftIns := fourier.NewFFT(len(power2Sub))
 	fftIns.Reset(len(power2Sub))
 	subFT := fftIns.Coefficients(nil, power2Sub)
 	// ----------------------------------------------------------

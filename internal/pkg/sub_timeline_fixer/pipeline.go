@@ -30,7 +30,6 @@ func (p Pipeline) FitGSS(infoBase, infoSrc *subparser.FileInfo) error {
 	if err != nil {
 		return err
 	}
-	fffAligner := NewFFTAligner(DefaultMaxOffsetSeconds, SampleRate)
 
 	framerateRatios := p.getFramerateRatios2Try()
 	for _, framerateRatio := range framerateRatios {
@@ -58,6 +57,7 @@ func (p Pipeline) FitGSS(infoBase, infoSrc *subparser.FileInfo) error {
 
 		optFunc := func(framerateRatio float64, isLastIter bool) float64 {
 
+			fffAligner := NewFFTAligner(DefaultMaxOffsetSeconds, SampleRate)
 			// 3. speech_extract	从字幕转换为 VAD 的语音检测信息
 			// 然后进行 base 与 src 匹配计算，将每一次变动 framerateRatio 计算得到的 偏移值和分数进行记录
 			bestOffset, score := fffAligner.Fit(baseUnitNew.GetVADFloatSlice(), tmpSrcInfoUnit.GetVADFloatSlice())
