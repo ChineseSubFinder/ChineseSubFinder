@@ -6,6 +6,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/gss"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/huandu/go-clone"
 	"os"
@@ -26,17 +27,30 @@ func NewPipeline(maxOffsetSeconds int) *Pipeline {
 	}
 }
 
-func (p Pipeline) FixTimeline(infoBase, infoSrc *subparser.FileInfo, useGSS bool, desSaveSubFileFullPath string) (PipeResult, string, error) {
+func (p Pipeline) FixTimeline(infoBase, infoSrc *subparser.FileInfo, audioVadList []vad.VADInfo, useGSS bool, desSaveSubFileFullPath string) (PipeResult, string, error) {
+
+	baseVADInfo := make([]float64, 0)
+	useSubtitleOrAudioAsBase := false
+	// 排序
+	infoSrc.SortDialogues()
+	if infoBase == nil && audioVadList != nil {
+		baseVADInfo = vad.GetFloatSlice(audioVadList)
+		useSubtitleOrAudioAsBase = true
+	} else if infoBase != nil {
+		useSubtitleOrAudioAsBase = false
+		// 排序
+		infoBase.SortDialogues()
+		// 解析处 VAD 信息
+		baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, 0)
+		if err != nil {
+			return PipeResult{}, "", err
+		}
+		baseVADInfo = baseUnitNew.GetVADFloatSlice()
+	} else {
+		return PipeResult{}, "", errors.New("FixTimeline input is error")
+	}
 
 	pipeResults := make([]PipeResult, 0)
-	// 排序
-	infoBase.SortDialogues()
-	infoSrc.SortDialogues()
-	// 解析处 VAD 信息
-	baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, 0)
-	if err != nil {
-		return PipeResult{}, "", err
-	}
 	/*
 			这里复现 ffsubsync 的思路
 			1. 首先由 getFramerateRatios2Try 得到多个帧数比率的数值，理论上有以下 7 个值：
@@ -59,8 +73,10 @@ func (p Pipeline) FixTimeline(infoBase, infoSrc *subparser.FileInfo, useGSS bool
 	framerateRatios := make([]float64, 0)
 	framerateRatios = p.getFramerateRatios2Try()
 	// 2.
-	inferredFramerateRatioFromLength := float64(infoBase.GetNumFrames()) / float64(infoSrc.GetNumFrames())
-	framerateRatios = append(framerateRatios, inferredFramerateRatioFromLength)
+	if useSubtitleOrAudioAsBase == false {
+		inferredFramerateRatioFromLength := float64(infoBase.GetNumFrames()) / float64(infoSrc.GetNumFrames())
+		framerateRatios = append(framerateRatios, inferredFramerateRatioFromLength)
+	}
 	// 3.
 	fffAligner := NewFFTAligner(p.MaxOffsetSeconds, SampleRate)
 	// 需要在这个偏移之下
@@ -81,7 +97,7 @@ func (p Pipeline) FixTimeline(infoBase, infoSrc *subparser.FileInfo, useGSS bool
 		// 1. parse			解析字幕
 		tmpInfoSrc := clone.Clone(infoSrc).(*subparser.FileInfo)
 		// 2. scale			根据帧数比率调整时间轴
-		err = tmpInfoSrc.ChangeDialoguesTimeByFramerateRatio(framerateRatio)
+		err := tmpInfoSrc.ChangeDialoguesTimeByFramerateRatio(framerateRatio)
 		if err != nil {
 			// 还原
 			println("ChangeDialoguesTimeByFramerateRatio", err)
@@ -92,7 +108,7 @@ func (p Pipeline) FixTimeline(infoBase, infoSrc *subparser.FileInfo, useGSS bool
 		if err != nil {
 			return PipeResult{}, "", err
 		}
-		bestOffset, score := fffAligner.Fit(baseUnitNew.GetVADFloatSlice(), tmpSrcInfoUnit.GetVADFloatSlice())
+		bestOffset, score := fffAligner.Fit(baseVADInfo, tmpSrcInfoUnit.GetVADFloatSlice())
 		pipeResult := PipeResult{
 			Score:          score,
 			BestOffset:     bestOffset,
@@ -110,7 +126,7 @@ func (p Pipeline) FixTimeline(infoBase, infoSrc *subparser.FileInfo, useGSS bool
 			// 1. parse			解析字幕
 			tmpInfoSrc := clone.Clone(infoSrc).(*subparser.FileInfo)
 			// 2. scale			根据帧数比率调整时间轴
-			err = tmpInfoSrc.ChangeDialoguesTimeByFramerateRatio(framerateRatio)
+			err := tmpInfoSrc.ChangeDialoguesTimeByFramerateRatio(framerateRatio)
 			if err != nil {
 				// 还原
 				println("ChangeDialoguesTimeByFramerateRatio", err)
@@ -122,7 +138,7 @@ func (p Pipeline) FixTimeline(infoBase, infoSrc *subparser.FileInfo, useGSS bool
 				return 0
 			}
 			// 然后进行 base 与 src 匹配计算，将每一次变动 framerateRatio 计算得到的 偏移值和分数进行记录
-			bestOffset, score := fffAligner.Fit(baseUnitNew.GetVADFloatSlice(), tmpSrcInfoUnit.GetVADFloatSlice())
+			bestOffset, score := fffAligner.Fit(baseVADInfo, tmpSrcInfoUnit.GetVADFloatSlice())
 			println(fmt.Sprintf("got score %.0f (offset %d) for ratio %.3f", score, bestOffset, framerateRatio))
 			// 放到外部的存储中
 			if isLastIter == true {
@@ -142,7 +158,7 @@ func (p Pipeline) FixTimeline(infoBase, infoSrc *subparser.FileInfo, useGSS bool
 	// 先进行过滤
 	filterPipeResults := make([]PipeResult, 0)
 	for _, result := range pipeResults {
-		if int(result.Score) < maxOffsetSamples {
+		if result.BestOffset < maxOffsetSamples {
 			filterPipeResults = append(filterPipeResults, result)
 		}
 	}
