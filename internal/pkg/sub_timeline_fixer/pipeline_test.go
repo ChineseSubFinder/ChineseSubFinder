@@ -10,7 +10,7 @@ import (
 
 func TestPipeline_getFramerateRatios2Try(t *testing.T) {
 
-	outList := NewPipeline().getFramerateRatios2Try()
+	outList := NewPipeline(DefaultMaxOffsetSeconds).getFramerateRatios2Try()
 	for i, value := range outList {
 		println(i, fmt.Sprintf("%v", value))
 	}
@@ -20,9 +20,10 @@ func TestPipeline_FitGSS(t *testing.T) {
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
 	type args struct {
-		baseSubFile   string
-		orgFixSubFile string
-		srcSubFile    string
+		baseSubFile      string
+		ffsubSyncSubFile string
+		srcSubFile       string
+		srcFixedSubFile  string
 	}
 	tests := []struct {
 		name    string
@@ -31,19 +32,22 @@ func TestPipeline_FitGSS(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "BL S01E03", args: args{
-			baseSubFile:   "C:\\Tmp\\BL - S01E03\\英_2.ass",
-			orgFixSubFile: "C:\\Tmp\\BL - S01E03\\org-fix.ass",
-			srcSubFile:    "C:\\Tmp\\BL - S01E03\\org.ass",
+			baseSubFile:      "C:\\Tmp\\BL - S01E03\\英_2.ass",
+			ffsubSyncSubFile: "C:\\Tmp\\BL - S01E03\\ffsubsync.ass",
+			srcSubFile:       "C:\\Tmp\\BL - S01E03\\org.ass",
+			srcFixedSubFile:  "C:\\Tmp\\BL - S01E03\\org-fix.ass",
 		}, want: -4.1, wantErr: false},
 		{name: "Rick and Morty - S05E10", args: args{
-			baseSubFile:   "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
-			orgFixSubFile: "C:\\Tmp\\Rick and Morty - S05E10\\org-fix.ass",
-			srcSubFile:    "C:\\Tmp\\Rick and Morty - S05E10\\org.ass",
+			baseSubFile:      "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
+			ffsubSyncSubFile: "C:\\Tmp\\Rick and Morty - S05E10\\ffsubsync.ass",
+			srcSubFile:       "C:\\Tmp\\Rick and Morty - S05E10\\org.ass",
+			srcFixedSubFile:  "C:\\Tmp\\Rick and Morty - S05E10\\org-fix.ass",
 		}, want: -4.1, wantErr: false},
 		{name: "Foundation - S01E09", args: args{
-			baseSubFile:   "C:\\Tmp\\Foundation - S01E09\\英_2.ass",
-			orgFixSubFile: "C:\\Tmp\\Foundation - S01E09\\org-fix.ass",
-			srcSubFile:    "C:\\Tmp\\Foundation - S01E09\\org.ass",
+			baseSubFile:      "C:\\Tmp\\Foundation - S01E09\\英_2.ass",
+			ffsubSyncSubFile: "C:\\Tmp\\Foundation - S01E09\\ffsubsync.ass",
+			srcSubFile:       "C:\\Tmp\\Foundation - S01E09\\org.ass",
+			srcFixedSubFile:  "C:\\Tmp\\Foundation - S01E09\\org-fix.ass",
 		}, want: -4.1, wantErr: false},
 		{name: "mix", args: args{
 			baseSubFile: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
@@ -70,9 +74,9 @@ func TestPipeline_FitGSS(t *testing.T) {
 				t.Fatal("sub not match")
 			}
 			// ---------------------------------------------------------------------------------------
-			err = NewPipeline().Fit(infoBase, infoSrc, true)
+			_, err = NewPipeline(DefaultMaxOffsetSeconds).FixTimeline(infoBase, infoSrc, false, tt.args.srcFixedSubFile)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetOffsetTimeV3() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("FitGSS() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 		})

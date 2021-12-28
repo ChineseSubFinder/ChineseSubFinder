@@ -1,36 +1,41 @@
 package sub_timeline_fixer
 
 import (
+	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/gss"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/huandu/go-clone"
+	"os"
+	"sort"
+	"strings"
+	"time"
 )
 
 type Pipeline struct {
-	framerateRatios []float64
+	MaxOffsetSeconds int
+	framerateRatios  []float64
 }
 
-func NewPipeline() *Pipeline {
+func NewPipeline(maxOffsetSeconds int) *Pipeline {
 	return &Pipeline{
-		framerateRatios: make([]float64, 0),
+		MaxOffsetSeconds: maxOffsetSeconds,
+		framerateRatios:  make([]float64, 0),
 	}
 }
 
-func (p Pipeline) Fit(infoBase, infoSrc *subparser.FileInfo, useGSS bool) error {
+func (p Pipeline) FixTimeline(infoBase, infoSrc *subparser.FileInfo, useGSS bool, desSaveSubFileFullPath string) (PipeResult, string, error) {
 
 	pipeResults := make([]PipeResult, 0)
 	// 排序
 	infoBase.SortDialogues()
 	infoSrc.SortDialogues()
-	println(fmt.Sprintf("%f", my_util.Time2SecondNumber(infoBase.GetStartTime())))
-	println(fmt.Sprintf("%f", my_util.Time2SecondNumber(infoBase.GetEndTime())))
 	// 解析处 VAD 信息
 	baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, 0)
 	if err != nil {
-		return err
+		return PipeResult{}, "", err
 	}
 	/*
 			这里复现 ffsubsync 的思路
@@ -57,7 +62,13 @@ func (p Pipeline) Fit(infoBase, infoSrc *subparser.FileInfo, useGSS bool) error 
 	inferredFramerateRatioFromLength := float64(infoBase.GetNumFrames()) / float64(infoSrc.GetNumFrames())
 	framerateRatios = append(framerateRatios, inferredFramerateRatioFromLength)
 	// 3.
-	fffAligner := NewFFTAligner(DefaultMaxOffsetSeconds, SampleRate)
+	fffAligner := NewFFTAligner(p.MaxOffsetSeconds, SampleRate)
+	// 需要在这个偏移之下
+	maxOffsetSamples := p.MaxOffsetSeconds * SampleRate
+	if maxOffsetSamples < 0 {
+		maxOffsetSamples = -maxOffsetSamples
+	}
+
 	for _, framerateRatio := range framerateRatios {
 
 		/*
@@ -79,14 +90,14 @@ func (p Pipeline) Fit(infoBase, infoSrc *subparser.FileInfo, useGSS bool) error 
 		// 3. speech_extract	从字幕转换为 VAD 的语音检测信息
 		tmpSrcInfoUnit, err := sub_helper.GetVADInfoFeatureFromSubNew(tmpInfoSrc, 0)
 		if err != nil {
-			return err
+			return PipeResult{}, "", err
 		}
-		// 不是用 GSS
 		bestOffset, score := fffAligner.Fit(baseUnitNew.GetVADFloatSlice(), tmpSrcInfoUnit.GetVADFloatSlice())
 		pipeResult := PipeResult{
-			Score:       score,
-			BestOffset:  bestOffset,
-			ScaleFactor: framerateRatio,
+			Score:          score,
+			BestOffset:     bestOffset,
+			ScaleFactor:    framerateRatio,
+			ScaledFileInfo: tmpInfoSrc,
 		}
 		pipeResults = append(pipeResults, pipeResult)
 	}
@@ -116,9 +127,10 @@ func (p Pipeline) Fit(infoBase, infoSrc *subparser.FileInfo, useGSS bool) error 
 			// 放到外部的存储中
 			if isLastIter == true {
 				pipeResult := PipeResult{
-					Score:       score,
-					BestOffset:  bestOffset,
-					ScaleFactor: framerateRatio,
+					Score:          score,
+					BestOffset:     bestOffset,
+					ScaleFactor:    framerateRatio,
+					ScaledFileInfo: tmpInfoSrc,
 				}
 				pipeResults = append(pipeResults, pipeResult)
 			}
@@ -127,8 +139,76 @@ func (p Pipeline) Fit(infoBase, infoSrc *subparser.FileInfo, useGSS bool) error 
 
 		gss.Gss(optFunc, MinFramerateRatio, MaxFramerateRatio, 1e-4, nil)
 	}
+	// 先进行过滤
+	filterPipeResults := make([]PipeResult, 0)
+	for _, result := range pipeResults {
+		if int(result.Score) < maxOffsetSamples {
+			filterPipeResults = append(filterPipeResults, result)
+		}
+	}
+	if len(filterPipeResults) <= 0 {
+		return PipeResult{}, "", errors.New(fmt.Sprintf("AutoFixTimeline failed; you can set 'MaxOffSetTime' > %d", p.MaxOffsetSeconds) +
+			fmt.Sprintf(" Or this two subtiles are not fited to this video!"))
+	}
+	// 从得到的结果里面找到分数最高的
+	sort.Sort(PipeResults(filterPipeResults))
+	maxPipeResult := filterPipeResults[len(filterPipeResults)-1]
 
-	return nil
+	fixedSubContent, err := p.fixTime(infoSrc, maxPipeResult.ScaledFileInfo,
+		float64(maxPipeResult.BestOffset)/100.0,
+		desSaveSubFileFullPath)
+
+	return maxPipeResult, fixedSubContent, err
+}
+
+// fixTime 这里传入的 scaledInfoSrc 是从 pipeResults 筛选出来的最大分数的 FileInfo
+// infoSrc 是从源文件读取出来的，这样才能正确匹配 Content 中的时间戳
+func (p Pipeline) fixTime(infoSrc, scaledInfoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) (string, error) {
+
+	/*
+		从解析的实例中，正常来说是可以匹配出所有的 Dialogue 对话的 Start 和 End time 的信息
+		然后找到对应的字幕的文件，进行文件内容的替换来做时间轴的校正
+	*/
+	// 偏移时间
+	offsetTime := time.Duration(inOffsetTime*1000) * time.Millisecond
+	fixContent := scaledInfoSrc.Content
+	/*
+		这里进行时间转字符串的时候有一点比较特殊
+		正常来说输出的格式是类似 15:04:05.00
+		那么有个问题，字幕的时间格式是 0:00:12.00， 小时，是个数，除非有跨度到 20 小时的视频，不然小时就应该是个数
+		这就需要一个额外的函数去处理这些情况
+	*/
+	timeFormat := scaledInfoSrc.GetTimeFormat()
+	for index, scaledSrcOneDialogue := range scaledInfoSrc.Dialogues {
+
+		timeStart, err := my_util.ParseTime(scaledSrcOneDialogue.StartTime)
+		if err != nil {
+			return "", err
+		}
+		timeEnd, err := my_util.ParseTime(scaledSrcOneDialogue.EndTime)
+		if err != nil {
+			return "", err
+		}
+
+		fixTimeStart := timeStart.Add(offsetTime)
+		fixTimeEnd := timeEnd.Add(offsetTime)
+
+		fixContent = strings.ReplaceAll(fixContent, infoSrc.Dialogues[index].StartTime, my_util.Time2SubTimeString(fixTimeStart, timeFormat))
+		fixContent = strings.ReplaceAll(fixContent, infoSrc.Dialogues[index].EndTime, my_util.Time2SubTimeString(fixTimeEnd, timeFormat))
+	}
+
+	dstFile, err := os.Create(desSaveSubFileFullPath)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = dstFile.Close()
+	}()
+	_, err = dstFile.WriteString(fixContent)
+	if err != nil {
+		return "", err
+	}
+	return fixContent, nil
 }
 
 func (p *Pipeline) getFramerateRatios2Try() []float64 {
@@ -152,7 +232,23 @@ const DefaultMaxOffsetSeconds = 60
 const SampleRate = 100
 
 type PipeResult struct {
-	Score       float64
-	BestOffset  int
-	ScaleFactor float64
+	Score          float64
+	BestOffset     int
+	ScaleFactor    float64
+	ScaledFileInfo *subparser.FileInfo
+}
+
+type PipeResults []PipeResult
+
+func (d PipeResults) Len() int {
+	return len(d)
+}
+
+func (d PipeResults) Swap(i, j int) {
+	d[i], d[j] = d[j], d[i]
+}
+
+func (d PipeResults) Less(i, j int) bool {
+
+	return d[i].Score < d[j].Score
 }
