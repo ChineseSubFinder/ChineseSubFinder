@@ -337,6 +337,11 @@ func WriteStrings2File(desfilePath string, strings []string) error {
 	return nil
 }
 
+func TimeNumber2Time(inputTimeNumber float64) time.Time {
+	newTime := time.Time{}.Add(time.Duration(inputTimeNumber * math.Pow10(9)))
+	return newTime
+}
+
 func Time2SecondNumber(inTime time.Time) float64 {
 	outSecond := 0.0
 	outSecond += float64(inTime.Hour() * 60 * 60)

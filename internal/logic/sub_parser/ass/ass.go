@@ -139,12 +139,13 @@ func (p Parser) oneLineSubDialogueParser0(matched [][]string, subFileInfo *subpa
 		startTime := oneLine[1]
 		endTime := oneLine[2]
 		nowStyleName := oneLine[3]
+		nowText := oneLine[4]
 		odl := subparser.OneDialogue{
 			StyleName: nowStyleName,
 			StartTime: startTime,
 			EndTime:   endTime,
+			Lines:     []string{nowText},
 		}
-		odl.Lines = make([]string, 0)
 		subFileInfo.Dialogues = append(subFileInfo.Dialogues, odl)
 	}
 }

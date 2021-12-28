@@ -31,7 +31,7 @@ func IsWhiteListLang(lang whatlanggo.Lang) bool {
 
 // DetectSubLangAndStatistics 检测语言然后统计
 func DetectSubLangAndStatistics(oneDialogue subparser.OneDialogue, langDict map[int]int,
-	usefulDialoguseEx *[]subparser.OneDialogueEx, chLines *[]string, otherLines *[]string) int {
+	usefulDialogueEx *[]subparser.OneDialogueEx, chLines *[]string, otherLines *[]string) int {
 
 	var oneDialogueEx subparser.OneDialogueEx
 	oneDialogueEx.StartTime = oneDialogue.StartTime
@@ -79,7 +79,7 @@ func DetectSubLangAndStatistics(oneDialogue subparser.OneDialogue, langDict map[
 		}
 	}
 
-	*usefulDialoguseEx = append(*usefulDialoguseEx, oneDialogueEx)
+	*usefulDialogueEx = append(*usefulDialogueEx, oneDialogueEx)
 
 	return emptyLine
 }

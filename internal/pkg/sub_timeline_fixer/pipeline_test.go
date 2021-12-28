@@ -69,16 +69,8 @@ func TestPipeline_FitGSS(t *testing.T) {
 			if bFind == false {
 				t.Fatal("sub not match")
 			}
-
-			//bFind, orgFix, err := subParserHub.DetermineFileTypeFromFile(tt.args.orgFixSubFile)
-			//if err != nil {
-			//	t.Fatal(err)
-			//}
-			//if bFind == false {
-			//	t.Fatal("sub not match")
-			//}
 			// ---------------------------------------------------------------------------------------
-			err = NewPipeline().FitGSS(infoBase, infoSrc)
+			err = NewPipeline().Fit(infoBase, infoSrc, true)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOffsetTimeV3() error = %v, wantErr %v", err, tt.wantErr)
 				return

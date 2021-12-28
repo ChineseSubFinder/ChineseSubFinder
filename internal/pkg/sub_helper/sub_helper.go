@@ -392,12 +392,15 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 	if subUnitMaxCount < 0 {
 		subUnitMaxCount = 0
 	}
+
+	nowDialogue := fileInfo.Dialogues
+
 	srcSubUnitList := make([]SubUnit, 0)
-	srcSubDialogueList := make([]subparser.OneDialogueEx, 0)
+	srcSubDialogueList := make([]subparser.OneDialogue, 0)
 	srcOneSubUnit := NewSubUnit()
 
 	// 最后一个对话的结束时间
-	lastDialogueExTimeEnd, err := my_util.ParseTime(fileInfo.DialoguesFilterEx[len(fileInfo.DialoguesFilterEx)-1].EndTime)
+	lastDialogueExTimeEnd, err := my_util.ParseTime(nowDialogue[len(nowDialogue)-1].EndTime)
 	if err != nil {
 		return nil, err
 	}
@@ -410,13 +413,13 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 	println(startRangeTimeMin)
 	println(endRangeTimeMax)
 
-	for i := 0; i < len(fileInfo.DialoguesFilterEx); i++ {
+	for i := 0; i < len(nowDialogue); i++ {
 
-		oneDialogueExTimeStart, err := my_util.ParseTime(fileInfo.DialoguesFilterEx[i].StartTime)
+		oneDialogueExTimeStart, err := my_util.ParseTime(nowDialogue[i].StartTime)
 		if err != nil {
 			return nil, err
 		}
-		oneDialogueExTimeEnd, err := my_util.ParseTime(fileInfo.DialoguesFilterEx[i].EndTime)
+		oneDialogueExTimeEnd, err := my_util.ParseTime(nowDialogue[i].EndTime)
 		if err != nil {
 			return nil, err
 		}
@@ -428,6 +431,13 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 			}
 		}
 
+		if nowDialogue[i].Lines == nil || len(nowDialogue[i].Lines) == 0 {
+			continue
+		}
+		// 如果当前的这一句话，为空，或者进过正则表达式剔除特殊字符后为空，则跳过
+		if my_util.ReplaceSpecString(nowDialogue[i].Lines[0], "") == "" {
+			continue
+		}
 		// 如果当前的这一句话，为空，或者进过正则表达式剔除特殊字符后为空，则跳过
 		if my_util.ReplaceSpecString(fileInfo.GetDialogueExContent(i), "") == "" {
 			continue
@@ -445,11 +455,11 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 				srcOneSubUnit.Add(oneDialogueExTimeStart, oneDialogueExTimeEnd)
 			}
 			// 这一个单元的 Dialogue 需要合并起来，才能判断是否符合“钥匙”的要求
-			srcSubDialogueList = append(srcSubDialogueList, fileInfo.DialoguesFilterEx[i])
+			srcSubDialogueList = append(srcSubDialogueList, nowDialogue[i])
 
 		} else {
 			// 用完清空
-			srcSubDialogueList = make([]subparser.OneDialogueEx, 0)
+			srcSubDialogueList = make([]subparser.OneDialogue, 0)
 			// 将拼凑起来的对话组成一个单元进行存储起来
 			srcSubUnitList = append(srcSubUnitList, *srcOneSubUnit)
 			// 然后重置
@@ -469,7 +479,7 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPer float64) (*SubUnit, error) {
 
 	outSubUnits := NewSubUnit()
-	if len(fileInfo.DialoguesFilterEx) <= 0 {
+	if len(fileInfo.Dialogues) <= 0 {
 		return nil, errors.New("GetVADInfoFeatureFromSubNew fileInfo Dialogue Length is 0")
 	}
 	/*
@@ -477,17 +487,15 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 		因为 VAD 的窗口是 10ms，那么需要多每一句话按 10 ms 的单位进行取整
 		每一句话开始、结束的时间，需要向下取整
 	*/
-	subStartTimeFloor, subEndTimeFloor, err := ReadSubStartAndEndTime(fileInfo)
-	if err != nil {
-		return nil, err
-	}
+	subStartTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(fileInfo.GetStartTime()))
+	subEndTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(fileInfo.GetEndTime()))
 	// 如果想要从 0 时间点开始算，那么 subStartTimeFloor 这个值就需要重置到0
 	subStartTimeFloor = 0
 	subFullSecondTimeFloor := subEndTimeFloor - subStartTimeFloor
 	// 根据这个时长就能够得到一个完整的 VAD List，然后再通过每一句对白进行 VAD 值的调整即可，这样就能够保证
 	// 相同的一个字幕因为使用 ffmpeg 导出 srt 和 ass 后的，可能存在总体时间轴不一致的问题
 	// 123.450 - > 12345
-	vadLen := int(subFullSecondTimeFloor * 100)
+	vadLen := int(subFullSecondTimeFloor*100) + 2
 	subVADs := make([]vad.VADInfo, vadLen)
 	subStartTimeFloor10ms := subStartTimeFloor * 100
 	for i := 0; i < vadLen; i++ {
@@ -499,20 +507,22 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 	skipEndIndex := vadLen - skipLen
 	// 现在需要从 fileInfo 的每一句对白也就对应一段连续的 VAD active = true 来进行改写，记得向下取整
 	lastDialogueIndex := 0
-	for index, dialogueEx := range fileInfo.DialoguesFilterEx {
+	for _, dialogue := range fileInfo.Dialogues {
 
-		// 如果当前的这一句话，为空，或者进过正则表达式剔除特殊字符后为空，则跳过
-		if my_util.ReplaceSpecString(fileInfo.GetDialogueExContent(index), "") == "" {
+		if dialogue.Lines == nil || len(dialogue.Lines) == 0 {
 			continue
 		}
-
+		// 如果当前的这一句话，为空，或者进过正则表达式剔除特殊字符后为空，则跳过
+		if my_util.ReplaceSpecString(dialogue.Lines[0], "") == "" {
+			continue
+		}
 		// 字幕的开始时间
-		oneDialogueStartTime, err := my_util.ParseTime(dialogueEx.StartTime)
+		oneDialogueStartTime, err := my_util.ParseTime(dialogue.StartTime)
 		if err != nil {
 			return nil, err
 		}
 		// 字幕的结束时间
-		oneDialogueEndTime, err := my_util.ParseTime(dialogueEx.EndTime)
+		oneDialogueEndTime, err := my_util.ParseTime(dialogue.EndTime)
 		if err != nil {
 			return nil, err
 		}
@@ -572,53 +582,4 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 	outSubUnits.SetOffsetEndTime(tmpEndTime)
 
 	return outSubUnits, nil
-}
-
-func ReadSubStartAndEndTime(fileInfo *subparser.FileInfo) (float64, float64, error) {
-
-	/*
-		因为是先构建完整的时间轴 VAD ，然后再用每一句话去修改对应的 VAD 段
-		那么，如果字幕第一句话时间轴有问题，就会出问题，所以这里返回的时候需要判断是否 StartTime 正确
-		因为可能会有一种情况，读取到的字幕是经过 V1 校正时间的，那么第一句和前几句话，可能时间是 Dialogue: 0,23:59:31.32,23:59:33.23
-		明显时间过大，导致减出来的值是负值，会越界访问
-	*/
-
-	getTimeFunc := func(fileInfo *subparser.FileInfo, startIndex int) (bool, float64, float64, error) {
-		// 字幕的开始时间
-		subStartTime, err := my_util.ParseTime(fileInfo.DialoguesFilterEx[startIndex].StartTime)
-		if err != nil {
-			return false, 0, 0, err
-		}
-		// 字幕的结束时间
-		subEndTime, err := my_util.ParseTime(fileInfo.DialoguesFilterEx[len(fileInfo.DialoguesFilterEx)-1].EndTime)
-		if err != nil {
-			return false, 0, 0, err
-		}
-		// 字幕的时长，对时间进行向下取整
-		subStartTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(subStartTime))
-		subEndTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(subEndTime))
-
-		if subEndTimeFloor-subStartTimeFloor < 0 {
-			// 说明 StartTime 的数值太大，不正常，超过 EndTime 了，startIndex 需要累加
-			return false, 0, 0, nil
-		}
-
-		return true, subStartTimeFloor, subEndTimeFloor, nil
-	}
-	startIndex := 0
-	var err error
-	var subStartTimeFloor, subEndTimeFloor float64
-	bok := false
-	for bok == false {
-		bok, subStartTimeFloor, subEndTimeFloor, err = getTimeFunc(fileInfo, startIndex)
-		if err != nil {
-			return 0, 0, err
-		}
-		if bok == true {
-			break
-		}
-		startIndex++
-	}
-
-	return subStartTimeFloor, subEndTimeFloor, err
 }
