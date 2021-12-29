@@ -1,13 +1,14 @@
 package decode
 
 import (
+	"fmt"
 	"testing"
 )
 
 func Test_get_IMDB_movie_xml(t *testing.T) {
 	wantid := "tt0993840"
 	wantyear := "2021"
-	dirPth := "x:\\电影\\Army of the Dead (2021)\\movie.xml"
+	dirPth := "..\\..\\..\\TestData\\video_info_file\\movie.xml"
 	imdbInfo, err := getImdbAndYearMovieXml(dirPth)
 	if err != nil {
 		t.Error(err)
@@ -23,16 +24,38 @@ func Test_get_IMDB_movie_xml(t *testing.T) {
 func Test_get_IMDB_nfo(t *testing.T) {
 	wantid := "tt0993840"
 	wantyear := "2021"
-	dirPth := "X:\\电影\\Army of the Dead (2021)\\Army of the Dead (2021) WEBDL-1080p.nfo"
+	dirPth := "..\\..\\..\\TestData\\video_info_file\\Army of the Dead (2021) WEBDL-1080p.nfo"
 	imdbInfo, err := getImdbAndYearNfo(dirPth, "movie")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if imdbInfo.ImdbId != wantid {
-		t.Errorf("Test_get_IMDB_movie_xml() id = %v, wantid %v", imdbInfo.ImdbId, wantid)
+		t.Fatal(fmt.Sprintf("Test_get_IMDB_movie_xml() id = %v, wantid %v", imdbInfo.ImdbId, wantid))
 	}
 	if imdbInfo.Year != wantyear {
-		t.Errorf("Test_get_IMDB_movie_xml() year = %v, wantyear %v", imdbInfo.Year, wantyear)
+		t.Fatal(fmt.Sprintf("Test_get_IMDB_movie_xml() year = %v, wantyear %v", imdbInfo.Year, wantyear))
+	}
+
+	wantid = "tt12801326"
+	wantyear = "2020"
+	dirPth = "..\\..\\..\\TestData\\video_info_file\\has_http_address.nfo"
+	imdbInfo, err = getImdbAndYearNfo(dirPth, "movie")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if imdbInfo.ImdbId != wantid {
+		t.Fatal(fmt.Sprintf("Test_get_IMDB_movie_xml() id = %v, wantid %v", imdbInfo.ImdbId, wantid))
+	}
+	if imdbInfo.Year != wantyear {
+		t.Fatal(fmt.Sprintf("Test_get_IMDB_movie_xml() year = %v, wantyear %v", imdbInfo.Year, wantyear))
+	}
+
+	wantid = ""
+	wantyear = ""
+	dirPth = "..\\..\\..\\TestData\\video_info_file\\only_http_address.nfo"
+	imdbInfo, err = getImdbAndYearNfo(dirPth, "movie")
+	if err == nil {
+		t.Fatal("need errot")
 	}
 }
 
@@ -89,7 +112,7 @@ func TestGetNumber2int(t *testing.T) {
 
 func Test_getImdbAndYearNfo(t *testing.T) {
 
-	nfoInfo := "C:\\tmp\\imdb_id.nfo"
+	nfoInfo := "..\\..\\..\\TestData\\video_info_file\\Army of the Dead (2021) WEBDL-1080p.nfo"
 	nfo, err := getImdbAndYearNfo(nfoInfo, "tvshow")
 	if err != nil {
 		t.Fatal(err)
