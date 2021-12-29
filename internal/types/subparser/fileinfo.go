@@ -134,10 +134,17 @@ func (f FileInfo) GetNumFrames() int {
 
 // OneDialogue 一句对话
 type OneDialogue struct {
+	Index     int      // 对白的索引
 	StartTime string   // 开始时间
 	EndTime   string   // 结束时间
 	StyleName string   // StyleName
 	Lines     []string // 台词
+}
+
+func NewOneDialogue() OneDialogue {
+	return OneDialogue{
+		Lines: make([]string, 0),
+	}
 }
 
 func (o OneDialogue) GetStartTime() time.Time {

@@ -24,7 +24,7 @@ func ConvertToString(src string, srcCode string, tagCode string) string {
 
 // 感谢: https://blog.csdn.net/gaoluhua/article/details/109128154，解决了编码问题
 
-// ChangeFileCoding2UTF8 自动检测文件的编码，然后转换到 UTF-8
+// ChangeFileCoding2UTF8 自动检测文件的编码，然后转换到 UTF-8，但是导出 bytes 的时候会把头部的 BOM 信息去除
 func ChangeFileCoding2UTF8(inBytes []byte) ([]byte, error) {
 	best, err := detector.DetectBest(inBytes)
 	utf8String := ""
@@ -43,5 +43,12 @@ func ChangeFileCoding2UTF8(inBytes []byte) ([]byte, error) {
 	if utf8String == "" {
 		return inBytes, nil
 	}
-	return []byte(utf8String), nil
+
+	// 然后返回的时候需要去除头部的 BOM 信息
+	dat := []byte(utf8String)
+	if dat[0] == 0xef || dat[1] == 0xbb || dat[2] == 0xbf {
+		dat = dat[3:]
+	}
+
+	return dat, nil
 }

@@ -221,7 +221,11 @@ func SearchMatchedSubFileByDir(dir string) ([]string, error) {
 			}
 		} else {
 			// 这里就是文件了
-			if curFile.Size() < 1000 {
+			info, err := curFile.Info()
+			if err != nil {
+				return nil, err
+			}
+			if info.Size() < 1000 {
 				continue
 			}
 			if sub_parser_hub.IsSubExtWanted(filepath.Ext(curFile.Name())) == true {
@@ -251,7 +255,11 @@ func SearchMatchedSubFileByOneVideo(oneVideoFullPath string) ([]string, error) {
 			continue
 		}
 		// 这里就是文件了
-		if curFile.Size() < 1000 {
+		info, err := curFile.Info()
+		if err != nil {
+			return nil, err
+		}
+		if info.Size() < 1000 {
 			continue
 		}
 		// 判断的时候用小写的，后续重命名的时候用原有的名称
@@ -289,7 +297,11 @@ func SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath string) error {
 			continue
 		} else {
 			// 这里就是文件了
-			if curFile.Size() < 1000 {
+			info, err := curFile.Info()
+			if err != nil {
+				return err
+			}
+			if info.Size() < 1000 {
 				continue
 			}
 			// 判断的时候用小写的，后续重命名的时候用原有的名称

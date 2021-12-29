@@ -356,8 +356,8 @@ func Time2Duration(inTime time.Time) time.Duration {
 }
 
 // ReplaceSpecString 替换特殊的字符
-func ReplaceSpecString(instring string, rep string) string {
-	return regex_things.RegMatchSpString.ReplaceAllString(instring, rep)
+func ReplaceSpecString(inString string, rep string) string {
+	return regex_things.RegMatchSpString.ReplaceAllString(inString, rep)
 }
 
 func Bool2Int(inBool bool) int {
