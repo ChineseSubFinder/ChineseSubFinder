@@ -1,8 +1,10 @@
 package srt
 
 import (
+	lan "github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -60,4 +62,21 @@ func TestParser_DetermineFileType(t *testing.T) {
 			println(got.Name, got.Ext, got.Lang)
 		})
 	}
+}
+
+func TestParser_parseContent(t *testing.T) {
+
+	testDataPath := "../../../../TestData/sub_parser/org"
+	srtFileFPath := filepath.Join(testDataPath, "[zimuku]_5_Loki.S01E02.The.Variant.1080p.DSNP.WEB-DL.DDP5.1.Atmos.H.264-CM.chs&eng.srt")
+
+	fBytes, err := os.ReadFile(srtFileFPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	inBytes, err := lan.ChangeFileCoding2UTF8(fBytes)
+	if err != nil {
+
+		t.Fatal(err)
+	}
+	NewParser().parseContent(inBytes)
 }

@@ -10,7 +10,6 @@ import (
 	browser "github.com/allanpk716/fake-useragent"
 	"github.com/go-resty/resty/v2"
 	"io"
-	"io/ioutil"
 	"math"
 	"net/http"
 	"os"
@@ -145,7 +144,7 @@ func SearchMatchedVideoFile(dir string) ([]string, error) {
 
 	var fileFullPathList = make([]string, 0)
 	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -223,18 +222,18 @@ func CopyFile(src, dst string) error {
 // CopyDir copies a whole directory recursively
 func CopyDir(src string, dst string) error {
 	var err error
-	var fds []os.FileInfo
-	var srcinfo os.FileInfo
+	var fds []os.DirEntry
+	var srcInfo os.FileInfo
 
-	if srcinfo, err = os.Stat(src); err != nil {
+	if srcInfo, err = os.Stat(src); err != nil {
 		return err
 	}
 
-	if err = os.MkdirAll(dst, srcinfo.Mode()); err != nil {
+	if err = os.MkdirAll(dst, srcInfo.Mode()); err != nil {
 		return err
 	}
 
-	if fds, err = ioutil.ReadDir(src); err != nil {
+	if fds, err = os.ReadDir(src); err != nil {
 		return err
 	}
 	for _, fd := range fds {

@@ -2,7 +2,7 @@ package ffmpeg_helper
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -27,7 +27,7 @@ func TestGetFFMPEGInfo(t *testing.T) {
 }
 
 func readString(filePath string) string {
-	bytes, err := ioutil.ReadFile(filePath)
+	bytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return ""
 	}

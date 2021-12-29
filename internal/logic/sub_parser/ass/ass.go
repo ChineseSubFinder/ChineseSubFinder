@@ -6,7 +6,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/emirpasic/gods/maps/treemap"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -32,7 +32,7 @@ func (p Parser) DetermineFileTypeFromFile(filePath string) (bool, *subparser.Fil
 
 	log_helper.GetLogger().Debugln("DetermineFileTypeFromFile", p.GetParserName(), filePath)
 
-	fBytes, err := ioutil.ReadFile(filePath)
+	fBytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return false, nil, err
 	}

@@ -14,7 +14,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod/lib/utils"
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -203,7 +202,7 @@ func SearchMatchedSubFileByDir(dir string) ([]string, error) {
 	// 这里有个梗，会出现 __MACOSX 这类文件夹，那么里面会有一样的文件，需要用文件大小排除一下，至少大于 1 kb 吧
 	var fileFullPathList = make([]string, 0)
 	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +239,7 @@ func SearchMatchedSubFileByOneVideo(oneVideoFullPath string) ([]string, error) {
 	fileName = strings.ToLower(fileName)
 	fileName = strings.ReplaceAll(fileName, filepath.Ext(fileName), "")
 	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +280,7 @@ func SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath string) error {
 	fileName = strings.ToLower(fileName)
 	fileName = strings.ReplaceAll(fileName, filepath.Ext(fileName), "")
 	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return err
 	}
@@ -335,7 +334,7 @@ func DeleteOneSeasonSubCacheFolder(seriesDir string) error {
 	if err != nil {
 		return err
 	}
-	files, err := ioutil.ReadDir(debugFolderByName)
+	files, err := os.ReadDir(debugFolderByName)
 	if err != nil {
 		return err
 	}

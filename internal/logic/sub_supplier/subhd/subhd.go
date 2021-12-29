@@ -21,7 +21,6 @@ import (
 	"github.com/nfnt/resize"
 	"github.com/sirupsen/logrus"
 	"image/jpeg"
-	"io/ioutil"
 	"math"
 	"net/url"
 	"os"
@@ -509,7 +508,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWater
 			info := wait()
 			downloadPath := filepath.Join(tmpDir, info.GUID)
 			defer func() { _ = os.Remove(downloadPath) }()
-			b, err := ioutil.ReadFile(downloadPath)
+			b, err := os.ReadFile(downloadPath)
 			if err != nil {
 				return nil, "", err
 			}

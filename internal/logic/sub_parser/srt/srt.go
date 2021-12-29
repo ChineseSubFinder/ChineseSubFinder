@@ -5,7 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -31,7 +31,7 @@ func (p Parser) DetermineFileTypeFromFile(filePath string) (bool, *subparser.Fil
 
 	log_helper.GetLogger().Debugln("DetermineFileTypeFromFile", p.GetParserName(), filePath)
 
-	fBytes, err := ioutil.ReadFile(filePath)
+	fBytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return false, nil, err
 	}
@@ -112,4 +112,11 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	subFileInfo.CHLines = chLines
 	subFileInfo.OtherLines = otherLines
 	return true, &subFileInfo, nil
+}
+
+func (p Parser) parseContent(inBytes []byte) {
+
+	allString := string(inBytes)
+	// 注意，需要替换掉 \r 不然正则表达式会有问题
+	allString = strings.ReplaceAll(allString, "\r", "")
 }

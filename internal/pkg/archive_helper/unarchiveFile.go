@@ -11,7 +11,6 @@ import (
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 )
@@ -107,7 +106,7 @@ func processOneFile(f archiver.File, notUTF8 bool, desRootPath string) error {
 		//}
 		i := bytes.NewReader([]byte(f.Name()))
 		decoder := transform.NewReader(i, simplifiedchinese.GB18030.NewDecoder())
-		content, _ := ioutil.ReadAll(decoder)
+		content, _ := io.ReadAll(decoder)
 		decodeName = string(content)
 		//decodeName = string(ouBytes)
 	}
@@ -157,7 +156,7 @@ func un7zOneFile(file *sevenzip.File, desRootPath string) error {
 	}
 	defer rc.Close()
 
-	data, err := ioutil.ReadAll(rc)
+	data, err := io.ReadAll(rc)
 	if err != nil {
 		return err
 	}

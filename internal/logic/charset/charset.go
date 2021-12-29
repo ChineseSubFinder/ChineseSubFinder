@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/ianaindex"
@@ -65,7 +65,7 @@ func Convert(dstCharset Charset, srcCharset Charset, src string) (dst string, er
 	// Converting <src> to UTF-8.
 	if srcCharset != "UTF-8" {
 		if e := getEncoding(srcCharset); e != nil {
-			tmp, err := ioutil.ReadAll(
+			tmp, err := io.ReadAll(
 				transform.NewReader(bytes.NewReader([]byte(src)), e.NewDecoder()),
 			)
 			if err != nil {
@@ -79,7 +79,7 @@ func Convert(dstCharset Charset, srcCharset Charset, src string) (dst string, er
 	// Do the converting from UTF-8 to <dstCharset>.
 	if dstCharset != "UTF-8" {
 		if e := getEncoding(dstCharset); e != nil {
-			tmp, err := ioutil.ReadAll(
+			tmp, err := io.ReadAll(
 				transform.NewReader(bytes.NewReader([]byte(src)), e.NewEncoder()),
 			)
 			if err != nil {

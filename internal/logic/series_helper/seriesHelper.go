@@ -18,7 +18,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/jinzhu/now"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -224,7 +224,7 @@ func SetTheSpecifiedEps2Download(seriesInfo *series.SeriesInfo, epsMap map[int]i
 func GetSeriesList(dir string) ([]string, error) {
 
 	var seriesDirList = make([]string, 0)
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}

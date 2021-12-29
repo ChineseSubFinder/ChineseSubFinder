@@ -2,7 +2,6 @@ package my_util
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -117,7 +116,7 @@ func ClearRootTmpFolder() error {
 	}
 
 	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(nowTmpFolder)
+	files, err := os.ReadDir(nowTmpFolder)
 	if err != nil {
 		return err
 	}
@@ -180,7 +179,7 @@ func GetSubFixCacheFolderByName(folderName string) (string, error) {
 // ClearFolder 清空文件夹
 func ClearFolder(folderFullPath string) error {
 	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(folderFullPath)
+	files, err := os.ReadDir(folderFullPath)
 	if err != nil {
 		return err
 	}

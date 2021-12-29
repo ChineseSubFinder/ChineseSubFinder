@@ -7,7 +7,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/beevik/etree"
 	PTN "github.com/middelink/go-parse-torrent-name"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -106,7 +105,7 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	movieNameNfoFPath := ""
 	// 通用的 *.nfo
 	nfoFilePath := ""
-	dir, err := ioutil.ReadDir(dirPth)
+	dir, err := os.ReadDir(dirPth)
 	if err != nil {
 		return imdbInfo, err
 	}
@@ -166,7 +165,7 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 
 func GetImdbInfo4SeriesDir(seriesDir string) (types.VideoIMDBInfo, error) {
 	imdbInfo := types.VideoIMDBInfo{}
-	dir, err := ioutil.ReadDir(seriesDir)
+	dir, err := os.ReadDir(seriesDir)
 	if err != nil {
 		return imdbInfo, err
 	}

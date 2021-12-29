@@ -13,7 +13,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/jinzhu/now"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -71,7 +71,7 @@ func MovieHasChineseSub(videoFilePath string) (bool, []string, []string, error) 
 	dir := filepath.Dir(videoFilePath)
 	videoFileName := filepath.Base(videoFilePath)
 	videoFileName = strings.ReplaceAll(videoFileName, filepath.Ext(videoFileName), "")
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return false, nil, nil, err
 	}

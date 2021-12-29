@@ -3,7 +3,6 @@ package sub_timeline_fixer
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -49,7 +48,7 @@ func searchBackUpSubFile(dir string) ([]string, error) {
 
 	var fileFullPathList = make([]string, 0)
 	pathSep := string(os.PathSeparator)
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
