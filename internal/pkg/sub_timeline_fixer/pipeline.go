@@ -27,7 +27,7 @@ func NewPipeline(maxOffsetSeconds int) *Pipeline {
 	}
 }
 
-func (p Pipeline) FixTimeline(infoBase, infoSrc *subparser.FileInfo, audioVadList []vad.VADInfo, useGSS bool, desSaveSubFileFullPath string) (PipeResult, string, error) {
+func (p Pipeline) CalcOffsetTime(infoBase, infoSrc *subparser.FileInfo, audioVadList []vad.VADInfo, useGSS bool) (PipeResult, error) {
 
 	baseVADInfo := make([]float64, 0)
 	useSubtitleOrAudioAsBase := false
@@ -43,11 +43,11 @@ func (p Pipeline) FixTimeline(infoBase, infoSrc *subparser.FileInfo, audioVadLis
 		// 解析处 VAD 信息
 		baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, 0)
 		if err != nil {
-			return PipeResult{}, "", err
+			return PipeResult{}, err
 		}
 		baseVADInfo = baseUnitNew.GetVADFloatSlice()
 	} else {
-		return PipeResult{}, "", errors.New("FixTimeline input is error")
+		return PipeResult{}, errors.New("FixTimeline input is error")
 	}
 
 	pipeResults := make([]PipeResult, 0)
@@ -106,7 +106,7 @@ func (p Pipeline) FixTimeline(infoBase, infoSrc *subparser.FileInfo, audioVadLis
 		// 3. speech_extract	从字幕转换为 VAD 的语音检测信息
 		tmpSrcInfoUnit, err := sub_helper.GetVADInfoFeatureFromSubNew(tmpInfoSrc, 0)
 		if err != nil {
-			return PipeResult{}, "", err
+			return PipeResult{}, err
 		}
 		bestOffset, score := fffAligner.Fit(baseVADInfo, tmpSrcInfoUnit.GetVADFloatSlice())
 		pipeResult := PipeResult{
@@ -163,23 +163,19 @@ func (p Pipeline) FixTimeline(infoBase, infoSrc *subparser.FileInfo, audioVadLis
 		}
 	}
 	if len(filterPipeResults) <= 0 {
-		return PipeResult{}, "", errors.New(fmt.Sprintf("AutoFixTimeline failed; you can set 'MaxOffSetTime' > %d", p.MaxOffsetSeconds) +
+		return PipeResult{}, errors.New(fmt.Sprintf("AutoFixTimeline failed; you can set 'MaxOffSetTime' > %d", p.MaxOffsetSeconds) +
 			fmt.Sprintf(" Or this two subtiles are not fited to this video!"))
 	}
 	// 从得到的结果里面找到分数最高的
 	sort.Sort(PipeResults(filterPipeResults))
 	maxPipeResult := filterPipeResults[len(filterPipeResults)-1]
 
-	fixedSubContent, err := p.fixTime(infoSrc, maxPipeResult.ScaledFileInfo,
-		float64(maxPipeResult.BestOffset)/100.0,
-		desSaveSubFileFullPath)
-
-	return maxPipeResult, fixedSubContent, err
+	return maxPipeResult, nil
 }
 
-// fixTime 这里传入的 scaledInfoSrc 是从 pipeResults 筛选出来的最大分数的 FileInfo
+// FixSubFileTimeline 这里传入的 scaledInfoSrc 是从 pipeResults 筛选出来的最大分数的 FileInfo
 // infoSrc 是从源文件读取出来的，这样才能正确匹配 Content 中的时间戳
-func (p Pipeline) fixTime(infoSrc, scaledInfoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) (string, error) {
+func (p Pipeline) FixSubFileTimeline(infoSrc, scaledInfoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) (string, error) {
 
 	/*
 		从解析的实例中，正常来说是可以匹配出所有的 Dialogue 对话的 Start 和 End time 的信息
@@ -252,6 +248,11 @@ type PipeResult struct {
 	BestOffset     int
 	ScaleFactor    float64
 	ScaledFileInfo *subparser.FileInfo
+}
+
+// GetOffsetTime 从偏移得到偏移时间
+func (p PipeResult) GetOffsetTime() float64 {
+	return float64(p.BestOffset) / 100.0
 }
 
 type PipeResults []PipeResult

@@ -2,13 +2,11 @@ package sub_timeline_fixer
 
 import (
 	"errors"
-	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
@@ -20,18 +18,20 @@ import (
 )
 
 type SubTimelineFixerHelperEx struct {
-	ffmpegHelper       *ffmpeg_helper.FFMPEGHelper
-	subParserHub       *sub_parser_hub.SubParserHub
-	timelineFixer      *sub_timeline_fixer.SubTimelineFixer
-	needDownloadFFMPeg bool
+	ffmpegHelper        *ffmpeg_helper.FFMPEGHelper
+	subParserHub        *sub_parser_hub.SubParserHub
+	timelineFixPipeLine *sub_timeline_fixer.Pipeline
+	fixerConfig         sub_timeline_fiexer.SubTimelineFixerConfig
+	needDownloadFFMPeg  bool
 }
 
 func NewSubTimelineFixerHelperEx(fixerConfig sub_timeline_fiexer.SubTimelineFixerConfig) *SubTimelineFixerHelperEx {
 	return &SubTimelineFixerHelperEx{
-		ffmpegHelper:       ffmpeg_helper.NewFFMPEGHelper(),
-		subParserHub:       sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
-		timelineFixer:      sub_timeline_fixer.NewSubTimelineFixer(fixerConfig),
-		needDownloadFFMPeg: false,
+		ffmpegHelper:        ffmpeg_helper.NewFFMPEGHelper(),
+		subParserHub:        sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
+		timelineFixPipeLine: sub_timeline_fixer.NewPipeline(sub_timeline_fixer.DefaultMaxOffsetSeconds),
+		fixerConfig:         fixerConfig,
+		needDownloadFFMPeg:  false,
 	}
 }
 
@@ -56,6 +56,7 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	}
 
 	var infoSrc *subparser.FileInfo
+	var pipeResultMax sub_timeline_fixer.PipeResult
 	bProcess := false
 	offSetTime := 0.0
 	bok := false
@@ -103,7 +104,7 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 			log_helper.GetLogger().Warnln("Can`t find audio info, skip time fix --", videoFileFullPath)
 			return nil
 		}
-		bProcess, infoSrc, offSetTime, err = s.processByAudio(ffmpegInfo.AudioInfoList[0].FullPath, srcSubFPath)
+		bProcess, infoSrc, pipeResultMax, err = s.processByAudio(ffmpegInfo.AudioInfoList[0].FullPath, srcSubFPath)
 		if err != nil {
 			return err
 		}
@@ -122,7 +123,7 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 		}
 		_, index := fileSizes.Max()
 		baseSubFPath := ffmpegInfo.SubtitleInfoList[index.(int)].FullPath
-		bProcess, infoSrc, offSetTime, err = s.processBySub(baseSubFPath, srcSubFPath)
+		bProcess, infoSrc, pipeResultMax, err = s.processBySub(baseSubFPath, srcSubFPath)
 		if err != nil {
 			return err
 		}
@@ -133,7 +134,7 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 		log_helper.GetLogger().Infoln("Skip TimeLine Fix --", srcSubFPath)
 		return nil
 	}
-	err = s.changeTimeLineAndSave(infoSrc, offSetTime, srcSubFPath)
+	err = s.changeTimeLineAndSave(infoSrc, pipeResultMax, srcSubFPath)
 	if err != nil {
 		return err
 	}
@@ -144,51 +145,34 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	return nil
 }
 
-func (s SubTimelineFixerHelperEx) processBySub(baseSubFileFPath, srcSubFileFPath string) (bool, *subparser.FileInfo, float64, error) {
+func (s SubTimelineFixerHelperEx) processBySub(baseSubFileFPath, srcSubFileFPath string) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
 
 	bFind, infoBase, err := s.subParserHub.DetermineFileTypeFromFile(baseSubFileFPath)
 	if err != nil {
-		return false, nil, 0, err
+		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
 	if bFind == false {
 		log_helper.GetLogger().Warnln("processBySub.DetermineFileTypeFromFile sub not match --", baseSubFileFPath)
-		return false, nil, 0, nil
+		return false, nil, sub_timeline_fixer.PipeResult{}, nil
 	}
 	bFind, infoSrc, err := s.subParserHub.DetermineFileTypeFromFile(srcSubFileFPath)
 	if err != nil {
-		return false, nil, 0, err
+		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
 	if bFind == false {
 		log_helper.GetLogger().Warnln("processBySub.DetermineFileTypeFromFile sub not match --", srcSubFileFPath)
-		return false, nil, 0, nil
+		return false, nil, sub_timeline_fixer.PipeResult{}, nil
 	}
 	// ---------------------------------------------------------------------------------------
-	baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, s.timelineFixer.FixerConfig.V2_FrontAndEndPerBase)
+	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTime(infoBase, infoSrc, nil, false)
 	if err != nil {
-		return false, nil, 0, err
-	}
-	srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, s.timelineFixer.FixerConfig.V2_FrontAndEndPerSrc)
-	if err != nil {
-		return false, nil, 0, err
-	}
-	// ---------------------------------------------------------------------------------------
-	bok, _, err := s.timelineFixer.GetOffsetTimeV2(baseUnitNew, srcUnitNew, nil)
-	if err != nil {
-		return false, nil, 0, err
-	}
-	if bok == false {
-		log_helper.GetLogger().Warnln("processBySub.GetOffsetTimeV2 return false -- " + baseSubFileFPath)
-		return false, nil, 0, nil
+		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
 
-	//if s.jugOffsetAndSD("processBySub", offsetTime, sd) == false {
-	//	return false, nil, 0, nil
-	//}
-
-	return true, infoSrc, 0, nil
+	return true, infoSrc, pipeResult, nil
 }
 
-func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileFPath string) (bool, *subparser.FileInfo, float64, error) {
+func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileFPath string) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
 
 	audioVADInfos, err := vad.GetVADInfoFromAudio(vad.AudioInfo{
 		FileFullPath: baseAudioFileFPath,
@@ -196,64 +180,27 @@ func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileF
 		BitDepth:     16,
 	}, true)
 	if err != nil {
-		return false, nil, 0, err
+		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
 
 	bFind, infoSrc, err := s.subParserHub.DetermineFileTypeFromFile(srcSubFileFPath)
 	if err != nil {
-		return false, nil, 0, err
+		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
 	if bFind == false {
 		log_helper.GetLogger().Warnln("processByAudio.DetermineFileTypeFromFile sub not match --", srcSubFileFPath)
-		return false, nil, 0, nil
+		return false, nil, sub_timeline_fixer.PipeResult{}, nil
 	}
 	// ---------------------------------------------------------------------------------------
-	srcUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, s.timelineFixer.FixerConfig.V2_FrontAndEndPerSrc)
+	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTime(nil, infoSrc, audioVADInfos, false)
 	if err != nil {
-		return false, nil, 0, err
-	}
-	// ---------------------------------------------------------------------------------------
-	bok, _, err := s.timelineFixer.GetOffsetTimeV2(nil, srcUnitNew, audioVADInfos)
-	if err != nil {
-		return false, nil, 0, err
-	}
-	if bok == false {
-		log_helper.GetLogger().Warnln("processByAudio.GetOffsetTimeV2 return false -- " + baseAudioFileFPath)
-		return false, nil, 0, nil
+		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
 
-	//if s.jugOffsetAndSD("processByAudio", offsetTime, sd) == false {
-	//	return false, nil, 0, nil
-	//}
-
-	return true, infoSrc, 0, nil
+	return true, infoSrc, pipeResult, nil
 }
 
-func (s SubTimelineFixerHelperEx) jugOffsetAndSD(processName string, offsetTime, sd float64) bool {
-	// SD 要达标
-	if sd > s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD {
-		log_helper.GetLogger().Infoln(fmt.Sprintf("Skip, %s sd: %v > %v", processName, sd, s.timelineFixer.FixerConfig.V2_MaxStartTimeDiffSD))
-		return false
-	}
-	// 时间偏移的最小值才修正
-	if offsetTime < s.timelineFixer.FixerConfig.V2_MinOffset && offsetTime > -s.timelineFixer.FixerConfig.V2_MinOffset {
-		log_helper.GetLogger().Infoln(fmt.Sprintf("Skip, %s offset: %v > -%v && %v < %v",
-			processName,
-			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset,
-			offsetTime, s.timelineFixer.FixerConfig.V2_MinOffset))
-		return false
-	}
-	// sub_timeline_fixer.calcMeanAndSD 输出的可能的极小值
-
-	if my_util.IsEqual(offsetTime, sub_timeline_fixer.MinValue) == true {
-		log_helper.GetLogger().Infoln("Skip, offsetTime == -9999")
-		return false
-	}
-
-	return true
-}
-
-func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileInfo, offsetTime float64, desSubSaveFPath string) error {
+func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileInfo, pipeResult sub_timeline_fixer.PipeResult, desSubSaveFPath string) error {
 	/*
 		修复的字幕先存放到缓存目录，然后需要把原有的字幕进行“备份”，改名，然后再替换过来
 	*/
@@ -264,7 +211,7 @@ func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileI
 			return err
 		}
 	}
-	_, err := s.timelineFixer.FixSubTimelineOneOffsetTime(infoSrc, offsetTime, subFileName)
+	_, err := s.timelineFixPipeLine.FixSubFileTimeline(infoSrc, pipeResult.ScaledFileInfo, pipeResult.GetOffsetTime(), desSubSaveFPath)
 	if err != nil {
 		return err
 	}

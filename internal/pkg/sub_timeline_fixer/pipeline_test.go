@@ -37,29 +37,29 @@ func TestPipeline_FitGSS(t *testing.T) {
 			ffsubSyncSubFile: "C:\\Tmp\\BL - S01E03\\ffsubsync.ass",
 			srcSubFile:       "C:\\Tmp\\BL - S01E03\\org.ass",
 			srcFixedSubFile:  "C:\\Tmp\\BL - S01E03\\org-fix.ass",
-		}, want: -4.1, wantErr: false},
+		}, want: -4.290000, wantErr: false},
 		{name: "Rick and Morty - S05E01", args: args{
 			baseSubFile:      "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass",
 			ffsubSyncSubFile: "C:\\Tmp\\Rick and Morty - S05E01\\ffsubsync.ass",
 			srcSubFile:       "C:\\Tmp\\Rick and Morty - S05E01\\org.ass",
 			srcFixedSubFile:  "C:\\Tmp\\Rick and Morty - S05E01\\org-fix.ass",
-		}, want: -4.1, wantErr: false},
+		}, want: -6.170000, wantErr: false},
 		{name: "Rick and Morty - S05E10", args: args{
 			baseSubFile:      "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
 			ffsubSyncSubFile: "C:\\Tmp\\Rick and Morty - S05E10\\ffsubsync.ass",
 			srcSubFile:       "C:\\Tmp\\Rick and Morty - S05E10\\org.ass",
 			srcFixedSubFile:  "C:\\Tmp\\Rick and Morty - S05E10\\org-fix.ass",
-		}, want: -4.1, wantErr: false},
+		}, want: -6.020000, wantErr: false},
 		{name: "Foundation - S01E09", args: args{
 			baseSubFile:      "C:\\Tmp\\Foundation - S01E09\\英_2.ass",
 			ffsubSyncSubFile: "C:\\Tmp\\Foundation - S01E09\\ffsubsync.ass",
 			srcSubFile:       "C:\\Tmp\\Foundation - S01E09\\org.ass",
 			srcFixedSubFile:  "C:\\Tmp\\Foundation - S01E09\\org-fix.ass",
-		}, want: -4.1, wantErr: false},
-		{name: "mix", args: args{
-			baseSubFile: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
-			srcSubFile:  "C:\\Tmp\\BL - S01E03\\org.ass",
-		}, want: -4.1, wantErr: false},
+		}, want: -29.890000, wantErr: false},
+		//{name: "mix", args: args{
+		//	baseSubFile: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
+		//	srcSubFile:  "C:\\Tmp\\BL - S01E03\\org.ass",
+		//}, want: -4.1, wantErr: false},
 	}
 
 	for _, tt := range tests {
@@ -81,14 +81,23 @@ func TestPipeline_FitGSS(t *testing.T) {
 				t.Fatal("sub not match")
 			}
 			// ---------------------------------------------------------------------------------------
-			pipeResult, _, err := NewPipeline(DefaultMaxOffsetSeconds).FixTimeline(infoBase, infoSrc, nil, false, tt.args.srcFixedSubFile)
+			p := NewPipeline(DefaultMaxOffsetSeconds)
+			pipeResult, err := p.CalcOffsetTime(infoBase, infoSrc, nil, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FitGSS() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
+			if pipeResult.GetOffsetTime() != tt.want {
+				t.Errorf("FitGSS() offsetTome = %v, want %v", pipeResult.GetOffsetTime(), tt.want)
+			}
+
+			_, err = p.FixSubFileTimeline(infoSrc, pipeResult.ScaledFileInfo,
+				pipeResult.GetOffsetTime(),
+				tt.args.srcFixedSubFile)
+
 			println(fmt.Sprintf("Offset: %f, Score: %f, Scale:%f",
-				float64(pipeResult.BestOffset)/100.0,
+				pipeResult.GetOffsetTime(),
 				pipeResult.Score,
 				pipeResult.ScaleFactor))
 		})
@@ -119,7 +128,7 @@ func TestPipeline_FitGSSByAudio(t *testing.T) {
 				},
 				subFilePath:     "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass",
 				srcFixedSubFile: "C:\\Tmp\\Rick and Morty - S05E01\\org-fix.ass"},
-			want: true, want1: 0,
+			want: true, want1: 0.33,
 		},
 		// Rick and Morty - S05E01
 		{name: "Rick and Morty - S05E01 -- 1",
@@ -129,7 +138,7 @@ func TestPipeline_FitGSSByAudio(t *testing.T) {
 				},
 				subFilePath:     "C:\\Tmp\\Rick and Morty - S05E01\\org.ass",
 				srcFixedSubFile: "C:\\Tmp\\Rick and Morty - S05E01\\org-fix.ass"},
-			want: true, want1: 0,
+			want: true, want1: -6.1,
 		},
 	}
 
@@ -153,13 +162,23 @@ func TestPipeline_FitGSSByAudio(t *testing.T) {
 				t.Fatal("sub not match")
 			}
 			// ---------------------------------------------------------------------------------------
-			pipeResult, _, err := NewPipeline(DefaultMaxOffsetSeconds).FixTimeline(nil, infoSrc, audioVADInfos, false, tt.args.srcFixedSubFile)
+			p := NewPipeline(DefaultMaxOffsetSeconds)
+			pipeResult, err := p.CalcOffsetTime(nil, infoSrc, audioVADInfos, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FitGSS() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
+			if pipeResult.GetOffsetTime() != tt.want1 {
+				t.Errorf("FitGSS() offsetTome = %v, want1 %v", pipeResult.GetOffsetTime(), tt.want1)
+			}
+
+			_, err = p.FixSubFileTimeline(infoSrc, pipeResult.ScaledFileInfo,
+				pipeResult.GetOffsetTime(),
+				tt.args.srcFixedSubFile)
+
 			println(fmt.Sprintf("Offset: %f, Score: %f, Scale:%f",
-				float64(pipeResult.BestOffset)/100.0,
+				pipeResult.GetOffsetTime(),
 				pipeResult.Score,
 				pipeResult.ScaleFactor))
 		})
