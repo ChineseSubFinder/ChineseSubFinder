@@ -40,11 +40,15 @@ func OneMovieDlSubInAllSite(Suppliers []ifaces.ISupplier, oneVideoFullPath strin
 			subInfosChannel <- subInfos
 		}()
 	}
-	for i := 0; i < len(Suppliers); i++ {
+	for index := 0; index < len(Suppliers); index++ {
 		v, ok := <-subInfosChannel
 		if ok == true && v != nil {
 			outSUbInfos = append(outSUbInfos, v...)
 		}
+	}
+
+	for index, info := range outSUbInfos {
+		log_helper.GetLogger().Debugln(common.QueueName, i, "OneMovieDlSubInAllSite get sub", index, "Name:", info.Name, "FileUrl:", info.FileUrl)
 	}
 
 	return outSUbInfos

@@ -57,6 +57,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 		if nowExt != ".zip" && nowExt != ".tar" && nowExt != ".rar" && nowExt != ".7z" {
 			// 是否是受支持的字幕类型
 			if sub_parser_hub.IsSubExtWanted(nowExt) == false {
+				log_helper.GetLogger().Debugln("OrganizeDlSubFiles -> IsSubExtWanted == false", "Name:", subInfos[i].Name, "FileUrl:", subInfos[i].FileUrl)
 				continue
 			}
 			// 加入缓存列表

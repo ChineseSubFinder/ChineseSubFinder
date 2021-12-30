@@ -336,6 +336,10 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 		outSubInfoList = append(outSubInfoList, *oneSubInfo)
 	}
 
+	for i, info := range outSubInfoList {
+		s.log.Debugln(s.GetSupplierName(), "step3 -> Downloaded File Info", i, "FileName:", info.Name, "FileUrl:", info.FileUrl)
+	}
+
 	// 返回前，需要把每一个 Eps 的 Season Episode 信息填充到每个 SubInfo 中
 	return outSubInfoList
 }
@@ -531,6 +535,7 @@ func (s Supplier) step3(subDownloadPageUrl string) (string, []byte, error) {
 			s.log.Errorln("ZiMuKu step3 DownloadFile", err)
 			continue
 		}
+		s.log.Debugln("Step3,DownFile, FileName:", filename, "DataLen:", len(data))
 		return filename, data, nil
 	}
 	s.log.Debugln("Step3,sub download url not found", subDownloadPageUrl)

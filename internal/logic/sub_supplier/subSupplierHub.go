@@ -79,6 +79,11 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, force
 		for s, _ := range organizeSubFiles {
 			outSubFileFullPathList = append(outSubFileFullPathList, organizeSubFiles[s]...)
 		}
+
+		for i, subFile := range outSubFileFullPathList {
+			d.log.Debugln("OneMovieDlSubInAllSite", videoFullPath, i, "SubFileFPath:", subFile)
+		}
+
 		return outSubFileFullPathList, nil
 	} else {
 		// 无需下载字幕
