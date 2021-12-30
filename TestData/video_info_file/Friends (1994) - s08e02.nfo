@@ -1,0 +1,32 @@
+<episodedetails>
+  <title>The One with the Red Sweater</title>
+  <season>8</season>
+  <episode>2</episode>
+  <aired>2001-10-04</aired>
+  <plot>Joey discovers a red sweater and it causes speculation as to who the father of Rachel's baby is. Meanwhile, Chandler and Ross search for the disposable cameras left behind at the wedding.</plot>
+  <uniqueid type="sonarr" default="true">502</uniqueid>
+  <thumb>https://artworks.thetvdb.com/banners/episodes/79168/303993.jpg</thumb>
+  <watched>false</watched>
+  <rating>7.5</rating>
+  <fileinfo>
+    <streamdetails>
+      <video>
+        <aspect>1.77777779</aspect>
+        <bitrate>13597000</bitrate>
+        <codec>x264</codec>
+        <framerate>23.976</framerate>
+        <height>1080</height>
+        <scantype>Progressive</scantype>
+        <width>1920</width>
+        <duration>21.971966666666667</duration>
+        <durationinseconds>1318</durationinseconds>
+      </video>
+      <audio>
+        <bitrate>640000</bitrate>
+        <channels>6</channels>
+        <codec>AC3</codec>
+        <language></language>
+      </audio>
+    </streamdetails>
+  </fileinfo>
+</episodedetails>
