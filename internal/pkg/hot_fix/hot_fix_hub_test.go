@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"path/filepath"
 	"testing"
 )
 
@@ -15,7 +16,7 @@ func TestHotFixProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	testDataPath := "../../../TestData/hotfix/001"
+	testDataPath := filepath.FromSlash("../../../TestData/hotfix/001")
 	movieDir := "movies"
 	seriesDir := "series"
 	testRootDir, err := my_util.CopyTestData(testDataPath)

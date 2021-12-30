@@ -14,7 +14,8 @@ func TestHotFix001_GetKey(t *testing.T) {
 }
 
 func TestHotFix001_Process(t *testing.T) {
-	testDataPath := "../../../TestData/hotfix/001"
+	testDataPath := filepath.FromSlash("../../../TestData/hotfix/001")
+
 	movieDir := "movies"
 	seriesDir := "series"
 	testRootDir, err := my_util.CopyTestData(testDataPath)
@@ -66,7 +67,8 @@ func TestHotFix001_Process(t *testing.T) {
 	}
 
 	if len(outStruct.RenamedFiles) != len(checkResults) {
-		t.Fatal("newSubFileName.len != checkResults.len")
+		t.Logf("\n\nnewSubFileName.len %d != checkResults.len %d", len(outStruct.RenamedFiles), len(checkResults))
+		t.FailNow()
 	}
 
 	for _, result := range checkResults {
