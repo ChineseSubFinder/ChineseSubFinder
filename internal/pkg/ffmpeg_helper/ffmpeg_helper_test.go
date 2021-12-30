@@ -8,10 +8,12 @@ import (
 )
 
 func TestGetFFMPEGInfo(t *testing.T) {
-	//videoFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 5\\Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.mkv"
-	videoFile := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 5\\Rick and Morty - S05E01 - Mort Dinner Rick Andre WEBDL-1080p.mkv"
-	//videoFile := "X:\\TestSeries\\Blade Runner - Black Lotus\\Season 1\\Blade Runner - Black Lotus - S01E03 - The Human Condition WEBDL-1080p.mkv"
-	//videoFile := "X:\\连续剧\\Foundation (2021)\\Season 1\\Foundation (2021) - S01E10 - The Leap WEBDL-1080p.mkv"
+
+	// use small video sample form google
+	// TODO: make a video with ffmpeg on each test
+	// https://gist.github.com/SeunghoonBaek/f35e0fd3db80bf55c2707cae5d0f7184
+	// http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4
+	videoFile := filepath.FromSlash("../../../TestData/ffmpeg/sampleVideo.mp4")
 
 	f := NewFFMPEGHelper()
 	bok, ffmpegInfo, err := f.GetFFMPEGInfo(videoFile, Audio)
@@ -23,7 +25,8 @@ func TestGetFFMPEGInfo(t *testing.T) {
 	}
 
 	subArgs, audioArgs := f.getAudioAndSubExportArgs(videoFile, ffmpegInfo)
-	println(len(subArgs), len(audioArgs))
+
+	t.Logf("\n\nsubArgs: %d   audioArgs: %d\n", len(subArgs), len(audioArgs))
 }
 
 func readString(filePath string) string {
@@ -36,7 +39,7 @@ func readString(filePath string) string {
 
 func Test_parseJsonString2GetFFMPEGInfo(t *testing.T) {
 
-	testDataPath := "../../../TestData/ffmpeg"
+	testDataPath := filepath.FromSlash("../../../TestData/ffmpeg")
 	testRootDir, err := my_util.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)
@@ -69,6 +72,7 @@ func Test_parseJsonString2GetFFMPEGInfo(t *testing.T) {
 			}
 
 			if len(got1.AudioInfoList) != tt.audios || len(got1.SubtitleInfoList) != tt.subs {
+				t.Logf("\n\nGOT    Num. Audio: %d (%d)  Num. Subtitles: %d (%d)", len(got1.AudioInfoList), tt.audios, len(got1.SubtitleInfoList), tt.subs)
 				t.Fatal("parseJsonString2GetFFProbeInfo result List < 1")
 			}
 		})
@@ -77,23 +81,25 @@ func Test_parseJsonString2GetFFMPEGInfo(t *testing.T) {
 
 func TestFFMPEGHelper_ExportAudioArgsByTimeRange(t *testing.T) {
 
-	audioFullPath := "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"
-	subFullPath := "C:\\Tmp\\Rick and Morty - S05E10\\英_2.srt"
-	startTimeString := "0:1:27"
+	// https://www.lynxstudio.com/downloads/e44/sample-wav-file-zip-encoded-44-1khz-pcm-24-stereo/
+	// TODO: make a sample audio file with ffmpeg
+	audioFullPath := filepath.FromSlash("../../../TestData/ffmpeg/sampleAudio.wav")
+	subFullPath := filepath.FromSlash("../../../TestData/ffmpeg/sampleSrt.srt")
+	startTimeString := "0:0:27"
 	timeLeng := "28.2"
 
 	f := NewFFMPEGHelper()
 
 	_, _, timeRange, err := f.ExportAudioAndSubArgsByTimeRange(audioFullPath, subFullPath, startTimeString, timeLeng)
 	if err != nil {
-		println(timeRange)
+		t.Logf("\n\nTime Range: %s", timeRange)
 		t.Fatal(err)
 	}
 }
 
 func TestFFMPEGHelper_GetAudioInfo(t *testing.T) {
 
-	audioFullPath := "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm"
+	audioFullPath := filepath.FromSlash("../../../TestData/ffmpeg/sampleAudio.wav")
 
 	f := NewFFMPEGHelper()
 	bok, duration, err := f.GetAudioDurationInfo(audioFullPath)
@@ -101,15 +107,15 @@ func TestFFMPEGHelper_GetAudioInfo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	println(duration)
+	t.Logf("\n\nAudio Duration: %f\n", duration)
 }
 
 func TestFFMPEGHelper_Version(t *testing.T) {
 
 	f := FFMPEGHelper{}
-	got, err := f.Version()
+	_, err := f.Version()
 	if err != nil {
 		t.Fatal(err)
 	}
-	println(got)
+	t.Logf("\n\nGet FFMPEG\n")
 }

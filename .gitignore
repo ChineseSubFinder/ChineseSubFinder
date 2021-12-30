@@ -52,3 +52,5 @@
 
 /internal/logic/sub_supplier/shooter/Logs
 /internal/logic/sub_supplier/xunlei/Logs
+
+/TestData/ffmpeg/sampleAudio_*
