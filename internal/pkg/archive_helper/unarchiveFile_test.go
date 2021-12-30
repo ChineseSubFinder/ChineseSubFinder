@@ -9,18 +9,18 @@ import (
 
 func TestUnArchiveFile(t *testing.T) {
 
-	testDataPath := "../../../TestData/zips"
+	testDataPath := filepath.FromSlash("../../../TestData/zips")
 	testRootDir, err := my_util.CopyTestData(testDataPath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	tetUnArchive(t, testRootDir, "zip.zip")
-	tetUnArchive(t, testRootDir, "tar.tar")
-	tetUnArchive(t, testRootDir, "rar.rar")
-	tetUnArchive(t, testRootDir, "7z.7z")
+	testUnArchive(t, testRootDir, "zip.zip")
+	testUnArchive(t, testRootDir, "tar.tar")
+	testUnArchive(t, testRootDir, "rar.rar")
+	testUnArchive(t, testRootDir, "7z.7z")
 }
 
-func tetUnArchive(t *testing.T, testRootDir string, missionName string) {
+func testUnArchive(t *testing.T, testRootDir string, missionName string) {
 	fileFPath := filepath.Join(testRootDir, missionName)
 	desPath := filepath.Join(testRootDir, strings.ReplaceAll(filepath.Ext(missionName), ".", ""))
 	err := UnArchiveFile(fileFPath, desPath)
