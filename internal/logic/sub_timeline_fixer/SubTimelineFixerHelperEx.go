@@ -14,6 +14,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/emirpasic/gods/utils"
+	"math"
 	"os"
 )
 
@@ -129,15 +130,14 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	}
 
 	// 开始调整字幕时间轴
-	if bProcess == false {
-		log_helper.GetLogger().Infoln("Skip TimeLine Fix --", srcSubFPath)
+	if bProcess == false || math.Abs(pipeResultMax.GetOffsetTime()) < s.fixerConfig.V2_MinOffset {
+		log_helper.GetLogger().Infoln("Skip TimeLine Fix -- OffsetTime:", pipeResultMax.GetOffsetTime(), srcSubFPath)
 		return nil
 	}
 	err = s.changeTimeLineAndSave(infoSrc, pipeResultMax, srcSubFPath)
 	if err != nil {
 		return err
 	}
-
 	log_helper.GetLogger().Infoln("Fix Offset:", pipeResultMax.GetOffsetTime(), srcSubFPath)
 	log_helper.GetLogger().Infoln("BackUp Org SubFile:", pipeResultMax.GetOffsetTime(), srcSubFPath+sub_timeline_fixer.BackUpExt)
 
