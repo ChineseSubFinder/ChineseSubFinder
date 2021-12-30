@@ -88,3 +88,16 @@ func TestSupplier_getSubListFromKeyword(t *testing.T) {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, len(sublist.Data))
 	}
 }
+
+func TestSupplier_step3(t *testing.T) {
+
+	dlUrl := "https://zmk.pw/dld/162150.html"
+	s := Supplier{}
+	fileName, datas, err := s.step3(dlUrl)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	println(fileName)
+	println(len(datas))
+}

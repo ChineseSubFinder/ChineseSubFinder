@@ -24,8 +24,7 @@ func Test_get_IMDB_movie_xml(t *testing.T) {
 func Test_get_IMDB_nfo(t *testing.T) {
 	wantid := "tt0993840"
 	wantyear := "2021"
-	//dirPth := "..\\..\\..\\TestData\\video_info_file\\Army of the Dead (2021) WEBDL-1080p.nfo"
-	dirPth := "C:\\Tmp\\Red Notice （2021） 红色通缉令.nfo"
+	dirPth := "..\\..\\..\\TestData\\video_info_file\\Army of the Dead (2021) WEBDL-1080p.nfo"
 	imdbInfo, err := getImdbAndYearNfo(dirPth, "movie")
 	if err != nil {
 		t.Fatal(err)
