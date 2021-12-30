@@ -15,6 +15,7 @@ type SubTimelineFixerConfig struct {
 	V2_FixThreads               int     // 字幕校正的并发线程
 	V2_MaxStartTimeDiffSD       float64 // 对白开始时间的统计 SD 最大误差，超过则不进行修正
 	V2_MinOffset                float64 // 超过这个(+-)偏移的时间轴才校正，否则跳过，单位秒
+	V2_MaxOffsetTime            int     // 最大可以校正的时间偏移，时间是秒
 }
 
 // CheckDefault 检测默认值（比如某些之默认不能为0），不对就重置到默认值上
@@ -56,5 +57,9 @@ func (s *SubTimelineFixerConfig) CheckDefault() {
 	}
 	if s.V2_MinOffset <= 0 {
 		s.V2_MinOffset = 0.3
+	}
+
+	if s.V2_MaxOffsetTime <= 0 {
+		s.V2_MaxOffsetTime = 120
 	}
 }

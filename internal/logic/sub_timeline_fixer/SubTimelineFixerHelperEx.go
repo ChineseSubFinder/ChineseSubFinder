@@ -29,7 +29,7 @@ func NewSubTimelineFixerHelperEx(fixerConfig sub_timeline_fiexer.SubTimelineFixe
 	return &SubTimelineFixerHelperEx{
 		ffmpegHelper:        ffmpeg_helper.NewFFMPEGHelper(),
 		subParserHub:        sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
-		timelineFixPipeLine: sub_timeline_fixer.NewPipeline(sub_timeline_fixer.DefaultMaxOffsetSeconds),
+		timelineFixPipeLine: sub_timeline_fixer.NewPipeline(fixerConfig.V2_MaxOffsetTime),
 		fixerConfig:         fixerConfig,
 		needDownloadFFMPeg:  false,
 	}

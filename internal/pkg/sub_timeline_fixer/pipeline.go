@@ -240,7 +240,7 @@ var FramerateRatios = []float64{24. / 23.976, 25. / 23.976, 25. / 24.}
 
 const MinFramerateRatio = 0.9
 const MaxFramerateRatio = 1.1
-const DefaultMaxOffsetSeconds = 60
+const DefaultMaxOffsetSeconds = 120
 const SampleRate = 100
 
 type PipeResult struct {

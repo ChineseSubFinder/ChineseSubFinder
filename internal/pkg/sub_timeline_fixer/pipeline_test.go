@@ -33,35 +33,36 @@ func TestPipeline_FitGSS(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "BL S01E03", args: args{
-			baseSubFile:      "C:\\Tmp\\BL - S01E03\\英_2.ass",
-			ffsubSyncSubFile: "C:\\Tmp\\BL - S01E03\\ffsubsync.ass",
-			srcSubFile:       "C:\\Tmp\\BL - S01E03\\org.ass",
-			srcFixedSubFile:  "C:\\Tmp\\BL - S01E03\\org-fix.ass",
+			baseSubFile:      "C:\\Tmp\\fixsubtimeline\\BL - S01E03\\英_2.ass",
+			ffsubSyncSubFile: "C:\\Tmp\\fixsubtimeline\\BL - S01E03\\ffsubsync.ass",
+			srcSubFile:       "C:\\Tmp\\fixsubtimeline\\BL - S01E03\\org.ass",
+			srcFixedSubFile:  "C:\\Tmp\\fixsubtimeline\\BL - S01E03\\org-fix.ass",
 		}, want: -4.290000, wantErr: false},
 		{name: "Rick and Morty - S05E01", args: args{
-			baseSubFile:      "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass",
-			ffsubSyncSubFile: "C:\\Tmp\\Rick and Morty - S05E01\\ffsubsync.ass",
-			srcSubFile:       "C:\\Tmp\\Rick and Morty - S05E01\\org.ass",
-			srcFixedSubFile:  "C:\\Tmp\\Rick and Morty - S05E01\\org-fix.ass",
+			baseSubFile:      "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\英_2.ass",
+			ffsubSyncSubFile: "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\ffsubsync.ass",
+			srcSubFile:       "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\org.ass",
+			srcFixedSubFile:  "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\org-fix.ass",
 		}, want: -6.170000, wantErr: false},
 		{name: "Rick and Morty - S05E10", args: args{
-			baseSubFile:      "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
-			ffsubSyncSubFile: "C:\\Tmp\\Rick and Morty - S05E10\\ffsubsync.ass",
-			srcSubFile:       "C:\\Tmp\\Rick and Morty - S05E10\\org.ass",
-			srcFixedSubFile:  "C:\\Tmp\\Rick and Morty - S05E10\\org-fix.ass",
+			baseSubFile:      "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E10\\英_2.ass",
+			ffsubSyncSubFile: "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E10\\ffsubsync.ass",
+			srcSubFile:       "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E10\\org.ass",
+			srcFixedSubFile:  "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E10\\org-fix.ass",
 		}, want: -6.020000, wantErr: false},
 		{name: "Foundation - S01E09", args: args{
-			baseSubFile:      "C:\\Tmp\\Foundation - S01E09\\英_2.ass",
-			ffsubSyncSubFile: "C:\\Tmp\\Foundation - S01E09\\ffsubsync.ass",
-			srcSubFile:       "C:\\Tmp\\Foundation - S01E09\\org.ass",
-			srcFixedSubFile:  "C:\\Tmp\\Foundation - S01E09\\org-fix.ass",
+			baseSubFile:      "C:\\Tmp\\fixsubtimeline\\Foundation - S01E09\\英_2.ass",
+			ffsubSyncSubFile: "C:\\Tmp\\fixsubtimeline\\Foundation - S01E09\\ffsubsync.ass",
+			srcSubFile:       "C:\\Tmp\\fixsubtimeline\\Foundation - S01E09\\org.ass",
+			srcFixedSubFile:  "C:\\Tmp\\fixsubtimeline\\Foundation - S01E09\\org-fix.ass",
 		}, want: -29.890000, wantErr: false},
-		//{name: "mix", args: args{
-		//	baseSubFile: "C:\\Tmp\\Rick and Morty - S05E10\\英_2.ass",
-		//	srcSubFile:  "C:\\Tmp\\BL - S01E03\\org.ass",
-		//}, want: -4.1, wantErr: false},
+		{name: "Foundation - S01E09", args: args{
+			baseSubFile:      "C:\\Tmp\\fixsubtimeline\\Yellowstone S04E05\\英_2.ass",
+			ffsubSyncSubFile: "C:\\Tmp\\fixsubtimeline\\Yellowstone S04E05\\ffsubsync.ass",
+			srcSubFile:       "C:\\Tmp\\fixsubtimeline\\Yellowstone S04E05\\org.ass",
+			srcFixedSubFile:  "C:\\Tmp\\fixsubtimeline\\Yellowstone S04E05\\org-fix.ass",
+		}, want: -62.84, wantErr: false},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
@@ -124,20 +125,20 @@ func TestPipeline_FitGSSByAudio(t *testing.T) {
 		{name: "Rick and Morty - S05E01 -- 0",
 			args: args{
 				audioInfo: vad.AudioInfo{
-					FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm",
+					FileFullPath: "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\未知语言_1.pcm",
 				},
-				subFilePath:     "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass",
-				srcFixedSubFile: "C:\\Tmp\\Rick and Morty - S05E01\\org-fix.ass"},
+				subFilePath:     "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\英_2.ass",
+				srcFixedSubFile: "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\org-fix.ass"},
 			want: true, want1: 0.33,
 		},
 		// Rick and Morty - S05E01
 		{name: "Rick and Morty - S05E01 -- 1",
 			args: args{
 				audioInfo: vad.AudioInfo{
-					FileFullPath: "C:\\Tmp\\Rick and Morty - S05E01\\未知语言_1.pcm",
+					FileFullPath: "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\未知语言_1.pcm",
 				},
-				subFilePath:     "C:\\Tmp\\Rick and Morty - S05E01\\org.ass",
-				srcFixedSubFile: "C:\\Tmp\\Rick and Morty - S05E01\\org-fix.ass"},
+				subFilePath:     "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\org.ass",
+				srcFixedSubFile: "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\org-fix.ass"},
 			want: true, want1: -6.1,
 		},
 	}
