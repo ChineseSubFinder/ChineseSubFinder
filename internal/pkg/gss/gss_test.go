@@ -13,7 +13,7 @@ func TestGss(t *testing.T) {
 	}
 	logger := log.New(os.Stdout, "", 0)
 	a, b := Gss(f, 1, 5, 1e-4, logger)
-	println(a, b)
+	t.Logf("\n\n %f %f", a, b)
 	// 1e-6
 	// Output:
 	// 0	        1	        5
@@ -51,5 +51,5 @@ func TestGss(t *testing.T) {
 	// 32	        2	        2
 
 	a, b = Gss(f, 0.9, 1.1, 1e-4, logger)
-	println(a, b)
+	t.Logf("\n\n %f %f", a, b)
 }
