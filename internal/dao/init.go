@@ -88,6 +88,10 @@ func getDbName() string {
 	if sysType == "windows" {
 		nowDbFileName = dbFileNameWindows
 	}
+	if sysType == "darwin" {
+		home, _ := os.UserHomeDir()
+		nowDbFileName = home + "/.config/chinesesubfinder/" + dbFileNameDarwin
+	}
 	return nowDbFileName
 }
 
@@ -99,4 +103,5 @@ var (
 const (
 	dbFileNameLinux   = "/config/settings.db"
 	dbFileNameWindows = "settings.db"
+	dbFileNameDarwin  = "settings.db"
 )
