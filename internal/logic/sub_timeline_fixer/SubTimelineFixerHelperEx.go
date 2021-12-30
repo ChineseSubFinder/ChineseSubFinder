@@ -58,7 +58,6 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	var infoSrc *subparser.FileInfo
 	var pipeResultMax sub_timeline_fixer.PipeResult
 	bProcess := false
-	offSetTime := 0.0
 	bok := false
 	var ffmpegInfo *ffmpeg_helper.FFMPEGInfo
 	var err error
@@ -139,8 +138,8 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 		return err
 	}
 
-	log_helper.GetLogger().Infoln("Fix Offset:", offSetTime, srcSubFPath)
-	log_helper.GetLogger().Infoln("BackUp Org SubFile:", offSetTime, srcSubFPath+sub_timeline_fixer.BackUpExt)
+	log_helper.GetLogger().Infoln("Fix Offset:", pipeResultMax.GetOffsetTime(), srcSubFPath)
+	log_helper.GetLogger().Infoln("BackUp Org SubFile:", pipeResultMax.GetOffsetTime(), srcSubFPath+sub_timeline_fixer.BackUpExt)
 
 	return nil
 }
