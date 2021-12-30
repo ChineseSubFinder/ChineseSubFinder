@@ -139,6 +139,7 @@ func (s Supplier) getSubListFromMovie(fileFPath string) ([]supplier.SubInfo, err
 	if err != nil {
 		return nil, err
 	}
+	s.log.Debugln(s.GetSupplierName(), fileFPath, "GetVideoInfoFromFileFullPath -> Title:", info.Title)
 	// 找到这个视频文件，尝试得到 IMDB ID
 	// 目前测试来看，加入 年 这个关键词去搜索，对 2020 年后的影片有利，因为网站有统一的详细页面了，而之前的，没有，会影响识别
 	// 所以，year >= 2020 年，则可以多加一个关键词（年）去搜索影片
@@ -146,31 +147,43 @@ func (s Supplier) getSubListFromMovie(fileFPath string) ([]supplier.SubInfo, err
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
 		s.log.Errorln("model.GetImdbInfo", err)
+	} else {
+		s.log.Debugln(s.GetSupplierName(), fileFPath, "GetImdbInfo4Movie -> Title:", imdbInfo.Title)
+		s.log.Debugln(s.GetSupplierName(), fileFPath, "GetImdbInfo4Movie -> OriginalTitle:", imdbInfo.OriginalTitle)
+		s.log.Debugln(s.GetSupplierName(), fileFPath, "GetImdbInfo4Movie -> Year:", imdbInfo.Year)
+		s.log.Debugln(s.GetSupplierName(), fileFPath, "GetImdbInfo4Movie -> ImdbId:", imdbInfo.ImdbId)
 	}
+
 	var subInfoList []supplier.SubInfo
 
 	if imdbInfo.ImdbId != "" {
 		// 先用 imdb id 找
+		s.log.Debugln(s.GetSupplierName(), fileFPath, "getSubListFromKeyword -> Search By IMDB ID:", imdbInfo.ImdbId)
 		subInfoList, err = s.getSubListFromKeyword(imdbInfo.ImdbId)
 		if err != nil {
 			// 允许的错误，跳过，继续进行文件名的搜索
 			s.log.Errorln(s.GetSupplierName(), "keyword:", imdbInfo.ImdbId)
 			s.log.Errorln("getSubListFromKeyword", "IMDBID can not found sub", fileFPath, err)
 		}
+
+		s.log.Debugln(s.GetSupplierName(), fileFPath, "getSubListFromKeyword -> Search By IMDB ID, subInfoList Count:", len(subInfoList))
 		// 如果有就优先返回
 		if len(subInfoList) > 0 {
 			return subInfoList, nil
 		}
 	}
-
 	// 如果没有，那么就用文件名查找
 	searchKeyword := my_util.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
+
+	s.log.Debugln(s.GetSupplierName(), fileFPath, "VideoNameSearchKeywordMaker Keyword:", searchKeyword)
+
 	subInfoList, err = s.getSubListFromKeyword(searchKeyword)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "keyword:", searchKeyword)
 		return nil, err
 	}
 
+	s.log.Debugln(s.GetSupplierName(), fileFPath, "getSubListFromKeyword -> Search By Keyword, subInfoList Count:", len(subInfoList))
 	return subInfoList, nil
 }
 
@@ -182,6 +195,7 @@ func (s Supplier) getSubListFromKeyword(keyword string) ([]supplier.SubInfo, err
 	if err != nil {
 		return nil, err
 	}
+	s.log.Debugln(s.GetSupplierName(), "getSubListFromKeyword -> step0 -> filmDetailPageUrl:", filmDetailPageUrl)
 	// 第二级界面，有多少个字幕
 	subResult, err := s.step1(filmDetailPageUrl)
 	if err != nil {
@@ -190,6 +204,15 @@ func (s Supplier) getSubListFromKeyword(keyword string) ([]supplier.SubInfo, err
 	// 第三级界面，单个字幕详情
 	// 找到最大的优先级的字幕下载
 	sort.Sort(SortByPriority{subResult.SubInfos})
+
+	s.log.Debugln(s.GetSupplierName(), "getSubListFromKeyword -> step1 -> subResult.Title:", subResult.Title)
+	s.log.Debugln(s.GetSupplierName(), "getSubListFromKeyword -> step1 -> subResult.OtherName:", subResult.OtherName)
+	for i, info := range subResult.SubInfos {
+		s.log.Debugln(s.GetSupplierName(), "getSubListFromKeyword -> step1 -> info.Name", i, info.Name)
+		s.log.Debugln(s.GetSupplierName(), "getSubListFromKeyword -> step1 -> info.DownloadUrl:", i, info.DownloadUrl)
+		s.log.Debugln(s.GetSupplierName(), "getSubListFromKeyword -> step1 -> info.DetailUrl:", i, info.DetailUrl)
+		s.log.Debugln(s.GetSupplierName(), "getSubListFromKeyword -> step1 -> info.DownloadTimes:", i, info.DownloadTimes)
+	}
 
 	outSubInfoList = s.whichSubInfoNeedDownload(subResult.SubInfos, err)
 
@@ -260,6 +283,7 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 			s.log.Error(s.GetSupplierName(), "step 2", subInfos[i].Name, err)
 			continue
 		}
+		s.log.Debugln(s.GetSupplierName(), "whichSubInfoNeedDownload -> step2 -> info.SubDownloadPageUrl:", i, subInfos[i].SubDownloadPageUrl)
 	}
 
 	// TODO 这里需要考虑，可以设置为高级选项，不够就用 unknow 来补充
@@ -284,8 +308,19 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 		}
 	}
 
+	s.log.Debugln(s.GetSupplierName(), "step2 -> tmpSubInfo.Count", len(tmpSubInfo))
+	for i, info := range tmpSubInfo {
+
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.Name:", i, info.Name)
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.DownloadUrl:", i, info.DownloadUrl)
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.DetailUrl:", i, info.DetailUrl)
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.DownloadTimes:", i, info.DownloadTimes)
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.SubDownloadPageUrl:", i, info.SubDownloadPageUrl)
+	}
+
 	// 第四级界面，具体字幕下载
 	for i, subInfo := range tmpSubInfo {
+		s.log.Debugln(s.GetSupplierName(), "step3 -> subInfo.SubDownloadPageUrl:", i, subInfo.SubDownloadPageUrl)
 		fileName, data, err := s.step3(subInfo.SubDownloadPageUrl)
 		if err != nil {
 			s.log.Error(s.GetSupplierName(), "step 3", err)

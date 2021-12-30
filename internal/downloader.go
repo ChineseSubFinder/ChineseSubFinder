@@ -60,11 +60,16 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqPa
 		if downloader.reqParam.Topic > 0 && downloader.reqParam.Topic != downloader.topic {
 			downloader.topic = downloader.reqParam.Topic
 		}
-		// 并发线程的范围控制
-		if downloader.reqParam.Threads <= 0 {
-			downloader.reqParam.Threads = 2
-		} else if downloader.reqParam.Threads >= 10 {
-			downloader.reqParam.Threads = 10
+		// 如果 Debug 模式开启了，强制设置线程数为1，方便定位问题
+		if downloader.reqParam.DebugMode == true {
+			downloader.reqParam.Threads = 1
+		} else {
+			// 并发线程的范围控制
+			if downloader.reqParam.Threads <= 0 {
+				downloader.reqParam.Threads = 2
+			} else if downloader.reqParam.Threads >= 10 {
+				downloader.reqParam.Threads = 10
+			}
 		}
 		// 初始化 Emby API 接口
 		if downloader.reqParam.EmbyConfig.Url != "" && downloader.reqParam.EmbyConfig.ApiKey != "" {
