@@ -78,6 +78,16 @@ func TestIsEmbySubChineseLangStringWanted(t *testing.T) {
 		{name: "22", args: args{inLangString: "eng"}, want: true},
 		{name: "23", args: args{inLangString: "kor"}, want: true},
 		{name: "24", args: args{inLangString: "jpn"}, want: true},
+
+		// random text that should return false
+		{name: "25", args: args{inLangString: "chineseeng"}, want: false},
+		{name: "26", args: args{inLangString: "English"}, want: false},
+		{name: "27", args: args{inLangString: "eng&chinese"}, want: false},
+		{name: "28", args: args{inLangString: "cht&eng"}, want: false},
+		{name: "29", args: args{inLangString: "chs&eng"}, want: false},
+		{name: "30", args: args{inLangString: "chs_eng"}, want: false},
+		{name: "31", args: args{inLangString: "cht_eng"}, want: false},
+		{name: "32", args: args{inLangString: "chiasdachinese"}, want: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
