@@ -289,6 +289,11 @@ func CloseChrome() {
 		cmdString = "taskkill /F /im notepad.exe"
 		command = exec.Command("cmd.exe", "/c", cmdString)
 	}
+	if sysType == "darwin" {
+		// macOS
+		cmdString = "pkill chrome"
+		command = exec.Command("/bin/sh", "-c", cmdString)
+	}
 	if cmdString == "" || command == nil {
 		log_helper.GetLogger().Errorln("CloseChrome OS:", sysType)
 		return
