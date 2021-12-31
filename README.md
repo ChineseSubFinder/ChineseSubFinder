@@ -28,6 +28,10 @@
 * [How To Use - 原生文档](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/HowToUse.md)
 * [Docker ChineseSubFinder--中文字幕自动下载 | sleele的博客 - 第三方教程](https://sleele.com/2021/06/25/docker-chinesesubfinder-中文字幕自动下载/)
 
+Jellyfin、Plex 用户的设置建议：
+
+* [Jellyfin、Plex 用户的设置建议](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/Jellyfin%E3%80%81Plex%20%E7%94%A8%E6%88%B7%E7%9A%84%E8%AE%BE%E7%BD%AE%E5%BB%BA%E8%AE%AE/Jellyfin%E3%80%81Plex%20%E7%94%A8%E6%88%B7%E7%9A%84%E8%AE%BE%E7%BD%AE%E5%BB%BA%E8%AE%AE.md)
+
 高阶设置：
 
 * [高阶设置 - Emby API 支持](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E9%AB%98%E9%98%B6%E8%AE%BE%E7%BD%AE%20-%20Emby%20API%20%E6%94%AF%E6%8C%81.md)
