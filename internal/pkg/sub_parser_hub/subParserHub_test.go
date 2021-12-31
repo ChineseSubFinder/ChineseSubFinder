@@ -3,18 +3,13 @@ package sub_parser_hub
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"path/filepath"
 	"testing"
 )
 
-func TestSubParserHub_IsSubHasChinese(t *testing.T) {
+func TestSubParserHubIsSubHasChinese(t *testing.T) {
 
-	testDataPath := "../../../TestData/sub_parser"
-	testRootDir, err := my_util.CopyTestData(testDataPath)
-	if err != nil {
-		t.Fatal(err)
-	}
+	testRootDir := filepath.FromSlash("../../../TestData/sub_parser")
 
 	type args struct {
 		filePath string

@@ -141,6 +141,8 @@ func IsEmbySubCodecWanted(inSubCodec string) bool {
 // IsEmbySubChineseLangStringWanted 是否是 Emby 自己解析出来的中文语言类型
 func IsEmbySubChineseLangStringWanted(inLangString string) bool {
 
+	isWanted := false
+
 	tmpString := strings.ToLower(inLangString)
 	nextString := tmpString
 	spStrings := strings.Split(tmpString, "[")
@@ -156,22 +158,24 @@ func IsEmbySubChineseLangStringWanted(inLangString string) bool {
 	}
 
 	// 先判断 ISO 标准的和变种的支持列表
-	if language.IsSupportISOString(nextString) == false {
-		return false
+	if language.IsSupportISOString(nextString) {
+		// fmt.Println("###: ERROR")
+		isWanted = true
 	}
+
 	// 再判断之前支持的列表
 	switch nextString {
 	case languageConst.Emby_chinese_chs,
 		languageConst.Emby_chinese_cht,
 		languageConst.Emby_chinese_chi:
 		// chi chs cht
-		return true
+		isWanted = true
 	case replaceLangString(languageConst.Emby_chinese):
 		// chinese，这个比较特殊，是本程序定义的 chinese 的字段，再 Emby API 下特殊的字幕命名字段
-		return true
-	default:
-		return false
+		isWanted = true
 	}
+
+	return isWanted
 }
 
 func replaceLangString(inString string) string {
