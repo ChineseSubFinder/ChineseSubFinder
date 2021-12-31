@@ -12,12 +12,13 @@ import (
 
 func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
 
-	testDataPath := "../../../TestData/sub_helper"
-	testRootDir, err := my_util.CopyTestData(testDataPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = DeleteOneSeasonSubCacheFolder(testRootDir)
+
+	// ERROR: DeleteOneSeasonSubCacheFolder will create 
+	// CSF-DebugThings/sub_helper
+	// TODO: fix GetRootDebugFolder 
+
+	testRootDir := "../../../TestData/sub_helper"
+	err := DeleteOneSeasonSubCacheFolder(testRootDir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -30,8 +31,9 @@ func TestGetVADInfosFromSub(t *testing.T) {
 
 	// 这两个字幕是一样的，只不过是格式不同而已
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
-	baseSubFile := "C:\\Tmp\\Rick and Morty - S05E01\\英_2.srt"
-	srcSubFile := "C:\\Tmp\\Rick and Morty - S05E01\\英_2.ass"
+
+	baseSubFile := filepath.FromSlash("../../../TestData/sub_helper/R&M-S05E10/Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.chinese(简,zimuku).default.srt")
+	srcSubFile := filepath.FromSlash("../../../TestData/sub_helper/R&M-S05E10/Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.chinese(简英,zimuku).ass")
 
 	bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(baseSubFile)
 	if err != nil {
