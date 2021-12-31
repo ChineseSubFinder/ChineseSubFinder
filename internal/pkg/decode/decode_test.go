@@ -25,7 +25,9 @@ func Test_get_IMDB_nfo(t *testing.T) {
 	wantid := "tt0993840"
 	wantyear := "2021"
 	dirPth := "..\\..\\..\\TestData\\video_info_file\\Army of the Dead (2021) WEBDL-1080p.nfo"
+	//dirPth := "C:\\Tmp\\American Crime Story (2016) - s03e01.nfo"
 	imdbInfo, err := getImdbAndYearNfo(dirPth, "movie")
+	//imdbInfo, err := getImdbAndYearNfo(dirPth, "episodedetails")
 	if err != nil {
 		t.Fatal(err)
 	}

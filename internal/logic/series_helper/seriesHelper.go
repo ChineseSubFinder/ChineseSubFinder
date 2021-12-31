@@ -274,7 +274,7 @@ func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo, forcedScanAndD
 		if epsInfo.AiredTime != "" {
 			baseTime, err = now.Parse(epsInfo.AiredTime)
 			if err != nil {
-				log_helper.GetLogger().Errorln("SeriesInfo parse AiredTime", err)
+				log_helper.GetLogger().Errorln("SeriesInfo parse AiredTime", epsInfo.Title, epsInfo.Season, epsInfo.Episode, err)
 				baseTime = epsInfo.ModifyTime
 			}
 		} else {
@@ -317,7 +317,7 @@ func getSeriesInfoFromDir(seriesDir string, imdbInfo *imdb.Title) (*series.Serie
 		if err != nil {
 			// 不是必须的
 			seriesInfo.Year = 0
-			log_helper.GetLogger().Warnln("ReadSeriesInfoFromDir.GetImdbInfo4SeriesDir.strconv.Atoi", err)
+			log_helper.GetLogger().Warnln("ReadSeriesInfoFromDir.GetImdbInfo4SeriesDir.strconv.Atoi", seriesDir, err)
 		} else {
 			seriesInfo.Year = iYear
 		}
@@ -333,12 +333,12 @@ func getEpsInfoAndSubDic(videoFile string, EpisodeDict map[string]series.Episode
 	// 正常来说，一集只有一个格式的视频，也就是 S01E01 只有一个，如果有多个则会只保存第一个
 	info, modifyTime, err := decode.GetVideoInfoFromFileFullPath(videoFile)
 	if err != nil {
-		log_helper.GetLogger().Errorln("model.GetVideoInfoFromFileFullPath", err)
+		log_helper.GetLogger().Errorln("model.GetVideoInfoFromFileFullPath", videoFile, err)
 		return
 	}
 	episodeInfo, err := decode.GetImdbInfo4OneSeriesEpisode(videoFile)
 	if err != nil {
-		log_helper.GetLogger().Errorln("model.GetImdbInfo4OneSeriesEpisode", err)
+		log_helper.GetLogger().Errorln("model.GetImdbInfo4OneSeriesEpisode", videoFile, err)
 		return
 	}
 	epsKey := my_util.GetEpisodeKeyName(info.Season, info.Episode)
