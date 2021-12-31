@@ -8,7 +8,7 @@ import (
 
 func TestUnArchiveFile(t *testing.T) {
 
-	testDataPath := filepath.FromSlash("../../../TestData/archive_helper")
+	testDataPath := filepath.FromSlash("../../../TestData/misc")
 	// TODO: remove CopyTestData
 	testUnArchive(t, testDataPath, "zip.zip")
 	testUnArchive(t, testDataPath, "tar.tar")
