@@ -37,6 +37,10 @@ func getSpeFileName() string {
 	if sysType == "windows" {
 		nowSpeFileName = specialFileNameWindows
 	}
+	if sysType == "darwin" {
+		home, _ := os.UserHomeDir()
+		nowSpeFileName = home + "/.config/chinesesubfinder/" + specialFileNameDarwin
+	}
 	return nowSpeFileName
 }
 
@@ -49,4 +53,5 @@ func getSpeFileName() string {
 const (
 	specialFileNameWindows = "RestoreFixTimelineBK"
 	specialFileNameLinux   = "/config/" + specialFileNameWindows
+	specialFileNameDarwin  = "RestoreFixTimelineBK"
 )

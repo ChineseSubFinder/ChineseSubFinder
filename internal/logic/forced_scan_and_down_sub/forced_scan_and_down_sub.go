@@ -37,6 +37,10 @@ func getSpeFileName() string {
 	if sysType == "windows" {
 		nowSpeFileName = specialFileNameWindows
 	}
+	if sysType == "darwin" {
+		home, _ := os.UserHomeDir()
+		nowSpeFileName = home + "/.config/chinesesubfinder/" + specialFileNameDarwin
+	}
 	return nowSpeFileName
 }
 
@@ -44,9 +48,10 @@ func getSpeFileName() string {
 	识别 config 文件夹下面由这个特殊的文件，就会执行强制扫描所有视频文件进行字幕的下载（之前有的字幕会被覆盖）
 	对于 Linux 是 /config 文件夹下
 	对于 Windows 是程序根目录下
-	对于 MacOS 需要自行实现
+	对于 MacOS 是程序根目录下
 */
 const (
 	specialFileNameWindows = "ForceFullScanAndDownloadSub"
 	specialFileNameLinux   = "/config/" + specialFileNameWindows
+	specialFileNameDarwin = "ForceFullScanAndDownloadSub"
 )
