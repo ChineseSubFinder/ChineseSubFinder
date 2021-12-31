@@ -30,6 +30,7 @@ services:
     image: allanpk716/chinesesubfinder:latest
     volumes:
       - /volume1/docker/chinesesubfinder:/config
+      - /volume1/docker/chinesesubfinder/CSF-SubFixCache:/app/CSF-SubFixCache
       - /volume1/Video:/media
     environment:
       - PUID=1026
@@ -47,6 +48,7 @@ docker create \
   -e PGID=100 \
   -e TZ=Asia/Shanghai \
   -v /volume1/docker/chinesesubfinder:/config \
+  -v /volume1/docker/chinesesubfinder/CSF-SubFixCache:/app/CSF-SubFixCache \
   -v /volume1/Video:/media \
   --restart unless-stopped \
   allanpk716/chinesesubfinder:latest
