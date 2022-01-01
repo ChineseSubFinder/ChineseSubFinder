@@ -5,7 +5,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/debug_view"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
@@ -20,15 +19,11 @@ import (
 
 func TestStopWordCounter(t *testing.T) {
 
-	testDataPath := "../../../TestData/FixTimeline"
-	testRootDir, err := my_util.CopyTestData(testDataPath)
-	if err != nil {
-		t.Fatal(err)
-	}
+	testRootDir := filepath.FromSlash("../../../TestData/FixTimeline")
 
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
-	bFind, info, err := subParserHub.DetermineFileTypeFromFile(filepath.Join(testRootDir, "R&M S05E10 - English.srt"))
+	bFind, info, err := subParserHub.DetermineFileTypeFromFile(filepath.Join(testRootDir, "yes", "R&M S05E01 - English.srt"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,8 +36,7 @@ func TestStopWordCounter(t *testing.T) {
 	s := SubTimelineFixer{}
 	stopWords := s.StopWordCounter(strings.ToLower(allString), 5)
 
-	print(len(stopWords))
-	println(info.Name)
+	t.Logf("\n\nsub name: %s \t lem(stopWords): %d", info.Name, len(stopWords))
 }
 
 func TestTFIDF(t *testing.T) {
@@ -67,7 +61,7 @@ func TestTFIDF(t *testing.T) {
 	// Transform the corpus into an LSI fitting the model to the documents in the process
 	lsi, err := lsiPipeline.FitTransform(testCorpus...)
 	if err != nil {
-		fmt.Printf("Failed to process documents because %v", err)
+		t.Errorf("Failed to process documents because %v", err)
 		return
 	}
 
@@ -75,7 +69,7 @@ func TestTFIDF(t *testing.T) {
 	// to project it into the same dimensional space
 	queryVector, err := lsiPipeline.Transform(query)
 	if err != nil {
-		fmt.Printf("Failed to process documents because %v", err)
+		t.Errorf("Failed to process documents because %v", err)
 		return
 	}
 
@@ -93,16 +87,13 @@ func TestTFIDF(t *testing.T) {
 		}
 	}
 
-	fmt.Printf("Matched '%s'", testCorpus[matched])
+	t.Logf("\n\nMatched '%s'", testCorpus[matched])
 	// Output: Matched 'The quick brown fox jumped over the lazy dog'
 }
 
 func TestGetOffsetTimeV1(t *testing.T) {
-	testDataPath := "../../../TestData/FixTimeline"
-	testRootDir, err := my_util.CopyTestData(testDataPath)
-	if err != nil {
-		t.Fatal(err)
-	}
+	testRootDir := filepath.FromSlash("../../../TestData/FixTimeline")
+
 	testRootDirYes := filepath.Join(testRootDir, "yes")
 	testRootDirNo := filepath.Join(testRootDir, "no")
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
@@ -382,11 +373,8 @@ func TestGetOffsetTimeV1(t *testing.T) {
 }
 
 func TestGetOffsetTimeV2_BaseSub(t *testing.T) {
-	testDataPath := "../../../TestData/FixTimeline"
-	testRootDir, err := my_util.CopyTestData(testDataPath)
-	if err != nil {
-		t.Fatal(err)
-	}
+	testRootDir := filepath.FromSlash("../../../TestData/FixTimeline")
+
 	testRootDirYes := filepath.Join(testRootDir, "yes")
 	testRootDirNo := filepath.Join(testRootDir, "no")
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())

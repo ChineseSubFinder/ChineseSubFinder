@@ -11,9 +11,9 @@ func getTestFileDir(testFileName string) (xmlDir string) {
 	} else if testFileName == "movie.nfo" {
 		return filepath.FromSlash("../../../TestData/media/movies/Army of the Dead (2021)/Army of the Dead (2021).nfo")
 	} else if testFileName == "has_http_address.nfo" {
-		return filepath.FromSlash("../../../TestData/video_info_file/has_http_address.nfo")
+		return filepath.FromSlash("../../../TestData/misc/has_http_address.nfo")
 	} else if testFileName == "has_http_address.nfo" {
-		return filepath.FromSlash("../../../TestData/video_info_file/only_http_address.nfo")
+		return filepath.FromSlash("../../../TestData/misc/only_http_address.nfo")
 	} else if testFileName == "series.mp4" {
 		return filepath.FromSlash("../../../TestData/media/tv/Friends (1994)/Season 08/Friends (1994) - s08e02.mp4")	
 	}
