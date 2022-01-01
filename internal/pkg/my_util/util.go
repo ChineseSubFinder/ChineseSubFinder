@@ -291,8 +291,9 @@ func CloseChrome() {
 	}
 	if sysType == "darwin" {
 		// macOS
-		cmdString = "pkill chrome"
-		command = exec.Command("/bin/sh", "-c", cmdString)
+		// https://stackoverflow.com/questions/57079120/using-exec-command-in-golang-how-do-i-open-a-new-terminal-and-execute-a-command
+		cmdString = `tell application "/Applications/Google Chrome.app" to quit`
+		command = exec.Command("osascript", "-s", "h", "-e", cmdString)
 	}
 	if cmdString == "" || command == nil {
 		log_helper.GetLogger().Errorln("CloseChrome OS:", sysType)
