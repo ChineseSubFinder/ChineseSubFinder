@@ -103,6 +103,21 @@ func TestFormatter_IsMatchThisFormat(t *testing.T) {
 			want2: "",
 			want3: language.Unknown,
 			want4: ""},
+		// previous method will return 
+		// fileName:  // (empty)
+		// subExt:  ./../../TestData/sub_format_changer/test/movie_org_emby/AAA/AAA.chinese(简英,subhd).ass
+		{name: "04-1", args: args{subName: "../../../TestData/sub_format_changer/test/movie_org_emby/AAA/AAA.chinese(简英,subhd).ass"},
+			want: false,
+			want1: "",
+			want2: "",
+			want3: language.Unknown,
+			want4: ""},
+		{name: "04-2", args: args{subName: "../../../TestData/sub_format_changer/test/movie_org_emby/AAA/AAA.zh.forced.ass"},
+			want: true,
+			want1: "../../../TestData/sub_format_changer/test/movie_org_emby/AAA/AAA",
+			want2: ".forced.ass",
+			want3: language.ChineseSimple,
+			want4: ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
