@@ -58,6 +58,7 @@ func (s SubFormatChanger) AutoDetectThenChangeTo(desFormatter common.FormatterNa
 	// 先找出有那些电影文件夹和连续剧文件夹
 	var movieFullPathList = make([]string, 0)
 	movieFullPathList, err = my_util.SearchMatchedVideoFile(s.movieRootDir)
+	// fmt.Println("No. of Movies: ", len(movieFullPathList), "  dir:  ", s.movieRootDir)
 	if err != nil {
 		return outStruct, err
 	}
@@ -113,8 +114,23 @@ func (s SubFormatChanger) AutoDetectThenChangeTo(desFormatter common.FormatterNa
 // autoDetectAndChange 自动检测命名格式，然后修改至目标的命名格式
 func (s SubFormatChanger) autoDetectAndChange(outStruct *RenameResults, fitSubName string, desFormatter common.FormatterName) {
 
+	// fitSubName = filepath.Base(fitSubName)
+	// fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	// fmt.Println("ori fitSubName: ", fitSubName, "formatter: ", desFormatter, len(s.formatter))
+
 	for _, formatter := range s.formatter {
+		// fix: now fitSubName is the full name
+		// use only basename
+		// ../../../TestData/sub_format_changer/test/movie_org_emby/AAA/AAA.chinese(简英,subhd).ass
+		// get
+		// true,   ,  ./../../TestData/sub_format_changer/test/movie_org_emby/AAA/AAA.chinese(简英,subhd).ass, 未知语言,   ,
 		bok, fileNameWithOutExt, subExt, subLang, extraSubPreName := formatter.IsMatchThisFormat(fitSubName)
+		// fmt.Println("bok: \tfN: \tfileNameWithOutExt, \tsubExt\tsubLang:\textra: ")
+		// if bok {
+		// 	fmt.Println("Matched    :  ", bok, "FN: ", fileNameWithOutExt, "EXT: ", subExt, subLang, extraSubPreName)
+		// } else {
+		// 	fmt.Println("Not Matched:  ",)
+		// }
 		if bok == false {
 			continue
 		}
@@ -139,6 +155,11 @@ func (s SubFormatChanger) autoDetectAndChange(outStruct *RenameResults, fitSubNa
 		newSubFileName := ""
 		newName, newDefaultName, newForcedName := s.formatter[fmt.Sprintf("%s", desFormatter)].
 			GenerateMixSubNameBase(fileNameWithOutExt, subExt, subLang, extraSubPreName)
+
+		// fmt.Println(fmt.Sprintf("%s", desFormatter))
+		// fmt.Println("newName       : " + newName)
+		// fmt.Println("newDefaultName: " + newDefaultName)
+		// fmt.Println("newForcedName : " + newForcedName)
 		if findDefault == false && findForce == false {
 			// 使用没得额外 Default 或者 Forced 的名称即可
 			newSubFileName = newName
@@ -150,10 +171,13 @@ func (s SubFormatChanger) autoDetectAndChange(outStruct *RenameResults, fitSubNa
 		if newSubFileName == "" {
 			continue
 		}
+
 		// 确认改格式
 		err := os.Rename(fitSubName, newSubFileName)
+		// fmt.Println("ori: " + fitSubName + "\nnew: " + newSubFileName)
 		if err != nil {
 			tmpName := my_util.FixWindowPathBackSlash(fitSubName)
+			// fmt.Println(tmpName)
 			outStruct.ErrFiles[tmpName] += 1
 			continue
 		} else {
