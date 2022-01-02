@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+	"runtime"
 )
 
 func NewLogHelper(appName string, level logrus.Level, maxAge time.Duration, rotationTime time.Duration) *logrus.Logger {
@@ -22,15 +23,16 @@ func NewLogHelper(appName string, level logrus.Level, maxAge time.Duration, rota
 			LogFormat:       "[%lvl%]: %time% - %msg%\n",
 		},
 	}
-	nowpath, err := os.Getwd()
-	if err != nil {
-		panic(err)
+	nowLoggerDir := getLoggerDir()
+	if nowLoggerDir == "" {
+		panic("Can't find logger dir by getLoggerDir()")
 	}
-	pathRoot := filepath.Join(nowpath, "Logs")
-	fileAbsPath := filepath.Join(pathRoot, appName+".log")
+	fileAbsPath := filepath.Join(nowLoggerDir, appName+".log")
 	// 下面配置日志每隔 X 分钟轮转一个新文件，保留最近 X 分钟的日志文件，多余的自动清理掉。
+	// create YYYYMMDDhhmmss for log
+	timeStampString := time.Now().Format("20060102150405")
 	writer, _ := rotatelogs.New(
-		filepath.Join(pathRoot, appName+"--%YLen%m%d%H%M--.log"),
+		filepath.Join(nowLoggerDir, appName + "-" + timeStampString + ".log"),
 		rotatelogs.WithLinkName(fileAbsPath),
 		rotatelogs.WithMaxAge(maxAge),
 		rotatelogs.WithRotationTime(rotationTime),
@@ -57,5 +59,29 @@ func GetLogger() *logrus.Logger {
 	return logger
 }
 
-var logger *logrus.Logger
-var logOnce sync.Once
+func getLoggerDir() string {
+	nowLoggerDir := ""
+	sysType := runtime.GOOS
+	if sysType == "linux" {
+		nowLoggerDir = loggerDirLinux
+	}
+	if sysType == "windows" {
+		nowLoggerDir = loggerDirWindows
+	}
+	if sysType == "darwin" {
+		home, _ := os.UserHomeDir()
+		nowLoggerDir = home + "/.config/chinesesubfinder/Logs" + loggerDirDarwin
+	}
+	return nowLoggerDir
+}
+
+var (
+	logger  *logrus.Logger
+	logOnce sync.Once
+)
+
+const (
+	loggerDirLinux   = "/app/Logs/"
+	loggerDirWindows = ""
+	loggerDirDarwin  = ""
+)
