@@ -191,6 +191,11 @@ func (p Pipeline) FixSubFileTimeline(infoSrc, scaledInfoSrc *subparser.FileInfo,
 		这就需要一个额外的函数去处理这些情况
 	*/
 	timeFormat := scaledInfoSrc.GetTimeFormat()
+	// 如果两个解析出来的对白数量不一致，那么肯定是无法进行下面的匹配的，理论上应该没得问题
+	if len(scaledInfoSrc.Dialogues) != len(infoSrc.Dialogues) {
+		return "", errors.New("FixSubFileTimeline Not The Same Len: scaledInfoSrc.Dialogues and infoSrc.Dialogues")
+	}
+	contentReplaceOffsetAll := -1
 	for index, scaledSrcOneDialogue := range scaledInfoSrc.Dialogues {
 
 		timeStart, err := my_util.ParseTime(scaledSrcOneDialogue.StartTime)
@@ -204,9 +209,40 @@ func (p Pipeline) FixSubFileTimeline(infoSrc, scaledInfoSrc *subparser.FileInfo,
 
 		fixTimeStart := timeStart.Add(offsetTime)
 		fixTimeEnd := timeEnd.Add(offsetTime)
+		/*
+			这里有一个梗（之前没有考虑到），理论上这样的替换应该匹配到一句话（正确的那一句），但是有一定几率
+			会把上面修复完的对白时间也算进去替换（匹配上了两句话），导致时间轴无形中被错误延长了
+			那么就需要一个 contentReplaceOffsetAll 去记录现在进行到整个字幕那个偏移未知的替换操作了
 
-		fixContent = strings.ReplaceAll(fixContent, infoSrc.Dialogues[index].StartTime, my_util.Time2SubTimeString(fixTimeStart, timeFormat))
-		fixContent = strings.ReplaceAll(fixContent, infoSrc.Dialogues[index].EndTime, my_util.Time2SubTimeString(fixTimeEnd, timeFormat))
+			并不是说一个字幕中不能出现多个一样的“时间字符串”，也就是如果使用 Find 去查找应该也是一定 >= 1 的结果
+			所以才需要 contentReplaceOffsetAll 来记录替换的偏移位置，每次只能变大，而不是变小
+		*/
+
+		orgStartTimeString := infoSrc.Dialogues[index].StartTime
+		orgEndTimeString := infoSrc.Dialogues[index].EndTime
+		// contentReplaceOffsetAll 为 -1 的时候那么第一次搜索得到的就一定是可以替换的
+		if contentReplaceOffsetAll == -1 {
+			contentReplaceOffsetAll = 0
+		}
+		contentReplaceOffsetNow := strings.Index(fixContent[contentReplaceOffsetAll:], orgStartTimeString)
+		if contentReplaceOffsetNow == -1 {
+			// 说明没找到，就跳过,虽然理论上不应该会出现
+			continue
+		}
+		contentReplaceOffsetAll += contentReplaceOffsetNow
+		fixContent = fixContent[:contentReplaceOffsetAll] + strings.Replace(fixContent[contentReplaceOffsetAll:], orgStartTimeString, my_util.Time2SubTimeString(fixTimeStart, timeFormat), 1)
+
+		// contentReplaceOffsetAll 为 -1 的时候那么第一次搜索得到的就一定是可以替换的
+		if contentReplaceOffsetAll == -1 {
+			contentReplaceOffsetAll = 0
+		}
+		contentReplaceOffsetNow = strings.Index(fixContent[contentReplaceOffsetAll:], orgEndTimeString)
+		if contentReplaceOffsetNow == -1 {
+			// 说明没找到，就跳过,虽然理论上不应该会出现
+			continue
+		}
+		contentReplaceOffsetAll += contentReplaceOffsetNow
+		fixContent = fixContent[:contentReplaceOffsetAll] + strings.Replace(fixContent[contentReplaceOffsetAll:], orgEndTimeString, my_util.Time2SubTimeString(fixTimeEnd, timeFormat), 1)
 	}
 
 	dstFile, err := os.Create(desSaveSubFileFullPath)

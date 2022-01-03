@@ -59,7 +59,8 @@ func TestEmbyHelper_UpdateVideoSubList(t *testing.T) {
 	// 194046 -- 窃贼军团
 	// 178071 -- The Night House
 	// 215162 --  Black Lotus - S01E03
-	err := em.UpdateVideoSubList("145499")
+	// 229865 --  黄石 - S04E06
+	err := em.UpdateVideoSubList("229865")
 	if err != nil {
 		t.Fatal(err)
 	}

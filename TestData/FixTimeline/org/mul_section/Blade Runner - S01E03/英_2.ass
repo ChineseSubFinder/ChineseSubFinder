@@ -1,0 +1,269 @@
+[Script Info]
+Title: English (US)
+Original Script: alconEnt  [http://www.crunchyroll.com/user/alconEnt]
+Original Translation: 
+Original Editing: 
+Original Timing: 
+Synch Point: 
+Script Updated By: 
+Update Details: 
+ScriptType: v4.00+
+Collisions: Normal
+PlayResX: 640
+PlayResY: 360
+Timer: 0.0000
+WrapStyle: 0
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,Strikeout,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Arial,20,&H00FFFFFF,&H0000FFFF,&H00000000,&H7F404040,-1,0,0,0,100,100,0,0,1,2,1,2,0020,0020,0022,0
+Style: OS,Arial,18,&H00FFFFFF,&H0000FFFF,&H00000000,&H7F404040,-1,0,0,0,100,100,0,0,1,2,1,8,0001,0001,0015,0
+Style: On Top,Arial,20,&H00FFFFFF,&H0000FFFF,&H00000000,&H7F404040,-1,0,0,0,100,100,0,0,1,2,1,8,0020,0020,0022,0
+Style: Italics,Arial,20,&H00FFFFFF,&H0000FFFF,&H00000000,&H7F404040,-1,-1,0,0,100,100,0,0,1,2,1,2,0020,0020,0022,0
+Style: On Top Italic,Arial,20,&H00FFFFFF,&H0000FFFF,&H00000000,&H7F404040,-1,-1,0,0,100,100,0,0,1,2,1,8,0020,0020,0022,0
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:02.43,0:00:06.85,Italics,,0000,0000,0000,,This little light\NI've found
+Dialogue: 0,0:00:08.69,0:00:12.77,Italics,,0000,0000,0000,,Take it in,\Nbreathe it out
+Dialogue: 0,0:00:15.09,0:00:19.39,Italics,,0000,0000,0000,,A little drum\Nthat's beating loud
+Dialogue: 0,0:00:21.49,0:00:25.57,Italics,,0000,0000,0000,,In my chest,\NI hear the sound
+Dialogue: 0,0:00:31.22,0:00:33.34,Italics,,0000,0000,0000,,I can feel
+Dialogue: 0,0:00:33.75,0:00:35.58,Italics,,0000,0000,0000,,Feel you now
+Dialogue: 0,0:00:36.00,0:00:39.18,Italics,,0000,0000,0000,,I can feel you now
+Dialogue: 0,0:00:39.18,0:00:40.55,Italics,,0000,0000,0000,,I can feel
+Dialogue: 0,0:00:41.93,0:00:45.09,Italics,,0000,0000,0000,,I can feel you now
+Dialogue: 0,0:00:57.03,0:01:01.62,OS,,0000,0000,0000,,Mead Cameras
+Dialogue: 0,0:01:20.70,0:01:22.31,Default,,0000,0000,0000,,Where am I?
+Dialogue: 0,0:01:29.12,0:01:30.54,Default,,0000,0000,0000,,Ow...
+Dialogue: 0,0:01:47.87,0:01:50.02,Default,,0000,0000,0000,,Hey! What the hell?
+Dialogue: 0,0:01:51.14,0:01:52.89,Default,,0000,0000,0000,,What did you do to me?
+Dialogue: 0,0:01:52.89,0:01:54.36,Default,,0000,0000,0000,,Saved your life.
+Dialogue: 0,0:01:54.36,0:01:56.24,Default,,0000,0000,0000,,You shot me with a stun gun.
+Dialogue: 0,0:01:58.51,0:02:00.21,Default,,0000,0000,0000,,You killed Bannister, didn't you?
+Dialogue: 0,0:02:04.86,0:02:06.11,Default,,0000,0000,0000,,Don't worry.
+Dialogue: 0,0:02:06.11,0:02:07.52,Default,,0000,0000,0000,,I won't turn you in.
+Dialogue: 0,0:02:07.52,0:02:09.35,Default,,0000,0000,0000,,You were out of control.
+Dialogue: 0,0:02:09.35,0:02:11.31,Default,,0000,0000,0000,,I did what I had to do.
+Dialogue: 0,0:02:13.83,0:02:15.53,Default,,0000,0000,0000,,My device.
+Dialogue: 0,0:02:15.53,0:02:17.12,Default,,0000,0000,0000,,I always finish a job.
+Dialogue: 0,0:02:19.68,0:02:21.68,Default,,0000,0000,0000,,How did you know you'd find me there?
+Dialogue: 0,0:02:26.26,0:02:27.48,Italics,,0000,0000,0000,,AS-08 reporting.
+Dialogue: 0,0:02:27.48,0:02:28.85,Italics,,0000,0000,0000,,Returning to scene. Over.
+Dialogue: 0,0:02:29.16,0:02:30.12,Italics,,0000,0000,0000,,Roger that.
+Dialogue: 0,0:02:30.80,0:02:34.15,On Top Italic,,0000,0000,0000,,Report of multiple gunshots\Nheard near the Quail building.
+Dialogue: 0,0:02:33.37,0:02:35.50,Default,,0000,0000,0000,,I was tuned\Ninto the police frequency.
+Dialogue: 0,0:02:36.56,0:02:39.37,Default,,0000,0000,0000,,Picked up chatter about\NSenator Bannister's murder.
+Dialogue: 0,0:02:41.68,0:02:43.30,Default,,0000,0000,0000,,Just put two and two together.
+Dialogue: 0,0:02:44.97,0:02:46.89,Default,,0000,0000,0000,,I guess I'm supposed to say thank you.
+Dialogue: 0,0:02:53.29,0:02:54.98,Default,,0000,0000,0000,,Here. Drink this.
+Dialogue: 0,0:02:59.06,0:02:59.81,Default,,0000,0000,0000,,Don't blame you.
+Dialogue: 0,0:03:00.73,0:03:03.18,Default,,0000,0000,0000,,No booze has tasted right\Nsince the Blackout.
+Dialogue: 0,0:03:05.26,0:03:06.58,Default,,0000,0000,0000,,Blackout?
+Dialogue: 0,0:03:07.35,0:03:09.06,Default,,0000,0000,0000,,The Blackout of 2022.
+Dialogue: 0,0:03:09.67,0:03:11.37,Default,,0000,0000,0000,,You really don't remember a thing.
+Dialogue: 0,0:03:11.97,0:03:13.71,Default,,0000,0000,0000,,It was a total data wipe.
+Dialogue: 0,0:03:14.10,0:03:16.00,Default,,0000,0000,0000,,Changed everything.
+Dialogue: 0,0:03:16.00,0:03:18.74,Default,,0000,0000,0000,,I told you I can't remember anything.
+Dialogue: 0,0:03:19.26,0:03:22.48,Default,,0000,0000,0000,,But maybe I never had\Nany memories to begin with.
+Dialogue: 0,0:03:24.01,0:03:25.28,Default,,0000,0000,0000,,Why would you think that?
+Dialogue: 0,0:04:19.99,0:04:22.36,Default,,0000,0000,0000,,We know where to find it. They don't.
+Dialogue: 0,0:04:23.69,0:04:26.42,Default,,0000,0000,0000,,So if that little worm\Ncomes around again,
+Dialogue: 0,0:04:27.03,0:04:28.86,Default,,0000,0000,0000,,we slit his throat.
+Dialogue: 0,0:04:28.86,0:04:30.56,Default,,0000,0000,0000,,That'll send a message to the--
+Dialogue: 0,0:04:29.73,0:04:30.98,Default,,0000,0000,0000,,Drove, right?
+Dialogue: 0,0:04:31.31,0:04:32.90,Default,,0000,0000,0000,,Wanna talk with you.
+Dialogue: 0,0:04:35.73,0:04:37.48,Default,,0000,0000,0000,,You gotta be kidding.
+Dialogue: 0,0:04:37.95,0:04:40.54,Default,,0000,0000,0000,,What do you want, little piggy?\NYou ain't got nothing on me.
+Dialogue: 0,0:04:40.54,0:04:42.30,Default,,0000,0000,0000,,Whoa--ow!
+Dialogue: 0,0:04:42.30,0:04:44.52,Default,,0000,0000,0000,,Heard you had a run-in\Nwith a young woman.
+Dialogue: 0,0:04:44.52,0:04:47.46,Default,,0000,0000,0000,,Bad attitude, tattoo of a black lotus.
+Dialogue: 0,0:04:47.46,0:04:49.96,Default,,0000,0000,0000,,Why would I help\Na pretty, little piggy like you?
+Dialogue: 0,0:04:49.96,0:04:51.07,Default,,0000,0000,0000,,Ah! Geez!
+Dialogue: 0,0:04:51.07,0:04:53.05,Default,,0000,0000,0000,,Okay, okay! Ow!
+Dialogue: 0,0:04:57.22,0:04:59.81,Default,,0000,0000,0000,,Maybe I should\Nslice myself off a piece.
+Dialogue: 0,0:05:08.34,0:05:10.15,Default,,0000,0000,0000,,Son of a bitch!
+Dialogue: 0,0:05:33.31,0:05:35.64,Default,,0000,0000,0000,,Police business.\NNow, move along.
+Dialogue: 0,0:05:36.10,0:05:37.43,Default,,0000,0000,0000,,To hell with this!
+Dialogue: 0,0:05:41.23,0:05:43.21,Default,,0000,0000,0000,,Finally, a little peace and quiet.
+Dialogue: 0,0:05:44.18,0:05:45.94,Default,,0000,0000,0000,,Tell me about the girl.
+Dialogue: 0,0:05:47.68,0:05:49.38,Default,,0000,0000,0000,,You want me to slice your arm off?
+Dialogue: 0,0:05:49.90,0:05:51.25,Default,,0000,0000,0000,,The other one?
+Dialogue: 0,0:05:56.10,0:05:57.58,Default,,0000,0000,0000,,She cut the boss up.
+Dialogue: 0,0:05:57.58,0:05:59.07,Default,,0000,0000,0000,,She's nuts.
+Dialogue: 0,0:05:59.07,0:06:00.73,Default,,0000,0000,0000,,Carried a damn samurai sword.
+Dialogue: 0,0:06:09.75,0:06:11.77,Default,,0000,0000,0000,,You better give me\Nmore than that.
+Dialogue: 0,0:06:11.77,0:06:13.79,Default,,0000,0000,0000,,All right. All right.
+Dialogue: 0,0:06:13.79,0:06:15.22,Default,,0000,0000,0000,,You win.
+Dialogue: 0,0:06:15.22,0:06:18.00,Default,,0000,0000,0000,,She had this...tech.
+Dialogue: 0,0:06:18.00,0:06:20.66,Default,,0000,0000,0000,,We tried to take it from her.\NWe was just messing around.
+Dialogue: 0,0:06:21.07,0:06:23.11,Default,,0000,0000,0000,,Then she comes back to kill us.
+Dialogue: 0,0:06:23.11,0:06:25.27,Default,,0000,0000,0000,,Neuro-stims must've messed her brain up!
+Dialogue: 0,0:06:26.92,0:06:30.13,Default,,0000,0000,0000,,It'd be a good idea to cooperate \Nwith local law enforcement.
+Dialogue: 0,0:06:30.59,0:06:32.60,Default,,0000,0000,0000,,Next time, I won't be so nice.
+Dialogue: 0,0:06:33.92,0:06:36.22,Default,,0000,0000,0000,,Won't be a next time for you, piggy!
+Dialogue: 0,0:06:41.24,0:06:45.81,Italics,,0000,0000,0000,,LAPD investigators have refused to comment \Non reports that Senator Bannister
+Dialogue: 0,0:06:45.81,0:06:50.80,Italics,,0000,0000,0000,,was attending an unlicensed boxing match \Nwhen he was killed by an unknown assailant.
+Dialogue: 0,0:06:51.39,0:06:56.51,Italics,,0000,0000,0000,,Accolades for the senator came in from \Nas far away as the off-world colonies.
+Dialogue: 0,0:06:56.51,0:07:00.28,Italics,,0000,0000,0000,,In a long and distinguished career, \NSenator Bannister was seen
+Dialogue: 0,0:07:00.28,0:07:05.21,Italics,,0000,0000,0000,,as a non-partisan defender of basic human \Nrights and was hailed as a true patriot.
+Dialogue: 0,0:07:05.21,0:07:06.52,Default,,0000,0000,0000,,He was a piece of shit.
+Dialogue: 0,0:07:08.87,0:07:11.14,Default,,0000,0000,0000,,Did you find out what's on my device?
+Dialogue: 0,0:07:13.65,0:07:15.03,Default,,0000,0000,0000,,Not yet.
+Dialogue: 0,0:07:20.60,0:07:22.92,Default,,0000,0000,0000,,Listen, what's a replicant?
+Dialogue: 0,0:07:26.87,0:07:28.40,Default,,0000,0000,0000,,A replicant?
+Dialogue: 0,0:07:28.40,0:07:29.59,Default,,0000,0000,0000,,Is it a machine?
+Dialogue: 0,0:07:31.81,0:07:33.11,Default,,0000,0000,0000,,Not exactly.
+Dialogue: 0,0:07:34.10,0:07:35.22,Default,,0000,0000,0000,,Then what?
+Dialogue: 0,0:07:40.39,0:07:42.28,Default,,0000,0000,0000,,Why do you even care about this?
+Dialogue: 0,0:07:44.17,0:07:45.89,Default,,0000,0000,0000,,Bannister told me.
+Dialogue: 0,0:07:46.49,0:07:49.37,Default,,0000,0000,0000,,That I'm one of...them.
+Dialogue: 0,0:08:06.63,0:08:08.45,Default,,0000,0000,0000,,And you believe what that scum told you?
+Dialogue: 0,0:08:10.91,0:08:12.36,Default,,0000,0000,0000,,But what if...
+Dialogue: 0,0:08:16.71,0:08:20.43,Default,,0000,0000,0000,,20 years ago, a corporation\Nmade artificial people.
+Dialogue: 0,0:08:20.43,0:08:22.33,Default,,0000,0000,0000,,Called them replicants.
+Dialogue: 0,0:08:22.33,0:08:25.33,Default,,0000,0000,0000,,The idea was for them to do hard labor \Nwithout complaining, like slaves.
+Dialogue: 0,0:08:33.14,0:08:34.27,Default,,0000,0000,0000,,Hold still.
+Dialogue: 0,0:08:37.19,0:08:38.35,Default,,0000,0000,0000,,Look at me.
+Dialogue: 0,0:08:38.95,0:08:40.99,Default,,0000,0000,0000,,I'll tell you if you're a replicant.
+Dialogue: 0,0:08:44.23,0:08:45.81,Default,,0000,0000,0000,,Look up and to the left.
+Dialogue: 0,0:08:46.31,0:08:47.59,Default,,0000,0000,0000,,Don't blink.
+Dialogue: 0,0:09:02.83,0:09:04.27,Default,,0000,0000,0000,,You're not a replicant.
+Dialogue: 0,0:09:04.64,0:09:07.47,Default,,0000,0000,0000,,If you were a Nexus 8,\Nyou'd have a serial number.
+Dialogue: 0,0:09:07.47,0:09:09.91,Default,,0000,0000,0000,,6, you'd be long dead.
+Dialogue: 0,0:09:11.70,0:09:13.84,Default,,0000,0000,0000,,Then how was I able to do all that?
+Dialogue: 0,0:09:14.42,0:09:15.61,Default,,0000,0000,0000,,How did I...
+Dialogue: 0,0:09:16.34,0:09:17.87,Default,,0000,0000,0000,,kill people so easily?
+Dialogue: 0,0:09:21.86,0:09:23.43,Default,,0000,0000,0000,,If you're still worried,
+Dialogue: 0,0:09:23.98,0:09:26.16,Default,,0000,0000,0000,,there's only one way to tell for sure.
+Dialogue: 0,0:09:27.92,0:09:28.88,Default,,0000,0000,0000,,Have a seat.
+Dialogue: 0,0:10:19.94,0:10:21.89,Default,,0000,0000,0000,,It's called the Voight-Kampff test.
+Dialogue: 0,0:10:21.89,0:10:24.77,Default,,0000,0000,0000,,Tells if you're human or replicant.
+Dialogue: 0,0:10:25.41,0:10:27.73,Default,,0000,0000,0000,,Replicants are tough as nails,
+Dialogue: 0,0:10:27.73,0:10:30.00,Default,,0000,0000,0000,,but they look just like everybody else.
+Dialogue: 0,0:10:30.91,0:10:32.68,Default,,0000,0000,0000,,What's it going to do to me?
+Dialogue: 0,0:10:33.99,0:10:35.20,Default,,0000,0000,0000,,Don't worry.
+Dialogue: 0,0:10:35.20,0:10:36.80,Default,,0000,0000,0000,,I'm just gonna ask you some questions.
+Dialogue: 0,0:10:39.00,0:10:40.81,Default,,0000,0000,0000,,I don't have any memories.
+Dialogue: 0,0:10:42.21,0:10:44.45,Default,,0000,0000,0000,,Feelings can tell more than memories.
+Dialogue: 0,0:10:44.83,0:10:46.30,Default,,0000,0000,0000,,They're deeper.
+Dialogue: 0,0:10:46.66,0:10:50.56,Default,,0000,0000,0000,,If you're a replicant, your emotions \Nwill be marked by contradictions.
+Dialogue: 0,0:10:53.74,0:10:55.41,Default,,0000,0000,0000,,Picture your mother.
+Dialogue: 0,0:10:55.41,0:10:57.08,Default,,0000,0000,0000,,In the house you grew up in.
+Dialogue: 0,0:10:59.95,0:11:02.15,Default,,0000,0000,0000,,She looks at you, disappointed,
+Dialogue: 0,0:11:02.61,0:11:04.51,Default,,0000,0000,0000,,and tells you that she doesn't love you.
+Dialogue: 0,0:11:05.08,0:11:06.90,Default,,0000,0000,0000,,She's never loved you,
+Dialogue: 0,0:11:06.90,0:11:08.56,Default,,0000,0000,0000,,and she regrets ever having you.
+Dialogue: 0,0:11:08.56,0:11:10.91,Default,,0000,0000,0000,,A mother would never say that.
+Dialogue: 0,0:11:13.30,0:11:16.44,Default,,0000,0000,0000,,You're passing a busy street corner \Non the way to a friend's apartment,
+Dialogue: 0,0:11:16.44,0:11:19.21,Default,,0000,0000,0000,,and you see a small cardboard \Nbox next to a dumpster.
+Dialogue: 0,0:11:19.21,0:11:21.79,Default,,0000,0000,0000,,Inside is a tabby cat, a kitten, a real one
+Dialogue: 0,0:11:21.79,0:11:26.29,Default,,0000,0000,0000,,with green eyes and a white spot \Non her nose, meowing for food.
+Dialogue: 0,0:11:27.74,0:11:30.48,Default,,0000,0000,0000,,I'd take it home and feed it.
+Dialogue: 0,0:11:30.48,0:11:31.89,Default,,0000,0000,0000,,I like cats.
+Dialogue: 0,0:11:32.77,0:11:34.20,Default,,0000,0000,0000,,Why do you like cats?
+Dialogue: 0,0:11:34.75,0:11:36.04,Default,,0000,0000,0000,,Hmm...
+Dialogue: 0,0:11:36.97,0:11:38.75,Default,,0000,0000,0000,,They're cute and fluffy.
+Dialogue: 0,0:11:51.17,0:11:53.02,Default,,0000,0000,0000,,Can you remember being in love?
+Dialogue: 0,0:11:53.67,0:11:55.17,Default,,0000,0000,0000,,How did it make you feel?
+Dialogue: 0,0:11:55.82,0:11:57.15,Default,,0000,0000,0000,,That's easy.
+Dialogue: 0,0:11:57.96,0:12:00.01,Default,,0000,0000,0000,,The way he'd look at me...
+Dialogue: 0,0:12:00.69,0:12:02.83,Default,,0000,0000,0000,,I thought my heart was going to burst.
+Dialogue: 0,0:12:03.64,0:12:06.86,Default,,0000,0000,0000,,It felt like... something wonderful.
+Dialogue: 0,0:12:12.52,0:12:14.46,Default,,0000,0000,0000,,Make it pretty.
+Dialogue: 0,0:12:15.96,0:12:17.16,Default,,0000,0000,0000,,Stay still.
+Dialogue: 0,0:12:25.96,0:12:27.28,Default,,0000,0000,0000,,It's done.
+Dialogue: 0,0:12:30.93,0:12:33.03,Default,,0000,0000,0000,,That is so cool.
+Dialogue: 0,0:12:35.77,0:12:36.74,Default,,0000,0000,0000,,It's beautiful.
+Dialogue: 0,0:12:38.50,0:12:39.55,Default,,0000,0000,0000,,It's a gift.
+Dialogue: 0,0:12:40.52,0:12:42.48,Default,,0000,0000,0000,,To mark your new beginning.
+Dialogue: 0,0:12:44.21,0:12:46.74,Default,,0000,0000,0000,,Don't you mean our new beginning?
+Dialogue: 0,0:12:55.42,0:12:58.28,Default,,0000,0000,0000,,Don't forget me, Elle.
+Dialogue: 0,0:13:05.79,0:13:07.15,Default,,0000,0000,0000,,How old were you?
+Dialogue: 0,0:13:07.15,0:13:08.42,Default,,0000,0000,0000,,It's coming back.
+Dialogue: 0,0:13:09.01,0:13:10.82,Default,,0000,0000,0000,,That was when we first met.
+Dialogue: 0,0:13:12.02,0:13:13.42,Default,,0000,0000,0000,,He knew so many things.
+Dialogue: 0,0:13:13.42,0:13:16.01,Default,,0000,0000,0000,,He told me that the lotus represents purity.
+Dialogue: 0,0:13:17.47,0:13:19.98,Default,,0000,0000,0000,,So he gave me this tattoo.
+Dialogue: 0,0:13:21.33,0:13:23.64,Default,,0000,0000,0000,,But only the white lotus is said to be pure.
+Dialogue: 0,0:13:24.78,0:13:25.86,Default,,0000,0000,0000,,No.
+Dialogue: 0,0:13:26.77,0:13:29.13,Default,,0000,0000,0000,,That depends on perception.
+Dialogue: 0,0:14:06.11,0:14:07.61,Default,,0000,0000,0000,,Don't worry.
+Dialogue: 0,0:14:07.61,0:14:09.36,Default,,0000,0000,0000,,You're not a replicant.
+Dialogue: 0,0:14:11.07,0:14:12.99,Default,,0000,0000,0000,,Just a girl with amnesia.
+Dialogue: 0,0:14:14.78,0:14:17.43,Default,,0000,0000,0000,,Your emotions don't exhibit\Nany contradictions.
+Dialogue: 0,0:14:20.21,0:14:21.51,Default,,0000,0000,0000,,Get some rest.
+Dialogue: 0,0:14:23.21,0:14:24.78,Default,,0000,0000,0000,,I'm going out for a drink.
+Dialogue: 0,0:14:25.21,0:14:26.67,Default,,0000,0000,0000,,I'll grab you some food.
+Dialogue: 0,0:14:56.16,0:15:00.00,Italics,,0000,0000,0000,,Senator Bannister is the reason \NCalifornia still has an economy
+Dialogue: 0,0:15:00.00,0:15:03.83,Italics,,0000,0000,0000,,despite devastating climate \Nchange. A hero to the people.
+Dialogue: 0,0:15:06.02,0:15:07.39,Default,,0000,0000,0000,,A hero?
+Dialogue: 0,0:15:07.94,0:15:10.48,Default,,0000,0000,0000,,There wasn't a heroic bone in his body.
+Dialogue: 0,0:15:10.48,0:15:15.48,Default,,0000,0000,0000,,Now that he's gone, it's going to be \Nharder to remove the ban on replicants.
+Dialogue: 0,0:15:15.87,0:15:19.90,Default,,0000,0000,0000,,I still have plenty of \Nfriends who can help me.
+Dialogue: 0,0:15:21.86,0:15:24.06,Default,,0000,0000,0000,,Friends made with money?
+Dialogue: 0,0:15:28.40,0:15:32.81,Default,,0000,0000,0000,,Is that why you came up here? To insult me?
+Dialogue: 0,0:15:32.81,0:15:35.36,Default,,0000,0000,0000,,Or is this another talk about your pride?
+Dialogue: 0,0:15:38.42,0:15:43.33,Default,,0000,0000,0000,,I admit, humanity would \Nhave starved without you.
+Dialogue: 0,0:15:43.33,0:15:47.77,Default,,0000,0000,0000,,It was your research that \Nled to synthetic proteins,
+Dialogue: 0,0:15:47.77,0:15:52.39,Default,,0000,0000,0000,,but ideas mean nothing without the \Nmoney and power to actualize them.
+Dialogue: 0,0:15:55.14,0:15:59.94,Default,,0000,0000,0000,,I gave the people manna when \Nheaven would not oblige.
+Dialogue: 0,0:16:00.62,0:16:05.14,Default,,0000,0000,0000,,If a man is capable of stealing the \Ncredit for a feat of such enormity,
+Dialogue: 0,0:16:05.99,0:16:07.64,Default,,0000,0000,0000,,it will only be a matter of time.
+Dialogue: 0,0:16:08.67,0:16:11.40,Default,,0000,0000,0000,,No amount of wealth will save him.
+Dialogue: 0,0:16:12.52,0:16:17.38,Default,,0000,0000,0000,,And yet you need my wealth to remove \Nthe ban on those replicants.
+Dialogue: 0,0:16:18.23,0:16:21.24,Default,,0000,0000,0000,,Everything intended will happen.
+Dialogue: 0,0:16:21.24,0:16:23.95,Default,,0000,0000,0000,,A god makes it so.
+Dialogue: 0,0:16:24.85,0:16:26.91,Default,,0000,0000,0000,,Listen to yourself.
+Dialogue: 0,0:16:26.91,0:16:28.90,Default,,0000,0000,0000,,Do you know who you're \Nstarting to sound like?
+Dialogue: 0,0:17:22.29,0:17:23.82,Default,,0000,0000,0000,,Doc Badger.
+Dialogue: 0,0:17:23.82,0:17:26.50,Default,,0000,0000,0000,,Officer Davis, LAPD.
+Dialogue: 0,0:17:26.50,0:17:28.27,Default,,0000,0000,0000,,Got a few questions.
+Dialogue: 0,0:17:32.14,0:17:34.16,Default,,0000,0000,0000,,Whatever it is, I didn't do it.
+Dialogue: 0,0:17:34.91,0:17:37.97,Default,,0000,0000,0000,,You seen a young lady with a black lotus tattoo?
+Dialogue: 0,0:17:40.86,0:17:43.56,Default,,0000,0000,0000,,You think I spend all day looking?
+Dialogue: 0,0:17:43.56,0:17:45.12,Default,,0000,0000,0000,,Looking at people's tattoos?
+Dialogue: 0,0:17:46.67,0:17:50.82,Default,,0000,0000,0000,,Well, she was carrying a data drive \Nand swinging around a sword.
+Dialogue: 0,0:17:50.82,0:17:52.67,Default,,0000,0000,0000,,A samurai sword.
+Dialogue: 0,0:17:55.13,0:17:56.46,Default,,0000,0000,0000,,Right around here.
+Dialogue: 0,0:17:57.46,0:18:01.65,Default,,0000,0000,0000,,Everyone says you're the man to see about \Nthese kinds of things in this part of town.
+Dialogue: 0,0:18:03.34,0:18:05.11,Default,,0000,0000,0000,,It's time for me to close the store.
+Dialogue: 0,0:18:06.78,0:18:08.43,Default,,0000,0000,0000,,If you're not arresting me,
+Dialogue: 0,0:18:09.42,0:18:11.03,Default,,0000,0000,0000,,go bother other people.
+Dialogue: 0,0:18:15.23,0:18:16.76,Default,,0000,0000,0000,,I'll be in touch, Doc.
+Dialogue: 0,0:18:20.02,0:18:21.36,Default,,0000,0000,0000,,Dammit...
+Dialogue: 0,0:19:48.69,0:19:49.75,Default,,0000,0000,0000,,What?
+Dialogue: 0,0:19:58.12,0:20:01.71,Italics,,0000,0000,0000,,Get off your asses and \Nrun, you two-bit dolls!
+Dialogue: 0,0:20:10.71,0:20:12.14,Italics,,0000,0000,0000,,What are you doing?
+Dialogue: 0,0:20:12.14,0:20:14.14,Italics,,0000,0000,0000,,You know the rules.
+Dialogue: 0,0:20:14.14,0:20:16.85,Italics,,0000,0000,0000,,Hey, I'm a journalist.
+Dialogue: 0,0:20:16.85,0:20:19.59,Italics,,0000,0000,0000,,If you don't document it, \Ndid it really happen?
+Dialogue: 0,0:20:22.07,0:20:23.86,Italics,,0000,0000,0000,,Finished already?
+Dialogue: 0,0:20:24.28,0:20:27.30,Italics,,0000,0000,0000,,There's no challenge just \Npicking 'em off from this far.
+Dialogue: 0,0:20:27.89,0:20:29.80,Italics,,0000,0000,0000,,If they really are dangerous,
+Dialogue: 0,0:20:29.80,0:20:32.25,Italics,,0000,0000,0000,,we could be hunting 'em up close.
+Dialogue: 0,0:20:33.09,0:20:34.74,Italics,,0000,0000,0000,,Sounds like fun.
+Dialogue: 0,0:20:41.76,0:20:46.91,Italics,,0000,0000,0000,,These replicants are hardwired \Nto be fully submissive to humans.
+Dialogue: 0,0:20:50.39,0:20:51.79,Default,,0000,0000,0000,,Replicants...
+Dialogue: 0,0:20:53.04,0:20:54.74,Default,,0000,0000,0000,,hard-wired...
+Dialogue: 0,0:20:55.64,0:20:57.22,Default,,0000,0000,0000,,to be fully...
+Dialogue: 0,0:20:58.21,0:20:59.70,Default,,0000,0000,0000,,submissive...
+Dialogue: 0,0:21:09.87,0:21:12.64,Default,,0000,0000,0000,,Oh, these things are helpless.
+Dialogue: 0,0:21:12.64,0:21:15.33,Default,,0000,0000,0000,,Whatever we want, we do.
+Dialogue: 0,0:21:16.17,0:21:18.03,Default,,0000,0000,0000,,It's too easy.
+Dialogue: 0,0:21:22.72,0:21:24.01,Default,,0000,0000,0000,,Why?
+Dialogue: 0,0:21:27.69,0:21:31.12,Italics,,0000,0000,0000,,I'm so tired,\Noh, so tired
+Dialogue: 0,0:21:31.12,0:21:33.99,Italics,,0000,0000,0000,,All these voices\Nin my brain
+Dialogue: 0,0:21:33.99,0:21:37.58,Italics,,0000,0000,0000,,Living through my normal,\Noh, so formal
+Dialogue: 0,0:21:37.58,0:21:40.52,Italics,,0000,0000,0000,,I swear\Nthey're driving me insane
+Dialogue: 0,0:21:40.52,0:21:44.70,Italics,,0000,0000,0000,,Can't tell who's a liar\Ncome hell or high water
+Dialogue: 0,0:21:44.70,0:21:48.60,Italics,,0000,0000,0000,,I'm not listening
+Dialogue: 0,0:21:48.60,0:21:50.67,Italics,,0000,0000,0000,,Whoa
+Dialogue: 0,0:21:51.75,0:21:54.81,Italics,,0000,0000,0000,,I'm getting out of here
+Dialogue: 0,0:21:54.81,0:21:56.50,Italics,,0000,0000,0000,,Oh, no
+Dialogue: 0,0:21:56.50,0:21:59.80,Italics,,0000,0000,0000,,I won't let go\Ntill you say so
+Dialogue: 0,0:21:59.80,0:22:02.91,Italics,,0000,0000,0000,,I'm tired of being lost
+Dialogue: 0,0:22:02.91,0:22:05.79,Italics,,0000,0000,0000,,Show me the way\Nto get back
+Dialogue: 0,0:22:05.79,0:22:09.89,Italics,,0000,0000,0000,,Home
+Dialogue: 0,0:22:10.93,0:22:16.37,Italics,,0000,0000,0000,,To get back home
+
