@@ -66,12 +66,18 @@ func TestFormatter_IsMatchThisFormat(t *testing.T) {
 			want2: ".forced.ass",
 			want3: language.ChineseTraditionalEnglish,
 			want4: ""},
-		{name: "03", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese.ass"},
+		{name: "13", args: args{subName: "The Boss Baby Family Business (2021) WEBDL-1080p.chinese.ass"},
 			want:  false,
 			want1: "",
 			want2: "",
 			want3: language.Unknown,
 			want4: ""},
+		{name: "14", args: args{subName: "../../../TestDir/TestDir2/The Boss Baby Family Business (2021) WEBDL-1080p.chinese(简英,zimuku).forced.ass"},
+			want:  true,
+			want1: "../../../TestDir/TestDir2/The Boss Baby Family Business (2021) WEBDL-1080p",
+			want2: ".forced.ass",
+			want3: language.ChineseSimpleEnglish,
+			want4: "zimuku"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

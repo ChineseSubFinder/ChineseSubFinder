@@ -41,8 +41,13 @@ func (f Formatter) IsMatchThisFormat(subName string) (bool, string, string, lang
 		https://stackoverflow.com/questions/18902072/what-standard-do-language-codes-of-the-form-zh-hans-belong-to
 	*/
 	//subName = strings.ToLower(subName)
+	
+	// get basename to avoid relative path like "../../.." cause issue for regexp
+	// CANT just get Base, as autoDetectAndChange expect a full path
+	subNameBase := filepath.Base(subName)
+	subNameDir  := filepath.Dir(subName)
 	var re = regexp.MustCompile(language.ISOSupportRegexRule())
-	matched := re.FindAllStringSubmatch(subName, -1)
+	matched := re.FindAllStringSubmatch(subNameBase, -1)
 	/*
 		详细看测试用例
 		The Boss Baby Family Business (2021) WEBDL-1080p.zh.ass
@@ -64,14 +69,18 @@ func (f Formatter) IsMatchThisFormat(subName string) (bool, string, string, lang
 	}
 	var subLang languageConst.MyLanguage
 	var extraSubPreName string
-	fileNameWithOutExt := strings.ReplaceAll(subName, matched[0][0], "")
+
+	// replace only applys to basename
+	fileNameWithOutExt := strings.ReplaceAll(subNameBase, matched[0][0], "")
 	subExt := matched[0][2]
 	var subLangStr = matched[0][1]
 	extraSubPreName = ""
 	// 这里有一个点，是直接从 zh zho ch 去转换成中文语言就行了，还是要做字幕的语言识别
 	// 目前倾向于这里用后面的逻辑
 	subLang = language.ISOString2SupportLang(subLangStr)
-	return true, fileNameWithOutExt, subExt, subLang, extraSubPreName
+
+	// add original Dir to fileNameWithOutExt to ensure file can be reached
+	return true, filepath.Join(subNameDir, fileNameWithOutExt), subExt, subLang, extraSubPreName
 }
 
 // GenerateMixSubName 通过视频和字幕信息，生成当前实现接口的字幕命名格式。extraSubPreName 一般是填写字幕网站，不填写则留空 - 新名称、新名称带有 default 标记，新名称带有 forced 标记

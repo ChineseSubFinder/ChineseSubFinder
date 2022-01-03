@@ -1,7 +1,6 @@
 package dtw
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -11,6 +10,6 @@ func TestFastDTW(t *testing.T) {
 	//var balance2 = TimeSeries{1, 2, 3.1, 4, 5}
 	d, b := FastDTW(balance1, balance2, 1)
 
-	fmt.Println(d)
-	fmt.Println(b)
+	t.Logf("\n\nd: %f\nb: %d", d, b)
+
 }

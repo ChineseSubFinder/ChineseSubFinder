@@ -8,7 +8,7 @@ func TestProxyTest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	println("Speed:", gotSpeed, "Status:", gotStatus)
+	t.Logf("Speed: %d Statis: %d", gotSpeed, gotStatus)
 
 	_, _, err = ProxyTest("http:/192.168.1.123:123")
 	if err == nil {

@@ -7,6 +7,9 @@ import (
 	"github.com/spf13/viper"
 	"strings"
 	"sync"
+	"os"
+	"fmt"
+	"runtime"
 )
 
 // GetConfig 统一获取配置的接口
@@ -33,10 +36,15 @@ func GetConfig() *types.Config {
 
 // initConfigure 初始化配置文件实例
 func initConfigure() (*viper.Viper, error) {
+	nowConfigDir := getConfigDir()
+	if nowConfigDir == "" {
+		fmt.Sprintf("initConfigure().getConfigDir()")
+	}
+
 	v := viper.New()
 	v.SetConfigName("config") // 设置文件名称（无后缀）
 	v.SetConfigType("yaml")   // 设置后缀名 {"1.6以后的版本可以不设置该后缀"}
-	v.AddConfigPath(".")      // 设置文件所在路径
+	v.AddConfigPath(nowConfigDir)      // 设置文件所在路径
 
 	err := v.ReadInConfig()
 	if err != nil {
@@ -56,7 +64,29 @@ func readConfig(viper *viper.Viper) (*types.Config, error) {
 	return conf, nil
 }
 
+func getConfigDir() string {
+	nowConfigDir := ""
+	sysType := runtime.GOOS
+	if sysType == "linux" {
+		nowConfigDir = configDirLinux
+	}
+	if sysType == "windows" {
+		nowConfigDir = configDirWindows
+	}
+	if sysType == "darwin" {
+		home, _ := os.UserHomeDir()
+		nowConfigDir = home + "/.config/chinesesubfinder/" + configDirDarwin
+	}
+	return nowConfigDir
+}
+
 var (
 	config     *types.Config
 	configOnce sync.Once
+)
+
+const (
+	configDirLinux   = "/config/"
+	configDirWindows = ""
+	configDirDarwin  = ""
 )

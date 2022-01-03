@@ -1,9 +1,12 @@
 package vosk_api
 
-import "testing"
+import (
+	"testing"
+	"path/filepath"
+)
 
 func TestGetResult(t *testing.T) {
-	audioFPath := "C:\\Tmp\\audio.wav"
+	audioFPath := filepath.FromSlash("../../../TestData/ffmpeg/org/sampleAudio.wav")
 	err := GetResult(audioFPath)
 	if err != nil {
 		t.Fatal(err)

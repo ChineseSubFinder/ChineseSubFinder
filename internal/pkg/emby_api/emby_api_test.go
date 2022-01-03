@@ -73,7 +73,7 @@ func TestEmbyHelper_GetUserIdList(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i, item := range userIds.Items {
-		println(i, item.Name, item.Id)
+		t.Logf("\n\n%d  %s  %s", i, item.Name, item.Id)
 	}
 }
 

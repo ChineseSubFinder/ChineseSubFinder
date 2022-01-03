@@ -16,7 +16,7 @@ func TestGetVideoInfoFromIMDB(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	println(imdbInfo.Name, imdbInfo.Year, imdbInfo.ID)
+	t.Logf("\n\n Name:  %s\tYear:  %d\tID:  %s", imdbInfo.Name, imdbInfo.Year, imdbInfo.ID)
 }
 
 func TestIsChineseVideo(t *testing.T) {

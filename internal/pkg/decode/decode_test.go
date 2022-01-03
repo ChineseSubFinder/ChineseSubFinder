@@ -1,92 +1,102 @@
 package decode
 
 import (
-	"fmt"
 	"testing"
+    "path/filepath"
 )
 
-func Test_get_IMDB_movie_xml(t *testing.T) {
+func getTestFileDir(testFileName string) (xmlDir string) {
+	if testFileName == "movie.xml" {
+		return filepath.FromSlash("../../../TestData/media/movies/Army of the Dead (2021)/movie.xml")
+	} else if testFileName == "movie.nfo" {
+		return filepath.FromSlash("../../../TestData/media/movies/Army of the Dead (2021)/Army of the Dead (2021).nfo")
+	} else if testFileName == "has_http_address.nfo" {
+		return filepath.FromSlash("../../../TestData/misc/has_http_address.nfo")
+	} else if testFileName == "has_http_address.nfo" {
+		return filepath.FromSlash("../../../TestData/misc/only_http_address.nfo")
+	} else if testFileName == "series.mp4" {
+		return filepath.FromSlash("../../../TestData/media/tv/Friends (1994)/Season 08/Friends (1994) - s08e02.mp4")	
+	}
+
+	return ""
+}
+
+func TestGetImdbAndYearMovieXml(t *testing.T) {
 	wantid := "tt0993840"
 	wantyear := "2021"
-	dirPth := "..\\..\\..\\TestData\\video_info_file\\movie.xml"
+	dirPth := getTestFileDir("movie.xml")
 	imdbInfo, err := getImdbAndYearMovieXml(dirPth)
 	if err != nil {
 		t.Error(err)
 	}
 	if imdbInfo.ImdbId != wantid {
-		t.Errorf("Test_get_IMDB_movie_xml() got = %v, want %v", imdbInfo.ImdbId, wantid)
+		t.Errorf("got = %v, want %v", imdbInfo.ImdbId, wantid)
 	}
 	if imdbInfo.Year != wantyear {
-		t.Errorf("Test_get_IMDB_movie_xml() got = %v, want %v", imdbInfo.Year, wantyear)
+		t.Errorf("got = %v, want %v", imdbInfo.Year, wantyear)
 	}
 }
 
-func Test_get_IMDB_nfo(t *testing.T) {
+func TestGetImdbAndYearNfo(t *testing.T) {
 	wantid := "tt0993840"
 	wantyear := "2021"
+
 	dirPth := "..\\..\\..\\TestData\\video_info_file\\Army of the Dead (2021) WEBDL-1080p.nfo"
 	//dirPth := "C:\\Tmp\\American Crime Story (2016) - s03e01.nfo"
+
 	imdbInfo, err := getImdbAndYearNfo(dirPth, "movie")
 	//imdbInfo, err := getImdbAndYearNfo(dirPth, "episodedetails")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if imdbInfo.ImdbId != wantid {
-		t.Fatal(fmt.Sprintf("Test_get_IMDB_movie_xml() id = %v, wantid %v", imdbInfo.ImdbId, wantid))
+		t.Fatalf("\n\nid = %v, wantid %v", imdbInfo.ImdbId, wantid)
 	}
 	if imdbInfo.Year != wantyear {
-		t.Fatal(fmt.Sprintf("Test_get_IMDB_movie_xml() year = %v, wantyear %v", imdbInfo.Year, wantyear))
+		t.Fatalf("\n\nyear = %v, wantyear %v", imdbInfo.Year, wantyear)
 	}
 
 	wantid = "tt12801326"
 	wantyear = "2020"
-	dirPth = "..\\..\\..\\TestData\\video_info_file\\has_http_address.nfo"
+	dirPth =  getTestFileDir("has_http_address.nfo")
 	imdbInfo, err = getImdbAndYearNfo(dirPth, "movie")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if imdbInfo.ImdbId != wantid {
-		t.Fatal(fmt.Sprintf("Test_get_IMDB_movie_xml() id = %v, wantid %v", imdbInfo.ImdbId, wantid))
+		t.Fatalf("\n\nid = %v, wantid %v", imdbInfo.ImdbId, wantid)
 	}
 	if imdbInfo.Year != wantyear {
-		t.Fatal(fmt.Sprintf("Test_get_IMDB_movie_xml() year = %v, wantyear %v", imdbInfo.Year, wantyear))
+		t.Fatalf("\n\nyear = %v, wantyear %v", imdbInfo.Year, wantyear)
 	}
 
 	wantid = ""
 	wantyear = ""
-	dirPth = "..\\..\\..\\TestData\\video_info_file\\only_http_address.nfo"
+	dirPth = getTestFileDir("only_http_address.nfo")
 	imdbInfo, err = getImdbAndYearNfo(dirPth, "movie")
 	if err == nil {
-		t.Fatal("need errot")
+		t.Fatal("need error")
 	}
 }
 
-func Test_GetVideoInfoFromFileFullPath(t *testing.T) {
+func TestGetVideoInfoFromFileFullPath(t *testing.T) {
 
-	subTitle := "X:\\电影\\Spiral From the Book of Saw (2021)\\Spiral From the Book of Saw (2021) WEBDL-1080p.mkv"
-	//subTitle := "人之怒 WEBDL-1080p.mkv"
-	//subTitle := "機動戦士Zガンダム WEBDL-1080p.mkv"
-	//subTitle := "机动战士Z高达：星之继承者 (2005) 1080p TrueHD.mkv"
-	//subTitle := "X:\\连续剧\\The Bad Batch\\Season 1\\The Bad Batch - S01E01 - Aftermath WEBDL-1080p.mkv"
-	//subTitle := "X:\\连续剧\\Money.Heist\\Season 1\\Money.Heist.S01E01.SPANISH.WEBRip.x264-ION10.zh-cn.ssa"
-	//subTitle := "Spiral.From.the.Book.of.Saw.2021.1080p.WEBRip.x264-RARBG.chi.srt"
-	//subTitle := "Spiral.From.the.Book.of.Saw.2021.1080p.WEBRip.x264-RARBG.eng.srt"
-	//subTitle := "东城梅尔 第一季第一集【YYeTs字幕组 简繁英双语字幕】Mare.of.Easttown.S01E01.Miss.Lady.Hawk.Herself.720p/1080p.AMZN.WEB-DL.DDP5.1.H.264-TEPES"
+	subTitle := getTestFileDir("series.mp4")
+
 	info, modifyTime, err := GetVideoInfoFromFileFullPath(subTitle)
-	if err != nil {
+	if err != nil || info.Season != 8 || info.Episode != 2 {
 		t.Error(err)
 	}
-	println("Title:", info.Title, "Season:", info.Season, "Episode:", info.Episode, modifyTime.String())
+	t.Logf("\n\nTitle: %s Season: %d Episode: %d Modified Time: %s" , info.Title, info.Season, info.Episode, modifyTime.String())
 }
 
-func Test_GetSeasonAndEpisodeFromFileName(t *testing.T) {
-	//str := `杀死伊芙 第二季(第1集-简繁英双语字幕-FIX字幕侠)Killing.Eve.S02E01.Do.You.Know.How.to.Dispose.of.a.Body.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb.rar`
+func TestGetSeasonAndEpisodeFromFileName(t *testing.T) {
 	str := `杀死伊芙 第二季(-简繁英双语字幕-FIX字幕侠)Killing.Eve.S02.Do.You.Know.How.to.Dispose.of.a.Body.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb.rar`
 	b, s, e, err := GetSeasonAndEpisodeFromSubFileName(str)
 	if err != nil {
 		t.Fatal(err)
 	}
-	println(b, s, e)
+    t.Logf("\n\n%t\t S%dE%d\n", b, s, e)
 }
 
 func TestGetNumber2Float(t *testing.T) {
@@ -112,13 +122,13 @@ func TestGetNumber2int(t *testing.T) {
 	}
 }
 
-func Test_getImdbAndYearNfo(t *testing.T) {
+func TestgetImdbAndYearNfo(t *testing.T) {
 
-	nfoInfo := "..\\..\\..\\TestData\\video_info_file\\Army of the Dead (2021) WEBDL-1080p.nfo"
-	nfo, err := getImdbAndYearNfo(nfoInfo, "tvshow")
+	nfoInfo := getTestFileDir("movie.nfo")
+	nfo, err := getImdbAndYearNfo(nfoInfo, "movie")
+    t.Logf("\n\nMovies:\timdbid\tYear\tReleaseDate\n" + 
+			"        %s\t%s\t %s\n", nfo.ImdbId, nfo.Year, nfo.ReleaseDate)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	println(nfo.ImdbId, nfo.Year, nfo.ReleaseDate)
 }

@@ -2,12 +2,14 @@ package vad
 
 import (
 	"testing"
+	"path/filepath"
 )
 
 func TestGetVADInfo(t *testing.T) {
 
 	var audioInfo = AudioInfo{
-		FileFullPath: "C:\\Tmp\\Rick and Morty - S05E10\\英_1.pcm",
+		FileFullPath: filepath.FromSlash("../../../TestData/ffmpeg/org/sampleAudio.wav"),
+		// check below accordingly
 		SampleRate:   16000,
 		BitDepth:     16,
 	}

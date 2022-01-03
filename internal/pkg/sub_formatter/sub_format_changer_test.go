@@ -3,18 +3,14 @@ package sub_formatter
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"testing"
+	"path/filepath"
 )
 
 func TestSubFormatChanger_AutoDetectThenChangeTo(t *testing.T) {
 
-	testDataPath := "../../../TestData/sub_format_changer"
-	testRootDir, err := my_util.CopyTestData(testDataPath)
-	if err != nil {
-		t.Fatal(err)
-	}
+	testRootDir := filepath.FromSlash("../../../TestData/sub_format_changer")
 	movie_name := "AAA"
 	series_name := "Loki"
 
@@ -64,12 +60,12 @@ func TestSubFormatChanger_AutoDetectThenChangeTo(t *testing.T) {
 			args:   args{desFormatter: common.Emby},
 			want: RenameResults{
 				RenamedFiles: map[string]int{
-					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简英).ass"):                    1,
-					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简英).default.ass"):            1,
-					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简英).srt"):                    1,
-					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(繁英).ass"):         1,
-					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简英).default.ass"): 1,
-					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简英).srt"):         1,
+					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简).ass"):                    1,
+					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简).default.ass"):            1,
+					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简).srt"):                    1,
+					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(繁).ass"):         1,
+					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简).default.ass"): 1,
+					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简).srt"):         1,
 				},
 			}, wantErr: false},
 		{name: "emby 2 emby",
@@ -113,11 +109,7 @@ func TestSubFormatChangerProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testDataPath := "../../../TestData/sub_format_changer"
-	testRootDir, err := my_util.CopyTestData(testDataPath)
-	if err != nil {
-		t.Fatal(err)
-	}
+	testRootDir := filepath.FromSlash("../../../TestData/sub_format_changer")
 	movie_name := "AAA"
 	series_name := "Loki"
 
@@ -164,12 +156,12 @@ func TestSubFormatChangerProcess(t *testing.T) {
 			args: args{movieRootDir: movieDir_org_emby, seriesRootDir: movieDir_org_emby, nowDesFormatter: common.Emby},
 			want: RenameResults{
 				RenamedFiles: map[string]int{
-					filepath.Join(movieOneDir_org_emby, "AAA.chinese(简英).ass"):                    1,
-					filepath.Join(movieOneDir_org_emby, "AAA.chinese(简英).default.ass"):            1,
-					filepath.Join(movieOneDir_org_emby, "AAA.chinese(简英).srt"):                    1,
-					filepath.Join(seriesOneDir_org_emby, "Loki - S01E01.chinese(繁英).ass"):         1,
-					filepath.Join(seriesOneDir_org_emby, "Loki - S01E01.chinese(简英).default.ass"): 1,
-					filepath.Join(seriesOneDir_org_emby, "Loki - S01E01.chinese(简英).srt"):         1,
+					filepath.Join(movieOneDir_org_emby, "AAA.chinese(简).ass"):                    1,
+					filepath.Join(movieOneDir_org_emby, "AAA.chinese(简).default.ass"):            1,
+					filepath.Join(movieOneDir_org_emby, "AAA.chinese(简).srt"):                    1,
+					filepath.Join(seriesOneDir_org_emby, "Loki - S01E01.chinese(繁).ass"):         1,
+					filepath.Join(seriesOneDir_org_emby, "Loki - S01E01.chinese(简).default.ass"): 1,
+					filepath.Join(seriesOneDir_org_emby, "Loki - S01E01.chinese(简).srt"):         1,
 				},
 			}, wantErr: false},
 
@@ -183,12 +175,12 @@ func TestSubFormatChangerProcess(t *testing.T) {
 			args: args{movieRootDir: movieDir_org_normal, seriesRootDir: seriesDir_org_normal, nowDesFormatter: common.Emby},
 			want: RenameResults{
 				RenamedFiles: map[string]int{
-					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简英).ass"):                    1,
-					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简英).default.ass"):            1,
-					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简英).srt"):                    1,
-					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(繁英).ass"):         1,
-					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简英).default.ass"): 1,
-					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简英).srt"):         1,
+					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简).ass"):                    1,
+					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简).default.ass"):            1,
+					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简).srt"):                    1,
+					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(繁).ass"):         1,
+					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简).default.ass"): 1,
+					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简).srt"):         1,
 				},
 			}, wantErr: false},
 		// 然后从上面一个测试用例的文件夹中，继续，转 emby 2 normal
