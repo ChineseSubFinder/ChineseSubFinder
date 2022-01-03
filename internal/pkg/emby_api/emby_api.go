@@ -8,6 +8,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/panjf2000/ants/v2"
 	"golang.org/x/net/context"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -16,6 +17,7 @@ type EmbyApi struct {
 	embyConfig emby.EmbyConfig
 	threads    int
 	timeOut    time.Duration
+	client     *resty.Client
 }
 
 func NewEmbyApi(embyConfig emby.EmbyConfig) *EmbyApi {
@@ -28,6 +30,11 @@ func NewEmbyApi(embyConfig emby.EmbyConfig) *EmbyApi {
 	}
 	em.threads = 6
 	em.timeOut = 5 * 60 * time.Second
+	// 见 https://github.com/allanpk716/ChineseSubFinder/issues/140
+	em.client = resty.New().SetTransport(&http.Transport{
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 100,
+	}).RemoveProxy().SetTimeout(em.timeOut)
 	return &em
 }
 
@@ -104,7 +111,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 		log_helper.GetLogger().Debugln("Emby Setting SkipWatched = false")
 
 		// 默认是不指定某一个User的视频列表
-		_, err = em.getNewClient().R().
+		_, err = em.client.R().
 			SetQueryParams(map[string]string{
 				"api_key":          em.embyConfig.ApiKey,
 				"IsUnaired":        "false",
@@ -133,7 +140,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 		for _, item := range userIds.Items {
 			var tmpRecItems emby.EmbyRecentlyItems
 			// 获取指定用户的视频列表
-			_, err = em.getNewClient().R().
+			_, err = em.client.R().
 				SetQueryParams(map[string]string{
 					"api_key":          em.embyConfig.ApiKey,
 					"IsUnaired":        "false",
@@ -191,7 +198,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 // GetUserIdList 获取所有的 UserId
 func (em EmbyApi) GetUserIdList() (emby.EmbyUsers, error) {
 	var recItems emby.EmbyUsers
-	_, err := em.getNewClient().R().
+	_, err := em.client.R().
 		SetQueryParams(map[string]string{
 			"api_key": em.embyConfig.ApiKey,
 		}).
@@ -210,7 +217,7 @@ func (em EmbyApi) GetItemAncestors(id string) ([]emby.EmbyItemsAncestors, error)
 
 	var recItems []emby.EmbyItemsAncestors
 
-	_, err := em.getNewClient().R().
+	_, err := em.client.R().
 		SetQueryParams(map[string]string{
 			"api_key": em.embyConfig.ApiKey,
 		}).
@@ -228,7 +235,7 @@ func (em EmbyApi) GetItemVideoInfo(id string) (emby.EmbyVideoInfo, error) {
 
 	var recItem emby.EmbyVideoInfo
 
-	_, err := em.getNewClient().R().
+	_, err := em.client.R().
 		SetQueryParams(map[string]string{
 			"api_key": em.embyConfig.ApiKey,
 		}).
@@ -246,7 +253,7 @@ func (em EmbyApi) GetItemVideoInfoByUserId(userId, videoId string) (emby.EmbyVid
 
 	var recItem emby.EmbyVideoInfoByUserId
 
-	_, err := em.getNewClient().R().
+	_, err := em.client.R().
 		SetQueryParams(map[string]string{
 			"api_key": em.embyConfig.ApiKey,
 		}).
@@ -262,7 +269,7 @@ func (em EmbyApi) GetItemVideoInfoByUserId(userId, videoId string) (emby.EmbyVid
 // UpdateVideoSubList 更新字幕列表， 在 API 调试界面 -- ItemRefreshService
 func (em EmbyApi) UpdateVideoSubList(id string) error {
 
-	_, err := em.getNewClient().R().
+	_, err := em.client.R().
 		SetQueryParams(map[string]string{
 			"api_key": em.embyConfig.ApiKey,
 		}).
@@ -277,20 +284,13 @@ func (em EmbyApi) UpdateVideoSubList(id string) error {
 // GetSubFileData 下载字幕 subExt -> .ass or .srt , 在 API 调试界面 -- SubtitleService
 func (em EmbyApi) GetSubFileData(videoId, mediaSourceId, subIndex, subExt string) (string, error) {
 
-	response, err := em.getNewClient().R().
+	response, err := em.client.R().
 		Get(em.embyConfig.Url + "/emby/Videos/" + videoId + "/" + mediaSourceId + "/Subtitles/" + subIndex + "/Stream" + subExt)
 	if err != nil {
 		return "", err
 	}
 
 	return response.String(), nil
-}
-
-func (em EmbyApi) getNewClient() *resty.Client {
-	tmpClient := resty.New()
-	tmpClient.RemoveProxy()
-	tmpClient.SetTimeout(em.timeOut)
-	return tmpClient
 }
 
 type InputData struct {

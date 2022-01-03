@@ -79,6 +79,11 @@ func DownFile(urlStr string, _reqParam ...types.ReqParam) ([]byte, string, error
 		return nil, "", err
 	}
 	filename := GetFileName(resp.RawResponse)
+
+	if filename == "" {
+		log_helper.GetLogger().Errorln("DownFile.GetFileName is string.empty", urlStr)
+	}
+
 	return resp.Body(), filename, nil
 }
 
@@ -91,7 +96,7 @@ func GetFileName(resp *http.Response) string {
 	re := regexp.MustCompile(`filename=["]*([^"]+)["]*`)
 	matched := re.FindStringSubmatch(contentDisposition)
 	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
-		//fmt.Println("######")
+		log_helper.GetLogger().Errorln("GetFileName.Content-Disposition", contentDisposition)
 		return ""
 	}
 	return matched[1]

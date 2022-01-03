@@ -56,11 +56,17 @@ func TestPipeline_FitGSS(t *testing.T) {
 			srcSubFile:       "C:\\Tmp\\fixsubtimeline\\Foundation - S01E09\\org.ass",
 			srcFixedSubFile:  "C:\\Tmp\\fixsubtimeline\\Foundation - S01E09\\org-fix.ass",
 		}, want: -29.890000, wantErr: false},
-		{name: "Foundation - S01E09", args: args{
+		{name: "Yellowstone S04E05", args: args{
 			baseSubFile:      "C:\\Tmp\\fixsubtimeline\\Yellowstone S04E05\\英_2.ass",
 			ffsubSyncSubFile: "C:\\Tmp\\fixsubtimeline\\Yellowstone S04E05\\ffsubsync.ass",
 			srcSubFile:       "C:\\Tmp\\fixsubtimeline\\Yellowstone S04E05\\org.ass",
 			srcFixedSubFile:  "C:\\Tmp\\fixsubtimeline\\Yellowstone S04E05\\org-fix.ass",
+		}, want: -62.84, wantErr: false},
+		{name: "Yellowstone S04E06", args: args{
+			baseSubFile:      "C:\\Tmp\\fixsubtimeline\\Yellowstone S04E06\\英_2.ass",
+			ffsubSyncSubFile: "C:\\Tmp\\fixsubtimeline\\Yellowstone S04E06\\ffsubsync.ass",
+			srcSubFile:       "C:\\Tmp\\fixsubtimeline\\Yellowstone S04E06\\org.ass",
+			srcFixedSubFile:  "C:\\Tmp\\fixsubtimeline\\Yellowstone S04E06\\org-fix.ass",
 		}, want: -62.84, wantErr: false},
 	}
 	for _, tt := range tests {

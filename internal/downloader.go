@@ -424,10 +424,15 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		if err != nil {
 			return err
 		}
+		for index, seriesDir := range seriesDirList {
+			d.log.Debugln("embyHelper == nil GetSeriesList", index, seriesDir)
+		}
 	} else {
 		// 这里给出的是连续剧的文件夹名称
+		d.log.Debugln("embyHelper seriesSubNeedDlMap Count:", len(d.seriesSubNeedDlMap))
 		for s, _ := range d.seriesSubNeedDlMap {
 			seriesDirList = append(seriesDirList, s)
+			d.log.Debugln("embyHelper seriesSubNeedDlMap:", s)
 		}
 	}
 	wg := sync.WaitGroup{}
