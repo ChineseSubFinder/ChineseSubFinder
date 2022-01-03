@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/axgle/mahonia"
 	nzlov "github.com/nzlov/chardet"
+	"strings"
 )
 
 // ConvertToString 将字符串从原始编码转换到目标编码，需要配合字符串检测编码库使用 chardet.NewTextDetector()
@@ -49,6 +50,8 @@ func ChangeFileCoding2UTF8(inBytes []byte) ([]byte, error) {
 	if dat[0] == 0xef || dat[1] == 0xbb || dat[2] == 0xbf {
 		dat = dat[3:]
 	}
+	// 在确认一次
+	validUTF8String := strings.ToValidUTF8(string(dat[:]), "")
 
-	return dat, nil
+	return []byte(validUTF8String), nil
 }
