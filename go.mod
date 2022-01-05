@@ -19,7 +19,6 @@ require (
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/go-rod/rod v0.101.7
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/gorilla/websocket v1.4.2
 	github.com/grd/stat v0.0.0-20130623202159-138af3fd5012
 	github.com/huandu/go-clone v1.3.0
 	github.com/james-bowman/nlp v0.0.0-20210511120306-26d441fa0ded
