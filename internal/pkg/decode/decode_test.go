@@ -1,21 +1,23 @@
 package decode
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
+	"path/filepath"
 	"testing"
-    "path/filepath"
 )
 
 func getTestFileDir(testFileName string) (xmlDir string) {
+
+	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"movies", "Army of the Dead (2021)"}, 4, false)
+
 	if testFileName == "movie.xml" {
-		return filepath.FromSlash("../../../TestData/media/movies/Army of the Dead (2021)/movie.xml")
+		return filepath.Join(rootDir, "movie.xml")
 	} else if testFileName == "movie.nfo" {
-		return filepath.FromSlash("../../../TestData/media/movies/Army of the Dead (2021)/Army of the Dead (2021).nfo")
+		return filepath.Join(rootDir, "Army of the Dead (2021) WEBDL-1080p.nfo")
 	} else if testFileName == "has_http_address.nfo" {
-		return filepath.FromSlash("../../../TestData/misc/has_http_address.nfo")
+		return filepath.Join(rootDir, "has_http_address.nfo")
 	} else if testFileName == "has_http_address.nfo" {
-		return filepath.FromSlash("../../../TestData/misc/only_http_address.nfo")
-	} else if testFileName == "series.mp4" {
-		return filepath.FromSlash("../../../TestData/media/tv/Friends (1994)/Season 08/Friends (1994) - s08e02.mp4")	
+		return filepath.Join(rootDir, "only_http_address.nfo")
 	}
 
 	return ""
@@ -41,11 +43,7 @@ func TestGetImdbAndYearNfo(t *testing.T) {
 	wantid := "tt0993840"
 	wantyear := "2021"
 
-	dirPth := "..\\..\\..\\TestData\\video_info_file\\Army of the Dead (2021) WEBDL-1080p.nfo"
-	//dirPth := "C:\\Tmp\\American Crime Story (2016) - s03e01.nfo"
-
-	imdbInfo, err := getImdbAndYearNfo(dirPth, "movie")
-	//imdbInfo, err := getImdbAndYearNfo(dirPth, "episodedetails")
+	imdbInfo, err := getImdbAndYearNfo(getTestFileDir("movie.nfo"), "movie")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +56,7 @@ func TestGetImdbAndYearNfo(t *testing.T) {
 
 	wantid = "tt12801326"
 	wantyear = "2020"
-	dirPth =  getTestFileDir("has_http_address.nfo")
+	dirPth := getTestFileDir("has_http_address.nfo")
 	imdbInfo, err = getImdbAndYearNfo(dirPth, "movie")
 	if err != nil {
 		t.Fatal(err)
@@ -79,24 +77,13 @@ func TestGetImdbAndYearNfo(t *testing.T) {
 	}
 }
 
-func TestGetVideoInfoFromFileFullPath(t *testing.T) {
-
-	subTitle := getTestFileDir("series.mp4")
-
-	info, modifyTime, err := GetVideoInfoFromFileFullPath(subTitle)
-	if err != nil || info.Season != 8 || info.Episode != 2 {
-		t.Error(err)
-	}
-	t.Logf("\n\nTitle: %s Season: %d Episode: %d Modified Time: %s" , info.Title, info.Season, info.Episode, modifyTime.String())
-}
-
 func TestGetSeasonAndEpisodeFromFileName(t *testing.T) {
 	str := `杀死伊芙 第二季(-简繁英双语字幕-FIX字幕侠)Killing.Eve.S02.Do.You.Know.How.to.Dispose.of.a.Body.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb.rar`
 	b, s, e, err := GetSeasonAndEpisodeFromSubFileName(str)
 	if err != nil {
 		t.Fatal(err)
 	}
-    t.Logf("\n\n%t\t S%dE%d\n", b, s, e)
+	t.Logf("\n\n%t\t S%dE%d\n", b, s, e)
 }
 
 func TestGetNumber2Float(t *testing.T) {
@@ -119,16 +106,5 @@ func TestGetNumber2int(t *testing.T) {
 	}
 	if outNumber != 1998 {
 		t.Error("not the same")
-	}
-}
-
-func TestgetImdbAndYearNfo(t *testing.T) {
-
-	nfoInfo := getTestFileDir("movie.nfo")
-	nfo, err := getImdbAndYearNfo(nfoInfo, "movie")
-    t.Logf("\n\nMovies:\timdbid\tYear\tReleaseDate\n" + 
-			"        %s\t%s\t %s\n", nfo.ImdbId, nfo.Year, nfo.ReleaseDate)
-	if err != nil {
-		t.Fatal(err)
 	}
 }
