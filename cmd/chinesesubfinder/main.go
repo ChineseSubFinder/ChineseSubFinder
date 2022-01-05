@@ -18,6 +18,20 @@ import (
 
 func init() {
 
+	config = config2.GetConfig()
+	// 根据配置文件的情况去生成是否需要开启日志 Debug 记录级别的特殊文件
+	if config.DebugMode == true {
+		err := log_helper.WriteDebugFile()
+		if err != nil {
+			panic("log_helper.WriteDebugFile " + err.Error())
+		}
+	} else {
+		err := log_helper.DeleteDebugFile()
+		if err != nil {
+			panic("log_helper.DeleteDebugFile " + err.Error())
+		}
+	}
+
 	log = log_helper.GetLogger()
 
 	log.Infoln("ChineseSubFinder Version:", AppVersion)
@@ -28,8 +42,6 @@ you need implement getDbName() in file: internal/dao/init.go
 and 
 implement getSpeFileName() in internal/logic/forced_scan_and_down_sub/forced_scan_and_down_sub.go`)
 	}
-
-	config = config2.GetConfig()
 }
 
 func main() {
