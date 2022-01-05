@@ -33,9 +33,9 @@ func GetDebugFolderByName(names []string) (string, error) {
 		return "", err
 	}
 
-	tmpFolderFullPath := ""
+	tmpFolderFullPath := rootPath
 	for _, name := range names {
-		tmpFolderFullPath = filepath.Join(rootPath, name)
+		tmpFolderFullPath = filepath.Join(tmpFolderFullPath, name)
 	}
 	err = os.MkdirAll(tmpFolderFullPath, os.ModePerm)
 	if err != nil {

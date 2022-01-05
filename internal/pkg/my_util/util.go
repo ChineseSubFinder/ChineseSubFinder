@@ -258,26 +258,6 @@ func CopyDir(src string, dst string) error {
 	return nil
 }
 
-// CopyTestData 单元测试前把测试的数据 copy 一份出来操作，src 目录中默认应该有一个 org 原始数据文件夹，然后需要复制一份 test 文件夹出来
-func CopyTestData(srcDir string) (string, error) {
-	// 测试数据的文件夹
-	orgDir := filepath.Join(srcDir, "org")
-	testDir := filepath.Join(srcDir, "test")
-
-	if IsDir(testDir) == true {
-		err := ClearFolder(testDir)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	err := CopyDir(orgDir, testDir)
-	if err != nil {
-		return "", err
-	}
-	return testDir, nil
-}
-
 // CloseChrome 强行结束没有关闭的 Chrome 进程
 func CloseChrome() {
 

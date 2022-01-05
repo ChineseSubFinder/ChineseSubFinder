@@ -6,23 +6,32 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
 	"testing"
 )
 
 func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
-
-
-	// ERROR: DeleteOneSeasonSubCacheFolder will create 
-	// CSF-DebugThings/sub_helper
-	// TODO: fix GetRootDebugFolder 
-
-	testRootDir := "../../../TestData/sub_helper"
-	err := DeleteOneSeasonSubCacheFolder(testRootDir)
+	const testSerName = "XXX"
+	const needDelFolderName = "Sub_S1E0"
+	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_helper", "test", needDelFolderName}, 4, false)
+	desSerFullPath, err := my_util.GetDebugFolderByName([]string{testSerName})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if my_util.IsDir(filepath.Join(testRootDir, "Sub_S1E0")) == true {
+	desSeasonFullPath, err := my_util.GetDebugFolderByName([]string{testSerName, filepath.Base(testRootDir)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = my_util.CopyDir(testRootDir, desSeasonFullPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = DeleteOneSeasonSubCacheFolder(desSerFullPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if my_util.IsDir(desSeasonFullPath) == true {
 		t.Fatal("Sub_S1E0 not delete")
 	}
 }
@@ -32,8 +41,10 @@ func TestGetVADInfosFromSub(t *testing.T) {
 	// 这两个字幕是一样的，只不过是格式不同而已
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
-	baseSubFile := filepath.FromSlash("../../../TestData/sub_helper/R&M-S05E10/Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.chinese(简,zimuku).default.srt")
-	srcSubFile := filepath.FromSlash("../../../TestData/sub_helper/R&M-S05E10/Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.chinese(简英,zimuku).ass")
+	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_helper", "org", "R&M-S05E10"}, 4, false)
+
+	baseSubFile := filepath.Join(testRootDir, "Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.chinese(简,zimuku).default.srt")
+	srcSubFile := filepath.Join(testRootDir, "Rick and Morty - S05E10 - Rickmurai Jack WEBRip-1080p.chinese(简英,zimuku).ass")
 
 	bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(baseSubFile)
 	if err != nil {
@@ -50,9 +61,9 @@ func TestGetVADInfosFromSub(t *testing.T) {
 		t.Fatal("sub not match")
 	}
 
-	if len(infoBase.DialoguesFilterEx) != len(infoSrc.DialoguesFilterEx) {
+	if len(infoBase.Dialogues) != len(infoSrc.Dialogues) {
 		t.Fatal(fmt.Sprintf("info Base And Src Parse Error, infoBase.DialoguesFilterEx Len = %v, infoSrc.DialoguesFilterEx Len = %v",
-			len(infoBase.DialoguesFilterEx), len(infoSrc.DialoguesFilterEx)))
+			len(infoBase.Dialogues), len(infoSrc.Dialogues)))
 	}
 
 	baseSubUnit, err := GetVADInfoFeatureFromSubNew(infoBase, FrontAndEndPerBase)

@@ -59,7 +59,7 @@ func Test_isFirstLetterIsEngLower(t *testing.T) {
 
 func TestNewDialogueMerger(t *testing.T) {
 
-	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"FixTimeline", "test"}, 4)
+	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"FixTimeline", "org"}, 4, false)
 
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 	//bFind, infoBase, err := subParserHub.DetermineFileTypeFromFile(filepath.Join(testRootDir, "2line-The Card Counter (2021) WEBDL-1080p.chinese(inside).ass"))
