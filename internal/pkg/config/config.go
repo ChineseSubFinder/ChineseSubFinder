@@ -2,14 +2,14 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/spf13/viper"
+	"os"
+	"runtime"
 	"strings"
 	"sync"
-	"os"
-	"fmt"
-	"runtime"
 )
 
 // GetConfig 统一获取配置的接口
@@ -42,9 +42,9 @@ func initConfigure() (*viper.Viper, error) {
 	}
 
 	v := viper.New()
-	v.SetConfigName("config") // 设置文件名称（无后缀）
-	v.SetConfigType("yaml")   // 设置后缀名 {"1.6以后的版本可以不设置该后缀"}
-	v.AddConfigPath(nowConfigDir)      // 设置文件所在路径
+	v.SetConfigName("config")     // 设置文件名称（无后缀）
+	v.SetConfigType("yaml")       // 设置后缀名 {"1.6以后的版本可以不设置该后缀"}
+	v.AddConfigPath(nowConfigDir) // 设置文件所在路径
 
 	err := v.ReadInConfig()
 	if err != nil {
@@ -87,6 +87,6 @@ var (
 
 const (
 	configDirLinux   = "/config/"
-	configDirWindows = ""
-	configDirDarwin  = ""
+	configDirWindows = "."
+	configDirDarwin  = "."
 )
