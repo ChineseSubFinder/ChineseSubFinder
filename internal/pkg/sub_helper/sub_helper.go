@@ -209,10 +209,10 @@ func SearchMatchedSubFileByDir(dir string) ([]string, error) {
 	}
 	for _, curFile := range files {
 		fullPath := dir + pathSep + curFile.Name()
-		if curFile.IsDir() {
+		if my_util.IsDir(fullPath) == true {
 			// 需要排除 Sub_S1E0、Sub_S2E0 这样的整季的字幕文件夹，这里仅仅是缓存，不会被加载的
 			matched := regex_things.RegOneSeasonSubFolderNameMatch.FindAllStringSubmatch(curFile.Name(), -1)
-			if matched == nil || len(matched) > 0 {
+			if matched != nil && len(matched) > 0 {
 				continue
 			}
 			// 内层的错误就无视了

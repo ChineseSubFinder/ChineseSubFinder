@@ -48,3 +48,4 @@
 
 TestData/*
 TestData/
+/internal/pkg/hot_fix/Logs/*.log
