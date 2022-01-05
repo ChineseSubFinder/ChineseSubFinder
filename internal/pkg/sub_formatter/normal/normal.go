@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	languageConst "github.com/allanpk716/ChineseSubFinder/internal/types/language"
@@ -41,11 +42,11 @@ func (f Formatter) IsMatchThisFormat(subName string) (bool, string, string, lang
 		https://stackoverflow.com/questions/18902072/what-standard-do-language-codes-of-the-form-zh-hans-belong-to
 	*/
 	//subName = strings.ToLower(subName)
-	
+
 	// get basename to avoid relative path like "../../.." cause issue for regexp
 	// CANT just get Base, as autoDetectAndChange expect a full path
 	subNameBase := filepath.Base(subName)
-	subNameDir  := filepath.Dir(subName)
+	subNameDir := filepath.Dir(subName)
 	var re = regexp.MustCompile(language.ISOSupportRegexRule())
 	matched := re.FindAllStringSubmatch(subNameBase, -1)
 	/*
@@ -78,7 +79,15 @@ func (f Formatter) IsMatchThisFormat(subName string) (bool, string, string, lang
 	// 这里有一个点，是直接从 zh zho ch 去转换成中文语言就行了，还是要做字幕的语言识别
 	// 目前倾向于这里用后面的逻辑
 	subLang = language.ISOString2SupportLang(subLangStr)
-
+	// 这里可能是拿到的是文件的全路径，那么就可以读取文件内容去判断文件的语言
+	if my_util.IsFile(subName) == true {
+		bok, fileInfo, err := f.subParser.DetermineFileTypeFromFile(subName)
+		if err != nil || bok == false {
+			// add original Dir to fileNameWithOutExt to ensure file can be reached
+			return true, filepath.Join(subNameDir, fileNameWithOutExt), subExt, subLang, extraSubPreName
+		}
+		subLang = fileInfo.Lang
+	}
 	// add original Dir to fileNameWithOutExt to ensure file can be reached
 	return true, filepath.Join(subNameDir, fileNameWithOutExt), subExt, subLang, extraSubPreName
 }

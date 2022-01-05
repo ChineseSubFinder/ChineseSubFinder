@@ -4,13 +4,14 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
-	"testing"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
+	"testing"
 )
 
 func TestSubFormatChanger_AutoDetectThenChangeTo(t *testing.T) {
 
-	testRootDir := filepath.FromSlash("../../../TestData/sub_format_changer")
+	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_format_changer"}, 4, true)
 	movie_name := "AAA"
 	series_name := "Loki"
 
@@ -60,12 +61,12 @@ func TestSubFormatChanger_AutoDetectThenChangeTo(t *testing.T) {
 			args:   args{desFormatter: common.Emby},
 			want: RenameResults{
 				RenamedFiles: map[string]int{
-					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简).ass"):                    1,
-					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简).default.ass"):            1,
-					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简).srt"):                    1,
-					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(繁).ass"):         1,
-					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简).default.ass"): 1,
-					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简).srt"):         1,
+					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简英).ass"):                    1,
+					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简英).default.ass"):            1,
+					filepath.Join(movieOneDir_org_normal, "AAA.chinese(简英).srt"):                    1,
+					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(繁英).ass"):         1,
+					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简英).default.ass"): 1,
+					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简英).srt"):         1,
 				},
 			}, wantErr: false},
 		{name: "emby 2 emby",
@@ -91,8 +92,17 @@ func TestSubFormatChanger_AutoDetectThenChangeTo(t *testing.T) {
 				return
 			}
 
+			for s2, i := range tt.want.RenamedFiles {
+				println(s2, i)
+			}
+			println("-------------------------------")
+			for s2, i := range got.RenamedFiles {
+				println(s2, i)
+			}
 			for fileName, counter := range got.RenamedFiles {
-				if tt.want.RenamedFiles[fileName] != counter {
+				if tt.want.RenamedFiles[filepath.FromSlash(fileName)] != counter {
+					println(fileName)
+					println(filepath.FromSlash(fileName))
 					t.Errorf("AutoDetectThenChangeTo() RenamedFiles %v got = %v, want %v", fileName, counter, tt.want.RenamedFiles[fileName])
 					return
 				}
