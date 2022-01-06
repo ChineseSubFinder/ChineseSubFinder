@@ -1,17 +1,19 @@
 package vad
 
 import (
-	"testing"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
+	"testing"
 )
 
 func TestGetVADInfo(t *testing.T) {
 
 	var audioInfo = AudioInfo{
-		FileFullPath: filepath.FromSlash("../../../TestData/ffmpeg/org/sampleAudio.wav"),
+
+		FileFullPath: filepath.Join(unit_test_helper.GetTestDataResourceRootPath([]string{"ffmpeg"}, 4, false), "sampleAudio.wav"),
 		// check below accordingly
-		SampleRate:   16000,
-		BitDepth:     16,
+		SampleRate: 16000,
+		BitDepth:   16,
 	}
 	vadInfos, err := GetVADInfoFromAudio(audioInfo, false)
 	if err != nil {
