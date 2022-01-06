@@ -3,13 +3,14 @@ package sub_parser_hub
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
 	"testing"
 )
 
 func TestSubParserHubIsSubHasChinese(t *testing.T) {
 
-	testRootDir := filepath.FromSlash("../../../TestData/sub_parser")
+	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_parser", "org"}, 4, false)
 
 	type args struct {
 		filePath string
