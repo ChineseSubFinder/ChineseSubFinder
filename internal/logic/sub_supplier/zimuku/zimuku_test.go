@@ -2,6 +2,8 @@ package zimuku
 
 import (
 	series_helper2 "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
+	"path/filepath"
 	"testing"
 )
 
@@ -21,13 +23,15 @@ func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 }
 
 func TestSupplier_GetSubListFromFile(t *testing.T) {
-	movie1 := "X:\\电影\\The Devil All the Time (2020)\\The Devil All the Time (2020) WEBDL-1080p.mkv"
+	//movie1 := "X:\\电影\\The Devil All the Time (2020)\\The Devil All the Time (2020) WEBDL-1080p.mkv"
 	//movie1 := "X:\\电影\\龙猫 (1988)\\龙猫 (1988) 1080p DTS.mkv"
 	//movie1 := "X:\\电影\\消失爱人 (2016)\\消失爱人 (2016) 720p AAC.rmvb"
 	//movie1 := "X:\\电影\\Spiral From the Book of Saw (2021)\\Spiral From the Book of Saw (2021) WEBDL-1080p.mkv"
 	//movie1 := "X:\\电影\\机动战士Z高达：星之继承者 (2005)\\机动战士Z高达：星之继承者 (2005) 1080p TrueHD.mkv"
 	//movie1 := "X:\\连续剧\\The Bad Batch\\Season 1\\The Bad Batch - S01E01 - Aftermath WEBDL-1080p.mkv"
 
+	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"zimuku"}, 5, true)
+	movie1 := filepath.Join(rootDir, "movies", "The Devil All the Time (2020)", "The Devil All the Time (2020) WEBDL-1080p.mkv")
 	s := NewSupplier()
 	outList, err := s.getSubListFromMovie(movie1)
 	if err != nil {
@@ -44,8 +48,10 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	//ser := "X:\\连续剧\\The Bad Batch" // tt12708542
 	//ser := "X:\\连续剧\\杀死伊芙 (2018)"	// tt12708542
 	//ser := "X:\\连续剧\\Money.Heist"
-	ser := "X:\\连续剧\\黄石 (2018)"
+	//ser := "X:\\连续剧\\黄石 (2018)"
 
+	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"zimuku"}, 5, true)
+	ser := filepath.Join(rootDir, "series", "黄石 (2018)")
 	// 读取本地的视频和字幕信息
 	seriesInfo, err := series_helper2.ReadSeriesInfoFromDir(ser, nil, false)
 	if err != nil {
@@ -53,10 +59,10 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	}
 
 	// 可以指定几集去调试
-	epsMap := make(map[int]int, 0)
-	epsMap[4] = 5
-	epsMap[1] = 4
-	series_helper2.SetTheSpecifiedEps2Download(seriesInfo, epsMap)
+	//epsMap := make(map[int]int, 0)
+	//epsMap[4] = 5
+	//epsMap[1] = 4
+	//series_helper2.SetTheSpecifiedEps2Download(seriesInfo, epsMap)
 
 	s := NewSupplier()
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)
@@ -79,8 +85,8 @@ func TestSupplier_getSubListFromKeyword(t *testing.T) {
 	//imdbID := "tt15299712" // 云南虫谷
 	//imdbID := "tt3626476"  // Vacation Friends (2021)
 	imdbID := "tt11192306" // Superman.and.Lois
-	subhd := NewSupplier()
-	subInfos, err := subhd.getSubListFromKeyword(imdbID)
+	zimuku := NewSupplier()
+	subInfos, err := zimuku.getSubListFromKeyword(imdbID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,14 +96,14 @@ func TestSupplier_getSubListFromKeyword(t *testing.T) {
 }
 
 func TestSupplier_step3(t *testing.T) {
-
-	dlUrl := "https://zmk.pw/dld/162150.html"
-	s := Supplier{}
-	fileName, datas, err := s.step3(dlUrl)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	println(fileName)
-	println(len(datas))
+	// 调试用，不作为单元测试的一个考核，因为可能不可控
+	//dlUrl := "https://zmk.pw/dld/162150.html"
+	//s := Supplier{}
+	//fileName, datas, err := s.step3(dlUrl)
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//
+	//println(fileName)
+	//println(len(datas))
 }
