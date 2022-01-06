@@ -451,7 +451,7 @@ func (d Downloader) RestoreFixTimelineBK(moviesDir, seriesDir string) error {
 
 	defer d.log.Infoln("End Restore Fix Timeline BK")
 	d.log.Infoln("Start Restore Fix Timeline BK...")
-	err := sub_timeline_fixer_pkg.Restore(moviesDir, seriesDir)
+	_, err := sub_timeline_fixer_pkg.Restore(moviesDir, seriesDir)
 	if err != nil {
 		return err
 	}
