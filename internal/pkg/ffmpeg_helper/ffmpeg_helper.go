@@ -46,6 +46,7 @@ func (f FFMPEGHelper) Version() (string, error) {
 
 // GetFFMPEGInfo 获取 视频的 FFMPEG 信息，包含音频和字幕
 // 优先会导出 中、英、日、韩 类型的，字幕如果没有语言类型，则也导出，然后需要额外的字幕语言的判断去辅助标记（读取文件内容）
+// 音频只会导出一个，优先导出 中、英、日、韩 类型的
 func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType ExportType) (bool, *FFMPEGInfo, error) {
 
 	const args = "-v error -show_format -show_streams -print_format json"
@@ -65,7 +66,7 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType Export
 		return false, nil, err
 	}
 	// 解析得到的字符串反馈
-	bok, ffMPEGInfo := f.parseJsonString2GetFFProbeInfo(videoFileFullPath, buf.String())
+	bok, ffMPEGInfo, _ := f.parseJsonString2GetFFProbeInfo(videoFileFullPath, buf.String())
 	if bok == false {
 		return false, nil, nil
 	}
@@ -257,14 +258,15 @@ func (f *FFMPEGHelper) ExportSubArgsByTimeRange(subFullPath, outName string, sta
 }
 
 // parseJsonString2GetFFProbeInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引
-func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFFProbeString string) (bool, *FFMPEGInfo) {
+func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFFProbeString string) (bool, *FFMPEGInfo, *FFMPEGInfo) {
 
 	streamsValue := gjson.Get(inputFFProbeString, "streams.#")
 	if streamsValue.Exists() == false {
-		return false, nil
+		return false, nil, nil
 	}
 
-	ffmpegInfo := NewFFMPEGInfo(videoFileFullPath)
+	ffmpegInfoFlitter := NewFFMPEGInfo(videoFileFullPath)
+	ffmpegInfoFull := NewFFMPEGInfo(videoFileFullPath)
 
 	// 进行字幕和音频的缓存，优先当然是导出 中、英、日、韩 相关的字幕和音频
 	// 但是如果都没得这些的时候，那么也需要导出至少一个字幕或者音频，用于字幕的校正
@@ -333,7 +335,7 @@ func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFF
 				oneTimeBase.String(), oneStartTime.String(),
 				int(oneDurationTS.Num), oneDuration.String(), nowLanguageString)
 
-			ffmpegInfo.SubtitleInfoList = append(ffmpegInfo.SubtitleInfoList, *subInfo)
+			ffmpegInfoFlitter.SubtitleInfoList = append(ffmpegInfoFlitter.SubtitleInfoList, *subInfo)
 
 		} else if oneCodecType.String() == codecTypeAudio {
 			// 音频
@@ -358,31 +360,45 @@ func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFF
 			audioInfo := NewAudioInfo(int(oneIndex.Num), oneCodecName.String(), oneCodecType.String(),
 				oneTimeBase.String(), oneStartTime.String(), oneLanguage.String())
 
-			ffmpegInfo.AudioInfoList = append(ffmpegInfo.AudioInfoList, *audioInfo)
+			ffmpegInfoFlitter.AudioInfoList = append(ffmpegInfoFlitter.AudioInfoList, *audioInfo)
 
 		} else {
 			continue
 		}
 	}
+	// 把过滤的和缓存的都拼接到一起
+	for _, audioInfo := range ffmpegInfoFlitter.AudioInfoList {
+		ffmpegInfoFull.AudioInfoList = append(ffmpegInfoFull.AudioInfoList, audioInfo)
+	}
+	for _, audioInfo := range cacheAudios {
+		ffmpegInfoFull.AudioInfoList = append(ffmpegInfoFull.AudioInfoList, audioInfo)
+	}
+	for _, subInfo := range ffmpegInfoFlitter.SubtitleInfoList {
+		ffmpegInfoFull.SubtitleInfoList = append(ffmpegInfoFull.SubtitleInfoList, subInfo)
+	}
+	for _, subInfo := range cacheSubtitleInfos {
+		ffmpegInfoFull.SubtitleInfoList = append(ffmpegInfoFull.SubtitleInfoList, subInfo)
+	}
+
 	// 如何没有找到合适的字幕，那么就要把缓存的字幕选一个填充进去
-	if len(ffmpegInfo.SubtitleInfoList) == 0 {
+	if len(ffmpegInfoFlitter.SubtitleInfoList) == 0 {
 		if len(cacheSubtitleInfos) != 0 {
-			ffmpegInfo.SubtitleInfoList = append(ffmpegInfo.SubtitleInfoList, cacheSubtitleInfos[0])
+			ffmpegInfoFlitter.SubtitleInfoList = append(ffmpegInfoFlitter.SubtitleInfoList, cacheSubtitleInfos[0])
 		}
 	}
 	// 如何没有找到合适的音频，那么就要把缓存的音频选一个填充进去
-	if len(ffmpegInfo.AudioInfoList) == 0 {
+	if len(ffmpegInfoFlitter.AudioInfoList) == 0 {
 		if len(cacheAudios) != 0 {
-			ffmpegInfo.AudioInfoList = append(ffmpegInfo.AudioInfoList, cacheAudios[0])
+			ffmpegInfoFlitter.AudioInfoList = append(ffmpegInfoFlitter.AudioInfoList, cacheAudios[0])
 		}
 	} else {
 		// 音频只需要导出一个就行了，取第一个
 		newAudioList := make([]AudioInfo, 0)
-		newAudioList = append(newAudioList, ffmpegInfo.AudioInfoList[0])
-		ffmpegInfo.AudioInfoList = newAudioList
+		newAudioList = append(newAudioList, ffmpegInfoFlitter.AudioInfoList[0])
+		ffmpegInfoFlitter.AudioInfoList = newAudioList
 	}
 
-	return true, ffmpegInfo
+	return true, ffmpegInfoFlitter, ffmpegInfoFull
 }
 
 // parseJsonString2GetAudioInfo 获取 pcm 音频的长度
