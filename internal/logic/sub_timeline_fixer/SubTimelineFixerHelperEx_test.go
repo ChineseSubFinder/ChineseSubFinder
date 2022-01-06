@@ -29,7 +29,7 @@ func TestSubTimelineFixerHelperEx_Process(t *testing.T) {
 		{
 			name: "Foundation (2021) - S01E09", args: args{
 				videoFileFullPath: "X:\\连续剧\\Foundation (2021)\\Season 1\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p.mkv",
-				srcSubFPath:       filepath.Join(rootDir, "Foundation (2021)", "Season 1", "Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p.chinese(简英,zimuku).ass")},
+				srcSubFPath:       filepath.Join(rootDir, "series", "Foundation (2021)", "Season 1", "Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p.chinese(简英,zimuku).ass")},
 			wantErr: false,
 		},
 	}
