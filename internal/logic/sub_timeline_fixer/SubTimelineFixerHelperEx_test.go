@@ -2,6 +2,8 @@ package sub_timeline_fixer
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
+	"path/filepath"
 	"testing"
 )
 
@@ -14,6 +16,7 @@ func TestSubTimelineFixerHelperEx_Check(t *testing.T) {
 
 func TestSubTimelineFixerHelperEx_Process(t *testing.T) {
 
+	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_timeline_fixer"}, 4, true)
 	type args struct {
 		videoFileFullPath string
 		srcSubFPath       string
@@ -26,13 +29,7 @@ func TestSubTimelineFixerHelperEx_Process(t *testing.T) {
 		{
 			name: "Foundation (2021) - S01E09", args: args{
 				videoFileFullPath: "X:\\连续剧\\Foundation (2021)\\Season 1\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p.mkv",
-				srcSubFPath:       "C:\\WorkSpace\\Go2Hell\\src\\github.com\\allanpk716\\ChineseSubFinder\\internal\\logic\\sub_timeline_fixer\\CSF-SubFixCache\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p\\chinese(简英,zimuku).default.ass"},
-			wantErr: false,
-		},
-		{
-			name: "Foundation (2021) - S01E09", args: args{
-				videoFileFullPath: "X:\\连续剧\\Foundation (2021)\\Season 1\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p.mkv",
-				srcSubFPath:       "C:\\WorkSpace\\Go2Hell\\src\\github.com\\allanpk716\\ChineseSubFinder\\internal\\logic\\sub_timeline_fixer\\CSF-SubFixCache\\Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p\\chinese(简英,zimuku).default.ass"},
+				srcSubFPath:       filepath.Join(rootDir, "Foundation (2021)", "Season 1", "Foundation (2021) - S01E09 - The First Crisis WEBDL-1080p.chinese(简英,zimuku).ass")},
 			wantErr: false,
 		},
 	}

@@ -124,17 +124,15 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	return outSubInfoList, nil
 }
 
-func (s Supplier) getSubListFromKeyword(keyword string) ([]supplier.SubInfo, error) {
-	panic("not implemented")
-}
-
 func (s Supplier) computeFileHash(filePath string) (string, error) {
 	hash := ""
 	fp, err := os.Open(filePath)
 	if err != nil {
 		return "", err
 	}
-	defer fp.Close()
+	defer func() {
+		_ = fp.Close()
+	}()
 	stat, err := fp.Stat()
 	if err != nil {
 		return "", err
@@ -182,7 +180,7 @@ func (s Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier.
 			continue
 		}
 		// 需要赋值给字幕结构
-		for i, _ := range one {
+		for i := range one {
 			one[i].Season = episodeInfo.Season
 			one[i].Episode = episodeInfo.Episode
 		}

@@ -130,10 +130,6 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	return outSubList, nil
 }
 
-func (s Supplier) getSubListFromKeyword(keyword string) ([]supplier.SubInfo, error) {
-	panic("not implemented")
-}
-
 //getCid 获取指定文件的唯一 cid
 func (s Supplier) getCid(filePath string) (string, error) {
 	hash := ""
@@ -143,7 +139,9 @@ func (s Supplier) getCid(filePath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer fp.Close()
+	defer func() {
+		_ = fp.Close()
+	}()
 	stat, err := fp.Stat()
 	if err != nil {
 		return "", err
@@ -188,7 +186,7 @@ func (s Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier.
 			continue
 		}
 		// 需要赋值给字幕结构
-		for i, _ := range one {
+		for i := range one {
 			one[i].Season = episodeInfo.Season
 			one[i].Episode = episodeInfo.Episode
 		}
@@ -211,5 +209,3 @@ type SublistXunLei struct {
 type SublistSliceXunLei struct {
 	Sublist []SublistXunLei
 }
-
-const LangUnknow = "未知语言"
