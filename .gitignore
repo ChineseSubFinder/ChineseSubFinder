@@ -53,3 +53,5 @@ TestData/
 /internal/logic/series_helper/Logs/*.log
 /internal/pkg/my_util/Logs/*.log
 /internal/pkg/notify_center/Logs/*.log
+/internal/pkg/pass_water_wall/result.png
+/internal/pkg/pass_water_wall/Logs/*.log
