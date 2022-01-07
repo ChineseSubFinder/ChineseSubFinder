@@ -52,3 +52,4 @@ TestData/
 /internal/pkg/sub_parser_hub/Logs/*.log
 /internal/logic/series_helper/Logs/*.log
 /internal/pkg/my_util/Logs/*.log
+/internal/pkg/notify_center/Logs/*.log
