@@ -2,7 +2,7 @@ package srt
 
 import (
 	lan "github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"os"
 	"path/filepath"
@@ -10,12 +10,7 @@ import (
 )
 
 func TestParser_DetermineFileType(t *testing.T) {
-	testDataPath := "../../../../TestData/sub_parser"
-	testRootDir, err := my_util.CopyTestData(testDataPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_parser"}, 5, true)
 	type args struct {
 		filePath string
 	}
