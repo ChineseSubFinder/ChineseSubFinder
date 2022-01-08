@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	EveryTime              string
 	SSHKeyFullPath         string
 	SSHKeyPwd              string
 	CloneProjectDesSaveDir string

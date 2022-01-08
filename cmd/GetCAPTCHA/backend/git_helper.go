@@ -16,8 +16,9 @@ import (
 
 func GitProcess(config config.Config, enString string) error {
 
+	fmt.Println("Now Time", time.Now().Format("2006-01-02 15:04:05"))
 	nowTime := time.Now().Format("2006-01-02")
-	fmt.Println("Now Time", nowTime)
+
 	// 实例化登录密钥
 	publicKeys, err := ssh.NewPublicKeysFromFile("git", config.SSHKeyFullPath, config.SSHKeyPwd)
 	if err != nil {
