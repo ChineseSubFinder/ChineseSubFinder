@@ -14,7 +14,7 @@ import (
 func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
 	const testSerName = "XXX"
 	const needDelFolderName = "Sub_S1E0"
-	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_helper", "test", needDelFolderName}, 4, false)
+	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_helper", "org", needDelFolderName}, 4, false)
 	desSerFullPath, err := my_util.GetDebugFolderByName([]string{testSerName})
 	if err != nil {
 		t.Fatal(err)
