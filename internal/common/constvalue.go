@@ -42,3 +42,5 @@ const (
 )
 
 const QueueName = "Queue"
+
+const StaticFileName00 = "c31ViaG5Q.txt"

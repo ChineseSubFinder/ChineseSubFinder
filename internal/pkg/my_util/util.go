@@ -1,6 +1,8 @@
 package my_util
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
@@ -464,4 +466,23 @@ func ParseTime(inTime string) (time.Time, error) {
 		}
 	}
 	return parseTime, err
+}
+
+// GetFileSHA1 获取文件的 SHA1 值
+func GetFileSHA1(srcFileFPath string) (string, error) {
+
+	infile, err := os.Open(srcFileFPath)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = infile.Close()
+	}()
+
+	h := sha1.New()
+	_, err = io.Copy(h, infile)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
