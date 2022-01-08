@@ -74,4 +74,32 @@ func writeFile(saveFileFPath, enString, nowTime string) error {
 	return nil
 }
 
+func GetCodeFromWeb() (string, string, error) {
+	const baseCodeFileUrl = "https://cdn.jsdelivr.net/gh/"
+	const whichProject = "allanpk716/SomeThingsStatic/"
+
+	desUrl := baseCodeFileUrl + whichProject + common.StaticFileName00
+
+	fileBytes, _, err := my_util.DownFile(desUrl)
+	if err != nil {
+		return "", "", err
+	}
+
+	timeB64String := fileBytes[len(fileBytes)-16:]
+	decodedTime, err := b64.StdEncoding.DecodeString(string(timeB64String))
+	if err != nil {
+		return "", "", err
+	}
+	decodeTimeStr := string(decodedTime)
+
+	codeB64String := fileBytes[:len(fileBytes)-16]
+	decodedCode, err := b64.StdEncoding.DecodeString(string(codeB64String))
+	if err != nil {
+		return "", "", err
+	}
+	decodeCodeStr := string(decodedCode)
+
+	return decodeTimeStr, decodeCodeStr, nil
+}
+
 const waitExt = ".wait"

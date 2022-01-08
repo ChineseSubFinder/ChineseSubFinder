@@ -9,6 +9,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/proxy_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/something_static"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
@@ -157,6 +158,18 @@ func DownLoadStart(httpProxy string) {
 
 	notify_center.Notify.Clear()
 
+	updateTimeString, code, err := something_static.GetCodeFromWeb()
+	if err != nil {
+		notify_center.Notify.Add("GetSubhdCode", "GetCodeFromWeb,"+err.Error())
+		log.Errorln("something_static.GetCodeFromWeb", err)
+		log.Errorln("Skip Subhd download")
+		// 没有则需要清空
+		commonValue.SubhdCode = ""
+	} else {
+		log.Infoln("GetCode", updateTimeString, code)
+		commonValue.SubhdCode = code
+	}
+
 	// 下载实例
 	downloader := internal.NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter),
 		types.ReqParam{
@@ -183,7 +196,7 @@ func DownLoadStart(httpProxy string) {
 	log.Infoln("Download One Started...")
 
 	// 优先级最高。读取特殊文件，启用一些特殊的功能，比如 forced_scan_and_down_sub
-	err := downloader.ReadSpeFile()
+	err = downloader.ReadSpeFile()
 	if err != nil {
 		log.Errorln("ReadSpeFile", err)
 	}

@@ -35,6 +35,11 @@ func NewSubSupplierHub(one ifaces.ISupplier, _inSupplier ...ifaces.ISupplier) *S
 	return &s
 }
 
+// AddSubSupplier 添加一个下载器，目前目标是给 SubHD 使用
+func (d *SubSupplierHub) AddSubSupplier(one ifaces.ISupplier) {
+	d.Suppliers = append(d.Suppliers, one)
+}
+
 // DownloadSub4Movie 某一个电影字幕下载，下载完毕后，返回下载缓存每个字幕的位置
 func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, forcedScanAndDownloadSub bool) ([]string, error) {
 

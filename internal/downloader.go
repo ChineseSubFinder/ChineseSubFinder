@@ -10,6 +10,7 @@ import (
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
@@ -85,8 +86,8 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqPa
 	// TODO 这里写固定了抉择字幕的顺序
 	sitesSequence = append(sitesSequence, common.SubSiteZiMuKu)
 	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
-	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
 	sitesSequence = append(sitesSequence, common.SubSiteShooter)
+	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
 	downloader.mk = markSystem.NewMarkingSystem(sitesSequence, downloader.reqParam.SubTypePriority)
 
 	downloader.movieFileFullPathList = make([]string, 0)
@@ -224,6 +225,11 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 			xunlei.NewSupplier(d.reqParam),
 			shooter.NewSupplier(d.reqParam),
 		)
+
+		if common.SubhdCode != "" {
+			// 如果找到 code 了，那么就可以继续用这个实例
+			subSupplierHub.AddSubSupplier(subhd.NewSupplier(d.reqParam))
+		}
 		// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
 		organizeSubFiles, err := subSupplierHub.DownloadSub4Movie(inData.OneVideoFullPath, inData.Index, d.needForcedScanAndDownSub)
 		if err != nil {
