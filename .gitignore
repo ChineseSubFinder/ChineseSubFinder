@@ -57,3 +57,4 @@ TestData/
 /internal/pkg/pass_water_wall/Logs/*.log
 /something.yaml
 /.rod
+/cmd/GetCAPTCHA
