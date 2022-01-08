@@ -167,7 +167,7 @@ func DownLoadStart(httpProxy string) {
 		commonValue.SubhdCode = ""
 	} else {
 		log.Infoln("GetCode", updateTimeString, code)
-		commonValue.SubhdCode = code
+		//commonValue.SubhdCode = code
 	}
 
 	// 下载实例

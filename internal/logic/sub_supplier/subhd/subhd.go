@@ -439,6 +439,8 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 	if err != nil {
 		return nil, err
 	}
+	// 需要先判断是否先要输入验证码，然后才到下载界面
+
 	// 是否有腾讯的防水墙
 	hasWaterWall := true
 	waterWall := doc.Find(TCode)
