@@ -1,9 +1,9 @@
 package backend
 
 import (
-	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/something_static"
 	"github.com/go-git/go-git/v5"
@@ -16,7 +16,7 @@ import (
 
 func GitProcess(config config.Config, enString string) error {
 
-	fmt.Println("Now Time", time.Now().Format("2006-01-02 15:04:05"))
+	log_helper.GetLogger().Infoln("Now Time", time.Now().Format("2006-01-02 15:04:05"))
 	nowTime := time.Now().Format("2006-01-02")
 
 	// 实例化登录密钥
@@ -30,7 +30,7 @@ func GitProcess(config config.Config, enString string) error {
 	var w *git.Worktree
 	if my_util.IsDir(config.CloneProjectDesSaveDir) == true {
 		// 需要 pull
-		fmt.Println("Pull Start...")
+		log_helper.GetLogger().Infoln("Pull Start...")
 		r, err = git.PlainOpen(config.CloneProjectDesSaveDir)
 		if err != nil {
 			return err
@@ -45,10 +45,10 @@ func GitProcess(config config.Config, enString string) error {
 				return err
 			}
 		}
-		fmt.Println("Pull End")
+		log_helper.GetLogger().Infoln("Pull End")
 	} else {
 		// 需要 clone
-		fmt.Println("PlainClone Start...")
+		log_helper.GetLogger().Infoln("PlainClone Start...")
 
 		r, err = git.PlainClone(config.CloneProjectDesSaveDir, false, &git.CloneOptions{
 			Auth:     publicKeys,
@@ -58,7 +58,7 @@ func GitProcess(config config.Config, enString string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println("PlainClone End")
+		log_helper.GetLogger().Infoln("PlainClone End")
 
 	}
 	// 存储外部传入的字符串到文件
@@ -68,11 +68,11 @@ func GitProcess(config config.Config, enString string) error {
 	}
 	if bok == false {
 		// 说明无需继续，因为文件没有变化
-		fmt.Println("Code not change, Skip This Time")
+		log_helper.GetLogger().Infoln("Code not change, Skip This Time")
 		return nil
 	}
 
-	fmt.Println("Write File Done")
+	log_helper.GetLogger().Infoln("Write File Done")
 	w, err = r.Worktree()
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func GitProcess(config config.Config, enString string) error {
 		return err
 	}
 	status, err := w.Status()
-	fmt.Println("Status", status)
+	log_helper.GetLogger().Infoln("Status", status)
 	commit, err := w.Commit("update", &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  "haha",
@@ -97,7 +97,7 @@ func GitProcess(config config.Config, enString string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Commit Done")
+	log_helper.GetLogger().Infoln("Commit Done")
 	err = r.Push(&git.PushOptions{
 		Auth: publicKeys,
 	})
@@ -105,7 +105,7 @@ func GitProcess(config config.Config, enString string) error {
 		return err
 	}
 
-	fmt.Println("Push Done.")
+	log_helper.GetLogger().Infoln("Push Done.")
 
 	return nil
 }

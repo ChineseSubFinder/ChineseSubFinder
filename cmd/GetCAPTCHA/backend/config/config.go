@@ -7,12 +7,13 @@ import (
 )
 
 type Config struct {
-	EveryTime              string
-	SSHKeyFullPath         string
-	SSHKeyPwd              string
-	CloneProjectDesSaveDir string
-	GitProjectUrl          string
-	DesURL                 string
+	EveryTime                     string
+	SSHKeyFullPath                string
+	SSHKeyPwd                     string
+	CloneProjectDesSaveDir        string
+	GitProjectUrl                 string
+	DesURL                        string
+	WhenSubSupplierInvalidWebHook string
 }
 
 // GetConfig 统一获取配置的接口

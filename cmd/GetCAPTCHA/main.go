@@ -1,13 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend"
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/robfig/cron/v3"
 )
 
 func main() {
+
+	notify_center.Notify = notify_center.NewNotifyCenter(config.GetConfig().WhenSubSupplierInvalidWebHook)
 
 	// 任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
@@ -16,18 +19,18 @@ func main() {
 
 		err := Process()
 		if err != nil {
-			fmt.Println(err.Error())
+			log_helper.GetLogger().Errorln(err.Error())
 			return
 		}
 	})
 	if err != nil {
-		fmt.Println("cron entryID:", entryID, "Error:", err)
+		log_helper.GetLogger().Errorln("cron entryID:", entryID, "Error:", err)
 		return
 	}
 	// 先执行一次
 	err = Process()
 	if err != nil {
-		fmt.Println(err.Error())
+		log_helper.GetLogger().Errorln(err.Error())
 		return
 	}
 
@@ -38,7 +41,18 @@ func main() {
 
 func Process() error {
 
-	fmt.Println("-----------------------------------------")
+	var err error
+	notify_center.Notify.Clear()
+	defer func() {
+
+		if err != nil {
+			notify_center.Notify.Add("GetSubhdCode", err.Error())
+		}
+
+		notify_center.Notify.Send()
+	}()
+
+	log_helper.GetLogger().Infoln("-----------------------------------------")
 
 	codeB64, err := backend.GetCode(config.GetConfig().DesURL)
 	if err != nil {

@@ -3,7 +3,7 @@ package backend
 import (
 	b64 "encoding/base64"
 	"errors"
-	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/go-rod/rod/lib/proto"
 	"regexp"
@@ -12,7 +12,7 @@ import (
 
 func GetCode(codeUrl string) (string, error) {
 
-	fmt.Println("Start Get Code...")
+	log_helper.GetLogger().Infoln("Start Get Code...")
 	browser, err := rod_helper.NewBrowser("", false)
 	if err != nil {
 		return "", err
@@ -48,7 +48,7 @@ func GetCode(codeUrl string) (string, error) {
 
 	sEnc := b64.StdEncoding.EncodeToString([]byte(code))
 
-	fmt.Println("End Get Code")
+	log_helper.GetLogger().Infoln("End Get Code")
 
 	return sEnc, nil
 }
