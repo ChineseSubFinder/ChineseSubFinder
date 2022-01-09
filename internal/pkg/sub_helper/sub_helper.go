@@ -13,7 +13,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
-	"github.com/go-rod/rod/lib/utils"
 	"math"
 	"os"
 	"path/filepath"
@@ -42,9 +41,9 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 	for i := range subInfos {
 		// 先存下来，保存是时候需要前缀，前缀就是从那个网站下载来的
 		nowFileSaveFullPath := filepath.Join(tmpFolderFullPath, GetFrontNameAndOrgName(&subInfos[i]))
-		err = utils.OutputFile(nowFileSaveFullPath, subInfos[i].Data)
+		err = my_util.WriteFile(nowFileSaveFullPath, subInfos[i].Data)
 		if err != nil {
-			log_helper.GetLogger().Errorln("getFrontNameAndOrgName - OutputFile", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
+			log_helper.GetLogger().Errorln("getFrontNameAndOrgName - WriteFile", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
 			continue
 		}
 		nowExt := strings.ToLower(subInfos[i].Ext)

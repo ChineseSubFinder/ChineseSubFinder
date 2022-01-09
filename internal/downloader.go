@@ -24,7 +24,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
-	"github.com/go-rod/rod/lib/utils"
 	"github.com/panjf2000/ants/v2"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -638,7 +637,7 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 		}
 	}
 	// 最后写入字幕
-	err := utils.OutputFile(desSubFullPath, finalSubFile.Data)
+	err := my_util.WriteFile(desSubFullPath, finalSubFile.Data)
 	if err != nil {
 		return err
 	}

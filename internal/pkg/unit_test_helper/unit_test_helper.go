@@ -139,22 +139,28 @@ func GenerateXunleiVideoFile(videoPartsRootPath string) (string, error) {
 
 // copyTestData 单元测试前把测试的数据 copy 一份出来操作，src 目录中默认应该有一个 org 原始数据文件夹，然后需要复制一份 test 文件夹出来
 func copyTestData(srcDir string) (string, error) {
+
+	// 因为会出现，批量测试的需求，那么如果每次都进行一次清理，那么就会导致之前创建的被清理掉，测试用例失败
+	// 可以简单的按时间来判断，如果当前时间与以及存在文件夹名称相差在 5min，那么就清理掉
+	addString, _, _, _ := my_util.GetNowTimeString()
 	// 测试数据的文件夹
 	orgDir := filepath.Join(srcDir, "org")
 	testDir := filepath.Join(srcDir, "test")
 
 	if my_util.IsDir(testDir) == true {
-		err := my_util.ClearFolder(testDir)
+		err := my_util.ClearFolderEx(testDir, 2)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	err := my_util.CopyDir(orgDir, testDir)
+	// 多加一层，这样在批量测试的时候才不会出错
+	testDirEx := filepath.Join(testDir, addString)
+	err := my_util.CopyDir(orgDir, testDirEx)
 	if err != nil {
 		return "", err
 	}
-	return testDir, nil
+	return testDirEx, nil
 }
 
 const oneBackTime = "../"

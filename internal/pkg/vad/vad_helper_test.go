@@ -10,7 +10,7 @@ func TestGetVADInfo(t *testing.T) {
 
 	var audioInfo = AudioInfo{
 
-		FileFullPath: filepath.Join(unit_test_helper.GetTestDataResourceRootPath([]string{"ffmpeg"}, 4, false), "sampleAudio.wav"),
+		FileFullPath: filepath.Join(unit_test_helper.GetTestDataResourceRootPath([]string{"ffmpeg", "org"}, 4, false), "sampleAudio.wav"),
 		// check below accordingly
 		SampleRate: 16000,
 		BitDepth:   16,

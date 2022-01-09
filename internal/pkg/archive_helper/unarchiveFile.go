@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"compress/flate"
 	"errors"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/bodgit/sevenzip"
-	"github.com/go-rod/rod/lib/utils"
 	"github.com/mholt/archiver/v3"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
@@ -124,7 +124,7 @@ func processOneFile(f archiver.File, notUTF8 bool, desRootPath string) error {
 		//读取到最终的缓冲区中
 		chunk = append(chunk, buf[:n]...)
 	}
-	err := utils.OutputFile(filepath.Join(desRootPath, decodeName), chunk)
+	err := my_util.WriteFile(filepath.Join(desRootPath, decodeName), chunk)
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func un7zOneFile(file *sevenzip.File, desRootPath string) error {
 	}
 	decodeName := file.Name
 	decodeName = filepath.Base(decodeName)
-	err = utils.OutputFile(filepath.Join(desRootPath, decodeName), data)
+	err = my_util.WriteFile(filepath.Join(desRootPath, decodeName), data)
 	if err != nil {
 		return err
 	}

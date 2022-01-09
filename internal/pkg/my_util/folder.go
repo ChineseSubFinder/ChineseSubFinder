@@ -4,6 +4,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 // --------------------------------------------------------------
@@ -189,6 +191,80 @@ func ClearFolder(folderFullPath string) error {
 			err = os.RemoveAll(fullPath)
 			if err != nil {
 				return err
+			}
+		} else {
+			// 这里就是文件了
+			err = os.Remove(fullPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// ClearFolderEx 清空文件夹，文件夹名称有特殊之处，Hour-min-Nanosecond 的命名方式
+// 如果调用的时候，已存在的文件夹的时间 min < 5 那么则清理
+func ClearFolderEx(folderFullPath string, overtime int) error {
+
+	_, hour, minute, _ := GetNowTimeString()
+	pathSep := string(os.PathSeparator)
+	files, err := os.ReadDir(folderFullPath)
+	if err != nil {
+		return err
+	}
+	for _, curFile := range files {
+		fullPath := folderFullPath + pathSep + curFile.Name()
+		if curFile.IsDir() {
+
+			parts := strings.Split(curFile.Name(), "-")
+			if len(parts) == 3 {
+				// 基本是符合了，倒是还是需要额外的判断是否时间超过了
+				tmpHourStr := parts[0]
+				tmpMinuteStr := parts[1]
+				tmpHour, err := strconv.Atoi(tmpHourStr)
+				if err != nil {
+					// 如果不符合命名格式，直接删除
+					err = os.RemoveAll(fullPath)
+					if err != nil {
+						return err
+					}
+					continue
+				}
+				tmpMinute, err := strconv.Atoi(tmpMinuteStr)
+				if err != nil {
+					// 如果不符合命名格式，直接删除
+					err = os.RemoveAll(fullPath)
+					if err != nil {
+						return err
+					}
+					continue
+				}
+				// 判断时间
+				if tmpHour != hour {
+					// 如果不符合命名格式，直接删除
+					err = os.RemoveAll(fullPath)
+					if err != nil {
+						return err
+					}
+					continue
+				}
+				// 超过 5 min
+				if minute-overtime > tmpMinute {
+					// 如果不符合命名格式，直接删除
+					err = os.RemoveAll(fullPath)
+					if err != nil {
+						return err
+					}
+					continue
+				}
+			} else {
+				// 如果不符合命名格式，直接删除
+				err = os.RemoveAll(fullPath)
+				if err != nil {
+					return err
+				}
 			}
 		} else {
 			// 这里就是文件了
