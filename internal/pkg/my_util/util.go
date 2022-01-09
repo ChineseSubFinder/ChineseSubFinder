@@ -83,7 +83,7 @@ func DownFile(urlStr string, _reqParam ...types.ReqParam) ([]byte, string, error
 	filename := GetFileName(resp.RawResponse)
 
 	if filename == "" {
-		log_helper.GetLogger().Errorln("DownFile.GetFileName is string.empty", urlStr)
+		log_helper.GetLogger().Warningln("DownFile.GetFileName is string.empty", urlStr)
 	}
 
 	return resp.Body(), filename, nil

@@ -78,6 +78,9 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqPa
 	} else {
 		downloader.reqParam = *types.NewReqParam()
 	}
+	// 强制下载线程为 1，太猛，不然都是错误
+	downloader.reqParam.Threads = 1
+
 	// 这里就不单独弄一个 reqParam.SubNameFormatter 字段来传递值了，因为 inSubFormatter 就已经知道是什么 formatter 了
 	downloader.subNameFormatter = subcommon.FormatterName(downloader.subFormatter.GetFormatterFormatterName())
 

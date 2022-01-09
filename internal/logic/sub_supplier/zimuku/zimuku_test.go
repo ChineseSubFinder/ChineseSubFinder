@@ -30,8 +30,8 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 	//movie1 := "X:\\电影\\机动战士Z高达：星之继承者 (2005)\\机动战士Z高达：星之继承者 (2005) 1080p TrueHD.mkv"
 	//movie1 := "X:\\连续剧\\The Bad Batch\\Season 1\\The Bad Batch - S01E01 - Aftermath WEBDL-1080p.mkv"
 
-	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"zimuku"}, 5, true)
-	movie1 := filepath.Join(rootDir, "movies", "The Devil All the Time (2020)", "The Devil All the Time (2020) WEBDL-1080p.mkv")
+	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
+	movie1 := filepath.Join(rootDir, "zimuku", "movies", "The Devil All the Time (2020)", "The Devil All the Time (2020) WEBDL-1080p.mkv")
 	s := NewSupplier()
 	outList, err := s.getSubListFromMovie(movie1)
 	if err != nil {
@@ -50,8 +50,8 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	//ser := "X:\\连续剧\\Money.Heist"
 	//ser := "X:\\连续剧\\黄石 (2018)"
 
-	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"zimuku"}, 5, true)
-	ser := filepath.Join(rootDir, "series", "黄石 (2018)")
+	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
+	ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")
 	// 读取本地的视频和字幕信息
 	seriesInfo, err := series_helper2.ReadSeriesInfoFromDir(ser, nil, false)
 	if err != nil {

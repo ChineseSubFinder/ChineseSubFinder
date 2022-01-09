@@ -121,9 +121,13 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	subInfoNeedDownload := s.whichEpisodeNeedDownloadSub(seriesInfo, subList)
 	// 下载字幕
 	for i, item := range subInfoNeedDownload {
-		hdContent, err := s.step2Ex(browser, item.Url)
+		bok, hdContent, err := s.step2Ex(browser, item.Url)
 		if err != nil {
 			s.log.Errorln("subhd step2Ex", err)
+			continue
+		}
+		if bok == false {
+			s.log.Errorln("subhd step2Ex return false")
 			continue
 		}
 		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple, my_util.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0,
@@ -212,11 +216,15 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInf
 	}
 
 	for i, item := range subList {
-		hdContent, err := s.step2Ex(browser, item.Url)
+		bok, hdContent, err := s.step2Ex(browser, item.Url)
 		time.Sleep(time.Second)
 		if err != nil {
 			s.log.Errorln("subhd step2Ex", err)
-			return nil, err
+			continue
+		}
+		if bok == false {
+			s.log.Errorln("subhd step2Ex return false")
+			continue
 		}
 		subInfos = append(subInfos, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple, my_util.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
 	}
@@ -418,7 +426,7 @@ func (s Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSer
 }
 
 // step2Ex 下载字幕 过防水墙
-func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdContent, error) {
+func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (bool, *HdContent, error) {
 	var err error
 	defer func() {
 		if err != nil {
@@ -427,80 +435,32 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (*HdC
 	}()
 	subDownloadPageUrl = my_util.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
 
-	pageString, page, err := s.httpGetFromBrowser(browser, subDownloadPageUrl)
+	_, page, err := s.httpGetFromBrowser(browser, subDownloadPageUrl)
 	if err != nil {
-		return nil, err
+		return false, nil, err
 	}
 	defer func() {
 		_ = page.Close()
 	}()
 
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(pageString))
-	if err != nil {
-		return nil, err
-	}
 	// 需要先判断是否先要输入验证码，然后才到下载界面
-
-	// 是否有腾讯的防水墙
-	hasWaterWall := true
-	waterWall := doc.Find(TCode)
-	if len(waterWall.Nodes) < 1 {
-		hasWaterWall = false
-	}
-	hasDownBtn, BtnElemenString := s.JugDownloadBtn(doc)
-
-	if hasWaterWall == false && hasDownBtn == false {
-		// 都没有，则返回故障，无法下载
-		return nil, common.SubHDStep2ExCannotFindDownloadBtn
-	}
 	// 下载字幕
-	content, err := s.downloadSubFile(browser, page, hasWaterWall, BtnElemenString)
+	bok, content, err := s.downloadSubFile(browser, page)
 	if err != nil {
-		return nil, err
+		return false, nil, err
+	}
+	if bok == false {
+		return false, nil, nil
 	}
 
-	return content, nil
+	return true, content, nil
 }
 
-func (s Supplier) JugDownloadBtn(doc *goquery.Document) (bool, string) {
+func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *HdContent, error) {
 
-	const btnDown0 = "#down"
-	const btnDown1 = "button.down"
-	const btnDown2 = "button.btn"
-	// 是否有下载按钮
-	hasDownBtn := true
-	downBtn := doc.Find(btnDown0)
-	if len(downBtn.Nodes) < 1 {
-		hasDownBtn = false
-	} else {
-		return true, btnDown0
-	}
-	// 另一种是否有下载按钮的判断
-	if hasDownBtn == false {
-		downBtn = doc.Find(btnDown1)
-		if len(downBtn.Nodes) < 1 {
-			hasDownBtn = false
-		} else {
-			hasDownBtn = true
-			return true, btnDown1
-		}
-	}
-	// 新的一种下载按钮的判断
-	if hasDownBtn == false {
-		downBtn = doc.Find(btnDown2)
-		if len(downBtn.Nodes) < 1 {
-			hasDownBtn = false
-		} else {
-			hasDownBtn = true
-			return hasDownBtn, btnDown2
-		}
-	}
-
-	return false, btnDown1
-}
-
-func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWaterWall bool, btnElemenString string) (*HdContent, error) {
 	var err error
+	var doc *goquery.Document
+	downloadSuccess := false
 	fileName := ""
 	fileByte := []byte{0}
 	err = rod.Try(func() {
@@ -516,47 +476,91 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, hasWater
 			}
 			return b, info.SuggestedFilename, nil
 		}
-
-		// 点击下载按钮
-		//var el *rod.Element
-		if hasWaterWall == true {
-			page.MustElement(TCode).MustClick()
-		} else {
-			page.MustElement(btnElemenString).MustClick()
+		// 初始化页面用于查询元素
+		pString := page.MustHTML()
+		doc, err = goquery.NewDocumentFromReader(strings.NewReader(pString))
+		if err != nil {
+			return
 		}
-		// 找到遮挡的信息块，尝试移除
-		//if err != nil {
-		//if strings.Contains(err.Error(), "element covered by") == true {
-		//	println("11")
-		//	var eel *rod.ErrCovered
-		//	if errors.As(err, &eel) == true {
-		//		eel.MustRemove()
-		//		err = el.Click(proto.InputMouseButtonLeft)
-		//		if err != nil {
-		//			print(123)
-		//		}
-		//	}
-		//}
-		//}
+		// 移除广告
+		page.MustEval(`testgssdqw = function () { if (document.getElementById("tbkp")) {document.getElementById("tbkp").remove()}; }`)
+		page.MustEval(`testgssdqw()`)
+		// 点击“验证获取下载地址”
+		clickCodeBtn := doc.Find(btnClickCodeBtn)
+		if len(clickCodeBtn.Nodes) < 1 {
+			return
+		}
+		element := page.MustElement(btnClickCodeBtn)
+		BtnCodeText := element.MustText()
+		if strings.Contains(BtnCodeText, "验证") == true {
+			// 那么需要填写验证码
+			element.MustClick()
+			time.Sleep(time.Second * 2)
+			// 填写“验证码”
+			page.MustEval(`$("#gzhcode").attr("value","` + common.SubhdCode + `");`)
+			// 是否有“完成验证”按钮
+			downBtn := doc.Find(btnCommitCode)
+			if len(downBtn.Nodes) < 1 {
+				return
+			}
+			element = page.MustElement(btnCommitCode)
+			benCommit := element.MustText()
+			if strings.Contains(benCommit, "验证") == false {
+				log_helper.GetLogger().Errorln("btn not found 完整验证")
+				return
+			}
+			element.MustClick()
+			time.Sleep(time.Second * 2)
+
+			// 点击下载按钮
+			page.MustElement(btnClickCodeBtn).MustClick()
+		} else if strings.Contains(BtnCodeText, "下载") == true {
+
+			// 直接可以下载
+			element.MustClick()
+			time.Sleep(time.Second * 2)
+		} else {
+
+			log_helper.GetLogger().Errorln("btn not found 下载验证 or 下载")
+			return
+		}
+		// 更新 page 的实例对应的 doc Content
+		pString = page.MustHTML()
+		doc, err = goquery.NewDocumentFromReader(strings.NewReader(pString))
+		if err != nil {
+			return
+		}
+		// 是否有腾讯的防水墙
+		hasWaterWall := false
+		waterWall := doc.Find(TCode)
+		if len(waterWall.Nodes) >= 1 {
+			hasWaterWall = true
+		}
+		log_helper.GetLogger().Debugln("Need pass WaterWall", hasWaterWall)
 		// 过墙
 		if hasWaterWall == true {
 			s.passWaterWall(page)
 		}
+		time.Sleep(time.Second * 2)
 		fileByte, fileName, err = getDownloadFile()
 		if err != nil {
-			panic(err)
+			return
 		}
+		downloadSuccess = true
 	})
 	if err != nil {
-		return nil, err
+		return false, nil, err
 	}
-
 	var hdContent HdContent
 	hdContent.Filename = fileName
 	hdContent.Ext = filepath.Ext(fileName)
 	hdContent.Data = fileByte
 
-	return &hdContent, nil
+	if downloadSuccess == false {
+		return false, &hdContent, common.SubHDStep2ExCannotFindDownloadBtn
+	}
+
+	return downloadSuccess, &hdContent, nil
 }
 
 func (s Supplier) passWaterWall(page *rod.Page) {
@@ -688,3 +692,5 @@ type HdContent struct {
 }
 
 const TCode = "#TencentCaptcha"
+const btnClickCodeBtn = "button.btn-danger"
+const btnCommitCode = "button.btn-primary"

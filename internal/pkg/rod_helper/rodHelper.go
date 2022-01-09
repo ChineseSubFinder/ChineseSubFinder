@@ -188,6 +188,7 @@ func releaseAdblock() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	_ = adblockZipFile.Close()
 
 	r := archiver.NewZip()
 	err = r.Unarchive(outZipFileFPath, desPath)
@@ -202,7 +203,7 @@ const adblockInsideName = "adblock"
 var once sync.Once
 
 // 这个文件内有一个子文件夹 adblock ，制作的时候务必注意
-//go:embed assets/adblock_v4.34.0.zip
+//go:embed assets/adblock_4_42_0_0.zip
 var adblockFolder []byte
 
 var adblockSavePath string
