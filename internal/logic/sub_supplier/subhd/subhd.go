@@ -55,7 +55,7 @@ func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
 	sup.tt = common.HTMLTimeOut
 	sup.debugMode = sup.reqParam.DebugMode
 	if sup.reqParam.DebugMode == true {
-		sup.tt = common.OneVideoProcessTimeOut
+		sup.tt = common.OneMovieProcessTimeOut
 	}
 
 	return &sup
@@ -668,11 +668,11 @@ func (s Supplier) httpGetFromBrowser(browser *rod.Browser, inputUrl string) (str
 	if err != nil {
 		return "", nil, err
 	}
-	// 每次搜索间隔在 30-40s
+	// 每次搜索间隔
 	if s.debugMode == true {
 		time.Sleep(my_util.RandomSecondDuration(5, 10))
 	} else {
-		time.Sleep(my_util.RandomSecondDuration(30, 40))
+		time.Sleep(my_util.RandomSecondDuration(5, 15))
 	}
 
 	return pageString, page, nil

@@ -6,6 +6,7 @@ import (
 	series_helper2 "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/something_static"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"path/filepath"
 	"testing"
 )
@@ -24,7 +25,7 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	movie1 := filepath.Join(rootDir, "zimuku", "movies", "消失爱人 (2016)", "消失爱人 (2016) 720p AAC.rmvb")
 
-	subhd := NewSupplier()
+	subhd := NewSupplier(types.ReqParam{DebugMode: true})
 	outList, err := subhd.getSubListFromFile4Movie(movie1)
 	if err != nil {
 		t.Error(err)
@@ -56,7 +57,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := NewSupplier()
+	s := NewSupplier(types.ReqParam{DebugMode: true})
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -78,7 +79,7 @@ func TestSupplier_getSubListFromKeyword4Movie(t *testing.T) {
 	//imdbID := "tt15299712" // 云南虫谷
 	//imdbID := "tt3626476" // Vacation Friends (2021)
 	getCode()
-	subhd := NewSupplier()
+	subhd := NewSupplier(types.ReqParam{DebugMode: true})
 	subInfos, err := subhd.getSubListFromKeyword4Movie(imdbID)
 	if err != nil {
 		t.Fatal(err)

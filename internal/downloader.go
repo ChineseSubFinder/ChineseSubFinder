@@ -256,7 +256,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	antPool, err := ants.NewPoolWithFunc(d.reqParam.Threads, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), common.OneVideoProcessTimeOut)
+		ctx, cancel := context.WithTimeout(context.Background(), common.OneMovieProcessTimeOut)
 		defer cancel()
 
 		done := make(chan error, 1)
@@ -391,7 +391,7 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	antPool, err := ants.NewPoolWithFunc(d.reqParam.Threads, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), common.OneVideoProcessTimeOut)
+		ctx, cancel := context.WithTimeout(context.Background(), common.OneSeriesProcessTimeOut)
 		defer cancel()
 
 		done := make(chan error, 1)
