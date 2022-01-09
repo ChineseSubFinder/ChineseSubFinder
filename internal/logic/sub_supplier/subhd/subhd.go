@@ -36,6 +36,7 @@ type Supplier struct {
 	topic       int
 	rodLauncher *launcher.Launcher
 	tt          time.Duration
+	debugMode   bool
 }
 
 func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
@@ -52,6 +53,7 @@ func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
 
 	// 默认超时是 2 * 60s，如果是调试模式则是 5 min
 	sup.tt = common.HTMLTimeOut
+	sup.debugMode = sup.reqParam.DebugMode
 	if sup.reqParam.DebugMode == true {
 		sup.tt = common.OneVideoProcessTimeOut
 	}
@@ -667,7 +669,11 @@ func (s Supplier) httpGetFromBrowser(browser *rod.Browser, inputUrl string) (str
 		return "", nil, err
 	}
 	// 每次搜索间隔在 30-40s
-	time.Sleep(my_util.RandomSecondDuration(5, 10))
+	if s.debugMode == true {
+		time.Sleep(my_util.RandomSecondDuration(5, 10))
+	} else {
+		time.Sleep(my_util.RandomSecondDuration(30, 40))
+	}
 
 	return pageString, page, nil
 }
