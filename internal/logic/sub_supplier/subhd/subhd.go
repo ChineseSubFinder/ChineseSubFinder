@@ -672,7 +672,7 @@ func (s Supplier) httpGetFromBrowser(browser *rod.Browser, inputUrl string) (str
 	if s.debugMode == true {
 		time.Sleep(my_util.RandomSecondDuration(5, 10))
 	} else {
-		time.Sleep(my_util.RandomSecondDuration(5, 15))
+		time.Sleep(my_util.RandomSecondDuration(5, 20))
 	}
 
 	return pageString, page, nil
