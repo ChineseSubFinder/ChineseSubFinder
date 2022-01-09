@@ -311,6 +311,9 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 			d.log.Error("ClearRootTmpFolder", err)
 		}
 		d.log.Infoln("Download Series Sub End...")
+
+		my_util.CloseChrome()
+		d.log.Infoln("CloseChrome")
 	}()
 	d.log.Infoln("Download Series Sub Started...")
 

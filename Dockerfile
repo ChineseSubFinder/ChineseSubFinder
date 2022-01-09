@@ -28,6 +28,23 @@ RUN ln -s /root/.cache/rod/chromium-856583/chrome-linux/chrome /usr/bin/chrome &
     yasm ffmpeg \
     # C、C++ 支持库
     libgcc-6-dev libstdc++6 \
+    # chromium dependencies
+    libnss3 \
+    libxss1 \
+    libasound2 \
+    libxtst6 \
+    libgtk-3-0 \
+    libgbm1 \
+    # fonts
+    fonts-liberation fonts-noto-color-emoji fonts-noto-cjk \
+    # processs reaper
+    dumb-init \
+    # headful mode support, for example: $ xvfb-run chromium-browser --remote-debugging-port=9222
+    xvfb \
+    xorg gtk2-engines-pixbuf \
+    dbus-x11 xfonts-base xfonts-100dpi xfonts-75dpi xfonts-cyrillic xfonts-scalable \
+    imagemagick x11-apps \
+    # 通用
     ca-certificates \
     wget \
     # cleanup

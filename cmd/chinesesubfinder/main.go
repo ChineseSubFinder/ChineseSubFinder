@@ -9,6 +9,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/proxy_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/something_static"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
@@ -122,10 +123,10 @@ func main() {
 	// 初始化通知缓存模块
 	notify_center.Notify = notify_center.NewNotifyCenter(config.WhenSubSupplierInvalidWebHook)
 
-	//log.Infoln("ReloadBrowser Start...")
-	//// ReloadBrowser 提前把浏览器下载好
-	//rod_helper.ReloadBrowser()
-	//log.Infoln("ReloadBrowser End")
+	log.Infoln("ReloadBrowser Start...")
+	// ReloadBrowser 提前把浏览器下载好
+	rod_helper.ReloadBrowser()
+	log.Infoln("ReloadBrowser End")
 
 	// 任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
@@ -189,7 +190,7 @@ func DownLoadStart(httpProxy string) {
 	defer func() {
 		log.Infoln("Download One End...")
 		notify_center.Notify.Send()
-		//pkg.CloseChrome()
+		//my_util.CloseChrome()
 		//rod_helper.Clear()
 	}()
 

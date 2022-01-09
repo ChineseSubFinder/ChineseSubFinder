@@ -273,7 +273,7 @@ func CloseChrome() {
 	}
 	if sysType == "windows" {
 		// windows系统
-		cmdString = "taskkill /F /im notepad.exe"
+		cmdString = "taskkill /F /im chrome.exe"
 		command = exec.Command("cmd.exe", "/c", cmdString)
 	}
 	if sysType == "darwin" {
