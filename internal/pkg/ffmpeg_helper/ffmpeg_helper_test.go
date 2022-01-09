@@ -13,7 +13,7 @@ func TestGetFFMPEGInfo(t *testing.T) {
 	// TODO: make a video with ffmpeg on each test
 	// https://gist.github.com/SeunghoonBaek/f35e0fd3db80bf55c2707cae5d0f7184
 	// http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4
-	videoFile := unit_test_helper.GetTestDataResourceRootPath([]string{"ffmpeg"}, 4, false)
+	videoFile := unit_test_helper.GetTestDataResourceRootPath([]string{"ffmpeg", "org"}, 4, false)
 	videoFile = filepath.Join(videoFile, "sampleVideo.mp4")
 	f := NewFFMPEGHelper()
 	bok, ffmpegInfo, err := f.GetFFMPEGInfo(videoFile, Audio)
@@ -39,7 +39,7 @@ func readString(filePath string) string {
 
 func TestParseJsonString2GetFFMPEGInfo(t *testing.T) {
 
-	testDataPath := unit_test_helper.GetTestDataResourceRootPath([]string{"ffmpeg"}, 4, false)
+	testDataPath := unit_test_helper.GetTestDataResourceRootPath([]string{"ffmpeg", "org"}, 4, false)
 	type args struct {
 		videoFileFullPath string
 		input             string
@@ -103,7 +103,7 @@ func TestExportAudioArgsByTimeRange(t *testing.T) {
 
 func TestGetAudioInfo(t *testing.T) {
 
-	testDataPath := unit_test_helper.GetTestDataResourceRootPath([]string{"ffmpeg"}, 4, false)
+	testDataPath := unit_test_helper.GetTestDataResourceRootPath([]string{"ffmpeg", "org"}, 4, false)
 	audioFullPath := filepath.Join(testDataPath, "sampleAudio.wav")
 
 	f := NewFFMPEGHelper()

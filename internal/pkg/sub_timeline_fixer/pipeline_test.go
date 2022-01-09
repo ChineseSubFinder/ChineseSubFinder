@@ -117,6 +117,10 @@ func TestPipeline_FitGSS(t *testing.T) {
 }
 
 func TestPipeline_FitGSSByAudio(t *testing.T) {
+
+	dirRoot := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_timeline_fixer"}, 4, true)
+	dirRoot = filepath.Join(dirRoot, "mix")
+
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
 	type args struct {
@@ -136,20 +140,20 @@ func TestPipeline_FitGSSByAudio(t *testing.T) {
 		{name: "Rick and Morty - S05E01 -- 0",
 			args: args{
 				audioInfo: vad.AudioInfo{
-					FileFullPath: "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\未知语言_1.pcm",
+					FileFullPath: filepath.Join(dirRoot, "Rick and Morty - S05E01", "未知语言_1.pcm"),
 				},
-				subFilePath:     "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\英_2.ass",
-				srcFixedSubFile: "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\org-fix.ass"},
+				subFilePath:     filepath.Join(dirRoot, "Rick and Morty - S05E01", "英_2.ass"),
+				srcFixedSubFile: filepath.Join(dirRoot, "Rick and Morty - S05E01", "org-fix.ass")},
 			want: true, want1: 0.33,
 		},
 		// Rick and Morty - S05E01
 		{name: "Rick and Morty - S05E01 -- 1",
 			args: args{
 				audioInfo: vad.AudioInfo{
-					FileFullPath: "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\未知语言_1.pcm",
+					FileFullPath: filepath.Join(dirRoot, "Rick and Morty - S05E01", "未知语言_1.pcm"),
 				},
-				subFilePath:     "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\org.ass",
-				srcFixedSubFile: "C:\\Tmp\\fixsubtimeline\\Rick and Morty - S05E01\\org-fix.ass"},
+				subFilePath:     filepath.Join(dirRoot, "Rick and Morty - S05E01", "org.ass"),
+				srcFixedSubFile: filepath.Join(dirRoot, "Rick and Morty - S05E01", "org-fix.ass")},
 			want: true, want1: -6.1,
 		},
 	}
