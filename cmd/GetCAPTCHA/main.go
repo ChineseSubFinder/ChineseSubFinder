@@ -28,10 +28,11 @@ func main() {
 		return
 	}
 	// 先执行一次
+	log_helper.GetLogger().Infoln("-----------------------------------------")
+	log_helper.GetLogger().Infoln("First Time Start")
 	err = Process()
 	if err != nil {
 		log_helper.GetLogger().Errorln(err.Error())
-		return
 	}
 
 	c.Start()
