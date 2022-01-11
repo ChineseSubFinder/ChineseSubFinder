@@ -41,8 +41,17 @@ func NewLogHelper(appName string, level logrus.Level, maxAge time.Duration, rota
 	return Logger
 }
 
+// SetLoggerName 如果是 ChineseSubFinder 调用则无需使用，其他子程序用的时候，为了区分日子名称，需要设置
+func SetLoggerName(logName string) {
+	if logName == "" {
+		panic("Need Set Logger Name")
+	}
+	logNameBase = logName
+}
+
 func GetLogger() *logrus.Logger {
-	logOnce.Do(func() {
+
+	oneBase.Do(func() {
 
 		var level logrus.Level
 		// 之前是读取配置文件，现在改为，读取当前目录下，是否有一个特殊的文件，有则启动 Debug 日志级别
@@ -52,9 +61,16 @@ func GetLogger() *logrus.Logger {
 		} else {
 			level = logrus.InfoLevel
 		}
-		logger = NewLogHelper("ChineseSubFinder", level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
+
+		if logNameBase == "" {
+			// 默认不设置的时候就是这个
+			logNameBase = LogNameChineseSubFinder
+		}
+
+		loggerBase = NewLogHelper(logNameBase, level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
 	})
-	return logger
+
+	return loggerBase
 }
 
 func isFile(filePath string) bool {
@@ -71,7 +87,9 @@ func WriteDebugFile() error {
 		return nil
 	}
 	f, err := os.Create(DebugFileName)
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 	if err != nil {
 		return err
 	}
@@ -93,5 +111,14 @@ func DeleteDebugFile() error {
 
 const DebugFileName = "opendebuglog"
 
-var logger *logrus.Logger
-var logOnce sync.Once
+const (
+	LogNameChineseSubFinder = "ChineseSubFinder"
+	LogNameGetCAPTCHA       = "GetCAPTCHA"
+	LogNameBackEnd          = "BackEnd"
+)
+
+var (
+	logNameBase = ""
+	oneBase     = sync.Once{}
+	loggerBase  *logrus.Logger
+)

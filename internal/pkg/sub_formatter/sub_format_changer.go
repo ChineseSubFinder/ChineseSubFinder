@@ -203,7 +203,13 @@ func GetSubFormatter(subNameFormatter int) ifaces.ISubFormatter {
 // SubFormatChangerProcess 执行 SubFormatChanger 逻辑，并且更新数据库缓存
 func SubFormatChangerProcess(movieRootDir string, seriesRootDir string, nowDesFormatter common.FormatterName) (RenameResults, error) {
 	var subFormatRec models.SubFormatRec
-	dao.GetDb().First(&subFormatRec)
+	re := dao.GetDb().First(&subFormatRec)
+	if re == nil {
+		return RenameResults{}, errors.New(fmt.Sprintf("SubFormatChangerProcess dao.GetDb().First return nil"))
+	}
+	if re.Error != nil {
+		return RenameResults{}, errors.New(fmt.Sprintf("SubFormatChangerProcess dao.GetDb().First, %v", re.Error))
+	}
 	subFormatChanger := NewSubFormatChanger(movieRootDir, seriesRootDir)
 	// 理论上有且仅有一条记录
 	if subFormatRec.Done == false {
@@ -215,7 +221,13 @@ func SubFormatChangerProcess(movieRootDir string, seriesRootDir string, nowDesFo
 
 		// 需要记录到数据库中
 		oneSubFormatter := models.SubFormatRec{FormatName: int(nowDesFormatter), Done: true}
-		dao.GetDb().Create(&oneSubFormatter)
+		re = dao.GetDb().Create(&oneSubFormatter)
+		if re == nil {
+			return RenameResults{}, errors.New(fmt.Sprintf("SubFormatChangerProcess dao.GetDb().Create return nil"))
+		}
+		if re.Error != nil {
+			return RenameResults{}, errors.New(fmt.Sprintf("SubFormatChangerProcess dao.GetDb().Create, %v", re.Error))
+		}
 		return renameResults, nil
 	} else {
 		// 找到了，需要判断上一次执行的目标 formatter 是啥，如果这次的目标 formatter 不一样则执行
@@ -232,7 +244,13 @@ func SubFormatChangerProcess(movieRootDir string, seriesRootDir string, nowDesFo
 		// 更新数据库
 		subFormatRec.FormatName = int(nowDesFormatter)
 		subFormatRec.Done = true
-		dao.GetDb().Save(subFormatRec)
+		re = dao.GetDb().Save(subFormatRec)
+		if re == nil {
+			return RenameResults{}, errors.New(fmt.Sprintf("SubFormatChangerProcess dao.GetDb().Save return nil"))
+		}
+		if re.Error != nil {
+			return RenameResults{}, errors.New(fmt.Sprintf("SubFormatChangerProcess dao.GetDb().Save, %v", re.Error))
+		}
 		return renameResults, nil
 	}
 }

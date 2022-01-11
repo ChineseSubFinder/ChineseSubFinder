@@ -56,6 +56,9 @@ func HotFixProcess(param types.HotFixParam) error {
 			// 执行成功则存入数据库中，标记完成
 			markHotFixDone := models.HotFix{Key: hotfixCase.GetKey(), Done: true}
 			result = dao.GetDb().Create(&markHotFixDone)
+			if result == nil {
+				return errors.New(fmt.Sprintf("hotfix %s is done, but record failed, dao.GetDb().Create return nil", hotfixCase.GetKey()))
+			}
 			if result.Error != nil {
 				return errors.New(fmt.Sprintf("hotfix %s is done, but record failed, %s", hotfixCase.GetKey(), result.Error))
 			}

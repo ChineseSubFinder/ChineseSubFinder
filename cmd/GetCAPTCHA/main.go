@@ -10,6 +10,8 @@ import (
 
 func main() {
 
+	log_helper.SetLoggerName(log_helper.LogNameGetCAPTCHA)
+
 	notify_center.Notify = notify_center.NewNotifyCenter(config.GetConfig().WhenSubSupplierInvalidWebHook)
 
 	// 任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行

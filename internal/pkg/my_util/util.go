@@ -11,6 +11,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	browser "github.com/allanpk716/fake-useragent"
 	"github.com/go-resty/resty/v2"
+	"github.com/google/uuid"
 	"io"
 	"math"
 	"net/http"
@@ -524,4 +525,10 @@ func GetNowTimeString() (string, int, int, int) {
 	nowTime := time.Now()
 	addString := fmt.Sprintf("%d-%d-%d", nowTime.Hour(), nowTime.Minute(), nowTime.Nanosecond())
 	return addString, nowTime.Hour(), nowTime.Minute(), nowTime.Nanosecond()
+}
+
+// GenerateAccessToken 生成随机的 AccessToken
+func GenerateAccessToken() string {
+	u4 := uuid.New()
+	return u4.String()
 }

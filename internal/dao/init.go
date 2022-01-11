@@ -71,7 +71,8 @@ you need implement getDbName() in file: internal/dao/init.go `))
 		return errors.New(fmt.Sprintf("failed to connect database, %s", err.Error()))
 	}
 	// 迁移 schema
-	err = db.AutoMigrate(&models.HotFix{}, &models.SubFormatRec{})
+	err = db.AutoMigrate(&models.HotFix{}, &models.SubFormatRec{},
+		&models.UserInfo{})
 	if err != nil {
 		return errors.New(fmt.Sprintf("db AutoMigrate error, %s", err.Error()))
 	}
