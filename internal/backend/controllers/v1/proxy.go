@@ -8,4 +8,5 @@ func (cb ControllerBase) CheckProxyHandler(c *gin.Context) {
 		// 统一的异常处理
 		cb.ErrorProcess(c, "CheckProxyHandler", err)
 	}()
+
 }

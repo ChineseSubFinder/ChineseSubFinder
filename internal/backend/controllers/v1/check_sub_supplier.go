@@ -15,7 +15,7 @@ func (cb ControllerBase) CheckSubSupplierHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
-		cb.ErrorProcess(c, "LoginHandler", err)
+		cb.ErrorProcess(c, "CheckSubSupplierHandler", err)
 	}()
 	nowUserInfo := models.UserInfo{}
 	err = c.ShouldBindJSON(&nowUserInfo)
