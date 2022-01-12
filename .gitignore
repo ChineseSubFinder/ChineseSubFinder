@@ -61,3 +61,4 @@ TestData/
 /.idea
 /internal/backend/Logs
 /internal/backend
+/internal/pkg/task_control/Logs/*.log

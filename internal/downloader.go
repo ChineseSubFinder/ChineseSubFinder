@@ -661,9 +661,3 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 
 	return nil
 }
-
-type InputData struct {
-	OneVideoFullPath string
-	Index            int
-	Wg               *sync.WaitGroup
-}
