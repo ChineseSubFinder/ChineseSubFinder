@@ -82,32 +82,34 @@ func (tc *TaskControl) baseFuncHandler(inData interface{}) {
 
 	data := inData.(*TaskData)
 
-	defer func() {
-		tc.log.Debugln("Index:", data.Index, "baseFuncHandler wg.Done()")
-		tc.wgBase.Done()
-	}()
+	// 如果已经执行 Release 则返回
+	tc.commonLock.Lock()
+	if tc.released == true {
+		tc.log.Debugln("Index:", data.Index, "released == true")
+		return
+	}
+	tc.commonLock.Unlock()
 
 	// 实际执行的时候
 	tc.wgBase.Add(1)
 	tc.log.Debugln("Index:", data.Index, "baseFuncHandler wg.Add()")
+
+	tc.log.Debugln("Index:", data.Index, "baseFuncHandler wg.Done()")
+	tc.wgBase.Done()
 
 	var ctx context.Context
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(tc.oneCtxTimeOutSecond)*time.Second)
 	defer func() {
 
 		// 那么对应的需要取消掉 map 中的记录
+		tc.log.Debugln("Index:", data.Index, "baseFuncHandler cancelMapLock Lock() defer")
 		tc.cancelMapLock.Lock()
 		delete(tc.cancelMap, data.Index)
 		tc.cancelMapLock.Unlock()
+		tc.log.Debugln("Index:", data.Index, "baseFuncHandler cancelMapLock UnLock() defer")
 		cancel()
-	}()
 
-	// 如果已经执行 Release 则返回
-	tc.commonLock.Lock()
-	if tc.released == true {
-		return
-	}
-	tc.commonLock.Unlock()
+	}()
 
 	// 记录 cancel
 	tc.log.Debugln("Index:", data.Index, "baseFuncHandler cancelMapLock Lock()")
@@ -277,6 +279,7 @@ type TaskData struct {
 	Index            int64
 	Status           TaskState // 执行情况, 0 是成功，1 是未执行，2 是错误或者超时
 	OneVideoFullPath string
+	DataEx           interface{}
 }
 
 type TaskState int
