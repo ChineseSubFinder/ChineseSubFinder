@@ -222,6 +222,42 @@ func TestTaskControl_Invoke(t *testing.T) {
 					NeedRelease:      true}},
 			successProcessCount: 1,
 		},
+		{
+			name: "16", args: args{
+				TimeTester{PoolName: "16",
+					ConcurrentCount:  3,
+					JobCount:         5,
+					TimeAfterRelease: 4,
+					OneJobWaitTime:   3,
+					OneJobTimeOut:    4,
+					SelfHold:         true,
+					NeedRelease:      true}},
+			successProcessCount: 3,
+		},
+		{
+			name: "17", args: args{
+				TimeTester{PoolName: "17",
+					ConcurrentCount:  4,
+					JobCount:         5,
+					TimeAfterRelease: 4,
+					OneJobWaitTime:   3,
+					OneJobTimeOut:    4,
+					SelfHold:         true,
+					NeedRelease:      true}},
+			successProcessCount: 4,
+		},
+		{
+			name: "18", args: args{
+				TimeTester{PoolName: "18",
+					ConcurrentCount:  5,
+					JobCount:         5,
+					TimeAfterRelease: 4,
+					OneJobWaitTime:   3,
+					OneJobTimeOut:    4,
+					SelfHold:         true,
+					NeedRelease:      true}},
+			successProcessCount: 5,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
