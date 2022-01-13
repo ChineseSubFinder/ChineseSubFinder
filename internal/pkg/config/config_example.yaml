@@ -1,0 +1,7 @@
+HttpProxy: http://127.0.0.1:10809
+EveryTime: 12h
+Threads: 3
+RunAtStartup: true
+MovieFolder: /media/movies
+SeriesFolder: /media/tv
+CustomVideoExts: abc,efg

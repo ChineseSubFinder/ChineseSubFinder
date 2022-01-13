@@ -40,7 +40,5 @@ RUN ln -s /root/.cache/rod/chromium-856583/chrome-linux/chrome /usr/bin/chrome &
 COPY Docker/root/ /
 # 主程序
 COPY --from=builder /app/chinesesubfinder /app/chinesesubfinder
-# 配置文件
-COPY --from=builder /homelab/buildspace/config.yaml.sample /app/config.yaml
 
 VOLUME /config /media

@@ -1,9 +1,10 @@
 package my_util
 
 import (
+	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
@@ -173,24 +174,9 @@ func SearchMatchedVideoFile(dir string) ([]string, error) {
 
 // IsWantedVideoExtDef 后缀名是否符合规则
 func IsWantedVideoExtDef(fileName string) bool {
-
-	if len(global_value.WantedExtMap) < 1 {
-		global_value.DefExtMap[common.VideoExtMp4] = common.VideoExtMp4
-		global_value.DefExtMap[common.VideoExtMkv] = common.VideoExtMkv
-		global_value.DefExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
-		global_value.DefExtMap[common.VideoExtIso] = common.VideoExtIso
-
-		global_value.WantedExtMap[common.VideoExtMp4] = common.VideoExtMp4
-		global_value.WantedExtMap[common.VideoExtMkv] = common.VideoExtMkv
-		global_value.WantedExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
-		global_value.WantedExtMap[common.VideoExtIso] = common.VideoExtIso
-
-		for _, videoExt := range global_value.CustomVideoExts {
-			global_value.WantedExtMap[videoExt] = videoExt
-		}
-	}
-	fileExt := strings.ToLower(filepath.Ext(fileName))
-	_, bFound := global_value.WantedExtMap[fileExt]
+	c := config.GetConfig()
+	fileExt := strings.ToLower(strings.TrimLeft(filepath.Ext(fileName), "."))
+	_, bFound := c.SupportedVideoExts[fileExt]
 	return bFound
 }
 
@@ -291,16 +277,12 @@ func CloseChrome() {
 }
 
 // OSCheck 强制的系统支持检查
-func OSCheck() bool {
+func OSCheck() error {
 	sysType := runtime.GOOS
-	if sysType == "linux" {
-		return true
+	if sysType != "linux" && sysType != "windows" {
+		return errors.New("not supported OS")
 	}
-	if sysType == "windows" {
-		return true
-	}
-
-	return false
+	return nil
 }
 
 // FixWindowPathBackSlash 修复 Windows 反斜杠的梗

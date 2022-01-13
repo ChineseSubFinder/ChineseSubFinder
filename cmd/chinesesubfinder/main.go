@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal"
 	commonValue "github.com/allanpk716/ChineseSubFinder/internal/common"
 	config2 "github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
@@ -16,9 +17,32 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const conf = "config"
+
 func init() {
+	if err := my_util.OSCheck(); err != nil {
+		panic(`only support Linux and Windows, if you want to support MacOS, 
+				you need implement getDbName() in file: 
+				internal/dao/init.go 
+				and implement getSpeFileName() in file: 
+				internal/logic/forced_scan_and_down_sub/forced_scan_and_down_sub.go`)
+	}
+
+	if err := config2.LoadConfig(conf); err != nil {
+		panic(err)
+	}
+}
+
+func main() {
+	log = log_helper.GetLogger()
+	log.Infoln("ChineseSubFinder Version:", AppVersion)
 
 	config = config2.GetConfig()
+	log.Infoln(fmt.Sprintf("config: %+v", *config))
+	if err := config2.CheckConfig(); err != nil {
+		panic(err)
+	}
+
 	// 根据配置文件的情况去生成是否需要开启日志 Debug 记录级别的特殊文件
 	if config.DebugMode == true {
 		err := log_helper.WriteDebugFile()
@@ -32,33 +56,9 @@ func init() {
 		}
 	}
 
-	log = log_helper.GetLogger()
-
-	log.Infoln("ChineseSubFinder Version:", AppVersion)
-
-	if my_util.OSCheck() == false {
-		panic(`only support Linux and Windows, if you want support MacOS, 
-you need implement getDbName() in file: internal/dao/init.go 
-and 
-implement getSpeFileName() in internal/logic/forced_scan_and_down_sub/forced_scan_and_down_sub.go`)
-	}
-}
-
-func main() {
-	if log == nil {
-		panic("log init error")
-	}
-	if config == nil {
-		panic("read config error")
-	}
 	httpProxy := config.HttpProxy
-	if config.UseProxy == false {
-		httpProxy = ""
-	}
-	if config.UseProxy == false {
-		log.Infoln("UseProxy = false")
-	} else {
-		log.Infoln("UseProxy:", httpProxy)
+	if httpProxy != "" {
+		log.Infoln("start to test http proxy:", httpProxy)
 		proxySpeed, proxyStatus, err := proxy_helper.ProxyTest(httpProxy)
 		if err != nil {
 			log.Errorln("ProxyTest Target Site http://google.com", err)
@@ -67,19 +67,6 @@ func main() {
 			log.Infoln("ProxyTest Target Site http://google.com", "Speed:", proxySpeed, "Status:", proxyStatus)
 		}
 	}
-
-	// 判断文件夹是否存在
-	if my_util.IsDir(config.MovieFolder) == false {
-		log.Errorln("MovieFolder not found --", config.MovieFolder)
-		return
-	}
-	if my_util.IsDir(config.SeriesFolder) == false {
-		log.Errorln("SeriesFolder not found --", config.SeriesFolder)
-		return
-	}
-	// 读取到的文件夹信息展示
-	log.Infoln("MovieFolder:", config.MovieFolder)
-	log.Infoln("SeriesFolder:", config.SeriesFolder)
 
 	// ------ Hot Fix Start ------
 	// 开始修复
