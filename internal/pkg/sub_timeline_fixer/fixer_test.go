@@ -370,7 +370,7 @@ func TestGetOffsetTimeV1(t *testing.T) {
 	}
 }
 
-var timelineFixer = NewSubTimelineFixer(sub_timeline_fiexer.SubTimelineFixerConfig{
+var timelineFixer = NewSubTimelineFixer(sub_timeline_fixer.SubTimelineFixerConfig{
 	// V1
 	V1_MaxCompareDialogue: 3,
 	V1_MaxStartTimeDiffSD: 0.1,

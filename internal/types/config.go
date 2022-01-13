@@ -6,8 +6,7 @@ import (
 )
 
 type Config struct {
-	UseProxy                      bool                                       // 是否启用的代理
-	HttpProxy                     string                                     // http 代理地址
+	HttpProxy                     string                                     // http proxy, will not be used if it is empty
 	EveryTime                     string                                     // 一轮扫描字幕下载的间隔时间
 	DebugMode                     bool                                       // 是否启用 Debug 模式，调试功能
 	Threads                       int                                        // 同时并发的线程数（准确来说在go中不是线程，是 goroutine）
@@ -25,4 +24,7 @@ type Config struct {
 	MovieFolder  string // 电影文件夹
 	SeriesFolder string // 连续剧文件夹
 	AnimeFolder  string // 日本动画文件夹，很可能不会实现该功能
+
+	//invisible
+	SupportedVideoExts map[string]int
 }

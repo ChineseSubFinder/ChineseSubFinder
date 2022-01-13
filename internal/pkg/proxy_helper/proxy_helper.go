@@ -1,21 +1,12 @@
 package proxy_helper
 
 import (
-	"errors"
 	"net/http"
 	"net/url"
-	"regexp"
 	"time"
 )
 
 func ProxyTest(proxyAddr string) (Speed int, Status int, err error) {
-	// 首先检测 proxyAddr 是否合法，必须是 http 的代理，不支持 https 代理
-	re := regexp.MustCompile(`(http):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?`)
-	result := re.FindAllStringSubmatch(proxyAddr, -1)
-	if result == nil {
-		err = errors.New("proxy address illegal, only support http://xx:xx")
-		return 0, 0, err
-	}
 	// 检测代理iP访问地址
 	var testUrl string
 	testUrl = "http://google.com"

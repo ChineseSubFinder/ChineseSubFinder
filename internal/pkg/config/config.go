@@ -3,90 +3,92 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/spf13/viper"
 	"os"
-	"runtime"
+	"regexp"
 	"strings"
-	"sync"
 )
 
 // GetConfig 统一获取配置的接口
 func GetConfig() *types.Config {
-	configOnce.Do(func() {
-		configViper, err := initConfigure()
-		if err != nil {
-			panic("GetConfig - initConfigure " + err.Error())
-		}
-		config, err = readConfig(configViper)
-		if err != nil {
-			panic("GetConfig - readConfig " + err.Error())
-		}
-		// 读取用户自定义的视频后缀名列表
-		for _, customExt := range strings.Split(config.CustomVideoExts, ",") {
-			global_value.CustomVideoExts = append(global_value.CustomVideoExts, "."+customExt)
-		}
-
-		// 这里进行 Default 值的判断
-		config.SubTimelineFixerConfig.CheckDefault()
-	})
 	return config
 }
 
-// initConfigure 初始化配置文件实例
-func initConfigure() (*viper.Viper, error) {
-	nowConfigDir := getConfigDir()
-	if nowConfigDir == "" {
-		fmt.Sprintf("initConfigure().getConfigDir()")
-	}
-
+func LoadConfig(conf string) error {
+	config = &types.Config{}
 	v := viper.New()
-	v.SetConfigName("config")     // 设置文件名称（无后缀）
-	v.SetConfigType("yaml")       // 设置后缀名 {"1.6以后的版本可以不设置该后缀"}
-	v.AddConfigPath(nowConfigDir) // 设置文件所在路径
+	loadDefaults(v)
 
-	err := v.ReadInConfig()
-	if err != nil {
-		return nil, errors.New("error reading config:" + err.Error())
+	v.SetConfigName(conf)       // 设置文件名称（无后缀）
+	v.SetConfigType("yaml")     // 设置后缀名 {"1.6以后的版本可以不设置该后缀"}
+	v.AddConfigPath("/config/") // 设置文件所在路径
+	v.AddConfigPath(".")        // 设置文件所在路径
+
+	if err := v.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			//fmt.Println("config file not found, use defaults")
+		} else {
+			return fmt.Errorf("error for reading config file: %w \n", err)
+		}
 	}
 
-	return v, nil
+	v.AutomaticEnv()
+	v.AllowEmptyEnv(true)
+
+	if err := v.Unmarshal(config); err != nil {
+		return fmt.Errorf("error for unmarshaling config file: %w \n", err)
+	}
+
+	config.SupportedVideoExts = map[string]int{"mp4": 1, "mkv": 1, "rmvb": 1, "iso": 1}
+	// 读取用户自定义的视频后缀名列表
+	for _, customExt := range strings.Split(config.CustomVideoExts, ",") {
+		if customExt != "" {
+			c := strings.ToLower(strings.TrimLeft(customExt, "."))
+			config.SupportedVideoExts[c] = 1
+		}
+	}
+
+	return nil
 }
 
-// readConfig 读取配置文件
-func readConfig(viper *viper.Viper) (*types.Config, error) {
-	conf := &types.Config{}
-	err := viper.Unmarshal(conf)
+func CheckConfig() error {
+	errMsg := ""
+	f, err := os.Stat(config.MovieFolder)
 	if err != nil {
-		return nil, err
+		errMsg += fmt.Sprintf("MovieFolder %s not found\n", config.MovieFolder)
+	} else if !f.IsDir() {
+		errMsg += fmt.Sprintf("MovieFolder %s is not a directory\n", config.MovieFolder)
 	}
-	return conf, nil
+	f, err = os.Stat(config.SeriesFolder)
+	if err != nil {
+		errMsg += fmt.Sprintf("SeriesFolder %s not found\n", config.SeriesFolder)
+	} else if !f.IsDir() {
+		errMsg += fmt.Sprintf("SeriesFolder %s is not a directory\n", config.SeriesFolder)
+	}
+	if config.HttpProxy != "" {
+		re := regexp.MustCompile(`(http)://[\w\-_]+(\.[\w\-_]+)+([\w\-.,@?^=%&:/~+#]*[\w\-@?^=%&/~+#])?`)
+		if result := re.FindAllStringSubmatch(config.HttpProxy, -1); result == nil {
+			errMsg += fmt.Sprintf("proxy address %s is illegal, only support http://xx:xx", config.HttpProxy)
+		}
+	}
+	// 这里进行 Default 值的判断
+	config.SubTimelineFixerConfig.CheckDefault()
+	if errMsg != "" {
+		return errors.New(errMsg)
+	}
+	return nil
 }
 
-func getConfigDir() string {
-	nowConfigDir := ""
-	sysType := runtime.GOOS
-	if sysType == "linux" {
-		nowConfigDir = configDirLinux
-	}
-	if sysType == "windows" {
-		nowConfigDir = configDirWindows
-	}
-	if sysType == "darwin" {
-		home, _ := os.UserHomeDir()
-		nowConfigDir = home + "/.config/chinesesubfinder/" + configDirDarwin
-	}
-	return nowConfigDir
+func loadDefaults(v *viper.Viper) {
+	v.SetDefault("HttpProxy", "")
+	v.SetDefault("EveryTime", "12h")
+	v.SetDefault("Threads", 2)
+	v.SetDefault("RunAtStartup", true)
+	v.SetDefault("MovieFolder", "/media/电影")
+	v.SetDefault("SeriesFolder", "/media/连续剧")
 }
 
 var (
-	config     *types.Config
-	configOnce sync.Once
-)
-
-const (
-	configDirLinux   = "/config/"
-	configDirWindows = "."
-	configDirDarwin  = "."
+	config = &types.Config{}
 )
