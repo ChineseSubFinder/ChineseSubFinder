@@ -68,8 +68,8 @@ func (tc *TaskControl) Invoke(inData *TaskData) error {
 
 	err := tc.antPoolBase.Invoke(inData)
 	if err != nil {
-		tc.setTaskDataStatus(inData, Error)
-		tc.setExecuteStatus(inData.Index, Error)
+		tc.setTaskDataStatus(inData, NoExecute)
+		tc.setExecuteStatus(inData.Index, NoExecute)
 		tc.log.Debugln("Index:", inData.Index, "baseFuncHandler wg.Done()")
 		tc.wgBase.Done()
 		return err
