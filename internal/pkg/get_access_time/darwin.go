@@ -4,6 +4,7 @@ package get_access_time
 
 import (
 	"os"
+	"syscall"
 	"time"
 )
 

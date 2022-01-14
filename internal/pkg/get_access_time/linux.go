@@ -3,7 +3,9 @@
 package get_access_time
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"os"
+	"syscall"
 	"time"
 )
 
