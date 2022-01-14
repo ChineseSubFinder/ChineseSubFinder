@@ -14,33 +14,30 @@ type TaskControl struct {
 	wgBase              sync.WaitGroup
 	log                 *logrus.Logger
 	oneCtxTimeOutSecond int
-	bHold               bool
 	released            bool
 	// 传入的 func
 	ctxFunc func(ctx context.Context, inData interface{}) error
 	// 输入结构锁
-	inputDataMap     map[int64]*TaskData
+	inputDataMap     map[int]*TaskData
 	inputDataMapLock sync.Mutex
 	// 结束锁
-	cancelMap     map[int64]context.CancelFunc
+	cancelMap     map[int]context.CancelFunc
 	cancelMapLock sync.Mutex
 	// 执行情况, 0 是成功，1 是未执行，2 是错误或者超时
-	executeInfoMap     map[int64]TaskState
+	executeInfoMap     map[int]TaskState
 	executeInfoMapLock sync.Mutex
 
 	commonLock sync.Mutex
 }
 
-// NewTaskControl 这里有梗，按目前测试情况是，ants 设置的协程最大数量其实无法控制住，有可能会超出最大数量运行，所以有概率会失败
-// 特别是测试用例包含了提前结束的情况测试的时候（提前使用 Release），就会出现比期望的执行结果多出来的部分。
 func NewTaskControl(size int, log *logrus.Logger) (*TaskControl, error) {
 
 	var err error
 	tc := TaskControl{}
 	tc.log = log
-	tc.inputDataMap = make(map[int64]*TaskData, 0)
-	tc.cancelMap = make(map[int64]context.CancelFunc, 0)
-	tc.executeInfoMap = make(map[int64]TaskState, 0)
+	tc.inputDataMap = make(map[int]*TaskData, 0)
+	tc.cancelMap = make(map[int]context.CancelFunc, 0)
+	tc.executeInfoMap = make(map[int]TaskState, 0)
 	tc.antPoolBase, err = ants.NewPoolWithFunc(size, func(inData interface{}) {
 		tc.baseFuncHandler(inData)
 	})
@@ -62,6 +59,10 @@ func (tc *TaskControl) SetCtxProcessFunc(pollName string, pf func(ctx context.Co
 // Invoke 向 SetCtxProcessFunc 设置的 Func 中提交数据处理
 func (tc *TaskControl) Invoke(inData *TaskData) error {
 
+	// 实际执行的时候
+	tc.wgBase.Add(1)
+	tc.log.Debugln("Index:", inData.Index, "baseFuncHandler wg.Add()")
+
 	// 需要先记录有那些 ID 进来，然后再记录那些是完整执行的，以及出错执行的
 	tc.setExecuteStatus(inData.Index, NoExecute)
 
@@ -69,6 +70,8 @@ func (tc *TaskControl) Invoke(inData *TaskData) error {
 	if err != nil {
 		tc.setTaskDataStatus(inData, Error)
 		tc.setExecuteStatus(inData.Index, Error)
+		tc.log.Debugln("Index:", inData.Index, "baseFuncHandler wg.Done()")
+		tc.wgBase.Done()
 		return err
 	}
 
@@ -85,6 +88,11 @@ func (tc *TaskControl) baseFuncHandler(inData interface{}) {
 
 	data := inData.(*TaskData)
 
+	defer func() {
+		tc.log.Debugln("Index:", data.Index, "baseFuncHandler wg.Done()")
+		tc.wgBase.Done()
+	}()
+
 	// 如果已经执行 Release 则返回
 	nowRelease := false
 	tc.commonLock.Lock()
@@ -95,13 +103,6 @@ func (tc *TaskControl) baseFuncHandler(inData interface{}) {
 		tc.log.Debugln("Index:", data.Index, "released == true")
 		return
 	}
-
-	// 实际执行的时候
-	tc.wgBase.Add(1)
-	tc.log.Debugln("Index:", data.Index, "baseFuncHandler wg.Add()")
-
-	tc.log.Debugln("Index:", data.Index, "baseFuncHandler wg.Done()")
-	tc.wgBase.Done()
 
 	var ctx context.Context
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(tc.oneCtxTimeOutSecond)*time.Second)
@@ -165,11 +166,7 @@ func (tc *TaskControl) baseFuncHandler(inData interface{}) {
 
 // Hold 自身进行阻塞，如果你是使用 Web 服务器，那么应该无需使用该方法
 func (tc *TaskControl) Hold() {
-	tc.commonLock.Lock()
-	tc.bHold = true
-	tc.commonLock.Unlock()
-	tc.wgBase.Add(1)
-	tc.log.Debugln("Hold wg.Add()")
+	tc.log.Debugln("Hold()")
 	tc.wgBase.Wait()
 }
 
@@ -196,20 +193,8 @@ func (tc *TaskControl) Release() {
 
 	tc.log.Debugln("Release cancel() End")
 
-	var bHold bool
-	tc.commonLock.Lock()
-	bHold = tc.bHold
-	tc.commonLock.Unlock()
-	if bHold == true {
-		tc.log.Debugln("Release Hold wg.Done()")
-		tc.wgBase.Done()
-
-		tc.commonLock.Lock()
-		tc.bHold = false
-		tc.commonLock.Unlock()
-	}
-
 	tc.log.Debugln("Release End")
+	tc.log.Debugln("-------------------------------")
 }
 
 func (tc *TaskControl) Reboot() {
@@ -224,15 +209,15 @@ func (tc *TaskControl) Reboot() {
 		tc.antPoolBase.Reboot()
 		// 需要把缓存的 map 清理掉
 		tc.inputDataMapLock.Lock()
-		tc.inputDataMap = make(map[int64]*TaskData, 0)
+		tc.inputDataMap = make(map[int]*TaskData, 0)
 		tc.inputDataMapLock.Unlock()
 
 		tc.cancelMapLock.Lock()
-		tc.cancelMap = make(map[int64]context.CancelFunc, 0)
+		tc.cancelMap = make(map[int]context.CancelFunc, 0)
 		tc.cancelMapLock.Unlock()
 
 		tc.executeInfoMapLock.Lock()
-		tc.executeInfoMap = make(map[int64]TaskState, 0)
+		tc.executeInfoMap = make(map[int]TaskState, 0)
 		tc.executeInfoMapLock.Unlock()
 
 		tc.commonLock.Lock()
@@ -243,11 +228,11 @@ func (tc *TaskControl) Reboot() {
 
 // GetExecuteInfo 获取 所有 Invoke 的执行情况，需要在 下一次 Invoke 拿走，否则会清空
 // 成功执行的、未执行的、执行错误（超时）的
-func (tc *TaskControl) GetExecuteInfo() ([]int64, []int64, []int64) {
+func (tc *TaskControl) GetExecuteInfo() ([]int, []int, []int) {
 
-	successList := make([]int64, 0)
-	noExecuteList := make([]int64, 0)
-	errorList := make([]int64, 0)
+	successList := make([]int, 0)
+	noExecuteList := make([]int, 0)
+	errorList := make([]int, 0)
 
 	tc.executeInfoMapLock.Lock()
 
@@ -267,14 +252,14 @@ func (tc *TaskControl) GetExecuteInfo() ([]int64, []int64, []int64) {
 }
 
 // GetResult 获取 TaskData 的反馈值，需要在 下一次 Invoke 拿走，否则会清空
-func (tc *TaskControl) GetResult(index int64) (bool, *TaskData) {
+func (tc *TaskControl) GetResult(index int) (bool, *TaskData) {
 	tc.inputDataMapLock.Lock()
 	value, found := tc.inputDataMap[index]
 	tc.inputDataMapLock.Unlock()
 	return found, value
 }
 
-func (tc *TaskControl) setExecuteStatus(index int64, status TaskState) {
+func (tc *TaskControl) setExecuteStatus(index int, status TaskState) {
 	tc.executeInfoMapLock.Lock()
 	tc.executeInfoMap[index] = status
 	tc.executeInfoMapLock.Unlock()
@@ -287,7 +272,7 @@ func (tc *TaskControl) setTaskDataStatus(taskData *TaskData, status TaskState) {
 }
 
 type TaskData struct {
-	Index  int64
+	Index  int
 	Status TaskState // 执行情况, 0 是成功，1 是未执行，2 是错误或者超时
 	DataEx interface{}
 }
