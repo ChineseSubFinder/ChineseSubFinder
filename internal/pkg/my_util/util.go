@@ -349,6 +349,10 @@ func Time2Duration(inTime time.Time) time.Duration {
 	return time.Duration(Time2SecondNumber(inTime) * math.Pow10(9))
 }
 
+func Second2Time(sec int64) time.Time {
+	return time.Unix(sec, 0)
+}
+
 // ReplaceSpecString 替换特殊的字符
 func ReplaceSpecString(inString string, rep string) string {
 	return regex_things.RegMatchSpString.ReplaceAllString(inString, rep)
