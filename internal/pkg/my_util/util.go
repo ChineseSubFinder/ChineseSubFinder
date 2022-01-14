@@ -150,6 +150,9 @@ func VideoNameSearchKeywordMaker(title string, year string) string {
 // SearchMatchedVideoFile 搜索符合后缀名的视频文件
 func SearchMatchedVideoFile(dir string) ([]string, error) {
 
+	defer log_helper.GetLogger().Infoln("SearchMatchedVideoFile End")
+	log_helper.GetLogger().Infoln("SearchMatchedVideoFile Start...")
+
 	var fileFullPathList = make([]string, 0)
 	pathSep := string(os.PathSeparator)
 	files, err := os.ReadDir(dir)

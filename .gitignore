@@ -63,3 +63,4 @@ TestData/
 /internal/backend
 /internal/pkg/task_control/Logs/*.log
 /internal/pkg/task_control/opendebuglog
+/internal/pkg/downloader/Logs/*.log

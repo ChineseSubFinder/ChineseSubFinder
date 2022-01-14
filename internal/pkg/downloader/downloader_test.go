@@ -1,4 +1,4 @@
-package internal
+package downloader
 
 import (
 	"testing"
@@ -14,18 +14,23 @@ func TestDownloader_DownloadSub4Movie(t *testing.T) {
 	////dirRoot := "X:\\电影\\An Invisible Sign (2010)"
 	////dirRoot := "X:\\电影\\送你一朵小红花 (2020)"
 	////dirRoot := "X:\\电影\\冰海陷落 (2018)"
-	//dirRoot := "X:\\电影\\The Boss Baby Family Business (2021)"
+	////dirRoot := "X:\\电影\\The Boss Baby Family Business (2021)"
+	//dirRoot := "X:\\电影\\Don't Look Up (2021)"
 	////dirRoot := "X:\\电影"
 	//
 	//var config = types.Config{
 	//	SubNameFormatter: 0,
+	//	//MovieFolder:      "X:\\电影",
+	//	//SeriesFolder:     "X:\\连续剧",
 	//}
 	//
-	//dl := NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter), types.ReqParam{
+	//dl, err := NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter), types.ReqParam{
 	//	SaveMultiSub:    true,
 	//	SubTypePriority: 1,
-	//	//EmbyConfig:      config.EmbyConfig,
 	//})
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
 	////err = dl.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
 	////if err != nil {
 	////	t.Fatal(err)
@@ -57,11 +62,14 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 	//}
 	//
 	//// 如果需要调试 Emby 一定需要 dirRoot := "X:\\连续剧"
-	//dl := NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter), types.ReqParam{
+	//dl, err := NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter), types.ReqParam{
 	//	SaveMultiSub:    true,
 	//	SubTypePriority: 0,
 	//	//EmbyConfig:      config.EmbyConfig,
 	//})
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
 	////err = dl.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
 	////if err != nil {
 	////	t.Fatal(err)

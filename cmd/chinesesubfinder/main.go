@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal"
 	commonValue "github.com/allanpk716/ChineseSubFinder/internal/common"
 	config2 "github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -172,7 +172,7 @@ func DownLoadStart(httpProxy string) {
 	}
 
 	// 下载实例
-	downloader := internal.NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter),
+	dl, err := downloader.NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter),
 		types.ReqParam{
 			HttpProxy:                     httpProxy,
 			DebugMode:                     config.DebugMode,
@@ -187,6 +187,10 @@ func DownLoadStart(httpProxy string) {
 			FixTimeLine:            config.FixTimeLine,
 		})
 
+	if err != nil {
+		log.Errorln("NewDownloader", err)
+	}
+
 	defer func() {
 		log.Infoln("Download One End...")
 		notify_center.Notify.Send()
@@ -197,42 +201,42 @@ func DownLoadStart(httpProxy string) {
 	log.Infoln("Download One Started...")
 
 	// 优先级最高。读取特殊文件，启用一些特殊的功能，比如 forced_scan_and_down_sub
-	err = downloader.ReadSpeFile()
+	err = dl.ReadSpeFile()
 	if err != nil {
 		log.Errorln("ReadSpeFile", err)
 	}
 	// 从 csf-bk 文件还原时间轴修复前的字幕文件
-	if downloader.NeedRestoreFixTimeLineBK == true {
-		err = downloader.RestoreFixTimelineBK(config.MovieFolder, config.SeriesFolder)
+	if dl.NeedRestoreFixTimeLineBK == true {
+		err = dl.RestoreFixTimelineBK(config.MovieFolder, config.SeriesFolder)
 		if err != nil {
 			log.Errorln("RestoreFixTimelineBK", err)
 		}
 	}
 	// 刷新 Emby 的字幕，如果下载了字幕倒是没有刷新，则先刷新一次，便于后续的 Emby api 统计逻辑
-	err = downloader.RefreshEmbySubList()
+	err = dl.RefreshEmbySubList()
 	if err != nil {
 		log.Errorln("RefreshEmbySubList", err)
 		return
 	}
-	err = downloader.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
+	err = dl.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
 	if err != nil {
 		log.Errorln("GetUpdateVideoListFromEmby", err)
 		return
 	}
 	// 开始下载，电影
-	err = downloader.DownloadSub4Movie(config.MovieFolder)
+	err = dl.DownloadSub4Movie(config.MovieFolder)
 	if err != nil {
 		log.Errorln("DownloadSub4Movie", err)
 		return
 	}
 	// 开始下载，连续剧
-	err = downloader.DownloadSub4Series(config.SeriesFolder)
+	err = dl.DownloadSub4Series(config.SeriesFolder)
 	if err != nil {
 		log.Errorln("DownloadSub4Series", err)
 		return
 	}
 	// 刷新 Emby 的字幕，下载完毕字幕了，就统一刷新一下
-	err = downloader.RefreshEmbySubList()
+	err = dl.RefreshEmbySubList()
 	if err != nil {
 		log.Errorln("RefreshEmbySubList", err)
 		return

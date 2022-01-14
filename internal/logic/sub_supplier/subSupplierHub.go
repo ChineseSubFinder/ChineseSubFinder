@@ -81,7 +81,7 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, force
 		}
 		// 因为是下载电影，需要合并返回
 		var outSubFileFullPathList = make([]string, 0)
-		for s, _ := range organizeSubFiles {
+		for s := range organizeSubFiles {
 			outSubFileFullPathList = append(outSubFileFullPathList, organizeSubFiles[s]...)
 		}
 
