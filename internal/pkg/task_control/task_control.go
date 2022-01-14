@@ -31,12 +31,12 @@ type TaskControl struct {
 	commonLock sync.Mutex
 }
 
-func NewTaskControl(pollName string, size int, oneCtxTimeOutSecond int, log *logrus.Logger) (*TaskControl, error) {
+// NewTaskControl 这里有梗，按目前测试情况是，ants 设置的协程最大数量其实无法控制住，有可能会超出最大数量运行，所以有概率会失败
+// 特别是测试用例包含了提前结束的情况测试的时候（提前使用 Release），就会出现比期望的执行结果多出来的部分。
+func NewTaskControl(size int, log *logrus.Logger) (*TaskControl, error) {
 
 	var err error
 	tc := TaskControl{}
-	tc.pollName = pollName
-	tc.oneCtxTimeOutSecond = oneCtxTimeOutSecond
 	tc.log = log
 	tc.inputDataMap = make(map[int64]*TaskData, 0)
 	tc.cancelMap = make(map[int64]context.CancelFunc, 0)
@@ -52,8 +52,11 @@ func NewTaskControl(pollName string, size int, oneCtxTimeOutSecond int, log *log
 }
 
 // SetCtxProcessFunc 设置后续需要用到的单个任务的 Func，注意，如果之前的任务没有完成，不应该再次调用函数。建议进行 Release 后，再次调用
-func (tc *TaskControl) SetCtxProcessFunc(pf func(ctx context.Context, inData interface{}) error) {
+func (tc *TaskControl) SetCtxProcessFunc(pollName string, pf func(ctx context.Context, inData interface{}) error, oneCtxTimeOutSecond int) {
+
+	tc.pollName = pollName
 	tc.ctxFunc = pf
+	tc.oneCtxTimeOutSecond = oneCtxTimeOutSecond
 }
 
 // Invoke 向 SetCtxProcessFunc 设置的 Func 中提交数据处理
@@ -83,12 +86,15 @@ func (tc *TaskControl) baseFuncHandler(inData interface{}) {
 	data := inData.(*TaskData)
 
 	// 如果已经执行 Release 则返回
+	nowRelease := false
 	tc.commonLock.Lock()
-	if tc.released == true {
+	nowRelease = tc.released
+	tc.commonLock.Unlock()
+
+	if nowRelease == true {
 		tc.log.Debugln("Index:", data.Index, "released == true")
 		return
 	}
-	tc.commonLock.Unlock()
 
 	// 实际执行的时候
 	tc.wgBase.Add(1)
@@ -169,6 +175,7 @@ func (tc *TaskControl) Hold() {
 
 func (tc *TaskControl) Release() {
 
+	tc.log.Debugln("-------------------------------")
 	tc.log.Debugln("Release Start")
 
 	tc.commonLock.Lock()
@@ -196,6 +203,10 @@ func (tc *TaskControl) Release() {
 	if bHold == true {
 		tc.log.Debugln("Release Hold wg.Done()")
 		tc.wgBase.Done()
+
+		tc.commonLock.Lock()
+		tc.bHold = false
+		tc.commonLock.Unlock()
 	}
 
 	tc.log.Debugln("Release End")
@@ -276,10 +287,9 @@ func (tc *TaskControl) setTaskDataStatus(taskData *TaskData, status TaskState) {
 }
 
 type TaskData struct {
-	Index            int64
-	Status           TaskState // 执行情况, 0 是成功，1 是未执行，2 是错误或者超时
-	OneVideoFullPath string
-	DataEx           interface{}
+	Index  int64
+	Status TaskState // 执行情况, 0 是成功，1 是未执行，2 是错误或者超时
+	DataEx interface{}
 }
 
 type TaskState int
