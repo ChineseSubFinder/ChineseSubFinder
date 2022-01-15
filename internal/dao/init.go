@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/allanpk716/ChineseSubFinder/internal/models/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sqlite"
@@ -72,7 +73,8 @@ you need implement getDbName() in file: internal/dao/init.go `))
 	}
 	// 迁移 schema
 	err = db.AutoMigrate(&models.HotFix{}, &models.SubFormatRec{},
-		&models.UserInfo{})
+		&models.UserInfo{},
+		&settings.Settings{})
 	if err != nil {
 		return errors.New(fmt.Sprintf("db AutoMigrate error, %s", err.Error()))
 	}
