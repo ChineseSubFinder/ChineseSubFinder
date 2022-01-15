@@ -28,6 +28,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"path/filepath"
+	"sync"
 )
 
 // Downloader 实例化一次用一次，不要反复的使用，很多临时标志位需要清理。
@@ -46,7 +47,9 @@ type Downloader struct {
 
 	subTimelineFixerHelperEx *sub_timeline_fixer.SubTimelineFixerHelperEx // 字幕时间轴校正
 
-	taskControl *task_control.TaskControl
+	taskControl  *task_control.TaskControl
+	canceled     bool
+	canceledLock sync.Mutex
 }
 
 func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqParam) (*Downloader, error) {
@@ -127,12 +130,28 @@ func (d *Downloader) ReadSpeFile() error {
 	}
 	d.NeedRestoreFixTimeLineBK = needProcess_restore_fix_timeline_bk
 
+	d.log.Infoln("NeedRestoreFixTimeLineBK ==", needProcess_restore_fix_timeline_bk)
+
 	return nil
 }
 
 // GetUpdateVideoListFromEmby 这里首先会进行近期影片的获取，然后对这些影片进行刷新，然后在获取字幕列表，最终得到需要字幕获取的 video 列表
 func (d *Downloader) GetUpdateVideoListFromEmby(movieRootDir, seriesRootDir string) error {
 	if d.embyHelper == nil {
+		return nil
+	}
+	defer func() {
+		d.log.Infoln("GetUpdateVideoListFromEmby End")
+	}()
+	d.log.Infoln("GetUpdateVideoListFromEmby Start...")
+	//------------------------------------------------------
+	// 是否取消执行
+	nowCancel := false
+	d.canceledLock.Lock()
+	nowCancel = d.canceled
+	d.canceledLock.Unlock()
+	if nowCancel == true {
+		d.log.Infoln("GetUpdateVideoListFromEmby Canceled")
 		return nil
 	}
 	var err error
@@ -146,22 +165,22 @@ func (d *Downloader) GetUpdateVideoListFromEmby(movieRootDir, seriesRootDir stri
 		d.movieFileFullPathList = append(d.movieFileFullPathList, info.VideoFileFullPath)
 	}
 	// 输出调试信息
-	log_helper.GetLogger().Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap Start")
+	d.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap Start")
 	for s, _ := range d.seriesSubNeedDlMap {
-		log_helper.GetLogger().Debugln(s)
+		d.log.Debugln(s)
 	}
-	log_helper.GetLogger().Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap End")
+	d.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap End")
 
-	log_helper.GetLogger().Debugln("GetUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList Start")
+	d.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList Start")
 	for s, value := range d.movieFileFullPathList {
-		log_helper.GetLogger().Debugln(s, value)
+		d.log.Debugln(s, value)
 	}
-	log_helper.GetLogger().Debugln("GetUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList End")
+	d.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList End")
 
 	return nil
 }
 
-func (d Downloader) RefreshEmbySubList() error {
+func (d *Downloader) RefreshEmbySubList() error {
 
 	if d.embyHelper == nil {
 		return nil
@@ -175,6 +194,17 @@ func (d Downloader) RefreshEmbySubList() error {
 			d.log.Errorln("Refresh Emby Sub List Error")
 		}
 	}()
+	d.log.Infoln("Refresh Emby Sub List Start...")
+	//------------------------------------------------------
+	// 是否取消执行
+	nowCancel := false
+	d.canceledLock.Lock()
+	nowCancel = d.canceled
+	d.canceledLock.Unlock()
+	if nowCancel == true {
+		d.log.Infoln("RefreshEmbySubList Canceled")
+		return nil
+	}
 
 	bRefresh, err := d.embyHelper.RefreshEmbySubList()
 	if err != nil {
@@ -185,7 +215,7 @@ func (d Downloader) RefreshEmbySubList() error {
 }
 
 // DownloadSub4Movie 这里对接 Emby 的时候比较方便，只要更新 d.movieFileFullPathList 就行了，不像连续剧那么麻烦
-func (d Downloader) DownloadSub4Movie(dir string) error {
+func (d *Downloader) DownloadSub4Movie(dir string) error {
 	defer func() {
 		// 所有的电影字幕下载完成，抉择完成，需要清理缓存目录
 		err := my_util.ClearRootTmpFolder()
@@ -196,6 +226,16 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	}()
 	var err error
 	d.log.Infoln("Download Movie Sub Started...")
+	//------------------------------------------------------
+	// 是否取消执行
+	nowCancel := false
+	d.canceledLock.Lock()
+	nowCancel = d.canceled
+	d.canceledLock.Unlock()
+	if nowCancel == true {
+		d.log.Infoln("DownloadSub4Movie Canceled")
+		return nil
+	}
 	// -----------------------------------------------------
 	// 优先判断特殊的操作
 	if d.needForcedScanAndDownSub == true {
@@ -263,7 +303,7 @@ func (d Downloader) DownloadSub4Movie(dir string) error {
 	return nil
 }
 
-func (d Downloader) DownloadSub4Series(dir string) error {
+func (d *Downloader) DownloadSub4Series(dir string) error {
 	var err error
 	defer func() {
 		// 所有的连续剧字幕下载完成，抉择完成，需要清理缓存目录
@@ -277,6 +317,16 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 		d.log.Infoln("CloseChrome")
 	}()
 	d.log.Infoln("Download Series Sub Started...")
+	//------------------------------------------------------
+	// 是否取消执行
+	nowCancel := false
+	d.canceledLock.Lock()
+	nowCancel = d.canceled
+	d.canceledLock.Unlock()
+	if nowCancel == true {
+		d.log.Infoln("DownloadSub4Series Canceled")
+		return nil
+	}
 	// -----------------------------------------------------
 	// 并发控制，设置为 movie 的处理函数
 	d.taskControl.SetCtxProcessFunc("SeriesPool", d.seriesDlFunc, common.OneSeriesProcessTimeOut)
@@ -339,10 +389,21 @@ func (d Downloader) DownloadSub4Series(dir string) error {
 	return nil
 }
 
-func (d Downloader) RestoreFixTimelineBK(moviesDir, seriesDir string) error {
+func (d *Downloader) RestoreFixTimelineBK(moviesDir, seriesDir string) error {
 
 	defer d.log.Infoln("End Restore Fix Timeline BK")
 	d.log.Infoln("Start Restore Fix Timeline BK...")
+	//------------------------------------------------------
+	// 是否取消执行
+	nowCancel := false
+	d.canceledLock.Lock()
+	nowCancel = d.canceled
+	d.canceledLock.Unlock()
+	if nowCancel == true {
+		d.log.Infoln("RestoreFixTimelineBK Canceled")
+		return nil
+	}
+
 	_, err := sub_timeline_fixer_pkg.Restore(moviesDir, seriesDir)
 	if err != nil {
 		return err
@@ -350,7 +411,15 @@ func (d Downloader) RestoreFixTimelineBK(moviesDir, seriesDir string) error {
 	return nil
 }
 
-func (d Downloader) movieDlFunc(ctx context.Context, inData interface{}) error {
+func (d *Downloader) Cancel() {
+	d.canceledLock.Lock()
+	d.canceled = true
+	d.canceledLock.Unlock()
+
+	d.taskControl.Release()
+}
+
+func (d *Downloader) movieDlFunc(ctx context.Context, inData interface{}) error {
 
 	taskData := inData.(*task_control.TaskData)
 	downloadInputData := taskData.DataEx.(DownloadInputData)
@@ -388,7 +457,7 @@ func (d Downloader) movieDlFunc(ctx context.Context, inData interface{}) error {
 	return nil
 }
 
-func (d Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error {
+func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error {
 
 	var err error
 	taskData := inData.(*task_control.TaskData)
