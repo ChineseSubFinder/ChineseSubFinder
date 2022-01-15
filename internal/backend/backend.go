@@ -11,8 +11,6 @@ import (
 // StartBackEnd 开启后端的服务器
 func StartBackEnd(httpPort int) {
 
-	log_helper.SetLoggerName(log_helper.LogNameBackEnd)
-
 	engine := gin.Default()
 	// 默认所有都通过
 	engine.Use(cors.Default())

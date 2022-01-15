@@ -3,14 +3,12 @@ package main
 import (
 	commonValue "github.com/allanpk716/ChineseSubFinder/internal/common"
 	config2 "github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/proxy_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/something_static"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
@@ -157,90 +155,6 @@ func main() {
 
 func DownLoadStart(httpProxy string) {
 
-	notify_center.Notify.Clear()
-
-	updateTimeString, code, err := something_static.GetCodeFromWeb()
-	if err != nil {
-		notify_center.Notify.Add("GetSubhdCode", "GetCodeFromWeb,"+err.Error())
-		log.Errorln("something_static.GetCodeFromWeb", err)
-		log.Errorln("Skip Subhd download")
-		// 没有则需要清空
-		commonValue.SubhdCode = ""
-	} else {
-		log.Infoln("GetCode", updateTimeString, code)
-		commonValue.SubhdCode = code
-	}
-
-	// 下载实例
-	dl, err := downloader.NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter),
-		types.ReqParam{
-			HttpProxy:                     httpProxy,
-			DebugMode:                     config.DebugMode,
-			SaveMultiSub:                  config.SaveMultiSub,
-			Threads:                       config.Threads,
-			SubTypePriority:               config.SubTypePriority,
-			WhenSubSupplierInvalidWebHook: config.WhenSubSupplierInvalidWebHook,
-			EmbyConfig:                    config.EmbyConfig,
-			SaveOneSeasonSub:              config.SaveOneSeasonSub,
-
-			SubTimelineFixerConfig: config.SubTimelineFixerConfig,
-			FixTimeLine:            config.FixTimeLine,
-		})
-
-	if err != nil {
-		log.Errorln("NewDownloader", err)
-	}
-
-	defer func() {
-		log.Infoln("Download One End...")
-		notify_center.Notify.Send()
-		//my_util.CloseChrome()
-		//rod_helper.Clear()
-	}()
-
-	log.Infoln("Download One Started...")
-
-	// 优先级最高。读取特殊文件，启用一些特殊的功能，比如 forced_scan_and_down_sub
-	err = dl.ReadSpeFile()
-	if err != nil {
-		log.Errorln("ReadSpeFile", err)
-	}
-	// 从 csf-bk 文件还原时间轴修复前的字幕文件
-	if dl.NeedRestoreFixTimeLineBK == true {
-		err = dl.RestoreFixTimelineBK(config.MovieFolder, config.SeriesFolder)
-		if err != nil {
-			log.Errorln("RestoreFixTimelineBK", err)
-		}
-	}
-	// 刷新 Emby 的字幕，如果下载了字幕倒是没有刷新，则先刷新一次，便于后续的 Emby api 统计逻辑
-	err = dl.RefreshEmbySubList()
-	if err != nil {
-		log.Errorln("RefreshEmbySubList", err)
-		return
-	}
-	err = dl.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
-	if err != nil {
-		log.Errorln("GetUpdateVideoListFromEmby", err)
-		return
-	}
-	// 开始下载，电影
-	err = dl.DownloadSub4Movie(config.MovieFolder)
-	if err != nil {
-		log.Errorln("DownloadSub4Movie", err)
-		return
-	}
-	// 开始下载，连续剧
-	err = dl.DownloadSub4Series(config.SeriesFolder)
-	if err != nil {
-		log.Errorln("DownloadSub4Series", err)
-		return
-	}
-	// 刷新 Emby 的字幕，下载完毕字幕了，就统一刷新一下
-	err = dl.RefreshEmbySubList()
-	if err != nil {
-		log.Errorln("RefreshEmbySubList", err)
-		return
-	}
 }
 
 var (
