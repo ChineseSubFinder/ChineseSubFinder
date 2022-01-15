@@ -1,6 +1,8 @@
 package downloader
 
 import (
+	"errors"
+	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
@@ -442,21 +444,51 @@ func (d Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error 
 
 	// 只针对需要下载字幕的视频进行字幕的选择保存
 	for epsKey, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
-		// 匹配对应的 Eps 去处理
-		d.oneVideoSelectBestSub(episodeInfo.FileFullPath, organizeSubFiles[epsKey])
+
+		stage := make(chan interface{}, 1)
+		go func() {
+			// 匹配对应的 Eps 去处理
+			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, organizeSubFiles[epsKey])
+			stage <- 1
+		}()
+
+		select {
+		case <-ctx.Done():
+			{
+				return errors.New(fmt.Sprintf("cancel at NeedDlEpsKeyList.oneVideoSelectBestSub epsKey: %s", epsKey))
+			}
+		case <-stage:
+			break
+		}
 	}
 	// 这里会拿到一份季度字幕的列表比如，Key 是 S1E0 S2E0 S3E0，value 是新的存储位置
 	fullSeasonSubDict := d.saveFullSeasonSub(seriesInfo, organizeSubFiles)
 	// TODO 季度的字幕包，应该优先于零散的字幕吧，暂定就这样了，注意是全部都替换
 	// 需要与有下载需求的季交叉
 	for _, episodeInfo := range seriesInfo.EpList {
+
+		stage := make(chan interface{}, 1)
+
 		_, ok := seriesInfo.NeedDlSeasonDict[episodeInfo.Season]
 		if ok == false {
 			continue
 		}
-		// 匹配对应的 Eps 去处理
-		seasonEpsKey := my_util.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
-		d.oneVideoSelectBestSub(episodeInfo.FileFullPath, fullSeasonSubDict[seasonEpsKey])
+
+		go func() {
+			// 匹配对应的 Eps 去处理
+			seasonEpsKey := my_util.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
+			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, fullSeasonSubDict[seasonEpsKey])
+			stage <- 1
+		}()
+
+		select {
+		case <-ctx.Done():
+			{
+				return errors.New(fmt.Sprintf("cancel at EpList.oneVideoSelectBestSub episodeInfo.FileFullPath: %s", episodeInfo.FileFullPath))
+			}
+		case <-stage:
+			break
+		}
 	}
 	// 是否清理全季的缓存字幕文件夹
 	if d.reqParam.SaveOneSeasonSub == false {
