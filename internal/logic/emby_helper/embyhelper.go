@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
@@ -19,13 +20,13 @@ import (
 
 type EmbyHelper struct {
 	embyApi    *embyHelper.EmbyApi
-	EmbyConfig emby.EmbyConfig
+	EmbyConfig settings.EmbySettings
 	threads    int
 	timeOut    time.Duration
 	listLock   sync.Mutex
 }
 
-func NewEmbyHelper(embyConfig emby.EmbyConfig) *EmbyHelper {
+func NewEmbyHelper(embyConfig settings.EmbySettings) *EmbyHelper {
 	em := EmbyHelper{EmbyConfig: embyConfig}
 	em.embyApi = embyHelper.NewEmbyApi(embyConfig)
 	em.threads = 6
@@ -33,7 +34,7 @@ func NewEmbyHelper(embyConfig emby.EmbyConfig) *EmbyHelper {
 	return &em
 }
 
-func (em *EmbyHelper) GetRecentlyAddVideoList(movieRootDir, seriesRootDir string) ([]emby.EmbyMixInfo, map[string][]emby.EmbyMixInfo, error) {
+func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby.EmbyMixInfo, map[string][]emby.EmbyMixInfo, error) {
 
 	// 获取电影和连续剧的文件夹名称
 	movieFolderName := filepath.Base(movieRootDir)

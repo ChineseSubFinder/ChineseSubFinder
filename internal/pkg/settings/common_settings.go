@@ -1,8 +1,6 @@
 package settings
 
 type CommonSettings struct {
-	UseHttpProxy     bool     `json:"use_http_proxy"`       // 是否使用 http 代理
-	HttpProxyAddress string   `json:"http_proxy_address"`   // Http 代理地址，内网
 	ScanInterval     string   `json:"scan_interval"`        // 一轮字幕扫描的间隔
 	Threads          int      `json:"threads"`              // 同时扫描的并发数
 	RunScanAtStartUp bool     `json:"run_scan_at_start_up"` // 完成引导设置后，下次运行程序就开始扫描

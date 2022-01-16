@@ -7,10 +7,10 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/sub_timeline_fiexer"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/emirpasic/gods/utils"
@@ -22,15 +22,18 @@ type SubTimelineFixerHelperEx struct {
 	ffmpegHelper        *ffmpeg_helper.FFMPEGHelper
 	subParserHub        *sub_parser_hub.SubParserHub
 	timelineFixPipeLine *sub_timeline_fixer.Pipeline
-	fixerConfig         sub_timeline_fiexer.SubTimelineFixerConfig
+	fixerConfig         settings.TimelineFixerSettings
 	needDownloadFFMPeg  bool
 }
 
-func NewSubTimelineFixerHelperEx(fixerConfig sub_timeline_fiexer.SubTimelineFixerConfig) *SubTimelineFixerHelperEx {
+func NewSubTimelineFixerHelperEx(fixerConfig settings.TimelineFixerSettings) *SubTimelineFixerHelperEx {
+
+	fixerConfig.Check()
+
 	return &SubTimelineFixerHelperEx{
 		ffmpegHelper:        ffmpeg_helper.NewFFMPEGHelper(),
 		subParserHub:        sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
-		timelineFixPipeLine: sub_timeline_fixer.NewPipeline(fixerConfig.V2_MaxOffsetTime),
+		timelineFixPipeLine: sub_timeline_fixer.NewPipeline(fixerConfig.MaxOffsetTime),
 		fixerConfig:         fixerConfig,
 		needDownloadFFMPeg:  false,
 	}
@@ -130,7 +133,7 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	}
 
 	// 开始调整字幕时间轴
-	if bProcess == false || math.Abs(pipeResultMax.GetOffsetTime()) < s.fixerConfig.V2_MinOffset {
+	if bProcess == false || math.Abs(pipeResultMax.GetOffsetTime()) < s.fixerConfig.MinOffset {
 		log_helper.GetLogger().Infoln("Skip TimeLine Fix -- OffsetTime:", pipeResultMax.GetOffsetTime(), srcSubFPath)
 		return nil
 	}

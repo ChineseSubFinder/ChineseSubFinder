@@ -1,5 +1,7 @@
 package settings
 
+import "github.com/allanpk716/ChineseSubFinder/internal/common"
+
 type EmbySettings struct {
 	Enable                 bool              `json:"enable"`                   // 是否启用
 	AddressUrl             string            `json:"address_url"`              // 内网服务器的 url
@@ -15,5 +17,13 @@ func NewEmbySettings() *EmbySettings {
 		MaxRequestVideoNumber:  500,
 		MovieDirectoryMapping:  make(map[string]string, 0),
 		SeriesDirectoryMapping: make(map[string]string, 0),
+	}
+}
+
+func (e EmbySettings) Check() {
+	if e.MaxRequestVideoNumber < common.EmbyApiGetItemsLimitMin ||
+		e.MaxRequestVideoNumber > common.EmbyApiGetItemsLimitMax {
+
+		e.MaxRequestVideoNumber = common.EmbyApiGetItemsLimitMin
 	}
 }

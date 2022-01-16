@@ -8,7 +8,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	browser "github.com/allanpk716/fake-useragent"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
@@ -26,29 +26,21 @@ import (
 )
 
 // NewHttpClient 新建一个 resty 的对象
-func NewHttpClient(_reqParam ...types.ReqParam) *resty.Client {
+func NewHttpClient(_proxySettings ...settings.ProxySettings) *resty.Client {
 	//const defUserAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"
 	//const defUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41"
-	// 随机的 Browser
-	defUserAgent := browser.Random()
 
-	var reqParam types.ReqParam
+	var proxySettings settings.ProxySettings
 	var HttpProxy, UserAgent, Referer string
 
-	if len(_reqParam) > 0 {
-		reqParam = _reqParam[0]
+	if len(_proxySettings) > 0 {
+		proxySettings = _proxySettings[0]
 	}
-	if len(reqParam.HttpProxy) > 0 {
-		HttpProxy = reqParam.HttpProxy
+	if proxySettings.UseHttpProxy == true && len(proxySettings.HttpProxyAddress) > 0 {
+		HttpProxy = proxySettings.HttpProxyAddress
 	}
-	if len(reqParam.UserAgent) > 0 {
-		UserAgent = reqParam.UserAgent
-	} else {
-		UserAgent = defUserAgent
-	}
-	if len(reqParam.Referer) > 0 {
-		Referer = reqParam.Referer
-	}
+	// 随机的 Browser
+	UserAgent = browser.Random()
 
 	httpClient := resty.New()
 	httpClient.SetTimeout(common.HTMLTimeOut)
@@ -59,10 +51,15 @@ func NewHttpClient(_reqParam ...types.ReqParam) *resty.Client {
 		httpClient.RemoveProxy()
 	}
 
+	if len(proxySettings.Referer) > 0 {
+		Referer = proxySettings.Referer
+	}
+
 	httpClient.SetHeaders(map[string]string{
 		"Content-Type": "application/json",
 		"User-Agent":   UserAgent,
 	})
+
 	if len(Referer) > 0 {
 		httpClient.SetHeader("Referer", Referer)
 	}
@@ -71,12 +68,12 @@ func NewHttpClient(_reqParam ...types.ReqParam) *resty.Client {
 }
 
 // DownFile 从指定的 url 下载文件
-func DownFile(urlStr string, _reqParam ...types.ReqParam) ([]byte, string, error) {
-	var reqParam types.ReqParam
-	if len(_reqParam) > 0 {
-		reqParam = _reqParam[0]
+func DownFile(urlStr string, _proxySettings ...settings.ProxySettings) ([]byte, string, error) {
+	var proxySettings settings.ProxySettings
+	if len(_proxySettings) > 0 {
+		proxySettings = _proxySettings[0]
 	}
-	httpClient := NewHttpClient(reqParam)
+	httpClient := NewHttpClient(proxySettings)
 	resp, err := httpClient.R().Get(urlStr)
 	if err != nil {
 		return nil, "", err
@@ -207,27 +204,31 @@ func GetEpisodeKeyName(season, eps int) string {
 // CopyFile copies a single file from src to dst
 func CopyFile(src, dst string) error {
 	var err error
-	var srcfd *os.File
-	var dstfd *os.File
-	var srcinfo os.FileInfo
+	var srcFd *os.File
+	var dstFd *os.File
+	var srcInfo os.FileInfo
 
-	if srcfd, err = os.Open(src); err != nil {
+	if srcFd, err = os.Open(src); err != nil {
 		return err
 	}
-	defer srcfd.Close()
+	defer func() {
+		_ = srcFd.Close()
+	}()
 
-	if dstfd, err = os.Create(dst); err != nil {
+	if dstFd, err = os.Create(dst); err != nil {
 		return err
 	}
-	defer dstfd.Close()
+	defer func() {
+		_ = dstFd.Close()
+	}()
 
-	if _, err = io.Copy(dstfd, srcfd); err != nil {
+	if _, err = io.Copy(dstFd, srcFd); err != nil {
 		return err
 	}
-	if srcinfo, err = os.Stat(src); err != nil {
+	if srcInfo, err = os.Stat(src); err != nil {
 		return err
 	}
-	return os.Chmod(dst, srcinfo.Mode())
+	return os.Chmod(dst, srcInfo.Mode())
 }
 
 // CopyDir copies a whole directory recursively

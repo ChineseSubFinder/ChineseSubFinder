@@ -7,10 +7,10 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/proxy_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/url_connectedness_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/prometheus/common/log"
 	"github.com/robfig/cron/v3"
@@ -41,12 +41,12 @@ func main() {
 		log.Infoln("UseProxy = false")
 	} else {
 		log.Infoln("UseProxy:", httpProxy)
-		proxySpeed, proxyStatus, err := proxy_helper.ProxyTest(httpProxy)
+		proxySpeed, proxyStatus, err := url_connectedness_helper.UrlConnectednessTest(httpProxy)
 		if err != nil {
-			log.Errorln("ProxyTest Target Site http://google.com", err)
+			log.Errorln("UrlConnectednessTest Target Site http://google.com", err)
 			return
 		} else {
-			log.Infoln("ProxyTest Target Site http://google.com", "Speed:", proxySpeed, "Status:", proxyStatus)
+			log.Infoln("UrlConnectednessTest Target Site http://google.com", "Speed:", proxySpeed, "Status:", proxyStatus)
 		}
 	}
 

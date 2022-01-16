@@ -7,10 +7,11 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
+	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
 	"math"
 	"os"
@@ -19,31 +20,27 @@ import (
 )
 
 type Supplier struct {
-	reqParam types.ReqParam
+	settings settings.Settings
 	log      *logrus.Logger
 	topic    int
 }
 
-func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
+func NewSupplier(_settings settings.Settings) *Supplier {
 
 	sup := Supplier{}
 	sup.log = log_helper.GetLogger()
 	sup.topic = common.DownloadSubsPerSite
-	if len(_reqParam) > 0 {
-		sup.reqParam = _reqParam[0]
-		if sup.reqParam.Topic > 0 && sup.reqParam.Topic != sup.topic {
-			sup.topic = sup.reqParam.Topic
-		}
+
+	sup.settings = clone.Clone(_settings).(settings.Settings)
+	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
+		sup.topic = sup.settings.AdvancedSettings.Topic
 	}
+
 	return &sup
 }
 
 func (s Supplier) GetSupplierName() string {
 	return common.SubSiteShooter
-}
-
-func (s Supplier) GetReqParam() types.ReqParam {
-	return s.reqParam
 }
 
 func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
@@ -81,7 +78,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 
 	fileName := filepath.Base(filePath)
 
-	httpClient := my_util.NewHttpClient(s.reqParam)
+	httpClient := my_util.NewHttpClient(*s.settings.AdvancedSettings.ProxySettings)
 	resp, err := httpClient.R().
 		SetFormData(map[string]string{
 			"filehash": hash,

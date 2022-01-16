@@ -10,11 +10,12 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	language2 "github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
+	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
 	"path/filepath"
 	"regexp"
@@ -23,31 +24,26 @@ import (
 )
 
 type Supplier struct {
-	reqParam types.ReqParam
+	settings settings.Settings
 	log      *logrus.Logger
 	topic    int
 }
 
-func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
+func NewSupplier(_settings settings.Settings) *Supplier {
 
 	sup := Supplier{}
 	sup.log = log_helper.GetLogger()
 	sup.topic = common.DownloadSubsPerSite
-	if len(_reqParam) > 0 {
-		sup.reqParam = _reqParam[0]
-		if sup.reqParam.Topic > 0 && sup.reqParam.Topic != sup.topic {
-			sup.topic = sup.reqParam.Topic
-		}
+
+	sup.settings = clone.Clone(_settings).(settings.Settings)
+	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
+		sup.topic = sup.settings.AdvancedSettings.Topic
 	}
 	return &sup
 }
 
 func (s Supplier) GetSupplierName() string {
 	return common.SubSiteZiMuKu
-}
-
-func (s Supplier) GetReqParam() types.ReqParam {
-	return s.reqParam
 }
 
 func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
@@ -352,7 +348,7 @@ func (s Supplier) step0(keyword string) (string, error) {
 			notify_center.Notify.Add("zimuku_step0", err.Error())
 		}
 	}()
-	httpClient := my_util.NewHttpClient(s.reqParam)
+	httpClient := my_util.NewHttpClient(*s.settings.AdvancedSettings.ProxySettings)
 	// 第一级界面，有多少个字幕
 	resp, err := httpClient.R().
 		SetQueryParams(map[string]string{
@@ -382,7 +378,7 @@ func (s Supplier) step1(filmDetailPageUrl string) (SubResult, error) {
 		}
 	}()
 	filmDetailPageUrl = my_util.AddBaseUrl(common.SubZiMuKuRootUrl, filmDetailPageUrl)
-	httpClient := my_util.NewHttpClient(s.reqParam)
+	httpClient := my_util.NewHttpClient(*s.settings.AdvancedSettings.ProxySettings)
 	resp, err := httpClient.R().
 		Get(filmDetailPageUrl)
 	if err != nil {
@@ -483,7 +479,7 @@ func (s Supplier) step2(subInfo *SubInfo) error {
 		}
 	}()
 	detailUrl := my_util.AddBaseUrl(common.SubZiMuKuRootUrl, subInfo.DetailUrl)
-	httpClient := my_util.NewHttpClient(s.reqParam)
+	httpClient := my_util.NewHttpClient(*s.settings.AdvancedSettings.ProxySettings)
 	resp, err := httpClient.R().
 		Get(detailUrl)
 	if err != nil {
@@ -513,7 +509,7 @@ func (s Supplier) step3(subDownloadPageUrl string) (string, []byte, error) {
 		}
 	}()
 	subDownloadPageUrl = my_util.AddBaseUrl(common.SubZiMuKuRootUrl, subDownloadPageUrl)
-	httpClient := my_util.NewHttpClient(s.reqParam)
+	httpClient := my_util.NewHttpClient(*s.settings.AdvancedSettings.ProxySettings)
 	resp, err := httpClient.R().
 		Get(subDownloadPageUrl)
 	if err != nil {
@@ -528,9 +524,9 @@ func (s Supplier) step3(subDownloadPageUrl string) (string, []byte, error) {
 	var filename string
 	var data []byte
 
-	s.reqParam.Referer = subDownloadPageUrl
+	s.settings.AdvancedSettings.ProxySettings.Referer = subDownloadPageUrl
 	for i := 0; i < len(matched); i++ {
-		data, filename, err = my_util.DownFile(my_util.AddBaseUrl(common.SubZiMuKuRootUrl, matched[i][1]), s.reqParam)
+		data, filename, err = my_util.DownFile(my_util.AddBaseUrl(common.SubZiMuKuRootUrl, matched[i][1]), *s.settings.AdvancedSettings.ProxySettings)
 		if err != nil {
 			s.log.Errorln("ZiMuKu step3 DownloadFile", err)
 			continue

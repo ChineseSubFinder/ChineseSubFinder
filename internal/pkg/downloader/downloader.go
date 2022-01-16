@@ -18,11 +18,11 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
-	subcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	subCommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
-	sub_timeline_fixer_pkg "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
+	subTimelineFixerPKG "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_control"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/sirupsen/logrus"
@@ -33,15 +33,14 @@ import (
 
 // Downloader 实例化一次用一次，不要反复的使用，很多临时标志位需要清理。
 type Downloader struct {
-	reqParam                 types.ReqParam
+	settings                 settings.Settings
 	log                      *logrus.Logger
-	topic                    int                       // 最多能够下载 Top 几的字幕，每一个网站
 	mk                       *markSystem.MarkingSystem // MarkingSystem
 	embyHelper               *embyHelper.EmbyHelper
 	movieFileFullPathList    []string                      //  多个需要搜索字幕的电影文件全路径
 	seriesSubNeedDlMap       map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录
 	subFormatter             ifaces.ISubFormatter          //	字幕格式化命名的实现
-	subNameFormatter         subcommon.FormatterName       // 从 inSubFormatter 推断出来
+	subNameFormatter         subCommon.FormatterName       // 从 inSubFormatter 推断出来
 	needForcedScanAndDownSub bool                          // 将会强制扫描所有的视频，下载字幕，替换已经存在的字幕，不进行时间段和已存在则跳过的判断。且不会进过 Emby API 的逻辑，智能进行强制去以本程序的方式去扫描。
 	NeedRestoreFixTimeLineBK bool                          // 从 csf-bk 文件还原时间轴修复前的字幕文件
 
@@ -52,41 +51,22 @@ type Downloader struct {
 	canceledLock sync.Mutex
 }
 
-func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqParam) (*Downloader, error) {
+func NewDownloader(inSubFormatter ifaces.ISubFormatter, _settings settings.Settings) (*Downloader, error) {
 
 	var downloader Downloader
 	var err error
 	downloader.subFormatter = inSubFormatter
 	downloader.log = log_helper.GetLogger()
-	downloader.topic = common.DownloadSubsPerSite
-	if len(_reqParam) > 0 {
-		downloader.reqParam = _reqParam[0]
-		if downloader.reqParam.Topic > 0 && downloader.reqParam.Topic != downloader.topic {
-			downloader.topic = downloader.reqParam.Topic
-		}
-		// 如果 Debug 模式开启了，强制设置线程数为1，方便定位问题
-		if downloader.reqParam.DebugMode == true {
-			downloader.reqParam.Threads = 1
-		} else {
-			// 并发线程的范围控制
-			if downloader.reqParam.Threads <= 0 {
-				downloader.reqParam.Threads = 2
-			} else if downloader.reqParam.Threads >= 10 {
-				downloader.reqParam.Threads = 10
-			}
-		}
-		// 初始化 Emby API 接口
-		if downloader.reqParam.EmbyConfig.Url != "" && downloader.reqParam.EmbyConfig.ApiKey != "" {
-			downloader.embyHelper = embyHelper.NewEmbyHelper(downloader.reqParam.EmbyConfig)
-		}
-	} else {
-		downloader.reqParam = *types.NewReqParam()
+	// 参入设置信息
+	downloader.settings = _settings
+	// 检测是否某些参数超出范围
+	downloader.settings.Check()
+	// 初始化 Emby API 接口
+	if downloader.settings.EmbySettings.AddressUrl != "" && downloader.settings.EmbySettings.APIKey != "" {
+		downloader.embyHelper = embyHelper.NewEmbyHelper(*downloader.settings.EmbySettings)
 	}
-	// 强制下载线程为 1，太猛，不然都是错误
-	downloader.reqParam.Threads = 1
-
-	// 这里就不单独弄一个 reqParam.SubNameFormatter 字段来传递值了，因为 inSubFormatter 就已经知道是什么 formatter 了
-	downloader.subNameFormatter = subcommon.FormatterName(downloader.subFormatter.GetFormatterFormatterName())
+	// 这里就不单独弄一个 settings.SubNameFormatter 字段来传递值了，因为 inSubFormatter 就已经知道是什么 formatter 了
+	downloader.subNameFormatter = subCommon.FormatterName(downloader.subFormatter.GetFormatterFormatterName())
 
 	var sitesSequence = make([]string, 0)
 	// TODO 这里写固定了抉择字幕的顺序
@@ -94,19 +74,19 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqPa
 	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
 	sitesSequence = append(sitesSequence, common.SubSiteShooter)
 	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
-	downloader.mk = markSystem.NewMarkingSystem(sitesSequence, downloader.reqParam.SubTypePriority)
+	downloader.mk = markSystem.NewMarkingSystem(sitesSequence, downloader.settings.AdvancedSettings.SubTypePriority)
 
 	downloader.movieFileFullPathList = make([]string, 0)
 	downloader.seriesSubNeedDlMap = make(map[string][]emby.EmbyMixInfo)
 
 	// 初始化，字幕校正的实例
-	downloader.subTimelineFixerHelperEx = sub_timeline_fixer.NewSubTimelineFixerHelperEx(downloader.reqParam.SubTimelineFixerConfig)
+	downloader.subTimelineFixerHelperEx = sub_timeline_fixer.NewSubTimelineFixerHelperEx(*downloader.settings.TimelineFixerSettings)
 
-	if downloader.reqParam.FixTimeLine == true {
+	if downloader.settings.AdvancedSettings.FixTimeLine == true {
 		downloader.subTimelineFixerHelperEx.Check()
 	}
 	// 初始化任务控制
-	downloader.taskControl, err = task_control.NewTaskControl(downloader.reqParam.Threads, log_helper.GetLogger())
+	downloader.taskControl, err = task_control.NewTaskControl(downloader.settings.CommonSettings.Threads, log_helper.GetLogger())
 	if err != nil {
 		return nil, err
 	}
@@ -118,25 +98,25 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, _reqParam ...types.ReqPa
 func (d *Downloader) ReadSpeFile() error {
 	// 理论上是一次性的，用了这个文件就应该没了
 	// 强制的字幕扫描
-	needProcess_forced_scan_and_down_sub, err := forced_scan_and_down_sub.CheckSpeFile()
+	needProcessForcedScanAndDownSub, err := forced_scan_and_down_sub.CheckSpeFile()
 	if err != nil {
 		return err
 	}
-	d.needForcedScanAndDownSub = needProcess_forced_scan_and_down_sub
+	d.needForcedScanAndDownSub = needProcessForcedScanAndDownSub
 	// 从 csf-bk 文件还原时间轴修复前的字幕文件
-	needProcess_restore_fix_timeline_bk, err := restore_fix_timeline_bk.CheckSpeFile()
+	needProcessRestoreFixTimelineBK, err := restore_fix_timeline_bk.CheckSpeFile()
 	if err != nil {
 		return err
 	}
-	d.NeedRestoreFixTimeLineBK = needProcess_restore_fix_timeline_bk
+	d.NeedRestoreFixTimeLineBK = needProcessRestoreFixTimelineBK
 
-	d.log.Infoln("NeedRestoreFixTimeLineBK ==", needProcess_restore_fix_timeline_bk)
+	d.log.Infoln("NeedRestoreFixTimeLineBK ==", needProcessRestoreFixTimelineBK)
 
 	return nil
 }
 
 // GetUpdateVideoListFromEmby 这里首先会进行近期影片的获取，然后对这些影片进行刷新，然后在获取字幕列表，最终得到需要字幕获取的 video 列表
-func (d *Downloader) GetUpdateVideoListFromEmby(movieRootDir, seriesRootDir string) error {
+func (d *Downloader) GetUpdateVideoListFromEmby() error {
 	if d.embyHelper == nil {
 		return nil
 	}
@@ -156,7 +136,7 @@ func (d *Downloader) GetUpdateVideoListFromEmby(movieRootDir, seriesRootDir stri
 	}
 	var err error
 	var movieList []emby.EmbyMixInfo
-	movieList, d.seriesSubNeedDlMap, err = d.embyHelper.GetRecentlyAddVideoList(movieRootDir, seriesRootDir)
+	movieList, d.seriesSubNeedDlMap, err = d.embyHelper.GetRecentlyAddVideoList()
 	if err != nil {
 		return err
 	}
@@ -166,7 +146,7 @@ func (d *Downloader) GetUpdateVideoListFromEmby(movieRootDir, seriesRootDir stri
 	}
 	// 输出调试信息
 	d.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap Start")
-	for s, _ := range d.seriesSubNeedDlMap {
+	for s := range d.seriesSubNeedDlMap {
 		d.log.Debugln(s)
 	}
 	d.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap End")
@@ -215,7 +195,7 @@ func (d *Downloader) RefreshEmbySubList() error {
 }
 
 // DownloadSub4Movie 这里对接 Emby 的时候比较方便，只要更新 d.movieFileFullPathList 就行了，不像连续剧那么麻烦
-func (d *Downloader) DownloadSub4Movie(dir string) error {
+func (d *Downloader) DownloadSub4Movie() error {
 	defer func() {
 		// 所有的电影字幕下载完成，抉择完成，需要清理缓存目录
 		err := my_util.ClearRootTmpFolder()
@@ -303,7 +283,7 @@ func (d *Downloader) DownloadSub4Movie(dir string) error {
 	return nil
 }
 
-func (d *Downloader) DownloadSub4Series(dir string) error {
+func (d *Downloader) DownloadSub4Series() error {
 	var err error
 	defer func() {
 		// 所有的连续剧字幕下载完成，抉择完成，需要清理缓存目录
@@ -389,7 +369,7 @@ func (d *Downloader) DownloadSub4Series(dir string) error {
 	return nil
 }
 
-func (d *Downloader) RestoreFixTimelineBK(moviesDir, seriesDir string) error {
+func (d *Downloader) RestoreFixTimelineBK() error {
 
 	defer d.log.Infoln("End Restore Fix Timeline BK")
 	d.log.Infoln("Start Restore Fix Timeline BK...")
@@ -404,7 +384,7 @@ func (d *Downloader) RestoreFixTimelineBK(moviesDir, seriesDir string) error {
 		return nil
 	}
 
-	_, err := sub_timeline_fixer_pkg.Restore(moviesDir, seriesDir)
+	_, err := subTimelineFixerPKG.Restore(moviesDirs, seriesDirs)
 	if err != nil {
 		return err
 	}
@@ -426,14 +406,14 @@ func (d *Downloader) movieDlFunc(ctx context.Context, inData interface{}) error 
 	// -----------------------------------------------------
 	// 构建每个字幕站点下载者的实例
 	var subSupplierHub = subSupplier.NewSubSupplierHub(
-		//subhd.NewSupplier(d.reqParam),
-		zimuku.NewSupplier(d.reqParam),
-		xunlei.NewSupplier(d.reqParam),
-		shooter.NewSupplier(d.reqParam),
+		//subhd.NewSupplier(d.settings),
+		zimuku.NewSupplier(d.settings),
+		xunlei.NewSupplier(d.settings),
+		shooter.NewSupplier(d.settings),
 	)
 	if common.SubhdCode != "" {
 		// 如果找到 code 了，那么就可以继续用这个实例
-		subSupplierHub.AddSubSupplier(subhd.NewSupplier(d.reqParam))
+		subSupplierHub.AddSubSupplier(subhd.NewSupplier(d.settings))
 	}
 
 	// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
@@ -465,14 +445,14 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 	// 构建每个字幕站点下载者的实例
 	var subSupplierHub *subSupplier.SubSupplierHub
 	subSupplierHub = subSupplier.NewSubSupplierHub(
-		zimuku.NewSupplier(d.reqParam),
-		//subhd.NewSupplier(d.reqParam),
-		xunlei.NewSupplier(d.reqParam),
-		shooter.NewSupplier(d.reqParam),
+		zimuku.NewSupplier(d.settings),
+		//subhd.NewSupplier(d.settings),
+		xunlei.NewSupplier(d.settings),
+		shooter.NewSupplier(d.settings),
 	)
 	if common.SubhdCode != "" {
 		// 如果找到 code 了，那么就可以继续用这个实例
-		subSupplierHub.AddSubSupplier(subhd.NewSupplier(d.reqParam))
+		subSupplierHub.AddSubSupplier(subhd.NewSupplier(d.settings))
 	}
 
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
@@ -560,7 +540,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 		}
 	}
 	// 是否清理全季的缓存字幕文件夹
-	if d.reqParam.SaveOneSeasonSub == false {
+	if d.settings.AdvancedSettings.SaveFullSeasonTmpSubtitles == false {
 		err = sub_helper.DeleteOneSeasonSubCacheFolder(seriesInfo.DirPath)
 		if err != nil {
 			return err

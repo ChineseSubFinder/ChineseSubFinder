@@ -8,12 +8,13 @@ import (
 )
 
 type Settings struct {
-	configFPath       string
-	UserInfo          *UserInfo          `json:"user_info"`
-	CommonSettings    *CommonSettings    `json:"common_settings"`
-	AdvancedSettings  *AdvancedSettings  `json:"advanced_settings"`
-	EmbySettings      *EmbySettings      `json:"emby_settings"`
-	DeveloperSettings *DeveloperSettings `json:"developer_settings"`
+	configFPath           string
+	UserInfo              *UserInfo              `json:"user_info"`
+	CommonSettings        *CommonSettings        `json:"common_settings"`
+	AdvancedSettings      *AdvancedSettings      `json:"advanced_settings"`
+	EmbySettings          *EmbySettings          `json:"emby_settings"`
+	DeveloperSettings     *DeveloperSettings     `json:"developer_settings"`
+	TimelineFixerSettings *TimelineFixerSettings `json:"timeline_fixer_settings"`
 }
 
 // GetSettings 获取 Settings 的实例
@@ -51,12 +52,13 @@ func NewSettings() *Settings {
 	nowConfigFPath := ""
 
 	return &Settings{
-		configFPath:       nowConfigFPath,
-		UserInfo:          &UserInfo{},
-		CommonSettings:    NewCommonSettings(),
-		AdvancedSettings:  NewAdvancedSettings(),
-		EmbySettings:      NewEmbySettings(),
-		DeveloperSettings: NewDeveloperSettings(),
+		configFPath:           nowConfigFPath,
+		UserInfo:              &UserInfo{},
+		CommonSettings:        NewCommonSettings(),
+		AdvancedSettings:      NewAdvancedSettings(),
+		EmbySettings:          NewEmbySettings(),
+		DeveloperSettings:     NewDeveloperSettings(),
+		TimelineFixerSettings: NewTimelineFixerSettings(),
 	}
 }
 
@@ -72,6 +74,26 @@ func (s Settings) GetNoPasswordSettings() *Settings {
 	nowSettings := clone.Clone(s).(*Settings)
 	nowSettings.UserInfo.Password = noPassword4Show
 	return nowSettings
+}
+
+// Check 检测，某些参数有范围限制
+func (s *Settings) Check() {
+
+	// 每个网站最多找 Top 几的字幕结果，评价系统成熟后，才有设计的意义
+	if s.AdvancedSettings.Topic < 0 || s.AdvancedSettings.Topic > 3 {
+		s.AdvancedSettings.Topic = 1
+	}
+	// 如果 Debug 模式开启了，强制设置线程数为1，方便定位问题
+	if s.AdvancedSettings.DebugMode == true {
+		s.CommonSettings.Threads = 1
+	} else {
+		// 并发线程的范围控制
+		if s.CommonSettings.Threads <= 0 {
+			s.CommonSettings.Threads = 1
+		} else if s.CommonSettings.Threads >= 3 {
+			s.CommonSettings.Threads = 3
+		}
+	}
 }
 
 var (

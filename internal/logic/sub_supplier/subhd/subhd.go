@@ -11,13 +11,14 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
+	"github.com/huandu/go-clone"
 	"github.com/nfnt/resize"
 	"github.com/sirupsen/logrus"
 	"image/jpeg"
@@ -31,31 +32,37 @@ import (
 )
 
 type Supplier struct {
-	reqParam    types.ReqParam
-	log         *logrus.Logger
-	topic       int
-	rodLauncher *launcher.Launcher
-	tt          time.Duration
-	debugMode   bool
+	settings         settings.Settings
+	log              *logrus.Logger
+	topic            int
+	rodLauncher      *launcher.Launcher
+	tt               time.Duration
+	debugMode        bool
+	httpProxyAddress string
 }
 
-func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
+func NewSupplier(_settings settings.Settings) *Supplier {
 
 	sup := Supplier{}
 	sup.log = log_helper.GetLogger()
 	sup.topic = common.DownloadSubsPerSite
-	if len(_reqParam) > 0 {
-		sup.reqParam = _reqParam[0]
-		if sup.reqParam.Topic > 0 && sup.reqParam.Topic != sup.topic {
-			sup.topic = sup.reqParam.Topic
-		}
+
+	sup.settings = clone.Clone(_settings).(settings.Settings)
+	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
+		sup.topic = sup.settings.AdvancedSettings.Topic
 	}
 
 	// 默认超时是 2 * 60s，如果是调试模式则是 5 min
 	sup.tt = common.HTMLTimeOut
-	sup.debugMode = sup.reqParam.DebugMode
-	if sup.reqParam.DebugMode == true {
+	sup.debugMode = sup.settings.AdvancedSettings.DebugMode
+	if sup.debugMode == true {
 		sup.tt = common.OneMovieProcessTimeOut
+	}
+	// 判断是否启用代理
+	if sup.settings.AdvancedSettings.ProxySettings.UseHttpProxy == true {
+		sup.httpProxyAddress = sup.settings.AdvancedSettings.ProxySettings.HttpProxyAddress
+	} else {
+		sup.httpProxyAddress = ""
 	}
 
 	return &sup
@@ -63,10 +70,6 @@ func NewSupplier(_reqParam ...types.ReqParam) *Supplier {
 
 func (s Supplier) GetSupplierName() string {
 	return common.SubSiteSubHd
-}
-
-func (s Supplier) GetReqParam() types.ReqParam {
-	return s.reqParam
 }
 
 func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
@@ -77,7 +80,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy, true)
+	browser, err := rod_helper.NewBrowser(s.httpProxyAddress, true)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +199,7 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInf
 
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowser(s.reqParam.HttpProxy, true)
+	browser, err := rod_helper.NewBrowser(s.httpProxyAddress, true)
 	if err != nil {
 		return nil, err
 	}
@@ -647,7 +650,7 @@ search:
 	//鬆開滑鼠左鍵, 拖动完毕
 	mouse.MustUp("left")
 
-	if s.reqParam.DebugMode == true {
+	if s.debugMode == true {
 		//截圖保存
 		nowProcessRoot, err := my_util.GetRootDebugFolder()
 		if err == nil {

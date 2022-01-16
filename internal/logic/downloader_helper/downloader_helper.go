@@ -4,22 +4,25 @@ import (
 	commonValue "github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/something_static"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/sirupsen/logrus"
 )
 
 type DownloaderHelper struct {
 	downloader *downloader.Downloader
+	settings   settings.Settings
 	logger     *logrus.Logger
 }
 
-func NewDownloaderHelper() *DownloaderHelper {
-	return &DownloaderHelper{}
+func NewDownloaderHelper(settings settings.Settings) *DownloaderHelper {
+	return &DownloaderHelper{
+		settings: settings,
+	}
 }
 
-func (d DownloaderHelper) Start(config types.Config) error {
+func (d DownloaderHelper) Start() error {
 	var err error
 	// 清理通知中心
 	notify_center.Notify.Clear()
@@ -37,20 +40,7 @@ func (d DownloaderHelper) Start(config types.Config) error {
 	}
 
 	// 下载实例
-	d.downloader, err = downloader.NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter),
-		types.ReqParam{
-			HttpProxy:                     config.HttpProxy,
-			DebugMode:                     config.DebugMode,
-			SaveMultiSub:                  config.SaveMultiSub,
-			Threads:                       config.Threads,
-			SubTypePriority:               config.SubTypePriority,
-			WhenSubSupplierInvalidWebHook: config.WhenSubSupplierInvalidWebHook,
-			EmbyConfig:                    config.EmbyConfig,
-			SaveOneSeasonSub:              config.SaveOneSeasonSub,
-
-			SubTimelineFixerConfig: config.SubTimelineFixerConfig,
-			FixTimeLine:            config.FixTimeLine,
-		})
+	d.downloader, err = downloader.NewDownloader(sub_formatter.GetSubFormatter(d.settings.AdvancedSettings.SubNameFormatter), d.settings)
 
 	if err != nil {
 		d.logger.Errorln("NewDownloader", err)
@@ -72,7 +62,7 @@ func (d DownloaderHelper) Start(config types.Config) error {
 	}
 	// 从 csf-bk 文件还原时间轴修复前的字幕文件
 	if d.downloader.NeedRestoreFixTimeLineBK == true {
-		err = d.downloader.RestoreFixTimelineBK(config.MovieFolder, config.SeriesFolder)
+		err = d.downloader.RestoreFixTimelineBK()
 		if err != nil {
 			d.logger.Errorln("RestoreFixTimelineBK", err)
 		}
@@ -83,19 +73,19 @@ func (d DownloaderHelper) Start(config types.Config) error {
 		d.logger.Errorln("RefreshEmbySubList", err)
 		return err
 	}
-	err = d.downloader.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
+	err = d.downloader.GetUpdateVideoListFromEmby()
 	if err != nil {
 		d.logger.Errorln("GetUpdateVideoListFromEmby", err)
 		return err
 	}
 	// 开始下载，电影
-	err = d.downloader.DownloadSub4Movie(config.MovieFolder)
+	err = d.downloader.DownloadSub4Movie()
 	if err != nil {
 		d.logger.Errorln("DownloadSub4Movie", err)
 		return err
 	}
 	// 开始下载，连续剧
-	err = d.downloader.DownloadSub4Series(config.SeriesFolder)
+	err = d.downloader.DownloadSub4Series()
 	if err != nil {
 		d.logger.Errorln("DownloadSub4Series", err)
 		return err

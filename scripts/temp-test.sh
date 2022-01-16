@@ -20,7 +20,7 @@ go test ./internal/pkg/imdb_helper
 # go test ./internal/pkg/log_helper
 # go test ./internal/pkg/my_util # will produce Log dir
 echo "ERROR:  Proxy needed for proxy_helper, skipping.............."
-# go test ./internal/pkg/proxy_helper # fail
+# go test ./internal/pkg/url_connectedness_helper # fail
 # go test ./internal/pkg/random_useragent
 # go test ./internal/pkg/regex_things
 echo "ERROR:  Proxy needed for rod_helper,  skipping.............."

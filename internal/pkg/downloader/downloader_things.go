@@ -24,7 +24,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 	videoFileName := filepath.Base(oneVideoFullPath)
 	// -------------------------------------------------
 	// 调试缓存，把下载好的字幕写到对应的视频目录下，方便调试
-	if d.reqParam.DebugMode == true {
+	if d.settings.DebugMode == true {
 
 		err = my_util.CopyFiles2DebugFolder([]string{videoFileName}, organizeSubFiles)
 		if err != nil {
@@ -44,7 +44,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 		// 找个错误可以忍
 		d.log.Errorln("SearchVideoMatchSubFileAndRemoveExtMark,", oneVideoFullPath, err)
 	}
-	if d.reqParam.SaveMultiSub == false {
+	if d.settings.SaveMultiSub == false {
 		// 选择最优的一个字幕
 		var finalSubFile *subparser.FileInfo
 		finalSubFile = d.mk.SelectOneSubFile(organizeSubFiles)
@@ -65,7 +65,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 		// 找到了，写入文件
 		err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile, "", bSetDefault, false)
 		if err != nil {
-			d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub, "writeSubFile2VideoPath:", err)
+			d.log.Errorln("SaveMultiSub:", d.settings.SaveMultiSub, "writeSubFile2VideoPath:", err)
 			return
 		}
 	} else {
@@ -90,7 +90,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 				}
 				err = d.writeSubFile2VideoPath(oneVideoFullPath, file, siteNames[i], setDefault, false)
 				if err != nil {
-					d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub, "writeSubFile2VideoPath:", err)
+					d.log.Errorln("SaveMultiSub:", d.settings.SaveMultiSub, "writeSubFile2VideoPath:", err)
 					return
 				}
 			}
@@ -105,7 +105,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 			for i := len(finalSubFiles) - 1; i > -1; i-- {
 				err = d.writeSubFile2VideoPath(oneVideoFullPath, finalSubFiles[i], siteNames[i], false, false)
 				if err != nil {
-					d.log.Errorln("SaveMultiSub:", d.reqParam.SaveMultiSub, "writeSubFile2VideoPath:", err)
+					d.log.Errorln("SaveMultiSub:", d.settings.SaveMultiSub, "writeSubFile2VideoPath:", err)
 					return
 				}
 			}
@@ -194,7 +194,7 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	d.log.Infoln("SubDownAt:", desSubFullPath)
 
 	// 然后还需要判断是否需要校正字幕的时间轴
-	if d.reqParam.FixTimeLine == true {
+	if d.settings.FixTimeLine == true {
 		err = d.subTimelineFixerHelperEx.Process(videoFileFullPath, desSubFullPath)
 		if err != nil {
 			return err

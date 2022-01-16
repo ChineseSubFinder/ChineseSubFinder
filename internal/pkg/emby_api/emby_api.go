@@ -2,8 +2,8 @@ package emby_api
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/go-resty/resty/v2"
 	"github.com/panjf2000/ants/v2"
@@ -14,20 +14,18 @@ import (
 )
 
 type EmbyApi struct {
-	embyConfig emby.EmbyConfig
+	embyConfig settings.EmbySettings
 	threads    int
 	timeOut    time.Duration
 	client     *resty.Client
 }
 
-func NewEmbyApi(embyConfig emby.EmbyConfig) *EmbyApi {
+func NewEmbyApi(embyConfig settings.EmbySettings) *EmbyApi {
 	em := EmbyApi{}
 	em.embyConfig = embyConfig
-	if em.embyConfig.LimitCount < common.EmbyApiGetItemsLimitMin ||
-		em.embyConfig.LimitCount > common.EmbyApiGetItemsLimitMax {
-
-		em.embyConfig.LimitCount = common.EmbyApiGetItemsLimitMin
-	}
+	// 检查是否超过范围
+	em.embyConfig.Check()
+	// 强制设置
 	em.threads = 6
 	em.timeOut = 5 * 60 * time.Second
 	// 见 https://github.com/allanpk716/ChineseSubFinder/issues/140
@@ -113,9 +111,9 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 		// 默认是不指定某一个User的视频列表
 		_, err = em.client.R().
 			SetQueryParams(map[string]string{
-				"api_key":          em.embyConfig.ApiKey,
+				"api_key":          em.embyConfig.APIKey,
 				"IsUnaired":        "false",
-				"Limit":            fmt.Sprintf("%d", em.embyConfig.LimitCount),
+				"Limit":            fmt.Sprintf("%d", em.embyConfig.MaxRequestVideoNumber),
 				"Recursive":        "true",
 				"SortOrder":        "Descending",
 				"IncludeItemTypes": "Episode,Movie",
@@ -123,7 +121,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 				"SortBy":           "DateCreated",
 			}).
 			SetResult(&recItems).
-			Get(em.embyConfig.Url + "/emby/Items")
+			Get(em.embyConfig.AddressUrl + "/emby/Items")
 
 		if err != nil {
 			return emby.EmbyRecentlyItems{}, err
@@ -142,9 +140,9 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 			// 获取指定用户的视频列表
 			_, err = em.client.R().
 				SetQueryParams(map[string]string{
-					"api_key":          em.embyConfig.ApiKey,
+					"api_key":          em.embyConfig.APIKey,
 					"IsUnaired":        "false",
-					"Limit":            fmt.Sprintf("%d", em.embyConfig.LimitCount),
+					"Limit":            fmt.Sprintf("%d", em.embyConfig.MaxRequestVideoNumber),
 					"Recursive":        "true",
 					"SortOrder":        "Descending",
 					"IncludeItemTypes": "Episode,Movie",
@@ -152,7 +150,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 					"SortBy":           "DateCreated",
 				}).
 				SetResult(&tmpRecItems).
-				Get(em.embyConfig.Url + "/emby/Users/" + item.Id + "/Items")
+				Get(em.embyConfig.AddressUrl + "/emby/Users/" + item.Id + "/Items")
 
 			if err != nil {
 				return emby.EmbyRecentlyItems{}, err
@@ -200,10 +198,10 @@ func (em EmbyApi) GetUserIdList() (emby.EmbyUsers, error) {
 	var recItems emby.EmbyUsers
 	_, err := em.client.R().
 		SetQueryParams(map[string]string{
-			"api_key": em.embyConfig.ApiKey,
+			"api_key": em.embyConfig.APIKey,
 		}).
 		SetResult(&recItems).
-		Get(em.embyConfig.Url + "/emby/Users/Query")
+		Get(em.embyConfig.AddressUrl + "/emby/Users/Query")
 
 	if err != nil {
 		return emby.EmbyUsers{}, err
@@ -219,10 +217,10 @@ func (em EmbyApi) GetItemAncestors(id string) ([]emby.EmbyItemsAncestors, error)
 
 	_, err := em.client.R().
 		SetQueryParams(map[string]string{
-			"api_key": em.embyConfig.ApiKey,
+			"api_key": em.embyConfig.APIKey,
 		}).
 		SetResult(&recItems).
-		Get(em.embyConfig.Url + "/emby/Items/" + id + "/Ancestors")
+		Get(em.embyConfig.AddressUrl + "/emby/Items/" + id + "/Ancestors")
 	if err != nil {
 		return nil, err
 	}
@@ -237,10 +235,10 @@ func (em EmbyApi) GetItemVideoInfo(id string) (emby.EmbyVideoInfo, error) {
 
 	_, err := em.client.R().
 		SetQueryParams(map[string]string{
-			"api_key": em.embyConfig.ApiKey,
+			"api_key": em.embyConfig.APIKey,
 		}).
 		SetResult(&recItem).
-		Get(em.embyConfig.Url + "/emby/LiveTv/Programs/" + id)
+		Get(em.embyConfig.AddressUrl + "/emby/LiveTv/Programs/" + id)
 	if err != nil {
 		return emby.EmbyVideoInfo{}, err
 	}
@@ -255,10 +253,10 @@ func (em EmbyApi) GetItemVideoInfoByUserId(userId, videoId string) (emby.EmbyVid
 
 	_, err := em.client.R().
 		SetQueryParams(map[string]string{
-			"api_key": em.embyConfig.ApiKey,
+			"api_key": em.embyConfig.APIKey,
 		}).
 		SetResult(&recItem).
-		Get(em.embyConfig.Url + "/emby/Users/" + userId + "/Items/" + videoId)
+		Get(em.embyConfig.AddressUrl + "/emby/Users/" + userId + "/Items/" + videoId)
 	if err != nil {
 		return emby.EmbyVideoInfoByUserId{}, err
 	}
@@ -271,9 +269,9 @@ func (em EmbyApi) UpdateVideoSubList(id string) error {
 
 	_, err := em.client.R().
 		SetQueryParams(map[string]string{
-			"api_key": em.embyConfig.ApiKey,
+			"api_key": em.embyConfig.APIKey,
 		}).
-		Post(em.embyConfig.Url + "/emby/Items/" + id + "/Refresh")
+		Post(em.embyConfig.AddressUrl + "/emby/Items/" + id + "/Refresh")
 	if err != nil {
 		return err
 	}
@@ -285,7 +283,7 @@ func (em EmbyApi) UpdateVideoSubList(id string) error {
 func (em EmbyApi) GetSubFileData(videoId, mediaSourceId, subIndex, subExt string) (string, error) {
 
 	response, err := em.client.R().
-		Get(em.embyConfig.Url + "/emby/Videos/" + videoId + "/" + mediaSourceId + "/Subtitles/" + subIndex + "/Stream" + subExt)
+		Get(em.embyConfig.AddressUrl + "/emby/Videos/" + videoId + "/" + mediaSourceId + "/Subtitles/" + subIndex + "/Stream" + subExt)
 	if err != nil {
 		return "", err
 	}
