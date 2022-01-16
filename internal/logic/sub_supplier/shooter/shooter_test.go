@@ -36,7 +36,8 @@ func TestNewSupplier(t *testing.T) {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, sublist.FileUrl, len(sublist.Data))
 	}
 
-	if shooter.CheckAlive() == false {
+	alive, _ := shooter.CheckAlive()
+	if alive == false {
 		t.Fatal("CheckAlive == false")
 	}
 }

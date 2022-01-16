@@ -9,7 +9,7 @@ import (
 )
 
 // UrlConnectednessTest 测试输入 url 的连通性
-func UrlConnectednessTest(testUrl, proxyAddr string) (bool, int, error) {
+func UrlConnectednessTest(testUrl, proxyAddr string) (bool, int64, error) {
 
 	var httpClient http.Client
 	if proxyAddr == "" {
@@ -51,7 +51,7 @@ func UrlConnectednessTest(testUrl, proxyAddr string) (bool, int, error) {
 	defer func() {
 		_ = res.Body.Close()
 	}()
-	speed := int(time.Now().Sub(begin).Nanoseconds() / 1000 / 1000) //ms
+	speed := time.Now().Sub(begin).Nanoseconds() / 1000 / 1000 //ms
 	// 判断是否成功访问，如果成功访问StatusCode应该为200
 	if res.StatusCode != http.StatusOK {
 		return false, 0, nil

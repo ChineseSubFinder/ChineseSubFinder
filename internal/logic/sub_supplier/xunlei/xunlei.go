@@ -17,6 +17,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type Supplier struct {
@@ -39,18 +40,22 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 	return &sup
 }
 
-func (s Supplier) CheckAlive() bool {
+func (s Supplier) CheckAlive() (bool, int64) {
 
+	// 计算当前时间
+	startT := time.Now()
 	jsonList, err := s.getSubInfos(checkFileName, checkCID)
 	if err != nil {
-		return false
+		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
+		return false, 0
 	}
 
 	if len(jsonList.Sublist) < 1 {
-		return false
+		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Sublist < 1")
+		return false, 0
 	}
 
-	return true
+	return true, time.Since(startT).Milliseconds()
 }
 
 func (s Supplier) GetSupplierName() string {

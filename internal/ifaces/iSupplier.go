@@ -6,7 +6,7 @@ import (
 )
 
 type ISupplier interface {
-	CheckAlive() bool
+	CheckAlive() (bool, int64)
 
 	GetSupplierName() string
 

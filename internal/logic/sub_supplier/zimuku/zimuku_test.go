@@ -2,6 +2,7 @@ package zimuku
 
 import (
 	series_helper2 "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
 	"testing"
@@ -11,7 +12,7 @@ func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 
 	//imdbId1 := "tt3228774"
 	videoName := "黑白魔女库伊拉"
-	s := NewSupplier()
+	s := NewSupplier(*settings.NewSettings())
 	outList, err := s.getSubListFromKeyword(videoName)
 	if err != nil {
 		t.Error(err)
@@ -32,7 +33,7 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	movie1 := filepath.Join(rootDir, "zimuku", "movies", "The Devil All the Time (2020)", "The Devil All the Time (2020) WEBDL-1080p.mkv")
-	s := NewSupplier()
+	s := NewSupplier(*settings.NewSettings())
 	outList, err := s.getSubListFromMovie(movie1)
 	if err != nil {
 		t.Error(err)
@@ -40,6 +41,11 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 	println(outList)
 	for i, sublist := range outList {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, len(sublist.Data))
+	}
+
+	alive, _ := s.CheckAlive()
+	if alive == false {
+		t.Fatal("CheckAlive == false")
 	}
 }
 
@@ -64,7 +70,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	//epsMap[1] = 4
 	//series_helper2.SetTheSpecifiedEps2Download(seriesInfo, epsMap)
 
-	s := NewSupplier()
+	s := NewSupplier(*settings.NewSettings())
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -85,7 +91,7 @@ func TestSupplier_getSubListFromKeyword(t *testing.T) {
 	//imdbID := "tt15299712" // 云南虫谷
 	//imdbID := "tt3626476"  // Vacation Friends (2021)
 	imdbID := "tt11192306" // Superman.and.Lois
-	zimuku := NewSupplier()
+	zimuku := NewSupplier(*settings.NewSettings())
 	subInfos, err := zimuku.getSubListFromKeyword(imdbID)
 	if err != nil {
 		t.Fatal(err)

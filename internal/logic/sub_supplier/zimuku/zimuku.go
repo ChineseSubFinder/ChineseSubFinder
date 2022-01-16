@@ -12,6 +12,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/url_connectedness_helper"
 	language2 "github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -40,6 +41,21 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 		sup.topic = sup.settings.AdvancedSettings.Topic
 	}
 	return &sup
+}
+
+func (s Supplier) CheckAlive() (bool, int64) {
+
+	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(common.SubZiMuKuRootUrl, s.settings.AdvancedSettings.ProxySettings.HttpProxyAddress)
+	if err != nil {
+		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
+		return false, 0
+	}
+	if proxyStatus == false {
+		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Status != 200")
+		return false, proxySpeed
+	}
+
+	return true, proxySpeed
 }
 
 func (s Supplier) GetSupplierName() string {

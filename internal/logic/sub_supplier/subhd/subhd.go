@@ -13,6 +13,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/url_connectedness_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -66,6 +67,21 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 	}
 
 	return &sup
+}
+
+func (s Supplier) CheckAlive() (bool, int64) {
+
+	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(common.SubSubHDRootUrl, s.settings.AdvancedSettings.ProxySettings.HttpProxyAddress)
+	if err != nil {
+		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
+		return false, 0
+	}
+	if proxyStatus == false {
+		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Status != 200")
+		return false, proxySpeed
+	}
+
+	return true, proxySpeed
 }
 
 func (s Supplier) GetSupplierName() string {

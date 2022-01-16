@@ -38,7 +38,8 @@ func TestGetList(t *testing.T) {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, len(sublist.Data))
 	}
 
-	if xunlie.CheckAlive() == false {
+	alive, _ := xunlie.CheckAlive()
+	if alive == false {
 		t.Fatal("CheckAlive == false")
 	}
 }
