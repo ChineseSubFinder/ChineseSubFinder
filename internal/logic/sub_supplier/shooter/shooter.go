@@ -39,6 +39,16 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 	return &sup
 }
 
+func (s Supplier) CheckAlive() bool {
+
+	_, err := s.getSubInfos(checkFileHash, checkFileName, qLan)
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
 func (s Supplier) GetSupplierName() string {
 	return common.SubSiteShooter
 }
@@ -64,7 +74,6 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	s.log.Debugln(s.GetSupplierName(), filePath, "Start...")
 
 	// 可以提供的字幕查询 eng或者chn
-	const qLan = "Chn"
 	var outSubInfoList []supplier.SubInfo
 	var jsonList []SublistShooter
 
@@ -77,24 +86,11 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	}
 
 	fileName := filepath.Base(filePath)
-
-	httpClient := my_util.NewHttpClient(*s.settings.AdvancedSettings.ProxySettings)
-	resp, err := httpClient.R().
-		SetFormData(map[string]string{
-			"filehash": hash,
-			"pathinfo": fileName,
-			"format":   "json",
-			"lang":     qLan,
-		}).
-		SetResult(&jsonList).
-		Post(common.SubShooterRootUrl)
+	jsonList, err = s.getSubInfos(hash, fileName, qLan)
 	if err != nil {
-		if resp != nil {
-			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", filePath, err.Error())
-			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("filePath: %s, resp: %s, error: %s", filePath, resp.String(), err.Error()))
-		}
 		return nil, err
 	}
+
 	for i, shooter := range jsonList {
 		for _, file := range shooter.Files {
 			subExt := file.Ext
@@ -119,6 +115,31 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 		}
 	}
 	return outSubInfoList, nil
+}
+
+func (s Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShooter, error) {
+
+	var jsonList []SublistShooter
+
+	httpClient := my_util.NewHttpClient(*s.settings.AdvancedSettings.ProxySettings)
+	resp, err := httpClient.R().
+		SetFormData(map[string]string{
+			"filehash": fileHash,
+			"pathinfo": fileName,
+			"format":   "json",
+			"lang":     qLan,
+		}).
+		SetResult(&jsonList).
+		Post(common.SubShooterRootUrl)
+	if err != nil {
+		if resp != nil {
+			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", fileName, err.Error())
+			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("filePath: %s, resp: %s, error: %s", fileName, resp.String(), err.Error()))
+		}
+		return nil, err
+	}
+
+	return jsonList, nil
 }
 
 func (s Supplier) computeFileHash(filePath string) (string, error) {
@@ -196,3 +217,9 @@ type SublistShooter struct {
 	Delay int64          `json:"delay"`
 	Files []FilesShooter `json:"files"`
 }
+
+const (
+	qLan          = "Chn"
+	checkFileHash = "234b0ff3685d6c46164b6b48cd39d69f;8be57624909f9d365dc81df43399d496;436de72e3c36a05a07875cc3249ae31a;237f498cfee89c67a22564e61047b053"
+	checkFileName = "S05E09.mkv"
+)

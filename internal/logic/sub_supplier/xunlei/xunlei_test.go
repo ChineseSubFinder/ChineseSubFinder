@@ -1,8 +1,8 @@
 package xunlei
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"path/filepath"
 	"testing"
 )
@@ -27,7 +27,7 @@ func TestGetList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	xunlie := NewSupplier(types.ReqParam{Topic: 3})
+	xunlie := NewSupplier(*settings.NewSettings())
 	outList, err := xunlie.getSubListFromFile(gVideoFPath)
 	if err != nil {
 		t.Error(err)
@@ -36,5 +36,9 @@ func TestGetList(t *testing.T) {
 
 	for i, sublist := range outList {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, len(sublist.Data))
+	}
+
+	if xunlie.CheckAlive() == false {
+		t.Fatal("CheckAlive == false")
 	}
 }

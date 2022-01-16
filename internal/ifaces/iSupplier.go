@@ -6,6 +6,8 @@ import (
 )
 
 type ISupplier interface {
+	CheckAlive() bool
+
 	GetSupplierName() string
 
 	GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error)

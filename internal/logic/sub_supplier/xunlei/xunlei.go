@@ -39,6 +39,20 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 	return &sup
 }
 
+func (s Supplier) CheckAlive() bool {
+
+	jsonList, err := s.getSubInfos(checkFileName, checkCID)
+	if err != nil {
+		return false
+	}
+
+	if len(jsonList.Sublist) < 1 {
+		return false
+	}
+
+	return true
+}
+
 func (s Supplier) GetSupplierName() string {
 	return common.SubSiteXunLei
 }
@@ -70,17 +84,12 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	if len(cid) == 0 {
 		return nil, common.XunLeiCIdIsEmpty
 	}
-	httpClient := my_util.NewHttpClient(*s.settings.AdvancedSettings.ProxySettings)
-	resp, err := httpClient.R().
-		SetResult(&jsonList).
-		Get(fmt.Sprintf(common.SubXunLeiRootUrl, cid))
+
+	jsonList, err = s.getSubInfos(filePath, cid)
 	if err != nil {
-		if resp != nil {
-			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", filePath, err.Error())
-			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("filePath: %s, resp: %s, error: %s", filePath, resp.String(), err.Error()))
-		}
 		return nil, err
 	}
+
 	// 剔除空的
 	for _, v := range jsonList.Sublist {
 		if len(v.Scid) > 0 && v.Scid != "" {
@@ -125,6 +134,24 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	}
 
 	return outSubList, nil
+}
+
+func (s Supplier) getSubInfos(filePath, cid string) (SublistSliceXunLei, error) {
+	var jsonList SublistSliceXunLei
+
+	httpClient := my_util.NewHttpClient(*s.settings.AdvancedSettings.ProxySettings)
+	resp, err := httpClient.R().
+		SetResult(&jsonList).
+		Get(fmt.Sprintf(common.SubXunLeiRootUrl, cid))
+	if err != nil {
+		if resp != nil {
+			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", filePath, err.Error())
+			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("filePath: %s, resp: %s, error: %s", filePath, resp.String(), err.Error()))
+		}
+		return jsonList, err
+	}
+
+	return jsonList, nil
 }
 
 //getCid 获取指定文件的唯一 cid
@@ -206,3 +233,8 @@ type SublistXunLei struct {
 type SublistSliceXunLei struct {
 	Sublist []SublistXunLei
 }
+
+const (
+	checkFileName = "CheckFileName"
+	checkCID      = "FB4E2AFF106112136DFC5ACC7339EB29D1EC0CF8"
+)

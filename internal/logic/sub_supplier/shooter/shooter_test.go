@@ -1,8 +1,8 @@
 package shooter
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"path/filepath"
 	"testing"
 )
@@ -25,7 +25,7 @@ func TestNewSupplier(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shooter := NewSupplier(types.ReqParam{Topic: 3})
+	shooter := NewSupplier(*settings.NewSettings())
 	outList, err := shooter.getSubListFromFile(gVideoFPath)
 	if err != nil {
 		t.Error(err)
@@ -34,5 +34,9 @@ func TestNewSupplier(t *testing.T) {
 
 	for i, sublist := range outList {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, sublist.FileUrl, len(sublist.Data))
+	}
+
+	if shooter.CheckAlive() == false {
+		t.Fatal("CheckAlive == false")
 	}
 }

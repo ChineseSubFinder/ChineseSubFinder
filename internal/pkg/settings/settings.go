@@ -1,9 +1,9 @@
 package settings
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/strcut_json"
 	"github.com/huandu/go-clone"
+	"os"
 	"sync"
 )
 
@@ -23,7 +23,7 @@ func GetSettings() *Settings {
 
 		settingsOnce.Do(func() {
 			settings = NewSettings()
-			if my_util.IsFile(settings.configFPath) == false {
+			if isFile(settings.configFPath) == false {
 				// 配置文件不存在，新建一个空白的
 				err := settings.Save()
 				if err != nil {
@@ -94,6 +94,24 @@ func (s *Settings) Check() {
 			s.CommonSettings.Threads = 3
 		}
 	}
+}
+
+// isDir 存在且是文件夹
+func isDir(path string) bool {
+	s, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return s.IsDir()
+}
+
+// isFile 存在且是文件
+func isFile(filePath string) bool {
+	s, err := os.Stat(filePath)
+	if err != nil {
+		return false
+	}
+	return !s.IsDir()
 }
 
 var (
