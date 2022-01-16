@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -278,8 +279,36 @@ func ClearFolderEx(folderFullPath string, overtime int) error {
 	return nil
 }
 
+// GetConfigRootDirFPath 获取 Config 的根目录，不同系统不一样
+func GetConfigRootDirFPath() string {
+
+	nowConfigFPath := ""
+	sysType := runtime.GOOS
+	if sysType == "linux" {
+		nowConfigFPath = configDirRootFPathLinux
+	} else if sysType == "windows" {
+		nowConfigFPath = configDirRootFPathWindows
+	} else if sysType == "darwin" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			panic("GetConfigRootDirFPath darwin get UserHomeDir, Error:" + err.Error())
+		}
+		nowConfigFPath = home + configDirRootFPathDarwin
+	} else {
+		panic("GetConfigRootDirFPath can't matched OSType: " + sysType + " ,You Should Implement It Yourself")
+	}
+
+	return nowConfigFPath
+}
+
 const (
 	DebugFolder       = "CSF-DebugThings" // 调试相关的文件夹
 	TmpFolder         = "CSF-TmpThings"   // 临时缓存的文件夹
 	SubFixCacheFolder = "CSF-SubFixCache" // 字幕时间校正的缓存文件夹，一般可以不清理
+)
+
+const (
+	configDirRootFPathWindows = "./"                         // Windows 就是在当前的程序目录
+	configDirRootFPathLinux   = "/config/"                   // Linux 是在 /config 下
+	configDirRootFPathDarwin  = "/.config/chinesesubfinder/" // Darwin 是在 os.UserHomeDir()/.config/chinesesubfinder/ 下
 )

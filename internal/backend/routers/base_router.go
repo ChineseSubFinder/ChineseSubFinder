@@ -1,28 +1,27 @@
 package routers
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/base"
 	v1 "github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/v1"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/middle"
 	"github.com/gin-gonic/gin"
 )
 
 func InitRouter(router *gin.Engine) {
-
+	cbBase := base.NewControllerBase()
 	cbV1 := v1.NewControllerBase()
+	// 基础的路由
+	router.GET("/system-status", cbBase.SystemStatusHandler)
 
-	router.GET("/system-status", cbV1.SystemStatusHandler)
+	router.POST("/setup", cbBase.SetupHandler)
 
-	router.POST("/setup", cbV1.SetupHandler)
-
-	router.POST("/login", cbV1.LoginHandler)
-
+	router.POST("/login", cbBase.LoginHandler)
+	router.POST("/logout", middle.CheckAuth(), cbBase.LogoutHandler)
+	router.POST("/change-pwd", middle.CheckAuth(), cbBase.ChangePwdHandler)
+	// v1路由: /v1/xxx
 	GroupV1 := router.Group("/" + cbV1.GetVersion())
 	{
 		GroupV1.Use(middle.CheckAuth())
-
-		GroupV1.POST("/logout", cbV1.LogoutHandler)
-
-		GroupV1.POST("/change-pwd", cbV1.ChangePwdHandler)
 
 		GroupV1.GET("/settings", cbV1.SettingsHandler)
 		GroupV1.PATCH("/settings", cbV1.SettingsHandler)

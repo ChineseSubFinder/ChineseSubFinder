@@ -1,4 +1,4 @@
-package v1
+package base
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/common"
@@ -11,5 +11,5 @@ func (cb ControllerBase) LogoutHandler(c *gin.Context) {
 
 	// 注销
 	common.SetAccessToken("")
-	c.JSON(http.StatusOK, backend.ReplyCommon{Message: "ok"})
+	c.JSON(http.StatusOK, backend.ReplyCommon{Message: "ok, need ReLogin"})
 }

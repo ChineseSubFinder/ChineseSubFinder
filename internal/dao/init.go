@@ -4,14 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/models/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sqlite"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sync"
 )
 
@@ -58,10 +56,6 @@ func InitDb() error {
 	var err error
 	// 新建数据库
 	nowDbFileName := getDbName()
-	if nowDbFileName == "" {
-		return errors.New(fmt.Sprintf(`InitDb().getDbName() is empty, not support this OS.
-you need implement getDbName() in file: internal/dao/init.go `))
-	}
 
 	dbDir := filepath.Dir(nowDbFileName)
 	if my_util.IsDir(dbDir) == false {
@@ -72,9 +66,7 @@ you need implement getDbName() in file: internal/dao/init.go `))
 		return errors.New(fmt.Sprintf("failed to connect database, %s", err.Error()))
 	}
 	// 迁移 schema
-	err = db.AutoMigrate(&models.HotFix{}, &models.SubFormatRec{},
-		&models.UserInfo{},
-		&settings.Settings{})
+	err = db.AutoMigrate(&models.HotFix{}, &models.SubFormatRec{})
 	if err != nil {
 		return errors.New(fmt.Sprintf("db AutoMigrate error, %s", err.Error()))
 	}
@@ -83,19 +75,7 @@ you need implement getDbName() in file: internal/dao/init.go `))
 }
 
 func getDbName() string {
-	nowDbFileName := ""
-	sysType := runtime.GOOS
-	if sysType == "linux" {
-		nowDbFileName = dbFileNameLinux
-	}
-	if sysType == "windows" {
-		nowDbFileName = dbFileNameWindows
-	}
-	if sysType == "darwin" {
-		home, _ := os.UserHomeDir()
-		nowDbFileName = home + "/.config/chinesesubfinder/" + dbFileNameDarwin
-	}
-	return nowDbFileName
+	return my_util.GetConfigRootDirFPath() + dbFileName
 }
 
 var (
@@ -104,7 +84,5 @@ var (
 )
 
 const (
-	dbFileNameLinux   = "/config/settings.db"
-	dbFileNameWindows = "settings.db"
-	dbFileNameDarwin  = "settings.db"
+	dbFileName = "settings.db"
 )

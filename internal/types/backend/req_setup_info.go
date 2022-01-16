@@ -1,7 +1,9 @@
 package backend
 
-import "github.com/allanpk716/ChineseSubFinder/internal/models"
+import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+)
 
 type ReqSetupInfo struct {
-	UserInfo models.UserInfo `json:"user_info" binding:"required"`
+	Settings settings.Settings `json:"settings" binding:"required"`
 }

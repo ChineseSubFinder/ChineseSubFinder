@@ -1,10 +1,8 @@
-package v1
+package base
 
 import (
-	"errors"
-	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -24,31 +22,24 @@ func (cb ControllerBase) ChangePwdHandler(c *gin.Context) {
 		return
 	}
 
-	found, dbUserInfo, err := dao.GetUserInfo()
-	if err != nil {
+	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {
+		// 配置文件中的账号和密码任意一个未空，提示用户需要进行 setup 流程
+		c.JSON(http.StatusNoContent, backend.ReplyCommon{Message: "You need do `Setup`"})
 		return
 	}
 
-	if found == false {
-		// 找不到用户
-		c.JSON(http.StatusInternalServerError, backend.ReplyCommon{Message: "Can't Found UserInfo"})
-	} else if dbUserInfo.Password != changePwd.OrgPwd {
+	if settings.GetSettings().UserInfo.Password != changePwd.OrgPwd {
 		// 原始的密码不对
 		c.JSON(http.StatusNoContent, backend.ReplyCommon{Message: "Org Password Error"})
 	} else {
 		// 同意修改密码
-		dbUserInfo.Password = changePwd.NewPwd
-		re := dao.GetDb().Updates(dbUserInfo)
-		if re == nil {
-			err = errors.New(fmt.Sprintf("dao.GetDb().Updates return nil"))
-			return
-		}
-		if re.Error != nil {
-			err = re.Error
+		settings.GetSettings().UserInfo.Password = changePwd.NewPwd
+		err = settings.GetSettings().Save()
+		if err != nil {
 			return
 		}
 		// 修改密码成功后，会清理 AccessToken，强制要求重写登录
 		common.SetAccessToken("")
-		c.JSON(http.StatusOK, backend.ReplyCommon{Message: "ok"})
+		c.JSON(http.StatusOK, backend.ReplyCommon{Message: "ok, need ReLogin"})
 	}
 }

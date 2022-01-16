@@ -27,7 +27,7 @@ require (
 	github.com/huandu/go-clone v1.3.0
 	github.com/james-bowman/nlp v0.0.0-20210511120306-26d441fa0ded
 	github.com/james-bowman/sparse v0.0.0-20210729090128-1e6c7dd483e9 // indirect
-	github.com/jinzhu/now v1.1.2
+	github.com/jinzhu/now v1.1.4
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/klauspost/compress v1.12.2 // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
@@ -62,8 +62,7 @@ require (
 	gopkg.in/errgo.v2 v2.1.0
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gorm.io/gorm v1.21.12
-	modernc.org/sqlite v1.12.0
+	gorm.io/gorm v1.22.5
 )
 
 require (
@@ -98,6 +97,7 @@ require (
 	github.com/klauspost/pgzip v1.2.4 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mattn/go-sqlite3 v1.14.10 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -122,6 +122,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gorm.io/driver/sqlite v1.2.6 // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
 	modernc.org/cc/v3 v3.33.7 // indirect
 	modernc.org/ccgo/v3 v3.9.6 // indirect

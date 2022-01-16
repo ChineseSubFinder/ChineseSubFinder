@@ -12,35 +12,17 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/prometheus/common/log"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 )
 
 func init() {
 
-	config = config2.GetConfig()
-	// 根据配置文件的情况去生成是否需要开启日志 Debug 记录级别的特殊文件
-	if config.DebugMode == true {
-		err := log_helper.WriteDebugFile()
-		if err != nil {
-			panic("log_helper.WriteDebugFile " + err.Error())
-		}
-	} else {
-		err := log_helper.DeleteDebugFile()
-		if err != nil {
-			panic("log_helper.DeleteDebugFile " + err.Error())
-		}
-	}
-
-	log = log_helper.GetLogger()
-
 	log.Infoln("ChineseSubFinder Version:", AppVersion)
 
 	if my_util.OSCheck() == false {
-		panic(`only support Linux and Windows, if you want support MacOS, 
-you need implement getDbName() in file: internal/dao/init.go 
-and 
-implement getSpeFileName() in internal/logic/forced_scan_and_down_sub/forced_scan_and_down_sub.go`)
+		panic(`You should search runtime.GOOS in the project, Implement unimplemented function`)
 	}
 }
 
@@ -156,11 +138,6 @@ func main() {
 func DownLoadStart(httpProxy string) {
 
 }
-
-var (
-	log    *logrus.Logger
-	config *types.Config
-)
 
 /*
 	没有很好的想法，因为喜欢使用 tag 进行版本的输出标记，但是 tag 的时候编译 docker 前确实可以修改源码替换关键词做到版本与 tag 同步变更

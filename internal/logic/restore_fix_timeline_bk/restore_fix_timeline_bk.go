@@ -1,21 +1,15 @@
 package restore_fix_timeline_bk
 
 import (
-	"errors"
-	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"os"
-	"runtime"
 )
 
 // CheckSpeFile 目标是检测特定的文件，找到后，先删除，返回一个标志位用于后面的逻辑
 func CheckSpeFile() (bool, error) {
 
 	nowSpeFileName := getSpeFileName()
-	if nowSpeFileName == "" {
-		return false, errors.New(fmt.Sprintf(`restore_fix_timeline_bk.getSpeFileName() is empty, not support this OS. 
-you needd implement getSpeFileName() in internal/logic/restore_fix_timeline_bk/restore_fix_timeline_bk.go`))
-	}
+
 	if my_util.IsFile(nowSpeFileName) == false {
 		return false, nil
 	}
@@ -29,19 +23,7 @@ you needd implement getSpeFileName() in internal/logic/restore_fix_timeline_bk/r
 }
 
 func getSpeFileName() string {
-	nowSpeFileName := ""
-	sysType := runtime.GOOS
-	if sysType == "linux" {
-		nowSpeFileName = specialFileNameLinux
-	}
-	if sysType == "windows" {
-		nowSpeFileName = specialFileNameWindows
-	}
-	if sysType == "darwin" {
-		home, _ := os.UserHomeDir()
-		nowSpeFileName = home + "/.config/chinesesubfinder/" + specialFileNameDarwin
-	}
-	return nowSpeFileName
+	return my_util.GetConfigRootDirFPath() + specialFileName
 }
 
 /*
@@ -51,7 +33,5 @@ func getSpeFileName() string {
 	对于 MacOS 需要自行实现
 */
 const (
-	specialFileNameWindows = "RestoreFixTimelineBK"
-	specialFileNameLinux   = "/config/" + specialFileNameWindows
-	specialFileNameDarwin  = "RestoreFixTimelineBK"
+	specialFileName = "RestoreFixTimelineBK"
 )

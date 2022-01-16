@@ -305,6 +305,9 @@ func OSCheck() bool {
 	if sysType == "windows" {
 		return true
 	}
+	if sysType == "darwin" {
+		return true
+	}
 
 	return false
 }

@@ -1,7 +1,7 @@
-package v1
+package base
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -16,12 +16,13 @@ func (cb ControllerBase) SystemStatusHandler(c *gin.Context) {
 		cb.ErrorProcess(c, "SystemStatusHandler", err)
 	}()
 
-	found, _, err := dao.GetUserInfo()
-	if err != nil {
-		return
+	isSetup := false
+	if settings.GetSettings().UserInfo.Username != "" && settings.GetSettings().UserInfo.Password != "" {
+		// 进行过 setup 了，那么就可以 Login 的流程
+		isSetup = true
 	}
 
 	c.JSON(http.StatusOK, backend.ReplySystemStatus{
-		IsSetup: found,
+		IsSetup: isSetup,
 	})
 }

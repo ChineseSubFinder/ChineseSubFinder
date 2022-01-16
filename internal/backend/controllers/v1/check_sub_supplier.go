@@ -3,8 +3,8 @@ package v1
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -17,7 +17,7 @@ func (cb ControllerBase) CheckSubSupplierHandler(c *gin.Context) {
 		// 统一的异常处理
 		cb.ErrorProcess(c, "CheckSubSupplierHandler", err)
 	}()
-	nowUserInfo := models.UserInfo{}
+	nowUserInfo := settings.UserInfo{}
 	err = c.ShouldBindJSON(&nowUserInfo)
 	if err != nil {
 		return

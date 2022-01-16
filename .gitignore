@@ -60,7 +60,9 @@ TestData/
 /cmd/GetCAPTCHA
 /.idea
 /internal/backend/Logs
-/internal/backend
 /internal/pkg/task_control/Logs/*.log
 /internal/pkg/task_control/opendebuglog
 /internal/pkg/downloader/Logs/*.log
+/internal/dao/Logs/*.log
+/internal/dao/*.db
+/internal/pkg/strcut_json/*.json
