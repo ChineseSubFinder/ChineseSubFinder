@@ -4,6 +4,7 @@ import (
 	"errors"
 	movieHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/movie_helper"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/old"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
@@ -16,12 +17,12 @@ import (
 	chs_en[shooter] -> Chinese(中英,shooter)
 */
 type HotFix001 struct {
-	movieRootDir  string
-	seriesRootDir string
+	movieRootDirs  []string
+	seriesRootDirs []string
 }
 
-func NewHotFix001(movieRootDir string, seriesRootDir string) *HotFix001 {
-	return &HotFix001{movieRootDir: movieRootDir, seriesRootDir: seriesRootDir}
+func NewHotFix001(movieRootDirs []string, seriesRootDirs []string) *HotFix001 {
+	return &HotFix001{movieRootDirs: movieRootDirs, seriesRootDirs: seriesRootDirs}
 }
 
 func (h HotFix001) GetKey() string {
@@ -29,24 +30,58 @@ func (h HotFix001) GetKey() string {
 }
 
 func (h HotFix001) Process() (interface{}, error) {
+	return h.process()
+}
+
+func (h HotFix001) process() (interface{}, error) {
+
+	outStruct := OutStruct001{}
+	outStruct.RenamedFiles = make([]string, 0)
+	outStruct.ErrFiles = make([]string, 0)
+
+	for i, dir := range h.movieRootDirs {
+		log_helper.GetLogger().Infoln("Fix Movie Dir Index", i, dir, "Start...")
+		fixMovie, err := h.fixMovie(dir)
+		if err != nil {
+			log_helper.GetLogger().Infoln("Fix Movie Dir Index", i, dir, "End...")
+			return nil, err
+		}
+
+		outStruct.RenamedFiles = append(outStruct.RenamedFiles, fixMovie.(OutStruct001).RenamedFiles...)
+		outStruct.ErrFiles = append(outStruct.ErrFiles, fixMovie.(OutStruct001).ErrFiles...)
+
+		log_helper.GetLogger().Infoln("Fix Movie Dir Index", i, dir, "End...")
+	}
+
+	for i, dir := range h.seriesRootDirs {
+		log_helper.GetLogger().Infoln("Fix Series Dir Index", i, dir, "Start...")
+		fixSeries, err := h.fixMovie(dir)
+		if err != nil {
+			log_helper.GetLogger().Infoln("Fix Series Dir Index", i, dir, "End...")
+			return nil, err
+		}
+
+		outStruct.RenamedFiles = append(outStruct.RenamedFiles, fixSeries.(OutStruct001).RenamedFiles...)
+		outStruct.ErrFiles = append(outStruct.ErrFiles, fixSeries.(OutStruct001).ErrFiles...)
+
+		log_helper.GetLogger().Infoln("Fix Series Dir Index", i, dir, "End...")
+	}
+
+	return outStruct, nil
+}
+
+func (h HotFix001) fixMovie(movieRootDir string) (interface{}, error) {
 
 	var err error
 	outStruct := OutStruct001{}
 	outStruct.RenamedFiles = make([]string, 0)
 	outStruct.ErrFiles = make([]string, 0)
-	if my_util.IsDir(h.movieRootDir) == false {
-		return outStruct, errors.New("movieRootDir path not exist: " + h.movieRootDir)
-	}
-	if my_util.IsDir(h.seriesRootDir) == false {
-		return outStruct, errors.New("seriesRootDir path not exist: " + h.seriesRootDir)
+	if my_util.IsDir(movieRootDir) == false {
+		return outStruct, errors.New("movieRootDir path not exist: " + movieRootDir)
 	}
 	// 先找出有那些电影文件夹和连续剧文件夹
 	var movieFullPathList = make([]string, 0)
-	movieFullPathList, err = my_util.SearchMatchedVideoFile(h.movieRootDir)
-	if err != nil {
-		return outStruct, err
-	}
-	seriesDirList, err := seriesHelper.GetSeriesList(h.seriesRootDir)
+	movieFullPathList, err = my_util.SearchMatchedVideoFile(movieRootDir)
 	if err != nil {
 		return outStruct, err
 	}
@@ -71,6 +106,22 @@ func (h HotFix001) Process() (interface{}, error) {
 			}
 			outStruct.RenamedFiles = append(outStruct.RenamedFiles, newSubFileName)
 		}
+	}
+	return outStruct, nil
+}
+
+func (h HotFix001) fixSeries(seriesRootDir string) (interface{}, error) {
+	var err error
+	outStruct := OutStruct001{}
+	outStruct.RenamedFiles = make([]string, 0)
+	outStruct.ErrFiles = make([]string, 0)
+	if my_util.IsDir(seriesRootDir) == false {
+		return outStruct, errors.New("seriesRootDir path not exist: " + seriesRootDir)
+	}
+	// 先找出有那些电影文件夹和连续剧文件夹
+	seriesDirList, err := seriesHelper.GetSeriesList(seriesRootDir)
+	if err != nil {
+		return outStruct, err
 	}
 	// 连续剧
 	var seriesSubFiles = make([]string, 0)

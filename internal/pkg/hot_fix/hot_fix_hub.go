@@ -16,7 +16,7 @@ func HotFixProcess(param types.HotFixParam) error {
 	// -----------------------------------------------------------------------
 	// 一共有多少个 HotFix 要修复，需要固定下来
 	hotfixCases := []ifaces.IHotFix{
-		NewHotFix001(param.MovieRootDir, param.SeriesRootDir),
+		NewHotFix001(param.MovieRootDirs, param.SeriesRootDirs),
 	}
 	// -----------------------------------------------------------------------
 	// 找现在有多少个 hotfix 执行过了

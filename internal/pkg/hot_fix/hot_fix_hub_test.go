@@ -24,8 +24,8 @@ func TestHotFixProcess(t *testing.T) {
 	testSeriesDir := filepath.Join(testDataPath, seriesDir)
 	// 开始修复
 	err = HotFixProcess(types.HotFixParam{
-		MovieRootDir:  testMovieDir,
-		SeriesRootDir: testSeriesDir,
+		MovieRootDirs:  []string{testMovieDir},
+		SeriesRootDirs: []string{testSeriesDir},
 	})
 	if err != nil {
 		t.Fatal(err)

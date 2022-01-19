@@ -71,3 +71,8 @@ func proxyAddressValidHttpFormat(proxyAddr string) bool {
 }
 
 const testUrlTimeOut = 5
+
+const (
+	GoogleUrl = "https://google.com"
+	BaiduUrl  = "https://baidu.com"
+)

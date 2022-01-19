@@ -1,61 +1,32 @@
 package downloader_helper
 
 import (
-	commonValue "github.com/allanpk716/ChineseSubFinder/internal/common"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/something_static"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/sirupsen/logrus"
 )
 
 type DownloaderHelper struct {
-	downloader *downloader.Downloader
-	settings   settings.Settings
-	logger     *logrus.Logger
+	subSupplierHub *subSupplier.SubSupplierHub
+	downloader     *downloader.Downloader
+	settings       settings.Settings
+	logger         *logrus.Logger
 }
 
-func NewDownloaderHelper(settings settings.Settings) *DownloaderHelper {
+func NewDownloaderHelper(settings settings.Settings, _subSupplierHub *subSupplier.SubSupplierHub) *DownloaderHelper {
 	return &DownloaderHelper{
-		settings: settings,
+		subSupplierHub: _subSupplierHub,
+		settings:       settings,
 	}
 }
 
 func (d DownloaderHelper) Start() error {
 	var err error
-	// 清理通知中心
-	notify_center.Notify.Clear()
-	// 获取验证码
-	updateTimeString, code, err := something_static.GetCodeFromWeb()
-	if err != nil {
-		notify_center.Notify.Add("GetSubhdCode", "GetCodeFromWeb,"+err.Error())
-		d.logger.Errorln("something_static.GetCodeFromWeb", err)
-		d.logger.Errorln("Skip Subhd download")
-		// 没有则需要清空
-		commonValue.SubhdCode = ""
-	} else {
-		d.logger.Infoln("GetCode", updateTimeString, code)
-		commonValue.SubhdCode = code
-	}
-	// 构建每个字幕站点下载者的实例
-	var subSupplierHub = subSupplier.NewSubSupplierHub(
-		//subhd.NewSupplier(d.settings),
-		zimuku.NewSupplier(d.settings),
-		xunlei.NewSupplier(d.settings),
-		shooter.NewSupplier(d.settings),
-	)
-	if commonValue.SubhdCode != "" {
-		// 如果找到 code 了，那么就可以继续用这个实例
-		subSupplierHub.AddSubSupplier(subhd.NewSupplier(d.settings))
-	}
 	// 下载实例
-	d.downloader, err = downloader.NewDownloader(subSupplierHub, sub_formatter.GetSubFormatter(d.settings.AdvancedSettings.SubNameFormatter), d.settings)
+	d.downloader, err = downloader.NewDownloader(d.subSupplierHub, sub_formatter.GetSubFormatter(d.settings.AdvancedSettings.SubNameFormatter), d.settings)
 	if err != nil {
 		d.logger.Errorln("NewDownloader", err)
 	}

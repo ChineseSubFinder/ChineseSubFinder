@@ -1,6 +1,6 @@
 package types
 
 type HotFixParam struct {
-	MovieRootDir  string
-	SeriesRootDir string
+	MovieRootDirs  []string
+	SeriesRootDirs []string
 }
