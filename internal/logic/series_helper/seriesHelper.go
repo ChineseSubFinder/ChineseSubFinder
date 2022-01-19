@@ -11,9 +11,9 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -123,17 +123,17 @@ func ReadSeriesInfoFromEmby(seriesDir string, imdbInfo *imdb.Title, seriesList [
 }
 
 // SkipChineseSeries 跳过中文连续剧
-func SkipChineseSeries(seriesRootPath string, _reqParam ...types.ReqParam) (bool, *imdb.Title, error) {
-	var reqParam types.ReqParam
-	if len(_reqParam) > 0 {
-		reqParam = _reqParam[0]
+func SkipChineseSeries(seriesRootPath string, _proxySettings ...settings.ProxySettings) (bool, *imdb.Title, error) {
+	var proxySettings settings.ProxySettings
+	if len(_proxySettings) > 0 {
+		proxySettings = _proxySettings[0]
 	}
 	imdbInfo, err := decode.GetImdbInfo4SeriesDir(seriesRootPath)
 	if err != nil {
 		return false, nil, err
 	}
 
-	isChineseVideo, t, err := imdb_helper.IsChineseVideo(imdbInfo.ImdbId, reqParam)
+	isChineseVideo, t, err := imdb_helper.IsChineseVideo(imdbInfo.ImdbId, proxySettings)
 	if err != nil {
 		return false, nil, err
 	}

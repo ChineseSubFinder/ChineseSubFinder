@@ -7,6 +7,7 @@ import (
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
@@ -16,13 +17,16 @@ import (
 )
 
 type SubSupplierHub struct {
+	settings settings.Settings
+
 	Suppliers []ifaces.ISupplier
 
 	log *logrus.Logger
 }
 
-func NewSubSupplierHub(one ifaces.ISupplier, _inSupplier ...ifaces.ISupplier) *SubSupplierHub {
+func NewSubSupplierHub(_settings settings.Settings, one ifaces.ISupplier, _inSupplier ...ifaces.ISupplier) *SubSupplierHub {
 	s := SubSupplierHub{}
+	s.settings = _settings
 	s.log = log_helper.GetLogger()
 	s.Suppliers = make([]ifaces.ISupplier, 0)
 	s.Suppliers = append(s.Suppliers, one)
@@ -53,7 +57,7 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, force
 	}
 
 	// 跳过中文的电影，不是一定要跳过的
-	skip, err := movieHelper.SkipChineseMovie(videoFullPath, d.Suppliers[0].GetReqParam())
+	skip, err := movieHelper.SkipChineseMovie(videoFullPath, *d.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		d.log.Warnln("SkipChineseMovie", videoFullPath, err)
 	}
@@ -109,7 +113,7 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int, forc
 	}
 
 	// 跳过中文的连续剧，不是一定要跳过的
-	skip, imdbInfo, err := seriesHelper.SkipChineseSeries(seriesDirPath, d.Suppliers[0].GetReqParam())
+	skip, imdbInfo, err := seriesHelper.SkipChineseSeries(seriesDirPath, *d.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		d.log.Warnln("SkipChineseSeries", seriesDirPath, err)
 	}
@@ -132,7 +136,7 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int, forc
 func (d SubSupplierHub) DownloadSub4SeriesFromEmby(seriesDirPath string, seriesList []emby.EmbyMixInfo, index int) (*series.SeriesInfo, map[string][]string, error) {
 
 	// 跳过中文的连续剧，不是一定要跳过的
-	skip, imdbInfo, err := seriesHelper.SkipChineseSeries(seriesDirPath, d.Suppliers[0].GetReqParam())
+	skip, imdbInfo, err := seriesHelper.SkipChineseSeries(seriesDirPath, *d.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		d.log.Warnln("SkipChineseSeries", seriesDirPath, err)
 	}

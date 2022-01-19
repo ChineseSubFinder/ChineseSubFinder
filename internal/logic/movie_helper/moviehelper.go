@@ -8,9 +8,9 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/jinzhu/now"
 	"os"
@@ -111,17 +111,17 @@ func MovieHasChineseSub(videoFilePath string) (bool, []string, []string, error) 
 }
 
 // SkipChineseMovie 跳过中文的电影
-func SkipChineseMovie(videoFullPath string, _reqParam ...types.ReqParam) (bool, error) {
+func SkipChineseMovie(videoFullPath string, _proxySettings ...settings.ProxySettings) (bool, error) {
 
-	var reqParam types.ReqParam
-	if len(_reqParam) > 0 {
-		reqParam = _reqParam[0]
+	var proxySettings settings.ProxySettings
+	if len(_proxySettings) > 0 {
+		proxySettings = _proxySettings[0]
 	}
 	imdbInfo, err := decode.GetImdbInfo4Movie(videoFullPath)
 	if err != nil {
 		return false, err
 	}
-	isChineseVideo, _, err := imdb_helper.IsChineseVideo(imdbInfo.ImdbId, reqParam)
+	isChineseVideo, _, err := imdb_helper.IsChineseVideo(imdbInfo.ImdbId, proxySettings)
 	if err != nil {
 		return false, err
 	}

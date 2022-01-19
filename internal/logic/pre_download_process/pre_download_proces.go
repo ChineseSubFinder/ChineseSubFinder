@@ -75,6 +75,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	// ------------------------------------------------------------------------
 	// 构建每个字幕站点下载者的实例
 	p.subSupplierHub = subSupplier.NewSubSupplierHub(
+		*settings.GetSettings(),
 		zimuku.NewSupplier(*settings.GetSettings()),
 		xunlei.NewSupplier(*settings.GetSettings()),
 		shooter.NewSupplier(*settings.GetSettings()),
