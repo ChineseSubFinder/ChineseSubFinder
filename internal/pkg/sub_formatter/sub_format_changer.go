@@ -22,14 +22,14 @@ import (
 )
 
 type SubFormatChanger struct {
-	movieRootDir  string
-	seriesRootDir string
-	formatter     map[string]ifaces.ISubFormatter
+	movieRootDirs  []string
+	seriesRootDirs []string
+	formatter      map[string]ifaces.ISubFormatter
 }
 
-func NewSubFormatChanger(movieRootDir string, seriesRootDir string) *SubFormatChanger {
+func NewSubFormatChanger(movieRootDirs []string, seriesRootDirs []string) *SubFormatChanger {
 
-	formatter := SubFormatChanger{movieRootDir: movieRootDir, seriesRootDir: seriesRootDir}
+	formatter := SubFormatChanger{movieRootDirs: movieRootDirs, seriesRootDirs: seriesRootDirs}
 	// TODO 如果字幕格式新增了实现，这里也需要添加对应的实例
 	// 初始化支持的 formatter
 	// normal
@@ -45,26 +45,49 @@ func NewSubFormatChanger(movieRootDir string, seriesRootDir string) *SubFormatCh
 // AutoDetectThenChangeTo 自动检测字幕的命名格式，然后转换到目标的 formatter 上
 func (s SubFormatChanger) AutoDetectThenChangeTo(desFormatter common.FormatterName) (RenameResults, error) {
 
-	var err error
 	outStruct := RenameResults{}
 	outStruct.RenamedFiles = make(map[string]int)
 	outStruct.ErrFiles = make(map[string]int)
-	if my_util.IsDir(s.movieRootDir) == false {
-		return outStruct, errors.New("movieRootDir path not exist: " + s.movieRootDir)
+
+	for i, dir := range s.movieRootDirs {
+		log_helper.GetLogger().Infoln("AutoDetectThenChangeTo Movie Index", i, dir, "Start")
+
+		err := s.autoDetectMovieThenChangeTo(&outStruct, desFormatter, dir)
+		if err != nil {
+			log_helper.GetLogger().Infoln("AutoDetectThenChangeTo Movie Index", i, dir, "End")
+			return RenameResults{}, err
+		}
+
+		log_helper.GetLogger().Infoln("AutoDetectThenChangeTo Movie Index", i, dir, "Start")
 	}
-	if my_util.IsDir(s.seriesRootDir) == false {
-		return outStruct, errors.New("seriesRootDir path not exist: " + s.seriesRootDir)
+
+	for i, dir := range s.seriesRootDirs {
+		log_helper.GetLogger().Infoln("AutoDetectThenChangeTo Series Index", i, dir, "Start")
+
+		err := s.autoDetectMovieThenChangeTo(&outStruct, desFormatter, dir)
+		if err != nil {
+			log_helper.GetLogger().Infoln("AutoDetectThenChangeTo Series Index", i, dir, "End")
+			return RenameResults{}, err
+		}
+
+		log_helper.GetLogger().Infoln("AutoDetectThenChangeTo Series Index", i, dir, "Start")
+	}
+
+	return outStruct, nil
+}
+
+func (s SubFormatChanger) autoDetectMovieThenChangeTo(outStruct *RenameResults, desFormatter common.FormatterName, movieRootDir string) error {
+
+	var err error
+	if my_util.IsDir(movieRootDir) == false {
+		return errors.New("movieRootDir path not exist: " + movieRootDir)
 	}
 	// 先找出有那些电影文件夹和连续剧文件夹
 	var movieFullPathList = make([]string, 0)
-	movieFullPathList, err = my_util.SearchMatchedVideoFile(s.movieRootDir)
+	movieFullPathList, err = my_util.SearchMatchedVideoFile(movieRootDir)
 	// fmt.Println("No. of Movies: ", len(movieFullPathList), "  dir:  ", s.movieRootDir)
 	if err != nil {
-		return outStruct, err
-	}
-	seriesDirList, err := seriesHelper.GetSeriesList(s.seriesRootDir)
-	if err != nil {
-		return outStruct, err
+		return err
 	}
 	// 搜索所有的字幕，找到相关的字幕进行修改
 	for _, one := range movieFullPathList {
@@ -84,8 +107,23 @@ func (s SubFormatChanger) AutoDetectThenChangeTo(desFormatter common.FormatterNa
 		}
 		// 判断是否是符合要求
 		for _, fitSubName := range fitMovieNameSubList {
-			s.autoDetectAndChange(&outStruct, fitSubName, desFormatter)
+			s.autoDetectAndChange(outStruct, fitSubName, desFormatter)
 		}
+	}
+
+	return nil
+}
+
+func (s SubFormatChanger) autoDetectMSeriesThenChangeTo(outStruct *RenameResults, desFormatter common.FormatterName, seriesRootDir string) error {
+
+	var err error
+	if my_util.IsDir(seriesRootDir) == false {
+		return errors.New("seriesRootDir path not exist: " + seriesRootDir)
+	}
+	// 先找出有那些电影文件夹和连续剧文件夹
+	seriesDirList, err := seriesHelper.GetSeriesList(seriesRootDir)
+	if err != nil {
+		return err
 	}
 	// 连续剧
 	var seriesSubFiles = make([]string, 0)
@@ -100,15 +138,15 @@ func (s SubFormatChanger) AutoDetectThenChangeTo(desFormatter common.FormatterNa
 
 		seriesSubFiles, err = sub_helper.SearchMatchedSubFileByDir(oneSeriesDir)
 		if err != nil {
-			return outStruct, err
+			return err
 		}
 		// 判断是否是符合要求
 		for _, fitSubName := range seriesSubFiles {
-			s.autoDetectAndChange(&outStruct, fitSubName, desFormatter)
+			s.autoDetectAndChange(outStruct, fitSubName, desFormatter)
 		}
 	}
 
-	return outStruct, nil
+	return nil
 }
 
 // autoDetectAndChange 自动检测命名格式，然后修改至目标的命名格式
@@ -201,7 +239,7 @@ func GetSubFormatter(subNameFormatter int) ifaces.ISubFormatter {
 }
 
 // SubFormatChangerProcess 执行 SubFormatChanger 逻辑，并且更新数据库缓存
-func SubFormatChangerProcess(movieRootDir string, seriesRootDir string, nowDesFormatter common.FormatterName) (RenameResults, error) {
+func SubFormatChangerProcess(movieRootDirs []string, seriesRootDirs []string, nowDesFormatter common.FormatterName) (RenameResults, error) {
 	var subFormatRec models.SubFormatRec
 	re := dao.GetDb().First(&subFormatRec)
 	if re == nil {
@@ -210,7 +248,7 @@ func SubFormatChangerProcess(movieRootDir string, seriesRootDir string, nowDesFo
 	if re.Error != nil {
 		return RenameResults{}, errors.New(fmt.Sprintf("SubFormatChangerProcess dao.GetDb().First, %v", re.Error))
 	}
-	subFormatChanger := NewSubFormatChanger(movieRootDir, seriesRootDir)
+	subFormatChanger := NewSubFormatChanger(movieRootDirs, seriesRootDirs)
 	// 理论上有且仅有一条记录
 	if subFormatRec.Done == false {
 		// 没有找到，认为是第一次执行

@@ -1,20 +1,10 @@
 package main
 
 import (
-	commonValue "github.com/allanpk716/ChineseSubFinder/internal/common"
-	config2 "github.com/allanpk716/ChineseSubFinder/internal/pkg/config"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/url_connectedness_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/prometheus/common/log"
 	"github.com/robfig/cron/v3"
-	"github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -27,116 +17,29 @@ func init() {
 }
 
 func main() {
-	if log == nil {
-		panic("log init error")
-	}
-	if config == nil {
-		panic("read config error")
-	}
-	httpProxy := config.HttpProxy
-	if config.UseProxy == false {
-		httpProxy = ""
-	}
-	if config.UseProxy == false {
-		log.Infoln("UseProxy = false")
-	} else {
-		log.Infoln("UseProxy:", httpProxy)
-		proxySpeed, proxyStatus, err := url_connectedness_helper.UrlConnectednessTest(httpProxy)
-		if err != nil {
-			log.Errorln("UrlConnectednessTest Target Site http://google.com", err)
-			return
-		} else {
-			log.Infoln("UrlConnectednessTest Target Site http://google.com", "Speed:", proxySpeed, "Status:", proxyStatus)
-		}
-	}
-
-	// 判断文件夹是否存在
-	if my_util.IsDir(config.MovieFolder) == false {
-		log.Errorln("MovieFolder not found --", config.MovieFolder)
-		return
-	}
-	if my_util.IsDir(config.SeriesFolder) == false {
-		log.Errorln("SeriesFolder not found --", config.SeriesFolder)
-		return
-	}
-	// 读取到的文件夹信息展示
-	log.Infoln("MovieFolder:", config.MovieFolder)
-	log.Infoln("SeriesFolder:", config.SeriesFolder)
-
-	// ------ Hot Fix Start ------
-	// 开始修复
-	log.Infoln("HotFix Start, wait ...")
-	log.Infoln(commonValue.NotifyStringTellUserWait)
-	err := hot_fix.HotFixProcess(types.HotFixParam{
-		MovieRootDir:  config.MovieFolder,
-		SeriesRootDir: config.SeriesFolder,
-	})
-	if err != nil {
-		log.Errorln("HotFixProcess()", err)
-		log.Infoln("HotFix End")
-		return
-	}
-	log.Infoln("HotFix End")
-	// ------ Hot Fix End ------
-
-	// ------ Change SubName Format Start ------
-	/*
-		字幕命名格式转换，需要数据库支持
-		如果数据库没有记录经过转换，那么默认从 Emby 的格式作为检测的起点，转换到目标的格式
-		然后需要在数据库中记录本次的转换结果
-	*/
-	log.Infoln("Change Sub Name Format Start...")
-	log.Infoln(commonValue.NotifyStringTellUserWait)
-	renameResults, err := sub_formatter.SubFormatChangerProcess(config.MovieFolder, config.SeriesFolder, common.FormatterName(config.SubNameFormatter))
-	// 出错的文件有哪一些
-	for s, i := range renameResults.ErrFiles {
-		log_helper.GetLogger().Errorln("reformat ErrFile:"+s, i)
-	}
-	if err != nil {
-		log.Errorln("SubFormatChangerProcess()", err)
-		return
-	}
-
-	log.Infoln("Change Sub Name Format End")
-	// ------ Change SubName Format End ------
-
-	// 初始化通知缓存模块
-	notify_center.Notify = notify_center.NewNotifyCenter(config.WhenSubSupplierInvalidWebHook)
-
-	log.Infoln("ReloadBrowser Start...")
-	// ReloadBrowser 提前把浏览器下载好
-	rod_helper.ReloadBrowser()
-	log.Infoln("ReloadBrowser End")
 
 	// 任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
-	entryID, err := c.AddFunc("@every "+config.EveryTime, func() {
-
-		DownLoadStart(httpProxy)
+	entryID, err := c.AddFunc("@every "+settings.GetSettings().CommonSettings.ScanInterval, func() {
+		// do something
 	})
 	if err != nil {
 		log.Errorln("cron entryID:", entryID, "Error:", err)
 		return
 	}
 
-	if config.RunAtStartup == true {
+	if settings.GetSettings().CommonSettings.RunScanAtStartUp == true {
 		log.Infoln("First Time Download Start")
-
-		DownLoadStart(httpProxy)
-
+		// do something
 		log.Infoln("First Time Download End")
 	} else {
-		log.Infoln("config.yaml set RunAtStartup: false, so will not Run At Startup, wait", config.EveryTime, "to Download")
+		log.Infoln("RunAtStartup: false, so will not Run At Startup, wait", settings.GetSettings().CommonSettings.ScanInterval, "to Download")
 	}
 
 	c.Start()
 	// 阻塞
 	select {}
-}
-
-func DownLoadStart(httpProxy string) {
-
 }
 
 /*

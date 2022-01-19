@@ -293,7 +293,7 @@ func CloseChrome() {
 	}
 	err := command.Run()
 	if err != nil {
-		log_helper.GetLogger().Errorln("CloseChrome", err)
+		log_helper.GetLogger().Warningln("CloseChrome", err)
 	}
 }
 

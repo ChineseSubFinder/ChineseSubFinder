@@ -12,8 +12,11 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/something_static"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/url_connectedness_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/prometheus/common/log"
@@ -37,6 +40,8 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	}
 	p.stageName = stageNameInit
 	// ------------------------------------------------------------------------
+	// 初始化通知缓存模块
+	notify_center.Notify = notify_center.NewNotifyCenter(settings.GetSettings().DeveloperSettings.BarkServerUrl)
 	// 清理通知中心
 	notify_center.Notify.Clear()
 	// ------------------------------------------------------------------------
@@ -152,29 +157,29 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 		}
 	}
 	// ------------------------------------------------------------------------
-	// 输出 Emby 文件夹的映射关系
+	// 检查、输出 Emby 文件夹的映射关系
 
 	return p
 }
 
 func (p *PreDownloadProcess) HotFix() *PreDownloadProcess {
 
+	if p.gError != nil {
+		return p
+	}
+	p.stageName = stageNameCHotFix
+
 	defer func() {
 		log.Infoln("HotFix End")
 	}()
 
-	if p.gError != nil {
-		return p
-	}
-	p.stageName = stageNameStart
 	// ------------------------------------------------------------------------
-
 	// 开始修复
 	log.Infoln("HotFix Start, wait ...")
 	log.Infoln(commonValue.NotifyStringTellUserWait)
 	err := hot_fix.HotFixProcess(types.HotFixParam{
-		MovieRootDir:  config.MovieFolder,
-		SeriesRootDir: config.SeriesFolder,
+		MovieRootDirs:  settings.GetSettings().CommonSettings.MoviePaths,
+		SeriesRootDirs: settings.GetSettings().CommonSettings.SeriesPaths,
 	})
 	if err != nil {
 		log.Errorln("HotFixProcess()", err)
@@ -185,24 +190,64 @@ func (p *PreDownloadProcess) HotFix() *PreDownloadProcess {
 	return p
 }
 
-func (p *PreDownloadProcess) Start() *PreDownloadProcess {
+func (p *PreDownloadProcess) ChangeSubNameFormat() *PreDownloadProcess {
 
 	if p.gError != nil {
 		return p
 	}
-	p.stageName = stageNameStart
+	p.stageName = stageNameChangeSubNameFormat
+
+	defer func() {
+		log.Infoln("Change Sub Name Format End")
+	}()
 	// ------------------------------------------------------------------------
+	/*
+		字幕命名格式转换，需要数据库支持
+		如果数据库没有记录经过转换，那么默认从 Emby 的格式作为检测的起点，转换到目标的格式
+		然后需要在数据库中记录本次的转换结果
+	*/
+	log.Infoln("Change Sub Name Format Start...")
+	log.Infoln(commonValue.NotifyStringTellUserWait)
+	renameResults, err := sub_formatter.SubFormatChangerProcess(
+		settings.GetSettings().CommonSettings.MoviePaths,
+		settings.GetSettings().CommonSettings.SeriesPaths,
+		common.FormatterName(settings.GetSettings().AdvancedSettings.SubNameFormatter))
+	// 出错的文件有哪一些
+	for s, i := range renameResults.ErrFiles {
+		log_helper.GetLogger().Errorln("reformat ErrFile:"+s, i)
+	}
+	if err != nil {
+		log.Errorln("SubFormatChangerProcess() Error", err)
+		p.gError = err
+		return p
+	}
 
 	return p
 }
 
-func (p *PreDownloadProcess) GetResult() error {
+func (p *PreDownloadProcess) ReloadBrowser() *PreDownloadProcess {
+
+	if p.gError != nil {
+		return p
+	}
+	p.stageName = stageNameReloadBrowser
+	// ------------------------------------------------------------------------
+	log.Infoln("ReloadBrowser Start...")
+	// ReloadBrowser 提前把浏览器下载好
+	rod_helper.ReloadBrowser()
+	log.Infoln("ReloadBrowser End")
+	return p
+}
+
+func (p *PreDownloadProcess) Wait() error {
 
 	return errors.New(p.stageName + " " + p.gError.Error())
 }
 
 const (
-	stageNameInit  = "Init"
-	stageNameCheck = "Check"
-	stageNameStart = "Start"
+	stageNameInit                = "Init"
+	stageNameCheck               = "Check"
+	stageNameCHotFix             = "HotFix"
+	stageNameChangeSubNameFormat = "ChangeSubNameFormat"
+	stageNameReloadBrowser       = "ReloadBrowser"
 )
