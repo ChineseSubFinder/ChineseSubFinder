@@ -11,10 +11,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/restore_fix_timeline_bk"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -33,8 +29,11 @@ import (
 
 // Downloader 实例化一次用一次，不要反复的使用，很多临时标志位需要清理。
 type Downloader struct {
-	settings                 settings.Settings
-	log                      *logrus.Logger
+	settings settings.Settings
+	log      *logrus.Logger
+
+	subSupplierHub *subSupplier.SubSupplierHub
+
 	mk                       *markSystem.MarkingSystem // MarkingSystem
 	embyHelper               *embyHelper.EmbyHelper
 	movieFileFullPathList    []string                      //  多个需要搜索字幕的电影文件全路径
@@ -51,7 +50,7 @@ type Downloader struct {
 	canceledLock sync.Mutex
 }
 
-func NewDownloader(inSubFormatter ifaces.ISubFormatter, _settings settings.Settings) (*Downloader, error) {
+func NewDownloader(_supplierHub *subSupplier.SubSupplierHub, inSubFormatter ifaces.ISubFormatter, _settings settings.Settings) (*Downloader, error) {
 
 	var downloader Downloader
 	var err error
@@ -62,11 +61,13 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, _settings settings.Setti
 	// 检测是否某些参数超出范围
 	downloader.settings.Check()
 	// 初始化 Emby API 接口
-	if downloader.settings.EmbySettings.AddressUrl != "" && downloader.settings.EmbySettings.APIKey != "" {
+	if downloader.settings.EmbySettings.Enable == true && downloader.settings.EmbySettings.AddressUrl != "" && downloader.settings.EmbySettings.APIKey != "" {
 		downloader.embyHelper = embyHelper.NewEmbyHelper(*downloader.settings.EmbySettings)
 	}
 	// 这里就不单独弄一个 settings.SubNameFormatter 字段来传递值了，因为 inSubFormatter 就已经知道是什么 formatter 了
 	downloader.subNameFormatter = subCommon.FormatterName(downloader.subFormatter.GetFormatterFormatterName())
+
+	downloader.subSupplierHub = _supplierHub
 
 	var sitesSequence = make([]string, 0)
 	// TODO 这里写固定了抉择字幕的顺序
@@ -404,20 +405,8 @@ func (d *Downloader) movieDlFunc(ctx context.Context, inData interface{}) error 
 	taskData := inData.(*task_control.TaskData)
 	downloadInputData := taskData.DataEx.(DownloadInputData)
 	// -----------------------------------------------------
-	// 构建每个字幕站点下载者的实例
-	var subSupplierHub = subSupplier.NewSubSupplierHub(
-		//subhd.NewSupplier(d.settings),
-		zimuku.NewSupplier(d.settings),
-		xunlei.NewSupplier(d.settings),
-		shooter.NewSupplier(d.settings),
-	)
-	if common.SubhdCode != "" {
-		// 如果找到 code 了，那么就可以继续用这个实例
-		subSupplierHub.AddSubSupplier(subhd.NewSupplier(d.settings))
-	}
-
 	// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
-	organizeSubFiles, err := subSupplierHub.DownloadSub4Movie(downloadInputData.OneVideoFullPath, taskData.Index, d.needForcedScanAndDownSub)
+	organizeSubFiles, err := d.subSupplierHub.DownloadSub4Movie(downloadInputData.OneVideoFullPath, taskData.Index, d.needForcedScanAndDownSub)
 	if err != nil {
 		d.log.Errorln("subSupplierHub.DownloadSub4Movie", downloadInputData.OneVideoFullPath, err)
 		return err
@@ -442,26 +431,13 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 	var err error
 	taskData := inData.(*task_control.TaskData)
 	downloadInputData := taskData.DataEx.(DownloadInputData)
-	// 构建每个字幕站点下载者的实例
-	var subSupplierHub *subSupplier.SubSupplierHub
-	subSupplierHub = subSupplier.NewSubSupplierHub(
-		zimuku.NewSupplier(d.settings),
-		//subhd.NewSupplier(d.settings),
-		xunlei.NewSupplier(d.settings),
-		shooter.NewSupplier(d.settings),
-	)
-	if common.SubhdCode != "" {
-		// 如果找到 code 了，那么就可以继续用这个实例
-		subSupplierHub.AddSubSupplier(subhd.NewSupplier(d.settings))
-	}
-
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
 	var seriesInfo *series.SeriesInfo
 	var organizeSubFiles map[string][]string
 	// 优先判断特殊的操作
 	if d.needForcedScanAndDownSub == true {
 		// 全盘扫描
-		seriesInfo, organizeSubFiles, err = subSupplierHub.DownloadSub4Series(downloadInputData.OneSeriesPath, taskData.Index, d.needForcedScanAndDownSub)
+		seriesInfo, organizeSubFiles, err = d.subSupplierHub.DownloadSub4Series(downloadInputData.OneSeriesPath, taskData.Index, d.needForcedScanAndDownSub)
 		if err != nil {
 			d.log.Errorln("subSupplierHub.DownloadSub4Series", downloadInputData.OneSeriesPath, err)
 			return err
@@ -470,14 +446,14 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 		// 是否是通过 emby_helper api 获取的列表
 		if d.embyHelper == nil {
 			// 不适用 emby api
-			seriesInfo, organizeSubFiles, err = subSupplierHub.DownloadSub4Series(downloadInputData.OneSeriesPath, taskData.Index, d.needForcedScanAndDownSub)
+			seriesInfo, organizeSubFiles, err = d.subSupplierHub.DownloadSub4Series(downloadInputData.OneSeriesPath, taskData.Index, d.needForcedScanAndDownSub)
 			if err != nil {
 				d.log.Errorln("subSupplierHub.DownloadSub4Series", downloadInputData.OneSeriesPath, err)
 				return err
 			}
 		} else {
 			// 先进性 emby_helper api 的操作，读取需要更新字幕的项目
-			seriesInfo, organizeSubFiles, err = subSupplierHub.DownloadSub4SeriesFromEmby(
+			seriesInfo, organizeSubFiles, err = d.subSupplierHub.DownloadSub4SeriesFromEmby(
 				filepath.Join(downloadInputData.RootDirPath, downloadInputData.OneSeriesPath),
 				d.seriesSubNeedDlMap[downloadInputData.OneSeriesPath], taskData.Index)
 			if err != nil {

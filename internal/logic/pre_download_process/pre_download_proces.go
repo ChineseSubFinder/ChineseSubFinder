@@ -39,7 +39,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 		}
 	}
 	// ------------------------------------------------------------------------
-	// 测试代理
+	// 测试代理，同时
 	if settings.GetSettings().AdvancedSettings.ProxySettings.UseHttpProxy == false {
 		log_helper.GetLogger().Infoln("UseHttpProxy = false")
 	} else {

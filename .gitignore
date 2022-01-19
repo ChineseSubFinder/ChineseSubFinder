@@ -66,3 +66,4 @@ TestData/
 /internal/dao/Logs/*.log
 /internal/dao/*.db
 /internal/pkg/strcut_json/*.json
+/internal/backend/settings.db
