@@ -36,14 +36,16 @@ func NewEmbyHelper(embyConfig settings.EmbySettings) *EmbyHelper {
 
 func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby.EmbyMixInfo, map[string][]emby.EmbyMixInfo, error) {
 
+	// 获取最近的影片列表
+	items, err := em.embyApi.GetRecentlyItems()
+
 	// 获取电影和连续剧的文件夹名称
 	movieFolderName := filepath.Base(movieRootDir)
 	seriesFolderName := filepath.Base(seriesRootDir)
 
 	var EpisodeIdList = make([]string, 0)
 	var MovieIdList = make([]string, 0)
-	// 获取最近的影片列表
-	items, err := em.embyApi.GetRecentlyItems()
+
 	if err != nil {
 		return nil, nil, err
 	}

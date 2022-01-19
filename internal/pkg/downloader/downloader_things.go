@@ -12,7 +12,7 @@ import (
 )
 
 // oneVideoSelectBestSub 一个视频，选择最佳的一个字幕（也可以保存所有网站第一个最佳字幕）
-func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFiles []string) {
+func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFiles []string) {
 
 	// 如果没有则直接跳过
 	if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
@@ -24,7 +24,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 	videoFileName := filepath.Base(oneVideoFullPath)
 	// -------------------------------------------------
 	// 调试缓存，把下载好的字幕写到对应的视频目录下，方便调试
-	if d.settings.DebugMode == true {
+	if d.settings.AdvancedSettings.DebugMode == true {
 
 		err = my_util.CopyFiles2DebugFolder([]string{videoFileName}, organizeSubFiles)
 		if err != nil {
@@ -44,7 +44,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 		// 找个错误可以忍
 		d.log.Errorln("SearchVideoMatchSubFileAndRemoveExtMark,", oneVideoFullPath, err)
 	}
-	if d.settings.SaveMultiSub == false {
+	if d.settings.AdvancedSettings.SaveMultiSub == false {
 		// 选择最优的一个字幕
 		var finalSubFile *subparser.FileInfo
 		finalSubFile = d.mk.SelectOneSubFile(organizeSubFiles)
@@ -65,7 +65,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 		// 找到了，写入文件
 		err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile, "", bSetDefault, false)
 		if err != nil {
-			d.log.Errorln("SaveMultiSub:", d.settings.SaveMultiSub, "writeSubFile2VideoPath:", err)
+			d.log.Errorln("SaveMultiSub:", d.settings.AdvancedSettings.SaveMultiSub, "writeSubFile2VideoPath:", err)
 			return
 		}
 	} else {
@@ -90,7 +90,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 				}
 				err = d.writeSubFile2VideoPath(oneVideoFullPath, file, siteNames[i], setDefault, false)
 				if err != nil {
-					d.log.Errorln("SaveMultiSub:", d.settings.SaveMultiSub, "writeSubFile2VideoPath:", err)
+					d.log.Errorln("SaveMultiSub:", d.settings.AdvancedSettings.SaveMultiSub, "writeSubFile2VideoPath:", err)
 					return
 				}
 			}
@@ -105,7 +105,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 			for i := len(finalSubFiles) - 1; i > -1; i-- {
 				err = d.writeSubFile2VideoPath(oneVideoFullPath, finalSubFiles[i], siteNames[i], false, false)
 				if err != nil {
-					d.log.Errorln("SaveMultiSub:", d.settings.SaveMultiSub, "writeSubFile2VideoPath:", err)
+					d.log.Errorln("SaveMultiSub:", d.settings.AdvancedSettings.SaveMultiSub, "writeSubFile2VideoPath:", err)
 					return
 				}
 			}
@@ -115,7 +115,7 @@ func (d Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFi
 }
 
 // saveFullSeasonSub 这里就需要单独存储到连续剧每一季的文件夹的特殊文件夹中。需要跟 DeleteOneSeasonSubCacheFolder 关联起来
-func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSubFiles map[string][]string) map[string][]string {
+func (d *Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSubFiles map[string][]string) map[string][]string {
 
 	var fullSeasonSubDict = make(map[string][]string)
 
@@ -162,7 +162,7 @@ func (d Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSub
 }
 
 // 在前面需要进行语言的筛选、排序，这里仅仅是存储， extraSubPreName 这里传递是字幕的网站，有就认为是多字幕的存储。空就是单字幕，单字幕就可以setDefault
-func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile subparser.FileInfo, extraSubPreName string, setDefault bool, skipExistFile bool) error {
+func (d *Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile subparser.FileInfo, extraSubPreName string, setDefault bool, skipExistFile bool) error {
 	defer d.log.Infoln("----------------------------------")
 	videoRootPath := filepath.Dir(videoFileFullPath)
 	subNewName, subNewNameWithDefault, _ := d.subFormatter.GenerateMixSubName(videoFileFullPath, finalSubFile.Ext, finalSubFile.Lang, extraSubPreName)
@@ -194,7 +194,7 @@ func (d Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFil
 	d.log.Infoln("SubDownAt:", desSubFullPath)
 
 	// 然后还需要判断是否需要校正字幕的时间轴
-	if d.settings.FixTimeLine == true {
+	if d.settings.AdvancedSettings.FixTimeLine == true {
 		err = d.subTimelineFixerHelperEx.Process(videoFileFullPath, desSubFullPath)
 		if err != nil {
 			return err

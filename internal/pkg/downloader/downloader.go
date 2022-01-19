@@ -385,7 +385,7 @@ func (d *Downloader) RestoreFixTimelineBK() error {
 		return nil
 	}
 
-	_, err := subTimelineFixerPKG.Restore(moviesDirs, seriesDirs)
+	_, err := subTimelineFixerPKG.Restore(d.settings.CommonSettings.MoviePaths, d.settings.CommonSettings.SeriesPaths)
 	if err != nil {
 		return err
 	}
