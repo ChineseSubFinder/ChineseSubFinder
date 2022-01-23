@@ -103,13 +103,13 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 	if settings.GetSettings().AdvancedSettings.ProxySettings.UseHttpProxy == false {
 
 		log_helper.GetLogger().Infoln("UseHttpProxy = false")
-		// 如果使用了代理，那么默认需要检测 baidu 的连通性
+		// 如果不使用代理，那么默认需要检测 baidu 的连通性
 		proxySpeed, proxyStatus, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.BaiduUrl, "")
 		if err != nil {
-			p.gError = errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.GoogleUrl + ", " + err.Error())
+			p.gError = errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.BaiduUrl + ", " + err.Error())
 			return p
 		} else {
-			log_helper.GetLogger().Infoln("UrlConnectednessTest Target Site", url_connectedness_helper.GoogleUrl, "Speed:", proxySpeed, "Status:", proxyStatus)
+			log_helper.GetLogger().Infoln("UrlConnectednessTest Target Site", url_connectedness_helper.BaiduUrl, "Speed:", proxySpeed, "Status:", proxyStatus)
 		}
 	} else {
 
@@ -125,16 +125,7 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 	}
 	// ------------------------------------------------------------------------
 	// 测试提供字幕的网站是有效的
-	log_helper.GetLogger().Infoln("Check Sub Supplier Start...")
-	for _, supplier := range p.subSupplierHub.Suppliers {
-		bAlive, speed := supplier.CheckAlive()
-		if bAlive == false {
-			log_helper.GetLogger().Warningln(supplier.GetSupplierName(), "Check Alive = false")
-		} else {
-			log_helper.GetLogger().Infoln(supplier.GetSupplierName(), "Check Alive = true, Speed =", speed, "ms")
-		}
-	}
-	log_helper.GetLogger().Infoln("Check Sub Supplier End")
+	p.subSupplierHub.CheckSubSiteStatus()
 	// ------------------------------------------------------------------------
 	// 判断文件夹是否存在
 	if len(settings.GetSettings().CommonSettings.MoviePaths) < 1 {

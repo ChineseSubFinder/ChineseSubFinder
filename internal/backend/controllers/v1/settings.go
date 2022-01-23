@@ -20,7 +20,7 @@ func (cb ControllerBase) SettingsHandler(c *gin.Context) {
 			// 回复没有密码的 settings
 			c.JSON(http.StatusOK, settings.GetSettings().GetNoPasswordSettings())
 		}
-	case "PATH":
+	case "PUT":
 		{
 			// 修改设置，这里不允许修改密码
 			reqSetupInfo := backend.ReqSettings{}
@@ -43,9 +43,9 @@ func (cb ControllerBase) SettingsHandler(c *gin.Context) {
 			if err != nil {
 				return
 			}
-			c.JSON(http.StatusOK, backend.ReplyCommon{Message: "Settings Save Success`"})
+			c.JSON(http.StatusOK, backend.ReplyCommon{Message: "Settings Save Success"})
 		}
 	default:
-		c.JSON(http.StatusNoContent, backend.ReplyCommon{Message: "Settings Request.Method Error`"})
+		c.JSON(http.StatusNoContent, backend.ReplyCommon{Message: "Settings Request.Method Error"})
 	}
 }

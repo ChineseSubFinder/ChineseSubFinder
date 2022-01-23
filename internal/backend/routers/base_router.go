@@ -24,7 +24,7 @@ func InitRouter(router *gin.Engine) {
 		GroupV1.Use(middle.CheckAuth())
 
 		GroupV1.GET("/settings", cbV1.SettingsHandler)
-		GroupV1.PATCH("/settings", cbV1.SettingsHandler)
+		GroupV1.PUT("/settings", cbV1.SettingsHandler)
 
 		GroupV1.POST("/check-proxy", cbV1.CheckProxyHandler)
 

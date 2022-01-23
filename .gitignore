@@ -67,3 +67,5 @@ TestData/
 /internal/dao/*.db
 /internal/pkg/strcut_json/*.json
 /internal/backend/settings.db
+/internal/pkg/settings/testfile.json
+/internal/types/backend/reply_check_proxy.json

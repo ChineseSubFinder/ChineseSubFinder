@@ -9,6 +9,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/sirupsen/logrus"
@@ -153,6 +154,34 @@ func (d SubSupplierHub) DownloadSub4SeriesFromEmby(seriesDirPath string, seriesL
 		return nil, nil, err
 	}
 	return seriesInfo, organizeSubFiles, nil
+}
+
+// CheckSubSiteStatus 检测多个字幕提供的网站是否是有效的
+func (d SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
+
+	outStatus := backend.ReplyCheckStatus{
+		SubSiteStatus: make([]backend.SiteStatus, 0),
+	}
+
+	// 测试提供字幕的网站是有效的
+	d.log.Infoln("Check Sub Supplier Start...")
+	for _, supplier := range d.Suppliers {
+		bAlive, speed := supplier.CheckAlive()
+		if bAlive == false {
+			d.log.Warningln(supplier.GetSupplierName(), "Check Alive = false")
+		} else {
+			d.log.Infoln(supplier.GetSupplierName(), "Check Alive = true, Speed =", speed, "ms")
+		}
+
+		outStatus.SubSiteStatus = append(outStatus.SubSiteStatus, backend.SiteStatus{
+			Name:  supplier.GetSupplierName(),
+			Valid: bAlive,
+			Speed: speed,
+		})
+	}
+	d.log.Infoln("Check Sub Supplier End")
+
+	return outStatus
 }
 
 func (d SubSupplierHub) dlSubFromSeriesInfo(seriesDirPath string, index int, seriesInfo *series.SeriesInfo, err error) (map[string][]string, error) {
