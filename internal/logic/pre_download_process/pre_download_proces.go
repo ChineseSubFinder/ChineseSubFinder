@@ -41,7 +41,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	p.stageName = stageNameInit
 	// ------------------------------------------------------------------------
 	// 初始化通知缓存模块
-	notify_center.Notify = notify_center.NewNotifyCenter(settings.GetSettings().DeveloperSettings.BarkServerUrl)
+	notify_center.Notify = notify_center.NewNotifyCenter(settings.GetSettings().DeveloperSettings.BarkServerAddress)
 	// 清理通知中心
 	notify_center.Notify.Clear()
 	// ------------------------------------------------------------------------
@@ -84,10 +84,6 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 		// 如果找到 code 了，那么就可以继续用这个实例
 		p.subSupplierHub.AddSubSupplier(subhd.NewSupplier(*settings.GetSettings()))
 	}
-	// ------------------------------------------------------------------------
-	// Hot Fix Start
-
-	// ------------------------------------------------------------------------
 
 	return p
 }
