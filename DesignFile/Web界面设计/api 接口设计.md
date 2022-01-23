@@ -39,17 +39,17 @@
 		"api_key": "api123",
 		"max_request_video_number": 1000,
 		"skip_watched": true,
-		"movie_directory_mapping": {
+		"movie_paths_mapping": {
 			"aa": "123",
 			"bb": "456"
 		},
-		"series_directory_mapping": {
+		"series_paths_mapping": {
 			"aab": "123",
 			"bbc": "456"
 		}
 	},
 	"developer_settings": {
-		"bark_server_url": "bark"
+		"bark_server_address": "bark"
 	},
 	"timeline_fixer_settings": null
 }
@@ -128,17 +128,17 @@
             "api_key": "api123",
             "max_request_video_number": 1000,
             "skip_watched": true,
-            "movie_directory_mapping": {
+            "movie_paths_mapping": {
                 "aa": "123",
                 "bb": "456"
             },
-            "series_directory_mapping": {
+            "series_paths_mapping": {
                 "aab": "123",
                 "bbc": "456"
             }
         },
         "developer_settings": {
-            "bark_server_url": "bark"
+            "bark_server_address": "bark"
         },
         "timeline_fixer_settings": null
     }
@@ -264,17 +264,17 @@
             "api_key": "api123",
             "max_request_video_number": 1000,
             "skip_watched": true,
-            "movie_directory_mapping": {
+            "movie_paths_mapping": {
                 "aa": "123",
                 "bb": "456"
             },
-            "series_directory_mapping": {
+            "series_paths_mapping": {
                 "aab": "123",
                 "bbc": "456"
             }
         },
         "developer_settings": {
-            "bark_server_url": "bark"
+            "bark_server_address": "bark"
         },
         "timeline_fixer_settings": null
     }
@@ -326,17 +326,17 @@
             "api_key": "api123",
             "max_request_video_number": 1000,
             "skip_watched": true,
-            "movie_directory_mapping": {
+            "movie_paths_mapping": {
                 "aa": "123",
                 "bb": "456"
             },
-            "series_directory_mapping": {
+            "series_paths_mapping": {
                 "aab": "123",
                 "bbc": "456"
             }
         },
         "developer_settings": {
-            "bark_server_url": "bark"
+            "bark_server_address": "bark"
         },
         "timeline_fixer_settings": null
     }
@@ -363,7 +363,7 @@
 
 ```javascript
 {
-  http_proxy_url: 'http://127.0.0.1:10809';
+  http_proxy_address: 'http://127.0.0.1:10809';
 }
 ```
 
@@ -371,7 +371,15 @@
 
 ```javascript
 {
-  status: 0; // OK 0 or ERROR 1
+	"sub_site_status": [{
+		"name": "aa",
+		"valid": true,
+		"speed": 100  //ms
+	}, {
+		"name": "bb",
+		"valid": false,
+		"speed": 0
+	}]
 }
 ```
 
@@ -393,7 +401,7 @@
 
 ```javascript
 {
-  status: 0; // OK 0 or ERROR 1
+  valid: true; 
 }
 ```
 
