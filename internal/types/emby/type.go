@@ -151,12 +151,11 @@ func (info EmbyVideoInfoByUserId) GetDefaultSubIndex() int {
 }
 
 type EmbyMixInfo struct {
-	VideoFolderName       string // 电影就是电影的文件夹名称，连续剧就是对应的剧集的 root 文件夹
-	VideoFileName         string // 视频文件名
-	VideoFileRelativePath string // 视频文件的相对路径（注意，这里还是需要补齐 x:/电影 这样的 root 路径的，仅仅算相对路径）
-	VideoFileFullPath     string
-	Ancestors             []EmbyItemsAncestors
-	VideoInfo             EmbyVideoInfo
+	VideoFolderName   string // 电影就是电影的文件夹名称，连续剧就是对应的剧集的 root 文件夹
+	VideoFileName     string // 视频文件名
+	VideoFileFullPath string
+	Ancestors         []EmbyItemsAncestors
+	VideoInfo         EmbyVideoInfo
 }
 
 type Time time.Time

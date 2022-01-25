@@ -13,6 +13,7 @@ import (
 	"golang.org/x/net/context"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -38,17 +39,13 @@ func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby.EmbyMixInfo, map[string]
 
 	// 获取最近的影片列表
 	items, err := em.embyApi.GetRecentlyItems()
-
-	// 获取电影和连续剧的文件夹名称
-	movieFolderName := filepath.Base(movieRootDir)
-	seriesFolderName := filepath.Base(seriesRootDir)
-
-	var EpisodeIdList = make([]string, 0)
-	var MovieIdList = make([]string, 0)
-
 	if err != nil {
 		return nil, nil, err
 	}
+	// 获取电影和连续剧的文件夹名称
+	var EpisodeIdList = make([]string, 0)
+	var MovieIdList = make([]string, 0)
+
 	log_helper.GetLogger().Debugln("-----------------")
 	log_helper.GetLogger().Debugln("GetRecentlyAddVideoList - GetRecentlyItems Count", len(items.Items))
 
@@ -68,11 +65,11 @@ func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby.EmbyMixInfo, map[string]
 	}
 
 	// 过滤出有效的电影、连续剧的资源出来
-	filterMovieList, err := em.filterEmbyVideoList(movieFolderName, MovieIdList, true)
+	filterMovieList, err := em.filterEmbyVideoList(MovieIdList, true)
 	if err != nil {
 		return nil, nil, err
 	}
-	filterSeriesList, err := em.filterEmbyVideoList(seriesFolderName, EpisodeIdList, false)
+	filterSeriesList, err := em.filterEmbyVideoList(EpisodeIdList, false)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -109,14 +106,6 @@ func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby.EmbyMixInfo, map[string]
 	for index, info := range filterSeriesList {
 		log_helper.GetLogger().Debugln(index, info.VideoFileName)
 	}
-
-	// 拼接绝对路径
-	for i, info := range noSubMovieList {
-		noSubMovieList[i].VideoFileFullPath = filepath.Join(movieRootDir, info.VideoFileRelativePath)
-	}
-	for i, info := range noSubSeriesList {
-		noSubSeriesList[i].VideoFileFullPath = filepath.Join(seriesRootDir, info.VideoFileRelativePath)
-	}
 	// 需要将连续剧零散的每一集，进行合并到一个连续剧下面，也就是这个连续剧有那些需要更新的
 	var seriesMap = make(map[string][]emby.EmbyMixInfo)
 	for _, info := range noSubSeriesList {
@@ -143,7 +132,62 @@ func (em *EmbyHelper) RefreshEmbySubList() (bool, error) {
 	return true, nil
 }
 
-func (em *EmbyHelper) filterEmbyVideoList(videoFolderName string, videoIdList []string, isMovieOrSeries bool) ([]emby.EmbyMixInfo, error) {
+// findMappingPath 从 Emby 内置路径匹配到物理路径
+// X:\电影    - /mnt/share1/电影
+// X:\连续剧  - /mnt/share1/连续剧
+func (em *EmbyHelper) findMappingPath(videoEmbyFullPath string, isMovieOrSeries bool) (bool, string) {
+	// 这里进行路径匹配的时候需要考虑嵌套路径的问题
+	// 比如，映射了 /电影  以及 /电影/AA ，那么如果有一部电影 /电影/AA/xx/xx.mkv 那么，应该匹配的是最长的路径 /电影/AA
+	matchedEmbyPaths := make([]string, 0)
+	if isMovieOrSeries == true {
+		// 电影的情况
+		for _, embyPath := range em.EmbyConfig.MoviePathsMapping {
+			if strings.Contains(videoEmbyFullPath, embyPath) == true {
+				matchedEmbyPaths = append(matchedEmbyPaths, embyPath)
+			}
+		}
+	} else {
+		// 连续剧的情况
+		for _, embyPath := range em.EmbyConfig.MoviePathsMapping {
+			if strings.Contains(videoEmbyFullPath, embyPath) == true {
+				matchedEmbyPaths = append(matchedEmbyPaths, embyPath)
+			}
+		}
+	}
+	if len(matchedEmbyPaths) < 1 {
+		return false, ""
+	}
+	// 排序得到匹配上的路径，最长的那个
+	pathSlices := sortStringSliceByLength(matchedEmbyPaths)
+	// 然后还需要从这个最长的路径，从 map 中找到对应的物理路径
+	nowPhPath := ""
+	if isMovieOrSeries == true {
+		// 电影的情况
+		for physicalPath, embyPath := range em.EmbyConfig.MoviePathsMapping {
+			if embyPath == pathSlices[0].Path {
+				nowPhPath = physicalPath
+				break
+			}
+		}
+	} else {
+		// 连续剧的情况
+		for physicalPath, embyPath := range em.EmbyConfig.MoviePathsMapping {
+			if embyPath == pathSlices[0].Path {
+				nowPhPath = physicalPath
+				break
+			}
+		}
+	}
+	// 如果匹配不上
+	if nowPhPath == "" {
+		return false, ""
+	}
+
+	outPhPath := strings.ReplaceAll(videoEmbyFullPath, pathSlices[0].Path, nowPhPath)
+	return true, outPhPath
+}
+
+func (em *EmbyHelper) filterEmbyVideoList(videoIdList []string, isMovieOrSeries bool) ([]emby.EmbyMixInfo, error) {
 	var filterVideoEmbyInfo = make([]emby.EmbyMixInfo, 0)
 
 	queryFunc := func(m string) (*emby.EmbyMixInfo, error) {
@@ -158,43 +202,38 @@ func (em *EmbyHelper) filterEmbyVideoList(videoFolderName string, videoIdList []
 		mixInfo := emby.EmbyMixInfo{Ancestors: ancs, VideoInfo: info}
 		if isMovieOrSeries == true {
 			// 电影
-			// 过滤掉不符合要求的
-			if len(mixInfo.Ancestors) < 2 {
+			// 过滤掉不符合要求的,拼接绝对路径
+			isFit, physicalPath := em.findMappingPath(info.Path, isMovieOrSeries)
+			if isFit == false {
 				return nil, err
 			}
-
-			// 过滤掉不符合要求的
-			ancestorsCount := len(mixInfo.Ancestors)
-			usefulAncestorIndex := ancestorsCount - 2
-			if mixInfo.Ancestors[usefulAncestorIndex].Name != videoFolderName || mixInfo.Ancestors[usefulAncestorIndex].Type != "Folder" {
-				return nil, err
-			}
-
+			mixInfo.VideoFileFullPath = physicalPath
 			// 这个电影的文件夹
 			mixInfo.VideoFolderName = filepath.Base(filepath.Dir(mixInfo.VideoInfo.Path))
 			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
-			// 这里需要注意，仅仅这样是不能够解决嵌套文件夹问题的。
-			//mixInfo.VideoFileRelativePath = filepath.Join(mixInfo.VideoFolderName, mixInfo.VideoFileName)
-			// 需要从上面得到的 Ancestors 对应的“电影”根目录的 index 处，拿到 Path，然后用 info 这个实例的 Path 剪掉前面那个 Path，就是相对路径了
-			mixInfo.VideoFileRelativePath = strings.ReplaceAll(info.Path, mixInfo.Ancestors[usefulAncestorIndex].Path, "")
 		} else {
 			// 连续剧
-			// 过滤掉不符合要求的
-			if len(mixInfo.Ancestors) < 4 {
+			// 过滤掉不符合要求的,拼接绝对路径
+			isFit, physicalPath := em.findMappingPath(info.Path, isMovieOrSeries)
+			if isFit == false {
 				return nil, err
 			}
-			// 过滤掉不符合要求的
-			if mixInfo.Ancestors[0].Type != "Season" ||
-				mixInfo.Ancestors[1].Type != "Series" ||
-				mixInfo.Ancestors[2].Type != "Folder" ||
-				mixInfo.Ancestors[2].Name != videoFolderName {
-				return nil, err
-			}
+			mixInfo.VideoFileFullPath = physicalPath
 			// 这个剧集的文件夹
-			mixInfo.VideoFolderName = filepath.Base(mixInfo.Ancestors[1].Path)
+			ancestorIndex := -1
+			// 找到连续剧文件夹这一层
+			for i, ancestor := range mixInfo.Ancestors {
+				if ancestor.Type == "Series" {
+					ancestorIndex = i
+					break
+				}
+			}
+			if ancestorIndex == -1 {
+				// 说明没有找到连续剧文件夹的名称，那么就应该跳过
+				return nil, err
+			}
+			mixInfo.VideoFolderName = filepath.Base(mixInfo.Ancestors[ancestorIndex].Path)
 			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
-			seasonName := filepath.Base(mixInfo.Ancestors[0].Path)
-			mixInfo.VideoFileRelativePath = filepath.Join(mixInfo.VideoFolderName, seasonName, mixInfo.VideoFileName)
 		}
 
 		return &mixInfo, nil
@@ -464,6 +503,26 @@ type InputData struct {
 type OutData struct {
 	Info *emby.EmbyMixInfo
 	Err  error
+}
+
+type PathSlice struct {
+	Path string
+}
+type PathSlices []PathSlice
+
+func (a PathSlices) Len() int           { return len(a) }
+func (a PathSlices) Less(i, j int) bool { return len(a[i].Path) < len(a[j].Path) }
+func (a PathSlices) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+
+func sortStringSliceByLength(m []string) PathSlices {
+	p := make(PathSlices, len(m))
+	i := 0
+	for _, v := range m {
+		p[i] = PathSlice{v}
+		i++
+	}
+	sort.Sort(sort.Reverse(p))
+	return p
 }
 
 const (
