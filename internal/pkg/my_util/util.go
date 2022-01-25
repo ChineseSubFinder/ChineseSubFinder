@@ -144,6 +144,23 @@ func VideoNameSearchKeywordMaker(title string, year string) string {
 	return searchKeyword
 }
 
+// SearchMatchedVideoFileFromDirs 搜索符合后缀名的视频文件
+func SearchMatchedVideoFileFromDirs(dirs []string) ([]string, error) {
+
+	var fileFullPathList = make([]string, 0)
+	for _, dir := range dirs {
+
+		matchedVideoFile, err := SearchMatchedVideoFile(dir)
+		if err != nil {
+			return nil, err
+		}
+
+		fileFullPathList = append(fileFullPathList, matchedVideoFile...)
+	}
+
+	return fileFullPathList, nil
+}
+
 // SearchMatchedVideoFile 搜索符合后缀名的视频文件
 func SearchMatchedVideoFile(dir string) ([]string, error) {
 

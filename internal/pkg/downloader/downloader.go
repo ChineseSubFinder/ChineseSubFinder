@@ -21,6 +21,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_control"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
+	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"path/filepath"
@@ -37,7 +38,7 @@ type Downloader struct {
 	mk                       *markSystem.MarkingSystem // MarkingSystem
 	embyHelper               *embyHelper.EmbyHelper
 	movieFileFullPathList    []string                      //  多个需要搜索字幕的电影文件全路径
-	seriesSubNeedDlMap       map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录
+	seriesSubNeedDlMap       map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录，连续剧文件夹名称 -- 每一集的 EmbyMixInfo List
 	subFormatter             ifaces.ISubFormatter          //	字幕格式化命名的实现
 	subNameFormatter         subCommon.FormatterName       // 从 inSubFormatter 推断出来
 	needForcedScanAndDownSub bool                          // 将会强制扫描所有的视频，下载字幕，替换已经存在的字幕，不进行时间段和已存在则跳过的判断。且不会进过 Emby API 的逻辑，智能进行强制去以本程序的方式去扫描。
@@ -221,7 +222,7 @@ func (d *Downloader) DownloadSub4Movie() error {
 	// 优先判断特殊的操作
 	if d.needForcedScanAndDownSub == true {
 		// 全扫描
-		d.movieFileFullPathList, err = my_util.SearchMatchedVideoFile(dir)
+		d.movieFileFullPathList, err = my_util.SearchMatchedVideoFileFromDirs(d.settings.CommonSettings.MoviePaths)
 		if err != nil {
 			return err
 		}
@@ -229,7 +230,7 @@ func (d *Downloader) DownloadSub4Movie() error {
 		// 是否是通过 emby_helper api 获取的列表
 		if d.embyHelper == nil {
 			// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
-			d.movieFileFullPathList, err = my_util.SearchMatchedVideoFile(dir)
+			d.movieFileFullPathList, err = my_util.SearchMatchedVideoFileFromDirs(d.settings.CommonSettings.MoviePaths)
 			if err != nil {
 				return err
 			}
@@ -313,38 +314,65 @@ func (d *Downloader) DownloadSub4Series() error {
 	d.taskControl.SetCtxProcessFunc("SeriesPool", d.seriesDlFunc, common.OneSeriesProcessTimeOut)
 	// -----------------------------------------------------
 	// 是否是通过 emby_helper api 获取的列表
-	var seriesDirList = make([]string, 0)
+	// x://连续剧 -- 连续剧A、连续剧B、连续剧C 的名称列表
+	var seriesDirMap = treemap.NewWithStringComparator()
 	if d.embyHelper == nil {
+		// 不使用 Emby 的情况
 		// 遍历连续剧总目录下的第一层目录
-		seriesDirList, err = seriesHelper.GetSeriesList(dir)
+		seriesDirMap, err = seriesHelper.GetSeriesListFromDirs(d.settings.CommonSettings.SeriesPaths)
 		if err != nil {
 			return err
 		}
-		for index, seriesDir := range seriesDirList {
-			d.log.Debugln("embyHelper == nil GetSeriesList", index, seriesDir)
-		}
+
+		// 输出调试信息，有那些连续剧文件夹名称
+		seriesDirMap.Each(func(key interface{}, value interface{}) {
+
+			for i, s := range value.([]string) {
+				d.log.Debugln("embyHelper == nil GetSeriesList", i, s)
+			}
+		})
 	} else {
+		// 使用 Emby 的情况
 		// 这里给出的是连续剧的文件夹名称
 		d.log.Debugln("embyHelper seriesSubNeedDlMap Count:", len(d.seriesSubNeedDlMap))
-		for s := range d.seriesSubNeedDlMap {
-			seriesDirList = append(seriesDirList, s)
-			d.log.Debugln("embyHelper seriesSubNeedDlMap:", s)
+		for seriesFolderName, mixInfos := range d.seriesSubNeedDlMap {
+
+			if len(mixInfos) < 1 {
+				continue
+			}
+			nowPhRootPath := mixInfos[0].PhysicalRootPath
+			value, found := seriesDirMap.Get(nowPhRootPath)
+			if found == false {
+				seriesDirMap.Put(nowPhRootPath, []string{seriesFolderName})
+			} else {
+				value = append(value.([]string), seriesFolderName)
+				seriesDirMap.Put(nowPhRootPath, value)
+			}
+
+			d.log.Debugln("embyHelper seriesSubNeedDlMap:", seriesFolderName)
 		}
 	}
 
-	for i, oneSeriesPath := range seriesDirList {
+	seriesCount := 0
+	seriesIndexNameMap := make(map[int]string)
+	seriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
+		for _, seriesName := range seriesNames.([]string) {
 
-		err = d.taskControl.Invoke(&task_control.TaskData{
-			Index: i,
-			DataEx: DownloadInputData{
-				RootDirPath:   dir,
-				OneSeriesPath: oneSeriesPath,
-			},
-		})
-		if err != nil {
-			d.log.Errorln("DownloadSub4Movie Invoke Index:", i, "Error", err)
+			err = d.taskControl.Invoke(&task_control.TaskData{
+				Index: seriesCount,
+				DataEx: DownloadInputData{
+					RootDirPath:   seriesRootPathName.(string),
+					OneSeriesPath: seriesName,
+				},
+			})
+			if err != nil {
+				d.log.Errorln("DownloadSub4Series", seriesRootPathName.(string), "Invoke Index:", seriesCount, "Error", err)
+			}
+
+			seriesIndexNameMap[seriesCount] = seriesName
+			seriesCount++
 		}
-	}
+	})
 
 	d.taskControl.Hold()
 	// 可以得到执行结果的统计信息
@@ -353,17 +381,17 @@ func (d *Downloader) DownloadSub4Series() error {
 	d.log.Infoln("--------------------------------------")
 	d.log.Infoln("successList", len(successList))
 	for i, indexId := range successList {
-		d.log.Infoln(i, seriesDirList[indexId])
+		d.log.Infoln(i, seriesIndexNameMap[indexId])
 	}
 	d.log.Infoln("--------------------------------------")
 	d.log.Infoln("noExecuteList", len(noExecuteList))
 	for i, indexId := range noExecuteList {
-		d.log.Infoln(i, seriesDirList[indexId])
+		d.log.Infoln(i, seriesIndexNameMap[indexId])
 	}
 	d.log.Infoln("--------------------------------------")
 	d.log.Infoln("errorList", len(errorList))
 	for i, indexId := range errorList {
-		d.log.Infoln(i, seriesDirList[indexId])
+		d.log.Infoln(i, seriesIndexNameMap[indexId])
 	}
 	d.log.Infoln("--------------------------------------")
 
@@ -452,7 +480,10 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 				return err
 			}
 		} else {
-			// 先进性 emby_helper api 的操作，读取需要更新字幕的项目
+
+			//physicalSeriesFolderFPath := ""
+
+			// 先进行 emby_helper api 的操作，读取需要更新字幕的项目
 			seriesInfo, organizeSubFiles, err = d.subSupplierHub.DownloadSub4SeriesFromEmby(
 				filepath.Join(downloadInputData.RootDirPath, downloadInputData.OneSeriesPath),
 				d.seriesSubNeedDlMap[downloadInputData.OneSeriesPath], taskData.Index)

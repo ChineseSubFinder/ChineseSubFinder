@@ -83,17 +83,38 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 // TODO 暂不方便在其他环境进行单元测试
 func TestDownloader_GetUpdateVideoListFromEmby(t *testing.T) {
 
-	//var config = types.Config{
-	//	SubNameFormatter: 0,
-	//}
+	//se := settings.GetSettings()
+	////se.CommonSettings.MoviePaths = append(se.CommonSettings.MoviePaths, "X:\\电影")
+	//se.CommonSettings.SeriesPaths = append(se.CommonSettings.SeriesPaths, "X:\\TestSeries")
+	////se.CommonSettings.SeriesPaths = append(se.CommonSettings.SeriesPaths, "X:\\连续剧")
+	//se.EmbySettings.Enable = false
+	//se.EmbySettings.AddressUrl = "http://123:8096"
+	//se.EmbySettings.APIKey = "123"
+	//se.EmbySettings.SkipWatched = true
+	//se.EmbySettings.MoviePathsMapping["X:\\电影"] = "/mnt/share1/电影"
+	//se.EmbySettings.MoviePathsMapping["X:\\连续剧"] = "/mnt/share1/连续剧"
+	//
+	//subSupplierHub := subSupplier.NewSubSupplierHub(
+	//	*settings.GetSettings(),
+	//	shooter.NewSupplier(*settings.GetSettings()),
+	//)
 	//
 	//var err error
-	//dl := NewDownloader(sub_formatter.GetSubFormatter(config.SubNameFormatter), types.ReqParam{
-	//	SaveMultiSub:    true,
-	//	SubTypePriority: 1,
-	//	EmbyConfig:      config.EmbyConfig,
-	//})
-	//err = dl.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
+	//dl, err := NewDownloader(subSupplierHub, sub_formatter.GetSubFormatter(0), *se)
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//err = dl.GetUpdateVideoListFromEmby()
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//
+	//err = dl.DownloadSub4Movie()
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//
+	//err = dl.DownloadSub4Series()
 	//if err != nil {
 	//	t.Fatal(err)
 	//}

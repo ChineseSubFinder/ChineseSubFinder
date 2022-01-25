@@ -135,7 +135,7 @@ func (em *EmbyHelper) RefreshEmbySubList() (bool, error) {
 // findMappingPath 从 Emby 内置路径匹配到物理路径
 // X:\电影    - /mnt/share1/电影
 // X:\连续剧  - /mnt/share1/连续剧
-func (em *EmbyHelper) findMappingPath(videoEmbyFullPath string, isMovieOrSeries bool) (bool, string) {
+func (em *EmbyHelper) findMappingPath(videoEmbyFullPath string, isMovieOrSeries bool) (bool, string, string) {
 	// 这里进行路径匹配的时候需要考虑嵌套路径的问题
 	// 比如，映射了 /电影  以及 /电影/AA ，那么如果有一部电影 /电影/AA/xx/xx.mkv 那么，应该匹配的是最长的路径 /电影/AA
 	matchedEmbyPaths := make([]string, 0)
@@ -155,7 +155,7 @@ func (em *EmbyHelper) findMappingPath(videoEmbyFullPath string, isMovieOrSeries 
 		}
 	}
 	if len(matchedEmbyPaths) < 1 {
-		return false, ""
+		return false, "", ""
 	}
 	// 排序得到匹配上的路径，最长的那个
 	pathSlices := sortStringSliceByLength(matchedEmbyPaths)
@@ -180,11 +180,11 @@ func (em *EmbyHelper) findMappingPath(videoEmbyFullPath string, isMovieOrSeries 
 	}
 	// 如果匹配不上
 	if nowPhPath == "" {
-		return false, ""
+		return false, "", ""
 	}
 
 	outPhPath := strings.ReplaceAll(videoEmbyFullPath, pathSlices[0].Path, nowPhPath)
-	return true, outPhPath
+	return true, outPhPath, nowPhPath
 }
 
 func (em *EmbyHelper) filterEmbyVideoList(videoIdList []string, isMovieOrSeries bool) ([]emby.EmbyMixInfo, error) {
@@ -203,22 +203,24 @@ func (em *EmbyHelper) filterEmbyVideoList(videoIdList []string, isMovieOrSeries 
 		if isMovieOrSeries == true {
 			// 电影
 			// 过滤掉不符合要求的,拼接绝对路径
-			isFit, physicalPath := em.findMappingPath(info.Path, isMovieOrSeries)
+			isFit, physicalVideoFPath, physicalRootPath := em.findMappingPath(info.Path, isMovieOrSeries)
 			if isFit == false {
 				return nil, err
 			}
-			mixInfo.VideoFileFullPath = physicalPath
+			mixInfo.VideoFileFullPath = physicalVideoFPath
+			mixInfo.PhysicalRootPath = physicalRootPath
 			// 这个电影的文件夹
 			mixInfo.VideoFolderName = filepath.Base(filepath.Dir(mixInfo.VideoInfo.Path))
 			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
 		} else {
 			// 连续剧
 			// 过滤掉不符合要求的,拼接绝对路径
-			isFit, physicalPath := em.findMappingPath(info.Path, isMovieOrSeries)
+			isFit, physicalVideoFPath, physicalRootPath := em.findMappingPath(info.Path, isMovieOrSeries)
 			if isFit == false {
 				return nil, err
 			}
-			mixInfo.VideoFileFullPath = physicalPath
+			mixInfo.VideoFileFullPath = physicalVideoFPath
+			mixInfo.PhysicalRootPath = physicalRootPath
 			// 这个剧集的文件夹
 			ancestorIndex := -1
 			// 找到连续剧文件夹这一层

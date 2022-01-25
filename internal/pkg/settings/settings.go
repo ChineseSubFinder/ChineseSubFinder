@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/strcut_json"
 	"github.com/huandu/go-clone"
 	"os"
+	"path/filepath"
 	"sync"
 )
 
@@ -49,7 +50,7 @@ func SetFullNewSettings(inSettings *Settings) error {
 
 func NewSettings() *Settings {
 
-	nowConfigFPath := ""
+	nowConfigFPath := filepath.Join(configName)
 
 	return &Settings{
 		configFPath:           nowConfigFPath,

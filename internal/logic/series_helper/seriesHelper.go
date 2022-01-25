@@ -17,6 +17,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
+	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/jinzhu/now"
 	"os"
 	"path/filepath"
@@ -218,6 +219,29 @@ func SetTheSpecifiedEps2Download(seriesInfo *series.SeriesInfo, epsMap map[int]i
 	for s, info := range nowNeedDlEpsKeyList {
 		seriesInfo.NeedDlEpsKeyList[s] = info
 	}
+}
+
+// GetSeriesListFromDirs 获取这个目录下的所有文件夹名称，默认为一个连续剧的目录的List
+func GetSeriesListFromDirs(dirs []string) (*treemap.Map, error) {
+
+	var fileFullPathMap = treemap.NewWithStringComparator()
+	for _, dir := range dirs {
+
+		seriesList, err := GetSeriesList(dir)
+		if err != nil {
+			return nil, err
+		}
+
+		value, found := fileFullPathMap.Get(dir)
+		if found == false {
+			fileFullPathMap.Put(dir, seriesList)
+		} else {
+			value = append(value.([]string), seriesList...)
+			fileFullPathMap.Put(value, dir)
+		}
+	}
+
+	return fileFullPathMap, nil
 }
 
 // GetSeriesList 获取这个目录下的所有文件夹名称，默认为一个连续剧的目录的List

@@ -70,3 +70,4 @@ TestData/
 /internal/pkg/settings/testfile.json
 /internal/types/backend/reply_check_proxy.json
 /internal/logic/emby_helper/Logs
+/internal/pkg/downloader/ChineseSubFinderSettings.json
