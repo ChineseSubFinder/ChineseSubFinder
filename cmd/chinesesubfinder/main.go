@@ -1,15 +1,15 @@
 package main
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"github.com/prometheus/common/log"
 	"github.com/robfig/cron/v3"
 )
 
 func init() {
 
-	log.Infoln("ChineseSubFinder Version:", AppVersion)
+	log_helper.GetLogger().Infoln("ChineseSubFinder Version:", AppVersion)
 
 	if my_util.OSCheck() == false {
 		panic(`You should search runtime.GOOS in the project, Implement unimplemented function`)
@@ -25,16 +25,16 @@ func main() {
 		// do something
 	})
 	if err != nil {
-		log.Errorln("cron entryID:", entryID, "Error:", err)
+		log_helper.GetLogger().Errorln("cron entryID:", entryID, "Error:", err)
 		return
 	}
 
 	if settings.GetSettings().CommonSettings.RunScanAtStartUp == true {
-		log.Infoln("First Time Download Start")
+		log_helper.GetLogger().Infoln("First Time Download Start")
 		// do something
-		log.Infoln("First Time Download End")
+		log_helper.GetLogger().Infoln("First Time Download End")
 	} else {
-		log.Infoln("RunAtStartup: false, so will not Run At Startup, wait", settings.GetSettings().CommonSettings.ScanInterval, "to Download")
+		log_helper.GetLogger().Infoln("RunAtStartup: false, so will not Run At Startup, wait", settings.GetSettings().CommonSettings.ScanInterval, "to Download")
 	}
 
 	c.Start()

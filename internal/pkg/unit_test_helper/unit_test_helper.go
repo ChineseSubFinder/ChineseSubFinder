@@ -148,7 +148,7 @@ func copyTestData(srcDir string) (string, error) {
 	testDir := filepath.Join(srcDir, "test")
 
 	if my_util.IsDir(testDir) == true {
-		err := my_util.ClearFolderEx(testDir, 2)
+		err := my_util.ClearFolderEx(testDir, 10)
 		if err != nil {
 			return "", err
 		}

@@ -19,7 +19,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/url_connectedness_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
-	"github.com/prometheus/common/log"
 )
 
 type PreDownloadProcess struct {
@@ -158,19 +157,19 @@ func (p *PreDownloadProcess) HotFix() *PreDownloadProcess {
 	p.stageName = stageNameCHotFix
 
 	defer func() {
-		log.Infoln("HotFix End")
+		log_helper.GetLogger().Infoln("HotFix End")
 	}()
 
 	// ------------------------------------------------------------------------
 	// 开始修复
-	log.Infoln("HotFix Start, wait ...")
-	log.Infoln(commonValue.NotifyStringTellUserWait)
+	log_helper.GetLogger().Infoln("HotFix Start, wait ...")
+	log_helper.GetLogger().Infoln(commonValue.NotifyStringTellUserWait)
 	err := hot_fix.HotFixProcess(types.HotFixParam{
 		MovieRootDirs:  settings.GetSettings().CommonSettings.MoviePaths,
 		SeriesRootDirs: settings.GetSettings().CommonSettings.SeriesPaths,
 	})
 	if err != nil {
-		log.Errorln("HotFixProcess()", err)
+		log_helper.GetLogger().Errorln("HotFixProcess()", err)
 		p.gError = err
 		return p
 	}
@@ -186,7 +185,7 @@ func (p *PreDownloadProcess) ChangeSubNameFormat() *PreDownloadProcess {
 	p.stageName = stageNameChangeSubNameFormat
 
 	defer func() {
-		log.Infoln("Change Sub Name Format End")
+		log_helper.GetLogger().Infoln("Change Sub Name Format End")
 	}()
 	// ------------------------------------------------------------------------
 	/*
@@ -194,8 +193,8 @@ func (p *PreDownloadProcess) ChangeSubNameFormat() *PreDownloadProcess {
 		如果数据库没有记录经过转换，那么默认从 Emby 的格式作为检测的起点，转换到目标的格式
 		然后需要在数据库中记录本次的转换结果
 	*/
-	log.Infoln("Change Sub Name Format Start...")
-	log.Infoln(commonValue.NotifyStringTellUserWait)
+	log_helper.GetLogger().Infoln("Change Sub Name Format Start...")
+	log_helper.GetLogger().Infoln(commonValue.NotifyStringTellUserWait)
 	renameResults, err := sub_formatter.SubFormatChangerProcess(
 		settings.GetSettings().CommonSettings.MoviePaths,
 		settings.GetSettings().CommonSettings.SeriesPaths,
@@ -205,7 +204,7 @@ func (p *PreDownloadProcess) ChangeSubNameFormat() *PreDownloadProcess {
 		log_helper.GetLogger().Errorln("reformat ErrFile:"+s, i)
 	}
 	if err != nil {
-		log.Errorln("SubFormatChangerProcess() Error", err)
+		log_helper.GetLogger().Errorln("SubFormatChangerProcess() Error", err)
 		p.gError = err
 		return p
 	}
@@ -220,10 +219,10 @@ func (p *PreDownloadProcess) ReloadBrowser() *PreDownloadProcess {
 	}
 	p.stageName = stageNameReloadBrowser
 	// ------------------------------------------------------------------------
-	log.Infoln("ReloadBrowser Start...")
+	log_helper.GetLogger().Infoln("ReloadBrowser Start...")
 	// ReloadBrowser 提前把浏览器下载好
 	rod_helper.ReloadBrowser()
-	log.Infoln("ReloadBrowser End")
+	log_helper.GetLogger().Infoln("ReloadBrowser End")
 	return p
 }
 
