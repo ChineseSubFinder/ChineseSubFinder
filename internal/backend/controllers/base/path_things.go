@@ -1,4 +1,4 @@
-package v1
+package base
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"

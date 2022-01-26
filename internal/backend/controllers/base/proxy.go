@@ -1,4 +1,4 @@
-package v1
+package base
 
 import (
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"

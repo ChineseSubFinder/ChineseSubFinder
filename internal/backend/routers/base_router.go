@@ -19,7 +19,13 @@ func InitRouter(router *gin.Engine, cronHelper *cron_helper.CronHelper) {
 
 	router.POST("/login", cbBase.LoginHandler)
 	router.POST("/logout", middle.CheckAuth(), cbBase.LogoutHandler)
+
 	router.POST("/change-pwd", middle.CheckAuth(), cbBase.ChangePwdHandler)
+
+	router.POST("/check-path", middle.CheckAuth(), cbBase.CheckPathHandler)
+
+	router.POST("/check-proxy", middle.CheckAuth(), cbBase.CheckProxyHandler)
+
 	// v1路由: /v1/xxx
 	GroupV1 := router.Group("/" + cbV1.GetVersion())
 	{
@@ -28,12 +34,8 @@ func InitRouter(router *gin.Engine, cronHelper *cron_helper.CronHelper) {
 		GroupV1.GET("/settings", cbV1.SettingsHandler)
 		GroupV1.PUT("/settings", cbV1.SettingsHandler)
 
-		GroupV1.POST("/check-proxy", cbV1.CheckProxyHandler)
-
-		GroupV1.POST("/check-path", cbV1.CheckPathHandler)
-
 		GroupV1.POST("/jobs/start", cbV1.JobStartHandler)
 		GroupV1.POST("/jobs/stop", cbV1.JobStopHandler)
-		GroupV1.POST("/jobs/status", cbV1.JobStatusHandler)
+		GroupV1.GET("/jobs/status", cbV1.JobStatusHandler)
 	}
 }
