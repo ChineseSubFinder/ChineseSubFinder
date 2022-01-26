@@ -71,3 +71,4 @@ TestData/
 /internal/types/backend/reply_check_proxy.json
 /internal/logic/emby_helper/Logs
 /internal/pkg/downloader/ChineseSubFinderSettings.json
+/ChineseSubFinderSettings.json
