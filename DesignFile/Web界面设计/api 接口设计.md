@@ -409,6 +409,24 @@
 
 
 
+### 开始任务
+
+`POST /jobs/start`
+
+请求参数：无
+
+返回 HTTP 码 200：
+
+```javascript
+{
+  message: "ok"; 
+}
+```
+
+返回 HTTP 码 204
+
+
+
 ### 停止任务
 
 停止正在运行的任务
@@ -417,17 +435,37 @@
 
 请求参数：无
 
+返回 HTTP 码 200：
+
+```javascript
+{
+  message: "ok"; 
+}
+```
+
 返回 HTTP 码 204
 
 
 
-### 开始任务
+### 查询任务的状态
 
 `POST /jobs/start`
 
 请求参数：无
 
+返回 HTTP 码 200：
+
+```javascript
+{
+  status: "rinning"; // running or stoped
+}
+```
+
+> running 或者是 stoped，前者是正在运行，后者是已经停止或者没有执行，如果开始的耗时的执行流程，停止的时候可以需要点时间，有可能上分钟级别。
+
 返回 HTTP 码 204
+
+
 
 ## 通用错误码
 
