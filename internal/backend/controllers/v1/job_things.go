@@ -18,3 +18,11 @@ func (cb ControllerBase) JobStopHandler(c *gin.Context) {
 	}()
 
 }
+
+func (cb ControllerBase) JobStatusHandler(c *gin.Context) {
+	var err error
+	defer func() {
+		// 统一的异常处理
+		cb.ErrorProcess(c, "JobStatusHandler", err)
+	}()
+}

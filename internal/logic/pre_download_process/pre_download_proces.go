@@ -231,7 +231,9 @@ func (p *PreDownloadProcess) ReloadBrowser() *PreDownloadProcess {
 }
 
 func (p *PreDownloadProcess) Wait() error {
-
+	defer func() {
+		log_helper.GetLogger().Infoln("PreDownloadProcess Wait() Done.")
+	}()
 	if p.gError != nil {
 		return errors.New(p.stageName + " " + p.gError.Error())
 

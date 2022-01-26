@@ -1,11 +1,14 @@
 package main
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/backend"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"github.com/robfig/cron/v3"
+	"os"
+	"strconv"
 )
 
 func init() {
@@ -21,31 +24,53 @@ func init() {
 
 func main() {
 
-	// 任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
-	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
-	// 定时器
-	entryID, err := c.AddFunc("@every "+settings.GetSettings().CommonSettings.ScanInterval, func() {
-		// do something
-	})
+	cronHelper, err := cron_helper.NewCronHelper()
 	if err != nil {
-		log_helper.GetLogger().Errorln("cron entryID:", entryID, "Error:", err)
-		return
+		panic("NewCronHelper " + err.Error())
 	}
 
-	if settings.GetSettings().CommonSettings.RunScanAtStartUp == true {
-		log_helper.GetLogger().Infoln("First Time Download Start")
-		// do something
-		log_helper.GetLogger().Infoln("First Time Download End")
+	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {
+		// 如果没有完成，那么就不开启
+
 	} else {
-		log_helper.GetLogger().Infoln("RunAtStartup: false, so will not Run At Startup, wait", settings.GetSettings().CommonSettings.ScanInterval, "to Download")
+		// 是否完成了 Setup，如果完成了，那么就开启第一次的扫描
+		go func() {
+			cronHelper.Start(settings.GetSettings().CommonSettings.RunScanAtStartUp)
+		}()
 	}
+	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
+	backend.StartBackEnd(readCustomPortFile(), cronHelper)
+}
 
-	c.Start()
-	// 阻塞
-	select {}
+func readCustomPortFile() int {
+	if my_util.IsFile(customPort) == false {
+		return defPort
+	} else {
+		bytes, err := os.ReadFile(customPort)
+		if err != nil {
+			log_helper.GetLogger().Errorln("ReadFile CustomPort Error", err)
+			log_helper.GetLogger().Infoln("Use DefPort", defPort)
+			return defPort
+		}
+
+		atoi, err := strconv.Atoi(string(bytes))
+		if err != nil {
+			log_helper.GetLogger().Errorln("Atoi CustomPort Error", err)
+			log_helper.GetLogger().Infoln("Use DefPort", defPort)
+			return defPort
+		}
+
+		log_helper.GetLogger().Infoln("Use CustomPort", atoi)
+		return atoi
+	}
 }
 
 /*
 	使用 git tag 来做版本描述，然后在编译的时候传入版本号信息到这个变量上
 */
 var AppVersion = "unknow"
+
+const (
+	defPort    = 19035
+	customPort = "CustomPort"
+)

@@ -4,12 +4,14 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/base"
 	v1 "github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/v1"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/middle"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
 	"github.com/gin-gonic/gin"
 )
 
-func InitRouter(router *gin.Engine) {
+func InitRouter(router *gin.Engine, cronHelper *cron_helper.CronHelper) {
+
 	cbBase := base.NewControllerBase()
-	cbV1 := v1.NewControllerBase()
+	cbV1 := v1.NewControllerBase(cronHelper)
 	// 基础的路由
 	router.GET("/system-status", cbBase.SystemStatusHandler)
 
@@ -29,7 +31,9 @@ func InitRouter(router *gin.Engine) {
 		GroupV1.POST("/check-proxy", cbV1.CheckProxyHandler)
 
 		GroupV1.POST("/check-path", cbV1.CheckPathHandler)
+
 		GroupV1.POST("/jobs/start", cbV1.JobStartHandler)
 		GroupV1.POST("/jobs/stop", cbV1.JobStopHandler)
+		GroupV1.POST("/jobs/status", cbV1.JobStatusHandler)
 	}
 }

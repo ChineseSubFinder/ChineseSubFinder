@@ -1,6 +1,7 @@
 package base
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
@@ -24,5 +25,6 @@ func (cb ControllerBase) SystemStatusHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, backend.ReplySystemStatus{
 		IsSetup: isSetup,
+		Version: global_value.AppVersion,
 	})
 }
