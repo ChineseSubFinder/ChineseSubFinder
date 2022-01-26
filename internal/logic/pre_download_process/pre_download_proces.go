@@ -228,7 +228,12 @@ func (p *PreDownloadProcess) ReloadBrowser() *PreDownloadProcess {
 
 func (p *PreDownloadProcess) Wait() error {
 
-	return errors.New(p.stageName + " " + p.gError.Error())
+	if p.gError != nil {
+		return errors.New(p.stageName + " " + p.gError.Error())
+
+	} else {
+		return nil
+	}
 }
 
 const (
