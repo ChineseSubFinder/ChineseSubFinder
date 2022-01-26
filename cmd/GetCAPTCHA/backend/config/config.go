@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"github.com/spf13/viper"
-	"sync"
 )
 
 type Config struct {
@@ -18,16 +17,16 @@ type Config struct {
 
 // GetConfig 统一获取配置的接口
 func GetConfig() *Config {
-	configOnce.Do(func() {
-		configViper, err := initConfigure()
-		if err != nil {
-			panic("GetConfig - initConfigure something " + err.Error())
-		}
-		config, err = readConfig(configViper)
-		if err != nil {
-			panic("GetConfig - readConfig something " + err.Error())
-		}
-	})
+
+	configViper, err := initConfigure()
+	if err != nil {
+		panic("GetConfig - initConfigure something " + err.Error())
+	}
+	config, err = readConfig(configViper)
+	if err != nil {
+		panic("GetConfig - readConfig something " + err.Error())
+	}
+
 	return config
 }
 
@@ -57,6 +56,5 @@ func readConfig(viper *viper.Viper) (*Config, error) {
 }
 
 var (
-	config     *Config
-	configOnce sync.Once
+	config *Config
 )
