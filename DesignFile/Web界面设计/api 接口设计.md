@@ -189,6 +189,60 @@
 
 
 
+### 检查目录是否可用
+
+`POST /check-path`
+
+请求参数：
+
+```javascript
+{
+  path: '/mnt/电影';
+}
+```
+
+返回 HTTP 码 200：
+
+```javascript
+{
+  valid: true; 
+}
+```
+
+返回 HTTP 码 204
+
+
+
+### 检查代理服务器
+
+`POST /check-proxy`
+
+请求参数：
+
+```javascript
+{
+  http_proxy_address: 'http://127.0.0.1:10809';
+}
+```
+
+返回 HTTP 码 200：
+
+```javascript
+{
+	"sub_site_status": [{
+		"name": "aa",
+		"valid": true,
+		"speed": 100  //ms
+	}, {
+		"name": "bb",
+		"valid": false,
+		"speed": 0
+	}]
+}
+```
+
+
+
 ### 修改密码
 
 `POST /change-pwd`
@@ -215,9 +269,11 @@
 
 
 
-### 设置界面 -- 获取设置的信息
+### V1 版本 API
 
-`GET /settings`
+#### 设置界面 -- 获取设置的信息
+
+`GET /v1/settings`
 
 需要权限认证，这里获取到的 settings 信息与“应用初始化安装”填写的 settings 数据结构一致。
 
@@ -282,9 +338,9 @@
 
 
 
-### 设置界面 -- 写入设置信息
+#### 设置界面 -- 写入设置信息
 
-`PUT /settings`
+`PUT /v1/settings`
 
 需要权限认证，这里获取到的 settings 信息与“应用初始化安装”填写的 settings 数据结构一致。
 
@@ -355,63 +411,9 @@
 
 
 
-### 检查代理服务器
+#### 开始任务
 
-`POST /check-proxy`
-
-请求参数：
-
-```javascript
-{
-  http_proxy_address: 'http://127.0.0.1:10809';
-}
-```
-
-返回 HTTP 码 200：
-
-```javascript
-{
-	"sub_site_status": [{
-		"name": "aa",
-		"valid": true,
-		"speed": 100  //ms
-	}, {
-		"name": "bb",
-		"valid": false,
-		"speed": 0
-	}]
-}
-```
-
-
-
-### 检查目录是否可用
-
-`POST /check-path`
-
-请求参数：
-
-```javascript
-{
-  path: '/mnt/电影';
-}
-```
-
-返回 HTTP 码 200：
-
-```javascript
-{
-  valid: true; 
-}
-```
-
-返回 HTTP 码 204
-
-
-
-### 开始任务
-
-`POST /jobs/start`
+`POST /v1/jobs/start`
 
 请求参数：无
 
@@ -427,11 +429,11 @@
 
 
 
-### 停止任务
+#### 停止任务
 
 停止正在运行的任务
 
-`POST /jobs/stop`
+`POST /v1/jobs/stop`
 
 请求参数：无
 
@@ -447,9 +449,9 @@
 
 
 
-### 查询任务的状态
+#### 查询任务的状态
 
-`POST /jobs/start`
+`GET /v1/jobs/start`
 
 请求参数：无
 
