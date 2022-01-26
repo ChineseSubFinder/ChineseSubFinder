@@ -16,4 +16,5 @@ func (cb ControllerBase) JobStopHandler(c *gin.Context) {
 		// 统一的异常处理
 		cb.ErrorProcess(c, "JobStopHandler", err)
 	}()
+
 }

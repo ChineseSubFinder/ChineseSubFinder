@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -10,6 +11,8 @@ import (
 func init() {
 
 	log_helper.GetLogger().Infoln("ChineseSubFinder Version:", AppVersion)
+
+	global_value.AppVersion = AppVersion
 
 	if my_util.OSCheck() == false {
 		panic(`You should search runtime.GOOS in the project, Implement unimplemented function`)
@@ -43,8 +46,6 @@ func main() {
 }
 
 /*
-	没有很好的想法，因为喜欢使用 tag 进行版本的输出标记，但是 tag 的时候编译 docker 前确实可以修改源码替换关键词做到版本与 tag 同步变更
-	但是， goreleaser 却不支持这样，会提示源码被改了，无法进行编译发布
-	除非不发布、编译 Linux 和 Windows 程序，这样就能做到 tag 与 程序内部输出版本一致。
+	使用 git tag 来做版本描述，然后在编译的时候传入版本号信息到这个变量上
 */
 var AppVersion = "unknow"

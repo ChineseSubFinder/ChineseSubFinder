@@ -19,33 +19,43 @@ type Settings struct {
 }
 
 // GetSettings 获取 Settings 的实例
-func GetSettings() *Settings {
-	if settings == nil {
+func GetSettings(reloadSettings ...bool) *Settings {
+	if _settings == nil {
 
-		settingsOnce.Do(func() {
-			settings = NewSettings()
-			if isFile(settings.configFPath) == false {
+		_settingsOnce.Do(func() {
+			_settings = NewSettings()
+			if isFile(_settings.configFPath) == false {
 				// 配置文件不存在，新建一个空白的
-				err := settings.Save()
+				err := _settings.Save()
 				if err != nil {
 					panic("Can't Save Config File:" + configName + " Error: " + err.Error())
 				}
 			} else {
 				// 读取存在的文件
-				err := settings.Read()
+				err := _settings.Read()
 				if err != nil {
 					panic("Can't Read Config File:" + configName + " Error: " + err.Error())
 				}
 			}
 		})
+		// 是否需要重新读取配置信息，这个可能在每次保存配置文件后需要操作
+		if len(reloadSettings) >= 1 {
+			if reloadSettings[0] == true {
+				err := _settings.Read()
+				if err != nil {
+					panic("Can't Read Config File:" + configName + " Error: " + err.Error())
+				}
+			}
+		}
+
 	}
-	return settings
+	return _settings
 }
 
 // SetFullNewSettings 从 Web 端传入新的 Settings 完整设置
 func SetFullNewSettings(inSettings *Settings) error {
-	settings = inSettings
-	return settings.Save()
+	_settings = inSettings
+	return _settings.Save()
 }
 
 func NewSettings() *Settings {
@@ -116,8 +126,8 @@ func isFile(filePath string) bool {
 }
 
 var (
-	settings     *Settings
-	settingsOnce sync.Once
+	_settings     *Settings
+	_settingsOnce sync.Once
 )
 
 const (

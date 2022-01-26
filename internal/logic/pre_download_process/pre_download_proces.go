@@ -8,6 +8,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -25,7 +26,7 @@ type PreDownloadProcess struct {
 	stageName string
 	gError    error
 
-	subSupplierHub *subSupplier.SubSupplierHub
+	SubSupplierHub *subSupplier.SubSupplierHub
 }
 
 func NewPreDownloadProcess() *PreDownloadProcess {
@@ -38,6 +39,9 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 		return p
 	}
 	p.stageName = stageNameInit
+	// ------------------------------------------------------------------------
+	// 初始化全局变量
+	global_value.Init(settings.GetSettings().AdvancedSettings.CustomVideoExts)
 	// ------------------------------------------------------------------------
 	// 初始化通知缓存模块
 	notify_center.Notify = notify_center.NewNotifyCenter(settings.GetSettings().DeveloperSettings.BarkServerAddress)
@@ -73,7 +77,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	}
 	// ------------------------------------------------------------------------
 	// 构建每个字幕站点下载者的实例
-	p.subSupplierHub = subSupplier.NewSubSupplierHub(
+	p.SubSupplierHub = subSupplier.NewSubSupplierHub(
 		*settings.GetSettings(),
 		zimuku.NewSupplier(*settings.GetSettings()),
 		xunlei.NewSupplier(*settings.GetSettings()),
@@ -81,7 +85,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	)
 	if commonValue.SubhdCode != "" {
 		// 如果找到 code 了，那么就可以继续用这个实例
-		p.subSupplierHub.AddSubSupplier(subhd.NewSupplier(*settings.GetSettings()))
+		p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(*settings.GetSettings()))
 	}
 
 	return p
@@ -120,7 +124,7 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 	}
 	// ------------------------------------------------------------------------
 	// 测试提供字幕的网站是有效的
-	p.subSupplierHub.CheckSubSiteStatus()
+	p.SubSupplierHub.CheckSubSiteStatus()
 	// ------------------------------------------------------------------------
 	// 判断文件夹是否存在
 	if len(settings.GetSettings().CommonSettings.MoviePaths) < 1 {
