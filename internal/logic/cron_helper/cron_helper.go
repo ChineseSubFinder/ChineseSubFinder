@@ -11,10 +11,10 @@ import (
 )
 
 type CronHelper struct {
-	runImmediately                bool
-	fullSubDownloadProcessing     bool
+	fullSubDownloadProcessing     bool // 这个是核心耗时函数执行的状态
 	fullSubDownloadProcessingLock sync.Locker
-	cronHelperRunning             bool
+	cronHelperRunning             bool // 这个是定时器启动的状态，它为true，不代表核心函数在执行
+	cronHelperRunningLock         sync.Locker
 	c                             *cron.Cron
 	dh                            *downloader_helper.DownloaderHelper
 }
@@ -24,7 +24,7 @@ func NewCronHelper() (*CronHelper, error) {
 	ch := CronHelper{}
 	ch.c = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
-	entryID, err := ch.c.AddFunc("@every "+settings.GetSettings().CommonSettings.ScanInterval, ch.fullSubDownloadProcess)
+	entryID, err := ch.c.AddFunc("@every "+settings.GetSettings().CommonSettings.ScanInterval, ch.coreSubDownloadProcess)
 	if err != nil {
 		log_helper.GetLogger().Errorln("CronHelper Cron entryID:", entryID, "Error:", err)
 		return nil, err
@@ -32,19 +32,21 @@ func NewCronHelper() (*CronHelper, error) {
 	return &ch, nil
 }
 
-// Start 开启定时器任务，这个任务是非阻塞的，fullSubDownloadProcess 仅仅可能是这个函数执行耗时而已
+// Start 开启定时器任务，这个任务是非阻塞的，coreSubDownloadProcess 仅仅可能是这个函数执行耗时而已
 // runImmediately == false 那么 ch.c.Start() 是不会阻塞的
 func (ch *CronHelper) Start(runImmediately bool) {
 
-	ch.runImmediately = runImmediately
+	ch.cronHelperRunningLock.Lock()
+	ch.cronHelperRunning = true
+	ch.cronHelperRunningLock.Unlock()
 	// 是否在定时器开启前先执行一次任务
-	if ch.runImmediately == true {
+	if runImmediately == true {
 
-		log_helper.GetLogger().Infoln("First Time fullSubDownloadProcess Start")
+		log_helper.GetLogger().Infoln("First Time coreSubDownloadProcess Start")
 
-		ch.fullSubDownloadProcess()
+		ch.coreSubDownloadProcess()
 
-		log_helper.GetLogger().Infoln("First Time fullSubDownloadProcess End")
+		log_helper.GetLogger().Infoln("First Time coreSubDownloadProcess End")
 
 	} else {
 		log_helper.GetLogger().Infoln("RunAtStartup: false, so will not Run At Startup, wait",
@@ -86,20 +88,48 @@ func (ch *CronHelper) Stop() {
 			log_helper.GetLogger().Infoln("CronHelper.Stop() Done.")
 		}
 	}
+
+	ch.cronHelperRunningLock.Lock()
+	ch.cronHelperRunning = false
+	ch.cronHelperRunningLock.Unlock()
 }
 
-func (ch *CronHelper) Running() bool {
+func (ch *CronHelper) CronHelperRunning() bool {
+
+	defer func() {
+		ch.cronHelperRunningLock.Unlock()
+	}()
+	ch.cronHelperRunningLock.Lock()
+	return ch.cronHelperRunning
+}
+
+func (ch *CronHelper) CronRunningStatusString() string {
+	if ch.CronHelperRunning() == true {
+		return Running
+	} else {
+		return Stopped
+	}
+}
+
+func (ch *CronHelper) FullDownloadProcessRunning() bool {
 
 	defer func() {
 		ch.fullSubDownloadProcessingLock.Unlock()
 	}()
-
 	ch.fullSubDownloadProcessingLock.Lock()
 	return ch.fullSubDownloadProcessing
 }
 
-// fullSubDownloadProcess 执行一次下载任务的多个步骤
-func (ch *CronHelper) fullSubDownloadProcess() {
+func (ch *CronHelper) FullDownloadProcessRunningStatusString() string {
+	if ch.FullDownloadProcessRunning() == true {
+		return Running
+	} else {
+		return Stopped
+	}
+}
+
+// coreSubDownloadProcess 执行一次下载任务的多个步骤
+func (ch *CronHelper) coreSubDownloadProcess() {
 
 	defer func() {
 		ch.fullSubDownloadProcessingLock.Lock()
@@ -133,3 +163,8 @@ func (ch *CronHelper) fullSubDownloadProcess() {
 		return
 	}
 }
+
+const (
+	Stopped = "stopped"
+	Running = "running"
+)
