@@ -243,6 +243,63 @@
 
 
 
+### 获取默认的设置数据结构
+
+`GET /def-settings`
+
+用于获取默认的设置界面使用的数据结构，无需登录。下面是示例，理论上数组和字典应该是空的
+
+```json
+{
+        "user_info": {
+            "username": "abcd",
+            "password": "123456"
+        },
+        "common_settings": {
+            "scan_interval": "12h",
+            "threads": 12,
+            "run_scan_at_start_up": true,
+            "movie_paths": ["aaa", "bbb"],
+            "series_paths": ["ccc", "ddd"]
+        },
+        "advanced_settings": {
+            "proxy_settings": {
+                "use_http_proxy": true,
+                "http_proxy_address": "123"
+            },
+            "debug_mode": true,
+            "save_full_season_tmp_subtitles": true,
+            "sub_type_priority": 1,
+            "sub_name_formatter": 1,
+            "save_multi_sub": true,
+            "custom_video_exts": ["aaa", "bbb"],
+            "fix_time_line": true,
+            "topic": 0
+        },
+        "emby_settings": {
+            "enable": true,
+            "address_url": "123456",
+            "api_key": "api123",
+            "max_request_video_number": 1000,
+            "skip_watched": true,
+            "movie_paths_mapping": {
+                "aa": "123",
+                "bb": "456"
+            },
+            "series_paths_mapping": {
+                "aab": "123",
+                "bbc": "456"
+            }
+        },
+        "developer_settings": {
+            "bark_server_address": "bark"
+        },
+        "timeline_fixer_settings": null
+}
+```
+
+
+
 ### 修改密码
 
 `POST /change-pwd`
