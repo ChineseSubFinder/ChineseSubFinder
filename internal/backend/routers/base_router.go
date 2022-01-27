@@ -26,6 +26,8 @@ func InitRouter(router *gin.Engine, cronHelper *cron_helper.CronHelper) {
 
 	router.POST("/check-proxy", middle.CheckAuth(), cbBase.CheckProxyHandler)
 
+	router.GET("/def-settings", cbBase.DefSettingsHandler)
+
 	// v1路由: /v1/xxx
 	GroupV1 := router.Group("/" + cbV1.GetVersion())
 	{
