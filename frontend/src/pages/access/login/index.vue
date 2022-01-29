@@ -87,7 +87,10 @@ const submit = async () => {
   }
   const userData = {username: form.username, ...res};
   Object.assign(userState, userData)
-  LocalStorage.set('token', userData)
+  LocalStorage.set('token', {
+    accessToken: userData.access_token,
+    username: form.username
+  })
   router.push('/')
 }
 </script>
