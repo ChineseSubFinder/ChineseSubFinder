@@ -23,7 +23,7 @@ func (cb ControllerBase) SettingsHandler(c *gin.Context) {
 	case "PUT":
 		{
 			// 修改设置，这里不允许修改密码
-			reqSetupInfo := backend.ReqSettings{}
+			reqSetupInfo := settings.Settings{}
 			err = c.ShouldBindJSON(&reqSetupInfo)
 			if err != nil {
 				return
@@ -34,8 +34,8 @@ func (cb ControllerBase) SettingsHandler(c *gin.Context) {
 				return
 			}
 			nowPassword := settings.GetSettings().UserInfo.Password
-			reqSetupInfo.Settings.UserInfo.Password = nowPassword
-			err = settings.SetFullNewSettings(&reqSetupInfo.Settings)
+			reqSetupInfo.UserInfo.Password = nowPassword
+			err = settings.SetFullNewSettings(&reqSetupInfo)
 			if err != nil {
 				return
 			}
