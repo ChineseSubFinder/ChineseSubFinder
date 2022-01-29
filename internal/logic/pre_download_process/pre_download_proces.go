@@ -103,7 +103,7 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 
 		log_helper.GetLogger().Infoln("UseHttpProxy = false")
 		// 如果不使用代理，那么默认需要检测 baidu 的连通性
-		proxySpeed, proxyStatus, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.BaiduUrl, "")
+		proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.BaiduUrl, "")
 		if err != nil {
 			p.gError = errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.BaiduUrl + ", " + err.Error())
 			return p
@@ -114,7 +114,7 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 
 		log_helper.GetLogger().Infoln("UseHttpProxy:", settings.GetSettings().AdvancedSettings.ProxySettings.HttpProxyAddress)
 		// 如果使用了代理，那么默认需要检测 google 的连通性
-		proxySpeed, proxyStatus, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.GoogleUrl, settings.GetSettings().AdvancedSettings.ProxySettings.HttpProxyAddress)
+		proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.GoogleUrl, settings.GetSettings().AdvancedSettings.ProxySettings.HttpProxyAddress)
 		if err != nil {
 			p.gError = errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.GoogleUrl + ", " + err.Error())
 			return p
