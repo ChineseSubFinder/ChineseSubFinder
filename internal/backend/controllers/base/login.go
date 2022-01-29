@@ -31,7 +31,7 @@ func (cb ControllerBase) LoginHandler(c *gin.Context) {
 	if settings.GetSettings().UserInfo.Username != nowUserInfo.Username ||
 		settings.GetSettings().UserInfo.Password != nowUserInfo.Password {
 		// 账号密码不匹配
-		c.JSON(http.StatusNoContent, backend.ReplyCommon{Message: "Username or Password Error"})
+		c.JSON(http.StatusBadRequest, backend.ReplyCommon{Message: "Username or Password Error"})
 		return
 	} else {
 		// 用户账号密码匹配
