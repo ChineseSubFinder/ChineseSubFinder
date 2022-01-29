@@ -24,7 +24,7 @@ func InitRouter(router *gin.Engine, cronHelper *cron_helper.CronHelper) {
 
 	router.POST("/check-path", cbBase.CheckPathHandler)
 
-	router.POST("/check-proxy", middle.CheckAuth(), cbBase.CheckProxyHandler)
+	router.POST("/check-proxy", cbBase.CheckProxyHandler)
 
 	router.GET("/def-settings", cbBase.DefSettingsHandler)
 

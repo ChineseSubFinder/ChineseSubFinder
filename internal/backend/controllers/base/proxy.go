@@ -7,7 +7,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
 	"github.com/huandu/go-clone"
 	"net/http"
@@ -19,12 +18,6 @@ func (cb ControllerBase) CheckProxyHandler(c *gin.Context) {
 		// 统一的异常处理
 		cb.ErrorProcess(c, "CheckProxyHandler", err)
 	}()
-
-	reqCheckProxy := backend.ReqCheckProxy{}
-	err = c.ShouldBindJSON(&reqCheckProxy)
-	if err != nil {
-		return
-	}
 
 	tmpSettings := clone.Clone(*settings.GetSettings()).(settings.Settings)
 
