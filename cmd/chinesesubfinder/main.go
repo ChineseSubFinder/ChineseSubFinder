@@ -36,6 +36,7 @@ func main() {
 	} else {
 		// 是否完成了 Setup，如果完成了，那么就开启第一次的扫描
 		go func() {
+			log_helper.GetLogger().Infoln("Setup is Done")
 			cronHelper.Start(settings.GetSettings().CommonSettings.RunScanAtStartUp)
 		}()
 	}

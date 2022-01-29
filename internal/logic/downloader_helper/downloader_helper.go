@@ -3,6 +3,7 @@ package downloader_helper
 import (
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -21,6 +22,7 @@ func NewDownloaderHelper(settings settings.Settings, _subSupplierHub *subSupplie
 	return &DownloaderHelper{
 		subSupplierHub: _subSupplierHub,
 		settings:       settings,
+		logger:         log_helper.GetLogger(),
 	}
 }
 
