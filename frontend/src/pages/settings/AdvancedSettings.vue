@@ -14,7 +14,13 @@
 
         <q-item v-if="form.proxy_settings.use_http_proxy" class="q-mt-md" dense>
           <q-item-section>
-            <q-input v-model="form.httpProxyUrl" standout dense label="代理服务器地址" style="width: 400px">
+            <q-input
+              v-model="form.proxy_settings.http_proxy_address"
+              standout
+              dense
+              label="代理服务器地址"
+              style="width: 400px"
+            >
               <template v-slot:after>
                 <div style="width: 80px">
                   <proxy-check-btn :url="form.proxy_settings.http_proxy_address" />
@@ -104,7 +110,7 @@
               <div class="row items-center q-gutter-x-md" :class="{ 'q-mt-md': i === 0 }">
                 <q-input
                   v-model="form.custom_video_exts[i]"
-                  placeholder="/media/电影"
+                  placeholder=""
                   standout
                   dense
                   :rules="[(val) => !!val || '不能为空']"

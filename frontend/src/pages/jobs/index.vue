@@ -1,15 +1,15 @@
 <template>
   <q-page class="q-pa-md">
-    <q-card class="q-pa-md" flat>
+    <q-card v-if="systemState.jobStatus" class="q-pa-md" flat>
       <header class="column q-gutter-md">
         <div>
           当前任务状态：
-          <q-badge v-if="systemState.running" color="positive">运行中</q-badge>
+          <q-badge v-if="isRunning" color="positive">运行中</q-badge>
           <q-badge v-else color="grey">未运行</q-badge>
         </div>
         <div>
           <q-btn
-            v-if="systemState.running"
+            v-if="isRunning"
             label="强制停止"
             color="negative"
             @click="stopJobs"
@@ -23,15 +23,17 @@
 </template>
 
 <script setup>
-import { systemState } from 'src/store/systemState';
+import {getJobsStatus, systemState} from 'src/store/systemState';
 import { useQuasar } from 'quasar';
-import { ref } from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import JobApi from 'src/api/JobApi';
 import { SystemMessage } from 'src/utils/Message';
 
 const $q = useQuasar();
 
 const submitting = ref(false);
+
+const isRunning = computed(() => systemState.jobStatus?.status === 'running')
 
 const startJobs = () => {
   $q.dialog({
@@ -45,6 +47,7 @@ const startJobs = () => {
       SystemMessage.error(err.message);
       return;
     }
+    getJobsStatus();
     SystemMessage.success('启动成功');
   });
 };
@@ -60,7 +63,12 @@ const stopJobs = () => {
       SystemMessage.error(err.message);
       return;
     }
+    getJobsStatus();
     SystemMessage.success('停止成功');
   });
 };
+
+onMounted(() => {
+  getJobsStatus();
+})
 </script>

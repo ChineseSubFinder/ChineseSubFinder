@@ -5,7 +5,7 @@ class CommonAPi extends BaseApi {
 
   getDefaultSettings = (params) => this.http('/def-settings', params);
 
-  checkProxy = (params) => this.http('/v1/check-proxy', params, 'POST');
+  checkProxy = (params) => this.http('/check-proxy', params, 'POST');
 
   checkPath = (params) => this.http('/check-path', params, 'POST');
 }
