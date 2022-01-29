@@ -85,12 +85,12 @@ const submit = async () => {
     SystemMessage.error(err.message);
     return;
   }
-  const userData = {username: form.username, ...res};
-  Object.assign(userState, userData)
-  LocalStorage.set('token', {
-    accessToken: userData.access_token,
+  const userData = {
+    accessToken: res.access_token,
     username: form.username
-  })
+  };
+  Object.assign(userState, userData)
+  LocalStorage.set('token', userData)
   router.push('/')
 }
 </script>

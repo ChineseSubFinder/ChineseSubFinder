@@ -4,7 +4,7 @@ import JobApi from 'src/api/JobApi';
 
 export const systemState = reactive({
   systemInfo: null,
-  running: false,
+  jobStatus: null,
 });
 
 export const getInfo = async () => {
@@ -14,5 +14,5 @@ export const getInfo = async () => {
 
 export const getJobsStatus = async () => {
   const [res] = await JobApi.getStatus();
-  systemState.running = !!res?.running;
+  systemState.jobStatus = res;
 };

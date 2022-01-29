@@ -41,7 +41,9 @@ const checkList = ref([]);
 
 const checkProxy = async () => {
   checking.value = true;
-  const [res] = await CommonApi.checkProxy(props.url)
+  const [res] = await CommonApi.checkProxy({
+    http_proxy_address: props.url
+  })
   checking.value = false;
   checkList.value = res?.sub_site_status || [];
   show.value = true;

@@ -59,7 +59,7 @@ export const submitting = ref(false);
 
 export const submitAll = async () => {
   submitting.value = true;
-  const [, err] = await SettingApi.patchUpdate(formModel);
+  const [, err] = await SettingApi.update(formModel);
   submitting.value = false;
   if (err !== null) {
     SystemMessage.error(err.message);

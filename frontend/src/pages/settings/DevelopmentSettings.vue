@@ -8,12 +8,12 @@
             <q-item-label caption>
               项目维护人员使用，一般人员无需关心
             </q-item-label>
-            <div v-if="form.enabled" class="q-mt-sm">
+            <div v-if="form.enable" class="q-mt-sm">
               <q-input v-model="form.bark_server_address" standout dense />
             </div>
           </q-item-section>
           <q-item-section avatar top>
-            <q-toggle v-model="form.enabled" />
+            <q-toggle v-model="form.enable" />
           </q-item-section>
         </q-item>
       </q-list>
