@@ -11,13 +11,13 @@ func SetAccessToken(newToken string) {
 
 func GetAccessToken() string {
 
-	defer mutexAccessToken.RUnlock()
-	mutexAccessToken.RLocker()
+	defer mutexAccessToken.Unlock()
+	mutexAccessToken.Lock()
 	return accessToken
 
 }
 
 var (
 	accessToken      = ""
-	mutexAccessToken sync.RWMutex
+	mutexAccessToken sync.Mutex
 )
