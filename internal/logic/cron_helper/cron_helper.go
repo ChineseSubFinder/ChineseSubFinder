@@ -12,9 +12,9 @@ import (
 
 type CronHelper struct {
 	fullSubDownloadProcessing     bool // 这个是核心耗时函数执行的状态
-	fullSubDownloadProcessingLock sync.Locker
+	fullSubDownloadProcessingLock sync.Mutex
 	cronHelperRunning             bool // 这个是定时器启动的状态，它为true，不代表核心函数在执行
-	cronHelperRunningLock         sync.Locker
+	cronHelperRunningLock         sync.Mutex
 	c                             *cron.Cron
 	dh                            *downloader_helper.DownloaderHelper
 }
@@ -53,6 +53,8 @@ func (ch *CronHelper) Start(runImmediately bool) {
 			settings.GetSettings().CommonSettings.ScanInterval, "to Download")
 	}
 
+	log_helper.GetLogger().Infoln("CronHelper Start...")
+	log_helper.GetLogger().Infoln("Next Sub Scan Will Process After", settings.GetSettings().CommonSettings.ScanInterval)
 	ch.c.Start()
 }
 

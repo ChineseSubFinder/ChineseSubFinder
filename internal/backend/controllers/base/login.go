@@ -38,7 +38,7 @@ func (cb ControllerBase) LoginHandler(c *gin.Context) {
 		nowAccessToken := my_util.GenerateAccessToken()
 		common.SetAccessToken(nowAccessToken)
 		c.JSON(http.StatusOK, backend.ReplyLogin{AccessToken: nowAccessToken,
-			Settings: settings.GetSettings().GetNoPasswordSettings()})
+			Settings: *settings.GetSettings().GetNoPasswordSettings()})
 		return
 	}
 }

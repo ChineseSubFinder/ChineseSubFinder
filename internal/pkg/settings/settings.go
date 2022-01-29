@@ -54,7 +54,10 @@ func GetSettings(reloadSettings ...bool) *Settings {
 
 // SetFullNewSettings 从 Web 端传入新的 Settings 完整设置
 func SetFullNewSettings(inSettings *Settings) error {
+
+	nowConfigFPath := _settings.configFPath
 	_settings = inSettings
+	_settings.configFPath = nowConfigFPath
 	return _settings.Save()
 }
 
@@ -81,7 +84,7 @@ func (s *Settings) Save() error {
 	return strcut_json.ToFile(s.configFPath, s)
 }
 
-func (s Settings) GetNoPasswordSettings() *Settings {
+func (s *Settings) GetNoPasswordSettings() *Settings {
 	nowSettings := clone.Clone(s).(*Settings)
 	nowSettings.UserInfo.Password = noPassword4Show
 	return nowSettings
