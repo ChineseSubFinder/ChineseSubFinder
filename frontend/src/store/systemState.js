@@ -1,4 +1,4 @@
-import { reactive } from 'vue';
+import { computed, reactive } from 'vue';
 import SystemApi from 'src/api/SystemApi';
 import JobApi from 'src/api/JobApi';
 
@@ -11,6 +11,8 @@ export const getInfo = async () => {
   const [res] = await SystemApi.getInfo();
   systemState.systemInfo = res;
 };
+
+export const isJobRunning = computed(() => systemState.jobStatus?.status === 'running');
 
 export const getJobsStatus = async () => {
   const [res] = await JobApi.getStatus();

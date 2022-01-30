@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md">
-    <q-banner inline-actions class="text-white bg-red" v-if="systemState.running">
+    <q-banner inline-actions class="text-white bg-red" v-if="isJobRunning">
       <template v-slot:avatar>
         <q-icon name="warning" />
       </template>
@@ -8,8 +8,8 @@
     </q-banner>
     <q-card
       v-if="isSettingsLoaded"
-      :class="{ disabled: systemState.running }"
-      :style="{ pointerEvents: systemState.running ? 'none' : 'default' }"
+      :class="{ disabled: isJobRunning }"
+      :style="{ pointerEvents: isJobRunning ? 'none' : 'default' }"
       flat
     >
       <q-tabs
@@ -57,7 +57,7 @@ import AdvancedSettings from 'pages/settings/AdvancedSettings';
 import EmbySettings from 'pages/settings/EmbySettings';
 import DevelopmentSettings from 'pages/settings/DevelopmentSettings';
 import { settingsState, useSettings } from 'pages/settings/useSettings';
-import { systemState } from 'src/store/systemState';
+import {isJobRunning} from 'src/store/systemState';
 
 const tab = ref('basic');
 

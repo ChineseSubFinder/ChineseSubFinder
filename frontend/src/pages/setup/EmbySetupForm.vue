@@ -59,7 +59,7 @@
             <tbody>
               <tr v-for="(target, source) in setupState.form.emby.movieFolderMap" :key="source">
                 <td>
-                  <q-input model-value="target" disable hint="" standout dense />
+                  <q-input :model-value="source" disable hint="" standout dense />
                 </td>
                 <td>
                   <q-input
@@ -94,7 +94,7 @@
             <tbody>
               <tr v-for="(target, source) in setupState.form.emby.seriesFolderMap" :key="source">
                 <td>
-                  <q-input model-value="target" disable hint="" standout dense />
+                  <q-input :model-value="source" disable hint="" standout dense />
                 </td>
                 <td>
                   <q-input
