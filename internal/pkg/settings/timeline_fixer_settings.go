@@ -10,11 +10,11 @@ func NewTimelineFixerSettings() *TimelineFixerSettings {
 }
 
 func (t *TimelineFixerSettings) Check() {
-	if t.MaxOffsetTime < 0 || t.MaxOffsetTime > 120 {
+	if t.MaxOffsetTime <= 0 || t.MaxOffsetTime > 120 {
 		t.MaxOffsetTime = 60 // 60s
 	}
 
-	if t.MinOffset < 0 || t.MinOffset > 1 {
+	if t.MinOffset <= 0 || t.MinOffset > 1 {
 		t.MinOffset = 0.1 // 100ms
 	}
 }
