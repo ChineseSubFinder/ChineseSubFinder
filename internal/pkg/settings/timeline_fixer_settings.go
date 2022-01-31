@@ -6,7 +6,10 @@ type TimelineFixerSettings struct {
 }
 
 func NewTimelineFixerSettings() *TimelineFixerSettings {
-	return &TimelineFixerSettings{}
+	return &TimelineFixerSettings{
+		MaxOffsetTime: 60,
+		MinOffset:     0.1,
+	}
 }
 
 func (t *TimelineFixerSettings) Check() {
