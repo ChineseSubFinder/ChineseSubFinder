@@ -16,11 +16,28 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup npm
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: frontend
+
+      - name: frontend install depandence
+        run: npm install
+        working-directory: frontend
+
+      - name: frontend change api address
+        run: find -name '.env.production' | xargs perl -pi -e 's|BACKEND_URL=/api|BACKEND_URL=|g'
+        working-directory: frontend
+
+      - name: frontend build
+        run: npm run build
+        working-directory: frontend
+
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.17
-          
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
