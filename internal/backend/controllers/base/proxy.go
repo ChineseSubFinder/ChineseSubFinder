@@ -27,6 +27,7 @@ func (cb ControllerBase) CheckProxyHandler(c *gin.Context) {
 	}
 
 	tmpSettings := clone.Clone(*settings.GetSettings()).(settings.Settings)
+	tmpSettings.AdvancedSettings.ProxySettings.UseHttpProxy = true
 	tmpSettings.AdvancedSettings.ProxySettings.HttpProxyAddress = checkProxy.HttpProxyAddress
 
 	// 使用提交过来的这个代理地址，测试多个字幕网站的可用性

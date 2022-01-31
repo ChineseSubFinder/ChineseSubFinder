@@ -43,7 +43,7 @@ func TestNewSettings(t *testing.T) {
 			SeriesPathsMapping:    map[string]string{"aab": "123", "bbc": "456"},
 		},
 		DeveloperSettings: &DeveloperSettings{
-			BarkServerUrl: "bark",
+			BarkServerAddress: "bark",
 		},
 	}
 
