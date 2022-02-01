@@ -183,7 +183,20 @@ func SearchMatchedVideoFile(dir string) ([]string, error) {
 			}
 		} else {
 			// 这里就是文件了
-			if IsWantedVideoExtDef(curFile.Name()) == true {
+			if IsWantedVideoExtDef(curFile.Name()) == false {
+				continue
+			} else {
+
+				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
+				fi, err := curFile.Info()
+				if err != nil {
+					log_helper.GetLogger().Debugln("SearchMatchedVideoFile, file.Info:", fullPath, err)
+					continue
+				}
+				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
+					log_helper.GetLogger().Debugln("SearchMatchedVideoFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
+					continue
+				}
 				fileFullPathList = append(fileFullPathList, fullPath)
 			}
 		}
