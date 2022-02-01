@@ -22,11 +22,7 @@ jobs:
           working-directory: frontend
 
       - name: frontend install depandence
-        run: npm install
-        working-directory: frontend
-
-      - name: frontend change api address
-        run: find -name '.env.production' | xargs perl -pi -e 's|BACKEND_URL=/api|BACKEND_URL=|g'
+        run: npm ci
         working-directory: frontend
 
       - name: frontend build
