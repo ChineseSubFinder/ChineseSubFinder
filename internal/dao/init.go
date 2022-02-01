@@ -76,7 +76,7 @@ func InitDb() error {
 }
 
 func getDbName() string {
-	return folder_helper.GetConfigRootDirFPath() + dbFileName
+	return filepath.Join(folder_helper.GetConfigRootDirFPath(), dbFileName)
 }
 
 var (

@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"os"
+	"path/filepath"
 )
 
 // CheckSpeFile 目标是检测特定的文件，找到后，先删除，返回一个标志位用于后面的逻辑
@@ -24,7 +25,7 @@ func CheckSpeFile() (bool, error) {
 }
 
 func getSpeFileName() string {
-	return folder_helper.GetConfigRootDirFPath() + specialFileName
+	return filepath.Join(folder_helper.GetConfigRootDirFPath(), specialFileName)
 }
 
 /*

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -17,6 +18,8 @@ func init() {
 	log_helper.GetLogger().Infoln("ChineseSubFinder Version:", AppVersion)
 
 	global_value.AppVersion = AppVersion
+
+	global_value.ConfigRootDirFPath = folder_helper.GetConfigRootDirFPath()
 
 	if my_util.OSCheck() == false {
 		panic(`You should search runtime.GOOS in the project, Implement unimplemented function`)

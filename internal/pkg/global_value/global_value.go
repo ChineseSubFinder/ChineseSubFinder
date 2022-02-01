@@ -1,7 +1,6 @@
 package global_value
 
-func Init(configRootDirFPath string, customExts []string) {
-	ConfigRootDirFPath = configRootDirFPath
+func Init(customExts []string) {
 	DefDebugFolder = ""
 	DefTmpFolder = ""
 	DefSubFixCacheFolder = ""

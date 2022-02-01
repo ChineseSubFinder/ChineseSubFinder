@@ -384,7 +384,7 @@ const (
 
 // 配置文件的位置信息，这个会根据系统版本做区分
 const (
-	configDirRootFPathWindows = "./"                         // Windows 就是在当前的程序目录
-	configDirRootFPathLinux   = "/config/"                   // Linux 是在 /config 下
-	configDirRootFPathDarwin  = "/.config/chinesesubfinder/" // Darwin 是在 os.UserHomeDir()/.config/chinesesubfinder/ 下
+	configDirRootFPathWindows = "."                         // Windows 就是在当前的程序目录
+	configDirRootFPathLinux   = "/config"                   // Linux 是在 /config 下
+	configDirRootFPathDarwin  = "/.config/chinesesubfinder" // Darwin 是在 os.UserHomeDir()/.config/chinesesubfinder/ 下
 )

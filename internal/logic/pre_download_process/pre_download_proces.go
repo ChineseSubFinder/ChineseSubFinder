@@ -8,7 +8,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
@@ -42,7 +41,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	p.stageName = stageNameInit
 	// ------------------------------------------------------------------------
 	// 初始化全局变量
-	global_value.Init(folder_helper.GetConfigRootDirFPath(), settings.GetSettings().AdvancedSettings.CustomVideoExts)
+	global_value.Init(settings.GetSettings().AdvancedSettings.CustomVideoExts)
 	// ------------------------------------------------------------------------
 	// 初始化通知缓存模块
 	notify_center.Notify = notify_center.NewNotifyCenter(settings.GetSettings().DeveloperSettings.BarkServerAddress)
