@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 add ./package.json /usr/src/app
 add ./.npmrc /usr/src/app
 RUN npm install --registry https://registry.npm.taobao.org
-ADD . /usr/src/app
+COPY . /usr/src/app
 RUN ls -al
 RUN npm run build && ls -al dist/spa
 
