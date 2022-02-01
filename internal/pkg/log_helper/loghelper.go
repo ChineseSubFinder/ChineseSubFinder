@@ -1,6 +1,7 @@
 package log_helper
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/sirupsen/logrus"
 	easy "github.com/t-tomalak/logrus-easy-formatter"
@@ -49,28 +50,34 @@ func SetLoggerName(logName string) {
 	logNameBase = logName
 }
 
-func GetLogger() *logrus.Logger {
+func GetLogger(reload ...bool) *logrus.Logger {
 
-	oneBase.Do(func() {
-
-		var level logrus.Level
-		// 之前是读取配置文件，现在改为，读取当前目录下，是否有一个特殊的文件，有则启动 Debug 日志级别
-		// 那么怎么写入这个文件，就靠额外的逻辑控制了
-		if isFile(DebugFileName) == true {
-			level = logrus.DebugLevel
-		} else {
-			level = logrus.InfoLevel
+	if len(reload) > 0 {
+		if reload[0] == true {
+			logInit()
 		}
-
-		if logNameBase == "" {
-			// 默认不设置的时候就是这个
-			logNameBase = LogNameChineseSubFinder
-		}
-
-		loggerBase = NewLogHelper(logNameBase, level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
-	})
+	}
+	oneBase.Do(logInit)
 
 	return loggerBase
+}
+
+func logInit() {
+	var level logrus.Level
+	// 之前是读取配置文件，现在改为，读取当前目录下，是否有一个特殊的文件，有则启动 Debug 日志级别
+	// 那么怎么写入这个文件，就靠额外的逻辑控制了
+	if isFile(filepath.Join(global_value.ConfigRootDirFPath, DebugFileName)) == true {
+		level = logrus.DebugLevel
+	} else {
+		level = logrus.InfoLevel
+	}
+
+	if logNameBase == "" {
+		// 默认不设置的时候就是这个
+		logNameBase = LogNameChineseSubFinder
+	}
+
+	loggerBase = NewLogHelper(logNameBase, level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
 }
 
 func isFile(filePath string) bool {
@@ -83,10 +90,10 @@ func isFile(filePath string) bool {
 
 // WriteDebugFile 写入开启 Debug 级别日志记录的特殊文件，注意这个最好是在主程序中调用，这样就跟主程序在一个目录下生成，log 去检测是否存在才有意义
 func WriteDebugFile() error {
-	if isFile(DebugFileName) == true {
+	if isFile(filepath.Join(global_value.ConfigRootDirFPath, DebugFileName)) == true {
 		return nil
 	}
-	f, err := os.Create(DebugFileName)
+	f, err := os.Create(filepath.Join(global_value.ConfigRootDirFPath, DebugFileName))
 	defer func() {
 		_ = f.Close()
 	}()
@@ -99,10 +106,10 @@ func WriteDebugFile() error {
 // DeleteDebugFile 删除开启 Debug 级别日志记录的特殊文件
 func DeleteDebugFile() error {
 
-	if isFile(DebugFileName) == false {
+	if isFile(filepath.Join(global_value.ConfigRootDirFPath, DebugFileName)) == false {
 		return nil
 	}
-	err := os.Remove(DebugFileName)
+	err := os.Remove(filepath.Join(global_value.ConfigRootDirFPath, DebugFileName))
 	if err != nil {
 		return err
 	}

@@ -55,12 +55,14 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 			p.gError = errors.New("log_helper.WriteDebugFile " + err.Error())
 			return p
 		}
+		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Debug")
 	} else {
 		err := log_helper.DeleteDebugFile()
 		if err != nil {
 			p.gError = errors.New("log_helper.DeleteDebugFile " + err.Error())
 			return p
 		}
+		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Info")
 	}
 	// ------------------------------------------------------------------------
 	// 获取验证码
