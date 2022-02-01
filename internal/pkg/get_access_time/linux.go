@@ -24,5 +24,9 @@ func (d OneGetAccessTime) GetAccessTime(fileName string) (time.Time, error) {
 	}
 
 	aTime := fi.Sys().(*syscall.Stat_t).Atim
-	return time.Unix(aTime.Nanoseconds()/1e9, 0), nil
+	return timeSpecToTime(aTime), nil
+}
+
+func timeSpecToTime(ts syscall.Timespec) time.Time {
+	return time.Unix(int64(ts.Sec), int64(ts.Nsec))
 }
