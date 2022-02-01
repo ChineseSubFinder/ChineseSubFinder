@@ -85,5 +85,5 @@ var (
 )
 
 const (
-	dbFileName = "settings.db"
+	dbFileName = "ChineseSubFinder-Cache.db"
 )
