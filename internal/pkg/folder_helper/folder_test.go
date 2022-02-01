@@ -1,4 +1,4 @@
-package my_util
+package folder_helper
 
 import (
 	"testing"

@@ -4,8 +4,8 @@ import (
 	"context"
 	_ "embed"
 	"errors"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_useragent"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
@@ -173,7 +173,7 @@ func releaseAdblock() (string, error) {
 	}
 	desPath := filepath.Join(adblockFolderPath, "RunAdblock")
 	// 清理之前缓存的信息
-	_ = my_util.ClearFolder(desPath)
+	_ = folder_helper.ClearFolder(desPath)
 	// 具体把 adblock zip 解压下载到哪里
 	outZipFileFPath := filepath.Join(adblockFolderPath, "adblock.zip")
 	adblockZipFile, err := os.Create(outZipFileFPath)

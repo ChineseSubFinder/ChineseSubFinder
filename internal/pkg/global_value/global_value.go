@@ -1,6 +1,7 @@
 package global_value
 
-func Init(customExts []string) {
+func Init(configRootDirFPath string, customExts []string) {
+	ConfigRootDirFPath = configRootDirFPath
 	DefDebugFolder = ""
 	DefTmpFolder = ""
 	DefSubFixCacheFolder = ""
@@ -12,6 +13,7 @@ func Init(customExts []string) {
 // util.go
 var (
 	AppVersion           = "" // 程序的版本号
+	ConfigRootDirFPath   = ""
 	DefDebugFolder       = ""
 	DefTmpFolder         = ""
 	DefSubFixCacheFolder = ""

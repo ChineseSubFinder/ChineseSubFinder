@@ -1,6 +1,7 @@
 package unit_test_helper
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"io"
 	"os"
@@ -148,7 +149,7 @@ func copyTestData(srcDir string) (string, error) {
 	testDir := filepath.Join(srcDir, "test")
 
 	if my_util.IsDir(testDir) == true {
-		err := my_util.ClearFolderEx(testDir, 10)
+		err := folder_helper.ClearFolderEx(testDir, 10)
 		if err != nil {
 			return "", err
 		}

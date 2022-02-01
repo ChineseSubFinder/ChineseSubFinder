@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/strcut_json"
 	"github.com/huandu/go-clone"
 	"os"
@@ -63,7 +64,7 @@ func SetFullNewSettings(inSettings *Settings) error {
 
 func NewSettings() *Settings {
 
-	nowConfigFPath := filepath.Join(configName)
+	nowConfigFPath := filepath.Join(global_value.ConfigRootDirFPath, configName)
 
 	return &Settings{
 		configFPath:           nowConfigFPath,

@@ -1,10 +1,11 @@
-package my_util
+package folder_helper
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/get_access_time"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
-	os "os"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -61,7 +62,7 @@ func CopyFiles2DebugFolder(names []string, subFiles []string) error {
 	// 复制下载在 tmp 文件夹中的字幕文件到视频文件夹下面
 	for _, subFile := range subFiles {
 		newFn := filepath.Join(debugFolderByName, filepath.Base(subFile))
-		err = CopyFile(subFile, newFn)
+		err = my_util.CopyFile(subFile, newFn)
 		if err != nil {
 			return err
 		}
@@ -212,7 +213,7 @@ func ClearFolder(folderFullPath string) error {
 // 如果调用的时候，已存在的文件夹的时间 min < 5 那么则清理
 func ClearFolderEx(folderFullPath string, overtime int) error {
 
-	_, hour, minute, _ := GetNowTimeString()
+	_, hour, minute, _ := my_util.GetNowTimeString()
 	pathSep := string(os.PathSeparator)
 	files, err := os.ReadDir(folderFullPath)
 	if err != nil {
@@ -352,7 +353,7 @@ func ClearIdleSubFixCacheFolder(rootSubFixCacheFolder string, outOfDate time.Dur
 			if i == 0 {
 				maxAccessTime = accessTime
 			}
-			if Time2SecondNumber(accessTime) > Time2SecondNumber(maxAccessTime) {
+			if my_util.Time2SecondNumber(accessTime) > my_util.Time2SecondNumber(maxAccessTime) {
 				maxAccessTime = accessTime
 			}
 		}

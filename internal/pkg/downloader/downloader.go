@@ -12,6 +12,7 @@ import (
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -200,7 +201,7 @@ func (d *Downloader) RefreshEmbySubList() error {
 func (d *Downloader) DownloadSub4Movie() error {
 	defer func() {
 		// 所有的电影字幕下载完成，抉择完成，需要清理缓存目录
-		err := my_util.ClearRootTmpFolder()
+		err := folder_helper.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error("ClearRootTmpFolder", err)
 		}
@@ -289,7 +290,7 @@ func (d *Downloader) DownloadSub4Series() error {
 	var err error
 	defer func() {
 		// 所有的连续剧字幕下载完成，抉择完成，需要清理缓存目录
-		err := my_util.ClearRootTmpFolder()
+		err := folder_helper.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error("ClearRootTmpFolder", err)
 		}
