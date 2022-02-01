@@ -22,11 +22,7 @@ func NewLogHelper(appName string, level logrus.Level, maxAge time.Duration, rota
 			LogFormat:       "[%lvl%]: %time% - %msg%\n",
 		},
 	}
-	nowPath, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	pathRoot := filepath.Join(nowPath, "Logs")
+	pathRoot := filepath.Join(global_value.ConfigRootDirFPath, "Logs")
 	fileAbsPath := filepath.Join(pathRoot, appName+".log")
 	// 下面配置日志每隔 X 分钟轮转一个新文件，保留最近 X 分钟的日志文件，多余的自动清理掉。
 	writer, _ := rotatelogs.New(

@@ -20,9 +20,12 @@ import (
 // GetRootDebugFolder 在程序的根目录新建，调试用文件夹
 func GetRootDebugFolder() (string, error) {
 	if global_value.DefDebugFolder == "" {
-		nowProcessRoot, _ := os.Getwd()
+		nowProcessRoot, err := os.Getwd()
+		if err != nil {
+			return "", err
+		}
 		nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, DebugFolder)
-		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
+		err = os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err
 		}
@@ -78,9 +81,12 @@ func CopyFiles2DebugFolder(names []string, subFiles []string) error {
 // GetRootTmpFolder 在程序的根目录新建，取缓用文件夹，每一个视频的缓存将在其中额外新建子集文件夹
 func GetRootTmpFolder() (string, error) {
 	if global_value.DefTmpFolder == "" {
-		nowProcessRoot, _ := os.Getwd()
+		nowProcessRoot, err := os.Getwd()
+		if err != nil {
+			return "", err
+		}
 		nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, TmpFolder)
-		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
+		err = os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err
 		}
@@ -153,9 +159,12 @@ func ClearRootTmpFolder() error {
 // GetRootSubFixCacheFolder 在程序的根目录新建，字幕时间校正的缓存文件夹
 func GetRootSubFixCacheFolder() (string, error) {
 	if global_value.DefSubFixCacheFolder == "" {
-		nowProcessRoot, _ := os.Getwd()
+		nowProcessRoot, err := os.Getwd()
+		if err != nil {
+			return "", err
+		}
 		nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, SubFixCacheFolder)
-		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
+		err = os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err
 		}

@@ -84,17 +84,17 @@ func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby.EmbyMixInfo, map[string]
 	for index, info := range filterSeriesList {
 		log_helper.GetLogger().Debugln(index, info.VideoFileName)
 	}
-
+	log_helper.GetLogger().Debugln("-----------------")
 	// 将没有字幕的找出来
 	noSubMovieList, err := em.filterNoChineseSubVideoList(filterMovieList)
 	if err != nil {
 		return nil, nil, err
 	}
+	log_helper.GetLogger().Debugln("-----------------")
 	noSubSeriesList, err := em.filterNoChineseSubVideoList(filterSeriesList)
 	if err != nil {
 		return nil, nil, err
 	}
-
 	// 输出调试信息
 	log_helper.GetLogger().Debugln("-----------------")
 	log_helper.GetLogger().Debugln("filterNoChineseSubVideoList found no chinese movie", len(noSubMovieList))
