@@ -6,7 +6,17 @@ chown -R abc:abc \
     /app \
     /root \
     /config \
-    /media
-    
+    /media \
+    /media1 \
+    /media2 \
+    /media3 \
+    /media4 \
+    /media5 \
+    /media6 \
+    /media7 \
+    /media8 \
+    /media9
+
+
 chmod a+x \
     /app/chinesesubfinder
