@@ -1,8 +1,9 @@
 on:
   push:
+    branches: [master]
   pull_request:
-    branches:
-      - master
+    # The branches below must be a subset of the branches above
+    branches: [master]
 
 # for cache
 # checkout https://github.com/magnetikonline/action-golang-cache
