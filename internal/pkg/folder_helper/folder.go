@@ -21,7 +21,7 @@ import (
 func GetRootDebugFolder() (string, error) {
 	if global_value.DefDebugFolder == "" {
 		nowProcessRoot, _ := os.Getwd()
-		nowProcessRoot = filepath.Join(nowProcessRoot, DebugFolder)
+		nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, DebugFolder)
 		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err
@@ -79,7 +79,7 @@ func CopyFiles2DebugFolder(names []string, subFiles []string) error {
 func GetRootTmpFolder() (string, error) {
 	if global_value.DefTmpFolder == "" {
 		nowProcessRoot, _ := os.Getwd()
-		nowProcessRoot = filepath.Join(nowProcessRoot, TmpFolder)
+		nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, TmpFolder)
 		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err
@@ -154,7 +154,7 @@ func ClearRootTmpFolder() error {
 func GetRootSubFixCacheFolder() (string, error) {
 	if global_value.DefSubFixCacheFolder == "" {
 		nowProcessRoot, _ := os.Getwd()
-		nowProcessRoot = filepath.Join(nowProcessRoot, SubFixCacheFolder)
+		nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, SubFixCacheFolder)
 		err := os.MkdirAll(nowProcessRoot, os.ModePerm)
 		if err != nil {
 			return "", err
@@ -374,12 +374,15 @@ func ClearIdleSubFixCacheFolder(rootSubFixCacheFolder string, outOfDate time.Dur
 	return nil
 }
 
+// 缓存文件的位置信息，都是在程序的根目录下的 cache 中
 const (
-	DebugFolder       = "CSF-DebugThings" // 调试相关的文件夹
-	TmpFolder         = "CSF-TmpThings"   // 临时缓存的文件夹
-	SubFixCacheFolder = "CSF-SubFixCache" // 字幕时间校正的缓存文件夹，一般可以不清理
+	cacheRootFolderName = "cache"           // 缓存文件夹总名称
+	DebugFolder         = "CSF-DebugThings" // 调试相关的文件夹
+	TmpFolder           = "CSF-TmpThings"   // 临时缓存的文件夹
+	SubFixCacheFolder   = "CSF-SubFixCache" // 字幕时间校正的缓存文件夹，一般可以不清理
 )
 
+// 配置文件的位置信息，这个会根据系统版本做区分
 const (
 	configDirRootFPathWindows = "./"                         // Windows 就是在当前的程序目录
 	configDirRootFPathLinux   = "/config/"                   // Linux 是在 /config 下
