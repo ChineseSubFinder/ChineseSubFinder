@@ -4,10 +4,20 @@
 <script setup>
 import {getJobsStatus, systemState} from 'src/store/systemState';
 import useInterval from 'src/composables/useInterval';
+import {watch} from 'vue';
+import {userState} from 'src/store/userState';
 
-useInterval(() => {
-  if (systemState.systemInfo?.is_setup) {
+const getSystemJobStatus = () => {
+  if (userState.accessToken && systemState.systemInfo?.is_setup) {
     getJobsStatus();
   }
-}, 10000)
+}
+
+useInterval(() => {
+  getSystemJobStatus()
+}, 8000);
+
+watch(() => systemState.systemInfo?.is_setup, () => {
+  getSystemJobStatus()
+})
 </script>

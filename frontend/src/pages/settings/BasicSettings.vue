@@ -24,21 +24,21 @@
 
         <q-separator spaced inset></q-separator>
 
-        <q-item>
-          <q-item-section>
-            <q-item-label>并发数</q-item-label>
-          </q-item-section>
-          <q-item-section avatar>
-            <q-input
-              v-model.number="form.threads"
-              standout
-              dense
-              :rules="[(val) => !!val || '不能为空', (val) => /^\d+$/.test(val) || '必须是整数']"
-            />
-          </q-item-section>
-        </q-item>
+<!--        <q-item>-->
+<!--          <q-item-section>-->
+<!--            <q-item-label>并发数</q-item-label>-->
+<!--          </q-item-section>-->
+<!--          <q-item-section avatar>-->
+<!--            <q-input-->
+<!--              v-model.number="form.threads"-->
+<!--              standout-->
+<!--              dense-->
+<!--              :rules="[(val) => !!val || '不能为空', (val) => /^\d+$/.test(val) || '必须是整数']"-->
+<!--            />-->
+<!--          </q-item-section>-->
+<!--        </q-item>-->
 
-        <q-separator spaced inset></q-separator>
+<!--        <q-separator spaced inset></q-separator>-->
 
         <q-item tag="label" v-ripple>
           <q-item-section>

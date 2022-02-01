@@ -90,7 +90,7 @@
           </q-item-section>
         </q-item>
 
-        <q-item v-if="SUB_NAME_FORMAT_EMBY === form.subNameFormatter" tag="label" v-ripple>
+        <q-item v-if="SUB_NAME_FORMAT_EMBY === form.sub_name_formatter" tag="label" v-ripple>
           <q-item-section>
             <q-item-label>保存多字幕</q-item-label>
             <q-item-label caption>每个视频下面保存每个网站找到的最佳字幕，需要选择Emby格式</q-item-label>

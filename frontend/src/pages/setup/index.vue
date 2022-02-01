@@ -58,6 +58,7 @@ import EmbySetupForm from 'pages/setup/EmbySetupForm';
 import LoginBgArea from 'pages/access/login/LoginBgArea';
 import {deepCopy} from 'src/utils/CommonUtils';
 import {getInfo} from 'src/store/systemState';
+import {SUB_NAME_FORMAT_NORMAL} from 'src/constants/SettingConstants';
 
 useSetup();
 
@@ -118,6 +119,8 @@ const submit = async () => {
       movie_paths_mapping: setupState.form.emby.movieFolderMap,
       series_paths_mapping: setupState.form.emby.seriesFolderMap,
     }
+  } else {
+    formData.advanced_settings.sub_name_formatter = SUB_NAME_FORMAT_NORMAL
   }
   const [err] = await CommonApi.setup({
     settings: formData
