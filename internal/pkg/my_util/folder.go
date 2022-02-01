@@ -1,12 +1,15 @@
 package my_util
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/get_access_time"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
-	"os"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	os "os"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // --------------------------------------------------------------
@@ -299,6 +302,75 @@ func GetConfigRootDirFPath() string {
 	}
 
 	return nowConfigFPath
+}
+
+// ClearIdleSubFixCacheFolder 清理闲置的字幕修正缓存文件夹
+func ClearIdleSubFixCacheFolder(rootSubFixCacheFolder string, outOfDate time.Duration) error {
+
+	/*
+		从 GetRootSubFixCacheFolder 目录下，遍历第一级目录中的文件夹
+		然后每个文件夹中，统计里面最后的访问时间（可能有多个文件），如果超过某个时间范围就标记删除这个文件夹
+	*/
+	pathSep := string(os.PathSeparator)
+	files, err := os.ReadDir(rootSubFixCacheFolder)
+	if err != nil {
+		return err
+	}
+	wait2ScanFolder := make([]string, 0)
+	for _, curFile := range files {
+
+		fullPath := rootSubFixCacheFolder + pathSep + curFile.Name()
+		if curFile.IsDir() == true {
+			// 需要关注文件夹
+			wait2ScanFolder = append(wait2ScanFolder, fullPath)
+		}
+	}
+
+	wait2DeleteFolder := make([]string, 0)
+	getAccessTimeEx := get_access_time.GetAccessTimeEx{}
+	cutOff := time.Now().Add(-outOfDate)
+	for _, s := range wait2ScanFolder {
+
+		files, err = os.ReadDir(s)
+		if err != nil {
+			return err
+		}
+
+		maxAccessTime := time.Now()
+		// 需要统计这个文件夹下的所有文件的 AccessTIme，找出最新（最大的值）的那个时间，再比较
+		for i, curFile := range files {
+
+			fullPath := s + pathSep + curFile.Name()
+			if curFile.IsDir() == true {
+				continue
+			}
+			// 只需要关注文件
+			accessTime, err := getAccessTimeEx.GetAccessTime(fullPath)
+			if err != nil {
+				return err
+			}
+			if i == 0 {
+				maxAccessTime = accessTime
+			}
+			if Time2SecondNumber(accessTime) > Time2SecondNumber(maxAccessTime) {
+				maxAccessTime = accessTime
+			}
+		}
+		if maxAccessTime.Sub(cutOff) <= 0 {
+			// 确认可以删除
+			wait2DeleteFolder = append(wait2DeleteFolder, s)
+		}
+	}
+	// 统一清理过期的文件夹
+	for _, s := range wait2DeleteFolder {
+		log_helper.GetLogger().Infoln("Try 2 clear SubFixCache Folder:", s)
+		err := os.RemoveAll(s)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 const (

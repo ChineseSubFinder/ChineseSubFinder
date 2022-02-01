@@ -3,7 +3,6 @@
 package get_access_time
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"os"
 	"syscall"
 	"time"
@@ -28,5 +27,5 @@ func (d OneGetAccessTime) GetAccessTime(fileName string) (time.Time, error) {
 	// https://github.com/golang/go/commit/bd75468a089c8ad38bcb1130c4ed7d2703ef85c1
 	// https://github.com/golang/go/issues/31735
 	aTime := fi.Sys().(*syscall.Win32FileAttributeData).LastAccessTime
-	return my_util.Second2Time(aTime.Nanoseconds() / 1e9), nil
+	return time.Unix(aTime.Nanoseconds()/1e9, 0), nil
 }

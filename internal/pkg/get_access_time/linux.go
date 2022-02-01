@@ -3,7 +3,6 @@
 package get_access_time
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"os"
 	"syscall"
 	"time"
@@ -25,6 +24,5 @@ func (d OneGetAccessTime) GetAccessTime(fileName string) (time.Time, error) {
 	}
 
 	aTime := fi.Sys().(*syscall.Stat_t).Atim
-	return my_util.Second2Time(aTime.Nanoseconds() / 1e9), nil
-
+	return time.Unix(aTime.Nanoseconds()/1e9, 0), nil
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/sirupsen/logrus"
+	"time"
 )
 
 type DownloaderHelper struct {
@@ -83,6 +84,19 @@ func (d DownloaderHelper) Start() error {
 	err = d.downloader.RefreshEmbySubList()
 	if err != nil {
 		d.logger.Errorln("RefreshEmbySubList", err)
+		return err
+	}
+
+	d.logger.Infoln("Will Scan SubFixCache Folder, Clear files that are more than 7 * 24 hours old")
+	// 清理多天没有使用的时间轴字幕校正缓存文件
+	rootSubFixCache, err := my_util.GetRootSubFixCacheFolder()
+	if err != nil {
+		d.logger.Errorln("GetRootSubFixCacheFolder", err)
+		return err
+	}
+	err = my_util.ClearIdleSubFixCacheFolder(rootSubFixCache, 7*24*time.Hour)
+	if err != nil {
+		d.logger.Errorln("ClearIdleSubFixCacheFolder", err)
 		return err
 	}
 
