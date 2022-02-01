@@ -3,10 +3,9 @@ FROM library/node:14-alpine as frontBuilder
 USER root
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
-add ./package.json /usr/src/app
-add ./.npmrc /usr/src/app
+add ./frontend/package.json /usr/src/app
 RUN npm install --registry https://registry.npm.taobao.org
-COPY . /usr/src/app
+COPY ./frontend /usr/src/app
 RUN ls -al
 RUN npm run build && ls -al dist/spa
 
