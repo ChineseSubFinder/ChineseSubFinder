@@ -4,6 +4,7 @@ USER root
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 add ./package.json /usr/src/app
+add ./package-lock.json /usr/src/app
 add ./.npmrc /usr/src/app
 RUN npm install --registry https://registry.npm.taobao.org
 ADD . /usr/src/app

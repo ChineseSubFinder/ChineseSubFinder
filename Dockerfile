@@ -4,6 +4,7 @@ USER root
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 add ./frontend/package.json /usr/src/app
+add ./frontend/package-lock.json /usr/src/app
 RUN npm install --registry https://registry.npm.taobao.org
 COPY ./frontend /usr/src/app
 RUN ls -al
