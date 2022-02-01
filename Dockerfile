@@ -1,3 +1,16 @@
+FROM library/node:14-alpine as frontBuilder
+
+USER root
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+add ./package.json /usr/src/app
+add ./.npmrc /usr/src/app
+RUN npm install --registry https://registry.npm.taobao.org
+ADD . /usr/src/app
+RUN ls -al
+RUN npm run build && ls -al dist/spa
+
+
 FROM golang:1.17-buster AS builder
 ARG VERSION=0.0.10
 LABEL stage=gobuilder
@@ -11,6 +24,9 @@ ENV GOPROXY https://goproxy.cn,direct
 # 切换工作目录
 WORKDIR /homelab/buildspace
 COPY . .
+# 把前端编译好的文件 copy 过来
+COPY --from=frontBuilder /usr/src/app/dist/spa /homelab/buildspace/frontend/dist/spa
+
 # 执行编译，-o 指定保存位置和程序编译名称
 RUN cd ./cmd/chinesesubfinder \
     && go build -ldflags='-s -w --extldflags "-static -fpic" -X main.AppVersion=${VERSION}"' -o /app/chinesesubfinder
