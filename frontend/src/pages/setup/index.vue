@@ -112,6 +112,7 @@ const submit = async () => {
   if (setupState.form.mediaServer === 'emby') {
     formData.emby_settings = {
       ...formData.emby_settings,
+      enable: true,
       address_url: setupState.form.emby.url,
       api_key: setupState.form.emby.apiKey,
       max_request_video_number: setupState.form.emby.limitCount,
