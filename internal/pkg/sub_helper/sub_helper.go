@@ -229,6 +229,12 @@ func SearchMatchedSubFileByDir(dir string) ([]string, error) {
 			if info.Size() < 1000 {
 				continue
 			}
+
+			if info.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
+				log_helper.GetLogger().Debugln("SearchMatchedSubFileByDir file.Size() == 4096 && Prefix Name == ._*", fullPath)
+				continue
+			}
+
 			if sub_parser_hub.IsSubExtWanted(filepath.Ext(curFile.Name())) == true {
 				fileFullPathList = append(fileFullPathList, fullPath)
 			}
