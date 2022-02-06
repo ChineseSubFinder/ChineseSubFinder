@@ -148,7 +148,7 @@ func (em *EmbyHelper) findMappingPath(videoEmbyFullPath string, isMovieOrSeries 
 		}
 	} else {
 		// 连续剧的情况
-		for _, embyPath := range em.EmbyConfig.MoviePathsMapping {
+		for _, embyPath := range em.EmbyConfig.SeriesPathsMapping {
 			if strings.Contains(videoEmbyFullPath, embyPath) == true {
 				matchedEmbyPaths = append(matchedEmbyPaths, embyPath)
 			}
@@ -171,7 +171,7 @@ func (em *EmbyHelper) findMappingPath(videoEmbyFullPath string, isMovieOrSeries 
 		}
 	} else {
 		// 连续剧的情况
-		for physicalPath, embyPath := range em.EmbyConfig.MoviePathsMapping {
+		for physicalPath, embyPath := range em.EmbyConfig.SeriesPathsMapping {
 			if embyPath == pathSlices[0].Path {
 				nowPhPath = physicalPath
 				break

@@ -29,7 +29,7 @@ func NewDownloaderHelper(settings settings.Settings, _subSupplierHub *subSupplie
 }
 
 // Start 开启任务
-func (d DownloaderHelper) Start() error {
+func (d *DownloaderHelper) Start() error {
 	var err error
 	// 下载实例
 	d.downloader, err = downloader.NewDownloader(d.subSupplierHub, sub_formatter.GetSubFormatter(d.settings.AdvancedSettings.SubNameFormatter), d.settings)
@@ -105,6 +105,6 @@ func (d DownloaderHelper) Start() error {
 }
 
 // Cancel 提前取消任务的执行
-func (d DownloaderHelper) Cancel() {
+func (d *DownloaderHelper) Cancel() {
 	d.downloader.Cancel()
 }
