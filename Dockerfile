@@ -29,7 +29,7 @@ COPY --from=frontBuilder /usr/src/app/dist/spa /homelab/buildspace/frontend/dist
 
 # 执行编译，-o 指定保存位置和程序编译名称
 RUN cd ./cmd/chinesesubfinder \
-    && go build -ldflags='-s -w --extldflags "-static -fpic" -X main.AppVersion=${VERSION}"' -o /app/chinesesubfinder
+    && go build -ldflags='-s -w --extldflags "-static -fpic" -X main.AppVersion=${VERSION}' -o /app/chinesesubfinder
 
 # 运行时环境
 FROM lsiobase/ubuntu:bionic
