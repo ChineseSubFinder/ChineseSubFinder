@@ -17,11 +17,12 @@
       v-model="setupState.form.password"
       type="password"
       label="输入您的密码"
-      hint="密码需要在6个字符以上"
+      hint="密码必须在6-30位之间"
       lazy-rules
       :rules="[
                 (val) => (val && val.length > 0) || '请输入密码',
-                (val) => val.length >= 6 || '密码需要在6个字符以上',
+                (val) => /^([a-z]|[A-Z]|[\d~@#$%\*-\+=:,\\?\[\]\{}]){6,30}$/.test(val)
+                 || '密码必须在6-30位之间，且只能由字母、数字、特殊符号组成',
               ]"
     />
 

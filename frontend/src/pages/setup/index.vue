@@ -123,11 +123,11 @@ const submit = async () => {
   } else {
     formData.advanced_settings.sub_name_formatter = SUB_NAME_FORMAT_NORMAL
   }
-  const [err] = await CommonApi.setup({
+  const [, err] = await CommonApi.setup({
     settings: formData
   });
   submitting.value = false;
-  if (err === null) {
+  if (err !== null) {
     SystemMessage.error(err.message);
     return;
   }
