@@ -1,7 +1,0 @@
-UseProxy: false
-HttpProxy: http://127.0.0.1:10809
-EveryTime: 12h
-Threads: 2
-RunAtStartup: true
-MovieFolder: /media/电影
-SeriesFolder: /media/连续剧

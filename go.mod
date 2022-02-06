@@ -36,7 +36,6 @@ require (
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/middelink/go-parse-torrent-name v0.0.0-20190301154245-3ff4efacd4c4
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
-	github.com/mndrix/tukey v0.0.0-20160623155716-3069bc506243
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/nzlov/chardet v0.0.0-20190815145004-022cbcf483f9
 	github.com/panjf2000/ants/v2 v2.4.5
@@ -62,6 +61,7 @@ require (
 	gopkg.in/errgo.v2 v2.1.0
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gorm.io/driver/sqlite v1.2.6
 	gorm.io/gorm v1.22.5
 )
 
@@ -92,7 +92,6 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
 	github.com/klauspost/pgzip v1.2.4 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
@@ -104,7 +103,6 @@ require (
 	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/pierrec/lz4/v4 v4.0.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
@@ -117,21 +115,8 @@ require (
 	github.com/ysmood/leakless v0.7.0 // indirect
 	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect
 	golang.org/x/exp v0.0.0-20211123021643-48cbe7f80d7c // indirect
-	golang.org/x/mod v0.6.0-dev.0.20211013180041-c96bc1413d57 // indirect
-	golang.org/x/tools v0.1.8-0.20211029000441-d6a9af8af023 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gorm.io/driver/sqlite v1.2.6 // indirect
-	lukechampine.com/uint128 v1.1.1 // indirect
-	modernc.org/cc/v3 v3.33.7 // indirect
-	modernc.org/ccgo/v3 v3.9.6 // indirect
-	modernc.org/libc v1.9.11 // indirect
-	modernc.org/mathutil v1.4.1 // indirect
-	modernc.org/memory v1.0.4 // indirect
-	modernc.org/opt v0.1.1 // indirect
-	modernc.org/strutil v1.1.1 // indirect
-	modernc.org/token v1.0.0 // indirect
 )
 
 replace github.com/go-creed/sat => github.com/allanpk716/sat v0.0.0-20210622112535-2e00ce54a80b
