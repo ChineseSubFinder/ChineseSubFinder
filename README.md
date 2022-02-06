@@ -6,7 +6,7 @@
 >
 > 发布的 Beta 版本可能是不稳定的，同时新增功能可能是没有文档支持的。如果没有特殊的需求，不建议使用该版本。
 >
-> v0.20.x 开始，大范围重构，新增 Web 设置界面，见 [v0.20 教程](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.20 教程)（不兼容之前版本的 config.yaml 配置！）
+> v0.20.x 开始，大范围重构，新增 Web 设置界面，见 [v0.20 教程](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.20教程)（不兼容之前版本的 config.yaml 配置！）
 
 ## 功能
 
@@ -23,7 +23,7 @@
 
 有两个文档可以参考：
 
-- [v0.20 教程](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.20 教程)（不兼容之前版本的 config.yaml 配置！）
+- [v0.20 教程](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.20教程)（不兼容之前版本的 config.yaml 配置！）
 - [Docker ChineseSubFinder--中文字幕自动下载 | sleele 的博客 - 第三方教程](https://sleele.com/2021/06/25/docker-chinesesubfinder-中文字幕自动下载/)
 
 高阶设置：
