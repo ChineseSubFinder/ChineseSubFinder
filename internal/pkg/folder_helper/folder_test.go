@@ -2,13 +2,12 @@ package folder_helper
 
 import (
 	"testing"
-	"time"
 )
 
 func TestClearIdleSubFixCacheFolder(t *testing.T) {
 
-	err := ClearIdleSubFixCacheFolder("W:\\CSF-SubFixCache", 24*time.Hour)
-	if err != nil {
-		t.Fatal(err)
-	}
+	//err := ClearIdleSubFixCacheFolder("W:\\CSF-SubFixCache", 24*time.Hour)
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/normal"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"gorm.io/gorm"
 	"os"
 	"path/filepath"
 	"strings"
@@ -246,7 +247,9 @@ func SubFormatChangerProcess(movieRootDirs []string, seriesRootDirs []string, no
 		return RenameResults{}, errors.New(fmt.Sprintf("SubFormatChangerProcess dao.GetDb().First return nil"))
 	}
 	if re.Error != nil {
-		return RenameResults{}, errors.New(fmt.Sprintf("SubFormatChangerProcess dao.GetDb().First, %v", re.Error))
+		if re.Error != gorm.ErrRecordNotFound {
+			return RenameResults{}, errors.New(fmt.Sprintf("SubFormatChangerProcess dao.GetDb().First, %v", re.Error))
+		}
 	}
 	subFormatChanger := NewSubFormatChanger(movieRootDirs, seriesRootDirs)
 	// 理论上有且仅有一条记录

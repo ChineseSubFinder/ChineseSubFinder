@@ -76,3 +76,5 @@ TestData/
 /*.iml
 /ChineseSubFinder-Cache.db
 /cache
+/internal/pkg/hot_fix/ChineseSubFinder-Cache.db
+/internal/pkg/sub_formatter/ChineseSubFinder-Cache.db

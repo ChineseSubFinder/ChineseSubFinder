@@ -8,7 +8,7 @@ import (
 )
 
 func TestHotFix001_GetKey(t *testing.T) {
-	hf001 := NewHotFix001("", "")
+	hf001 := NewHotFix001([]string{""}, []string{""})
 	if hf001.GetKey() != "001" {
 		t.Fatal("GetKey() != 001")
 	}
@@ -23,7 +23,7 @@ func TestHotFix001_Process(t *testing.T) {
 	testMovieDir := filepath.Join(testDataPath, movieDir)
 	testSeriesDir := filepath.Join(testDataPath, seriesDir)
 	// 开始修复
-	hf001 := NewHotFix001(testMovieDir, testSeriesDir)
+	hf001 := NewHotFix001([]string{testMovieDir}, []string{testSeriesDir})
 	outData, err := hf001.Process()
 	outStruct := outData.(OutStruct001)
 	if err != nil {
