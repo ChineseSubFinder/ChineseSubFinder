@@ -156,6 +156,16 @@ func TestPipeline_FitGSSByAudio(t *testing.T) {
 				srcFixedSubFile: filepath.Join(dirRoot, "Rick and Morty - S05E01", "org-fix.ass")},
 			want: true, want1: -6.1,
 		},
+		// Bulgasal.Immortal.Souls.S01E15
+		{name: "Bulgasal.Immortal.Souls.S01E15",
+			args: args{
+				audioInfo: vad.AudioInfo{
+					FileFullPath: filepath.Join(dirRoot, "Bulgasal.Immortal.Souls.S01E15", "audio.pcm"),
+				},
+				subFilePath:     filepath.Join(dirRoot, "Bulgasal.Immortal.Souls.S01E15", "subs.chinese.srt"),
+				srcFixedSubFile: filepath.Join(dirRoot, "Bulgasal.Immortal.Souls.S01E15", "org-fix.srt")},
+			want: true, want1: 0.01,
+		},
 	}
 
 	for _, tt := range tests {

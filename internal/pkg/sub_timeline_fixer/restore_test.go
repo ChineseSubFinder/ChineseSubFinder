@@ -22,7 +22,7 @@ func TestRestore(t *testing.T) {
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_timeline_fixer"}, 4, true)
 	movieDir := filepath.Join(rootDir, "movies")
 	seriesDir := filepath.Join(rootDir, "series")
-	count, err := Restore(movieDir, seriesDir)
+	count, err := Restore([]string{movieDir}, []string{seriesDir})
 	if err != nil {
 		t.Fatal(err)
 	}
