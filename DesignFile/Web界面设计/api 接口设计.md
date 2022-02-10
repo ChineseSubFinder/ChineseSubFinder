@@ -189,6 +189,117 @@
 
 
 
+### 检查目录是否可用
+
+`POST /check-path`
+
+请求参数：
+
+```javascript
+{
+  path: '/mnt/电影';
+}
+```
+
+返回 HTTP 码 200：
+
+```javascript
+{
+  valid: true; 
+}
+```
+
+返回 HTTP 码 204
+
+
+
+### 检查代理服务器
+
+`POST /check-proxy`
+
+请求参数：
+
+```javascript
+{
+  http_proxy_address: 'http://127.0.0.1:10809';
+}
+```
+
+返回 HTTP 码 200：
+
+```javascript
+{
+	"sub_site_status": [{
+		"name": "aa",
+		"valid": true,
+		"speed": 100  //ms
+	}, {
+		"name": "bb",
+		"valid": false,
+		"speed": 0
+	}]
+}
+```
+
+
+
+### 获取默认的设置数据结构
+
+`GET /def-settings`
+
+用于获取默认的设置界面使用的数据结构，无需登录。下面是示例，理论上数组和字典应该是空的
+
+```json
+{
+        "user_info": {
+            "username": "abcd",
+            "password": "123456"
+        },
+        "common_settings": {
+            "scan_interval": "12h",
+            "threads": 12,
+            "run_scan_at_start_up": true,
+            "movie_paths": ["aaa", "bbb"],
+            "series_paths": ["ccc", "ddd"]
+        },
+        "advanced_settings": {
+            "proxy_settings": {
+                "use_http_proxy": true,
+                "http_proxy_address": "123"
+            },
+            "debug_mode": true,
+            "save_full_season_tmp_subtitles": true,
+            "sub_type_priority": 1,
+            "sub_name_formatter": 1,
+            "save_multi_sub": true,
+            "custom_video_exts": ["aaa", "bbb"],
+            "fix_time_line": true,
+            "topic": 0
+        },
+        "emby_settings": {
+            "enable": true,
+            "address_url": "123456",
+            "api_key": "api123",
+            "max_request_video_number": 1000,
+            "skip_watched": true,
+            "movie_paths_mapping": {
+                "aa": "123",
+                "bb": "456"
+            },
+            "series_paths_mapping": {
+                "aab": "123",
+                "bbc": "456"
+            }
+        },
+        "developer_settings": {
+            "bark_server_address": "bark"
+        },
+        "timeline_fixer_settings": null
+}
+```
+
+
+
 ### 修改密码
 
 `POST /change-pwd`
@@ -215,9 +326,11 @@
 
 
 
-### 设置界面 -- 获取设置的信息
+### V1 版本 API
 
-`GET /settings`
+#### 设置界面 -- 获取设置的信息
+
+`GET /v1/settings`
 
 需要权限认证，这里获取到的 settings 信息与“应用初始化安装”填写的 settings 数据结构一致。
 
@@ -282,9 +395,9 @@
 
 
 
-### 设置界面 -- 写入设置信息
+#### 设置界面 -- 写入设置信息
 
-`PUT /settings`
+`PUT /v1/settings`
 
 需要权限认证，这里获取到的 settings 信息与“应用初始化安装”填写的 settings 数据结构一致。
 
@@ -355,53 +468,17 @@
 
 
 
-### 检查代理服务器
+#### 开始任务
 
-`POST /check-proxy`
+`POST /v1/jobs/start`
 
-请求参数：
-
-```javascript
-{
-  http_proxy_address: 'http://127.0.0.1:10809';
-}
-```
+请求参数：无
 
 返回 HTTP 码 200：
 
 ```javascript
 {
-	"sub_site_status": [{
-		"name": "aa",
-		"valid": true,
-		"speed": 100  //ms
-	}, {
-		"name": "bb",
-		"valid": false,
-		"speed": 0
-	}]
-}
-```
-
-
-
-### 检查目录是否可用
-
-`POST /check-path`
-
-请求参数：
-
-```javascript
-{
-  path: '/mnt/电影';
-}
-```
-
-返回 HTTP 码 200：
-
-```javascript
-{
-  valid: true; 
+  message: "ok"; 
 }
 ```
 
@@ -409,25 +486,45 @@
 
 
 
-### 停止任务
+#### 停止任务
 
 停止正在运行的任务
 
-`POST /jobs/stop`
+`POST /v1/jobs/stop`
 
 请求参数：无
+
+返回 HTTP 码 200：
+
+```javascript
+{
+  message: "ok"; 
+}
+```
 
 返回 HTTP 码 204
 
 
 
-### 开始任务
+#### 查询任务的状态
 
-`POST /jobs/start`
+`GET /v1/jobs/start`
 
 请求参数：无
 
+返回 HTTP 码 200：
+
+```javascript
+{
+  status: "rinning"; // running or stoped
+}
+```
+
+> running 或者是 stoped，前者是正在运行，后者是已经停止或者没有执行，如果开始的耗时的执行流程，停止的时候可以需要点时间，有可能上分钟级别。
+
 返回 HTTP 码 204
+
+
 
 ## 通用错误码
 
