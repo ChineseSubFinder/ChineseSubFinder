@@ -20,6 +20,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/url_connectedness_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"time"
 )
 
 type PreDownloadProcess struct {
@@ -74,8 +75,24 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 		// 没有则需要清空
 		commonValue.SubhdCode = ""
 	} else {
-		log_helper.GetLogger().Infoln("GetCode", updateTimeString, code)
-		commonValue.SubhdCode = code
+
+		// 如果差一天，那么本次也跳过本次
+		codeTime, err := time.Parse(updateTimeString, "2006-01-02")
+		if err != nil {
+			log_helper.GetLogger().Errorln("something_static.GetCodeFromWeb.time.Parse", err)
+			// 没有则需要清空
+			commonValue.SubhdCode = ""
+		} else {
+
+			if my_util.Time2SecondNumber(codeTime) < my_util.Time2SecondNumber(time.Now().Add(-24*time.Hour)) {
+				// 没有则需要清空
+				commonValue.SubhdCode = ""
+				log_helper.GetLogger().Warningln("something_static.GetCodeFromWeb, GetCodeTime:", updateTimeString, "NowTime:", time.Now().String(), "Skip")
+			} else {
+				log_helper.GetLogger().Infoln("GetCode", updateTimeString, code)
+				commonValue.SubhdCode = code
+			}
+		}
 	}
 	// ------------------------------------------------------------------------
 	// 构建每个字幕站点下载者的实例
