@@ -76,7 +76,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 		commonValue.SubhdCode = ""
 	} else {
 
-		// 如果差一天，那么本次也跳过本次
+		// 获取到的更新时间不是当前的日期，那么本次也跳过本次
 		codeTime, err := time.Parse(updateTimeString, "2006-01-02")
 		if err != nil {
 			log_helper.GetLogger().Errorln("something_static.GetCodeFromWeb.time.Parse", err)
@@ -84,7 +84,8 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 			commonValue.SubhdCode = ""
 		} else {
 
-			if my_util.Time2SecondNumber(codeTime) < my_util.Time2SecondNumber(time.Now().Add(-24*time.Hour)) {
+			nowTime := time.Now()
+			if codeTime.YearDay() != nowTime.YearDay() {
 				// 没有则需要清空
 				commonValue.SubhdCode = ""
 				log_helper.GetLogger().Warningln("something_static.GetCodeFromWeb, GetCodeTime:", updateTimeString, "NowTime:", time.Now().String(), "Skip")
