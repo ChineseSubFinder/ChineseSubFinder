@@ -12,6 +12,10 @@ import (
 
 func GetCode(codeUrl string) (string, error) {
 
+	defer func() {
+		log_helper.GetLogger().Infoln("End Get Code")
+	}()
+
 	log_helper.GetLogger().Infoln("Start Get Code...")
 	browser, err := rod_helper.NewBrowser("", false)
 	if err != nil {
@@ -47,8 +51,6 @@ func GetCode(codeUrl string) (string, error) {
 	}
 
 	sEnc := b64.StdEncoding.EncodeToString([]byte(code))
-
-	log_helper.GetLogger().Infoln("End Get Code")
 
 	return sEnc, nil
 }
