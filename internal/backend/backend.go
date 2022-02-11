@@ -8,11 +8,15 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
 	"net/http"
 )
 
 // StartBackEnd 开启后端的服务器
 func StartBackEnd(httpPort int, cronHelper *cron_helper.CronHelper) {
+
+	gin.SetMode(gin.ReleaseMode)
+	gin.DefaultWriter = ioutil.Discard
 
 	engine := gin.Default()
 	// 默认所有都通过
