@@ -160,12 +160,13 @@ func (em *EmbyHelper) findMappingPath(videoEmbyFullPath string, isMovieOrSeries 
 	// 排序得到匹配上的路径，最长的那个
 	pathSlices := sortStringSliceByLength(matchedEmbyPaths)
 	// 然后还需要从这个最长的路径，从 map 中找到对应的物理路径
-	nowPhPath := ""
+	// nowPhRootPath 这个路径是映射的根目录，如果里面再次嵌套 子文件夹 再到连续剧目录，则是个问题，会丢失子文件夹目录
+	nowPhRootPath := ""
 	if isMovieOrSeries == true {
 		// 电影的情况
 		for physicalPath, embyPath := range em.EmbyConfig.MoviePathsMapping {
 			if embyPath == pathSlices[0].Path {
-				nowPhPath = physicalPath
+				nowPhRootPath = physicalPath
 				break
 			}
 		}
@@ -173,18 +174,19 @@ func (em *EmbyHelper) findMappingPath(videoEmbyFullPath string, isMovieOrSeries 
 		// 连续剧的情况
 		for physicalPath, embyPath := range em.EmbyConfig.SeriesPathsMapping {
 			if embyPath == pathSlices[0].Path {
-				nowPhPath = physicalPath
+				nowPhRootPath = physicalPath
 				break
 			}
 		}
 	}
 	// 如果匹配不上
-	if nowPhPath == "" {
+	if nowPhRootPath == "" {
 		return false, "", ""
 	}
 
-	outPhPath := strings.ReplaceAll(videoEmbyFullPath, pathSlices[0].Path, nowPhPath)
-	return true, outPhPath, nowPhPath
+
+	outPhFullPath := strings.ReplaceAll(videoEmbyFullPath, pathSlices[0].Path, nowPhRootPath)
+	return true, outPhFullPath, nowPhRootPath
 }
 
 func (em *EmbyHelper) filterEmbyVideoList(videoIdList []string, isMovieOrSeries bool) ([]emby.EmbyMixInfo, error) {
