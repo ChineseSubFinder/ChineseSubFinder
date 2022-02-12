@@ -135,27 +135,27 @@ func (em *EmbyHelper) RefreshEmbySubList() (bool, error) {
 // findMappingPath 从 Emby 内置路径匹配到物理路径
 // X:\电影    - /mnt/share1/电影
 // X:\连续剧  - /mnt/share1/连续剧
-func (em *EmbyHelper) findMappingPath(videoEmbyFullPath string, isMovieOrSeries bool) (bool, string, string) {
+func (em *EmbyHelper) findMappingPath(mixInfo *emby.EmbyMixInfo, isMovieOrSeries bool) bool {
 	// 这里进行路径匹配的时候需要考虑嵌套路径的问题
 	// 比如，映射了 /电影  以及 /电影/AA ，那么如果有一部电影 /电影/AA/xx/xx.mkv 那么，应该匹配的是最长的路径 /电影/AA
 	matchedEmbyPaths := make([]string, 0)
 	if isMovieOrSeries == true {
 		// 电影的情况
 		for _, embyPath := range em.EmbyConfig.MoviePathsMapping {
-			if strings.Contains(videoEmbyFullPath, embyPath) == true {
+			if strings.HasPrefix(mixInfo.VideoInfo.Path, embyPath) == true {
 				matchedEmbyPaths = append(matchedEmbyPaths, embyPath)
 			}
 		}
 	} else {
 		// 连续剧的情况
 		for _, embyPath := range em.EmbyConfig.SeriesPathsMapping {
-			if strings.Contains(videoEmbyFullPath, embyPath) == true {
+			if strings.HasPrefix(mixInfo.VideoInfo.Path, embyPath) == true {
 				matchedEmbyPaths = append(matchedEmbyPaths, embyPath)
 			}
 		}
 	}
 	if len(matchedEmbyPaths) < 1 {
-		return false, "", ""
+		return false
 	}
 	// 排序得到匹配上的路径，最长的那个
 	pathSlices := sortStringSliceByLength(matchedEmbyPaths)
@@ -181,12 +181,39 @@ func (em *EmbyHelper) findMappingPath(videoEmbyFullPath string, isMovieOrSeries 
 	}
 	// 如果匹配不上
 	if nowPhRootPath == "" {
-		return false, "", ""
+		return false
 	}
 
+	if isMovieOrSeries == true {
+		// 电影
+		mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
+		// 因为电影搜索的时候使用的是完整的视频目录，所以这个字段并不重要
+		//mixInfo.PhysicalRootPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
+		// 这个电影的文件夹
+		mixInfo.VideoFolderName = filepath.Base(filepath.Dir(mixInfo.VideoInfo.Path))
+		mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
+	} else {
+		// 连续剧
+		ancestorIndex := -1
+		// 找到连续剧文件夹这一层
+		for i, ancestor := range mixInfo.Ancestors {
+			if ancestor.Type == "Series" {
+				ancestorIndex = i
+				break
+			}
+		}
+		if ancestorIndex == -1 {
+			// 说明没有找到连续剧文件夹的名称，那么就应该跳过
+			return false
+		}
+		mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
+		mixInfo.PhysicalRootPath = mixInfo.Ancestors[ancestorIndex+1].Path
+		// 这个剧集的文件夹
+		mixInfo.VideoFolderName = filepath.Base(mixInfo.Ancestors[ancestorIndex].Path)
+		mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
+	}
 
-	outPhFullPath := strings.ReplaceAll(videoEmbyFullPath, pathSlices[0].Path, nowPhRootPath)
-	return true, outPhFullPath, nowPhRootPath
+	return true
 }
 
 func (em *EmbyHelper) filterEmbyVideoList(videoIdList []string, isMovieOrSeries bool) ([]emby.EmbyMixInfo, error) {
@@ -205,39 +232,17 @@ func (em *EmbyHelper) filterEmbyVideoList(videoIdList []string, isMovieOrSeries 
 		if isMovieOrSeries == true {
 			// 电影
 			// 过滤掉不符合要求的,拼接绝对路径
-			isFit, physicalVideoFPath, physicalRootPath := em.findMappingPath(info.Path, isMovieOrSeries)
+			isFit := em.findMappingPath(&mixInfo, isMovieOrSeries)
 			if isFit == false {
 				return nil, err
 			}
-			mixInfo.VideoFileFullPath = physicalVideoFPath
-			mixInfo.PhysicalRootPath = physicalRootPath
-			// 这个电影的文件夹
-			mixInfo.VideoFolderName = filepath.Base(filepath.Dir(mixInfo.VideoInfo.Path))
-			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
 		} else {
 			// 连续剧
 			// 过滤掉不符合要求的,拼接绝对路径
-			isFit, physicalVideoFPath, physicalRootPath := em.findMappingPath(info.Path, isMovieOrSeries)
+			isFit := em.findMappingPath(&mixInfo, isMovieOrSeries)
 			if isFit == false {
 				return nil, err
 			}
-			mixInfo.VideoFileFullPath = physicalVideoFPath
-			mixInfo.PhysicalRootPath = physicalRootPath
-			// 这个剧集的文件夹
-			ancestorIndex := -1
-			// 找到连续剧文件夹这一层
-			for i, ancestor := range mixInfo.Ancestors {
-				if ancestor.Type == "Series" {
-					ancestorIndex = i
-					break
-				}
-			}
-			if ancestorIndex == -1 {
-				// 说明没有找到连续剧文件夹的名称，那么就应该跳过
-				return nil, err
-			}
-			mixInfo.VideoFolderName = filepath.Base(mixInfo.Ancestors[ancestorIndex].Path)
-			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
 		}
 
 		return &mixInfo, nil

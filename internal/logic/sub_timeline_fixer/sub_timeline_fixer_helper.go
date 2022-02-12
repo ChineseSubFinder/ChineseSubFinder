@@ -91,7 +91,7 @@ package sub_timeline_fixer
 //	// 先做电影的字幕校正、然后才是连续剧的
 //	for _, info := range movieList {
 //		// path.Dir 在 Windows 有梗，所以换个方式获取路径
-//		videoRootPath := filepath.Dir(info.VideoFileFullPath)
+//		videoRootPath := filepath.Dir(info.PhysicalVideoFileFullPath)
 //		err = s.fixOneVideoSub(info.VideoInfo.Id, videoRootPath)
 //		if err != nil {
 //			return err
@@ -103,7 +103,7 @@ package sub_timeline_fixer
 //	for _, infos := range seriesList {
 //		for _, info := range infos {
 //			// path.Dir 在 Windows 有梗，所以换个方式获取路径
-//			videoRootPath := filepath.Dir(info.VideoFileFullPath)
+//			videoRootPath := filepath.Dir(info.PhysicalVideoFileFullPath)
 //			err = s.fixOneVideoSub(info.VideoInfo.Id, videoRootPath)
 //			if err != nil {
 //				return err

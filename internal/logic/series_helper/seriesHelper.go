@@ -110,7 +110,7 @@ func ReadSeriesInfoFromEmby(seriesDir string, imdbInfo *imdb.Title, seriesList [
 	EpisodeDict := make(map[string]series.EpisodeInfo)
 	SubDict := make(map[string][]series.SubInfo)
 	for _, info := range seriesList {
-		getEpsInfoAndSubDic(info.VideoFileFullPath, EpisodeDict, SubDict)
+		getEpsInfoAndSubDic(info.PhysicalVideoFileFullPath, EpisodeDict, SubDict)
 	}
 
 	for _, episodeInfo := range EpisodeDict {

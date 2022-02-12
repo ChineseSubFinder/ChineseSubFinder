@@ -151,12 +151,12 @@ func (info EmbyVideoInfoByUserId) GetDefaultSubIndex() int {
 }
 
 type EmbyMixInfo struct {
-	VideoFolderName   string // 电影就是电影的文件夹名称，连续剧就是对应的剧集的 root 文件夹
-	VideoFileName     string // 视频文件名
-	VideoFileFullPath string // 视频的物理路径（这里指的物理路径是相对于本程序而言，如果是用 docker 使用的话，那么就是映射容器内的路径，如果是用物理机器比如 Windows 使用的话，那么就是相对于物理机器的路径）
-	PhysicalRootPath  string // 视频在那个物理根目录中（这里指的物理路径是相对于本程序而言，如果是用 docker 使用的话，那么就是映射容器内的路径，如果是用物理机器比如 Windows 使用的话，那么就是相对于物理机器的路径）
-	Ancestors         []EmbyItemsAncestors
-	VideoInfo         EmbyVideoInfo
+	VideoFolderName           string // 电影就是电影的文件夹名称，连续剧就是对应的剧集的 root 文件夹
+	VideoFileName             string // 视频文件名
+	PhysicalVideoFileFullPath string // 视频的物理路径（这里指的物理路径是相对于本程序而言，如果是用 docker 使用的话，那么就是映射容器内的路径，如果是用物理机器比如 Windows 使用的话，那么就是相对于物理机器的路径）
+	PhysicalRootPath          string // 视频在那个物理根目录中（这里指的物理路径是相对于本程序而言，如果是用 docker 使用的话，那么就是映射容器内的路径，如果是用物理机器比如 Windows 使用的话，那么就是相对于物理机器的路径）
+	Ancestors                 []EmbyItemsAncestors
+	VideoInfo                 EmbyVideoInfo
 }
 
 type Time time.Time

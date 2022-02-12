@@ -145,7 +145,7 @@ func (d *Downloader) GetUpdateVideoListFromEmby() error {
 	}
 	// 获取全路径
 	for _, info := range movieList {
-		d.movieFileFullPathList = append(d.movieFileFullPathList, info.VideoFileFullPath)
+		d.movieFileFullPathList = append(d.movieFileFullPathList, info.PhysicalVideoFileFullPath)
 	}
 	// 输出调试信息
 	d.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap Start")
