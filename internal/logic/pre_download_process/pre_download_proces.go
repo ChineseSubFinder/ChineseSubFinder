@@ -77,7 +77,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	} else {
 
 		// 获取到的更新时间不是当前的日期，那么本次也跳过本次
-		codeTime, err := time.Parse(updateTimeString, "2006-01-02")
+		codeTime, err := time.Parse( "2006-01-02", updateTimeString)
 		if err != nil {
 			log_helper.GetLogger().Errorln("something_static.GetCodeFromWeb.time.Parse", err)
 			// 没有则需要清空
