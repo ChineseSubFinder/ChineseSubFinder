@@ -19,10 +19,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/jinzhu/now"
-	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -247,24 +245,15 @@ func GetSeriesListFromDirs(dirs []string) (*treemap.Map, error) {
 // GetSeriesList 获取这个目录下的所有文件夹名称，默认为一个连续剧的目录的List
 func GetSeriesList(dir string) ([]string, error) {
 
-	var seriesDirList = make([]string, 0)
-	files, err := os.ReadDir(dir)
+	// 需要把所有 tvshow.nfo 搜索出来，那么这些文件对应的目录就是目标连续剧的目录
+	tvNFOs, err := my_util.SearchTVNfo(dir)
 	if err != nil {
 		return nil, err
 	}
-	for _, curFile := range files {
-		if curFile.IsDir() == false {
+	var seriesDirList = make([]string, 0)
 
-			// 如果发现有 tvshow.nfo 文件，那么就任务这个目录就是剧集的目录
-			if strings.ToLower(curFile.Name()) == decode.MetadateTVNfo {
-				seriesDirList = make([]string, 0)
-				seriesDirList = append(seriesDirList, dir)
-				return seriesDirList, nil
-			}
-			continue
-		}
-		fullPath := filepath.Join(dir, curFile.Name())
-		seriesDirList = append(seriesDirList, fullPath)
+	for _, tvNfo := range tvNFOs {
+		seriesDirList = append(seriesDirList, filepath.Dir(tvNfo))
 	}
 
 	return seriesDirList, err

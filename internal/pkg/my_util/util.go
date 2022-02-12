@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
@@ -192,6 +193,45 @@ func SearchMatchedVideoFile(dir string) ([]string, error) {
 				}
 				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
 					log_helper.GetLogger().Debugln("SearchMatchedVideoFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
+					continue
+				}
+				fileFullPathList = append(fileFullPathList, fullPath)
+			}
+		}
+	}
+	return fileFullPathList, nil
+}
+
+func SearchTVNfo(dir string) ([]string, error) {
+
+	var fileFullPathList = make([]string, 0)
+	pathSep := string(os.PathSeparator)
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	for _, curFile := range files {
+		fullPath := dir + pathSep + curFile.Name()
+		if curFile.IsDir() {
+			// 内层的错误就无视了
+			oneList, _ := SearchTVNfo(fullPath)
+			if oneList != nil {
+				fileFullPathList = append(fileFullPathList, oneList...)
+			}
+		} else {
+			// 这里就是文件了
+			if strings.ToLower(curFile.Name()) != decode.MetadateTVNfo {
+				continue
+			} else {
+
+				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
+				fi, err := curFile.Info()
+				if err != nil {
+					log_helper.GetLogger().Debugln("SearchTVNfo, file.Info:", fullPath, err)
+					continue
+				}
+				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
+					log_helper.GetLogger().Debugln("SearchTVNfo file.Size() == 4096 && Prefix Name == ._*", fullPath)
 					continue
 				}
 				fileFullPathList = append(fileFullPathList, fullPath)
