@@ -34,7 +34,7 @@ require (
 	github.com/lestrrat-go/strftime v1.0.4 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mholt/archiver/v3 v3.5.0
-	github.com/middelink/go-parse-torrent-name v0.0.0-20190301154245-3ff4efacd4c4
+	github.com/middelink/go-parse-torrent-name v0.0.0-00010101000000-000000000000
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/nzlov/chardet v0.0.0-20190815145004-022cbcf483f9
@@ -119,4 +119,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
 
-replace github.com/go-creed/sat => github.com/allanpk716/sat v0.0.0-20210622112535-2e00ce54a80b
+replace (
+	github.com/go-creed/sat => github.com/allanpk716/sat v0.0.0-20210622112535-2e00ce54a80b
+	github.com/middelink/go-parse-torrent-name => github.com/allanpk716/go-parse-torrent-name v0.0.0-20220212145434-430ea25cbba7
+)

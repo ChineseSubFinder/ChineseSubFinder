@@ -207,7 +207,7 @@ func (em *EmbyHelper) findMappingPath(mixInfo *emby.EmbyMixInfo, isMovieOrSeries
 			return false
 		}
 		mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
-		mixInfo.PhysicalRootPath = mixInfo.Ancestors[ancestorIndex+1].Path
+		mixInfo.PhysicalRootPath = strings.ReplaceAll(mixInfo.Ancestors[ancestorIndex+1].Path, pathSlices[0].Path, nowPhRootPath)
 		// 这个剧集的文件夹
 		mixInfo.VideoFolderName = filepath.Base(mixInfo.Ancestors[ancestorIndex].Path)
 		mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
