@@ -7,12 +7,12 @@
  * This file is used ONLY on production.
  */
 
-import { ssrProductionExport } from 'quasar/wrappers'
+import { ssrProductionExport } from 'quasar/wrappers';
 
-export default ssrProductionExport(({ app, port, isReady }) => {
-  return isReady().then(() => {
+export default ssrProductionExport(({ app, port, isReady }) =>
+  isReady().then(() => {
     app.listen(port, () => {
-      console.log('Server listening at port ' + port)
-    })
+      console.log(`Server listening at port ${port}`);
+    });
   })
-})
+);

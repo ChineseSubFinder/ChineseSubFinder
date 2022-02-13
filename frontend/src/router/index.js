@@ -11,6 +11,7 @@ import routes from './routes';
  * async/await or return a Promise which resolves
  * with the Router instance.
  */
+// eslint-disable-next-line no-nested-ternary
 const createHistory = process.env.SERVER
   ? createMemoryHistory
   : process.env.VUE_ROUTER_MODE === 'history'
