@@ -16,8 +16,10 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -609,4 +611,14 @@ func GetNowTimeString() (string, int, int, int) {
 func GenerateAccessToken() string {
 	u4 := uuid.New()
 	return u4.String()
+}
+
+func UrlJoin(hostUrl, subUrl string) (string, error) {
+
+	u, err := url.Parse(hostUrl)
+	if err != nil {
+		return "", err
+	}
+	u.Path = path.Join(u.Path, subUrl)
+	return u.String(), nil
 }

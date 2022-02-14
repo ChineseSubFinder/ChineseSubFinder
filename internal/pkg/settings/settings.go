@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/strcut_json"
 	"github.com/huandu/go-clone"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -61,8 +62,6 @@ func SetFullNewSettings(inSettings *Settings) error {
 	_settings = inSettings
 	_settings.configFPath = nowConfigFPath
 
-	_settings.EmbySettings.AddressUrl = removeSuffixAddressSlash(_settings.EmbySettings.AddressUrl)
-
 	return _settings.Save()
 }
 
@@ -82,10 +81,28 @@ func NewSettings() *Settings {
 }
 
 func (s *Settings) Read() error {
+
+	// 需要检查 url 是否正确
+	newEmbyAddressUrl := removeSuffixAddressSlash(s.EmbySettings.AddressUrl)
+	_, err := url.Parse(newEmbyAddressUrl)
+	if err != nil {
+		return err
+	}
+	s.EmbySettings.AddressUrl = newEmbyAddressUrl
+
 	return strcut_json.ToStruct(s.configFPath, s)
 }
 
 func (s *Settings) Save() error {
+
+	// 需要检查 url 是否正确
+	newEmbyAddressUrl := removeSuffixAddressSlash(s.EmbySettings.AddressUrl)
+	_, err := url.Parse(newEmbyAddressUrl)
+	if err != nil {
+		return err
+	}
+	s.EmbySettings.AddressUrl = newEmbyAddressUrl
+
 	return strcut_json.ToFile(s.configFPath, s)
 }
 
