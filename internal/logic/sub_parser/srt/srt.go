@@ -236,6 +236,10 @@ func (p Parser) parseContent(inBytes []byte) []subparser.OneDialogue {
 // needMatchNextContentLine 是否需要继续匹配下一句话作为一个对白的对话内容
 func (p Parser) needMatchNextContentLine(lines []string, index int) bool {
 
+	if index+1 > len(lines)-1 {
+		return false
+	}
+
 	// 匹配到对白的 Index
 	_, err := strconv.Atoi(lines[index])
 	if err != nil {
