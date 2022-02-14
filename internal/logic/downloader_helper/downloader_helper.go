@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/sirupsen/logrus"
@@ -41,7 +42,7 @@ func (d *DownloaderHelper) Start() error {
 		d.logger.Infoln("Download One End...")
 		notify_center.Notify.Send()
 		my_util.CloseChrome()
-		//rod_helper.Clear()
+		rod_helper.Clear()
 	}()
 
 	d.logger.Infoln("Download One Started...")
