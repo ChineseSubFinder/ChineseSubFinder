@@ -6,6 +6,7 @@ import (
 	"github.com/huandu/go-clone"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -59,6 +60,9 @@ func SetFullNewSettings(inSettings *Settings) error {
 	nowConfigFPath := _settings.configFPath
 	_settings = inSettings
 	_settings.configFPath = nowConfigFPath
+
+	_settings.EmbySettings.AddressUrl = removeSuffixAddressSlash(_settings.EmbySettings.AddressUrl)
+
 	return _settings.Save()
 }
 
@@ -127,6 +131,21 @@ func isFile(filePath string) bool {
 		return false
 	}
 	return !s.IsDir()
+}
+
+// 将字符串后面最后一个字符，如果是 / 那么则替换掉，多个也会
+func removeSuffixAddressSlash(orgAddressUrlString string) string {
+
+	outString := orgAddressUrlString
+
+	for {
+		if strings.HasSuffix(outString, "/") == true {
+			outString = outString[:len(outString)-1]
+		} else {
+			break
+		}
+	}
+	return outString
 }
 
 var (
