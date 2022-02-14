@@ -157,8 +157,8 @@ func IsEmbySubChineseLangStringWanted(inLangString string) bool {
 		}
 	}
 
-	// 先判断 ISO 标准的和变种的支持列表
-	if language.IsSupportISOString(nextString) {
+	// 先判断 ISO 标准的和变种的支持列表，仅仅是中文的
+	if language.IsSupportISOChineseString(nextString) {
 		// fmt.Println("###: ERROR")
 		isWanted = true
 	}
