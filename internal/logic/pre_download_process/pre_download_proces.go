@@ -37,9 +37,15 @@ func NewPreDownloadProcess() *PreDownloadProcess {
 func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 
 	if p.gError != nil {
+		log_helper.GetLogger().Infoln("Skip PreDownloadProcess.Init()")
 		return p
 	}
 	p.stageName = stageNameInit
+	defer func() {
+		log_helper.GetLogger().Infoln("PreDownloadProcess.Init() End")
+	}()
+	log_helper.GetLogger().Infoln("PreDownloadProcess.Init() Start...")
+
 	// ------------------------------------------------------------------------
 	// 初始化全局变量
 	global_value.Init(settings.GetSettings().AdvancedSettings.CustomVideoExts)
@@ -114,9 +120,14 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 
 	if p.gError != nil {
+		log_helper.GetLogger().Infoln("Skip PreDownloadProcess.Check()")
 		return p
 	}
 	p.stageName = stageNameCheck
+	defer func() {
+		log_helper.GetLogger().Infoln("PreDownloadProcess.Check() End")
+	}()
+	log_helper.GetLogger().Infoln("PreDownloadProcess.Check() Start...")
 	// ------------------------------------------------------------------------
 	// 是否启用代理
 	if settings.GetSettings().AdvancedSettings.ProxySettings.UseHttpProxy == false {
@@ -176,24 +187,24 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 func (p *PreDownloadProcess) HotFix() *PreDownloadProcess {
 
 	if p.gError != nil {
+		log_helper.GetLogger().Infoln("Skip PreDownloadProcess.Check()")
 		return p
 	}
 	p.stageName = stageNameCHotFix
 
 	defer func() {
-		log_helper.GetLogger().Infoln("HotFix End")
+		log_helper.GetLogger().Infoln("PreDownloadProcess.HotFix() End")
 	}()
-
+	log_helper.GetLogger().Infoln("PreDownloadProcess.HotFix() Start...")
 	// ------------------------------------------------------------------------
 	// 开始修复
-	log_helper.GetLogger().Infoln("HotFix Start, wait ...")
 	log_helper.GetLogger().Infoln(commonValue.NotifyStringTellUserWait)
 	err := hot_fix.HotFixProcess(types.HotFixParam{
 		MovieRootDirs:  settings.GetSettings().CommonSettings.MoviePaths,
 		SeriesRootDirs: settings.GetSettings().CommonSettings.SeriesPaths,
 	})
 	if err != nil {
-		log_helper.GetLogger().Errorln("HotFixProcess()", err)
+		log_helper.GetLogger().Errorln("hot_fix.HotFixProcess()", err)
 		p.gError = err
 		return p
 	}
@@ -204,20 +215,20 @@ func (p *PreDownloadProcess) HotFix() *PreDownloadProcess {
 func (p *PreDownloadProcess) ChangeSubNameFormat() *PreDownloadProcess {
 
 	if p.gError != nil {
+		log_helper.GetLogger().Infoln("Skip PreDownloadProcess.ChangeSubNameFormat()")
 		return p
 	}
 	p.stageName = stageNameChangeSubNameFormat
-
 	defer func() {
-		log_helper.GetLogger().Infoln("Change Sub Name Format End")
+		log_helper.GetLogger().Infoln("PreDownloadProcess.ChangeSubNameFormat() End")
 	}()
+	log_helper.GetLogger().Infoln("PreDownloadProcess.ChangeSubNameFormat() Start...")
 	// ------------------------------------------------------------------------
 	/*
 		字幕命名格式转换，需要数据库支持
 		如果数据库没有记录经过转换，那么默认从 Emby 的格式作为检测的起点，转换到目标的格式
 		然后需要在数据库中记录本次的转换结果
 	*/
-	log_helper.GetLogger().Infoln("Change Sub Name Format Start...")
 	log_helper.GetLogger().Infoln(commonValue.NotifyStringTellUserWait)
 	renameResults, err := sub_formatter.SubFormatChangerProcess(
 		settings.GetSettings().CommonSettings.MoviePaths,
@@ -239,24 +250,28 @@ func (p *PreDownloadProcess) ChangeSubNameFormat() *PreDownloadProcess {
 func (p *PreDownloadProcess) ReloadBrowser() *PreDownloadProcess {
 
 	if p.gError != nil {
+		log_helper.GetLogger().Infoln("Skip PreDownloadProcess.ReloadBrowser()")
 		return p
 	}
 	p.stageName = stageNameReloadBrowser
+	defer func() {
+		log_helper.GetLogger().Infoln("PreDownloadProcess.ReloadBrowser() End")
+	}()
+	log_helper.GetLogger().Infoln("PreDownloadProcess.ReloadBrowser() Start...")
 	// ------------------------------------------------------------------------
-	log_helper.GetLogger().Infoln("ReloadBrowser Start...")
 	// ReloadBrowser 提前把浏览器下载好
 	rod_helper.ReloadBrowser()
-	log_helper.GetLogger().Infoln("ReloadBrowser End")
 	return p
 }
 
 func (p *PreDownloadProcess) Wait() error {
 	defer func() {
-		log_helper.GetLogger().Infoln("PreDownloadProcess Wait() Done.")
+		log_helper.GetLogger().Infoln("PreDownloadProcess.Wait() Done.")
 	}()
 	if p.gError != nil {
-		return errors.New(p.stageName + " " + p.gError.Error())
-
+		outErrString := "PreDownloadProcess.Wait() Get Error, " + "stageName:" + p.stageName + " -- " + p.gError.Error()
+		log_helper.GetLogger().Errorln(outErrString)
+		return errors.New(outErrString)
 	} else {
 		return nil
 	}

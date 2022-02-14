@@ -144,13 +144,14 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 	ch.fullSubDownloadProcessingLock.Unlock()
 
 	// 下载前的初始化
-	preDownloadProcess := pre_download_process.NewPreDownloadProcess().
+	preDownloadProcess := pre_download_process.NewPreDownloadProcess()
+	err := preDownloadProcess.
 		Init().
 		Check().
 		HotFix().
 		ChangeSubNameFormat().
-		ReloadBrowser()
-	err := preDownloadProcess.Wait()
+		ReloadBrowser().
+		Wait()
 	if err != nil {
 		log_helper.GetLogger().Errorln("pre_download_process", "Error:", err)
 		log_helper.GetLogger().Errorln("Skip DownloaderHelper.Start()")
