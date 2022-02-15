@@ -1,15 +1,12 @@
-package folder_helper
+package my_util
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/get_access_time"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -65,7 +62,7 @@ func CopyFiles2DebugFolder(names []string, subFiles []string) error {
 	// 复制下载在 tmp 文件夹中的字幕文件到视频文件夹下面
 	for _, subFile := range subFiles {
 		newFn := filepath.Join(debugFolderByName, filepath.Base(subFile))
-		err = my_util.CopyFile(subFile, newFn)
+		err = CopyFile(subFile, newFn)
 		if err != nil {
 			return err
 		}
@@ -218,80 +215,6 @@ func ClearFolder(folderFullPath string) error {
 	return nil
 }
 
-// ClearFolderEx 清空文件夹，文件夹名称有特殊之处，Hour-min-Nanosecond 的命名方式
-// 如果调用的时候，已存在的文件夹的时间 min < 5 那么则清理
-func ClearFolderEx(folderFullPath string, overtime int) error {
-
-	_, hour, minute, _ := my_util.GetNowTimeString()
-	pathSep := string(os.PathSeparator)
-	files, err := os.ReadDir(folderFullPath)
-	if err != nil {
-		return err
-	}
-	for _, curFile := range files {
-		fullPath := folderFullPath + pathSep + curFile.Name()
-		if curFile.IsDir() {
-
-			parts := strings.Split(curFile.Name(), "-")
-			if len(parts) == 3 {
-				// 基本是符合了，倒是还是需要额外的判断是否时间超过了
-				tmpHourStr := parts[0]
-				tmpMinuteStr := parts[1]
-				tmpHour, err := strconv.Atoi(tmpHourStr)
-				if err != nil {
-					// 如果不符合命名格式，直接删除
-					err = os.RemoveAll(fullPath)
-					if err != nil {
-						return err
-					}
-					continue
-				}
-				tmpMinute, err := strconv.Atoi(tmpMinuteStr)
-				if err != nil {
-					// 如果不符合命名格式，直接删除
-					err = os.RemoveAll(fullPath)
-					if err != nil {
-						return err
-					}
-					continue
-				}
-				// 判断时间
-				if tmpHour != hour {
-					// 如果不符合命名格式，直接删除
-					err = os.RemoveAll(fullPath)
-					if err != nil {
-						return err
-					}
-					continue
-				}
-				// 超过 5 min
-				if minute-overtime > tmpMinute {
-					// 如果不符合命名格式，直接删除
-					err = os.RemoveAll(fullPath)
-					if err != nil {
-						return err
-					}
-					continue
-				}
-			} else {
-				// 如果不符合命名格式，直接删除
-				err = os.RemoveAll(fullPath)
-				if err != nil {
-					return err
-				}
-			}
-		} else {
-			// 这里就是文件了
-			err = os.Remove(fullPath)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
 // GetConfigRootDirFPath 获取 Config 的根目录，不同系统不一样
 func GetConfigRootDirFPath() string {
 
@@ -362,7 +285,7 @@ func ClearIdleSubFixCacheFolder(rootSubFixCacheFolder string, outOfDate time.Dur
 			if i == 0 {
 				maxAccessTime = accessTime
 			}
-			if my_util.Time2SecondNumber(accessTime) > my_util.Time2SecondNumber(maxAccessTime) {
+			if Time2SecondNumber(accessTime) > Time2SecondNumber(maxAccessTime) {
 				maxAccessTime = accessTime
 			}
 		}

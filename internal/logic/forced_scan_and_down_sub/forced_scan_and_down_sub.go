@@ -3,7 +3,6 @@ package forced_scan_and_down_sub
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"os"
 	"path/filepath"
@@ -31,7 +30,7 @@ you needd implement getSpeFileName() in internal/logic/forced_scan_and_down_sub/
 
 func getSpeFileName() string {
 
-	return filepath.Join(folder_helper.GetConfigRootDirFPath(), specialFileNameWindows)
+	return filepath.Join(my_util.GetConfigRootDirFPath(), specialFileNameWindows)
 }
 
 /*

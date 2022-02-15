@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"gorm.io/driver/sqlite"
@@ -76,7 +75,7 @@ func InitDb() error {
 }
 
 func getDbName() string {
-	return filepath.Join(folder_helper.GetConfigRootDirFPath(), dbFileName)
+	return filepath.Join(my_util.GetConfigRootDirFPath(), dbFileName)
 }
 
 var (

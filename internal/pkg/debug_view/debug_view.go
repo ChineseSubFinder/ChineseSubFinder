@@ -2,7 +2,7 @@ package debug_view
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
 	"github.com/go-echarts/go-echarts/v2/charts"
@@ -42,7 +42,7 @@ func SaveDebugChartBase(vadList []vad.VADInfo, title, subTitle string) error {
 	line.SetXAxis(xAxis).
 		AddSeries("VAD", lineData)
 
-	rootDebugFolder, err := folder_helper.GetRootDebugFolder()
+	rootDebugFolder, err := my_util.GetRootDebugFolder()
 	if err != nil {
 		return err
 	}

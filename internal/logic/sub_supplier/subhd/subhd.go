@@ -7,7 +7,6 @@ import (
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
@@ -669,7 +668,7 @@ search:
 
 	if s.debugMode == true {
 		//截圖保存
-		nowProcessRoot, err := folder_helper.GetRootDebugFolder()
+		nowProcessRoot, err := my_util.GetRootDebugFolder()
 		if err == nil {
 			page.MustScreenshot(filepath.Join(nowProcessRoot, "result.png"))
 		} else {

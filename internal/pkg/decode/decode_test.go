@@ -2,7 +2,9 @@ package decode
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -106,5 +108,51 @@ func TestGetNumber2int(t *testing.T) {
 	}
 	if outNumber != 1998 {
 		t.Error("not the same")
+	}
+}
+
+func TestGetImdbInfo4SeriesDir(t *testing.T) {
+
+	type args struct {
+		seriesDir string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    types.VideoIMDBInfo
+		wantErr bool
+	}{
+		{
+			name: "Loki",
+			args: args{seriesDir: unit_test_helper.GetTestDataResourceRootPath([]string{"series", "Loki"}, 4, false)},
+			want: types.VideoIMDBInfo{
+				ImdbId:      "tt9140554",
+				Title:       "Loki",
+				ReleaseDate: "2021-06-09",
+			},
+			wantErr: false,
+		},
+		{
+			name: "辛普森一家",
+			args: args{seriesDir: unit_test_helper.GetTestDataResourceRootPath([]string{"series", "辛普森一家"}, 4, false)},
+			want: types.VideoIMDBInfo{
+				ImdbId:      "tt9140554",
+				Title:       "Loki",
+				ReleaseDate: "2021-06-09",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetImdbInfo4SeriesDir(tt.args.seriesDir)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetImdbInfo4SeriesDir() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetImdbInfo4SeriesDir() got = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
