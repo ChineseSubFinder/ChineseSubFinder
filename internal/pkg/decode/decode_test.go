@@ -8,27 +8,13 @@ import (
 	"testing"
 )
 
-func getTestFileDir(testFileName string) (xmlDir string) {
+func TestGetImdbAndYearMovieXml(t *testing.T) {
 
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"movies", "Army of the Dead (2021)"}, 4, false)
 
-	if testFileName == "movie.xml" {
-		return filepath.Join(rootDir, "movie.xml")
-	} else if testFileName == "movie.nfo" {
-		return filepath.Join(rootDir, "Army of the Dead (2021) WEBDL-1080p.nfo")
-	} else if testFileName == "has_http_address.nfo" {
-		return filepath.Join(rootDir, "has_http_address.nfo")
-	} else if testFileName == "has_http_address.nfo" {
-		return filepath.Join(rootDir, "only_http_address.nfo")
-	}
-
-	return ""
-}
-
-func TestGetImdbAndYearMovieXml(t *testing.T) {
 	wantid := "tt0993840"
 	wantyear := "2021"
-	dirPth := getTestFileDir("movie.xml")
+	dirPth := filepath.Join(rootDir, "movie.xml")
 	imdbInfo, err := getImdbAndYearMovieXml(dirPth)
 	if err != nil {
 		t.Error(err)
@@ -41,41 +27,66 @@ func TestGetImdbAndYearMovieXml(t *testing.T) {
 	}
 }
 
-func TestGetImdbAndYearNfo(t *testing.T) {
-	wantid := "tt0993840"
-	wantyear := "2021"
-
-	imdbInfo, err := getImdbAndYearNfo(getTestFileDir("movie.nfo"), "movie")
-	if err != nil {
-		t.Fatal(err)
+func Test_getImdbAndYearNfo(t *testing.T) {
+	type args struct {
+		nfoFilePath string
+		rootKey     string
 	}
-	if imdbInfo.ImdbId != wantid {
-		t.Fatalf("\n\nid = %v, wantid %v", imdbInfo.ImdbId, wantid)
+	tests := []struct {
+		name    string
+		args    args
+		want    types.VideoIMDBInfo
+		wantErr bool
+	}{
+		{
+			name: "Army of the Dead (2021) WEBDL-1080p.nfo", args: args{
+				nfoFilePath: filepath.Join(unit_test_helper.GetTestDataResourceRootPath([]string{"movies", "Army of the Dead (2021)"}, 4, false), "Army of the Dead (2021) WEBDL-1080p.nfo"),
+				rootKey:     "movie",
+			},
+			want: types.VideoIMDBInfo{
+				ImdbId:      "tt0993840",
+				Title:       "活死人军团",
+				Year:        "2021",
+				ReleaseDate: "2021-05-13",
+			},
+			wantErr: false,
+		},
+		{
+			name: "tvshow_00 (2).nfo", args: args{
+				nfoFilePath: filepath.Join(unit_test_helper.GetTestDataResourceRootPath([]string{"nfo_files", "tvshow"}, 4, false), "tvshow_00 (2).nfo"),
+				rootKey:     "tvshow",
+			},
+			want: types.VideoIMDBInfo{
+				ImdbId:      "tt0346314",
+				Title:       "Ghost in the Shell: Stand Alone Complex",
+				ReleaseDate: "2002-10-01",
+			},
+			wantErr: false,
+		},
+		{
+			name: "tvshow_00 (3).nfo", args: args{
+				nfoFilePath: filepath.Join(unit_test_helper.GetTestDataResourceRootPath([]string{"nfo_files", "tvshow"}, 4, false), "tvshow_00 (3).nfo"),
+				rootKey:     "tvshow",
+			},
+			want: types.VideoIMDBInfo{
+				ImdbId:      "tt1856010",
+				Title:       "House of Cards (US)",
+				ReleaseDate: "2013-02-01",
+			},
+			wantErr: false,
+		},
 	}
-	if imdbInfo.Year != wantyear {
-		t.Fatalf("\n\nyear = %v, wantyear %v", imdbInfo.Year, wantyear)
-	}
-
-	wantid = "tt12801326"
-	wantyear = "2020"
-	dirPth := getTestFileDir("has_http_address.nfo")
-	imdbInfo, err = getImdbAndYearNfo(dirPth, "movie")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if imdbInfo.ImdbId != wantid {
-		t.Fatalf("\n\nid = %v, wantid %v", imdbInfo.ImdbId, wantid)
-	}
-	if imdbInfo.Year != wantyear {
-		t.Fatalf("\n\nyear = %v, wantyear %v", imdbInfo.Year, wantyear)
-	}
-
-	wantid = ""
-	wantyear = ""
-	dirPth = getTestFileDir("only_http_address.nfo")
-	imdbInfo, err = getImdbAndYearNfo(dirPth, "movie")
-	if err == nil {
-		t.Fatal("need error")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getImdbAndYearNfo(tt.args.nfoFilePath, tt.args.rootKey)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getImdbAndYearNfo() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getImdbAndYearNfo() got = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
@@ -136,9 +147,9 @@ func TestGetImdbInfo4SeriesDir(t *testing.T) {
 			name: "辛普森一家",
 			args: args{seriesDir: unit_test_helper.GetTestDataResourceRootPath([]string{"series", "辛普森一家"}, 4, false)},
 			want: types.VideoIMDBInfo{
-				ImdbId:      "tt9140554",
-				Title:       "Loki",
-				ReleaseDate: "2021-06-09",
+				ImdbId:      "tt0096697",
+				Title:       "The Simpsons",
+				ReleaseDate: "1989-12-17",
 			},
 			wantErr: false,
 		},
