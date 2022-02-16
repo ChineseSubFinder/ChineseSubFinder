@@ -30,6 +30,13 @@ func (h HotFix001) GetKey() string {
 }
 
 func (h HotFix001) Process() (interface{}, error) {
+
+	defer func() {
+		log_helper.GetLogger().Infoln("Hotfix", h.GetKey(), "End")
+	}()
+
+	log_helper.GetLogger().Infoln("Hotfix", h.GetKey(), "Start...")
+
 	return h.process()
 }
 
@@ -55,7 +62,7 @@ func (h HotFix001) process() (interface{}, error) {
 
 	for i, dir := range h.seriesRootDirs {
 		log_helper.GetLogger().Infoln("Fix Series Dir Index", i, dir, "Start...")
-		fixSeries, err := h.fixMovie(dir)
+		fixSeries, err := h.fixSeries(dir)
 		if err != nil {
 			log_helper.GetLogger().Infoln("Fix Series Dir Index", i, dir, "End...")
 			return nil, err
