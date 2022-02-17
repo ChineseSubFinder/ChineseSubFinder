@@ -55,3 +55,18 @@ func ChangeFileCoding2UTF8(inBytes []byte) ([]byte, error) {
 
 	return []byte(validUTF8String), nil
 }
+
+func ChangeFileCoding2GBK(inBytes []byte) ([]byte, error) {
+
+	utf8Bytes, err := ChangeFileCoding2UTF8(inBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	gbkString, err := charset.UTF8To("GBK", string(utf8Bytes))
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(gbkString), nil
+}
