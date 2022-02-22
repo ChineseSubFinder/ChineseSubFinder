@@ -1,6 +1,7 @@
 package downloader
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/change_file_encode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	subcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
@@ -196,6 +197,15 @@ func (d *Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFi
 	// 然后还需要判断是否需要校正字幕的时间轴
 	if d.settings.AdvancedSettings.FixTimeLine == true {
 		err = d.subTimelineFixerHelperEx.Process(videoFileFullPath, desSubFullPath)
+		if err != nil {
+			return err
+		}
+	}
+	// 判断是否需要转换字幕的编码
+	if d.settings.ExperimentalFunction.AutoChangeSubEncode.Enable == true {
+		d.log.Infoln("----------------------------------")
+		d.log.Infoln("change_file_encode to", d.settings.ExperimentalFunction.AutoChangeSubEncode.GetDesEncodeType())
+		err = change_file_encode.Process(desSubFullPath, d.settings.ExperimentalFunction.AutoChangeSubEncode.DesEncodeType)
 		if err != nil {
 			return err
 		}
