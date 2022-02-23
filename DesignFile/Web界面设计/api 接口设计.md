@@ -51,7 +51,13 @@
 	"developer_settings": {
 		"bark_server_address": "bark"
 	},
-	"timeline_fixer_settings": null
+	"timeline_fixer_settings": null,
+    	"experimental_function": {
+            "auto_change_sub_encode": {
+                "enable": false,
+                "des_encode_type": 0, // 默认 0 是 UTF-8，1 是 GBK
+            }
+	}
 }
 ```
 
@@ -140,7 +146,13 @@
         "developer_settings": {
             "bark_server_address": "bark"
         },
-        "timeline_fixer_settings": null
+        "timeline_fixer_settings": null,
+        "experimental_function": {
+            "auto_change_sub_encode": {
+                "enable": false,
+                "des_encode_type": 0, // 默认 0 是 UTF-8，1 是 GBK
+            }
+		}
     }
 }
 ```
@@ -294,7 +306,13 @@
         "developer_settings": {
             "bark_server_address": "bark"
         },
-        "timeline_fixer_settings": null
+        "timeline_fixer_settings": null,
+    	"experimental_function": {
+            "auto_change_sub_encode": {
+                "enable": false,
+                "des_encode_type": 0, // 默认 0 是 UTF-8，1 是 GBK
+            }
+		}
 }
 ```
 
@@ -323,6 +341,52 @@
 * Org Password Error
 
 返回 HTTP 200："ok, need ReLogin"，然后会清空 AccessToken，需要重新登录
+
+
+
+### 查询运行日志
+
+`GET /running-log`
+
+获取运行日志
+
+请求参数：
+
+```json
+{
+  "the_last_few_times": 3 // 获取最后几次的运行日志，每次指的是一次字幕的扫描，默认获取最近运行三次的日志
+}
+```
+
+返回 HTTP 401：AccessToken 不正确
+
+返回 HTTP 码204：
+
+* You need do Setup
+* Org Password Error
+
+返回 HTTP 200：
+
+```json
+{
+	"recent_logs": [
+		{
+            "index": 0,
+            "log_lines":[
+                {"level": "INFO", "date": "2022-02-11", "time": "08:51:16", "content": "ChineseSubFinder Version: unknow"},
+                {"level": "INFO", "date": "2022-02-11", "time": "08:51:16", "content": "Need do Setup"}
+            ]
+         },
+        {
+            "index": 1,
+            "log_lines":[
+                {"level": "INFO", "date": "2022-02-12", "time": "08:52:16", "content": "ChineseSubFinder Version: unknow"},
+                {"level": "INFO", "date": "2022-02-12", "time": "08:52:16", "content": "Need do Setup"}
+            ]
+         },
+	]
+}
+```
 
 
 
@@ -389,7 +453,13 @@
         "developer_settings": {
             "bark_server_address": "bark"
         },
-        "timeline_fixer_settings": null
+        "timeline_fixer_settings": null,
+    	"experimental_function": {
+            "auto_change_sub_encode": {
+                "enable": false,
+                "des_encode_type": 0, // 默认 0 是 UTF-8，1 是 GBK
+            }
+	 	}
     }
 ```
 
@@ -451,7 +521,13 @@
         "developer_settings": {
             "bark_server_address": "bark"
         },
-        "timeline_fixer_settings": null
+        "timeline_fixer_settings": null,
+        "experimental_function": {
+            "auto_change_sub_encode": {
+                "enable": false,
+                "des_encode_type": 0, // 默认 0 是 UTF-8，1 是 GBK
+            }
+		}
     }
 }
 ```
