@@ -25,6 +25,7 @@
         <q-tab name="advanced" label="进阶配置" />
         <q-tab name="emby" label="Emby配置" />
         <q-tab name="development" label="开发人员配置" />
+        <q-tab name="experiment" label="实验室" />
       </q-tabs>
 
       <q-separator />
@@ -45,6 +46,10 @@
         <q-tab-panel name="development">
           <development-settings />
         </q-tab-panel>
+
+        <q-tab-panel name="experiment">
+          <experiment-settings />
+        </q-tab-panel>
       </q-tab-panels>
     </q-card>
   </q-page>
@@ -58,6 +63,7 @@ import EmbySettings from 'pages/settings/EmbySettings';
 import DevelopmentSettings from 'pages/settings/DevelopmentSettings';
 import { settingsState, useSettings } from 'pages/settings/useSettings';
 import {isJobRunning} from 'src/store/systemState';
+import ExperimentSettings from 'pages/settings/ExperimentSettings';
 
 const tab = ref('basic');
 
