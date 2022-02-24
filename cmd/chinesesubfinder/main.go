@@ -14,14 +14,14 @@ import (
 
 func init() {
 
+	global_value.ConfigRootDirFPath = my_util.GetConfigRootDirFPath()
+
 	log_helper.GetLogger().Infoln("ChineseSubFinder Version:", AppVersion)
 
 	global_value.AppVersion = AppVersion
 
-	global_value.ConfigRootDirFPath = my_util.GetConfigRootDirFPath()
-
 	if my_util.OSCheck() == false {
-		panic(`You should search runtime.GOOS in the project, Implement unimplemented function`)
+		log_helper.GetLogger().Panicln(`You should search runtime.GOOS in the project, Implement unimplemented function`)
 	}
 }
 
@@ -29,7 +29,7 @@ func main() {
 
 	cronHelper, err := cron_helper.NewCronHelper()
 	if err != nil {
-		panic("NewCronHelper " + err.Error())
+		log_helper.GetLogger().Panicln("NewCronHelper " + err.Error())
 	}
 
 	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {

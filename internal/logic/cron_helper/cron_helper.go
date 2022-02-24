@@ -137,11 +137,15 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 		ch.fullSubDownloadProcessingLock.Lock()
 		ch.fullSubDownloadProcessing = false
 		ch.fullSubDownloadProcessingLock.Unlock()
+
+		log_helper.GetLogger().Infoln(log_helper.OnceSubsScanEnd)
 	}()
 
 	ch.fullSubDownloadProcessingLock.Lock()
 	ch.fullSubDownloadProcessing = true
 	ch.fullSubDownloadProcessingLock.Unlock()
+
+	log_helper.GetLogger().Infoln(log_helper.OnceSubsScanStart)
 
 	// 下载前的初始化
 	preDownloadProcess := pre_download_process.NewPreDownloadProcess()

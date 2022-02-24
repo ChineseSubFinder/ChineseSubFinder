@@ -14,13 +14,10 @@ import (
 
 func NewLogHelper(appName string, level logrus.Level, maxAge time.Duration, rotationTime time.Duration) *logrus.Logger {
 
-	Logger := &logrus.Logger{
-		// Out:   os.Stderr,
-		// Level: logrus.DebugLevel,
-		Formatter: &easy.Formatter{
-			TimestampFormat: "2006-01-02 15:04:05",
-			LogFormat:       "[%lvl%]: %time% - %msg%\n",
-		},
+	Logger := logrus.New()
+	Logger.Formatter = &easy.Formatter{
+		TimestampFormat: "2006-01-02 15:04:05",
+		LogFormat:       "[%lvl%]: %time% - %msg%\n",
 	}
 	pathRoot := filepath.Join(global_value.ConfigRootDirFPath, "Logs")
 	fileAbsPath := filepath.Join(pathRoot, appName+".log")
@@ -35,6 +32,10 @@ func NewLogHelper(appName string, level logrus.Level, maxAge time.Duration, rota
 	Logger.SetLevel(level)
 	Logger.SetOutput(io.MultiWriter(os.Stderr, writer))
 
+	// 可以输出函数调用还文件位置
+	//if level == logrus.DebugLevel {
+	//	Logger.SetReportCaller(true)
+	//}
 	return Logger
 }
 
@@ -74,6 +75,8 @@ func logInit() {
 	}
 
 	loggerBase = NewLogHelper(logNameBase, level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
+
+	loggerBase.AddHook(NewLoggerHub())
 }
 
 func isFile(filePath string) bool {

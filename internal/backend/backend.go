@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/frontend/dist"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/routers"
+	"github.com/allanpk716/ChineseSubFinder/internal/backend/ws_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/gin-contrib/cors"
@@ -35,6 +36,14 @@ func StartBackEnd(httpPort int, cronHelper *cron_helper.CronHelper) {
 
 	engine.Any("/api", func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/")
+	})
+
+	hub := ws_helper.NewHub()
+	go hub.Run()
+
+	// middle.CheckAuth(),
+	engine.GET("/ws", func(context *gin.Context) {
+		ws_helper.ServeWs(hub, context.Writer, context.Request)
 	})
 
 	// listen and serve on 0.0.0.0:8080(default)

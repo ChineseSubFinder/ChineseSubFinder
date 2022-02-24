@@ -20,7 +20,7 @@ func GetDb() *gorm.DB {
 			err := InitDb()
 			if err != nil {
 				log_helper.GetLogger().Errorln("dao.InitDb()", err)
-				panic(err)
+				log_helper.GetLogger().Panicln(err)
 			}
 		})
 	}
