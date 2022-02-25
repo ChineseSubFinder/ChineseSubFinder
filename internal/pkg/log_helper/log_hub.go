@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/log_hub"
+	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
 	easy "github.com/t-tomalak/logrus-easy-formatter"
 	"os"
@@ -56,6 +57,10 @@ func (lh *LoggerHub) Fire(entry *logrus.Entry) error {
 		if lh.onceStart == false {
 			lh.onceLogger = newOnceLogger()
 			lh.onceStart = true
+			// 既然新的一次开始，就实例化新的实例出来使用
+			onceLog4RunningLock.Lock()
+			onceLog4Running = log_hub.NewOnceLog(0)
+			onceLog4RunningLock.Unlock()
 		}
 		return nil
 	} else if entry.Message == OnceSubsScanEnd {
@@ -90,6 +95,13 @@ func (lh *LoggerHub) Fire(entry *logrus.Entry) error {
 		lh.onceLogger.Panicln(entry.Message)
 	}
 
+	onceLog4RunningLock.Lock()
+	onceLog4Running.LogLines = append(onceLog4Running.LogLines, *log_hub.NewOneLine(
+		entry.Level.String(),
+		entry.Time.Format("2006-01-02 15:04:05"),
+		entry.Message))
+	onceLog4RunningLock.Unlock()
+
 	return nil
 }
 
@@ -112,6 +124,18 @@ func GetRecentOnceLogs(getHowMany int) []log_hub.OnceLog {
 	}
 
 	return tmpOnceLogs
+}
+
+// GetOnceLog4Running 当前正在扫描的日志内容，注意，开启任务，不代表就在扫描
+func GetOnceLog4Running() *log_hub.OnceLog {
+
+	var nowOnceRunningLog *log_hub.OnceLog
+
+	onceLog4RunningLock.Lock()
+	nowOnceRunningLog = clone.Clone(onceLog4Running).(*log_hub.OnceLog)
+	onceLog4RunningLock.Unlock()
+
+	return nowOnceRunningLog
 }
 
 func newOnceLogger() *logrus.Logger {
@@ -217,9 +241,11 @@ func readLogFile(index int, filePath string) error {
 }
 
 var (
-	onceLoggerFile *os.File
-	onceLogs       = make([]log_hub.OnceLog, 0)
-	onceLogsLock   sync.Mutex
+	onceLoggerFile      *os.File                     // 单次扫描保存 Log 文件的实例
+	onceLogs            = make([]log_hub.OnceLog, 0) // 本地缓存的多次，单次扫描的 Log 内容
+	onceLogsLock        sync.Mutex                   // 对应的锁
+	onceLog4Running     *log_hub.OnceLog             // 当前正在扫描时候日志的日志内容实例，注意，开启任务不代表就在扫描
+	onceLog4RunningLock sync.Mutex                   // 对应的锁
 )
 
 const (
