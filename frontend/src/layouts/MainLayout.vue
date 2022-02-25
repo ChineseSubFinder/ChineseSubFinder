@@ -28,7 +28,10 @@
     >
       <div class="text-h5 q-py-sm q-px-md" style="height: 65px;">
         <div>ChineseSubFinder</div>
-        <div class="text-body2">{{ systemState.systemInfo?.version }}</div>
+        <div class="text-body2">
+          {{ systemState.systemInfo?.version }}
+          <version-update-badge/>
+        </div>
       </div>
       <q-list>
         <menu-item v-for="route in menus" :menu-info="route" :key="`${route.name}${route.path}`" />
@@ -50,6 +53,7 @@ import {systemState} from 'src/store/systemState';
 import {userState} from 'src/store/userState';
 import {LocalStorage} from 'quasar';
 import AccessApi from 'src/api/AccessApi';
+import VersionUpdateBadge from 'components/VersionUpdateBadge';
 
 const router = useRouter();
 
