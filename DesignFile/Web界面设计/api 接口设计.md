@@ -373,15 +373,15 @@
 		{
             "index": 0,
             "log_lines":[
-                {"level": "INFO", "date": "2022-02-11", "time": "08:51:16", "content": "ChineseSubFinder Version: unknow"},
-                {"level": "INFO", "date": "2022-02-11", "time": "08:51:16", "content": "Need do Setup"}
+                {"level": "INFO", "date_time": "2022-02-11 08:51:16", "content": "ChineseSubFinder Version: unknow"},
+                {"level": "INFO", "date_time": "2022-02-11 08:51:16", "content": "Need do Setup"}
             ]
          },
         {
             "index": 1,
             "log_lines":[
-                {"level": "INFO", "date": "2022-02-12", "time": "08:52:16", "content": "ChineseSubFinder Version: unknow"},
-                {"level": "INFO", "date": "2022-02-12", "time": "08:52:16", "content": "Need do Setup"}
+                {"level": "INFO", "date_time": "2022-02-12 08:52:16", "content": "ChineseSubFinder Version: unknow"},
+                {"level": "INFO", "date_time": "2022-02-12 08:52:16", "content": "Need do Setup"}
             ]
          },
 	]
