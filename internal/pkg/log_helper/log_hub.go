@@ -53,6 +53,10 @@ func (lh *LoggerHub) Fire(entry *logrus.Entry) error {
 	} else if entry.Message == OnceSubsScanEnd {
 		// “一次”扫描的结束标志位
 		lh.onceStart = false
+		if onceLoggerFile != nil {
+			_ = onceLoggerFile.Close()
+			onceLoggerFile = nil
+		}
 		return nil
 	}
 
