@@ -13,17 +13,15 @@ func NewOnceLog(index int) *OnceLog {
 }
 
 type OneLine struct {
-	Level   string `json:"level"`   // 日志的级别
-	Date    string `json:"date"`    // 日期
-	Time    string `json:"time"`    // 时间
-	Content string `json:"content"` // 日志的内容
+	Level    string `json:"level"`     // 日志的级别
+	DateTime string `json:"date_time"` // 日期,时间
+	Content  string `json:"content"`   // 日志的内容
 }
 
-func NewOneLine(level, date, time, content string) *OneLine {
+func NewOneLine(level, datetime, content string) *OneLine {
 	return &OneLine{
-		Level:   level,
-		Date:    date,
-		Time:    time,
-		Content: content,
+		Level:    level,
+		DateTime: datetime,
+		Content:  content,
 	}
 }
