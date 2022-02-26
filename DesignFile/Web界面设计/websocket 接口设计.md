@@ -13,7 +13,25 @@
 ```json
 {
 	"type": "auth",
-	"token": "xxxxxxx"
+	"token": "xxxxxxx"	// 由 web 登录成功后得到的 token
+}
+```
+
+成功：
+
+```json
+{
+    "type" ："common_reply"
+	"message": "auth ok"
+}
+```
+
+失败：
+
+```json
+{
+    "type" ："common_reply"
+	"message": "auth error"
 }
 ```
 
@@ -28,22 +46,10 @@
 ```json
 {
 	"type": "get_running_log",
-	"token": "xxxxxxx"
 }
 ```
 
 针对这个第一次的主动日志获取操作，Server 将回复
-
-如果 token 失效：
-
-```json
-{
-    "type" ："error"
-	"message": "token error"
-}
-```
-
-正常情况下回复:
 
 ```json
 {
@@ -58,7 +64,16 @@
 }
 ```
 
-后续的日志，理论上 Server 会每隔 5s 进行一次批量的日志汇总发给 Client，Client 仅需要拼接起来就好了，顺序和偏移问题由服务器解决。
+如果 Client 收到本次日志，则需要回复确认收到，以便服务器确认继续向下偏移日志内容发送
+
+```json
+{
+	"type": "running_log",
+	"status": "ok"
+}
+```
+
+后续的日志，理论上 Server 会**主动**每隔 5s 进行一次批量的日志汇总发给 Client，Client 仅需要拼接起来就好了，顺序和偏移问题由服务器解决。
 
 > 拼接 log_lines 的条目即可
 
@@ -68,12 +83,21 @@
 {
     "type" ："running_log",
 	"log": {
-    		"index": 0,// 这个字段无需关注
-            "log_lines":[
+			"index": 0,// 这个字段无需关注
+			"log_lines":[
                 {"level": "INFO", "date_time": "2022-02-11 08:52:16", "content": "123"},
                 {"level": "INFO", "date_time": "2022-02-11 08:52:16", "content": "456"}
             ]
 	}
+}
+```
+
+哪怕是服务器主动发送的日志上来，也需要 Client 回复收到
+
+```json
+{
+	"type": "running_log",
+	"status": "ok"
 }
 ```
 
