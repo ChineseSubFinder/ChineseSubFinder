@@ -23,6 +23,10 @@ const (
 
 	// send buffer size
 	bufSize = 256
+
+	upGraderReadBufferSize = 5 * 1024
+
+	upGraderWriteBufferSize = 5 * 1024
 )
 
 var (
@@ -30,9 +34,9 @@ var (
 	space   = []byte{' '}
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  5 * 1024,
-	WriteBufferSize: 5 * 1024,
+var upGrader = websocket.Upgrader{
+	ReadBufferSize:  upGraderReadBufferSize,
+	WriteBufferSize: upGraderWriteBufferSize,
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
@@ -41,7 +45,9 @@ var upgrader = websocket.Upgrader{
 type Client struct {
 	hub *Hub
 
-	conn *websocket.Conn
+	conn *websocket.Conn // 与服务器连接实例
+
+	sendLogLineIndex int // 日志发送到那个位置了
 
 	send chan []byte
 }
@@ -130,7 +136,7 @@ func (c *Client) writePump() {
 }
 
 func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := upGrader.Upgrade(w, r, nil)
 	if err != nil {
 		log_helper.GetLogger().Errorln("ServeWs", err)
 		return
