@@ -9,7 +9,9 @@
 ## 通信的类型
 
 * auth
-* 
+* common_reply
+* get_running_log
+* running_log
 
 ## 接口认证方式
 
