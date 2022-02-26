@@ -13,9 +13,7 @@
 ```json
 {
 	"type": "auth",
-	"data": {
-		"token": "xxxxxxx"
-	}
+	"token": "xxxxxxx"
 }
 ```
 
@@ -30,9 +28,7 @@
 ```json
 {
 	"type": "get_running_log",
-	"data": {
-		"token": "xxxxxxx"
-	}
+	"token": "xxxxxxx"
 }
 ```
 
@@ -42,7 +38,8 @@
 
 ```json
 {
-	"error": "token error"
+    "type" ："error"
+	"message": "token error"
 }
 ```
 
@@ -50,9 +47,10 @@
 
 ```json
 {
-	"running_log": {
+	"type" ："running_log",
+    "log": {
     		"index": 0,	// 这个字段无需关注
-            "log_lines":[
+    		"log_lines":[
                 {"level": "INFO", "date_time": "2022-02-11 08:51:16", "content": "ChineseSubFinder Version: unknow"},
                 {"level": "INFO", "date_time": "2022-02-11 08:51:16", "content": "Need do Setup"}
             ]
@@ -68,7 +66,8 @@
 
 ```json
 {
-	"running_log": {
+    "type" ："running_log",
+	"log": {
     		"index": 0,// 这个字段无需关注
             "log_lines":[
                 {"level": "INFO", "date_time": "2022-02-11 08:52:16", "content": "123"},
