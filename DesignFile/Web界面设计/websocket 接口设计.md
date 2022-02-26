@@ -6,6 +6,11 @@
 
 `ws://localhost:19035/ws`
 
+## 通信的类型
+
+* auth
+* 
+
 ## 接口认证方式
 
 当 client 链接到 server 的 ws 时，第一次交互，需要发送以下的 json 结构，用于权限的校验，否则将无法通过 ws 的注册，直接踢下线
@@ -68,8 +73,8 @@
 
 ```json
 {
-	"type": "running_log",
-	"status": "ok"
+	"type": "common_reply",
+	"message": "ok"
 }
 ```
 
@@ -96,8 +101,8 @@
 
 ```json
 {
-	"type": "running_log",
-	"status": "ok"
+	"type": "common_reply",
+	"message": "ok"
 }
 ```
 
