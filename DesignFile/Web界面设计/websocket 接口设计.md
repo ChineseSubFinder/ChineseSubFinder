@@ -108,3 +108,27 @@
 }
 ```
 
+## 字幕扫描任务状态
+
+```json
+{
+	"type": "sub_download_jobs",
+	"jobs": {
+        "status": "running", // "waitting"，不是运行中，就是等待中
+        "started_time": "2022-03-01 15:04:05",	// 任务开始的时间
+        "working_unit_index": 10,	//正在处理到第几部电影或者连续剧
+        "unit_count": 1000,			//一共有多少部电影或者连续剧
+        "working_unit_name": "电影名称，或者连续剧的名称",
+        
+        "working_video_index": 10,	//正在处理到第几个视频
+        "video_count": 1500,		//一共有几个视频
+        "working_video_name": "电影名称，或者是连续剧中某一季、某一集的名称",	//正在处理到第几个视频
+    }
+}
+```
+
+根据 status 不同的值，started_time 会有不同的解释
+
+status == running，那么 started_time 就是任务开始的时间，应该是小于等于当前的系统时间，也就可以推算字幕扫描开始运行多久了。
+
+status == waitting，那么 started_time 就是任务将要开始的时间，那么这个时间应该大于等于当前系统的时间，也就是个倒计时，还有多久才开始执行扫描
