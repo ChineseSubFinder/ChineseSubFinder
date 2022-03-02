@@ -41,7 +41,6 @@ func StartBackEnd(httpPort int, cronHelper *cron_helper.CronHelper) {
 	hub := ws_helper.NewHub()
 	go hub.Run()
 
-	// middle.CheckAuth(),
 	engine.GET("/ws", func(context *gin.Context) {
 		ws_helper.ServeWs(hub, context.Writer, context.Request)
 	})

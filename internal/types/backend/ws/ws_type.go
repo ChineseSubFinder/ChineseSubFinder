@@ -3,10 +3,10 @@ package ws
 type WSType int
 
 const (
-	CommonReply   WSType = iota // 通用回复
-	Auth                        // Client 发送登录握手消息
-	GetRunningLog               // Client 获取第一次的 Log 信息
-	RunningLog                  // Server 回复 Log 的信息
+	CommonReply           WSType = iota // 通用回复
+	Auth                                // Client 发送登录握手消息
+	RunningLog                          // Server 回复 Log 的信息
+	SubDownloadJobsStatus               // Server 主动发送的字幕下载任务状态信息
 )
 
 func (c WSType) String() string {
@@ -15,10 +15,10 @@ func (c WSType) String() string {
 		return "common_reply"
 	case Auth:
 		return "auth"
-	case GetRunningLog:
-		return "get_running_log"
 	case RunningLog:
 		return "running_log"
+	case SubDownloadJobsStatus:
+		return "sub_download_jobs_status"
 	}
 	return "N/A"
 }

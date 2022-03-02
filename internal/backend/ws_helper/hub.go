@@ -29,8 +29,10 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
+			// 上线后先注册，然后等待 client 发送认证的 token 来确认有效，才进行后续的通信
 			h.clients[client] = true
 		case client := <-h.unregister:
+			// 下线后删除实例
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
