@@ -114,17 +114,16 @@
 ```json
 {
 	"type": "sub_download_jobs_status",
-	"jobs": {
-        "status": "running", // "waitting"，不是运行中，就是等待中
-        "started_time": "2022-03-01 15:04:05",	// 任务开始的时间
-        "working_unit_index": 10,	//正在处理到第几部电影或者连续剧
-        "unit_count": 1000,			//一共有多少部电影或者连续剧
-        "working_unit_name": "电影名称，或者连续剧的名称",
-        
-        "working_video_index": 10,	//正在处理到第几个视频
-        "video_count": 1500,		//一共有几个视频
-        "working_video_name": "电影名称，或者是连续剧中某一季、某一集的名称",	//正在处理到第几个视频
-    }
+    
+    "status": "running", // "waiting"，不是运行中，就是等待中
+    "started_time": "2022-03-01 15:04:05",	// 任务开始的时间
+    "working_unit_index": 10,	//正在处理到第几部电影或者连续剧
+    "unit_count": 1000,			//一共有多少部电影或者连续剧
+    "working_unit_name": "电影名称，或者连续剧的名称",
+
+    "working_video_index": 10,	//正在处理到第几个视频
+    "video_count": 1500,		//一共有几个视频
+    "working_video_name": "电影名称，或者是连续剧中某一季、某一集的名称",	//正在处理到第几个视频
 }
 ```
 
