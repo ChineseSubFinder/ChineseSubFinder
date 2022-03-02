@@ -12,6 +12,7 @@
 * common_reply
 * get_running_log
 * running_log
+* sub_download_jobs_status
 
 ## 接口认证方式
 
@@ -112,7 +113,7 @@
 
 ```json
 {
-	"type": "sub_download_jobs",
+	"type": "sub_download_jobs_status",
 	"jobs": {
         "status": "running", // "waitting"，不是运行中，就是等待中
         "started_time": "2022-03-01 15:04:05",	// 任务开始的时间
