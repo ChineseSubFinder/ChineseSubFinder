@@ -30,6 +30,12 @@ const routes = [
         component: () => import('pages/settings/index.vue'),
         meta: { title: '配置中心', icon: 'settings' },
       },
+      {
+        name: 'logs',
+        path: 'logs',
+        component: () => import('pages/logs/index.vue'),
+        meta: { title: '日志', icon: 'receipt_long' },
+      },
     ],
   },
 

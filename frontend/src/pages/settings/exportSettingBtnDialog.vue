@@ -43,6 +43,7 @@ import { settingsState } from 'pages/settings/useSettings';
 import { copyToClipboard } from 'quasar';
 import { SystemMessage } from 'src/utils/Message';
 import {deepCopy} from 'src/utils/CommonUtils';
+import {saveText} from 'src/utils/FileDownload';
 
 const visible = ref(false);
 const hideSensitive = ref(false);
@@ -59,16 +60,7 @@ const settingsString = computed(() => {
 });
 
 const exportSettings = () => {
-  const element = document.createElement('a');
-  element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(settingsString.value)}`);
-  element.setAttribute('download', 'ChineseSubFinderSettings.json');
-
-  element.style.display = 'none';
-  document.body.appendChild(element);
-
-  element.click();
-
-  document.body.removeChild(element);
+  saveText(settingsString.value, 'ChineseSubFinderSettings.json');
 };
 
 const copy = (str) =>
