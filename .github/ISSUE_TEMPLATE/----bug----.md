@@ -28,7 +28,60 @@ assignees: ""
 
 ## 给出当前程序的配置文件
 
-> /volume1/docker/chinesesubfinder/config:/config 下，ChineseSubFinderSettings.json
+> /volume1/docker/chinesesubfinder/config:/config 下，ChineseSubFinderSettings.json，记得把你的用户名、密码、Emby API 敏感信息删除
+>
+> 可以复制上面的配置，使用类似在线 json 格式化的工具进行一次处理，方便阅读，[JSON 在线解析及格式化验证 - JSON.cn](https://www.json.cn/#)
+
+```json
+{
+  "user_info": {
+    "username": "xx", // 这里是用户名，需要替换掉
+    "password": "xx" // 这里是密码，需要替换掉
+  },
+  "common_settings": {
+    "scan_interval": "6h",
+    "threads": 1,
+    "run_scan_at_start_up": false,
+    "movie_paths": ["X:\\电影"],
+    "series_paths": ["X:\\连续剧"]
+  },
+  "advanced_settings": {
+    "proxy_settings": {
+      "use_http_proxy": false,
+      "http_proxy_address": ""
+    },
+    "debug_mode": false,
+    "save_full_season_tmp_subtitles": true,
+    "sub_type_priority": 0,
+    "sub_name_formatter": 0,
+    "save_multi_sub": true,
+    "custom_video_exts": [],
+    "fix_time_line": false,
+    "topic": 1
+  },
+  "emby_settings": {
+    "enable": true,
+    "address_url": "http://192.168.50.xxx:xxx", // 这里替换掉
+    "api_key": "xxxxxxxxxxxxxx", // 这里替换掉
+    "max_request_video_number": 100,
+    "skip_watched": true,
+    "movie_paths_mapping": {
+      "X:\\电影": "/mnt/share1/电影"
+    },
+    "series_paths_mapping": {
+      "X:\\连续剧": "/mnt/share1/连续剧"
+    }
+  },
+  "developer_settings": {
+    "enable": false,
+    "bark_server_address": ""
+  },
+  "timeline_fixer_settings": {
+    "max_offset_time": 120,
+    "min_offset": 0.1
+  }
+}
+```
 
 ## 如果是使用 Docker，请给出对应的配置信息
 
