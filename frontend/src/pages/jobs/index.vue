@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-md">
-    <q-card v-if="systemState.jobStatus" class="q-pa-md" flat>
-      <header class="column q-gutter-md">
+    <q-card v-if="systemState.jobStatus" flat>
+      <header class="row items-center justify-between q-gutter-md">
         <div>
           当前任务状态：
           <q-badge v-if="isRunning" color="positive">运行中</q-badge>
@@ -19,6 +19,14 @@
         </div>
       </header>
     </q-card>
+
+    <q-separator class="q-my-md"/>
+
+    <sub-job-pabel/>
+
+    <q-separator class="q-my-md"/>
+
+    <job-r-t-log-panel/>
   </q-page>
 </template>
 
@@ -28,6 +36,8 @@ import { useQuasar } from 'quasar';
 import {computed, onMounted, ref} from 'vue';
 import JobApi from 'src/api/JobApi';
 import { SystemMessage } from 'src/utils/Message';
+import SubJobPabel from 'pages/jobs/SubJobPabel';
+import JobRTLogPanel from 'pages/jobs/JobRTLogPanel';
 
 const $q = useQuasar();
 

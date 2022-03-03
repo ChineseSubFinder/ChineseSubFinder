@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.13.14",
-    "@imyon/eslint-config-preset": "^0.0.3",
+    "@imyon/eslint-config-preset": "^0.0.5",
     "@imyon/eslint-config-prettier": "^0.0.2",
     "@quasar/app": "^3.0.0",
     "dotenv": "^10.0.0",

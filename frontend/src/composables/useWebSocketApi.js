@@ -31,7 +31,7 @@ class WSManager extends EventEmitter {
     ws.onopen = () => {
       // 连接成功后自动发送验证信息
       this.send('auth', {
-        token: LocalStorage.getItem('token'),
+        token: LocalStorage.getItem('token')?.accessToken,
       });
     };
 
@@ -77,6 +77,11 @@ class WSManager extends EventEmitter {
 
 // 根据BACKEND_URL配置计算ws地址
 export const getWsBaseUrl = () => {
+  try {
+    return process.env.BACKEND_WS_URL;
+  } catch (e) {
+    // do nothing
+  }
   let result = '';
   const backendUrl = process.env.BACKEND_URL;
   if (!backendUrl) {
@@ -91,7 +96,7 @@ export const getWsBaseUrl = () => {
     result = `${protocol}//${window.location.host}${backendUrl}`;
   }
 
-  return 'ws://localhost:8080' || result;
+  return result;
 };
 
 export const wsManager = new WSManager(`${getWsBaseUrl()}/ws`);

@@ -30,6 +30,7 @@ const updateFolderMap = () => {
     embySettings.series_paths_mapping || {}
   );
 };
+
 watch(
   () => settingsState.data,
   () => {
@@ -67,4 +68,20 @@ export const submitAll = async () => {
   }
   settingsState.data = { ...settingsState.data, ...deepCopy(formModel) };
   SystemMessage.success('保存成功');
+};
+
+/**
+ * 获取导出的settings
+ * @param includeSensitive
+ * @returns {any}
+ */
+export const getExportSettings = (includeSensitive = false) => {
+  const data = deepCopy(settingsState.data);
+  if (!includeSensitive) {
+    delete data.user_info;
+    delete data.common_settings.threads;
+    delete data.emby_settings.api_key;
+    delete data.emby_settings.address_url;
+  }
+  return data;
 };

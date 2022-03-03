@@ -44,21 +44,11 @@
         </q-list>
       </div>
       <q-separator vertical />
-      <div class="full-height col bg-grey-2 overflow-auto" :key="logType + currentItem?.log_lines[0]?.date_time">
-        <q-virtual-scroll
-          v-model.number="virtualListIndex"
-          ref="logArea"
-          class="full-height q-pa-sm"
-          :items="currentLogLines"
-          :items-size="1000"
-        >
-          <template v-slot="{ item, index }">
-            <div :key="index" style="white-space: nowrap; line-height: 2">
-              {{ getTexLogLine(item) }}
-            </div>
-          </template>
-        </q-virtual-scroll>
-      </div>
+      <log-viewer
+        class="full-height"
+        :log-lines="currentLogLines"
+        :key="logType + currentItem?.log_lines[0]?.date_time"
+      />
     </q-card>
   </fix-height-q-page>
 </template>
@@ -67,13 +57,15 @@
 import { useLogList } from 'pages/logs/useLogList';
 import FixHeightQPage from 'components/FixHeightQPage';
 import { saveText } from 'src/utils/FileDownload';
-import { useRealTimeLog } from 'pages/logs/useRealTimeLog';
-import { computed, nextTick, ref, watch } from 'vue';
-import { templateRef } from '@vueuse/core';
+import { computed, ref } from 'vue';
+import { useRealTimeLog } from 'src/composables/useRealTimeLog';
+import LogViewer from 'components/LogViewer';
+import {getExportSettings, useSettings} from 'pages/settings/useSettings';
 
 const { logList, currentIndex, currentItem } = useLogList();
 const logType = ref('rt'); // rt or history
 
+useSettings();
 const { logLines: rtLogLines } = useRealTimeLog();
 
 const handleHistoryItemClick = (item) => {
@@ -93,26 +85,11 @@ const currentLogLines = computed(() => {
   return lines || [];
 });
 
-const logArea = templateRef('logArea');
-
-// 自动滚动到底部
-watch(
-  () => rtLogLines.value.length,
-  () => {
-    if (logType.value !== 'rt') return;
-    const element = logArea.value.$el;
-    // console.log(element.scrollTop, element.clientHeight, element.scrollHeight);
-    // 如果当前正处于底部，则自动滚动
-    if (element.scrollTop + element.clientHeight >= element.scrollHeight - 10) {
-      nextTick(() => {
-        logArea.value.scrollTo(rtLogLines.value.length - 1);
-      });
-    }
-  }
-);
-
 const downloadLog = (logLines) => {
   const filename = `${logLines[0]?.date_time || 'output'}.log`;
-  saveText(filename, getTextLogContent(logLines));
+  const configString = JSON.stringify(getExportSettings(), null, 2);
+  const logString = getTextLogContent(logLines);
+  const content = `config:\n${configString}\n\nlog:\n${logString}`;
+  saveText(filename, content);
 };
 </script>
