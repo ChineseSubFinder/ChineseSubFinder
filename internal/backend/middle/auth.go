@@ -18,7 +18,7 @@ func CheckAuth() gin.HandlerFunc {
 			return
 		}
 		nowAccessToken := strings.Fields(authHeader)[1]
-		if nowAccessToken != common.GetAccessToken() {
+		if nowAccessToken == "" || nowAccessToken != common.GetAccessToken() {
 			context.JSON(http.StatusUnauthorized, backend.ReplyCheckAuth{Message: "AccessToken Error"})
 			context.Abort()
 			return
