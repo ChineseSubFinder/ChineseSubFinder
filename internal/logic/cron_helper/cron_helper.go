@@ -3,6 +3,7 @@ package cron_helper
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/downloader_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_download_process"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/robfig/cron/v3"
@@ -138,6 +139,8 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 		ch.fullSubDownloadProcessing = false
 		ch.fullSubDownloadProcessingLock.Unlock()
 
+		common.IsSubDownloadJobInfoRunning = false
+
 		log_helper.GetLogger().Infoln(log_helper.OnceSubsScanEnd)
 	}()
 
@@ -146,6 +149,8 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 	ch.fullSubDownloadProcessingLock.Unlock()
 
 	log_helper.GetLogger().Infoln(log_helper.OnceSubsScanStart)
+
+	common.IsSubDownloadJobInfoRunning = true
 
 	// 下载前的初始化
 	preDownloadProcess := pre_download_process.NewPreDownloadProcess()

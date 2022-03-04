@@ -1,7 +1,6 @@
 package ws
 
 type SubDownloadJobInfo struct {
-	Type              WSType `json:"type"`
 	Status            string `json:"status"`              // "running", "waiting"，不是运行中，就是等待中
 	StartedTime       string `json:"started_time"`        // 任务开始的时间
 	WorkingUnitIndex  int    `json:"working_unit_index"`  // 正在处理到第几部电影或者连续剧

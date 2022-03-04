@@ -38,6 +38,7 @@ func (h *Hub) Run() {
 				close(client.send)
 			}
 		case message := <-h.broadcast:
+			// 向所有的 Client 广播
 			for client := range h.clients {
 				select {
 				case client.send <- message:

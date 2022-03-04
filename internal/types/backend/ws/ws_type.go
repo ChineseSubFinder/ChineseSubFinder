@@ -40,6 +40,23 @@ func (c AuthMessage) String() string {
 	return "N/A"
 }
 
+type RunningLogMessage int
+
+const (
+	RunningLogRevOk RunningLogMessage = iota
+	RunningLogRevError
+)
+
+func (c RunningLogMessage) String() string {
+	switch c {
+	case RunningLogRevOk:
+		return "running log recv ok"
+	case RunningLogRevError:
+		return "running log recv error"
+	}
+	return "N/A"
+}
+
 type CommonMessage int
 
 const (
@@ -53,3 +70,10 @@ func (c CommonMessage) String() string {
 	}
 	return "N/A"
 }
+
+const (
+	Running = "running"
+	Waiting = "waiting"
+)
+
+var CloseThisConnect = []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 9, 8, 7, 6, 5, 4, 3, 2, 1}

@@ -126,7 +126,7 @@ func GetRecentOnceLogs(getHowMany int) []log_hub.OnceLog {
 	return tmpOnceLogs
 }
 
-// GetOnceLog4Running 当前正在扫描的日志内容，注意，开启任务，不代表就在扫描
+// GetOnceLog4Running 当前正在扫描的日志内容，注意，开启任务，不代表就在扫描。不是设置值，因为创建了实例的副本
 func GetOnceLog4Running() *log_hub.OnceLog {
 
 	var nowOnceRunningLog *log_hub.OnceLog
@@ -136,6 +136,19 @@ func GetOnceLog4Running() *log_hub.OnceLog {
 	onceLog4RunningLock.Unlock()
 
 	return nowOnceRunningLog
+}
+
+// GetSpiltOnceLog 拆分到一行一个，没有锁，所以需要考虑并发问题
+func GetSpiltOnceLog(log *log_hub.OnceLog) []*log_hub.OnceLog {
+
+	var outList = make([]*log_hub.OnceLog, len(log.LogLines))
+	for i := 0; i < len(log.LogLines); i++ {
+		outList[i] = &log_hub.OnceLog{
+			LogLines: []log_hub.OneLine{log.LogLines[i]},
+		}
+	}
+
+	return outList
 }
 
 func newOnceLogger() *logrus.Logger {

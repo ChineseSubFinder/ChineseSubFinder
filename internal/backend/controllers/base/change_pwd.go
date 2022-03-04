@@ -1,7 +1,7 @@
 package base
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/backend/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
