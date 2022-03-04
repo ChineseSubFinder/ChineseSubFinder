@@ -39,36 +39,21 @@
 
 <script setup>
 import { computed, ref } from 'vue';
-import { settingsState } from 'pages/settings/useSettings';
+import {getExportSettings} from 'pages/settings/useSettings';
 import { copyToClipboard } from 'quasar';
 import { SystemMessage } from 'src/utils/Message';
-import {deepCopy} from 'src/utils/CommonUtils';
+import {saveText} from 'src/utils/FileDownload';
 
 const visible = ref(false);
 const hideSensitive = ref(false);
 
 const settingsString = computed(() => {
-  const settings = deepCopy(settingsState.data);
-  delete settings.user_info;
-  if (hideSensitive.value) {
-    delete settings.common_settings.threads;
-    delete settings.emby_settings.api_key;
-    delete settings.emby_settings.address_url;
-  }
+  const settings = getExportSettings(!hideSensitive.value);
   return JSON.stringify(settings, null, 2);
 });
 
 const exportSettings = () => {
-  const element = document.createElement('a');
-  element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(settingsString.value)}`);
-  element.setAttribute('download', 'ChineseSubFinderSettings.json');
-
-  element.style.display = 'none';
-  document.body.appendChild(element);
-
-  element.click();
-
-  document.body.removeChild(element);
+  saveText('ChineseSubFinderSettings.json', settingsString.value);
 };
 
 const copy = (str) =>
