@@ -136,5 +136,6 @@
 
 根据 status 不同的值，started_time 会有不同的解释：
 
+* status == preparing，那么 started_time 就是任务开始的时间，应该是小于等于当前的系统时间，也就可以推算字幕扫描开始运行多久了。这个时候下载字幕已经开始，但是处于准备阶段
 * status == running，那么 started_time 就是任务开始的时间，应该是小于等于当前的系统时间，也就可以推算字幕扫描开始运行多久了。
 * status == waitting，那么 started_time 就是任务将要开始的时间，那么这个时间应该大于等于当前系统的时间，也就是个倒计时，还有多久才开始执行扫描
