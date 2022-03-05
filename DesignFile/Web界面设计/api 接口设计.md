@@ -235,6 +235,7 @@
 {
   address_url: "emby 的地址，因为这个时候很可能没有保存，所以需要额外传输过来"
   api_key： "emby ap，因为这个时候很可能没有保存，所以需要额外传输过来i"
+  path_type: "movie"  // 或者是 series
   cfs_media_path: "X:\电影  这里的路径对应 check-path 中的路径，是本程序需要设置的媒体目录"
   emby_media_path: '/mnt/电影  这里的路径是 Emby 中的路径';
 }
