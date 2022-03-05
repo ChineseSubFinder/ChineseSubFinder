@@ -122,7 +122,7 @@
 
 ```json
 {
-    "status": "running", // "waiting"，不是运行中，就是等待中
+    "status": "running", // preparing、waiting
     "started_time": "2022-03-01 15:04:05",	// 任务开始的时间
     "working_unit_index": 10,	//正在处理到第几部电影或者连续剧
     "unit_count": 1000,			//一共有多少部电影或者连续剧
@@ -137,5 +137,6 @@
 根据 status 不同的值，started_time 会有不同的解释：
 
 * status == preparing，那么 started_time 就是任务开始的时间，应该是小于等于当前的系统时间，也就可以推算字幕扫描开始运行多久了。这个时候下载字幕已经开始，但是处于准备阶段
-* status == running，那么 started_time 就是任务开始的时间，应该是小于等于当前的系统时间，也就可以推算字幕扫描开始运行多久了。
+* status == scan-movie，那么 started_time 就是任务开始的时间，应该是小于等于当前的系统时间，也就可以推算电影字幕扫描开始运行多久了。
+* status == scan-series，那么 started_time 就是任务开始的时间，应该是小于等于当前的系统时间，也就可以推算连续剧字幕扫描开始运行多久了。
 * status == waitting，那么 started_time 就是任务将要开始的时间，那么这个时间应该大于等于当前系统的时间，也就是个倒计时，还有多久才开始执行扫描
