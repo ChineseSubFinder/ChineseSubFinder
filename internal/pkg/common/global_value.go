@@ -42,22 +42,34 @@ func SetSubScanJobStatusPreparing(startedTime string) {
 	subDownloadJobInfoLock.Unlock()
 }
 
-// SetSubScanJobStatusRunning 设置扫描字幕任务的状态为运行
-func SetSubScanJobStatusRunning(WorkingUnitIndex, UnitCount int, WorkingUnitName string,
-	WorkingVideoIndex, VideoCount int, WorkingVideoName string) {
+// SetSubScanJobStatusScanMovie 设置扫描字幕任务的状态为运行
+func SetSubScanJobStatusScanMovie(WorkingUnitIndex, UnitCount int, WorkingUnitName string) {
 
 	subDownloadJobInfoLock.Lock()
+
 	if subDownloadJobInfo == nil {
 		subDownloadJobInfo = &ws.SubDownloadJobInfo{}
 	}
-	subDownloadJobInfo.Status = ws.Running
+	subDownloadJobInfo.Status = ws.ScanMovie
 	subDownloadJobInfo.WorkingUnitIndex = WorkingUnitIndex
 	subDownloadJobInfo.UnitCount = UnitCount
 	subDownloadJobInfo.WorkingUnitName = WorkingUnitName
 
-	subDownloadJobInfo.WorkingVideoIndex = WorkingVideoIndex
-	subDownloadJobInfo.VideoCount = VideoCount
-	subDownloadJobInfo.WorkingVideoName = WorkingVideoName
+	subDownloadJobInfoLock.Unlock()
+}
+
+// SetSubScanJobStatusScanSeriesMain 设置扫描字幕任务的状态为运行
+func SetSubScanJobStatusScanSeriesMain(WorkingUnitIndex, UnitCount int, WorkingUnitName string) {
+
+	subDownloadJobInfoLock.Lock()
+
+	if subDownloadJobInfo == nil {
+		subDownloadJobInfo = &ws.SubDownloadJobInfo{}
+	}
+	subDownloadJobInfo.Status = ws.ScanSeries
+	subDownloadJobInfo.WorkingUnitIndex = WorkingUnitIndex
+	subDownloadJobInfo.UnitCount = UnitCount
+	subDownloadJobInfo.WorkingUnitName = WorkingUnitName
 
 	subDownloadJobInfoLock.Unlock()
 }

@@ -12,6 +12,7 @@ import (
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
+	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -250,6 +251,9 @@ func (d *Downloader) DownloadSub4Movie() error {
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
 	for i, oneVideoFullPath := range d.movieFileFullPathList {
 
+		// 设置任务的状态
+		pkgcommon.SetSubScanJobStatusScanMovie(i+1, len(d.movieFileFullPathList), filepath.Base(oneVideoFullPath))
+
 		err = d.taskControl.Invoke(&task_control.TaskData{
 			Index: i,
 			DataEx: DownloadInputData{
@@ -357,6 +361,9 @@ func (d *Downloader) DownloadSub4Series() error {
 	seriesIndexNameMap := make(map[int]string)
 	seriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
 		for _, seriesName := range seriesNames.([]string) {
+
+			// 设置任务的状态
+			pkgcommon.SetSubScanJobStatusScanSeriesMain(seriesCount+1, len(seriesNames.([]string)), seriesName)
 
 			err = d.taskControl.Invoke(&task_control.TaskData{
 				Index: seriesCount,
@@ -480,9 +487,6 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 				return err
 			}
 		} else {
-
-			//physicalSeriesFolderFPath := ""
-
 			// 先进行 emby_helper api 的操作，读取需要更新字幕的项目
 			seriesInfo, organizeSubFiles, err = d.subSupplierHub.DownloadSub4SeriesFromEmby(
 				filepath.Join(downloadInputData.RootDirPath, downloadInputData.OneSeriesPath),
@@ -499,6 +503,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 	}
 
 	// 只针对需要下载字幕的视频进行字幕的选择保存
+	subVideoCount := 0
 	for epsKey, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 
 		stage := make(chan interface{}, 1)
@@ -516,6 +521,8 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 		case <-stage:
 			break
 		}
+
+		subVideoCount++
 	}
 	// 这里会拿到一份季度字幕的列表比如，Key 是 S1E0 S2E0 S3E0，value 是新的存储位置
 	fullSeasonSubDict := d.saveFullSeasonSub(seriesInfo, organizeSubFiles)
