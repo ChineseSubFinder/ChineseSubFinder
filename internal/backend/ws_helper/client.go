@@ -46,12 +46,11 @@ var upGrader = websocket.Upgrader{
 }
 
 type Client struct {
-	hub                     *Hub
-	conn                    *websocket.Conn // 与服务器连接实例
-	sendLogLineIndex        int             // 日志发送到那个位置了
-	sendLogFirstTimeSuccess bool            // 第一次日志发送成功了
-	authed                  bool            // 是否已经通过认证
-	send                    chan []byte     // 发送给 client 的内容 bytes
+	hub              *Hub
+	conn             *websocket.Conn // 与服务器连接实例
+	sendLogLineIndex int             // 日志发送到那个位置了
+	authed           bool            // 是否已经通过认证
+	send             chan []byte     // 发送给 client 的内容 bytes
 }
 
 // 接收 Client 发送来的消息
@@ -129,27 +128,6 @@ func (c *Client) readPump() {
 
 		} else {
 			// 进过认证后的消息，无需再次带有 token 信息
-			if revMessage.Type == ws.RunningLog.String() {
-
-				c.sendLogFirstTimeSuccess = false
-				c.sendLogLineIndex = 0
-				// Client 想要获取第一次的日志
-				nowRunningLog := log_helper.GetOnceLog4Running()
-				// 正在运行扫描日志
-				// 找到日志，把当前已有的日志发送出去，然后记录发送到哪里了
-				// 这里需要考虑一次性的信息太多，超过发送的缓冲区，所以需要拆分发送
-				outLogsBytes, err := RunningLogReply(nowRunningLog, c.sendLogLineIndex)
-				if err != nil {
-					log_helper.GetLogger().Errorln("readPump.RunningLogReply", err)
-					return
-				}
-				// 拆分到一条日志来发送
-				for _, logsByte := range outLogsBytes {
-					c.send <- logsByte
-					c.sendLogLineIndex += 1
-				}
-				c.sendLogFirstTimeSuccess = true
-			}
 		}
 	}
 }
@@ -241,11 +219,13 @@ func (c *Client) writePump() {
 				// 没有认证通过，就无需处理次定时器时间
 				continue
 			}
-			if common.IsSubDownloadJobInfoRunning == false {
+			// 如果没有开启总任务，或者停止总任务了，那么这里获取到的应该是 nil，不应该继续往下
+			info := common.GetSubScanJobStatus()
+			if info == nil {
 				continue
 			}
 			// 统一丢到 send 里面得了
-			outLogsBytes, err := SubScanJobStatusReply()
+			outLogsBytes, err := SubScanJobStatusReply(info)
 			if err != nil {
 				log_helper.GetLogger().Errorln("writePump.SubScanJobStatusReply", err)
 				return
@@ -256,10 +236,6 @@ func (c *Client) writePump() {
 			// 正在运行扫描日志
 			if c.authed == false {
 				// 没有认证通过，就无需处理次定时器时间
-				continue
-			}
-			if c.sendLogFirstTimeSuccess == false {
-				// 要等待第一次发送结束后，才能够每次发送新的
 				continue
 			}
 			nowRunningLog := log_helper.GetOnceLog4Running()
@@ -333,11 +309,11 @@ func RunningLogReply(log *log_hub.OnceLog, iPreSendLines ...int) ([][]byte, erro
 }
 
 // SubScanJobStatusReply 当前字幕扫描的进度信息
-func SubScanJobStatusReply() ([]byte, error) {
+func SubScanJobStatusReply(info *ws.SubDownloadJobInfo) ([]byte, error) {
 
 	var err error
 	var outData, outBytes []byte
-	outData, err = json.Marshal(common.GetSubScanJobStatus())
+	outData, err = json.Marshal(info)
 	if err != nil {
 		return nil, err
 	}
@@ -360,12 +336,11 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &Client{
-		hub:                     hub,
-		conn:                    conn,
-		sendLogLineIndex:        0,
-		authed:                  false,
-		sendLogFirstTimeSuccess: false,
-		send:                    make(chan []byte, bufSize),
+		hub:              hub,
+		conn:             conn,
+		sendLogLineIndex: 0,
+		authed:           false,
+		send:             make(chan []byte, bufSize),
 	}
 	client.hub.register <- client
 

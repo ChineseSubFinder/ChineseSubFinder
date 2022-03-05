@@ -57,6 +57,15 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	log_helper.GetLogger().Infoln("CronHelper Start...")
 	log_helper.GetLogger().Infoln("Next Sub Scan Will Process After", settings.GetSettings().CommonSettings.ScanInterval)
 	ch.c.Start()
+
+	// 只有定时任务 start 之后才能拿到信息
+	if len(ch.c.Entries()) > 0 {
+		// 不会马上启动扫描，那么就需要设置当前的时间，且为 waiting
+		tttt := ch.c.Entries()[0].Next.Format("2006-01-02 15:04:05")
+		common.SetSubScanJobStatusWaiting(tttt)
+	} else {
+		log_helper.GetLogger().Errorln("Can't get cron jobs, will not send SubScanJobStatus")
+	}
 }
 
 // Stop 会阻塞等待任务完成
@@ -95,6 +104,8 @@ func (ch *CronHelper) Stop() {
 	ch.cronHelperRunningLock.Lock()
 	ch.cronHelperRunning = false
 	ch.cronHelperRunningLock.Unlock()
+
+	common.SetSubScanJobStatusNil()
 }
 
 func (ch *CronHelper) CronHelperRunning() bool {
@@ -139,8 +150,6 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 		ch.fullSubDownloadProcessing = false
 		ch.fullSubDownloadProcessingLock.Unlock()
 
-		common.IsSubDownloadJobInfoRunning = false
-
 		log_helper.GetLogger().Infoln(log_helper.OnceSubsScanEnd)
 	}()
 
@@ -150,7 +159,8 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 
 	log_helper.GetLogger().Infoln(log_helper.OnceSubsScanStart)
 
-	common.IsSubDownloadJobInfoRunning = true
+	// 扫描字幕任务开始，先是扫描阶段，那么是拿不到有多少视频需要扫描的数量的
+	common.SetSubScanJobStatusPreparing(time.Now().Format("2006-01-02 15:04:05"))
 
 	// 下载前的初始化
 	preDownloadProcess := pre_download_process.NewPreDownloadProcess()
