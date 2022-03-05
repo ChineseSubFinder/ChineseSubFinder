@@ -223,6 +223,31 @@
 
 返回 HTTP 码 204
 
+### 检查 Emby 目录是否可用
+
+`POST /check-emby-path`
+
+如果映射正确，应该需要返回对应的目录中的视频列表，如果检测到返回的列表为空，那么需要提示用户确认映射是否正确
+
+请求参数：
+
+```javascript
+{
+  cfs_media_path: "X:\电影  这里的路径对应 check-path 中的路径，是本程序需要设置的媒体目录"
+  emby_media_path: '/mnt/电影  这里的路径是 Emby 中的路径';
+}
+```
+
+返回 HTTP 码 200：
+
+```javascript
+{
+  media_list: ["电影AA", "连续剧BB"],; 
+}
+```
+
+返回 HTTP 码 204
+
 
 
 ### 检查代理服务器
