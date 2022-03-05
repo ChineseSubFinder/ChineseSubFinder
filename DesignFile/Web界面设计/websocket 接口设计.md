@@ -112,26 +112,6 @@
 }
 ```
 
-如果 Client 收到本次日志，则需要回复确认收到，以便服务器确认继续向下偏移日志内容发送
-
-Client 回复收到成功：
-
-```json
-// 	对应 "type": "common_reply",
-{
-	"message": "running log recv ok"
-}
-```
-
-Client 回复收到失败：
-
-```json
-//	对应 "type": "common_reply",
-{
-	"message": "running log recv error"
-}
-```
-
 后续的日志，理论上 Server 会**主动**每隔 5s 进行一次批量的日志汇总发给 Client，Client 仅需要拼接起来就好了，顺序和偏移问题由服务器解决。
 
 > 拼接 log_lines 的条目即可
