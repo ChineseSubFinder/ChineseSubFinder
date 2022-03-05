@@ -504,6 +504,16 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 	return true, inSubList, exSubList, nil
 }
 
+func (em *EmbyHelper) CheckPath(CFSMediaPath, EmbyMediaPath string) ([]string, error) {
+
+	// 获取最近的影片列表
+	items, err := em.embyApi.GetRecentlyItems()
+	if err != nil {
+		return nil, err
+	}
+
+}
+
 type InputData struct {
 	Id string
 	Wg *sync.WaitGroup
