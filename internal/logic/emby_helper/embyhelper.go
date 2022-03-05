@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
@@ -504,14 +505,71 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 	return true, inSubList, exSubList, nil
 }
 
-func (em *EmbyHelper) CheckPath(CFSMediaPath, EmbyMediaPath string) ([]string, error) {
+func (em *EmbyHelper) CheckPath(pathType string) ([]string, error) {
 
 	// 获取最近的影片列表
 	items, err := em.embyApi.GetRecentlyItems()
 	if err != nil {
 		return nil, err
 	}
+	// 获取电影和连续剧的文件夹名称
+	var EpisodeIdList = make([]string, 0)
+	var MovieIdList = make([]string, 0)
+	// 分类
+	for index, item := range items.Items {
+		if item.Type == videoTypeEpisode {
+			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
+			EpisodeIdList = append(EpisodeIdList, item.Id)
+			log_helper.GetLogger().Debugln("Episode:", index, item.SeriesName, item.ParentIndexNumber, item.IndexNumber)
+		} else if item.Type == videoTypeMovie {
+			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
+			MovieIdList = append(MovieIdList, item.Id)
+			log_helper.GetLogger().Debugln("Movie:", index, item.Name)
+		} else {
+			log_helper.GetLogger().Debugln("GetRecentlyItems - Is not a goal video type:", index, item.Name, item.Type)
+		}
+	}
 
+	outCount := 0
+	outList := make([]string, 0)
+
+	if pathType == "movie" {
+		// 过滤出有效的电影、连续剧的资源出来
+		filterMovieList, err := em.filterEmbyVideoList(MovieIdList, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, info := range filterMovieList {
+
+			if my_util.IsFile(info.PhysicalVideoFileFullPath) == true {
+				outList = append(outList, info.PhysicalVideoFileFullPath)
+				outCount++
+				if outCount > 5 {
+					break
+				}
+			}
+		}
+
+	} else {
+		filterSeriesList, err := em.filterEmbyVideoList(EpisodeIdList, false)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, info := range filterSeriesList {
+
+			if my_util.IsFile(info.PhysicalVideoFileFullPath) == true {
+				outList = append(outList, info.PhysicalVideoFileFullPath)
+				outCount++
+				if outCount > 5 {
+					break
+				}
+			}
+		}
+	}
+
+	return outList, nil
 }
 
 type InputData struct {
