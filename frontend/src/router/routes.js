@@ -4,7 +4,7 @@ const routes = [
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
-    redirect: { name: 'settings' },
+    redirect: { name: 'jobs' },
     children: [
       // {
       //   name: 'home',
@@ -25,16 +25,16 @@ const routes = [
         meta: { title: '任务', icon: 'cloud_queue' },
       },
       {
-        name: 'settings',
-        path: 'settings',
-        component: () => import('pages/settings/index.vue'),
-        meta: { title: '配置中心', icon: 'settings' },
-      },
-      {
         name: 'logs',
         path: 'logs',
         component: () => import('pages/logs/index.vue'),
         meta: { title: '日志', icon: 'receipt_long' },
+      },
+      {
+        name: 'settings',
+        path: 'settings',
+        component: () => import('pages/settings/index.vue'),
+        meta: { title: '配置中心', icon: 'settings' },
       },
     ],
   },

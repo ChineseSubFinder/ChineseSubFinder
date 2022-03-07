@@ -5,6 +5,12 @@
         <q-icon name="warning" />
       </template>
       当前有任务正在运行中，不能更改配置
+      <template v-slot:action>
+        <q-btn color="white" label="去任务页面停止" flat @click="$router.push('/jobs')"/>
+      </template>
+      <span>
+      </span>
+
     </q-banner>
     <q-card v-if="isSettingsLoaded" flat>
       <q-tabs

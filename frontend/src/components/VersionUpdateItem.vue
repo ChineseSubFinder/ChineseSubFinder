@@ -111,3 +111,10 @@ const navigateToReleasePage = () => {
 
 onMounted(getLatestVersion);
 </script>
+
+
+<style lang="scss" scoped>
+a {
+  color: $primary;
+}
+</style>

@@ -8,7 +8,7 @@ class WSManager extends EventEmitter {
 
   url = null;
 
-  autoConnect = true;
+  autoRetry = true;
 
   connected = false;
 
@@ -18,6 +18,14 @@ class WSManager extends EventEmitter {
   }
 
   send(type, data) {
+    // console.log(
+    //   'send',
+    //   type,
+    //   JSON.stringify({
+    //     type,
+    //     data: JSON.stringify(data),
+    //   })
+    // );
     this.ws.send(
       JSON.stringify({
         type,
@@ -27,6 +35,7 @@ class WSManager extends EventEmitter {
   }
 
   connect() {
+    this.autoRetry = true;
     const ws = new WebSocket(this.url);
     ws.onopen = () => {
       // 连接成功后自动发送验证信息
@@ -37,6 +46,7 @@ class WSManager extends EventEmitter {
 
     ws.onmessage = (e) => {
       try {
+        // console.log('receive', e.data);
         const { type, data } = JSON.parse(e.data);
         // console.log(type, data);
         this.emit(type, JSON.parse(data));
@@ -48,7 +58,7 @@ class WSManager extends EventEmitter {
 
     ws.onclose = (e) => {
       this.connected = false;
-      if (this.autoConnect) {
+      if (this.autoRetry) {
         // eslint-disable-next-line no-console
         console.log('Socket is closed. Reconnect will be attempted in 2 second.', e.reason);
         setTimeout(() => {
@@ -70,15 +80,19 @@ class WSManager extends EventEmitter {
 
   // 强制关闭连接
   close() {
-    this.autoConnect = false;
+    this.autoRetry = false;
     this.ws?.close();
+    this.connected = false;
   }
 }
 
 // 根据BACKEND_URL配置计算ws地址
 export const getWsBaseUrl = () => {
   try {
-    return process.env.BACKEND_WS_URL;
+    const wsUrl = process.env.BACKEND_WS_URL;
+    if (wsUrl) {
+      return wsUrl;
+    }
   } catch (e) {
     // do nothing
   }
@@ -118,5 +132,6 @@ export const useWebSocketApi = (eventType, eventHandler) => {
 
   onBeforeUnmount(() => {
     wsManager.off(eventType, eventHandler);
+    wsManager.close();
   });
 };

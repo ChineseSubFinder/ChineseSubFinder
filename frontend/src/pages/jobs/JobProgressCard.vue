@@ -50,6 +50,6 @@ const progress = computed(() => {
 .title {
   font-size: 14px;
   font-weight: bold;
-  padding-left: 20px;
+  padding-left: 30px;
 }
 </style>

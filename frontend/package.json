@@ -23,6 +23,7 @@
     "@vueuse/core": "^4.11.2",
     "axios": "^0.25.0",
     "core-js": "^3.6.5",
+    "dayjs": "^1.10.8",
     "events": "^3.3.0",
     "github-markdown-css": "^5.1.0",
     "markdown": "^0.5.0",

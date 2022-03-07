@@ -82,7 +82,15 @@
                         v-model="form.movie_paths_mapping[source]"
                         standout
                         dense
-                        :rules="[(val) => (form.enable && !!val) || '不能为空']"
+                        :rules="[
+                          (val) => (form.enable && !!val) || '不能为空',
+                          (val) => validateEmbyPath(val, {
+                                  address_url: form.address_url,
+                                  api_key: form.api_key,
+                                  path_type: 'movie', // movie / series
+                                  cfs_media_path: source,
+                          })
+                          ]"
                       />
                     </td>
                   </tr>
@@ -113,7 +121,15 @@
                         v-model="form.series_paths_mapping[source]"
                         standout
                         dense
-                        :rules="[(val) => (form.enable && !!val) || '不能为空']"
+                        :rules="[
+                          (val) => (form.enable && !!val) || '不能为空',
+                          (val) => validateEmbyPath(val, {
+                                  address_url: form.address_url,
+                                  api_key: form.api_key,
+                                  path_type: 'series', // movie / series
+                                  cfs_media_path: source,
+                          })
+                          ]"
                       />
                     </td>
                   </tr>
@@ -135,6 +151,8 @@
 import { formModel, submitAll } from 'pages/settings/useSettings';
 import { toRefs } from '@vueuse/core';
 import FormSubmitArea from 'pages/settings/FormSubmitArea';
+import {validateEmbyPath} from 'src/utils/QuasarValidators';
 
 const { emby_settings: form } = toRefs(formModel);
+
 </script>
