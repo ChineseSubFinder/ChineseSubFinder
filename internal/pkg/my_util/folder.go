@@ -10,26 +10,60 @@ import (
 	"time"
 )
 
+func init() {
+	err := Init()
+	if err != nil {
+		log_helper.GetLogger().Panicln("my_util.Init", err)
+	}
+}
+
+func Init() error {
+
+	var err error
+
+	global_value.ConfigRootDirFPath = GetConfigRootDirFPath()
+
+	global_value.DefDebugFolder, err = GetRootDebugFolder()
+	if err != nil {
+		log_helper.GetLogger().Panicln("GetRootDebugFolder", err)
+	}
+
+	global_value.DefTmpFolder, err = GetRootTmpFolder()
+	if err != nil {
+		log_helper.GetLogger().Panicln("GetRootTmpFolder", err)
+	}
+
+	global_value.DefRodTmpFolder, err = GetRodTmpFolder()
+	if err != nil {
+		log_helper.GetLogger().Panicln("GetRodTmpFolder", err)
+	}
+
+	global_value.DefSubFixCacheFolder, err = GetRootSubFixCacheFolder()
+	if err != nil {
+		log_helper.GetLogger().Panicln("GetRootTmpFolder", err)
+	}
+
+	return nil
+}
+
 // --------------------------------------------------------------
 // Debug
 // --------------------------------------------------------------
 
 // GetRootDebugFolder 在程序的根目录新建，调试用文件夹
 func GetRootDebugFolder() (string, error) {
-	if global_value.DefDebugFolder == "" {
-		nowProcessRoot, err := os.Getwd()
-		if err != nil {
-			return "", err
-		}
-		nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, DebugFolder)
-		err = os.MkdirAll(nowProcessRoot, os.ModePerm)
-		if err != nil {
-			return "", err
-		}
-		global_value.DefDebugFolder = nowProcessRoot
-		return nowProcessRoot, err
+
+	nowProcessRoot, err := os.Getwd()
+	if err != nil {
+		return "", err
 	}
-	return global_value.DefDebugFolder, nil
+	nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, DebugFolder)
+	err = os.MkdirAll(nowProcessRoot, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+
+	return nowProcessRoot, err
 }
 
 // GetDebugFolderByName 根据传入的 strings (["aa", "bb"]) 组成  DebugFolder/aa/bb 这样的路径
@@ -77,20 +111,17 @@ func CopyFiles2DebugFolder(names []string, subFiles []string) error {
 
 // GetRootTmpFolder 在程序的根目录新建，取缓用文件夹，每一个视频的缓存将在其中额外新建子集文件夹
 func GetRootTmpFolder() (string, error) {
-	if global_value.DefTmpFolder == "" {
-		nowProcessRoot, err := os.Getwd()
-		if err != nil {
-			return "", err
-		}
-		nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, TmpFolder)
-		err = os.MkdirAll(nowProcessRoot, os.ModePerm)
-		if err != nil {
-			return "", err
-		}
-		global_value.DefTmpFolder = nowProcessRoot
-		return nowProcessRoot, err
+
+	nowProcessRoot, err := os.Getwd()
+	if err != nil {
+		return "", err
 	}
-	return global_value.DefTmpFolder, nil
+	nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, TmpFolder)
+	err = os.MkdirAll(nowProcessRoot, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	return nowProcessRoot, err
 }
 
 // GetTmpFolderByName 获取缓存的文件夹，没有则新建
@@ -150,25 +181,77 @@ func ClearRootTmpFolder() error {
 }
 
 // --------------------------------------------------------------
+// Rod Cache
+// --------------------------------------------------------------
+
+// GetRodTmpFolder 在程序的根目录新建，rod 缓存用文件夹
+func GetRodTmpFolder() (string, error) {
+
+	if global_value.DefRodTmpFolder == "" {
+		nowProcessRoot, err := os.Getwd()
+		if err != nil {
+			return "", err
+		}
+		nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, RodCacheFolder)
+		err = os.MkdirAll(nowProcessRoot, os.ModePerm)
+		if err != nil {
+			return "", err
+		}
+		global_value.DefRodTmpFolder = nowProcessRoot
+		return nowProcessRoot, err
+	}
+	return global_value.DefRodTmpFolder, nil
+}
+
+// ClearRodTmpFolder 清理 rod 缓存文件夹
+func ClearRodTmpFolder() error {
+
+	nowTmpFolder, err := GetRodTmpFolder()
+	if err != nil {
+		return err
+	}
+
+	pathSep := string(os.PathSeparator)
+	files, err := os.ReadDir(nowTmpFolder)
+	if err != nil {
+		return err
+	}
+	for _, curFile := range files {
+		fullPath := nowTmpFolder + pathSep + curFile.Name()
+		if curFile.IsDir() {
+			err = os.RemoveAll(fullPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			// 这里就是文件了
+			err = os.Remove(fullPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// --------------------------------------------------------------
 // Sub Fix Cache
 // --------------------------------------------------------------
 
 // GetRootSubFixCacheFolder 在程序的根目录新建，字幕时间校正的缓存文件夹
 func GetRootSubFixCacheFolder() (string, error) {
-	if global_value.DefSubFixCacheFolder == "" {
-		nowProcessRoot, err := os.Getwd()
-		if err != nil {
-			return "", err
-		}
-		nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, SubFixCacheFolder)
-		err = os.MkdirAll(nowProcessRoot, os.ModePerm)
-		if err != nil {
-			return "", err
-		}
-		global_value.DefSubFixCacheFolder = nowProcessRoot
-		return nowProcessRoot, err
+
+	nowProcessRoot, err := os.Getwd()
+	if err != nil {
+		return "", err
 	}
-	return global_value.DefSubFixCacheFolder, nil
+	nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, SubFixCacheFolder)
+	err = os.MkdirAll(nowProcessRoot, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	return nowProcessRoot, err
 }
 
 // GetSubFixCacheFolderByName 获取缓存的文件夹，没有则新建
@@ -312,6 +395,7 @@ const (
 	DebugFolder         = "CSF-DebugThings" // 调试相关的文件夹
 	TmpFolder           = "CSF-TmpThings"   // 临时缓存的文件夹
 	SubFixCacheFolder   = "CSF-SubFixCache" // 字幕时间校正的缓存文件夹，一般可以不清理
+	RodCacheFolder      = "CSF-Rod"         // rod 的缓存目录
 )
 
 // 配置文件的位置信息，这个会根据系统版本做区分

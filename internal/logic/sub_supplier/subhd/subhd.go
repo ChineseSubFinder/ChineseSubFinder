@@ -7,6 +7,7 @@ import (
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
@@ -485,7 +486,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *
 	fileName := ""
 	fileByte := []byte{0}
 	err = rod.Try(func() {
-		tmpDir := filepath.Join(os.TempDir(), "rod", "downloads")
+		tmpDir := filepath.Join(global_value.DefRodTmpFolder, "downloads")
 		wait := browser.WaitDownload(tmpDir)
 		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()
@@ -668,12 +669,7 @@ search:
 
 	if s.debugMode == true {
 		//截圖保存
-		nowProcessRoot, err := my_util.GetRootDebugFolder()
-		if err == nil {
-			page.MustScreenshot(filepath.Join(nowProcessRoot, "result.png"))
-		} else {
-			s.log.Errorln("model.GetDebugFolder", err)
-		}
+		page.MustScreenshot(global_value.DefDebugFolder, "result.png")
 	}
 }
 

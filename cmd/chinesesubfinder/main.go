@@ -14,8 +14,6 @@ import (
 
 func init() {
 
-	global_value.ConfigRootDirFPath = my_util.GetConfigRootDirFPath()
-
 	log_helper.GetLogger().Infoln("ChineseSubFinder Version:", AppVersion)
 
 	global_value.AppVersion = AppVersion
