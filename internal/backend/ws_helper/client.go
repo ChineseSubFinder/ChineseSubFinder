@@ -57,6 +57,12 @@ type Client struct {
 func (c *Client) readPump() {
 
 	defer func() {
+		if err := recover(); err != nil {
+			log_helper.GetLogger().Warningln("readPump.recover", err)
+		}
+	}()
+
+	defer func() {
 		// 触发移除 client 的逻辑
 		c.hub.unregister <- c
 		_ = c.conn.Close()
@@ -134,6 +140,12 @@ func (c *Client) readPump() {
 
 // 向 Client 发送消息的队列
 func (c *Client) writePump() {
+
+	defer func() {
+		if err := recover(); err != nil {
+			log_helper.GetLogger().Warningln("writePump.recover", err)
+		}
+	}()
 
 	// 心跳计时器
 	pingTicker := time.NewTicker(pingPeriod)
