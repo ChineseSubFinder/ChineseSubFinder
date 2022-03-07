@@ -26,7 +26,7 @@ const (
 	maxMessageSize = 5 * 1024
 
 	// 发送 chan 的队列长度
-	bufSize = 1024
+	bufSize = 1
 
 	upGraderReadBufferSize = 5 * 1024
 
@@ -181,21 +181,6 @@ func (c *Client) writePump() {
 			if err != nil {
 				log_helper.GetLogger().Errorln("writePump.Write", err)
 				return
-			}
-			// Add queued chat messages to the current websocket message.
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-
-				nowMessage := <-c.send
-				if bytes.Equal(nowMessage, ws.CloseThisConnect) == true {
-					return
-				}
-
-				_, err = w.Write(nowMessage)
-				if err != nil {
-					log_helper.GetLogger().Errorln("writePump.Write", err)
-					return
-				}
 			}
 
 			if err := w.Close(); err != nil {
