@@ -14,6 +14,7 @@ import (
 	"github.com/mholt/archiver/v3"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -26,13 +27,13 @@ import (
 func NewBrowser(httpProxyURL string, loadAdblock bool) (*rod.Browser, error) {
 
 	var err error
-	if my_util.IsFile(adblockSavePath) == false {
+
+	once.Do(func() {
 		adblockSavePath, err = releaseAdblock()
 		if err != nil {
-			log_helper.GetLogger().Panicln("releaseAdblock", err)
+			log_helper.GetLogger().Errorln("releaseAdblock", err)
 		}
-	}
-
+	})
 	var browser *rod.Browser
 	err = rod.Try(func() {
 		purl := ""
@@ -179,7 +180,7 @@ func newPage(browser *rod.Browser) (*rod.Page, error) {
 // releaseAdblock 从程序中释放 adblock 插件出来到本地路径
 func releaseAdblock() (string, error) {
 
-	adblockFolderPath := filepath.Join(global_value.DefRodTmpFolder, "chinesesubfinder")
+	adblockFolderPath := filepath.Join(global_value.DefTmpFolder, "chinesesubfinder")
 	err := os.MkdirAll(filepath.Join(adblockFolderPath), os.ModePerm)
 	if err != nil {
 		return "", err
@@ -212,6 +213,8 @@ func releaseAdblock() (string, error) {
 }
 
 const adblockInsideName = "adblock"
+
+var once sync.Once
 
 // 这个文件内有一个子文件夹 adblock ，制作的时候务必注意
 //go:embed assets/adblock_4_43_0_0.zip
