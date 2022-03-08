@@ -388,10 +388,10 @@ func ClearIdleSubFixCacheFolder(rootSubFixCacheFolder string, outOfDate time.Dur
 // 缓存文件的位置信息，都是在程序的根目录下的 cache 中
 const (
 	cacheRootFolderName = "cache"           // 缓存文件夹总名称
+	TmpFolder           = "tmp"             // 临时缓存的文件夹
+	RodCacheFolder      = "rod"             // rod 的缓存目录
 	DebugFolder         = "CSF-DebugThings" // 调试相关的文件夹
-	TmpFolder           = "CSF-TmpThings"   // 临时缓存的文件夹
 	SubFixCacheFolder   = "CSF-SubFixCache" // 字幕时间校正的缓存文件夹，一般可以不清理
-	RodCacheFolder      = "CSF-Rod"         // rod 的缓存目录
 )
 
 // 配置文件的位置信息，这个会根据系统版本做区分

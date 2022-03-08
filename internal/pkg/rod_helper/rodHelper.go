@@ -32,6 +32,7 @@ func NewBrowser(httpProxyURL string, loadAdblock bool) (*rod.Browser, error) {
 		adblockSavePath, err = releaseAdblock()
 		if err != nil {
 			log_helper.GetLogger().Errorln("releaseAdblock", err)
+			log_helper.GetLogger().Panicln("releaseAdblock", err)
 		}
 	})
 	var browser *rod.Browser
@@ -179,6 +180,12 @@ func newPage(browser *rod.Browser) (*rod.Page, error) {
 
 // releaseAdblock 从程序中释放 adblock 插件出来到本地路径
 func releaseAdblock() (string, error) {
+
+	defer func() {
+		log_helper.GetLogger().Infoln("releaseAdblock end")
+	}()
+
+	log_helper.GetLogger().Infoln("releaseAdblock start")
 
 	adblockFolderPath := filepath.Join(global_value.DefTmpFolder, "chinesesubfinder")
 	err := os.MkdirAll(filepath.Join(adblockFolderPath), os.ModePerm)
