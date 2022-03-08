@@ -5,13 +5,13 @@
         <div>
           <div>
             守护进程：
-            <q-badge v-if="isRunning" color="positive">运行中</q-badge>
+            <q-badge v-if="isJobRunning" color="positive">运行中</q-badge>
             <q-badge v-else color="grey">未运行</q-badge>
           </div>
           <div class="text-grey">用于处理定时任务、启动扫描程序</div>
         </div>
         <div>
-          <q-btn v-if="isRunning" label="强制停止" color="negative" @click="stopJobs" :loading="submitting"></q-btn>
+          <q-btn v-if="isJobRunning" label="强制停止" color="negative" @click="stopJobs" :loading="submitting"></q-btn>
           <q-btn v-else label="立即运行" color="primary" @click="startJobs" :loading="submitting"></q-btn>
         </div>
       </header>
