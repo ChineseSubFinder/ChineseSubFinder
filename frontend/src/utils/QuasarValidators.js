@@ -13,7 +13,7 @@ export const validateRemotePath = (val) =>
 
 export const validateEmbyPath = (val, extendData) =>
   new Promise((resolve) => {
-    CommonApi.checkPath({
+    CommonApi.checkEmbyPath({
       address_url: extendData.address_url,
       api_key: extendData.api_key,
       path_type: extendData.path_type, // movie / series

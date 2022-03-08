@@ -9,6 +9,6 @@ class CommonAPi extends BaseApi {
 
   checkPath = (params) => this.http('/check-path', params, 'POST');
 
-  checkPath = (data) => this.http('/check-emby-path', data, 'POST');
+  checkEmbyPath = (data) => this.http('/check-emby-path', data, 'POST');
 }
 export default new CommonAPi();

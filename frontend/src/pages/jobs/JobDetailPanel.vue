@@ -10,13 +10,13 @@
     <div class="text-grey row items-center">
       <div>
         <template v-if="isRunning">
-          已运行：<time-counter :time="startTimestamp" v-slot="{ days, hours, minutes, seconds }">
-            {{ days }} 天 {{ hours }} 小时 {{ minutes }} 分 {{ seconds }} 秒
+          已运行：<time-counter :time="startTimestamp" v-slot="props">
+            {{ getTimeCountString(props) }}
           </time-counter>
         </template>
         <template v-else-if="isWaiting">
-          <time-counter :time="startTimestamp" v-slot="{ days, hours, minutes, seconds }">
-            {{ days }} 天 {{ hours }} 小时 {{ minutes }} 分 {{ seconds }} 秒
+          <time-counter :time="startTimestamp" v-slot="props">
+            {{ getTimeCountString(props) }}
           </time-counter>
           后开始
         </template>
@@ -50,4 +50,9 @@ import TimeCounter from 'components/TimeCounter';
 import { subJobsDetail, isWaiting, isPreparing, isRunning } from 'pages/jobs/useJob';
 
 const startTimestamp = computed(() => dayjs(subJobsDetail.value.started_time).unix());
+
+const getTimeCountString = (props) => {
+  const { days, hours, minutes, seconds } = props;
+  return `${days ? `${days} 天 ` : ''}${hours} 小时 ${minutes} 分 ${seconds} 秒`;
+};
 </script>

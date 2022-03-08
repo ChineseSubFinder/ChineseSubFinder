@@ -27,37 +27,32 @@
       <job-r-t-log-panel />
     </template>
 
-    <div v-else-if="isRunning" class="q-mt-lg row items-center">
-      <q-spinner-facebook
-        color="primary"
-        size="2em"
-      />
+    <div v-else-if="isJobRunning" class="q-mt-lg row items-center">
+      <q-spinner-facebook color="primary" size="2em" />
       <div class="text-primary q-ml-sm">正在获取任务执行情况...</div>
     </div>
   </q-page>
 </template>
 
 <script setup>
-import { getJobsStatus, systemState } from 'src/store/systemState';
+import { getJobsStatus, isJobRunning, systemState } from 'src/store/systemState';
 import { useQuasar } from 'quasar';
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import JobApi from 'src/api/JobApi';
 import { SystemMessage } from 'src/utils/Message';
 import JobRTLogPanel from 'pages/jobs/JobRTLogPanel';
-import {subJobsDetail, useJob} from 'pages/jobs/useJob';
+import { subJobsDetail, useJob } from 'pages/jobs/useJob';
 import JobDetailPanel from 'pages/jobs/JobDetailPanel';
 
 const $q = useQuasar();
 
 const submitting = ref(false);
 
-const isRunning = computed(() => systemState.jobStatus?.status === 'running');
-
 useJob();
 
 const startJobs = () => {
   $q.dialog({
-    title: '立即运行任务？',
+    title: '是否立即运行？',
     cancel: true,
   }).onOk(async () => {
     submitting.value = true;
@@ -71,9 +66,10 @@ const startJobs = () => {
     SystemMessage.success('启动成功');
   });
 };
+
 const stopJobs = () => {
   $q.dialog({
-    title: '强制停止当前任务？',
+    title: '是否强制停止？',
     cancel: true,
   }).onOk(async () => {
     submitting.value = true;
