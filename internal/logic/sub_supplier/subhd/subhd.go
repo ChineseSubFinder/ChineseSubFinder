@@ -486,7 +486,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *
 	fileName := ""
 	fileByte := []byte{0}
 	err = rod.Try(func() {
-		tmpDir := filepath.Join(global_value.DefRodTmpRootFolder, "downloads")
+		tmpDir := filepath.Join(global_value.DefTmpFolder, "downloads")
 		wait := browser.WaitDownload(tmpDir)
 		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()

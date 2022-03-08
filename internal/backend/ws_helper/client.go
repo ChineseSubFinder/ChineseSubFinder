@@ -26,7 +26,7 @@ const (
 	maxMessageSize = 5 * 1024
 
 	// 发送 chan 的队列长度
-	bufSize = 1
+	bufSize = 5 * 1024
 
 	upGraderReadBufferSize = 5 * 1024
 

@@ -190,7 +190,7 @@ func releaseAdblock() (string, error) {
 
 	log_helper.GetLogger().Infoln("releaseAdblock start")
 
-	adblockFolderPath := filepath.Join(global_value.DefTmpFolder, "chinesesubfinder")
+	adblockFolderPath := global_value.AdblockTmpFolder
 	err := os.MkdirAll(filepath.Join(adblockFolderPath), os.ModePerm)
 	if err != nil {
 		return "", err

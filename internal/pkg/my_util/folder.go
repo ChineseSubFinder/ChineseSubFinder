@@ -43,6 +43,11 @@ func Init() error {
 		log_helper.GetLogger().Panicln("GetRootTmpFolder", err)
 	}
 
+	global_value.AdblockTmpFolder, err = GetPluginFolderByName(Plugin_Adblock)
+	if err != nil {
+		log_helper.GetLogger().Panicln("GetPluginFolderByName", Plugin_Adblock, err)
+	}
+
 	return nil
 }
 
@@ -178,6 +183,50 @@ func ClearRootTmpFolder() error {
 	}
 
 	return nil
+}
+
+// --------------------------------------------------------------
+// Adblock Cache
+// --------------------------------------------------------------
+
+// GetPluginRootFolder 在程序的根目录新建，取缓用文件夹，每一个视频的缓存将在其中额外新建子集文件夹
+func GetPluginRootFolder() (string, error) {
+
+	nowProcessRoot, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, PluginFolder)
+	err = os.MkdirAll(nowProcessRoot, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	return nowProcessRoot, err
+}
+
+// GetPluginFolderByName 获取缓存的文件夹，没有则新建
+func GetPluginFolderByName(folderName string) (string, error) {
+	rootPath, err := GetPluginRootFolder()
+	if err != nil {
+		return "", err
+	}
+	tmpFolderFullPath := filepath.Join(rootPath, folderName)
+	err = os.MkdirAll(tmpFolderFullPath, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	return tmpFolderFullPath, nil
+}
+
+// ClearPluginFolderByName 清理指定的缓存文件夹
+func ClearPluginFolderByName(folderName string) error {
+
+	nowTmpFolder, err := GetPluginFolderByName(folderName)
+	if err != nil {
+		return err
+	}
+
+	return ClearFolder(nowTmpFolder)
 }
 
 // --------------------------------------------------------------
@@ -390,8 +439,13 @@ const (
 	cacheRootFolderName = "cache"           // 缓存文件夹总名称
 	TmpFolder           = "tmp"             // 临时缓存的文件夹
 	RodCacheFolder      = "rod"             // rod 的缓存目录
+	PluginFolder        = "Plugin"          // 插件的目录
 	DebugFolder         = "CSF-DebugThings" // 调试相关的文件夹
 	SubFixCacheFolder   = "CSF-SubFixCache" // 字幕时间校正的缓存文件夹，一般可以不清理
+)
+
+const (
+	Plugin_Adblock = "adblock"
 )
 
 // 配置文件的位置信息，这个会根据系统版本做区分

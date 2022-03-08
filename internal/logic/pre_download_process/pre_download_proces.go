@@ -55,23 +55,6 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	// 清理通知中心
 	notify_center.Notify.Clear()
 	// ------------------------------------------------------------------------
-	// 如果是 Debug 模式，那么就需要写入特殊文件
-	if settings.GetSettings().AdvancedSettings.DebugMode == true {
-		err := log_helper.WriteDebugFile()
-		if err != nil {
-			p.gError = errors.New("log_helper.WriteDebugFile " + err.Error())
-			return p
-		}
-		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Debug")
-	} else {
-		err := log_helper.DeleteDebugFile()
-		if err != nil {
-			p.gError = errors.New("log_helper.DeleteDebugFile " + err.Error())
-			return p
-		}
-		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Info")
-	}
-	// ------------------------------------------------------------------------
 	// 获取验证码
 	updateTimeString, code, err := something_static.GetCodeFromWeb()
 	if err != nil {

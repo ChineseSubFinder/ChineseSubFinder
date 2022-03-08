@@ -157,6 +157,23 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 	ch.fullSubDownloadProcessing = true
 	ch.fullSubDownloadProcessingLock.Unlock()
 
+	// ------------------------------------------------------------------------
+	// 如果是 Debug 模式，那么就需要写入特殊文件
+	if settings.GetSettings().AdvancedSettings.DebugMode == true {
+		err := log_helper.WriteDebugFile()
+		if err != nil {
+			log_helper.GetLogger().Errorln("log_helper.WriteDebugFile " + err.Error())
+		}
+		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Debug")
+	} else {
+		err := log_helper.DeleteDebugFile()
+		if err != nil {
+			log_helper.GetLogger().Errorln("log_helper.DeleteDebugFile " + err.Error())
+		}
+		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Info")
+	}
+	// ------------------------------------------------------------------------
+	// 开始标记，这个是单次扫描的开始
 	log_helper.GetLogger().Infoln(log_helper.OnceSubsScanStart)
 
 	// 扫描字幕任务开始，先是扫描阶段，那么是拿不到有多少视频需要扫描的数量的

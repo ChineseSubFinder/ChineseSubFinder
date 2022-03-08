@@ -251,11 +251,9 @@ func (d *Downloader) DownloadSub4Movie() error {
 	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
 	for i, oneVideoFullPath := range d.movieFileFullPathList {
 
-		// 设置任务的状态
-		pkgcommon.SetSubScanJobStatusScanMovie(i+1, len(d.movieFileFullPathList), filepath.Base(oneVideoFullPath))
-
 		err = d.taskControl.Invoke(&task_control.TaskData{
 			Index: i,
+			Count: len(d.movieFileFullPathList),
 			DataEx: DownloadInputData{
 				OneVideoFullPath: oneVideoFullPath,
 			},
@@ -362,11 +360,9 @@ func (d *Downloader) DownloadSub4Series() error {
 	seriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
 		for _, seriesName := range seriesNames.([]string) {
 
-			// 设置任务的状态
-			pkgcommon.SetSubScanJobStatusScanSeriesMain(seriesCount+1, len(seriesNames.([]string)), seriesName)
-
 			err = d.taskControl.Invoke(&task_control.TaskData{
 				Index: seriesCount,
+				Count: len(seriesNames.([]string)),
 				DataEx: DownloadInputData{
 					RootDirPath:   seriesRootPathName.(string),
 					OneSeriesPath: seriesName,
@@ -439,6 +435,8 @@ func (d *Downloader) movieDlFunc(ctx context.Context, inData interface{}) error 
 
 	taskData := inData.(*task_control.TaskData)
 	downloadInputData := taskData.DataEx.(DownloadInputData)
+	// 设置任务的状态
+	pkgcommon.SetSubScanJobStatusScanMovie(taskData.Index+1, taskData.Count, filepath.Base(downloadInputData.OneVideoFullPath))
 	// -----------------------------------------------------
 	// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
 	organizeSubFiles, err := d.subSupplierHub.DownloadSub4Movie(downloadInputData.OneVideoFullPath, taskData.Index, d.needForcedScanAndDownSub)
@@ -469,6 +467,10 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
 	var seriesInfo *series.SeriesInfo
 	var organizeSubFiles map[string][]string
+
+	// 设置任务的状态
+	pkgcommon.SetSubScanJobStatusScanSeriesMain(taskData.Index+1, taskData.Count, downloadInputData.OneSeriesPath)
+
 	// 优先判断特殊的操作
 	if d.needForcedScanAndDownSub == true {
 		// 全盘扫描
