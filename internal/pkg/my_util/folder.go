@@ -187,20 +187,16 @@ func ClearRootTmpFolder() error {
 // GetRodTmpFolder 在程序的根目录新建，rod 缓存用文件夹
 func GetRodTmpFolder() (string, error) {
 
-	if global_value.DefRodTmpFolder == "" {
-		nowProcessRoot, err := os.Getwd()
-		if err != nil {
-			return "", err
-		}
-		nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, RodCacheFolder)
-		err = os.MkdirAll(nowProcessRoot, os.ModePerm)
-		if err != nil {
-			return "", err
-		}
-		global_value.DefRodTmpFolder = nowProcessRoot
-		return nowProcessRoot, err
+	nowProcessRoot, err := os.Getwd()
+	if err != nil {
+		return "", err
 	}
-	return global_value.DefRodTmpFolder, nil
+	nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, RodCacheFolder)
+	err = os.MkdirAll(nowProcessRoot, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	return nowProcessRoot, err
 }
 
 // ClearRodTmpFolder 清理 rod 缓存文件夹
