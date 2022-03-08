@@ -113,6 +113,15 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 		// 如果找到 code 了，那么就可以继续用这个实例
 		p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(*settings.GetSettings()))
 	}
+	// ------------------------------------------------------------------------
+	// 清理自定义的 rod 缓存目录
+	err = my_util.ClearRodTmpRootFolder()
+	if err != nil {
+		p.gError = errors.New("ClearRodTmpRootFolder " + err.Error())
+		return p
+	}
+
+	log_helper.GetLogger().Infoln("ClearRodTmpRootFolder Done")
 
 	return p
 }

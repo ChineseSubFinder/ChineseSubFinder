@@ -13,7 +13,7 @@ var (
 	ConfigRootDirFPath   = ""
 	DefDebugFolder       = ""
 	DefTmpFolder         = ""
-	DefRodTmpFolder      = ""
+	DefRodTmpRootFolder  = ""
 	DefSubFixCacheFolder = ""
 	WantedExtMap         = make(map[string]string) // 人工确认的需要监控的视频后缀名
 	DefExtMap            = make(map[string]string) // 内置支持的视频后缀名列表

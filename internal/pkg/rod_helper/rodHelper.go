@@ -35,6 +35,9 @@ func NewBrowser(httpProxyURL string, loadAdblock bool) (*rod.Browser, error) {
 			log_helper.GetLogger().Panicln("releaseAdblock", err)
 		}
 	})
+
+	// 随机的 rod 子文件夹名称
+	nowUserData := filepath.Join(global_value.DefRodTmpRootFolder, my_util.RandStringBytesMaskImprSrcSB(20))
 	var browser *rod.Browser
 	err = rod.Try(func() {
 		purl := ""
@@ -44,14 +47,14 @@ func NewBrowser(httpProxyURL string, loadAdblock bool) (*rod.Browser, error) {
 				Set("load-extension", adblockSavePath).
 				Proxy(httpProxyURL).
 				Headless(false). // 插件模式需要设置这个
-				UserDataDir(global_value.DefRodTmpFolder).
+				UserDataDir(nowUserData).
 				//XVFB("--server-num=5", "--server-args=-screen 0 1600x900x16").
 				//XVFB("-ac :99", "-screen 0 1280x1024x16").
 				MustLaunch()
 		} else {
 			purl = launcher.New().
 				Proxy(httpProxyURL).
-				UserDataDir(global_value.DefRodTmpFolder).
+				UserDataDir(nowUserData).
 				MustLaunch()
 		}
 
@@ -161,13 +164,13 @@ func Clear() {
 		defer browser.MustClose()
 	})
 
-	err := my_util.ClearRodTmpFolder()
+	err := my_util.ClearRodTmpRootFolder()
 	if err != nil {
-		log_helper.GetLogger().Errorln("ClearRodTmpFolder", err)
+		log_helper.GetLogger().Errorln("ClearRodTmpRootFolder", err)
 		return
 	}
 
-	log_helper.GetLogger().Infoln("ClearRodTmpFolder Done")
+	log_helper.GetLogger().Infoln("ClearRodTmpRootFolder Done")
 }
 
 func newPage(browser *rod.Browser) (*rod.Page, error) {

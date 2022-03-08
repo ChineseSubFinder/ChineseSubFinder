@@ -33,9 +33,9 @@ func Init() error {
 		log_helper.GetLogger().Panicln("GetRootTmpFolder", err)
 	}
 
-	global_value.DefRodTmpFolder, err = GetRodTmpFolder()
+	global_value.DefRodTmpRootFolder, err = GetRodTmpRootFolder()
 	if err != nil {
-		log_helper.GetLogger().Panicln("GetRodTmpFolder", err)
+		log_helper.GetLogger().Panicln("GetRodTmpRootFolder", err)
 	}
 
 	global_value.DefSubFixCacheFolder, err = GetRootSubFixCacheFolder()
@@ -184,8 +184,8 @@ func ClearRootTmpFolder() error {
 // Rod Cache
 // --------------------------------------------------------------
 
-// GetRodTmpFolder 在程序的根目录新建，rod 缓存用文件夹
-func GetRodTmpFolder() (string, error) {
+// GetRodTmpRootFolder 在程序的根目录新建，rod 缓存用文件夹
+func GetRodTmpRootFolder() (string, error) {
 
 	nowProcessRoot, err := os.Getwd()
 	if err != nil {
@@ -199,10 +199,10 @@ func GetRodTmpFolder() (string, error) {
 	return nowProcessRoot, err
 }
 
-// ClearRodTmpFolder 清理 rod 缓存文件夹
-func ClearRodTmpFolder() error {
+// ClearRodTmpRootFolder 清理 rod 缓存文件夹
+func ClearRodTmpRootFolder() error {
 
-	nowTmpFolder, err := GetRodTmpFolder()
+	nowTmpFolder, err := GetRodTmpRootFolder()
 	if err != nil {
 		return err
 	}
