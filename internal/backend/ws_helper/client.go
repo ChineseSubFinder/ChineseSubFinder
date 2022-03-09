@@ -3,12 +3,14 @@ package ws_helper
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend/ws"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/log_hub"
 	"github.com/gorilla/websocket"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -51,6 +53,13 @@ type Client struct {
 	sendLogLineIndex int             // 日志发送到那个位置了
 	authed           bool            // 是否已经通过认证
 	send             chan []byte     // 发送给 client 的内容 bytes
+	closeOnce        sync.Once
+}
+
+func (c *Client) close() {
+	c.closeOnce.Do(func() {
+		_ = c.conn.Close()
+	})
 }
 
 // 接收 Client 发送来的消息
@@ -65,7 +74,7 @@ func (c *Client) readPump() {
 	defer func() {
 		// 触发移除 client 的逻辑
 		c.hub.unregister <- c
-		_ = c.conn.Close()
+		c.close()
 	}()
 	var err error
 	var message []byte
@@ -157,7 +166,7 @@ func (c *Client) writePump() {
 		pingTicker.Stop()
 		subScanJobStatusTicker.Stop()
 		runningLogTicker.Stop()
-		_ = c.conn.Close()
+		c.close()
 	}()
 
 	for {
@@ -179,7 +188,7 @@ func (c *Client) writePump() {
 				// The hub closed the channel.
 				err = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				if err != nil {
-					log_helper.GetLogger().Errorln("writePump close hub WriteMessage", err)
+					log_helper.GetLogger().Warningln("writePump close hub WriteMessage", err)
 				}
 				return
 			}
@@ -236,6 +245,9 @@ func (c *Client) writePump() {
 				continue
 			}
 			nowRunningLog := log_helper.GetOnceLog4Running()
+			if nowRunningLog == nil {
+				continue
+			}
 			// 找到日志，把当前已有的日志发送出去，然后记录发送到哪里了
 			// 这里需要考虑一次性的信息太多，超过发送的缓冲区，所以需要拆分发送
 			outLogsBytes, err := RunningLogReply(nowRunningLog, c.sendLogLineIndex)
@@ -276,7 +288,7 @@ func AuthReply(inType ws.AuthMessage) ([]byte, error) {
 func RunningLogReply(log *log_hub.OnceLog, iPreSendLines ...int) ([][]byte, error) {
 
 	if log == nil {
-		return nil, nil
+		return nil, errors.New("RunningLogReply input log is nil")
 	}
 
 	var outLogBytes = make([][]byte, 0)

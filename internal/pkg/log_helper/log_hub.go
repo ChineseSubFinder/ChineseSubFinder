@@ -141,6 +141,10 @@ func GetOnceLog4Running() *log_hub.OnceLog {
 // GetSpiltOnceLog 拆分到一行一个，没有锁，所以需要考虑并发问题
 func GetSpiltOnceLog(log *log_hub.OnceLog) []*log_hub.OnceLog {
 
+	if log == nil {
+		return nil
+	}
+
 	var outList = make([]*log_hub.OnceLog, len(log.LogLines))
 	for i := 0; i < len(log.LogLines); i++ {
 		outList[i] = &log_hub.OnceLog{
@@ -257,7 +261,7 @@ var (
 	onceLoggerFile      *os.File                     // 单次扫描保存 Log 文件的实例
 	onceLogs            = make([]log_hub.OnceLog, 0) // 本地缓存的多次，单次扫描的 Log 内容
 	onceLogsLock        sync.Mutex                   // 对应的锁
-	onceLog4Running     *log_hub.OnceLog             // 当前正在扫描时候日志的日志内容实例，注意，开启任务不代表就在扫描
+	onceLog4Running     = log_hub.NewOnceLog(0)      // 当前正在扫描时候日志的日志内容实例，注意，开启任务不代表就在扫描
 	onceLog4RunningLock sync.Mutex                   // 对应的锁
 )
 
