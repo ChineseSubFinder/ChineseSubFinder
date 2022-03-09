@@ -58,6 +58,7 @@ type Client struct {
 
 func (c *Client) close() {
 	c.closeOnce.Do(func() {
+		c.hub.unregister <- c
 		_ = c.conn.Close()
 	})
 }
@@ -73,7 +74,7 @@ func (c *Client) readPump() {
 
 	defer func() {
 		// 触发移除 client 的逻辑
-		c.hub.unregister <- c
+		//c.hub.unregister <- c
 		c.close()
 	}()
 	var err error
@@ -94,7 +95,7 @@ func (c *Client) readPump() {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log_helper.GetLogger().Errorln("readPump.IsUnexpectedCloseError", err)
 			}
-			break
+			return
 		}
 
 		revMessage := ws.BaseMessage{}
