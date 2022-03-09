@@ -1,6 +1,6 @@
 import BaseApi from './BaseApi';
 
 class LogApi extends BaseApi {
-  getList = () => this.http('/running-log', { the_last_few_times: 3 });
+  getList = (params) => this.http('/running-log', params);
 }
 export default new LogApi();

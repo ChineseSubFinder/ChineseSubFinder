@@ -37,12 +37,13 @@
 <script setup>
 import { getJobsStatus, isJobRunning, systemState } from 'src/store/systemState';
 import { useQuasar } from 'quasar';
-import { onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import JobApi from 'src/api/JobApi';
 import { SystemMessage } from 'src/utils/Message';
 import JobRTLogPanel from 'pages/jobs/JobRTLogPanel';
 import { subJobsDetail, useJob } from 'pages/jobs/useJob';
 import JobDetailPanel from 'pages/jobs/JobDetailPanel';
+import { wsManager } from 'src/composables/useWebSocketApi';
 
 const $q = useQuasar();
 
@@ -86,5 +87,9 @@ const stopJobs = () => {
 
 onMounted(() => {
   getJobsStatus();
+});
+
+onBeforeUnmount(() => {
+  wsManager.close();
 });
 </script>

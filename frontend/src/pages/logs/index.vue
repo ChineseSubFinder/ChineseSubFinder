@@ -3,7 +3,27 @@
     <q-card class="row col" flat bordered>
       <div class="full-height q-pa-md">
         <q-list style="width: 220px">
-          <q-item-label header>历史日志</q-item-label>
+          <q-item-label header>
+            <div class="row items-center justify-between">
+              <div>历史日志</div>
+              <div>
+                <q-select
+                  style="width: 120px"
+                  v-model="form.logCount"
+                  :options="[
+                    { label: '最近3次', value: 3 },
+                    { label: '最近5次', value: 5 },
+                    { label: '最近10次', value: 10 },
+                    { label: '最近20次', value: 20 },
+                  ]"
+                  dense
+                  outlined
+                  map-options
+                  emit-value
+                />
+              </div>
+            </div>
+          </q-item-label>
           <q-separator />
           <q-item
             v-for="item in logList"
@@ -28,22 +48,18 @@
         </q-list>
       </div>
       <q-separator vertical />
-      <log-viewer
-        class="full-height"
-        :log-lines="currentLogLines"
-        :key="currentItem?.log_lines[0]?.date_time"
-      />
+      <log-viewer class="full-height" :log-lines="currentLogLines" :key="currentItem?.log_lines[0]?.date_time" />
     </q-card>
   </fix-height-q-page>
 </template>
 
 <script setup>
-import { useLogList } from 'pages/logs/useLogList';
+import { form, useLogList } from 'pages/logs/useLogList';
 import FixHeightQPage from 'components/FixHeightQPage';
 import { saveText } from 'src/utils/FileDownload';
 import { computed } from 'vue';
 import LogViewer from 'components/LogViewer';
-import {getExportSettings, useSettings} from 'pages/settings/useSettings';
+import { getExportSettings, useSettings } from 'pages/settings/useSettings';
 
 const { logList, currentIndex, currentItem } = useLogList();
 

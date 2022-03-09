@@ -132,6 +132,5 @@ export const useWebSocketApi = (eventType, eventHandler) => {
 
   onBeforeUnmount(() => {
     wsManager.off(eventType, eventHandler);
-    wsManager.close();
   });
 };

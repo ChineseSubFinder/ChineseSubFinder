@@ -3,27 +3,28 @@
     <div class="q-my-xs">
       任务状态：
       <q-badge outline v-if="isPreparing" color="secondary">已启动</q-badge>
-      <q-badge outline v-if="isRunning" color="positive">运行中</q-badge>
+      <q-badge outline v-if="isScanMovie" color="positive">正在扫描电影</q-badge>
+      <q-badge outline v-if="isScanSeries" color="positive">正在扫描连续剧</q-badge>
       <q-badge outline v-else-if="isWaiting" color="warning">等待下一次定时任务启动</q-badge>
     </div>
 
     <div class="text-grey row items-center">
       <div>
-        <template v-if="isRunning">
-          已运行：<time-counter :time="startTimestamp" v-slot="props">
-            {{ getTimeCountString(props) }}
-          </time-counter>
-        </template>
-        <template v-else-if="isWaiting">
+        <template v-if="isScanSeries || isScanMovie">
           <time-counter :time="startTimestamp" v-slot="props">
             {{ getTimeCountString(props) }}
           </time-counter>
           后开始
         </template>
+        <template v-else>
+          已运行：<time-counter :time="startTimestamp" v-slot="props">
+            {{ getTimeCountString(props) }}
+          </time-counter>
+        </template>
       </div>
     </div>
 
-    <section v-if="isRunning" class="row q-mt-md">
+    <section v-if="isScanSeries || isScanMovie" class="row q-mt-md">
       <job-progress-card
         title="任务进度"
         :current="subJobsDetail.working_unit_index"
@@ -47,7 +48,7 @@ import { computed } from 'vue';
 import JobProgressCard from 'pages/jobs/JobProgressCard';
 import dayjs from 'dayjs';
 import TimeCounter from 'components/TimeCounter';
-import { subJobsDetail, isWaiting, isPreparing, isRunning } from 'pages/jobs/useJob';
+import { subJobsDetail, isWaiting, isPreparing, isScanMovie, isScanSeries } from 'pages/jobs/useJob';
 
 const startTimestamp = computed(() => dayjs(subJobsDetail.value.started_time).unix());
 
