@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 func (cb ControllerBase) RunningLogHandler(c *gin.Context) {
@@ -14,14 +15,14 @@ func (cb ControllerBase) RunningLogHandler(c *gin.Context) {
 		cb.ErrorProcess(c, "RunningLogHandler", err)
 	}()
 
-	reqRunningLog := backend.ReqRunningLog{}
-	err = c.ShouldBindJSON(&reqRunningLog)
+	// 从缓存中拿到日志信息，拼接后返回
+	strLastFewTimes := c.DefaultQuery("the_last_few_times", "3")
+	lastFewTimes, err := strconv.Atoi(strLastFewTimes)
 	if err != nil {
 		return
 	}
-	// 从缓存中拿到日志信息，拼接后返回
 
-	tmpOnceLogs := log_helper.GetRecentOnceLogs(reqRunningLog.TheLastFewTimes)
+	tmpOnceLogs := log_helper.GetRecentOnceLogs(lastFewTimes)
 
 	replyOnceLog := backend.NewReplyRunningLog()
 	replyOnceLog.RecentLogs = append(replyOnceLog.RecentLogs, tmpOnceLogs...)

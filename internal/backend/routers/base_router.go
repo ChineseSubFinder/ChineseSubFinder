@@ -30,7 +30,7 @@ func InitRouter(router *gin.Engine, cronHelper *cron_helper.CronHelper) {
 
 	router.GET("/def-settings", cbBase.DefSettingsHandler)
 
-	router.POST("/running-log", middle.CheckAuth(), cbBase.RunningLogHandler)
+	router.GET("/running-log", middle.CheckAuth(), cbBase.RunningLogHandler)
 
 	// v1路由: /v1/xxx
 	GroupV1 := router.Group("/" + cbV1.GetVersion())

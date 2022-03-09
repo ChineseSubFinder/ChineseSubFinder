@@ -275,6 +275,10 @@ func AuthReply(inType ws.AuthMessage) ([]byte, error) {
 // RunningLogReply 发送的 Running Log 数据，iPreSendLines 之前俺发送到第几条数据，则不发发送过的
 func RunningLogReply(log *log_hub.OnceLog, iPreSendLines ...int) ([][]byte, error) {
 
+	if log == nil {
+		return nil, nil
+	}
+
 	var outLogBytes = make([][]byte, 0)
 	var err error
 	var preSendLines = 0
