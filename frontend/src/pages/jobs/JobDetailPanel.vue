@@ -10,14 +10,15 @@
 
     <div class="text-grey row items-center">
       <div>
-        <template v-if="isScanSeries || isScanMovie">
+        <template v-if="isWaiting">
           <time-counter :time="startTimestamp" v-slot="props">
             {{ getTimeCountString(props) }}
           </time-counter>
           后开始
         </template>
         <template v-else>
-          已运行：<time-counter :time="startTimestamp" v-slot="props">
+          已运行
+          <time-counter :time="startTimestamp" v-slot="props">
             {{ getTimeCountString(props) }}
           </time-counter>
         </template>
