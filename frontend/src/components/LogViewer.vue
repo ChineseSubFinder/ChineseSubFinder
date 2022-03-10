@@ -1,6 +1,6 @@
 <template>
-  <div class="log-viewer col bg-grey-2 overflow-auto q-pa-sm relative-position" :key="logLines[0]?.date_time">
-    <q-virtual-scroll ref="logArea" class="full-height" :items="logLines">
+  <div class="log-viewer col bg-grey-2 overflow-auto relative-position" :key="logLines[0]?.date_time">
+    <q-virtual-scroll ref="logArea" class="full-height q-pa-sm" :items="logLines">
       <template v-slot="{ item, index }">
         <div :key="index" style="white-space: nowrap; line-height: 2">
           {{ getTextLogLine(item) }}

@@ -1,6 +1,6 @@
 <template>
   <q-card flat>
-    <header class="title">{{title}}</header>
+    <header class="title">{{ title }}</header>
     <div class="row">
       <div>
         <q-circular-progress
@@ -27,7 +27,8 @@
 </template>
 
 <script setup>
-import {computed} from 'vue';
+import { computed } from 'vue';
+import { isScanMovie, isScanSeries } from 'pages/jobs/useJob';
 
 const props = defineProps({
   title: String,
@@ -36,12 +37,15 @@ const props = defineProps({
   currentName: String,
   color: {
     type: String,
-    default: 'secondary'
+    default: 'secondary',
   },
-})
+});
 
 const progress = computed(() => {
-  const val = props.current / props.total * 100;
+  if (props.total === 0) return '100.00';
+  // 最后一个处理任务时显示99.99
+  if (props.total === props.current && (isScanMovie || isScanSeries)) return '99.99';
+  const val = (props.current / props.total) * 100;
   return val.toFixed(2);
 });
 </script>
