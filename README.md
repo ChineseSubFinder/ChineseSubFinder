@@ -24,6 +24,7 @@
 有两个文档可以参考：
 
 - [v0.20 教程](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.20教程)（不兼容之前版本的 config.yaml 配置！）
+- [v0.21.x 优化细节](https://github.com/allanpk716/ChineseSubFinder/issues/240)
 - [Docker ChineseSubFinder--中文字幕自动下载 | sleele 的博客 - 第三方教程](https://sleele.com/2021/06/25/docker-chinesesubfinder-中文字幕自动下载/)
 
 高阶设置：
@@ -75,6 +76,7 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 
 ## 版本
 
+- v0.21.x 调整细节，[v0.21.x 优化细节](https://github.com/allanpk716/ChineseSubFinder/issues/240) -- 2022 年 2 月 6 日
 - v0.20.x 重构，大范围重构，新增 Web 设置界面，支持多媒体路径 -- 2022 年 2 月 6 日
 - v0.19.x 调整，[字幕时间轴校正 V2](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3V2.md) 功能，以及若干细节改动 --2021 年 12 月 30 日
 - v0.18.x 新增，[字幕时间轴自动校正 V1](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3.md)。暂时屏蔽 subhd 下载逻辑 -- 2021 年 10 月 17 日
