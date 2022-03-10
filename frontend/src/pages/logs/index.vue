@@ -1,5 +1,9 @@
 <template>
-  <fix-height-q-page class="flex row q-pa-md">
+  <fix-height-q-page class="flex column q-pa-md">
+    <div class="text-grey-8 q-mb-sm">
+      * 如果运行中出现问题，欢迎到Github
+      <span class="text-primary cursor-pointer" @click="gotoGithubIssuePage">提交反馈</span>，提交反馈时请附上出错日志。
+    </div>
     <q-card class="row col" flat bordered>
       <div class="full-height q-pa-md">
         <q-list style="width: 220px">
@@ -60,6 +64,7 @@ import { saveText } from 'src/utils/FileDownload';
 import { computed } from 'vue';
 import LogViewer from 'components/LogViewer';
 import { getExportSettings, useSettings } from 'pages/settings/useSettings';
+import { gotoGithubIssuePage } from 'src/utils/CommonUtils';
 
 const { logList, currentIndex, currentItem } = useLogList();
 
