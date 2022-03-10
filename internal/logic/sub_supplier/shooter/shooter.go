@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
@@ -187,8 +188,15 @@ func (s Supplier) computeFileHash(filePath string) (string, error) {
 
 func (s Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	var allSupplierSubInfo = make([]supplier.SubInfo, 0)
+
+	index := 0
 	// 这里拿到的 seriesInfo ，里面包含了，需要下载字幕的 Eps 信息
 	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
+
+		index++
+		pkgcommon.SetSubScanJobStatusScanSeriesSub(index, len(seriesInfo.NeedDlEpsKeyList),
+			fmt.Sprintf("%v - S%v-E%v", episodeInfo.Title, episodeInfo.Season, episodeInfo.Episode))
+
 		one, err := s.getSubListFromFile(episodeInfo.FileFullPath)
 		if err != nil {
 			s.log.Errorln(s.GetSupplierName(), "getSubListFromFile", episodeInfo.FileFullPath)

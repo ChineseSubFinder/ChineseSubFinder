@@ -6,6 +6,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
@@ -143,6 +144,10 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	subInfoNeedDownload := s.whichEpisodeNeedDownloadSub(seriesInfo, subList)
 	// 下载字幕
 	for i, item := range subInfoNeedDownload {
+
+		pkgcommon.SetSubScanJobStatusScanSeriesSub(i+1, len(seriesInfo.NeedDlEpsKeyList),
+			fmt.Sprintf("%v - S%v-E%v", item.Title, item.Season, item.Episode))
+
 		bok, hdContent, err := s.step2Ex(browser, item.Url)
 		if err != nil {
 			s.log.Errorln("subhd step2Ex", err)

@@ -71,6 +71,39 @@ func SetSubScanJobStatusScanSeriesMain(WorkingUnitIndex, UnitCount int, WorkingU
 	subDownloadJobInfo.UnitCount = UnitCount
 	subDownloadJobInfo.WorkingUnitName = WorkingUnitName
 
+	subDownloadJobInfo.WorkingVideoIndex = 0
+	subDownloadJobInfo.VideoCount = 0
+	subDownloadJobInfo.WorkingVideoName = ""
+
+	subDownloadJobInfoLock.Unlock()
+}
+
+// SetSubScanJobStatusScanSeriesSub 设置扫描字幕任务的状态为运行
+func SetSubScanJobStatusScanSeriesSub(WorkingVideoIndex, VideoCount int, WorkingVideoName string) {
+
+	subDownloadJobInfoLock.Lock()
+
+	if subDownloadJobInfo == nil {
+		subDownloadJobInfo = &ws.SubDownloadJobInfo{}
+	}
+	subDownloadJobInfo.Status = ws.ScanSeries
+	update := false
+	// 因为这里不同于movie的逻辑，movie 是在字幕下载者之前进行的统计更新
+	// 而对应 series 则是进入到具体的一个下载者中进行的任务进度更新，所以需要考虑并发情况，以最大值来更新
+	if subDownloadJobInfo.WorkingVideoIndex < WorkingVideoIndex {
+		subDownloadJobInfo.WorkingVideoIndex = WorkingVideoIndex
+		update = true
+	}
+
+	if subDownloadJobInfo.VideoCount < VideoCount {
+		subDownloadJobInfo.VideoCount = VideoCount
+		update = true
+	}
+
+	if update == true {
+		subDownloadJobInfo.WorkingVideoName = WorkingVideoName
+	}
+
 	subDownloadJobInfoLock.Unlock()
 }
 

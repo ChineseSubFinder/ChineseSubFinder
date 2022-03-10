@@ -125,22 +125,20 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 	if settings.GetSettings().AdvancedSettings.ProxySettings.UseHttpProxy == false {
 
 		log_helper.GetLogger().Infoln("UseHttpProxy = false")
-		// 如果不使用代理，那么默认需要检测 baidu 的连通性
+		// 如果不使用代理，那么默认需要检测 baidu 的连通性，不通过也继续
 		proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.BaiduUrl, "")
 		if err != nil {
-			p.gError = errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.BaiduUrl + ", " + err.Error())
-			return p
+			log_helper.GetLogger().Errorln(errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.BaiduUrl + ", " + err.Error()))
 		} else {
 			log_helper.GetLogger().Infoln("UrlConnectednessTest Target Site", url_connectedness_helper.BaiduUrl, "Speed:", proxySpeed, "ms,", "Status:", proxyStatus)
 		}
 	} else {
 
 		log_helper.GetLogger().Infoln("UseHttpProxy:", settings.GetSettings().AdvancedSettings.ProxySettings.HttpProxyAddress)
-		// 如果使用了代理，那么默认需要检测 google 的连通性
+		// 如果使用了代理，那么默认需要检测 google 的连通性，不通过也继续
 		proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.GoogleUrl, settings.GetSettings().AdvancedSettings.ProxySettings.HttpProxyAddress)
 		if err != nil {
-			p.gError = errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.GoogleUrl + ", " + err.Error())
-			return p
+			log_helper.GetLogger().Errorln(errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.GoogleUrl + ", " + err.Error()))
 		} else {
 			log_helper.GetLogger().Infoln("UrlConnectednessTest Target Site", url_connectedness_helper.GoogleUrl, "Speed:", proxySpeed, "ms,", "Status:", proxyStatus)
 		}
