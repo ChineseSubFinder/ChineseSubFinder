@@ -70,6 +70,10 @@ func (lh *LoggerHub) Fire(entry *logrus.Entry) error {
 			_ = onceLoggerFile.Close()
 			onceLoggerFile = nil
 		}
+
+		// 注意这个函数的调用时机
+		cleanAndLoadOnceLogs()
+
 		return nil
 	}
 
