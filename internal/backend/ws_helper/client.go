@@ -68,7 +68,7 @@ func (c *Client) readPump() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			log_helper.GetLogger().Warningln("readPump.recover", err)
+			log_helper.GetLogger().Debugln("readPump.recover", err)
 		}
 	}()
 
@@ -82,7 +82,7 @@ func (c *Client) readPump() {
 	c.conn.SetReadLimit(maxMessageSize)
 	err = c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	if err != nil {
-		log_helper.GetLogger().Errorln("readPump.SetReadDeadline", err)
+		log_helper.GetLogger().Debugln("readPump.SetReadDeadline", err)
 		return
 	}
 	c.conn.SetPongHandler(func(string) error {
@@ -93,7 +93,7 @@ func (c *Client) readPump() {
 		_, message, err = c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log_helper.GetLogger().Errorln("readPump.IsUnexpectedCloseError", err)
+				log_helper.GetLogger().Debugln("readPump.IsUnexpectedCloseError", err)
 			}
 			return
 		}
@@ -101,7 +101,7 @@ func (c *Client) readPump() {
 		revMessage := ws.BaseMessage{}
 		err = json.Unmarshal(message, &revMessage)
 		if err != nil {
-			log_helper.GetLogger().Errorln("readPump.BaseMessage.parse", err)
+			log_helper.GetLogger().Debugln("readPump.BaseMessage.parse", err)
 			return
 		}
 
@@ -115,7 +115,7 @@ func (c *Client) readPump() {
 			login := ws.Login{}
 			err = json.Unmarshal([]byte(revMessage.Data), &login)
 			if err != nil {
-				log_helper.GetLogger().Errorln("readPump.Login.parse", err)
+				log_helper.GetLogger().Debugln("readPump.Login.parse", err)
 				return
 			}
 
@@ -124,7 +124,7 @@ func (c *Client) readPump() {
 				// 发送 token 失败的消息
 				outBytes, err := AuthReply(ws.AuthError)
 				if err != nil {
-					log_helper.GetLogger().Errorln("readPump.AuthReply", err)
+					log_helper.GetLogger().Debugln("readPump.AuthReply", err)
 					return
 				}
 				c.send <- outBytes
@@ -135,7 +135,7 @@ func (c *Client) readPump() {
 				// Token 通过
 				outBytes, err := AuthReply(ws.AuthOk)
 				if err != nil {
-					log_helper.GetLogger().Errorln("readPump.AuthReply", err)
+					log_helper.GetLogger().Debugln("readPump.AuthReply", err)
 					return
 				}
 				c.send <- outBytes
@@ -153,7 +153,7 @@ func (c *Client) writePump() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			log_helper.GetLogger().Warningln("writePump.recover", err)
+			log_helper.GetLogger().Debugln("writePump.recover", err)
 		}
 	}()
 
@@ -182,42 +182,42 @@ func (c *Client) writePump() {
 			// 当然首先还是得先把当前消息的发送超时，给确定下来
 			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err != nil {
-				log_helper.GetLogger().Errorln("writePump.SetWriteDeadline", err)
+				log_helper.GetLogger().Debugln("writePump.SetWriteDeadline", err)
 				return
 			}
 			if ok == false {
 				// The hub closed the channel.
 				err = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				if err != nil {
-					log_helper.GetLogger().Warningln("writePump close hub WriteMessage", err)
+					log_helper.GetLogger().Debugln("writePump close hub WriteMessage", err)
 				}
 				return
 			}
 
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
-				log_helper.GetLogger().Errorln("writePump.NextWriter", err)
+				log_helper.GetLogger().Debugln("writePump.NextWriter", err)
 				return
 			}
 			_, err = w.Write(message)
 			if err != nil {
-				log_helper.GetLogger().Errorln("writePump.Write", err)
+				log_helper.GetLogger().Debugln("writePump.Write", err)
 				return
 			}
 
 			if err := w.Close(); err != nil {
-				log_helper.GetLogger().Errorln("writePump.Close", err)
+				log_helper.GetLogger().Debugln("writePump.Close", err)
 				return
 			}
 		case <-pingTicker.C:
 			// 心跳相关，这里是定时器到了触发的间隔，设置发送下一条心跳的超时时间
 			if err := c.conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
-				log_helper.GetLogger().Errorln("writePump.pingTicker.C.SetWriteDeadline", err)
+				log_helper.GetLogger().Debugln("writePump.pingTicker.C.SetWriteDeadline", err)
 				return
 			}
 			// 然后发送心跳
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				log_helper.GetLogger().Errorln("writePump.pingTicker.C.WriteMessage", err)
+				log_helper.GetLogger().Debugln("writePump.pingTicker.C.WriteMessage", err)
 				return
 			}
 		case <-subScanJobStatusTicker.C:
@@ -234,7 +234,7 @@ func (c *Client) writePump() {
 			// 统一丢到 send 里面得了
 			outLogsBytes, err := SubScanJobStatusReply(info)
 			if err != nil {
-				log_helper.GetLogger().Errorln("writePump.SubScanJobStatusReply", err)
+				log_helper.GetLogger().Debugln("writePump.SubScanJobStatusReply", err)
 				return
 			}
 			c.send <- outLogsBytes
@@ -253,7 +253,7 @@ func (c *Client) writePump() {
 			// 这里需要考虑一次性的信息太多，超过发送的缓冲区，所以需要拆分发送
 			outLogsBytes, err := RunningLogReply(nowRunningLog, c.sendLogLineIndex)
 			if err != nil {
-				log_helper.GetLogger().Errorln("writePump.RunningLogReply", err)
+				log_helper.GetLogger().Debugln("writePump.RunningLogReply", err)
 				return
 			}
 			// 拆分到一条日志来发送
