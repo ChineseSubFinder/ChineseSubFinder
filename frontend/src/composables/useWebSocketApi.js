@@ -119,6 +119,7 @@ export const wsManager = new WSManager(`${getWsBaseUrl()}/ws`);
 wsManager.on('common_reply', (data) => {
   if (data.message === 'auth error') {
     SystemMessage.error('Websocket验证失败，请重新登录');
+    wsManager.close();
   }
 });
 
