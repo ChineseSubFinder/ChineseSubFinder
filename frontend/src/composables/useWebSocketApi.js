@@ -57,7 +57,6 @@ class WSManager extends EventEmitter {
     };
 
     ws.onclose = (e) => {
-      this.connected = false;
       if (this.autoRetry) {
         // eslint-disable-next-line no-console
         console.log('Socket is closed. Reconnect will be attempted in 2 second.', e.reason);
@@ -74,15 +73,12 @@ class WSManager extends EventEmitter {
     };
 
     this.ws = ws;
-
-    this.connected = true;
   }
 
   // 强制关闭连接
   close() {
     this.autoRetry = false;
     this.ws?.close();
-    this.connected = false;
   }
 }
 
@@ -124,7 +120,7 @@ wsManager.on('common_reply', (data) => {
 });
 
 export const useWebSocketApi = (eventType, eventHandler) => {
-  if (wsManager.connected === false) {
+  if (wsManager.ws?.readyState !== WebSocket.OPEN) {
     wsManager.connect();
   }
   onMounted(() => {

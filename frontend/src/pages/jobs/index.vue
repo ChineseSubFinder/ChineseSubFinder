@@ -91,5 +91,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   wsManager.close();
+  wsManager.ws = null;
 });
 </script>
