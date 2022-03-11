@@ -25,11 +25,7 @@ func init() {
 
 func main() {
 
-	cronHelper, err := cron_helper.NewCronHelper()
-	if err != nil {
-		log_helper.GetLogger().Panicln("NewCronHelper " + err.Error())
-	}
-
+	cronHelper := cron_helper.NewCronHelper()
 	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {
 		// 如果没有完成，那么就不开启
 		log_helper.GetLogger().Infoln("Need do Setup")

@@ -20,22 +20,22 @@ type CronHelper struct {
 	dh                            *downloader_helper.DownloaderHelper
 }
 
-func NewCronHelper() (*CronHelper, error) {
+func NewCronHelper() *CronHelper {
 
 	ch := CronHelper{}
-	ch.c = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
-	// 定时器
-	entryID, err := ch.c.AddFunc("@every "+settings.GetSettings().CommonSettings.ScanInterval, ch.coreSubDownloadProcess)
-	if err != nil {
-		log_helper.GetLogger().Errorln("CronHelper Cron entryID:", entryID, "Error:", err)
-		return nil, err
-	}
-	return &ch, nil
+	return &ch
 }
 
 // Start 开启定时器任务，这个任务是非阻塞的，coreSubDownloadProcess 仅仅可能是这个函数执行耗时而已
 // runImmediately == false 那么 ch.c.Start() 是不会阻塞的
 func (ch *CronHelper) Start(runImmediately bool) {
+
+	ch.c = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
+	// 定时器
+	entryID, err := ch.c.AddFunc("@every "+settings.GetSettings().CommonSettings.ScanInterval, ch.coreSubDownloadProcess)
+	if err != nil {
+		log_helper.GetLogger().Panicln("CronHelper Cron entryID:", entryID, "Error:", err)
+	}
 
 	ch.cronHelperRunningLock.Lock()
 	ch.cronHelperRunning = true
