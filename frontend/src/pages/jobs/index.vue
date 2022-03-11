@@ -17,7 +17,7 @@
       </header>
     </q-card>
 
-    <template v-if="subJobsDetail">
+    <template v-if="subJobsDetail && isJobRunning">
       <q-separator class="q-my-md" />
 
       <job-detail-panel />
