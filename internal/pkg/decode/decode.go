@@ -19,6 +19,7 @@ func getImdbAndYearMovieXml(movieFilePath string) (types.VideoIMDBInfo, error) {
 
 	videoInfo := types.VideoIMDBInfo{}
 	doc := etree.NewDocument()
+	doc.ReadSettings.Permissive = true
 	if err := doc.ReadFromFile(movieFilePath); err != nil {
 		return videoInfo, err
 	}
@@ -39,6 +40,7 @@ func getImdbAndYearMovieXml(movieFilePath string) (types.VideoIMDBInfo, error) {
 func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo, error) {
 	imdbInfo := types.VideoIMDBInfo{}
 	doc := etree.NewDocument()
+	doc.ReadSettings.Permissive = true
 	// 这里会遇到一个梗，下面的关键词，可能是小写、大写、首字母大写
 	// 读取文件转换为全部的小写，然后在解析 xml ？ etree 在转换为小写后，某些类型的文件的内容会崩溃···
 	// 所以这里很傻的方式解决
@@ -210,6 +212,7 @@ func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoIMDBInfo, error
 	//
 	imdbInfo := types.VideoIMDBInfo{}
 	doc := etree.NewDocument()
+	doc.ReadSettings.Permissive = true
 	// 这里会遇到一个梗，下面的关键词，可能是小写、大写、首字母大写
 	// 读取文件转换为全部的小写，然后在解析 xml ？ etree 在转换为小写后，某些类型的文件的内容会崩溃···
 	// 所以这里很傻的方式解决

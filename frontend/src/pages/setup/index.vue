@@ -94,7 +94,7 @@ const showSubmitButton = computed(() => {
 
 const submit = async () => {
   let isValid = true;
-  if (setupState.form.mediaServer) {
+  if (setupState.form.mediaServer === 'emby') {
     isValid = await mediaServerSettingForm.value.$refs.form.validate();
   }
   if (!isValid) return;

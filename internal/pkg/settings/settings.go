@@ -4,8 +4,10 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/strcut_json"
 	"github.com/huandu/go-clone"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -17,6 +19,7 @@ type Settings struct {
 	EmbySettings          *EmbySettings          `json:"emby_settings"`
 	DeveloperSettings     *DeveloperSettings     `json:"developer_settings"`
 	TimelineFixerSettings *TimelineFixerSettings `json:"timeline_fixer_settings"`
+	ExperimentalFunction  *ExperimentalFunction  `json:"experimental_function"`
 }
 
 // GetSettings 获取 Settings 的实例
@@ -59,6 +62,7 @@ func SetFullNewSettings(inSettings *Settings) error {
 	nowConfigFPath := _settings.configFPath
 	_settings = inSettings
 	_settings.configFPath = nowConfigFPath
+
 	return _settings.Save()
 }
 
@@ -74,14 +78,33 @@ func NewSettings() *Settings {
 		EmbySettings:          NewEmbySettings(),
 		DeveloperSettings:     NewDeveloperSettings(),
 		TimelineFixerSettings: NewTimelineFixerSettings(),
+		ExperimentalFunction:  NewExperimentalFunction(),
 	}
 }
 
 func (s *Settings) Read() error {
+
+	// 需要检查 url 是否正确
+	newEmbyAddressUrl := removeSuffixAddressSlash(s.EmbySettings.AddressUrl)
+	_, err := url.Parse(newEmbyAddressUrl)
+	if err != nil {
+		return err
+	}
+	s.EmbySettings.AddressUrl = newEmbyAddressUrl
+
 	return strcut_json.ToStruct(s.configFPath, s)
 }
 
 func (s *Settings) Save() error {
+
+	// 需要检查 url 是否正确
+	newEmbyAddressUrl := removeSuffixAddressSlash(s.EmbySettings.AddressUrl)
+	_, err := url.Parse(newEmbyAddressUrl)
+	if err != nil {
+		return err
+	}
+	s.EmbySettings.AddressUrl = newEmbyAddressUrl
+
 	return strcut_json.ToFile(s.configFPath, s)
 }
 
@@ -127,6 +150,21 @@ func isFile(filePath string) bool {
 		return false
 	}
 	return !s.IsDir()
+}
+
+// 将字符串后面最后一个字符，如果是 / 那么则替换掉，多个也会
+func removeSuffixAddressSlash(orgAddressUrlString string) string {
+
+	outString := orgAddressUrlString
+
+	for {
+		if strings.HasSuffix(outString, "/") == true {
+			outString = outString[:len(outString)-1]
+		} else {
+			break
+		}
+	}
+	return outString
 }
 
 var (

@@ -122,6 +122,49 @@ func IsSupportISOString(isoString string) bool {
 	return false
 }
 
+// IsSupportISOChineseString 是否是受支持的语言，中
+// 1. 支持 ISO 639-1、639-2/B、639-2/T、639-3
+// 2. 支持中文的多种变种编码
+func IsSupportISOChineseString(isoString string) bool {
+
+	lowerString := strings.ToLower(isoString)
+
+	switch lowerString {
+	case language.ISO_639_1_Chinese:
+		// 639-1
+		return true
+	}
+	switch lowerString {
+	case language.ISO_639_2B_Chinese:
+		// 639-2/B
+		return true
+	}
+	switch lowerString {
+	case language.ISO_639_2T_Chinese:
+		// 639-2/T
+		return true
+	}
+	switch lowerString {
+	case language.ISO_639_3_Chinese:
+		// 639-3
+		return true
+	}
+	switch lowerString {
+	case language.ChineseISO_Hans,
+		language.ChineseISO_Hant,
+		language.ChineseISO_CN,
+		language.ChineseISO_TW,
+		language.ChineseISO_SG,
+		language.ChineseISO_MY,
+		language.ChineseISO_HK,
+		language.ChineseISO_MO:
+		// 中文编码变种
+		return true
+	}
+
+	return false
+}
+
 // ISOSupportRegexRule 获取 ISO 匹配的 regex 表达式
 func ISOSupportRegexRule() string {
 

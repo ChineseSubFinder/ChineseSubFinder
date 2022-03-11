@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
@@ -16,11 +15,11 @@ func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
 	const testSerName = "XXX"
 	const needDelFolderName = "Sub_S1E0"
 	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_helper", "org", needDelFolderName}, 4, false)
-	desSerFullPath, err := folder_helper.GetDebugFolderByName([]string{testSerName})
+	desSerFullPath, err := my_util.GetDebugFolderByName([]string{testSerName})
 	if err != nil {
 		t.Fatal(err)
 	}
-	desSeasonFullPath, err := folder_helper.GetDebugFolderByName([]string{testSerName, filepath.Base(testRootDir)})
+	desSeasonFullPath, err := my_util.GetDebugFolderByName([]string{testSerName, filepath.Base(testRootDir)})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -30,10 +30,17 @@ func (h HotFix001) GetKey() string {
 }
 
 func (h HotFix001) Process() (interface{}, error) {
+
+	defer func() {
+		log_helper.GetLogger().Infoln("Hotfix", h.GetKey(), "End")
+	}()
+
+	log_helper.GetLogger().Infoln("Hotfix", h.GetKey(), "Start...")
+
 	return h.process()
 }
 
-func (h HotFix001) process() (interface{}, error) {
+func (h HotFix001) process() (OutStruct001, error) {
 
 	outStruct := OutStruct001{}
 	outStruct.RenamedFiles = make([]string, 0)
@@ -43,26 +50,26 @@ func (h HotFix001) process() (interface{}, error) {
 		log_helper.GetLogger().Infoln("Fix Movie Dir Index", i, dir, "Start...")
 		fixMovie, err := h.fixMovie(dir)
 		if err != nil {
-			log_helper.GetLogger().Infoln("Fix Movie Dir Index", i, dir, "End...")
-			return nil, err
+			log_helper.GetLogger().Errorln("Fix Movie Dir Index", i, dir, "End With Error", err)
+			return outStruct, err
 		}
 
-		outStruct.RenamedFiles = append(outStruct.RenamedFiles, fixMovie.(OutStruct001).RenamedFiles...)
-		outStruct.ErrFiles = append(outStruct.ErrFiles, fixMovie.(OutStruct001).ErrFiles...)
+		outStruct.RenamedFiles = append(outStruct.RenamedFiles, fixMovie.RenamedFiles...)
+		outStruct.ErrFiles = append(outStruct.ErrFiles, fixMovie.ErrFiles...)
 
 		log_helper.GetLogger().Infoln("Fix Movie Dir Index", i, dir, "End...")
 	}
 
 	for i, dir := range h.seriesRootDirs {
 		log_helper.GetLogger().Infoln("Fix Series Dir Index", i, dir, "Start...")
-		fixSeries, err := h.fixMovie(dir)
+		fixSeries, err := h.fixSeries(dir)
 		if err != nil {
-			log_helper.GetLogger().Infoln("Fix Series Dir Index", i, dir, "End...")
-			return nil, err
+			log_helper.GetLogger().Errorln("Fix Series Dir Index", i, dir, "End With Error", err)
+			return outStruct, err
 		}
 
-		outStruct.RenamedFiles = append(outStruct.RenamedFiles, fixSeries.(OutStruct001).RenamedFiles...)
-		outStruct.ErrFiles = append(outStruct.ErrFiles, fixSeries.(OutStruct001).ErrFiles...)
+		outStruct.RenamedFiles = append(outStruct.RenamedFiles, fixSeries.RenamedFiles...)
+		outStruct.ErrFiles = append(outStruct.ErrFiles, fixSeries.ErrFiles...)
 
 		log_helper.GetLogger().Infoln("Fix Series Dir Index", i, dir, "End...")
 	}
@@ -70,7 +77,7 @@ func (h HotFix001) process() (interface{}, error) {
 	return outStruct, nil
 }
 
-func (h HotFix001) fixMovie(movieRootDir string) (interface{}, error) {
+func (h HotFix001) fixMovie(movieRootDir string) (OutStruct001, error) {
 
 	var err error
 	outStruct := OutStruct001{}
@@ -110,7 +117,7 @@ func (h HotFix001) fixMovie(movieRootDir string) (interface{}, error) {
 	return outStruct, nil
 }
 
-func (h HotFix001) fixSeries(seriesRootDir string) (interface{}, error) {
+func (h HotFix001) fixSeries(seriesRootDir string) (OutStruct001, error) {
 	var err error
 	outStruct := OutStruct001{}
 	outStruct.RenamedFiles = make([]string, 0)

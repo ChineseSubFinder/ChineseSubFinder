@@ -4,15 +4,20 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/frontend/dist"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/routers"
+	"github.com/allanpk716/ChineseSubFinder/internal/backend/ws_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
 	"net/http"
 )
 
 // StartBackEnd 开启后端的服务器
 func StartBackEnd(httpPort int, cronHelper *cron_helper.CronHelper) {
+
+	gin.SetMode(gin.ReleaseMode)
+	gin.DefaultWriter = ioutil.Discard
 
 	engine := gin.Default()
 	// 默认所有都通过
@@ -31,6 +36,13 @@ func StartBackEnd(httpPort int, cronHelper *cron_helper.CronHelper) {
 
 	engine.Any("/api", func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/")
+	})
+
+	hub := ws_helper.NewHub()
+	go hub.Run()
+
+	engine.GET("/ws", func(context *gin.Context) {
+		ws_helper.ServeWs(hub, context.Writer, context.Request)
 	})
 
 	// listen and serve on 0.0.0.0:8080(default)

@@ -272,9 +272,10 @@ func (tc *TaskControl) setTaskDataStatus(taskData *TaskData, status TaskState) {
 }
 
 type TaskData struct {
-	Index  int
-	Status TaskState // 执行情况, 0 是成功，1 是未执行，2 是错误或者超时
-	DataEx interface{}
+	Index  int         // 第几个任务
+	Count  int         // 总任务的数量
+	Status TaskState   // 执行情况, 0 是成功，1 是未执行，2 是错误或者超时
+	DataEx interface{} // 需要传递到执行函数中的数据
 }
 
 type TaskState int

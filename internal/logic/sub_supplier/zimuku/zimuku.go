@@ -5,6 +5,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
@@ -290,6 +291,10 @@ func (s Supplier) whichSubInfoNeedDownload(subInfos SubInfos, err error) []suppl
 
 	var outSubInfoList = make([]supplier.SubInfo, 0)
 	for i := range subInfos {
+
+		pkgcommon.SetSubScanJobStatusScanSeriesSub(i+1, len(subInfos),
+			fmt.Sprintf("%v - S%v-E%v", subInfos[i].Name, subInfos[i].Season, subInfos[i].Episode))
+
 		err = s.step2(&subInfos[i])
 		if err != nil {
 			s.log.Error(s.GetSupplierName(), "step 2", subInfos[i].Name, err)

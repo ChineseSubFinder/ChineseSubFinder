@@ -33,7 +33,7 @@ func TestSubTimelineFixerHelperEx_Process(t *testing.T) {
 	//	},
 	//}
 	//
-	//s := NewSubTimelineFixerHelperEx(config.GetConfig().SubTimelineFixerConfig)
+	//s := NewSubTimelineFixerHelperEx(*settings.NewTimelineFixerSettings())
 	//s.Check()
 	//for _, tt := range tests {
 	//	t.Run(tt.name, func(t *testing.T) {

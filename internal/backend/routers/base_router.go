@@ -24,9 +24,13 @@ func InitRouter(router *gin.Engine, cronHelper *cron_helper.CronHelper) {
 
 	router.POST("/check-path", cbBase.CheckPathHandler)
 
+	router.POST("/check-emby-path", cbBase.CheckEmbyPathHandler)
+
 	router.POST("/check-proxy", cbBase.CheckProxyHandler)
 
 	router.GET("/def-settings", cbBase.DefSettingsHandler)
+
+	router.GET("/running-log", middle.CheckAuth(), cbBase.RunningLogHandler)
 
 	// v1路由: /v1/xxx
 	GroupV1 := router.Group("/" + cbV1.GetVersion())

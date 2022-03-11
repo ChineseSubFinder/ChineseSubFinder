@@ -47,11 +47,26 @@ func ChangeFileCoding2UTF8(inBytes []byte) ([]byte, error) {
 
 	// 然后返回的时候需要去除头部的 BOM 信息
 	dat := []byte(utf8String)
-	if dat[0] == 0xef || dat[1] == 0xbb || dat[2] == 0xbf {
+	if dat[0] == 0xef && dat[1] == 0xbb && dat[2] == 0xbf {
 		dat = dat[3:]
 	}
 	// 在确认一次
 	validUTF8String := strings.ToValidUTF8(string(dat[:]), "")
 
 	return []byte(validUTF8String), nil
+}
+
+func ChangeFileCoding2GBK(inBytes []byte) ([]byte, error) {
+
+	utf8Bytes, err := ChangeFileCoding2UTF8(inBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	gbkString, err := charset.UTF8To("GBK", string(utf8Bytes))
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(gbkString), nil
 }

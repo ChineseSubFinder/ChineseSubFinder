@@ -3,6 +3,7 @@ package cron_helper
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/downloader_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_download_process"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/robfig/cron/v3"
@@ -56,6 +57,15 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	log_helper.GetLogger().Infoln("CronHelper Start...")
 	log_helper.GetLogger().Infoln("Next Sub Scan Will Process After", settings.GetSettings().CommonSettings.ScanInterval)
 	ch.c.Start()
+
+	// 只有定时任务 start 之后才能拿到信息
+	if len(ch.c.Entries()) > 0 {
+		// 不会马上启动扫描，那么就需要设置当前的时间，且为 waiting
+		tttt := ch.c.Entries()[0].Next.Format("2006-01-02 15:04:05")
+		common.SetSubScanJobStatusWaiting(tttt)
+	} else {
+		log_helper.GetLogger().Errorln("Can't get cron jobs, will not send SubScanJobStatus")
+	}
 }
 
 // Stop 会阻塞等待任务完成
@@ -94,6 +104,8 @@ func (ch *CronHelper) Stop() {
 	ch.cronHelperRunningLock.Lock()
 	ch.cronHelperRunning = false
 	ch.cronHelperRunningLock.Unlock()
+
+	common.SetSubScanJobStatusNil()
 }
 
 func (ch *CronHelper) CronHelperRunning() bool {
@@ -137,20 +149,45 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 		ch.fullSubDownloadProcessingLock.Lock()
 		ch.fullSubDownloadProcessing = false
 		ch.fullSubDownloadProcessingLock.Unlock()
+
+		log_helper.GetLogger().Infoln(log_helper.OnceSubsScanEnd)
 	}()
 
 	ch.fullSubDownloadProcessingLock.Lock()
 	ch.fullSubDownloadProcessing = true
 	ch.fullSubDownloadProcessingLock.Unlock()
 
+	// ------------------------------------------------------------------------
+	// 如果是 Debug 模式，那么就需要写入特殊文件
+	if settings.GetSettings().AdvancedSettings.DebugMode == true {
+		err := log_helper.WriteDebugFile()
+		if err != nil {
+			log_helper.GetLogger().Errorln("log_helper.WriteDebugFile " + err.Error())
+		}
+		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Debug")
+	} else {
+		err := log_helper.DeleteDebugFile()
+		if err != nil {
+			log_helper.GetLogger().Errorln("log_helper.DeleteDebugFile " + err.Error())
+		}
+		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Info")
+	}
+	// ------------------------------------------------------------------------
+	// 开始标记，这个是单次扫描的开始
+	log_helper.GetLogger().Infoln(log_helper.OnceSubsScanStart)
+
+	// 扫描字幕任务开始，先是扫描阶段，那么是拿不到有多少视频需要扫描的数量的
+	common.SetSubScanJobStatusPreparing(time.Now().Format("2006-01-02 15:04:05"))
+
 	// 下载前的初始化
-	preDownloadProcess := pre_download_process.NewPreDownloadProcess().
+	preDownloadProcess := pre_download_process.NewPreDownloadProcess()
+	err := preDownloadProcess.
 		Init().
 		Check().
 		HotFix().
 		ChangeSubNameFormat().
-		ReloadBrowser()
-	err := preDownloadProcess.Wait()
+		ReloadBrowser().
+		Wait()
 	if err != nil {
 		log_helper.GetLogger().Errorln("pre_download_process", "Error:", err)
 		log_helper.GetLogger().Errorln("Skip DownloaderHelper.Start()")

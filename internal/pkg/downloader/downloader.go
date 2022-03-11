@@ -12,7 +12,7 @@ import (
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
+	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -145,7 +145,7 @@ func (d *Downloader) GetUpdateVideoListFromEmby() error {
 	}
 	// 获取全路径
 	for _, info := range movieList {
-		d.movieFileFullPathList = append(d.movieFileFullPathList, info.VideoFileFullPath)
+		d.movieFileFullPathList = append(d.movieFileFullPathList, info.PhysicalVideoFileFullPath)
 	}
 	// 输出调试信息
 	d.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap Start")
@@ -201,7 +201,7 @@ func (d *Downloader) RefreshEmbySubList() error {
 func (d *Downloader) DownloadSub4Movie() error {
 	defer func() {
 		// 所有的电影字幕下载完成，抉择完成，需要清理缓存目录
-		err := folder_helper.ClearRootTmpFolder()
+		err := my_util.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error("ClearRootTmpFolder", err)
 		}
@@ -253,6 +253,7 @@ func (d *Downloader) DownloadSub4Movie() error {
 
 		err = d.taskControl.Invoke(&task_control.TaskData{
 			Index: i,
+			Count: len(d.movieFileFullPathList),
 			DataEx: DownloadInputData{
 				OneVideoFullPath: oneVideoFullPath,
 			},
@@ -290,7 +291,7 @@ func (d *Downloader) DownloadSub4Series() error {
 	var err error
 	defer func() {
 		// 所有的连续剧字幕下载完成，抉择完成，需要清理缓存目录
-		err := folder_helper.ClearRootTmpFolder()
+		err := my_util.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error("ClearRootTmpFolder", err)
 		}
@@ -361,6 +362,7 @@ func (d *Downloader) DownloadSub4Series() error {
 
 			err = d.taskControl.Invoke(&task_control.TaskData{
 				Index: seriesCount,
+				Count: len(seriesNames.([]string)),
 				DataEx: DownloadInputData{
 					RootDirPath:   seriesRootPathName.(string),
 					OneSeriesPath: seriesName,
@@ -433,6 +435,8 @@ func (d *Downloader) movieDlFunc(ctx context.Context, inData interface{}) error 
 
 	taskData := inData.(*task_control.TaskData)
 	downloadInputData := taskData.DataEx.(DownloadInputData)
+	// 设置任务的状态
+	pkgcommon.SetSubScanJobStatusScanMovie(taskData.Index+1, taskData.Count, filepath.Base(downloadInputData.OneVideoFullPath))
 	// -----------------------------------------------------
 	// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
 	organizeSubFiles, err := d.subSupplierHub.DownloadSub4Movie(downloadInputData.OneVideoFullPath, taskData.Index, d.needForcedScanAndDownSub)
@@ -463,6 +467,10 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
 	var seriesInfo *series.SeriesInfo
 	var organizeSubFiles map[string][]string
+
+	// 设置任务的状态
+	pkgcommon.SetSubScanJobStatusScanSeriesMain(taskData.Index+1, taskData.Count, downloadInputData.OneSeriesPath)
+
 	// 优先判断特殊的操作
 	if d.needForcedScanAndDownSub == true {
 		// 全盘扫描
@@ -481,9 +489,6 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 				return err
 			}
 		} else {
-
-			//physicalSeriesFolderFPath := ""
-
 			// 先进行 emby_helper api 的操作，读取需要更新字幕的项目
 			seriesInfo, organizeSubFiles, err = d.subSupplierHub.DownloadSub4SeriesFromEmby(
 				filepath.Join(downloadInputData.RootDirPath, downloadInputData.OneSeriesPath),
@@ -500,6 +505,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 	}
 
 	// 只针对需要下载字幕的视频进行字幕的选择保存
+	subVideoCount := 0
 	for epsKey, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 
 		stage := make(chan interface{}, 1)
@@ -517,6 +523,8 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 		case <-stage:
 			break
 		}
+
+		subVideoCount++
 	}
 	// 这里会拿到一份季度字幕的列表比如，Key 是 S1E0 S2E0 S3E0，value 是新的存储位置
 	fullSeasonSubDict := d.saveFullSeasonSub(seriesInfo, organizeSubFiles)

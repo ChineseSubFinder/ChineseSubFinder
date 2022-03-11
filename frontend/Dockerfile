@@ -1,4 +1,4 @@
-FROM library/node:14-alpine as builder
+FROM library/node:16-alpine as builder
 
 USER root
 RUN mkdir -p /usr/src/app
@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 add ./package.json /usr/src/app
 add ./package-lock.json /usr/src/app
 add ./.npmrc /usr/src/app
-RUN npm install --registry https://registry.npm.taobao.org
+RUN npm ci
 ADD . /usr/src/app
 RUN ls -al
 RUN npm run build && ls -al dist/spa

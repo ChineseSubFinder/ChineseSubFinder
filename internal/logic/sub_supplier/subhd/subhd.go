@@ -6,8 +6,9 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
@@ -143,6 +144,10 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	subInfoNeedDownload := s.whichEpisodeNeedDownloadSub(seriesInfo, subList)
 	// 下载字幕
 	for i, item := range subInfoNeedDownload {
+
+		pkgcommon.SetSubScanJobStatusScanSeriesSub(i+1, len(seriesInfo.NeedDlEpsKeyList),
+			fmt.Sprintf("%v - S%v-E%v", item.Title, item.Season, item.Episode))
+
 		bok, hdContent, err := s.step2Ex(browser, item.Url)
 		if err != nil {
 			s.log.Errorln("subhd step2Ex", err)
@@ -486,7 +491,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *
 	fileName := ""
 	fileByte := []byte{0}
 	err = rod.Try(func() {
-		tmpDir := filepath.Join(os.TempDir(), "rod", "downloads")
+		tmpDir := filepath.Join(global_value.DefTmpFolder, "downloads")
 		wait := browser.WaitDownload(tmpDir)
 		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()
@@ -669,12 +674,7 @@ search:
 
 	if s.debugMode == true {
 		//截圖保存
-		nowProcessRoot, err := folder_helper.GetRootDebugFolder()
-		if err == nil {
-			page.MustScreenshot(filepath.Join(nowProcessRoot, "result.png"))
-		} else {
-			s.log.Errorln("model.GetDebugFolder", err)
-		}
+		page.MustScreenshot(global_value.DefDebugFolder, "result.png")
 	}
 }
 

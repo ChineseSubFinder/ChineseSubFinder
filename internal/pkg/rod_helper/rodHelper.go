@@ -4,8 +4,9 @@ import (
 	"context"
 	_ "embed"
 	"errors"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_useragent"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
@@ -31,8 +32,12 @@ func NewBrowser(httpProxyURL string, loadAdblock bool) (*rod.Browser, error) {
 		adblockSavePath, err = releaseAdblock()
 		if err != nil {
 			log_helper.GetLogger().Errorln("releaseAdblock", err)
+			log_helper.GetLogger().Panicln("releaseAdblock", err)
 		}
 	})
+
+	// 随机的 rod 子文件夹名称
+	nowUserData := filepath.Join(global_value.DefRodTmpRootFolder, my_util.RandStringBytesMaskImprSrcSB(20))
 	var browser *rod.Browser
 	err = rod.Try(func() {
 		purl := ""
@@ -42,12 +47,14 @@ func NewBrowser(httpProxyURL string, loadAdblock bool) (*rod.Browser, error) {
 				Set("load-extension", adblockSavePath).
 				Proxy(httpProxyURL).
 				Headless(false). // 插件模式需要设置这个
+				UserDataDir(nowUserData).
 				//XVFB("--server-num=5", "--server-args=-screen 0 1600x900x16").
 				//XVFB("-ac :99", "-screen 0 1280x1024x16").
 				MustLaunch()
 		} else {
 			purl = launcher.New().
 				Proxy(httpProxyURL).
+				UserDataDir(nowUserData).
 				MustLaunch()
 		}
 
@@ -140,7 +147,10 @@ func Clear() {
 			Headless(false).
 			Devtools(true)
 
-		defer l.Cleanup() // remove launcher.FlagUserDataDir
+		defer func() {
+			l.Cleanup() // remove launcher.FlagUserDataDir
+			log_helper.GetLogger().Infoln("rod clean up done.")
+		}()
 
 		url := l.MustLaunch()
 		// Trace shows verbose debug information for each action executed
@@ -153,6 +163,14 @@ func Clear() {
 			MustConnect()
 		defer browser.MustClose()
 	})
+
+	err := my_util.ClearRodTmpRootFolder()
+	if err != nil {
+		log_helper.GetLogger().Errorln("ClearRodTmpRootFolder", err)
+		return
+	}
+
+	log_helper.GetLogger().Infoln("ClearRodTmpRootFolder Done")
 }
 
 func newPage(browser *rod.Browser) (*rod.Page, error) {
@@ -166,14 +184,20 @@ func newPage(browser *rod.Browser) (*rod.Page, error) {
 // releaseAdblock 从程序中释放 adblock 插件出来到本地路径
 func releaseAdblock() (string, error) {
 
-	adblockFolderPath := filepath.Join(os.TempDir(), "chinesesubfinder")
+	defer func() {
+		log_helper.GetLogger().Infoln("releaseAdblock end")
+	}()
+
+	log_helper.GetLogger().Infoln("releaseAdblock start")
+
+	adblockFolderPath := global_value.AdblockTmpFolder
 	err := os.MkdirAll(filepath.Join(adblockFolderPath), os.ModePerm)
 	if err != nil {
 		return "", err
 	}
 	desPath := filepath.Join(adblockFolderPath, "RunAdblock")
 	// 清理之前缓存的信息
-	_ = folder_helper.ClearFolder(desPath)
+	_ = my_util.ClearFolder(desPath)
 	// 具体把 adblock zip 解压下载到哪里
 	outZipFileFPath := filepath.Join(adblockFolderPath, "adblock.zip")
 	adblockZipFile, err := os.Create(outZipFileFPath)
@@ -203,7 +227,7 @@ const adblockInsideName = "adblock"
 var once sync.Once
 
 // 这个文件内有一个子文件夹 adblock ，制作的时候务必注意
-//go:embed assets/adblock_4_42_0_0.zip
+//go:embed assets/adblock_4_43_0_0.zip
 var adblockFolder []byte
 
 var adblockSavePath string

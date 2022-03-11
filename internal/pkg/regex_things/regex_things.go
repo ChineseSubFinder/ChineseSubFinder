@@ -35,3 +35,8 @@ var ReMatchDialogueTimeSRT2 = regexp.MustCompile(regStringSRTime2)
 
 // RegOneSeasonSubFolderNameMatch 每个视频文件夹下的缓存文件夹名称，一个季度的
 var RegOneSeasonSubFolderNameMatch = regexp.MustCompile(`(?m)^Sub_S\dE0`)
+
+const regStringMathLogOneLine = `(?m)^(\[)(.*)(\])\: (\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}) - (.+)`
+
+// 匹配目前日志记录的格式的一行
+var ReMathLogOneLine = regexp.MustCompile(regStringMathLogOneLine)

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -19,10 +18,8 @@ func init() {
 
 	global_value.AppVersion = AppVersion
 
-	global_value.ConfigRootDirFPath = folder_helper.GetConfigRootDirFPath()
-
 	if my_util.OSCheck() == false {
-		panic(`You should search runtime.GOOS in the project, Implement unimplemented function`)
+		log_helper.GetLogger().Panicln(`You should search runtime.GOOS in the project, Implement unimplemented function`)
 	}
 }
 
@@ -30,7 +27,7 @@ func main() {
 
 	cronHelper, err := cron_helper.NewCronHelper()
 	if err != nil {
-		panic("NewCronHelper " + err.Error())
+		log_helper.GetLogger().Panicln("NewCronHelper " + err.Error())
 	}
 
 	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {

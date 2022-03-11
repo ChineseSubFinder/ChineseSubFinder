@@ -20,6 +20,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/url_connectedness_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"time"
 )
 
 type PreDownloadProcess struct {
@@ -36,9 +37,15 @@ func NewPreDownloadProcess() *PreDownloadProcess {
 func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 
 	if p.gError != nil {
+		log_helper.GetLogger().Infoln("Skip PreDownloadProcess.Init()")
 		return p
 	}
 	p.stageName = stageNameInit
+	defer func() {
+		log_helper.GetLogger().Infoln("PreDownloadProcess.Init() End")
+	}()
+	log_helper.GetLogger().Infoln("PreDownloadProcess.Init() Start...")
+
 	// ------------------------------------------------------------------------
 	// 初始化全局变量
 	global_value.Init(settings.GetSettings().AdvancedSettings.CustomVideoExts)
@@ -47,23 +54,6 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	notify_center.Notify = notify_center.NewNotifyCenter(settings.GetSettings().DeveloperSettings.BarkServerAddress)
 	// 清理通知中心
 	notify_center.Notify.Clear()
-	// ------------------------------------------------------------------------
-	// 如果是 Debug 模式，那么就需要写入特殊文件
-	if settings.GetSettings().AdvancedSettings.DebugMode == true {
-		err := log_helper.WriteDebugFile()
-		if err != nil {
-			p.gError = errors.New("log_helper.WriteDebugFile " + err.Error())
-			return p
-		}
-		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Debug")
-	} else {
-		err := log_helper.DeleteDebugFile()
-		if err != nil {
-			p.gError = errors.New("log_helper.DeleteDebugFile " + err.Error())
-			return p
-		}
-		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Info")
-	}
 	// ------------------------------------------------------------------------
 	// 获取验证码
 	updateTimeString, code, err := something_static.GetCodeFromWeb()
@@ -74,8 +64,25 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 		// 没有则需要清空
 		commonValue.SubhdCode = ""
 	} else {
-		log_helper.GetLogger().Infoln("GetCode", updateTimeString, code)
-		commonValue.SubhdCode = code
+
+		// 获取到的更新时间不是当前的日期，那么本次也跳过本次
+		codeTime, err := time.Parse("2006-01-02", updateTimeString)
+		if err != nil {
+			log_helper.GetLogger().Errorln("something_static.GetCodeFromWeb.time.Parse", err)
+			// 没有则需要清空
+			commonValue.SubhdCode = ""
+		} else {
+
+			nowTime := time.Now()
+			if codeTime.YearDay() != nowTime.YearDay() {
+				// 没有则需要清空
+				commonValue.SubhdCode = ""
+				log_helper.GetLogger().Warningln("something_static.GetCodeFromWeb, GetCodeTime:", updateTimeString, "NowTime:", time.Now().String(), "Skip")
+			} else {
+				log_helper.GetLogger().Infoln("GetCode", updateTimeString, code)
+				commonValue.SubhdCode = code
+			}
+		}
 	}
 	// ------------------------------------------------------------------------
 	// 构建每个字幕站点下载者的实例
@@ -89,6 +96,15 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 		// 如果找到 code 了，那么就可以继续用这个实例
 		p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(*settings.GetSettings()))
 	}
+	// ------------------------------------------------------------------------
+	// 清理自定义的 rod 缓存目录
+	err = my_util.ClearRodTmpRootFolder()
+	if err != nil {
+		p.gError = errors.New("ClearRodTmpRootFolder " + err.Error())
+		return p
+	}
+
+	log_helper.GetLogger().Infoln("ClearRodTmpRootFolder Done")
 
 	return p
 }
@@ -96,32 +112,35 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 
 	if p.gError != nil {
+		log_helper.GetLogger().Infoln("Skip PreDownloadProcess.Check()")
 		return p
 	}
 	p.stageName = stageNameCheck
+	defer func() {
+		log_helper.GetLogger().Infoln("PreDownloadProcess.Check() End")
+	}()
+	log_helper.GetLogger().Infoln("PreDownloadProcess.Check() Start...")
 	// ------------------------------------------------------------------------
 	// 是否启用代理
 	if settings.GetSettings().AdvancedSettings.ProxySettings.UseHttpProxy == false {
 
 		log_helper.GetLogger().Infoln("UseHttpProxy = false")
-		// 如果不使用代理，那么默认需要检测 baidu 的连通性
+		// 如果不使用代理，那么默认需要检测 baidu 的连通性，不通过也继续
 		proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.BaiduUrl, "")
 		if err != nil {
-			p.gError = errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.BaiduUrl + ", " + err.Error())
-			return p
+			log_helper.GetLogger().Errorln(errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.BaiduUrl + ", " + err.Error()))
 		} else {
-			log_helper.GetLogger().Infoln("UrlConnectednessTest Target Site", url_connectedness_helper.BaiduUrl, "Speed:", proxySpeed, "Status:", proxyStatus)
+			log_helper.GetLogger().Infoln("UrlConnectednessTest Target Site", url_connectedness_helper.BaiduUrl, "Speed:", proxySpeed, "ms,", "Status:", proxyStatus)
 		}
 	} else {
 
 		log_helper.GetLogger().Infoln("UseHttpProxy:", settings.GetSettings().AdvancedSettings.ProxySettings.HttpProxyAddress)
-		// 如果使用了代理，那么默认需要检测 google 的连通性
+		// 如果使用了代理，那么默认需要检测 google 的连通性，不通过也继续
 		proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.GoogleUrl, settings.GetSettings().AdvancedSettings.ProxySettings.HttpProxyAddress)
 		if err != nil {
-			p.gError = errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.GoogleUrl + ", " + err.Error())
-			return p
+			log_helper.GetLogger().Errorln(errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.GoogleUrl + ", " + err.Error()))
 		} else {
-			log_helper.GetLogger().Infoln("UrlConnectednessTest Target Site", url_connectedness_helper.GoogleUrl, "Speed:", proxySpeed, "Status:", proxyStatus)
+			log_helper.GetLogger().Infoln("UrlConnectednessTest Target Site", url_connectedness_helper.GoogleUrl, "Speed:", proxySpeed, "ms,", "Status:", proxyStatus)
 		}
 	}
 	// ------------------------------------------------------------------------
@@ -158,24 +177,24 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 func (p *PreDownloadProcess) HotFix() *PreDownloadProcess {
 
 	if p.gError != nil {
+		log_helper.GetLogger().Infoln("Skip PreDownloadProcess.Check()")
 		return p
 	}
 	p.stageName = stageNameCHotFix
 
 	defer func() {
-		log_helper.GetLogger().Infoln("HotFix End")
+		log_helper.GetLogger().Infoln("PreDownloadProcess.HotFix() End")
 	}()
-
+	log_helper.GetLogger().Infoln("PreDownloadProcess.HotFix() Start...")
 	// ------------------------------------------------------------------------
 	// 开始修复
-	log_helper.GetLogger().Infoln("HotFix Start, wait ...")
 	log_helper.GetLogger().Infoln(commonValue.NotifyStringTellUserWait)
 	err := hot_fix.HotFixProcess(types.HotFixParam{
 		MovieRootDirs:  settings.GetSettings().CommonSettings.MoviePaths,
 		SeriesRootDirs: settings.GetSettings().CommonSettings.SeriesPaths,
 	})
 	if err != nil {
-		log_helper.GetLogger().Errorln("HotFixProcess()", err)
+		log_helper.GetLogger().Errorln("hot_fix.HotFixProcess()", err)
 		p.gError = err
 		return p
 	}
@@ -186,20 +205,20 @@ func (p *PreDownloadProcess) HotFix() *PreDownloadProcess {
 func (p *PreDownloadProcess) ChangeSubNameFormat() *PreDownloadProcess {
 
 	if p.gError != nil {
+		log_helper.GetLogger().Infoln("Skip PreDownloadProcess.ChangeSubNameFormat()")
 		return p
 	}
 	p.stageName = stageNameChangeSubNameFormat
-
 	defer func() {
-		log_helper.GetLogger().Infoln("Change Sub Name Format End")
+		log_helper.GetLogger().Infoln("PreDownloadProcess.ChangeSubNameFormat() End")
 	}()
+	log_helper.GetLogger().Infoln("PreDownloadProcess.ChangeSubNameFormat() Start...")
 	// ------------------------------------------------------------------------
 	/*
 		字幕命名格式转换，需要数据库支持
 		如果数据库没有记录经过转换，那么默认从 Emby 的格式作为检测的起点，转换到目标的格式
 		然后需要在数据库中记录本次的转换结果
 	*/
-	log_helper.GetLogger().Infoln("Change Sub Name Format Start...")
 	log_helper.GetLogger().Infoln(commonValue.NotifyStringTellUserWait)
 	renameResults, err := sub_formatter.SubFormatChangerProcess(
 		settings.GetSettings().CommonSettings.MoviePaths,
@@ -221,24 +240,28 @@ func (p *PreDownloadProcess) ChangeSubNameFormat() *PreDownloadProcess {
 func (p *PreDownloadProcess) ReloadBrowser() *PreDownloadProcess {
 
 	if p.gError != nil {
+		log_helper.GetLogger().Infoln("Skip PreDownloadProcess.ReloadBrowser()")
 		return p
 	}
 	p.stageName = stageNameReloadBrowser
+	defer func() {
+		log_helper.GetLogger().Infoln("PreDownloadProcess.ReloadBrowser() End")
+	}()
+	log_helper.GetLogger().Infoln("PreDownloadProcess.ReloadBrowser() Start...")
 	// ------------------------------------------------------------------------
-	log_helper.GetLogger().Infoln("ReloadBrowser Start...")
 	// ReloadBrowser 提前把浏览器下载好
 	rod_helper.ReloadBrowser()
-	log_helper.GetLogger().Infoln("ReloadBrowser End")
 	return p
 }
 
 func (p *PreDownloadProcess) Wait() error {
 	defer func() {
-		log_helper.GetLogger().Infoln("PreDownloadProcess Wait() Done.")
+		log_helper.GetLogger().Infoln("PreDownloadProcess.Wait() Done.")
 	}()
 	if p.gError != nil {
-		return errors.New(p.stageName + " " + p.gError.Error())
-
+		outErrString := "PreDownloadProcess.Wait() Get Error, " + "stageName:" + p.stageName + " -- " + p.gError.Error()
+		log_helper.GetLogger().Errorln(outErrString)
+		return errors.New(outErrString)
 	} else {
 		return nil
 	}

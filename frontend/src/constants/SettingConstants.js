@@ -15,3 +15,11 @@ export const SUB_NAME_FORMAT_NAME_MAP = {
   [SUB_NAME_FORMAT_EMBY]: 'Emby格式',
   [SUB_NAME_FORMAT_NORMAL]: '常规格式',
 };
+
+export const DESC_ENCODE_TYPE_UTF8 = 0;
+export const DESC_ENCODE_TYPE_GBK = 1;
+
+export const DESC_ENCODE_TYPE_NAME_MAP = {
+  [DESC_ENCODE_TYPE_UTF8]: 'UTF-8',
+  [DESC_ENCODE_TYPE_GBK]: 'GBK',
+};

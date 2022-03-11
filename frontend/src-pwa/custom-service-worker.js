@@ -4,7 +4,8 @@
  * quasar.conf > pwa > workboxPluginMode is set to "InjectManifest"
  */
 
-import { precacheAndRoute } from 'workbox-precaching'
+import { precacheAndRoute } from 'workbox-precaching';
 
 // Use with precache injection
-precacheAndRoute(self.__WB_MANIFEST)
+// eslint-disable-next-line no-restricted-globals,no-underscore-dangle
+precacheAndRoute(self.__WB_MANIFEST);

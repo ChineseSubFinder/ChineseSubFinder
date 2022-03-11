@@ -19,11 +19,10 @@
 
 <style scoped>
 .area {
-  background: url(/images/sprinkle.svg);
+  /* webpackIgnore: true */ background-image: url(../images/sprinkle.svg), linear-gradient(to left, #8f94fb, #4e54c8);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background: -webkit-linear-gradient(to left, #8f94fb, #4e54c8);
   width: 100vw;
   height: 100vh;
   position: fixed;

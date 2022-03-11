@@ -1,12 +1,13 @@
 package unit_test_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/folder_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
+	"time"
 )
 
 // GetTestDataResourceRootPath 向上返回几层就能够到 ChineseSubFinder-TestData 同级目录，然后进入其中的 resourceFolderName 资源文件夹中
@@ -27,7 +28,7 @@ func GetTestDataResourceRootPath(resourceFolderNames []string, goBackTimes int, 
 	if userCopyData == true {
 		// 想要 copy org 中的数据到 test 中去处理
 		orgDir := filepath.Join(outPath, "org")
-		if my_util.IsDir(orgDir) == false {
+		if IsDir(orgDir) == false {
 			// 如果没有发现 org 文件夹，就返回之前的路径即可
 			return outPath
 		}
@@ -143,13 +144,13 @@ func copyTestData(srcDir string) (string, error) {
 
 	// 因为会出现，批量测试的需求，那么如果每次都进行一次清理，那么就会导致之前创建的被清理掉，测试用例失败
 	// 可以简单的按时间来判断，如果当前时间与以及存在文件夹名称相差在 5min，那么就清理掉
-	addString, _, _, _ := my_util.GetNowTimeString()
+	addString, _, _, _ := GetNowTimeString()
 	// 测试数据的文件夹
 	orgDir := filepath.Join(srcDir, "org")
 	testDir := filepath.Join(srcDir, "test")
 
-	if my_util.IsDir(testDir) == true {
-		err := folder_helper.ClearFolderEx(testDir, 10)
+	if IsDir(testDir) == true {
+		err := ClearFolderEx(testDir, 10)
 		if err != nil {
 			return "", err
 		}
@@ -157,11 +158,165 @@ func copyTestData(srcDir string) (string, error) {
 
 	// 多加一层，这样在批量测试的时候才不会出错
 	testDirEx := filepath.Join(testDir, addString)
-	err := my_util.CopyDir(orgDir, testDirEx)
+	err := CopyDir(orgDir, testDirEx)
 	if err != nil {
 		return "", err
 	}
 	return testDirEx, nil
+}
+
+// IsDir 存在且是文件夹
+func IsDir(path string) bool {
+	s, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return s.IsDir()
+}
+
+// CopyFile copies a single file from src to dst
+func CopyFile(src, dst string) error {
+	var err error
+	var srcFd *os.File
+	var dstFd *os.File
+	var srcInfo os.FileInfo
+
+	if srcFd, err = os.Open(src); err != nil {
+		return err
+	}
+	defer func() {
+		_ = srcFd.Close()
+	}()
+
+	if dstFd, err = os.Create(dst); err != nil {
+		return err
+	}
+	defer func() {
+		_ = dstFd.Close()
+	}()
+
+	if _, err = io.Copy(dstFd, srcFd); err != nil {
+		return err
+	}
+	if srcInfo, err = os.Stat(src); err != nil {
+		return err
+	}
+	return os.Chmod(dst, srcInfo.Mode())
+}
+
+// CopyDir copies a whole directory recursively
+func CopyDir(src string, dst string) error {
+	var err error
+	var fds []os.DirEntry
+	var srcInfo os.FileInfo
+
+	if srcInfo, err = os.Stat(src); err != nil {
+		return err
+	}
+
+	if err = os.MkdirAll(dst, srcInfo.Mode()); err != nil {
+		return err
+	}
+
+	if fds, err = os.ReadDir(src); err != nil {
+		return err
+	}
+	for _, fd := range fds {
+		srcfp := filepath.Join(src, fd.Name())
+		dstfp := filepath.Join(dst, fd.Name())
+
+		if fd.IsDir() {
+			if err = CopyDir(srcfp, dstfp); err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			if err = CopyFile(srcfp, dstfp); err != nil {
+				fmt.Println(err)
+			}
+		}
+	}
+	return nil
+}
+
+// GetNowTimeString 获取当前的时间，没有秒
+func GetNowTimeString() (string, int, int, int) {
+	nowTime := time.Now()
+	addString := fmt.Sprintf("%d-%d-%d", nowTime.Hour(), nowTime.Minute(), nowTime.Nanosecond())
+	return addString, nowTime.Hour(), nowTime.Minute(), nowTime.Nanosecond()
+}
+
+// ClearFolderEx 清空文件夹，文件夹名称有特殊之处，Hour-min-Nanosecond 的命名方式
+// 如果调用的时候，已存在的文件夹的时间 min < 5 那么则清理
+func ClearFolderEx(folderFullPath string, overtime int) error {
+
+	_, hour, minute, _ := GetNowTimeString()
+	pathSep := string(os.PathSeparator)
+	files, err := os.ReadDir(folderFullPath)
+	if err != nil {
+		return err
+	}
+	for _, curFile := range files {
+		fullPath := folderFullPath + pathSep + curFile.Name()
+		if curFile.IsDir() {
+
+			parts := strings.Split(curFile.Name(), "-")
+			if len(parts) == 3 {
+				// 基本是符合了，倒是还是需要额外的判断是否时间超过了
+				tmpHourStr := parts[0]
+				tmpMinuteStr := parts[1]
+				tmpHour, err := strconv.Atoi(tmpHourStr)
+				if err != nil {
+					// 如果不符合命名格式，直接删除
+					err = os.RemoveAll(fullPath)
+					if err != nil {
+						return err
+					}
+					continue
+				}
+				tmpMinute, err := strconv.Atoi(tmpMinuteStr)
+				if err != nil {
+					// 如果不符合命名格式，直接删除
+					err = os.RemoveAll(fullPath)
+					if err != nil {
+						return err
+					}
+					continue
+				}
+				// 判断时间
+				if tmpHour != hour {
+					// 如果不符合命名格式，直接删除
+					err = os.RemoveAll(fullPath)
+					if err != nil {
+						return err
+					}
+					continue
+				}
+				// 超过 5 min
+				if minute-overtime > tmpMinute {
+					// 如果不符合命名格式，直接删除
+					err = os.RemoveAll(fullPath)
+					if err != nil {
+						return err
+					}
+					continue
+				}
+			} else {
+				// 如果不符合命名格式，直接删除
+				err = os.RemoveAll(fullPath)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			// 这里就是文件了
+			err = os.Remove(fullPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 const oneBackTime = "../"

@@ -8,5 +8,7 @@ class CommonAPi extends BaseApi {
   checkProxy = (params) => this.http('/check-proxy', params, 'POST');
 
   checkPath = (params) => this.http('/check-path', params, 'POST');
+
+  checkEmbyPath = (data) => this.http('/check-emby-path', data, 'POST');
 }
 export default new CommonAPi();

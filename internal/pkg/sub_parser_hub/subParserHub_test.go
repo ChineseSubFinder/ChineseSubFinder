@@ -66,19 +66,19 @@ func TestIsEmbySubChineseLangStringWanted(t *testing.T) {
 		{name: "12", args: args{inLangString: "zh-mo"}, want: true},
 
 		{name: "13", args: args{inLangString: "zh"}, want: true},
-		{name: "14", args: args{inLangString: "en"}, want: true},
-		{name: "15", args: args{inLangString: "ko"}, want: true},
-		{name: "16", args: args{inLangString: "ja"}, want: true},
+		{name: "14", args: args{inLangString: "en"}, want: false},
+		{name: "15", args: args{inLangString: "ko"}, want: false},
+		{name: "16", args: args{inLangString: "ja"}, want: false},
 
 		{name: "17", args: args{inLangString: "zho"}, want: true},
-		{name: "18", args: args{inLangString: "eng"}, want: true},
-		{name: "19", args: args{inLangString: "kor"}, want: true},
-		{name: "20", args: args{inLangString: "jpn"}, want: true},
+		{name: "18", args: args{inLangString: "eng"}, want: false},
+		{name: "19", args: args{inLangString: "kor"}, want: false},
+		{name: "20", args: args{inLangString: "jpn"}, want: false},
 
 		{name: "21", args: args{inLangString: "chi"}, want: true},
-		{name: "22", args: args{inLangString: "eng"}, want: true},
-		{name: "23", args: args{inLangString: "kor"}, want: true},
-		{name: "24", args: args{inLangString: "jpn"}, want: true},
+		{name: "22", args: args{inLangString: "eng"}, want: false},
+		{name: "23", args: args{inLangString: "kor"}, want: false},
+		{name: "24", args: args{inLangString: "jpn"}, want: false},
 
 		// random text that should return false
 		{name: "25", args: args{inLangString: "chineseeng"}, want: false},

@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
@@ -135,37 +136,38 @@ func (em *EmbyHelper) RefreshEmbySubList() (bool, error) {
 // findMappingPath 从 Emby 内置路径匹配到物理路径
 // X:\电影    - /mnt/share1/电影
 // X:\连续剧  - /mnt/share1/连续剧
-func (em *EmbyHelper) findMappingPath(videoEmbyFullPath string, isMovieOrSeries bool) (bool, string, string) {
+func (em *EmbyHelper) findMappingPath(mixInfo *emby.EmbyMixInfo, isMovieOrSeries bool) bool {
 	// 这里进行路径匹配的时候需要考虑嵌套路径的问题
 	// 比如，映射了 /电影  以及 /电影/AA ，那么如果有一部电影 /电影/AA/xx/xx.mkv 那么，应该匹配的是最长的路径 /电影/AA
 	matchedEmbyPaths := make([]string, 0)
 	if isMovieOrSeries == true {
 		// 电影的情况
 		for _, embyPath := range em.EmbyConfig.MoviePathsMapping {
-			if strings.Contains(videoEmbyFullPath, embyPath) == true {
+			if strings.HasPrefix(mixInfo.VideoInfo.Path, embyPath) == true {
 				matchedEmbyPaths = append(matchedEmbyPaths, embyPath)
 			}
 		}
 	} else {
 		// 连续剧的情况
 		for _, embyPath := range em.EmbyConfig.SeriesPathsMapping {
-			if strings.Contains(videoEmbyFullPath, embyPath) == true {
+			if strings.HasPrefix(mixInfo.VideoInfo.Path, embyPath) == true {
 				matchedEmbyPaths = append(matchedEmbyPaths, embyPath)
 			}
 		}
 	}
 	if len(matchedEmbyPaths) < 1 {
-		return false, "", ""
+		return false
 	}
 	// 排序得到匹配上的路径，最长的那个
 	pathSlices := sortStringSliceByLength(matchedEmbyPaths)
 	// 然后还需要从这个最长的路径，从 map 中找到对应的物理路径
-	nowPhPath := ""
+	// nowPhRootPath 这个路径是映射的根目录，如果里面再次嵌套 子文件夹 再到连续剧目录，则是个问题，会丢失子文件夹目录
+	nowPhRootPath := ""
 	if isMovieOrSeries == true {
 		// 电影的情况
 		for physicalPath, embyPath := range em.EmbyConfig.MoviePathsMapping {
 			if embyPath == pathSlices[0].Path {
-				nowPhPath = physicalPath
+				nowPhRootPath = physicalPath
 				break
 			}
 		}
@@ -173,18 +175,46 @@ func (em *EmbyHelper) findMappingPath(videoEmbyFullPath string, isMovieOrSeries 
 		// 连续剧的情况
 		for physicalPath, embyPath := range em.EmbyConfig.SeriesPathsMapping {
 			if embyPath == pathSlices[0].Path {
-				nowPhPath = physicalPath
+				nowPhRootPath = physicalPath
 				break
 			}
 		}
 	}
 	// 如果匹配不上
-	if nowPhPath == "" {
-		return false, "", ""
+	if nowPhRootPath == "" {
+		return false
 	}
 
-	outPhPath := strings.ReplaceAll(videoEmbyFullPath, pathSlices[0].Path, nowPhPath)
-	return true, outPhPath, nowPhPath
+	if isMovieOrSeries == true {
+		// 电影
+		mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
+		// 因为电影搜索的时候使用的是完整的视频目录，所以这个字段并不重要
+		//mixInfo.PhysicalRootPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
+		// 这个电影的文件夹
+		mixInfo.VideoFolderName = filepath.Base(filepath.Dir(mixInfo.VideoInfo.Path))
+		mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
+	} else {
+		// 连续剧
+		ancestorIndex := -1
+		// 找到连续剧文件夹这一层
+		for i, ancestor := range mixInfo.Ancestors {
+			if ancestor.Type == "Series" {
+				ancestorIndex = i
+				break
+			}
+		}
+		if ancestorIndex == -1 {
+			// 说明没有找到连续剧文件夹的名称，那么就应该跳过
+			return false
+		}
+		mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
+		mixInfo.PhysicalRootPath = strings.ReplaceAll(mixInfo.Ancestors[ancestorIndex+1].Path, pathSlices[0].Path, nowPhRootPath)
+		// 这个剧集的文件夹
+		mixInfo.VideoFolderName = filepath.Base(mixInfo.Ancestors[ancestorIndex].Path)
+		mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
+	}
+
+	return true
 }
 
 func (em *EmbyHelper) filterEmbyVideoList(videoIdList []string, isMovieOrSeries bool) ([]emby.EmbyMixInfo, error) {
@@ -203,39 +233,17 @@ func (em *EmbyHelper) filterEmbyVideoList(videoIdList []string, isMovieOrSeries 
 		if isMovieOrSeries == true {
 			// 电影
 			// 过滤掉不符合要求的,拼接绝对路径
-			isFit, physicalVideoFPath, physicalRootPath := em.findMappingPath(info.Path, isMovieOrSeries)
+			isFit := em.findMappingPath(&mixInfo, isMovieOrSeries)
 			if isFit == false {
 				return nil, err
 			}
-			mixInfo.VideoFileFullPath = physicalVideoFPath
-			mixInfo.PhysicalRootPath = physicalRootPath
-			// 这个电影的文件夹
-			mixInfo.VideoFolderName = filepath.Base(filepath.Dir(mixInfo.VideoInfo.Path))
-			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
 		} else {
 			// 连续剧
 			// 过滤掉不符合要求的,拼接绝对路径
-			isFit, physicalVideoFPath, physicalRootPath := em.findMappingPath(info.Path, isMovieOrSeries)
+			isFit := em.findMappingPath(&mixInfo, isMovieOrSeries)
 			if isFit == false {
 				return nil, err
 			}
-			mixInfo.VideoFileFullPath = physicalVideoFPath
-			mixInfo.PhysicalRootPath = physicalRootPath
-			// 这个剧集的文件夹
-			ancestorIndex := -1
-			// 找到连续剧文件夹这一层
-			for i, ancestor := range mixInfo.Ancestors {
-				if ancestor.Type == "Series" {
-					ancestorIndex = i
-					break
-				}
-			}
-			if ancestorIndex == -1 {
-				// 说明没有找到连续剧文件夹的名称，那么就应该跳过
-				return nil, err
-			}
-			mixInfo.VideoFolderName = filepath.Base(mixInfo.Ancestors[ancestorIndex].Path)
-			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
 		}
 
 		return &mixInfo, nil
@@ -495,6 +503,73 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 	}
 
 	return true, inSubList, exSubList, nil
+}
+
+func (em *EmbyHelper) CheckPath(pathType string) ([]string, error) {
+
+	// 获取最近的影片列表
+	items, err := em.embyApi.GetRecentlyItems()
+	if err != nil {
+		return nil, err
+	}
+	// 获取电影和连续剧的文件夹名称
+	var EpisodeIdList = make([]string, 0)
+	var MovieIdList = make([]string, 0)
+	// 分类
+	for index, item := range items.Items {
+		if item.Type == videoTypeEpisode {
+			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
+			EpisodeIdList = append(EpisodeIdList, item.Id)
+			log_helper.GetLogger().Debugln("Episode:", index, item.SeriesName, item.ParentIndexNumber, item.IndexNumber)
+		} else if item.Type == videoTypeMovie {
+			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
+			MovieIdList = append(MovieIdList, item.Id)
+			log_helper.GetLogger().Debugln("Movie:", index, item.Name)
+		} else {
+			log_helper.GetLogger().Debugln("GetRecentlyItems - Is not a goal video type:", index, item.Name, item.Type)
+		}
+	}
+
+	outCount := 0
+	outList := make([]string, 0)
+
+	if pathType == "movie" {
+		// 过滤出有效的电影、连续剧的资源出来
+		filterMovieList, err := em.filterEmbyVideoList(MovieIdList, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, info := range filterMovieList {
+
+			if my_util.IsFile(info.PhysicalVideoFileFullPath) == true {
+				outList = append(outList, info.PhysicalVideoFileFullPath)
+				outCount++
+				if outCount > 5 {
+					break
+				}
+			}
+		}
+
+	} else {
+		filterSeriesList, err := em.filterEmbyVideoList(EpisodeIdList, false)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, info := range filterSeriesList {
+
+			if my_util.IsFile(info.PhysicalVideoFileFullPath) == true {
+				outList = append(outList, info.PhysicalVideoFileFullPath)
+				outCount++
+				if outCount > 5 {
+					break
+				}
+			}
+		}
+	}
+
+	return outList, nil
 }
 
 type InputData struct {
