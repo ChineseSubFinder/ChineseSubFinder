@@ -193,6 +193,8 @@ func cleanAndLoadOnceLogs() {
 
 	onceLogsLock.Lock()
 
+	onceLogs = make([]log_hub.OnceLog, 0)
+
 	pathRoot := filepath.Join(global_value.ConfigRootDirFPath, "Logs")
 	// 扫描当前日志存储目录下有多少个符合要求的 Once- 日志
 	// 确保有且仅有最近的 20 次扫描日志记录存在即可
@@ -231,8 +233,6 @@ func cleanAndLoadOnceLogs() {
 }
 
 func readLogFile(index int, filePath string) error {
-
-	onceLogs = make([]log_hub.OnceLog, 0)
 
 	fBytes, err := os.ReadFile(filePath)
 	if err != nil {
