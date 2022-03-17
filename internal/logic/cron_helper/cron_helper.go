@@ -151,6 +151,10 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 		ch.fullSubDownloadProcessingLock.Unlock()
 
 		log_helper.GetLogger().Infoln(log_helper.OnceSubsScanEnd)
+
+		// 下载完后，应该继续是等待
+		tttt := ch.c.Entries()[0].Next.Format("2006-01-02 15:04:05")
+		common.SetSubScanJobStatusWaiting(tttt)
 	}()
 
 	ch.fullSubDownloadProcessingLock.Lock()
