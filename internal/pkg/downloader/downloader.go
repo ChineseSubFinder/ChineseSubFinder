@@ -139,7 +139,7 @@ func (d *Downloader) GetUpdateVideoListFromEmby() error {
 	}
 	var err error
 	var movieList []emby.EmbyMixInfo
-	movieList, d.seriesSubNeedDlMap, err = d.embyHelper.GetRecentlyAddVideoList()
+	movieList, d.seriesSubNeedDlMap, err = d.embyHelper.GetRecentlyAddVideoListWithNoChineseSubtitle()
 	if err != nil {
 		return err
 	}

@@ -17,7 +17,7 @@ func TestEmbyHelper_GetRecentlyAddVideoList(t *testing.T) {
 	//embyConfig.MoviePathsMapping["X:\\连续剧"] = "/mnt/share1/连续剧"
 	//
 	//em := NewEmbyHelper(*embyConfig)
-	//movieList, seriesList, err := em.GetRecentlyAddVideoList()
+	//movieList, seriesList, err := em.GetRecentlyAddVideoListWithNoChineseSubtitle()
 	//if err != nil {
 	//	t.Fatal(err)
 	//}

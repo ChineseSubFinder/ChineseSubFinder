@@ -69,7 +69,7 @@ package sub_timeline_fixer
 //		return nil
 //	}
 //
-//	movieList, seriesList, err := s.embyHelper.GetRecentlyAddVideoList(movieRootDir, seriesRootDir)
+//	movieList, seriesList, err := s.embyHelper.GetRecentlyAddVideoListWithNoChineseSubtitle(movieRootDir, seriesRootDir)
 //	if err != nil {
 //		return err
 //	}
