@@ -132,6 +132,105 @@ func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby.EmbyMixInfo, []emby.Emby
 	return filterMovieList, filterSeriesList, nil
 }
 
+func (em *EmbyHelper) GetPlayedItemsSubtitle() (map[string]string, map[string]string, error) {
+
+	// 这个用户看过那些视频
+	var userPlayedItemsList = make([]emby.UserPlayedItems, 0)
+	// 获取有那些用户
+	var userIds emby.EmbyUsers
+	userIds, err := em.embyApi.GetUserIdList()
+	if err != nil {
+		return nil, nil, err
+	}
+	// 所有用户观看过的视频有那些，需要分用户统计出来
+	for _, item := range userIds.Items {
+		tmpRecItems, err := em.embyApi.GetRecentItemsByUserID(item.Id)
+		if err != nil {
+			return nil, nil, err
+		}
+		// 相同的视频项目，需要判断是否已经看过了，看过的需要排除
+		// 项目是否相同可以通过 Id 判断
+		oneUserPlayedItems := emby.UserPlayedItems{
+			UserName: item.Name,
+			UserID:   item.Id,
+			Items:    make([]emby.EmbyRecentlyItem, 0),
+		}
+		for _, recentlyItem := range tmpRecItems.Items {
+
+			if recentlyItem.UserData.Played == true {
+				oneUserPlayedItems.Items = append(oneUserPlayedItems.Items, recentlyItem)
+			}
+		}
+
+		userPlayedItemsList = append(userPlayedItemsList, oneUserPlayedItems)
+	}
+	// 把这些用户看过的视频根据 userID 和 videoID 进行查询，使用的是第几个字幕
+	// 这里需要区分是 Movie 还是 Series，这样后续的路径映射才能够生效
+	// 视频 emby 路径 - 字幕 emby 路径
+	movieEmbyFPathMap := make(map[string]string)
+	seriesEmbyFPathMap := make(map[string]string)
+	for _, playedItems := range userPlayedItemsList {
+
+		for _, item := range playedItems.Items {
+
+			videoInfoByUserId, err := em.embyApi.GetItemVideoInfoByUserId(playedItems.UserID, item.Id)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			videoInfo, err := em.embyApi.GetItemVideoInfo(item.Id)
+			if err != nil {
+				return nil, nil, err
+			}
+			// 首先不能越界
+			if videoInfoByUserId.GetDefaultSubIndex() < 0 || len(videoInfo.MediaStreams)-1 < videoInfoByUserId.GetDefaultSubIndex() {
+				log_helper.GetLogger().Debugln("GetPlayedItemsSubtitle", videoInfo.Name, "SubIndex Out Of Range")
+				continue
+			}
+			// 然后找出来的字幕必须是外置字幕，内置还导出个啥子
+			if videoInfo.MediaStreams[videoInfoByUserId.GetDefaultSubIndex()].IsExternal == false {
+				log_helper.GetLogger().Debugln("GetPlayedItemsSubtitle", videoInfo.Name,
+					"Get Played SubIndex", videoInfoByUserId.GetDefaultSubIndex(),
+					"is IsExternal == false, Skip")
+				continue
+			}
+			// 将这个字幕的 Emby 内部路径保存下来，后续还需要进行一次路径转换才能使用，转换到本程序的路径上
+			if item.Type == videoTypeEpisode {
+				seriesEmbyFPathMap[videoInfo.Path] = videoInfo.MediaStreams[videoInfoByUserId.GetDefaultSubIndex()].Path
+			} else if item.Type == videoTypeMovie {
+				movieEmbyFPathMap[videoInfo.Path] = videoInfo.MediaStreams[videoInfoByUserId.GetDefaultSubIndex()].Path
+			}
+		}
+	}
+	// 转换 Emby 内部路径到本程序识别的视频目录上
+	moviePhyFPathMap := make(map[string]string)
+	seriesPhyFPathMap := make(map[string]string)
+	// movie
+	for key, value := range movieEmbyFPathMap {
+		bok, prefixOldPath, prefixNewPath := em.findMappingPath(key, true)
+		if bok == false {
+			log_helper.GetLogger().Warningln("GetPlayedItemsSubtitle.findMappingPath miss matched,", key)
+			continue
+		}
+		phyVideoPath := strings.ReplaceAll(key, prefixOldPath, prefixNewPath)
+		phySubPath := strings.ReplaceAll(value, prefixOldPath, prefixNewPath)
+		moviePhyFPathMap[phyVideoPath] = phySubPath
+	}
+	// series
+	for key, value := range seriesEmbyFPathMap {
+		bok, prefixOldPath, prefixNewPath := em.findMappingPath(key, false)
+		if bok == false {
+			log_helper.GetLogger().Warningln("GetPlayedItemsSubtitle.findMappingPath miss matched,", key)
+			continue
+		}
+		phyVideoPath := strings.ReplaceAll(key, prefixOldPath, prefixNewPath)
+		phySubPath := strings.ReplaceAll(value, prefixOldPath, prefixNewPath)
+		seriesPhyFPathMap[phyVideoPath] = phySubPath
+	}
+
+	return moviePhyFPathMap, seriesPhyFPathMap, nil
+}
+
 // RefreshEmbySubList 字幕下载完毕一次，就可以触发一次这个。并发 6 线程去刷新
 func (em *EmbyHelper) RefreshEmbySubList() (bool, error) {
 	if em.embyApi == nil {
@@ -144,10 +243,67 @@ func (em *EmbyHelper) RefreshEmbySubList() (bool, error) {
 	return true, nil
 }
 
-// findMappingPath 从 Emby 内置路径匹配到物理路径
+// findMappingPath 从 Emby 内置路径匹配到物理路径，返回，需要替换的前缀，以及替换到的前缀
 // X:\电影    - /mnt/share1/电影
 // X:\连续剧  - /mnt/share1/连续剧
-func (em *EmbyHelper) findMappingPath(mixInfo *emby.EmbyMixInfo, isMovieOrSeries bool) bool {
+func (em *EmbyHelper) findMappingPath(fileFPathWithEmby string, isMovieOrSeries bool) (bool, string, string) {
+
+	// 这里进行路径匹配的时候需要考虑嵌套路径的问题
+	// 比如，映射了 /电影  以及 /电影/AA ，那么如果有一部电影 /电影/AA/xx/xx.mkv 那么，应该匹配的是最长的路径 /电影/AA
+	matchedEmbyPaths := make([]string, 0)
+	if isMovieOrSeries == true {
+		// 电影的情况
+		for _, embyPath := range em.EmbyConfig.MoviePathsMapping {
+			if strings.HasPrefix(fileFPathWithEmby, embyPath) == true {
+				matchedEmbyPaths = append(matchedEmbyPaths, embyPath)
+			}
+		}
+	} else {
+		// 连续剧的情况
+		for _, embyPath := range em.EmbyConfig.SeriesPathsMapping {
+			if strings.HasPrefix(fileFPathWithEmby, embyPath) == true {
+				matchedEmbyPaths = append(matchedEmbyPaths, embyPath)
+			}
+		}
+	}
+	if len(matchedEmbyPaths) < 1 {
+		return false, "", ""
+	}
+
+	// 排序得到匹配上的路径，最长的那个
+	pathSlices := sortStringSliceByLength(matchedEmbyPaths)
+	// 然后还需要从这个最长的路径，从 map 中找到对应的物理路径
+	// nowPhRootPath 这个路径是映射的根目录，如果里面再次嵌套 子文件夹 再到连续剧目录，则是个问题，会丢失子文件夹目录
+	nowPhRootPath := ""
+	if isMovieOrSeries == true {
+		// 电影的情况
+		for physicalPath, embyPath := range em.EmbyConfig.MoviePathsMapping {
+			if embyPath == pathSlices[0].Path {
+				nowPhRootPath = physicalPath
+				break
+			}
+		}
+	} else {
+		// 连续剧的情况
+		for physicalPath, embyPath := range em.EmbyConfig.SeriesPathsMapping {
+			if embyPath == pathSlices[0].Path {
+				nowPhRootPath = physicalPath
+				break
+			}
+		}
+	}
+	// 如果匹配不上
+	if nowPhRootPath == "" {
+		return false, "", ""
+	}
+
+	return true, pathSlices[0].Path, nowPhRootPath
+}
+
+// findMappingPathWithMixInfo 从 Emby 内置路径匹配到物理路径
+// X:\电影    - /mnt/share1/电影
+// X:\连续剧  - /mnt/share1/连续剧
+func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMovieOrSeries bool) bool {
 	// 这里进行路径匹配的时候需要考虑嵌套路径的问题
 	// 比如，映射了 /电影  以及 /电影/AA ，那么如果有一部电影 /电影/AA/xx/xx.mkv 那么，应该匹配的是最长的路径 /电影/AA
 	matchedEmbyPaths := make([]string, 0)
@@ -245,14 +401,14 @@ func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries
 		if isMovieOrSeries == true {
 			// 电影
 			// 过滤掉不符合要求的,拼接绝对路径
-			isFit := em.findMappingPath(&mixInfo, isMovieOrSeries)
+			isFit := em.findMappingPathWithMixInfo(&mixInfo, isMovieOrSeries)
 			if isFit == false {
 				return nil, err
 			}
 		} else {
 			// 连续剧
 			// 过滤掉不符合要求的,拼接绝对路径
-			isFit := em.findMappingPath(&mixInfo, isMovieOrSeries)
+			isFit := em.findMappingPathWithMixInfo(&mixInfo, isMovieOrSeries)
 			if isFit == false {
 				return nil, err
 			}

@@ -97,7 +97,32 @@ func (em EmbyApi) RefreshRecentlyVideoInfo() error {
 	return nil
 }
 
-// GetRecentlyItems 获取近期的视频，在 API 调试界面 -- ItemsService
+func (em EmbyApi) GetRecentItemsByUserID(userId string) (emby.EmbyRecentlyItems, error) {
+
+	var tmpRecItems emby.EmbyRecentlyItems
+	// 获取指定用户的视频列表
+	_, err := em.client.R().
+		SetQueryParams(map[string]string{
+			"api_key":          em.embyConfig.APIKey,
+			"IsUnaired":        "false",
+			"Limit":            fmt.Sprintf("%d", em.embyConfig.MaxRequestVideoNumber),
+			"Recursive":        "true",
+			"SortOrder":        "Descending",
+			"IncludeItemTypes": "Episode,Movie",
+			"Filters":          "IsNotFolder",
+			"SortBy":           "DateCreated",
+		}).
+		SetResult(&tmpRecItems).
+		Get(em.embyConfig.AddressUrl + "/emby/Users/" + userId + "/Items")
+	if err != nil {
+		return emby.EmbyRecentlyItems{}, err
+	}
+
+	return tmpRecItems, nil
+}
+
+// GetRecentlyItems 获取近期的视频(根据 SkipWatched 的情况，如果不跳过，那么就是获取所有用户的列表，如果是跳过，那么就会单独读取每个用户的再交叉判断)
+// 在 API 调试界面 -- ItemsService
 func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 
 	var recItems emby.EmbyRecentlyItems
@@ -136,22 +161,8 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 		}
 
 		for _, item := range userIds.Items {
-			var tmpRecItems emby.EmbyRecentlyItems
-			// 获取指定用户的视频列表
-			_, err = em.client.R().
-				SetQueryParams(map[string]string{
-					"api_key":          em.embyConfig.APIKey,
-					"IsUnaired":        "false",
-					"Limit":            fmt.Sprintf("%d", em.embyConfig.MaxRequestVideoNumber),
-					"Recursive":        "true",
-					"SortOrder":        "Descending",
-					"IncludeItemTypes": "Episode,Movie",
-					"Filters":          "IsNotFolder",
-					"SortBy":           "DateCreated",
-				}).
-				SetResult(&tmpRecItems).
-				Get(em.embyConfig.AddressUrl + "/emby/Users/" + item.Id + "/Items")
 
+			tmpRecItems, err := em.GetRecentItemsByUserID(item.Id)
 			if err != nil {
 				return emby.EmbyRecentlyItems{}, err
 			}

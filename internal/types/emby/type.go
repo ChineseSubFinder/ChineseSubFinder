@@ -78,7 +78,7 @@ type EmbyVideoInfo struct {
 			Profile                string  `json:"Profile,omitempty"`
 			Type                   string  `json:"Type"`
 			AspectRatio            string  `json:"AspectRatio,omitempty"`
-			Index                  int     `json:"OffsetIndex"`
+			Index                  int     `json:"Index"`
 			IsExternal             bool    `json:"IsExternal"`
 			IsTextSubtitleStream   bool    `json:"IsTextSubtitleStream"`
 			SupportsExternalStream bool    `json:"SupportsExternalStream"`
@@ -106,7 +106,7 @@ type EmbyVideoInfo struct {
 		Codec                  string `json:"Codec"`
 		Language               string `json:"Language"`
 		DisplayTitle           string `json:"DisplayTitle"`
-		Index                  int    `json:"OffsetIndex"`
+		Index                  int    `json:"Index"`
 		IsExternal             bool   `json:"IsExternal"`
 		IsTextSubtitleStream   bool   `json:"IsTextSubtitleStream"`
 		SupportsExternalStream bool   `json:"SupportsExternalStream"`
@@ -157,6 +157,12 @@ type EmbyMixInfo struct {
 	PhysicalRootPath          string // 视频在那个物理根目录中（这里指的物理路径是相对于本程序而言，如果是用 docker 使用的话，那么就是映射容器内的路径，如果是用物理机器比如 Windows 使用的话，那么就是相对于物理机器的路径）
 	Ancestors                 []EmbyItemsAncestors
 	VideoInfo                 EmbyVideoInfo
+}
+
+type UserPlayedItems struct {
+	UserName string
+	UserID   string
+	Items    []EmbyRecentlyItem
 }
 
 type Time time.Time
