@@ -94,7 +94,8 @@ func DownFile(urlStr string, _proxySettings ...settings.ProxySettings) ([]byte, 
 func GetFileName(resp *http.Response) string {
 	contentDisposition := resp.Header.Get("Content-Disposition")
 	if len(contentDisposition) == 0 {
-		return ""
+		m := regexp.MustCompile(`^(.*/)?(?:$|(.+?)(?:(\.[^.]*$)|$))`).FindStringSubmatch(resp.Request.URL.String())
+		return m[2]+m[3]
 	}
 	re := regexp.MustCompile(`filename=["]*([^"]+)["]*`)
 	matched := re.FindStringSubmatch(contentDisposition)
