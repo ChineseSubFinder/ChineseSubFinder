@@ -11,6 +11,10 @@ npm install
 ### 运行
 
 ```bash
+# 启动后端
+go run cmd/chinesesubfinder/main.go
+
+# 运行前端开发环境
 npm run dev
 ```
 
@@ -26,6 +30,10 @@ npm run build
 | ---------------- | -------- |
 | .env.development | 开发环境 |
 | .env.production  | 正式环境 |
+
+`.env.development`中配置的`/api`，是开发环境下对后端服务的代理，代理规则可在`quasar.conf.js > devServer`中查看。
+
+如果本地运行需要修改后端地址请新增`.env.development.local`文件
 
 配置项说明：
 
