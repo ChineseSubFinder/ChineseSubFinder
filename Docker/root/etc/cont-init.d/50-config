@@ -10,7 +10,6 @@ chown -R abc:abc \
 if [ "${PERMS}"=true ]
 then
   chown -R abc:abc /media
-
 fi
 
 chmod a+x \
