@@ -34,7 +34,7 @@ RUN cd ./cmd/chinesesubfinder \
 # 运行时环境
 FROM lsiobase/ubuntu:bionic
 
-ENV TZ=Asia/Shanghai \
+ENV TZ=Asia/Shanghai PERMS=true \
     PUID=1026 PGID=100
 
 RUN ln -s /root/.cache/rod/chromium-856583/chrome-linux/chrome /usr/bin/chrome && \
