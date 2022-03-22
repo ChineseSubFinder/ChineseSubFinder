@@ -5,18 +5,12 @@ mkdir -p /root/.cache
 chown -R abc:abc \
     /app \
     /root \
-    /config \
-    /media \
-    /media1 \
-    /media2 \
-    /media3 \
-    /media4 \
-    /media5 \
-    /media6 \
-    /media7 \
-    /media8 \
-    /media9
-
+    /config
+    
+if [ "${PERMS}"=true ]
+then
+  chown -R abc:abc /media
+fi
 
 chmod a+x \
     /app/chinesesubfinder
