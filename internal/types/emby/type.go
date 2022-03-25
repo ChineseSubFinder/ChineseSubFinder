@@ -131,7 +131,13 @@ type EmbyVideoInfoByUserId struct {
 	PremiereDate  time.Time `json:"PremiereDate,omitempty"`
 	SortName      string    `json:"SortName,omitempty"`
 	Path          string    `json:"Path"`
-	MediaSources  []struct {
+	UserData      struct {
+		PlaybackPositionTicks int  `json:"PlaybackPositionTicks"`
+		PlayCount             int  `json:"PlayCount"`
+		IsFavorite            bool `json:"IsFavorite"`
+		Played                bool `json:"Played"`
+	} `json:"UserData"`
+	MediaSources []struct {
 		Path                       string `json:"Path"`
 		DefaultAudioStreamIndex    int    `json:"DefaultAudioStreamIndex,omitempty"`
 		DefaultSubtitleStreamIndex int    `json:"DefaultSubtitleStreamIndex,omitempty"`
