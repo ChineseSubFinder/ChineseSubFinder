@@ -1,6 +1,7 @@
 package my_util
 
 import (
+	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/get_access_time"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
@@ -314,6 +315,50 @@ func GetSubFixCacheFolderByName(folderName string) (string, error) {
 }
 
 // --------------------------------------------------------------
+// Share Sub Cache
+// --------------------------------------------------------------
+
+// GetShareSubRootFolder 在程序的根目录新建，字幕共享的缓存根目录，下级还有具体是按发行的时间去划分的子集目录
+func GetShareSubRootFolder() (string, error) {
+
+	nowProcessRoot, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, ShareSubFileCache)
+	err = os.MkdirAll(nowProcessRoot, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	return nowProcessRoot, err
+}
+
+// GetShareFolderByYear 缓存的文件夹以发行的年为一个单位存储
+func GetShareFolderByYear(year int) (string, error) {
+	rootPath, err := GetShareSubRootFolder()
+	if err != nil {
+		return "", err
+	}
+	tmpFolderFullPath := filepath.Join(rootPath, fmt.Sprintf("%d", year))
+	err = os.MkdirAll(tmpFolderFullPath, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	return tmpFolderFullPath, nil
+}
+
+// ClearShareSubFolderByYear 清理指定的缓存文件夹
+func ClearShareSubFolderByYear(year int) error {
+
+	nowTmpFolder, err := GetShareFolderByYear(year)
+	if err != nil {
+		return err
+	}
+
+	return ClearFolder(nowTmpFolder)
+}
+
+// --------------------------------------------------------------
 // Common
 // --------------------------------------------------------------
 
@@ -436,12 +481,13 @@ func ClearIdleSubFixCacheFolder(rootSubFixCacheFolder string, outOfDate time.Dur
 
 // 缓存文件的位置信息，都是在程序的根目录下的 cache 中
 const (
-	cacheRootFolderName = "cache"           // 缓存文件夹总名称
-	TmpFolder           = "tmp"             // 临时缓存的文件夹
-	RodCacheFolder      = "rod"             // rod 的缓存目录
-	PluginFolder        = "Plugin"          // 插件的目录
-	DebugFolder         = "CSF-DebugThings" // 调试相关的文件夹
-	SubFixCacheFolder   = "CSF-SubFixCache" // 字幕时间校正的缓存文件夹，一般可以不清理
+	cacheRootFolderName = "cache"             // 缓存文件夹总名称
+	TmpFolder           = "tmp"               // 临时缓存的文件夹
+	RodCacheFolder      = "rod"               // rod 的缓存目录
+	PluginFolder        = "Plugin"            // 插件的目录
+	DebugFolder         = "CSF-DebugThings"   // 调试相关的文件夹
+	SubFixCacheFolder   = "CSF-SubFixCache"   // 字幕时间校正的缓存文件夹，一般可以不清理
+	ShareSubFileCache   = "CSF-ShareSubCache" // 字幕共享的缓存目录，不建议删除
 )
 
 const (

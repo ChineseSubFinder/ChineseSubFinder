@@ -81,7 +81,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	var outSubInfoList []supplier.SubInfo
 	var jsonList []SublistShooter
 
-	hash, err := s.computeFileHash(filePath)
+	hash, err := ComputeFileHash(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (s Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShooter
 	return jsonList, nil
 }
 
-func (s Supplier) computeFileHash(filePath string) (string, error) {
+func ComputeFileHash(filePath string) (string, error) {
 	hash := ""
 	fp, err := os.Open(filePath)
 	if err != nil {

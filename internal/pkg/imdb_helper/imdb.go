@@ -25,6 +25,37 @@ func GetVideoInfoFromIMDB(imdbID string, _proxySettings ...settings.ProxySetting
 	return t, nil
 }
 
+// GetVideoIMDBInfoFromLocal 从本地获取 IMDB 信息，如果找不到则去网络获取并写入本地缓存
+func GetVideoIMDBInfoFromLocal(imdbID string, _proxySettings ...settings.ProxySettings) (*models.IMDBInfo, error) {
+
+	var proxySettings settings.ProxySettings
+	if len(_proxySettings) > 0 {
+		proxySettings = _proxySettings[0]
+	}
+
+	// 首先从数据库中查找是否存在这个 IMDB 信息，如果不存在再使用 Web 查找，且写入数据库
+	var imdbInfos []models.IMDBInfo
+	dao.GetDb().Limit(1).Where(&models.IMDBInfo{IMDBID: imdbID}).Find(&imdbInfos)
+
+	if len(imdbInfos) <= 0 {
+		// 没有找到，去网上获取
+		t, err := GetVideoInfoFromIMDB(imdbID, proxySettings)
+		if err != nil {
+			return nil, err
+		}
+		// 存入数据库
+		nowIMDBInfo := models.NewIMDBInfo(imdbID, t.Name, t.Year, t.Description, t.Languages, t.AKA)
+		imdbInfos = make([]models.IMDBInfo, 0)
+		imdbInfos = append(imdbInfos, *nowIMDBInfo)
+		dao.GetDb().Create(nowIMDBInfo)
+
+		return nowIMDBInfo, nil
+	} else {
+		// 找到
+		return &imdbInfos[0], nil
+	}
+}
+
 // IsChineseVideo 从 imdbID 去查询判断是否是中文视频
 func IsChineseVideo(imdbID string, _proxySettings ...settings.ProxySettings) (bool, *models.IMDBInfo, error) {
 
@@ -36,42 +67,19 @@ func IsChineseVideo(imdbID string, _proxySettings ...settings.ProxySettings) (bo
 		proxySettings = _proxySettings[0]
 	}
 
-	// 首先从数据库中查找是否存在这个 IMDB 信息，如果不存在再使用 Web 查找，且写入数据库
-	var imdbInfos []models.IMDBInfo
-	dao.GetDb().Limit(1).Where(&models.IMDBInfo{IMDBID: imdbID}).Find(&imdbInfos)
-
-	var firstLangLowCase string
-	if len(imdbInfos) <= 0 {
-		// 没有找到
-		t, err := GetVideoInfoFromIMDB(imdbID, proxySettings)
-		if err != nil {
-			return false, nil, err
-		}
-		// 存入数据库
-		nowIMDBInfo := models.NewIMDBInfo(imdbID, t.Name, t.Year, t.Description, t.Languages, t.AKA)
-		imdbInfos = make([]models.IMDBInfo, 0)
-		imdbInfos = append(imdbInfos, *nowIMDBInfo)
-		dao.GetDb().Create(nowIMDBInfo)
-
-		if len(t.Languages) <= 0 {
-			return false, nil, nil
-		}
-
-		firstLangLowCase = strings.ToLower(t.Languages[0])
-
-	} else {
-		// 找到
-		if len(imdbInfos[0].Languages) <= 0 {
-			return false, nil, nil
-		}
-
-		firstLangLowCase = strings.ToLower(imdbInfos[0].Languages[0])
+	localIMDBInfo, err := GetVideoIMDBInfoFromLocal(imdbID, proxySettings)
+	if err != nil {
+		return false, nil, err
 	}
+	if len(localIMDBInfo.Languages) <= 0 {
+		return false, nil, nil
+	}
+	firstLangLowCase := strings.ToLower(localIMDBInfo.Languages[0])
 	// 判断第一语言是否是中文
 	switch firstLangLowCase {
 	case chName0, chName1:
-		return true, &imdbInfos[0], nil
+		return true, localIMDBInfo, nil
 	default:
-		return false, &imdbInfos[0], nil
+		return false, localIMDBInfo, nil
 	}
 }

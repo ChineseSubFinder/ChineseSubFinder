@@ -200,6 +200,43 @@ func GetImdbInfo4SeriesDir(seriesDir string) (types.VideoIMDBInfo, error) {
 	return imdbInfo, nil
 }
 
+func GetSeriesImdbInfoFromEpisode(oneEpFPath string) (types.VideoIMDBInfo, error) {
+
+	var err error
+	// 当前季的路径
+	EPdir := filepath.Dir(oneEpFPath)
+	// 先判断是否存在 tvshow.nfo
+	nfoFilePath := ""
+	dir, err := os.ReadDir(EPdir)
+	for _, fi := range dir {
+		if fi.IsDir() == true {
+			continue
+		}
+		upperName := strings.ToUpper(fi.Name())
+		if upperName == strings.ToUpper(MetadateTVNfo) {
+			// 连续剧的 nfo 文件
+			nfoFilePath = filepath.Join(EPdir, fi.Name())
+			break
+		}
+	}
+	if nfoFilePath == "" {
+
+		// 没有找到，那么就向上一级再次找
+		seasonDir := filepath.Base(EPdir)
+		seriesDir := EPdir[:len(EPdir)-len(seasonDir)]
+
+		return GetImdbInfo4SeriesDir(seriesDir)
+
+	} else {
+		var imdbInfo types.VideoIMDBInfo
+		imdbInfo, err = getImdbAndYearNfo(nfoFilePath, "tvshow")
+		if err != nil {
+			return types.VideoIMDBInfo{}, err
+		}
+		return imdbInfo, nil
+	}
+}
+
 func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoIMDBInfo, error) {
 
 	// 从这一集的视频文件全路径去推算对应的 nfo 文件是否存在
