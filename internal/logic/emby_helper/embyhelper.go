@@ -132,6 +132,7 @@ func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby.EmbyMixInfo, []emby.Emby
 	return filterMovieList, filterSeriesList, nil
 }
 
+// GetPlayedItemsSubtitle 所有用户标记播放过的视频，返回 电影、连续剧, 视频全路径 -- 对应字幕全路径（经过转换的）
 func (em *EmbyHelper) GetPlayedItemsSubtitle() (map[string]string, map[string]string, error) {
 
 	// 这个用户看过那些视频
