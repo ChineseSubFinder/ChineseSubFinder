@@ -10,9 +10,10 @@ type CommonSettings struct {
 
 func NewCommonSettings() *CommonSettings {
 	return &CommonSettings{
-		ScanInterval: "6h",
-		Threads:      1,
-		MoviePaths:   make([]string, 0),
-		SeriesPaths:  make([]string, 0),
+		ScanInterval:     "6h",
+		Threads:          1,
+		RunScanAtStartUp: true,
+		MoviePaths:       make([]string, 0),
+		SeriesPaths:      make([]string, 0),
 	}
 }
