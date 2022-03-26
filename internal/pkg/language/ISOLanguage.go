@@ -165,6 +165,52 @@ func IsSupportISOChineseString(isoString string) bool {
 	return false
 }
 
+// MyLang2ISO_639_1_String 内置的语言转换到 ISO_639-1_codes 标准
+func MyLang2ISO_639_1_String(myLanguage language.MyLanguage) string {
+
+	switch myLanguage {
+	case language.ChineseSimple,
+		language.ChineseTraditional,
+		language.ChineseSimpleEnglish,
+		language.ChineseTraditionalEnglish,
+		language.ChineseSimpleJapanese,
+		language.ChineseTraditionalJapanese,
+		language.ChineseSimpleKorean,
+		language.ChineseTraditionalKorean:
+		return language.ISO_639_1_Chinese
+	case language.English:
+		return language.ISO_639_1_English
+	case language.Japanese:
+		return language.ISO_639_1_Japanese
+	case language.Korean:
+		return language.ISO_639_1_Korean
+	default:
+		return language.MathLangChnUnknown
+	}
+}
+
+// MyLang2ChineseISO 中文语言编码变种，见 ISOLanguage.go 文件，这里区分简体、繁体等，如果语言是非中文则这里是空
+func MyLang2ChineseISO(myLanguage language.MyLanguage) string {
+	switch myLanguage {
+	case language.ChineseSimple,
+		language.ChineseSimpleEnglish,
+		language.ChineseSimpleJapanese,
+		language.ChineseSimpleKorean:
+		return language.ChineseISO_Hans
+
+	case language.ChineseTraditional,
+		language.ChineseTraditionalEnglish,
+		language.ChineseTraditionalJapanese,
+		language.ChineseTraditionalKorean:
+		return language.ChineseISO_Hant
+
+	case language.English, language.Japanese, language.Korean:
+		return ""
+	default:
+		return ""
+	}
+}
+
 // ISOSupportRegexRule 获取 ISO 匹配的 regex 表达式
 func ISOSupportRegexRule() string {
 

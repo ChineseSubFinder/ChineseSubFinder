@@ -15,6 +15,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_control"
+	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/sirupsen/logrus"
 	"path/filepath"
 	"sync"
@@ -86,59 +87,82 @@ func (s *ScanPlayedVideoSubInfo) GetPlayedItemsSubtitle() (bool, error) {
 	return true, nil
 }
 
-func (s *ScanPlayedVideoSubInfo) ScanMovie() error {
+func (s *ScanPlayedVideoSubInfo) Scan() error {
+
+	err := s.scan(s.movieSubMap, true)
+	if err != nil {
+		return err
+	}
+
+	err = s.scan(s.seriesSubMap, false)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *ScanPlayedVideoSubInfo) scan(videos map[string]string, isMovie bool) error {
+
+	videoTypes := ""
+	if isMovie == true {
+		videoTypes = "Movie"
+	} else {
+		videoTypes = "Series"
+	}
 
 	defer func() {
-		s.log.Infoln("ScanPlayedVideoSubInfo Movie Sub End")
+		s.log.Infoln("ScanPlayedVideoSubInfo", videoTypes, "Sub End")
+		s.log.Infoln("-----------------------------------------------")
 	}()
 
 	s.log.Infoln("-----------------------------------------------")
-	s.log.Infoln("ScanPlayedVideoSubInfo Movie Sub Start...")
+	s.log.Infoln("ScanPlayedVideoSubInfo", videoTypes, "Sub Start...")
 
 	imdbInfoCache := make(map[string]*models.IMDBInfo)
-	for movieFPath, subFPath := range s.movieSubMap {
+	for movieFPath, subFPath := range videos {
 
 		// 通过视频的绝对路径，从本地的视频文件对应的 nfo 获取到这个视频的 IMDB ID,
-		imdbInfo4Movie, err := decode.GetImdbInfo4Movie(movieFPath)
+		var err error
+		var imdbInfo4Video types.VideoIMDBInfo
+
+		if isMovie == true {
+			imdbInfo4Video, err = decode.GetImdbInfo4Movie(movieFPath)
+		} else {
+			imdbInfo4Video, err = decode.GetSeriesImdbInfoFromEpisode(movieFPath)
+		}
 		if err != nil {
 			// 如果找不到当前电影的 IMDB Info 本地文件，那么就跳过
-			s.log.Warningln("ScanPlayedVideoSubInfo.ScanMovie.GetImdbInfo4Movie", movieFPath, err)
+			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetImdbInfo4Movie", movieFPath, err)
 			continue
 		}
 		// 使用 shooter 的技术 hash 的算法，得到视频的唯一 ID
 		fileHash, err := shooter.ComputeFileHash(movieFPath)
 		if err != nil {
-			s.log.Warningln("ScanPlayedVideoSubInfo.ScanMovie.ComputeFileHash", movieFPath, err)
+			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".ComputeFileHash", movieFPath, err)
 			continue
 		}
 
 		var imdbInfo *models.IMDBInfo
 		var ok bool
-		if imdbInfo, ok = imdbInfoCache[imdbInfo4Movie.ImdbId]; ok == false {
+		if imdbInfo, ok = imdbInfoCache[imdbInfo4Video.ImdbId]; ok == false {
 			// 不存在，那么就去查询和新建缓存
-			imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(imdbInfo4Movie.ImdbId, *s.settings.AdvancedSettings.ProxySettings)
+			imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(imdbInfo4Video.ImdbId, *s.settings.AdvancedSettings.ProxySettings)
 			if err != nil {
 				return err
 			}
-			imdbInfoCache[imdbInfo4Movie.ImdbId] = imdbInfo
-		}
-
-		// 查找关联的 VideoSubInfo
-		var videoSubInfos []models.VideoSubInfo
-		err = dao.GetDb().Model(imdbInfo).Association("VideoSubInfos").Find(&videoSubInfos)
-		if err != nil {
-			return err
+			imdbInfoCache[imdbInfo4Video.ImdbId] = imdbInfo
 		}
 		// 判断找到的关联字幕信息是否已经存在了，不存在则新增关联
 		var exist bool
-		for _, info := range videoSubInfos {
+		for _, info := range imdbInfo.VideoSubInfos {
 
 			// 首先，这里会进行已有缓存字幕是否存在的判断，把不存在的字幕给删除了
 			if my_util.IsFile(info.StoreFPath) == false {
 				// 关联删除了，但是不会删除这些对象，所以后续还需要再次删除
 				err := dao.GetDb().Model(imdbInfo).Association("VideoSubInfos").Delete(&info)
 				if err != nil {
-					s.log.Warningln("ScanPlayedVideoSubInfo.ScanMovie.Delete Association", info.Feature, err)
+					s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".Delete Association", info.SubName, err)
 					continue
 				}
 				// 继续删除这个对象
@@ -162,58 +186,37 @@ func (s *ScanPlayedVideoSubInfo) ScanMovie() error {
 			return err
 		}
 		if bok == false {
-			s.log.Warningln("ScanPlayedVideoSubInfo.ScanMovie.DetermineFileTypeFromFile", imdbInfo4Movie.Title, err)
+			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".DetermineFileTypeFromFile", imdbInfo4Video.ImdbId, err)
 			continue
 		}
 
 		oneVideoSubInfo := models.NewVideoSubInfo(
 			fileHash,
 			filepath.Base(subFPath),
-			"language_iso",
+			language.MyLang2ISO_639_1_String(fileInfo.Lang),
 			language.IsBilingualSubtitle(fileInfo.Lang),
-			"chinese_iso",
+			language.MyLang2ChineseISO(fileInfo.Lang),
 			fileInfo.Lang.String(),
 			subFPath,
 		)
 
+		if isMovie == false {
+			// 连续剧的时候，如果可能应该获取是 第几季  第几集
+			torrentInfo, _, err := decode.GetVideoInfoFromFileFullPath(subFPath)
+			if err != nil {
+				s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoInfoFromFileFullPath", imdbInfo4Video.Title, err)
+				continue
+			}
+			oneVideoSubInfo.Season = torrentInfo.Season
+			oneVideoSubInfo.Episode = torrentInfo.Episode
+		}
+
 		err = dao.GetDb().Model(imdbInfo).Association("VideoSubInfos").Append(oneVideoSubInfo)
 		if err != nil {
-			s.log.Warningln("ScanPlayedVideoSubInfo.ScanMovie.Append Association", oneVideoSubInfo.SubName, err)
+			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".Append Association", oneVideoSubInfo.SubName, err)
 			continue
 		}
 
-	}
-
-	return nil
-}
-
-func (s *ScanPlayedVideoSubInfo) ScanSeries() error {
-
-	defer func() {
-		s.log.Infoln("ScanPlayedVideoSubInfo Series Sub End")
-	}()
-
-	s.log.Infoln("ScanPlayedVideoSubInfo Series Sub Start...")
-
-	for episodeFPath, subFPath := range s.seriesSubMap {
-
-		// 通过视频的绝对路径，，从本地的视频文件对应的 nfo 获取到这个视频的 IMDB ID
-		imdbInfo4Series, err := decode.GetSeriesImdbInfoFromEpisode(episodeFPath)
-		if err != nil {
-			// 如果找不到当前电影的 IMDB Info 本地文件，那么就跳过
-			s.log.Warningln("ScanPlayedVideoSubInfo.ScanMovie.GetSeriesImdbInfoFromEpisode", episodeFPath, err)
-			continue
-		}
-		// 使用 shooter 的技术 hash 的算法，得到视频的唯一 ID
-		fileHash, err := shooter.ComputeFileHash(episodeFPath)
-		if err != nil {
-			s.log.Warningln("ScanPlayedVideoSubInfo.ScanMovie.ComputeFileHash", episodeFPath, err)
-			continue
-		}
-
-		println(subFPath)
-		println(imdbInfo4Series)
-		println(fileHash)
 	}
 
 	return nil

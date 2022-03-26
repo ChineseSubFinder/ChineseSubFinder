@@ -35,7 +35,8 @@ func GetVideoIMDBInfoFromLocal(imdbID string, _proxySettings ...settings.ProxySe
 
 	// 首先从数据库中查找是否存在这个 IMDB 信息，如果不存在再使用 Web 查找，且写入数据库
 	var imdbInfos []models.IMDBInfo
-	dao.GetDb().Limit(1).Where(&models.IMDBInfo{IMDBID: imdbID}).Find(&imdbInfos)
+	// 把嵌套关联的 has many 的信息都查询出来
+	dao.GetDb().Preload("VideoSubInfos").Limit(1).Where(&models.IMDBInfo{IMDBID: imdbID}).Find(&imdbInfos)
 
 	if len(imdbInfos) <= 0 {
 		// 没有找到，去网上获取

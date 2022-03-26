@@ -94,6 +94,7 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo,
 	return imdbInfo, common.CanNotFindIMDBID
 }
 
+// GetImdbInfo4Movie 从电影视频文件获取 IMDB info
 func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	imdbInfo := types.VideoIMDBInfo{}
 	// movie 当前的目录
@@ -165,6 +166,7 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	return imdbInfo, common.CanNotFindIMDBID
 }
 
+// GetImdbInfo4SeriesDir 从一个连续剧的根目录获取 IMDB info
 func GetImdbInfo4SeriesDir(seriesDir string) (types.VideoIMDBInfo, error) {
 	imdbInfo := types.VideoIMDBInfo{}
 	dir, err := os.ReadDir(seriesDir)
@@ -200,6 +202,7 @@ func GetImdbInfo4SeriesDir(seriesDir string) (types.VideoIMDBInfo, error) {
 	return imdbInfo, nil
 }
 
+// GetSeriesImdbInfoFromEpisode 从一集获取这个 Series 的 IMDB info
 func GetSeriesImdbInfoFromEpisode(oneEpFPath string) (types.VideoIMDBInfo, error) {
 
 	var err error
@@ -237,6 +240,7 @@ func GetSeriesImdbInfoFromEpisode(oneEpFPath string) (types.VideoIMDBInfo, error
 	}
 }
 
+// GetImdbInfo4OneSeriesEpisode 获取这一集的 IMDB info
 func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoIMDBInfo, error) {
 
 	// 从这一集的视频文件全路径去推算对应的 nfo 文件是否存在
