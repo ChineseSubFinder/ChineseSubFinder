@@ -19,6 +19,8 @@ func init() {
 
 	global_value.AppVersion = AppVersion
 
+	global_value.ExtEnCode = ExtEnCode
+
 	if my_util.OSCheck() == false {
 		log_helper.GetLogger().Panicln(`You should search runtime.GOOS in the project, Implement unimplemented function`)
 	}
@@ -86,6 +88,9 @@ func readCustomPortFile() int {
 	使用 git tag 来做版本描述，然后在编译的时候传入版本号信息到这个变量上
 */
 var AppVersion = "unknow"
+
+// go build -ldflags="-X main.AppVersion=aabb -X main.ExtEnCode=ccdd" .
+var ExtEnCode = "abcdefg1234567890"
 
 const (
 	defPort    = 19035

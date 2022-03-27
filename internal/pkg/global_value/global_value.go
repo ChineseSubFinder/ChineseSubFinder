@@ -10,6 +10,7 @@ func Init(customExts []string) {
 // util.go
 var (
 	AppVersion           = "" // 程序的版本号
+	ExtEnCode            = "" // 扩展加密部分
 	ConfigRootDirFPath   = ""
 	DefDebugFolder       = ""
 	DefTmpFolder         = ""
