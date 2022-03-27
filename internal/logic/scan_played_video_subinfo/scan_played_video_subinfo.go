@@ -2,6 +2,7 @@ package scan_played_video_subinfo
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
+	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
@@ -13,7 +14,9 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_share_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_control"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/sirupsen/logrus"
@@ -35,6 +38,8 @@ type ScanPlayedVideoSubInfo struct {
 
 	movieSubMap  map[string]string
 	seriesSubMap map[string]string
+
+	subFormatter ifaces.ISubFormatter
 }
 
 func NewScanPlayedVideoSubInfo(_settings settings.Settings) (*ScanPlayedVideoSubInfo, error) {
@@ -57,6 +62,8 @@ func NewScanPlayedVideoSubInfo(_settings settings.Settings) (*ScanPlayedVideoSub
 	}
 	// 字幕解析器
 	scanPlayedVideoSubInfo.subParserHub = sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
+	// 字幕命名格式解析器
+	scanPlayedVideoSubInfo.subFormatter = emby.NewFormatter()
 
 	return &scanPlayedVideoSubInfo, nil
 }
@@ -104,6 +111,11 @@ func (s *ScanPlayedVideoSubInfo) Scan() error {
 
 func (s *ScanPlayedVideoSubInfo) scan(videos map[string]string, isMovie bool) error {
 
+	shareRootDir, err := my_util.GetShareSubRootFolder()
+	if err != nil {
+		return err
+	}
+
 	videoTypes := ""
 	if isMovie == true {
 		videoTypes = "Movie"
@@ -120,7 +132,13 @@ func (s *ScanPlayedVideoSubInfo) scan(videos map[string]string, isMovie bool) er
 	s.log.Infoln("ScanPlayedVideoSubInfo", videoTypes, "Sub Start...")
 
 	imdbInfoCache := make(map[string]*models.IMDBInfo)
-	for movieFPath, subFPath := range videos {
+	for movieFPath, orgSubFPath := range videos {
+
+		if my_util.IsFile(orgSubFPath) == false {
+
+			log_helper.GetLogger().Errorln("Skip", orgSubFPath, "not exist")
+			continue
+		}
 
 		// 通过视频的绝对路径，从本地的视频文件对应的 nfo 获取到这个视频的 IMDB ID,
 		var err error
@@ -157,8 +175,9 @@ func (s *ScanPlayedVideoSubInfo) scan(videos map[string]string, isMovie bool) er
 		var exist bool
 		for _, info := range imdbInfo.VideoSubInfos {
 
+			// 转绝对路径存储
 			// 首先，这里会进行已有缓存字幕是否存在的判断，把不存在的字幕给删除了
-			if my_util.IsFile(info.StoreFPath) == false {
+			if my_util.IsFile(filepath.Join(shareRootDir, info.StoreRPath)) == false {
 				// 关联删除了，但是不会删除这些对象，所以后续还需要再次删除
 				err := dao.GetDb().Model(imdbInfo).Association("VideoSubInfos").Delete(&info)
 				if err != nil {
@@ -170,7 +189,7 @@ func (s *ScanPlayedVideoSubInfo) scan(videos map[string]string, isMovie bool) er
 				s.log.Infoln("Delete Not Exist Sub Association", info.SubName, err)
 				continue
 			}
-
+			// 文件对应的视频唯一 ID 一致
 			if info.Feature == fileHash {
 				exist = true
 				break
@@ -180,29 +199,50 @@ func (s *ScanPlayedVideoSubInfo) scan(videos map[string]string, isMovie bool) er
 			// 存在
 			continue
 		}
-		// 不存在，插入，建立关系
-		bok, fileInfo, err := s.subParserHub.DetermineFileTypeFromFile(subFPath)
-		if err != nil {
-			return err
-		}
+
+		// 把现有的字幕 copy 到缓存目录中
+		bok, subCacheFPath := sub_share_center.CopySub2Cache(orgSubFPath, imdbInfo.Year)
 		if bok == false {
+			continue
+		}
+
+		// 不存在，插入，建立关系
+		bok, fileInfo, err := s.subParserHub.DetermineFileTypeFromFile(subCacheFPath)
+		if err != nil {
 			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".DetermineFileTypeFromFile", imdbInfo4Video.ImdbId, err)
 			continue
+		}
+		if bok == false {
+			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".DetermineFileTypeFromFile == false", imdbInfo4Video.ImdbId)
+			continue
+		}
+
+		// 特指 emby 字幕的情况
+		bok, _, _, _, extraSubPreName := s.subFormatter.IsMatchThisFormat(filepath.Base(subCacheFPath))
+		if bok == false {
+			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".IsMatchThisFormat == false", imdbInfo4Video.ImdbId)
+			continue
+		}
+		// 转相对路径存储
+		subRelPath, err := filepath.Rel(shareRootDir, subCacheFPath)
+		if err != nil {
+			return err
 		}
 
 		oneVideoSubInfo := models.NewVideoSubInfo(
 			fileHash,
-			filepath.Base(subFPath),
+			filepath.Base(subCacheFPath),
 			language.MyLang2ISO_639_1_String(fileInfo.Lang),
 			language.IsBilingualSubtitle(fileInfo.Lang),
 			language.MyLang2ChineseISO(fileInfo.Lang),
 			fileInfo.Lang.String(),
-			subFPath,
+			subRelPath,
+			extraSubPreName,
 		)
 
 		if isMovie == false {
 			// 连续剧的时候，如果可能应该获取是 第几季  第几集
-			torrentInfo, _, err := decode.GetVideoInfoFromFileFullPath(subFPath)
+			torrentInfo, _, err := decode.GetVideoInfoFromFileFullPath(subCacheFPath)
 			if err != nil {
 				s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoInfoFromFileFullPath", imdbInfo4Video.Title, err)
 				continue
