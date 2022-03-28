@@ -139,6 +139,54 @@ func GenerateXunleiVideoFile(videoPartsRootPath string) (string, error) {
 	return outVideoFPath, nil
 }
 
+// GenerateCSFVideoFile 这里为 CSF 的接口专门生成一个视频文件，瑞克和莫蒂 (2013)\Season 5\S05E09 .mkv
+func GenerateCSFVideoFile(videoPartsRootPath string) (string, error) {
+
+	const videoSize int64 = 640302895
+	const videoName = "S05E09.mkv"
+	const ext = ".videoPart"
+	partNames := []string{"4096", "160075723", "320151447", "480227171", "640294703"}
+
+	outVideoFPath := filepath.Join(videoPartsRootPath, videoName)
+
+	f, err := os.Create(outVideoFPath)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+
+	if err := f.Truncate(videoSize); err != nil {
+		return "", err
+	}
+
+	/*
+		一共有 5 个检测点
+	*/
+	for _, name := range partNames {
+
+		partF, err := os.Open(filepath.Join(videoPartsRootPath, name+ext))
+		if err != nil {
+			return "", err
+		}
+		partAll, err := io.ReadAll(partF)
+		if err != nil {
+			return "", err
+		}
+		int64Numb, err := strconv.ParseInt(name, 10, 64)
+		if err != nil {
+			return "", err
+		}
+		_, err = f.WriteAt(partAll, int64Numb)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return outVideoFPath, nil
+}
+
 // copyTestData 单元测试前把测试的数据 copy 一份出来操作，src 目录中默认应该有一个 org 原始数据文件夹，然后需要复制一份 test 文件夹出来
 func copyTestData(srcDir string) (string, error) {
 
