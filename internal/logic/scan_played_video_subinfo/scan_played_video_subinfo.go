@@ -51,6 +51,8 @@ func NewScanPlayedVideoSubInfo(_settings settings.Settings) (*ScanPlayedVideoSub
 	var scanPlayedVideoSubInfo ScanPlayedVideoSubInfo
 	scanPlayedVideoSubInfo.log = log_helper.GetLogger()
 	// 参入设置信息
+	// 最大获取的视频数目设置到 100W
+	_settings.EmbySettings.MaxRequestVideoNumber = 1000000
 	scanPlayedVideoSubInfo.settings = _settings
 	// 检测是否某些参数超出范围
 	scanPlayedVideoSubInfo.settings.Check()
@@ -160,11 +162,13 @@ func (s *ScanPlayedVideoSubInfo) scan(ctx context.Context, inData interface{}) e
 	}
 
 	imdbInfoCache := make(map[string]*models.IMDBInfo)
+	index := 0
 	for videoFPath, orgSubFPath := range scanInputData.Videos {
 
+		index++
 		stage := make(chan interface{}, 1)
 		go func() {
-			s.dealOneVideo(videoFPath, orgSubFPath, videoTypes, shareRootDir, scanInputData.IsMovie, imdbInfoCache)
+			s.dealOneVideo(index, videoFPath, orgSubFPath, videoTypes, shareRootDir, scanInputData.IsMovie, imdbInfoCache)
 			stage <- 1
 		}()
 
@@ -181,15 +185,19 @@ func (s *ScanPlayedVideoSubInfo) scan(ctx context.Context, inData interface{}) e
 	return nil
 }
 
-func (s *ScanPlayedVideoSubInfo) dealOneVideo(videoFPath, orgSubFPath, videoTypes, shareRootDir string,
+func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath, videoTypes, shareRootDir string,
 	isMovie bool,
 	imdbInfoCache map[string]*models.IMDBInfo) {
+
+	s.log.Infoln(index, orgSubFPath)
 
 	if my_util.IsFile(orgSubFPath) == false {
 
 		log_helper.GetLogger().Errorln("Skip", orgSubFPath, "not exist")
 		return
 	}
+
+	s.log.Debugln(0)
 
 	// 通过视频的绝对路径，从本地的视频文件对应的 nfo 获取到这个视频的 IMDB ID,
 	var err error
@@ -205,12 +213,17 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(videoFPath, orgSubFPath, videoType
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetImdbInfo", videoFPath, err)
 		return
 	}
+
+	s.log.Debugln(1)
+
 	// 使用 shooter 的技术 hash 的算法，得到视频的唯一 ID
 	fileHash, err := sub_file_hash.Calculate(videoFPath)
 	if err != nil {
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".ComputeFileHash", videoFPath, err)
 		return
 	}
+
+	s.log.Debugln(2)
 
 	var imdbInfo *models.IMDBInfo
 	var ok bool
@@ -223,41 +236,61 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(videoFPath, orgSubFPath, videoType
 		}
 		imdbInfoCache[imdbInfo4Video.ImdbId] = imdbInfo
 	}
-	// 判断找到的关联字幕信息是否已经存在了，不存在则新增关联
-	var exist bool
-	for _, info := range imdbInfo.VideoSubInfos {
 
+	s.log.Debugln(3)
+
+	// 判断找到的关联字幕信息是否已经存在了，不存在则新增关联
+	var skip bool
+	for tt, cacheInfo := range imdbInfo.VideoSubInfos {
+
+		s.log.Debugln(4, tt)
+
+		skip = false
 		// 转绝对路径存储
 		// 首先，这里会进行已有缓存字幕是否存在的判断，把不存在的字幕给删除了
-		if my_util.IsFile(filepath.Join(shareRootDir, info.StoreRPath)) == false {
+		cacheSubFPath := filepath.Join(shareRootDir, cacheInfo.StoreRPath)
+
+		tmpSHA1String, err := my_util.GetFileSHA1String(cacheSubFPath)
+		if err != nil {
+			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "VideoSubInfos.GetFileSHA1String", videoFPath, err)
+			return
+		}
+
+		if my_util.IsFile(cacheSubFPath) == false {
+			// 如果文件不存在，那么就删除之前的关联
 			// 关联删除了，但是不会删除这些对象，所以后续还需要再次删除
-			err := dao.GetDb().Model(imdbInfo).Association("VideoSubInfos").Delete(&info)
+			err := dao.GetDb().Model(imdbInfo).Association("VideoSubInfos").Delete(&cacheInfo)
 			if err != nil {
-				s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".Delete Association", info.SubName, err)
+				s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".Delete Association", cacheInfo.SubName, err)
 				continue
 			}
 			// 继续删除这个对象
-			dao.GetDb().Delete(&info)
-			s.log.Infoln("Delete Not Exist Sub Association", info.SubName, err)
+			dao.GetDb().Delete(&cacheInfo)
+			s.log.Infoln("Delete Not Exist or SHA1 not the same， Sub Association", cacheInfo.SubName)
 			continue
 		}
-		// 文件对应的视频唯一 ID 一致
-		if info.Feature == fileHash {
-			exist = true
+		if cacheInfo.SHA1 == tmpSHA1String {
+			// 如果 SHA1 一样，那么就说明存在了，这里其实并不是很关心文件名是否是一样的
+			skip = true
 			break
 		}
 	}
-	if exist == true {
-		// 存在
+	if skip == true {
+		// 存在，跳过
 		return
 	}
 
+	s.log.Debugln(5)
+
+	// 新增插入
 	// 把现有的字幕 copy 到缓存目录中
 	bok, subCacheFPath := sub_share_center.CopySub2Cache(orgSubFPath, imdbInfo.IMDBID, imdbInfo.Year)
 	if bok == false {
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".CopySub2Cache", orgSubFPath, err)
 		return
 	}
+
+	s.log.Debugln(6)
 
 	// 不存在，插入，建立关系
 	bok, fileInfo, err := s.subParserHub.DetermineFileTypeFromFile(subCacheFPath)
@@ -270,18 +303,27 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(videoFPath, orgSubFPath, videoType
 		return
 	}
 
+	s.log.Debugln(7)
+
 	// 特指 emby 字幕的情况
-	bok, _, _, _, extraSubPreName := s.subFormatter.IsMatchThisFormat(filepath.Base(subCacheFPath))
-	if bok == false {
-		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".IsMatchThisFormat == false", imdbInfo4Video.ImdbId)
-		return
-	}
+	_, _, _, _, extraSubPreName := s.subFormatter.IsMatchThisFormat(filepath.Base(subCacheFPath))
 	// 转相对路径存储
 	subRelPath, err := filepath.Rel(shareRootDir, subCacheFPath)
 	if err != nil {
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".Rel", imdbInfo4Video.ImdbId, err)
 		return
 	}
+
+	s.log.Debugln(8)
+
+	// 计算需要插入字幕的 sha1
+	saveSHA1String, err := my_util.GetFileSHA1String(subCacheFPath)
+	if err != nil {
+		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "GetFileSHA1String", videoFPath, err)
+		return
+	}
+
+	s.log.Debugln(9)
 
 	oneVideoSubInfo := models.NewVideoSubInfo(
 		fileHash,
@@ -292,6 +334,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(videoFPath, orgSubFPath, videoType
 		fileInfo.Lang.String(),
 		subRelPath,
 		extraSubPreName,
+		saveSHA1String,
 	)
 
 	if isMovie == false {
@@ -304,6 +347,8 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(videoFPath, orgSubFPath, videoType
 		oneVideoSubInfo.Season = torrentInfo.Season
 		oneVideoSubInfo.Episode = torrentInfo.Episode
 	}
+
+	s.log.Debugln(10)
 
 	err = dao.GetDb().Model(imdbInfo).Association("VideoSubInfos").Append(oneVideoSubInfo)
 	if err != nil {

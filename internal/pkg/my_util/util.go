@@ -1,6 +1,7 @@
 package my_util
 
 import (
+	"crypto/md5"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
@@ -621,4 +622,27 @@ func UrlJoin(hostUrl, subUrl string) (string, error) {
 	}
 	u.Path = path.Join(u.Path, subUrl)
 	return u.String(), nil
+}
+
+// GetFileSHA1String 获取文件的 SHA1 字符串
+func GetFileSHA1String(fileFPath string) (string, error) {
+	h := sha1.New()
+
+	fp, err := os.Open(fileFPath)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = fp.Close()
+	}()
+
+	partAll, err := io.ReadAll(fp)
+	if err != nil {
+		return "", err
+	}
+
+	h.Write(partAll)
+	hashBytes := h.Sum(nil)
+
+	return fmt.Sprintf("%x", md5.Sum(hashBytes)), nil
 }

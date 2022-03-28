@@ -47,14 +47,15 @@ func main() {
 	if err != nil {
 		log_helper.GetLogger().Panicln(err)
 	}
-	_, err = scan.GetPlayedItemsSubtitle()
+	bok, err := scan.GetPlayedItemsSubtitle()
 	if err != nil {
 		log_helper.GetLogger().Panicln(err)
 	}
-
-	err = scan.Scan()
-	if err != nil {
-		log_helper.GetLogger().Panicln(err)
+	if bok == true {
+		err = scan.Scan()
+		if err != nil {
+			log_helper.GetLogger().Panicln(err)
+		}
 	}
 
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用

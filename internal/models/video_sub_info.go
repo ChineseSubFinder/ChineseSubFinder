@@ -2,7 +2,7 @@ package models
 
 // VideoSubInfo 属于 IMDBInfo，IMDBInfoID 是外键，使用了 GORM 的 HasMany 关联
 type VideoSubInfo struct {
-	Feature      string `gorm:"primaryKey" json:"feature"` // 特征码，这个未必有，比如是蓝光格式，分散成多个视频文件的时候，暂定使用 shooter 的特征提前方式
+	Feature      string `gorm:"primaryKey" json:"feature"` // 特征码，这个未必有，比如是蓝光格式，分散成多个视频文件的时候，暂定使用本程序的特征提前方式
 	SubName      string `json:"sub_name"`                  // 字幕的文件名
 	Season       int    `json:"season"`                    // 如果对应的是电影则可能是 0，没有
 	Episode      int    `json:"episode"`                   // 如果对应的是电影则可能是 0，没有
@@ -12,9 +12,11 @@ type VideoSubInfo struct {
 	MyLanguage   string `json:"my_language"`               // 这个是本程序定义的语言类型，见 my_language.go 文件
 	StoreRPath   string `json:"store_r_path"`              // 字幕存在出本地的哪里相对路径上，cache/CSF-ShareSubCache
 	ExtraPreName string `json:"extra_pre_name"`            // 字幕额外的命名信息，指 Emby 字幕命名格式(简英,subhd)，的 subhd
+	SHA1         string `json:"sha_1"`                     // 当前文件的 sha1 的值
+	IsSend       bool   `json:"is_send"`                   // 是否已经发送
 	IMDBInfoID   string
 }
 
-func NewVideoSubInfo(feature string, subName string, languageISO string, isDouble bool, chineseISO string, myLanguage string, storeFPath string, extraPreName string) *VideoSubInfo {
-	return &VideoSubInfo{Feature: feature, SubName: subName, LanguageISO: languageISO, IsDouble: isDouble, ChineseISO: chineseISO, MyLanguage: myLanguage, StoreRPath: storeFPath, ExtraPreName: extraPreName}
+func NewVideoSubInfo(feature string, subName string, languageISO string, isDouble bool, chineseISO string, myLanguage string, storeFPath string, extraPreName string, sha1String string) *VideoSubInfo {
+	return &VideoSubInfo{Feature: feature, SubName: subName, LanguageISO: languageISO, IsDouble: isDouble, ChineseISO: chineseISO, MyLanguage: myLanguage, StoreRPath: storeFPath, ExtraPreName: extraPreName, SHA1: sha1String}
 }
