@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/scan_played_video_subinfo"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -42,20 +43,23 @@ func main() {
 	nowPort := readCustomPortFile()
 	log_helper.GetLogger().Infoln(fmt.Sprintf("WebUI will listen at 0.0.0.0:%d", nowPort))
 
-	//scan, err := scan_played_video_subinfo.NewScanPlayedVideoSubInfo(*settings.GetSettings())
-	//if err != nil {
-	//	log_helper.GetLogger().Panicln(err)
-	//}
-	//bok, err := scan.GetPlayedItemsSubtitle()
-	//if err != nil {
-	//	log_helper.GetLogger().Panicln(err)
-	//}
-	//if bok == true {
-	//	err = scan.Scan()
-	//	if err != nil {
-	//		log_helper.GetLogger().Panicln(err)
-	//	}
-	//}
+	scan, err := scan_played_video_subinfo.NewScanPlayedVideoSubInfo(*settings.GetSettings())
+	if err != nil {
+		log_helper.GetLogger().Panicln(err)
+	}
+	bok, err := scan.GetPlayedItemsSubtitle()
+	if err != nil {
+		log_helper.GetLogger().Panicln(err)
+	}
+	if bok == true {
+
+		scan.Clear()
+
+		err = scan.Scan()
+		if err != nil {
+			log_helper.GetLogger().Panicln(err)
+		}
+	}
 
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
 	backend.StartBackEnd(nowPort, cronHelper)

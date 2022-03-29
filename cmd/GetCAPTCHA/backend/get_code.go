@@ -52,5 +52,8 @@ func GetCode(codeUrl string) (string, error) {
 
 	sEnc := b64.StdEncoding.EncodeToString([]byte(code))
 
+	log_helper.GetLogger().Infoln("code:", code)
+	log_helper.GetLogger().Infoln("sEnc:", sEnc)
+
 	return sEnc, nil
 }

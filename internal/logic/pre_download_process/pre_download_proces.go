@@ -2,6 +2,7 @@ package pre_download_process
 
 import (
 	"errors"
+	"fmt"
 	commonValue "github.com/allanpk716/ChineseSubFinder/internal/common"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
@@ -56,7 +57,9 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	notify_center.Notify.Clear()
 	// ------------------------------------------------------------------------
 	// 获取验证码
-	updateTimeString, code, err := something_static.GetCodeFromWeb()
+	nowTT := time.Now()
+	nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
+	updateTimeString, code, err := something_static.GetCodeFromWeb(nowTimeFileNamePrix)
 	if err != nil {
 		notify_center.Notify.Add("GetSubhdCode", "GetCodeFromWeb,"+err.Error())
 		log_helper.GetLogger().Errorln("something_static.GetCodeFromWeb", err)

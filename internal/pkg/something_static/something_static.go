@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 )
 
-func WriteFile(CloneProjectDesSaveDir, enString, nowTime string) (bool, error) {
+func WriteFile(CloneProjectDesSaveDir, enString, nowTime, nowTimeFileNamePrix string) (bool, error) {
 
-	saveFileFPath := filepath.Join(CloneProjectDesSaveDir, common.StaticFileName00)
-	saveFileFPathWait := filepath.Join(CloneProjectDesSaveDir, common.StaticFileName00+waitExt)
+	saveFileFPath := filepath.Join(CloneProjectDesSaveDir, nowTimeFileNamePrix+common.StaticFileName00)
+	saveFileFPathWait := filepath.Join(CloneProjectDesSaveDir, nowTimeFileNamePrix+common.StaticFileName00+waitExt)
 
 	if my_util.IsFile(saveFileFPath) == true {
 		// 目标文件存在，则需要判断准备写入覆盖的文件是否与当前存在的文件 SHA1 的值是一样的，一样就跳过后续的操作
@@ -74,11 +74,11 @@ func writeFile(saveFileFPath, enString, nowTime string) error {
 	return nil
 }
 
-func GetCodeFromWeb() (string, string, error) {
+func GetCodeFromWeb(nowTimeFileNamePrix string) (string, string, error) {
 	const baseCodeFileUrl = "https://cdn.jsdelivr.net/gh/"
 	const whichProject = "allanpk716/SomeThingsStatic/"
 
-	desUrl := baseCodeFileUrl + whichProject + common.StaticFileName00
+	desUrl := baseCodeFileUrl + whichProject + nowTimeFileNamePrix + common.StaticFileName00
 
 	fileBytes, _, err := my_util.DownFile(desUrl)
 	if err != nil {

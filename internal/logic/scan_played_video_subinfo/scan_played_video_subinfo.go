@@ -24,6 +24,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
+	"os"
 	"path/filepath"
 	"sync"
 )
@@ -44,6 +45,8 @@ type ScanPlayedVideoSubInfo struct {
 	seriesSubMap map[string]string
 
 	subFormatter ifaces.ISubFormatter
+
+	shareRootDir string
 }
 
 func NewScanPlayedVideoSubInfo(_settings settings.Settings) (*ScanPlayedVideoSubInfo, error) {
@@ -70,6 +73,12 @@ func NewScanPlayedVideoSubInfo(_settings settings.Settings) (*ScanPlayedVideoSub
 	scanPlayedVideoSubInfo.subParserHub = sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 	// 字幕命名格式解析器
 	scanPlayedVideoSubInfo.subFormatter = emby.NewFormatter()
+	// 缓存目录的根目录
+	shareRootDir, err := my_util.GetShareSubRootFolder()
+	if err != nil {
+		return nil, err
+	}
+	scanPlayedVideoSubInfo.shareRootDir = shareRootDir
 
 	return &scanPlayedVideoSubInfo, nil
 }
@@ -98,6 +107,71 @@ func (s *ScanPlayedVideoSubInfo) GetPlayedItemsSubtitle() (bool, error) {
 	}
 
 	return true, nil
+}
+
+// Clear 清理无效的缓存字幕信息
+func (s *ScanPlayedVideoSubInfo) Clear() {
+
+	defer func() {
+		s.log.Infoln("ScanPlayedVideoSubInfo.Clear Sub End")
+		s.log.Infoln("----------------------------------------------")
+	}()
+
+	s.log.Infoln("-----------------------------------------------")
+	s.log.Infoln("ScanPlayedVideoSubInfo.Clear Sub Start...")
+
+	var imdbInfos []models.IMDBInfo
+	// 把嵌套关联的 has many 的信息都查询出来
+	dao.GetDb().Preload("VideoSubInfos").Find(&imdbInfos)
+
+	// 同时需要把不在数据库记录的字幕给删除，那么就需要把数据库查询出来的给做成 map
+	dbSubMap := make(map[string]int)
+	for _, info := range imdbInfos {
+
+		for _, oneSubInfo := range info.VideoSubInfos {
+
+			s.log.Infoln("ScanPlayedVideoSubInfo.Clear Sub", oneSubInfo.SubName)
+
+			// 转换到绝对路径
+			cacheSubFPath := filepath.Join(s.shareRootDir, oneSubInfo.StoreRPath)
+			if my_util.IsFile(cacheSubFPath) == false {
+				// 如果文件不存在，那么就删除之前的关联
+				// 关联删除了，但是不会删除这些对象，所以后续还需要再次删除
+				s.delSubInfo(&info, &oneSubInfo)
+
+				s.log.Debugln("ScanPlayedVideoSubInfo.Clear Sub delSubInfo", oneSubInfo.SubName)
+
+				continue
+			}
+
+			dbSubMap[oneSubInfo.StoreRPath] = 0
+		}
+	}
+	// 搜索缓存文件夹所有的字幕出来，对比上面的 map 进行比较
+	subFiles, err := sub_parser_hub.SearchMatchedSubFile(s.shareRootDir)
+	if err != nil {
+		return
+	}
+
+	for _, file := range subFiles {
+
+		subRelPath, err := filepath.Rel(s.shareRootDir, file)
+		if err != nil {
+			s.log.Warningln("ScanPlayedVideoSubInfo.Scan.Rel", file, err)
+			continue
+		}
+
+		_, bok := dbSubMap[subRelPath]
+		if bok == false {
+
+			err = os.Remove(file)
+			s.log.Debugln("ScanPlayedVideoSubInfo.Clear Sub Remove", file)
+			if err != nil {
+				s.log.Debugln("ScanPlayedVideoSubInfo.Clear Sub Remove", file, err)
+				continue
+			}
+		}
+	}
 }
 
 func (s *ScanPlayedVideoSubInfo) Scan() error {
@@ -227,6 +301,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	var imdbInfo *models.IMDBInfo
 	var ok bool
+	// 先把 IMDB 信息查询查来，不管是从数据库还是网络（查询出来也得写入到数据库）
 	if imdbInfo, ok = imdbInfoCache[imdbInfo4Video.ImdbId]; ok == false {
 		// 不存在，那么就去查询和新建缓存
 		imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(imdbInfo4Video.ImdbId, *s.settings.AdvancedSettings.ProxySettings)
@@ -239,45 +314,22 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	s.log.Debugln(3)
 
+	// 当前扫描到的找个字幕的 sha1 是否已经存在与缓存中了
+	tmpSHA1String, err := my_util.GetFileSHA1String(orgSubFPath)
+	if err != nil {
+		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "orgSubFPath.GetFileSHA1String", videoFPath, err)
+		return
+	}
+
+	s.log.Debugln(4)
+
 	// 判断找到的关联字幕信息是否已经存在了，不存在则新增关联
-	var skip bool
-	for tt, cacheInfo := range imdbInfo.VideoSubInfos {
+	for _, cacheInfo := range imdbInfo.VideoSubInfos {
 
-		s.log.Debugln(4, tt)
-
-		skip = false
-		// 转绝对路径存储
-		// 首先，这里会进行已有缓存字幕是否存在的判断，把不存在的字幕给删除了
-		cacheSubFPath := filepath.Join(shareRootDir, cacheInfo.StoreRPath)
-
-		tmpSHA1String, err := my_util.GetFileSHA1String(cacheSubFPath)
-		if err != nil {
-			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "VideoSubInfos.GetFileSHA1String", videoFPath, err)
+		if cacheInfo.SHA1 == tmpSHA1String {
+			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "SHA1 Exist == true, Skip", orgSubFPath)
 			return
 		}
-
-		if my_util.IsFile(cacheSubFPath) == false {
-			// 如果文件不存在，那么就删除之前的关联
-			// 关联删除了，但是不会删除这些对象，所以后续还需要再次删除
-			err := dao.GetDb().Model(imdbInfo).Association("VideoSubInfos").Delete(&cacheInfo)
-			if err != nil {
-				s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".Delete Association", cacheInfo.SubName, err)
-				continue
-			}
-			// 继续删除这个对象
-			dao.GetDb().Delete(&cacheInfo)
-			s.log.Infoln("Delete Not Exist or SHA1 not the same， Sub Association", cacheInfo.SubName)
-			continue
-		}
-		if cacheInfo.SHA1 == tmpSHA1String {
-			// 如果 SHA1 一样，那么就说明存在了，这里其实并不是很关心文件名是否是一样的
-			skip = true
-			break
-		}
-	}
-	if skip == true {
-		// 存在，跳过
-		return
 	}
 
 	s.log.Debugln(5)
@@ -355,6 +407,22 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".Append Association", oneVideoSubInfo.SubName, err)
 		return
 	}
+}
+
+// 如果文件不存在，那么就删除之前的关联
+// 关联删除了，但是不会删除这些对象，所以后续还需要再次删除
+func (s *ScanPlayedVideoSubInfo) delSubInfo(imdbInfo *models.IMDBInfo, cacheInfo *models.VideoSubInfo) bool {
+
+	err := dao.GetDb().Model(imdbInfo).Association("VideoSubInfos").Delete(cacheInfo)
+	if err != nil {
+		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", ".Delete Association", cacheInfo.SubName, err)
+		return false
+	}
+	// 继续删除这个对象
+	dao.GetDb().Delete(cacheInfo)
+	s.log.Infoln("Delete Not Exist or SHA1 not the same， Sub Association", cacheInfo.SubName)
+
+	return true
 }
 
 type ScanInputData struct {

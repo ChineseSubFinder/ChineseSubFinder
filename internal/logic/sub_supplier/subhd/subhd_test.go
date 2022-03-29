@@ -9,6 +9,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 // 无需关注这个测试用例，这个方案暂时弃用
@@ -95,7 +96,10 @@ func TestSupplier_getSubListFromKeyword4Movie(t *testing.T) {
 }
 
 func getCode() {
-	updateTimeString, code, err := something_static.GetCodeFromWeb()
+
+	nowTT := time.Now()
+	nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
+	updateTimeString, code, err := something_static.GetCodeFromWeb(nowTimeFileNamePrix)
 	if err != nil {
 		commonValue.SubhdCode = ""
 	} else {

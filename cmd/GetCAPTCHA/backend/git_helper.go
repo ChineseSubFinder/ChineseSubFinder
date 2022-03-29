@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
@@ -17,7 +18,9 @@ import (
 func GitProcess(config config.Config, enString string) error {
 
 	log_helper.GetLogger().Infoln("Now Time", time.Now().Format("2006-01-02 15:04:05"))
-	nowTime := time.Now().Format("2006-01-02")
+	nowTT := time.Now()
+	nowTime := nowTT.Format("2006-01-02")
+	nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
 
 	// 实例化登录密钥
 	publicKeys, err := ssh.NewPublicKeysFromFile("git", config.SSHKeyFullPath, config.SSHKeyPwd)
@@ -62,7 +65,7 @@ func GitProcess(config config.Config, enString string) error {
 
 	}
 	// 存储外部传入的字符串到文件
-	bok, err := something_static.WriteFile(config.CloneProjectDesSaveDir, enString, nowTime)
+	bok, err := something_static.WriteFile(config.CloneProjectDesSaveDir, enString, nowTime, nowTimeFileNamePrix)
 	if err != nil {
 		return err
 	}
@@ -77,7 +80,7 @@ func GitProcess(config config.Config, enString string) error {
 	if err != nil {
 		return err
 	}
-	_, err = w.Add(common.StaticFileName00)
+	_, err = w.Add(nowTimeFileNamePrix + common.StaticFileName00)
 	if err != nil {
 		return err
 	}

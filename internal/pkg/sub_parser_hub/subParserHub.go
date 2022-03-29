@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	languageConst "github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -176,6 +177,46 @@ func IsEmbySubChineseLangStringWanted(inLangString string) bool {
 	}
 
 	return isWanted
+}
+
+// SearchMatchedSubFile 搜索符合后缀名的字幕文件
+func SearchMatchedSubFile(dir string) ([]string, error) {
+
+	var fileFullPathList = make([]string, 0)
+	pathSep := string(os.PathSeparator)
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	for _, curFile := range files {
+		fullPath := dir + pathSep + curFile.Name()
+		if curFile.IsDir() {
+			// 内层的错误就无视了
+			oneList, _ := SearchMatchedSubFile(fullPath)
+			if oneList != nil {
+				fileFullPathList = append(fileFullPathList, oneList...)
+			}
+		} else {
+			// 这里就是文件了
+			if IsSubExtWanted(curFile.Name()) == false {
+				continue
+			} else {
+
+				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
+				fi, err := curFile.Info()
+				if err != nil {
+					log_helper.GetLogger().Debugln("SearchMatchedSubFile, file.Info:", fullPath, err)
+					continue
+				}
+				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
+					log_helper.GetLogger().Debugln("SearchMatchedSubFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
+					continue
+				}
+				fileFullPathList = append(fileFullPathList, fullPath)
+			}
+		}
+	}
+	return fileFullPathList, nil
 }
 
 func replaceLangString(inString string) string {
