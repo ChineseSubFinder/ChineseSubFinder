@@ -42,6 +42,7 @@ type Supplier struct {
 	tt               time.Duration
 	debugMode        bool
 	httpProxyAddress string
+	isAlive          bool
 }
 
 func NewSupplier(_settings settings.Settings) *Supplier {
@@ -54,6 +55,7 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
 		sup.topic = sup.settings.AdvancedSettings.Topic
 	}
+	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
 	// 默认超时是 2 * 60s，如果是调试模式则是 5 min
 	sup.tt = common.HTMLTimeOut
@@ -71,19 +73,26 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 	return &sup
 }
 
-func (s Supplier) CheckAlive() (bool, int64) {
+func (s *Supplier) CheckAlive() (bool, int64) {
 
 	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(common.SubSubHDRootUrl, s.settings.AdvancedSettings.ProxySettings.HttpProxyAddress)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
+		s.isAlive = false
 		return false, 0
 	}
 	if proxyStatus == false {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Status != 200")
+		s.isAlive = false
 		return false, proxySpeed
 	}
 
+	s.isAlive = true
 	return true, proxySpeed
+}
+
+func (s *Supplier) IsAlive() bool {
+	return s.isAlive
 }
 
 func (s Supplier) GetSupplierName() string {

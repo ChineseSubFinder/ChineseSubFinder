@@ -29,6 +29,7 @@ type Supplier struct {
 	settings settings.Settings
 	log      *logrus.Logger
 	topic    int
+	isAlive  bool
 }
 
 func NewSupplier(_settings settings.Settings) *Supplier {
@@ -36,6 +37,7 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 	sup := Supplier{}
 	sup.log = log_helper.GetLogger()
 	sup.topic = common.DownloadSubsPerSite
+	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
 	sup.settings = clone.Clone(_settings).(settings.Settings)
 	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
@@ -44,19 +46,26 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 	return &sup
 }
 
-func (s Supplier) CheckAlive() (bool, int64) {
+func (s *Supplier) CheckAlive() (bool, int64) {
 
 	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(common.SubZiMuKuRootUrl, s.settings.AdvancedSettings.ProxySettings.HttpProxyAddress)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
+		s.isAlive = false
 		return false, 0
 	}
 	if proxyStatus == false {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Status != 200")
+		s.isAlive = false
 		return false, proxySpeed
 	}
 
+	s.isAlive = true
 	return true, proxySpeed
+}
+
+func (s *Supplier) IsAlive() bool {
+	return s.isAlive
 }
 
 func (s Supplier) GetSupplierName() string {

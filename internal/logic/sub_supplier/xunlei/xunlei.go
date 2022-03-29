@@ -25,6 +25,7 @@ type Supplier struct {
 	settings settings.Settings
 	log      *logrus.Logger
 	topic    int
+	isAlive  bool
 }
 
 func NewSupplier(_settings settings.Settings) *Supplier {
@@ -32,6 +33,7 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 	sup := Supplier{}
 	sup.log = log_helper.GetLogger()
 	sup.topic = common.DownloadSubsPerSite
+	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
 	sup.settings = clone.Clone(_settings).(settings.Settings)
 	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
@@ -41,22 +43,29 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 	return &sup
 }
 
-func (s Supplier) CheckAlive() (bool, int64) {
+func (s *Supplier) CheckAlive() (bool, int64) {
 
 	// 计算当前时间
 	startT := time.Now()
 	jsonList, err := s.getSubInfos(checkFileName, checkCID)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
+		s.isAlive = false
 		return false, 0
 	}
 
 	if len(jsonList.Sublist) < 1 {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Sublist < 1")
+		s.isAlive = false
 		return false, 0
 	}
 
+	s.isAlive = true
 	return true, time.Since(startT).Milliseconds()
+}
+
+func (s *Supplier) IsAlive() bool {
+	return s.isAlive
 }
 
 func (s Supplier) GetSupplierName() string {

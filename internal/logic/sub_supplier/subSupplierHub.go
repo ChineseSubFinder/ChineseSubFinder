@@ -45,6 +45,16 @@ func (d *SubSupplierHub) AddSubSupplier(one ifaces.ISupplier) {
 	d.Suppliers = append(d.Suppliers, one)
 }
 
+func (d *SubSupplierHub) DelSubSupplier(one ifaces.ISupplier) {
+
+	for i := 0; i < len(d.Suppliers); i++ {
+
+		if one.GetSupplierName() == d.Suppliers[i].GetSupplierName() {
+			d.Suppliers = append(d.Suppliers[:i], d.Suppliers[i+1:]...)
+		}
+	}
+}
+
 // DownloadSub4Movie 某一个电影字幕下载，下载完毕后，返回下载缓存每个字幕的位置
 func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, forcedScanAndDownloadSub bool) ([]string, error) {
 
@@ -157,7 +167,7 @@ func (d SubSupplierHub) DownloadSub4SeriesFromEmby(seriesDirPath string, seriesL
 }
 
 // CheckSubSiteStatus 检测多个字幕提供的网站是否是有效的
-func (d SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
+func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 
 	outStatus := backend.ReplyCheckStatus{
 		SubSiteStatus: make([]backend.SiteStatus, 0),
@@ -179,6 +189,15 @@ func (d SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 			Speed: speed,
 		})
 	}
+
+	suppliersLen := len(d.Suppliers)
+	for i := 0; i < suppliersLen; i++ {
+		if d.Suppliers[i].IsAlive() == false {
+			d.DelSubSupplier(d.Suppliers[i])
+		}
+		suppliersLen = len(d.Suppliers)
+	}
+
 	d.log.Infoln("Check Sub Supplier End")
 
 	return outStatus
