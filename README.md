@@ -76,6 +76,7 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 
 ## 版本
 
+- v0.22.x 调整细节，[v0.22.x 优化细节](https://github.com/allanpk716/ChineseSubFinder/issues/266) -- 2022 年 3 月 29 日
 - v0.21.x 调整细节，[v0.21.x 优化细节](https://github.com/allanpk716/ChineseSubFinder/issues/240) -- 2022 年 2 月 6 日
 - v0.20.x 重构，大范围重构，新增 Web 设置界面，支持多媒体路径 -- 2022 年 2 月 6 日
 - v0.19.x 调整，[字幕时间轴校正 V2](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3V2.md) 功能，以及若干细节改动 --2021 年 12 月 30 日
