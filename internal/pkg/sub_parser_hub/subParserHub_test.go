@@ -27,6 +27,7 @@ func TestSubParserHubIsSubHasChinese(t *testing.T) {
 		{name: "5", args: args{filePath: filepath.Join(testRootDir, "oslo.2021.1080p.web.h264-naisu.繁体.ass")}, want: true},
 		{name: "6", args: args{filePath: filepath.Join(testRootDir, "[zimuku]_5_Loki.S01E02.The.Variant.1080p.DSNP.WEB-DL.DDP5.1.Atmos.H.264-CM.chs&eng.srt")}, want: true},
 		{name: "7", args: args{filePath: filepath.Join(testRootDir, "[zimuku]_5_Loki.S01E03.Lamentis.1080p.DSNP.WEB-DL.DDP5.1.H.264-TOMMY.chs&eng.srt")}, want: true},
+		{name: "8", args: args{filePath: filepath.Join(testRootDir, "苍穹浩瀚 - S02E06 - 范式转换.chinese(简英,xunlei).default.srt")}, want: true},
 	}
 
 	subParserHub := NewSubParserHub(ass.NewParser(), srt.NewParser())

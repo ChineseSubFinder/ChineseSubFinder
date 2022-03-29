@@ -206,6 +206,11 @@ func (p Parser) parseContent(inBytes []byte) []subparser.OneDialogue {
 		if steps == 2 {
 			// 在上述情况排除后，才继续
 			// 匹配内容
+
+			if len(regex_things.ReMatchSrtSubtitleEffects.FindAllString(line, -1)) > 5 {
+				continue
+			}
+
 			nowDialogue.Lines = append(nowDialogue.Lines, line)
 			// 是否到结尾
 			if i+1 > len(filterLines)-1 {
