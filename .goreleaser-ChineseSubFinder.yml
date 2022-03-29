@@ -1,11 +1,12 @@
 project_name: chinesesubfinder
 
 env:
-    - GO111MODULE=on
+  - GO111MODULE=on
 
 before:
   hooks:
     - go mod tidy
+    - sudo apt-get update
     - sudo apt-get install gcc-multilib
     - sudo apt-get install -y *-w64-x86-*
 builds:
@@ -33,7 +34,6 @@ builds:
     ldflags:
       - -s -w --extldflags "-static -fpic" -X main.AppVersion=v{{.Version}}
 
-
 archives:
   - id: archive
     name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
@@ -43,14 +43,14 @@ archives:
       windows: Windows
       amd64: x86_64
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 snapshot:
   name_template: "{{ .Tag }}-next"
 changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
-      - '^TestData:'
-      - '^TestCode:'
+      - "^docs:"
+      - "^test:"
+      - "^TestData:"
+      - "^TestCode:"
