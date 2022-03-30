@@ -18,6 +18,7 @@ import (
 func GitProcess(config config.Config, enString string) error {
 
 	log_helper.GetLogger().Infoln("Now Time", time.Now().Format("2006-01-02 15:04:05"))
+	var delFileNames []string
 	nowTT := time.Now()
 	nowTime := nowTT.Format("2006-01-02")
 	nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
@@ -49,6 +50,7 @@ func GitProcess(config config.Config, enString string) error {
 			}
 		}
 		log_helper.GetLogger().Infoln("Pull End")
+
 	} else {
 		// 需要 clone
 		log_helper.GetLogger().Infoln("PlainClone Start...")
@@ -80,6 +82,19 @@ func GitProcess(config config.Config, enString string) error {
 	if err != nil {
 		return err
 	}
+
+	// 遍历当前文件夹，仅仅保留当天的文件 nowTimeFileNamePrix + common.StaticFileName00
+	delFileNames, err = delExpireFile(config.CloneProjectDesSaveDir, nowTimeFileNamePrix+common.StaticFileName00)
+	if err != nil {
+		return err
+	}
+	for _, delFileName := range delFileNames {
+		_, err = w.Remove(delFileName)
+		if err != nil {
+			return err
+		}
+	}
+	// 添加文件到 git 文件树
 	_, err = w.Add(nowTimeFileNamePrix + common.StaticFileName00)
 	if err != nil {
 		return err
@@ -111,4 +126,38 @@ func GitProcess(config config.Config, enString string) error {
 	log_helper.GetLogger().Infoln("Push Done.")
 
 	return nil
+}
+
+func delExpireFile(dir string, goldName string) ([]string, error) {
+
+	delFileNames := make([]string, 0)
+	pathSep := string(os.PathSeparator)
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, curFile := range files {
+		fullPath := dir + pathSep + curFile.Name()
+		if curFile.IsDir() {
+			continue
+		} else {
+
+			if "ReadMe.md" == curFile.Name() {
+				continue
+			}
+			// 这里就是文件了
+			if curFile.Name() != goldName {
+
+				log_helper.GetLogger().Infoln("Del Expire File:", fullPath)
+				err = os.Remove(fullPath)
+				if err != nil {
+					return nil, err
+				}
+				delFileNames = append(delFileNames, curFile.Name())
+			}
+		}
+	}
+
+	return delFileNames, nil
 }
