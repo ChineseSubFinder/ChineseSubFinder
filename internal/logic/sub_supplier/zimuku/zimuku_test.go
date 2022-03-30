@@ -1,7 +1,9 @@
 package zimuku
 
 import (
-	series_helper2 "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
@@ -10,10 +12,18 @@ import (
 
 func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 
+	browser, err := rod_helper.NewBrowser("", true, common.SubZiMuKuRootUrl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = browser.Close()
+	}()
+
 	//imdbId1 := "tt3228774"
 	videoName := "黑白魔女库伊拉"
 	s := NewSupplier(*settings.NewSettings())
-	outList, err := s.getSubListFromKeyword(videoName)
+	outList, err := s.getSubListFromKeyword(browser, videoName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -24,6 +34,15 @@ func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 }
 
 func TestSupplier_GetSubListFromFile(t *testing.T) {
+
+	browser, err := rod_helper.NewBrowser("", true, common.SubZiMuKuRootUrl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = browser.Close()
+	}()
+
 	//movie1 := "X:\\电影\\The Devil All the Time (2020)\\The Devil All the Time (2020) WEBDL-1080p.mkv"
 	//movie1 := "X:\\电影\\龙猫 (1988)\\龙猫 (1988) 1080p DTS.mkv"
 	//movie1 := "X:\\电影\\消失爱人 (2016)\\消失爱人 (2016) 720p AAC.rmvb"
@@ -34,18 +53,13 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	movie1 := filepath.Join(rootDir, "zimuku", "movies", "The Devil All the Time (2020)", "The Devil All the Time (2020) WEBDL-1080p.mkv")
 	s := NewSupplier(*settings.NewSettings())
-	outList, err := s.getSubListFromMovie(movie1)
+	outList, err := s.getSubListFromMovie(browser, movie1)
 	if err != nil {
 		t.Error(err)
 	}
 	println(outList)
 	for i, sublist := range outList {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, len(sublist.Data))
-	}
-
-	alive, _ := s.CheckAlive()
-	if alive == false {
-		t.Fatal("CheckAlive == false")
 	}
 }
 
@@ -59,7 +73,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper2.ReadSeriesInfoFromDir(ser, nil, false)
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(ser, nil, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,6 +97,14 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 
 func TestSupplier_getSubListFromKeyword(t *testing.T) {
 
+	browser, err := rod_helper.NewBrowser("", true, common.SubZiMuKuRootUrl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = browser.Close()
+	}()
+
 	//imdbID := "tt12708542" // 星球大战：残次品
 	//imdbID := "tt7016936" // 杀死伊芙
 	//imdbID := "tt2990738" // 恐怖直播
@@ -92,7 +114,7 @@ func TestSupplier_getSubListFromKeyword(t *testing.T) {
 	//imdbID := "tt3626476"  // Vacation Friends (2021)
 	imdbID := "tt11192306" // Superman.and.Lois
 	zimuku := NewSupplier(*settings.NewSettings())
-	subInfos, err := zimuku.getSubListFromKeyword(imdbID)
+	subInfos, err := zimuku.getSubListFromKeyword(browser, imdbID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,4 +134,13 @@ func TestSupplier_step3(t *testing.T) {
 	//
 	//println(fileName)
 	//println(len(datas))
+}
+
+func TestSupplier_CheckAlive(t *testing.T) {
+
+	s := NewSupplier(*settings.NewSettings())
+	alive, _ := s.CheckAlive()
+	if alive == false {
+		t.Fatal("CheckAlive == false")
+	}
 }

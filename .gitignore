@@ -80,3 +80,5 @@ TestData/
 /internal/pkg/hot_fix/ChineseSubFinder-Cache.db
 /internal/pkg/sub_formatter/ChineseSubFinder-Cache.db
 /opendebuglog
+/internal/logic/sub_supplier/subhd/cache
+/internal/logic/sub_supplier/zimuku/cache

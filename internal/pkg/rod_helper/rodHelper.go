@@ -24,7 +24,7 @@ import (
  * @return *rod.Browser
  * @return error
  */
-func NewBrowser(httpProxyURL string, loadAdblock bool) (*rod.Browser, error) {
+func NewBrowser(httpProxyURL string, loadAdblock bool, preLoadUrl ...string) (*rod.Browser, error) {
 
 	var err error
 
@@ -62,6 +62,32 @@ func NewBrowser(httpProxyURL string, loadAdblock bool) (*rod.Browser, error) {
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// 如果加载了插件，那么就需要进行一定的耗时操作，等待其第一次的加载完成
+
+	if loadAdblock == true {
+		_, page, err := HttpGetFromBrowser(browser, "https://www.qq.com", 15*time.Second)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			if page != nil {
+				_ = page.Close()
+			}
+		}()
+	}
+
+	if len(preLoadUrl) > 0 {
+		_, page, err := HttpGetFromBrowser(browser, preLoadUrl[0], 15*time.Second)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			if page != nil {
+				_ = page.Close()
+			}
+		}()
 	}
 
 	return browser, nil
@@ -120,6 +146,26 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 		}
 	}
 	return nil, err
+}
+
+func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration, debugMode ...bool) (string, *rod.Page, error) {
+
+	page, err := NewPageNavigate(browser, inputUrl, tt, 2)
+	if err != nil {
+		return "", nil, err
+	}
+	pageString, err := page.HTML()
+	if err != nil {
+		return "", nil, err
+	}
+	// 每次搜索间隔
+	if len(debugMode) > 0 && debugMode[0] == true {
+		time.Sleep(my_util.RandomSecondDuration(5, 20))
+	} else {
+		time.Sleep(my_util.RandomSecondDuration(5, 10))
+	}
+
+	return pageString, page, nil
 }
 
 // ReloadBrowser 提前把浏览器下载好

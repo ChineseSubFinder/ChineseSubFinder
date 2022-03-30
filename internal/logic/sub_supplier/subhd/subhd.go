@@ -20,7 +20,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/launcher"
 	"github.com/huandu/go-clone"
 	"github.com/nfnt/resize"
 	"github.com/sirupsen/logrus"
@@ -38,7 +37,6 @@ type Supplier struct {
 	settings         settings.Settings
 	log              *logrus.Logger
 	topic            int
-	rodLauncher      *launcher.Launcher
 	tt               time.Duration
 	debugMode        bool
 	httpProxyAddress string
@@ -331,7 +329,7 @@ func (s Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 		}
 	}()
 
-	result, page, err := s.httpGetFromBrowser(browser, fmt.Sprintf(common.SubSubHDSearchUrl, url.QueryEscape(keyword)))
+	result, page, err := rod_helper.HttpGetFromBrowser(browser, fmt.Sprintf(common.SubSubHDSearchUrl, url.QueryEscape(keyword)), s.tt)
 	if err != nil {
 		return "", err
 	}
@@ -400,7 +398,7 @@ func (s Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSer
 		}
 	}()
 	detailPageUrl = my_util.AddBaseUrl(common.SubSubHDRootUrl, detailPageUrl)
-	result, page, err := s.httpGetFromBrowser(browser, detailPageUrl)
+	result, page, err := rod_helper.HttpGetFromBrowser(browser, detailPageUrl, s.tt)
 	if err != nil {
 		return nil, err
 	}
@@ -471,7 +469,7 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (bool
 	}()
 	subDownloadPageUrl = my_util.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
 
-	_, page, err := s.httpGetFromBrowser(browser, subDownloadPageUrl)
+	_, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageUrl, s.tt)
 	if err != nil {
 		return false, nil, err
 	}
@@ -685,26 +683,6 @@ search:
 		//截圖保存
 		page.MustScreenshot(global_value.DefDebugFolder, "result.png")
 	}
-}
-
-func (s Supplier) httpGetFromBrowser(browser *rod.Browser, inputUrl string) (string, *rod.Page, error) {
-
-	page, err := rod_helper.NewPageNavigate(browser, inputUrl, s.tt, 5)
-	if err != nil {
-		return "", nil, err
-	}
-	pageString, err := page.HTML()
-	if err != nil {
-		return "", nil, err
-	}
-	// 每次搜索间隔
-	if s.debugMode == true {
-		time.Sleep(my_util.RandomSecondDuration(5, 10))
-	} else {
-		time.Sleep(my_util.RandomSecondDuration(5, 20))
-	}
-
-	return pageString, page, nil
 }
 
 type HdListItem struct {
