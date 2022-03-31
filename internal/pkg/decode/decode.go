@@ -308,12 +308,43 @@ func GetVideoInfoFromFileFullPath(videoFileFullPath string) (*PTN.TorrentInfo, t
 	match = strings.TrimRight(match, "")
 	parse.Title = match
 
-	fInfo, err := os.Stat(videoFileFullPath)
-	if err != nil {
-		return nil, time.Time{}, err
-	}
+	/*
+		这里有个特殊情况，如果是某一种蓝光的文件结构，不是一个单一的视频文件
+		* 失控玩家 (2021)
+			* BDMV
+			* CERTIFICATE
+				* id.bdmv
+		大致是这样的目录结构，两个文件夹，下面按个文件夹中一定有这个文件 id.bdmv
+		那么，在前期的扫描视频的阶段，会把这样的蓝光视频给伪造一个假的不存在的视频传入进来
+		失控玩家 (2021).mp4 比如这个
+		然后需要 check 这个文件是否存在：
+			1. 如果 check 这个文件存在，那么就是之前的逻辑
+			2. 如果是这个情况肯定是不存在的，那么就要判断是否有这文件结构是否符合这种蓝光结构
 
-	return parse, fInfo.ModTime(), nil
+	*/
+	if IsFile(videoFileFullPath) == true {
+		// 常见的视频情况
+		fInfo, err := os.Stat(videoFileFullPath)
+		if err != nil {
+			return nil, time.Time{}, err
+		}
+
+		return parse, fInfo.ModTime(), nil
+	} else {
+		// 再次判断是否是蓝光结构
+		// 因为在前面扫描视频的时候，发现特殊的蓝光结构会伪造一个不存在的 xx.mp4 的视频文件过来，这里就需要额外检测一次
+		bok, idBDMVFPath := IsFakeBDMVWorked(videoFileFullPath)
+		if bok == false {
+			return nil, time.Time{}, err
+		}
+
+		// 获取这个蓝光 ID BDMV 文件的时间
+		fInfo, err := os.Stat(idBDMVFPath)
+		if err != nil {
+			return nil, time.Time{}, err
+		}
+		return parse, fInfo.ModTime(), nil
+	}
 }
 
 // GetSeasonAndEpisodeFromSubFileName 从文件名推断 季 和 集 的信息 Season Episode
@@ -375,6 +406,40 @@ func GetNumber2int(input string) (int, error) {
 		return 0, errors.New("get number ParseFloat error")
 	}
 	return fNum, nil
+}
+
+// IsFile 存在且是文件
+func IsFile(filePath string) bool {
+	s, err := os.Stat(filePath)
+	if err != nil {
+		return false
+	}
+	return !s.IsDir()
+}
+
+// IsDir 存在且是文件夹
+func IsDir(path string) bool {
+	s, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return s.IsDir()
+}
+
+// IsFakeBDMVWorked 传入的是伪造的不存在的蓝光结构的视频全路径，如果是就返回 true 和 id.bdmv 的绝对路径
+func IsFakeBDMVWorked(fakseVideFPath string) (bool, string) {
+
+	rootDir := filepath.Dir(fakseVideFPath)
+
+	CERDir := filepath.Join(rootDir, "CERTIFICATE")
+	BDMVDir := filepath.Join(rootDir, "BDMV")
+	idBDMVFPath := filepath.Join(CERDir, common.FileBDMV)
+
+	if IsDir(CERDir) == true && IsDir(BDMVDir) == true && IsFile(idBDMVFPath) == true {
+		return true, idBDMVFPath
+	}
+
+	return false, ""
 }
 
 const (

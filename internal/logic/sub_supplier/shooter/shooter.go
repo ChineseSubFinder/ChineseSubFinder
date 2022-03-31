@@ -2,9 +2,11 @@ package shooter
 
 import (
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
@@ -88,6 +90,22 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	// 可以提供的字幕查询 eng或者chn
 	var outSubInfoList []supplier.SubInfo
 	var jsonList []SublistShooter
+
+	if my_util.IsFile(filePath) == false {
+		// 这里传入的可能是蓝光结构的伪造存在的视频文件，需要检查一次这个文件是否存在
+		bok, _ := decode.IsFakeBDMVWorked(filePath)
+		if bok == false {
+
+			nowError := errors.New(fmt.Sprintf("%s %s %s",
+				s.GetSupplierName(),
+				filePath,
+				"not exist, and it`s not a Blue ray Video FakeFileName"))
+
+			s.log.Errorln(nowError)
+
+			return nil, nowError
+		}
+	}
 
 	hash, err := ComputeFileHash(filePath)
 	if err != nil {

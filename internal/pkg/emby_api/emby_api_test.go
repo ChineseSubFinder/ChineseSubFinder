@@ -6,9 +6,9 @@ import (
 )
 
 var ec = settings.EmbySettings{
-	AddressUrl:            "1",
+	AddressUrl:            "http://192.168.50.252:8096",
 	APIKey:                "1",
-	MaxRequestVideoNumber: 10,
+	MaxRequestVideoNumber: 1000,
 }
 
 // TODO 暂不方便在其他环境进行单元测试
@@ -98,7 +98,7 @@ func TestEmbyHelper_GetItemVideoInfo(t *testing.T) {
 	//// 基地 S01E03 166840
 	//// 基地 S01E04 173354
 	//// 算牌人 166837
-	//videoInfo, err := em.GetItemVideoInfo("145499")
+	//videoInfo, err := em.GetItemVideoInfo("327198")
 	//if err != nil {
 	//	t.Fatal(err)
 	//}

@@ -353,16 +353,37 @@ func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMo
 		return false
 	}
 
+	// 下面开始实际的路径替换，从 emby 的内部路径转换为 本程序读取到视频的路径
 	if isMovieOrSeries == true {
 		// 电影
-		mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
-		// 因为电影搜索的时候使用的是完整的视频目录，所以这个字段并不重要
-		//mixInfo.PhysicalRootPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
-		// 这个电影的文件夹
-		mixInfo.VideoFolderName = filepath.Base(filepath.Dir(mixInfo.VideoInfo.Path))
-		mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
+
+		// 这里需要考虑蓝光的情况，这种目录比较特殊，在 emby 获取的时候，可以知道这个是否是蓝光，是的话，需要特殊处理
+		// 伪造一个虚假不存在的 .mp4 文件向后提交给电影的下载函数
+		/*
+			举例：失控玩家(2021) 是一个蓝光电影
+			那么下面的 mixInfo.VideoInfo.Path 从 emby 拿到应该是 /mnt/share1/电影/失控玩家(2021)
+			就需要再次基础上进行视频的伪造
+		*/
+
+		if len(mixInfo.VideoInfo.MediaSources) > 0 && mixInfo.VideoInfo.MediaSources[0].Container == "bluray" {
+			// 这个就是蓝光了
+			fakeVideoFPath := filepath.Join(mixInfo.VideoInfo.Path, filepath.Base(mixInfo.VideoInfo.Path)+common.VideoExtMp4)
+			mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(fakeVideoFPath, pathSlices[0].Path, nowPhRootPath)
+			// 这个电影的文件夹
+			mixInfo.VideoFolderName = filepath.Base(filepath.Dir(fakeVideoFPath))
+			mixInfo.VideoFileName = filepath.Base(fakeVideoFPath)
+		} else {
+			// 常规的电影情况，也就是有一个具体的视频文件 .mp4 or .mkv
+			mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
+			// 因为电影搜索的时候使用的是完整的视频目录，所以这个字段并不重要，连续剧的时候才需要关注
+			//mixInfo.PhysicalRootPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
+			// 这个电影的文件夹
+			mixInfo.VideoFolderName = filepath.Base(filepath.Dir(mixInfo.VideoInfo.Path))
+			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
+		}
 	} else {
 		// 连续剧
+		// 暂时不支持蓝光，因为没有下载到对应的连续剧蓝光视频
 		ancestorIndex := -1
 		// 找到连续剧文件夹这一层
 		for i, ancestor := range mixInfo.Ancestors {

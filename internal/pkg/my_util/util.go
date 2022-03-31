@@ -165,7 +165,7 @@ func SearchMatchedVideoFileFromDirs(dirs []string) ([]string, error) {
 	return fileFullPathList, nil
 }
 
-// SearchMatchedVideoFile 搜索符合后缀名的视频文件
+// SearchMatchedVideoFile 搜索符合后缀名的视频文件，现在也会把 BDMV 的文件搜索出来，但是这个并不是一个视频文件，需要在后续特殊处理
 func SearchMatchedVideoFile(dir string) ([]string, error) {
 
 	var fileFullPathList = make([]string, 0)
@@ -184,7 +184,14 @@ func SearchMatchedVideoFile(dir string) ([]string, error) {
 			}
 		} else {
 			// 这里就是文件了
+			bok, fakeBDMVVideoFile := FileNameIsBDMV(fullPath)
+			if bok == true {
+				// 这类文件后续的扫描字幕操作需要额外的处理
+				fileFullPathList = append(fileFullPathList, fakeBDMVVideoFile)
+				continue
+			}
 			if IsWantedVideoExtDef(curFile.Name()) == false {
+				// 不是期望的视频后缀名则跳过
 				continue
 			} else {
 
@@ -203,6 +210,31 @@ func SearchMatchedVideoFile(dir string) ([]string, error) {
 		}
 	}
 	return fileFullPathList, nil
+}
+
+// FileNameIsBDMV 是否是 BDMV 蓝光目录，符合返回 true，以及 fakseVideoFPath
+func FileNameIsBDMV(id_bdmv_fileFPath string) (bool, string) {
+	/*
+		这类蓝光视频比较特殊，它没有具体的一个后缀名的视频文件而是由两个文件夹来存储视频数据
+		* BDMV
+		* CERTIFICATE
+		但是不管如何，都需要使用一个文件作为锚点，就选定 CERTIFICATE 中的 id.bdmv 文件
+		后续的下载逻辑也需要单独为这个文件进行处理，比如，从这个文件向上一层获取 nfo 文件，
+		以及再上一层得到视频文件夹名称等
+	*/
+
+	if strings.ToLower(filepath.Base(id_bdmv_fileFPath)) == common.FileBDMV {
+
+		// 这个文件是确认了，那么就需要查看这个文件父级目录是不是 CERTIFICATE 文件夹
+		// 且 CERTIFICATE 需要和 BDMV 文件夹都存在
+		CERDir := filepath.Dir(id_bdmv_fileFPath)
+		BDMVDir := filepath.Join(filepath.Dir(CERDir), "BDMV")
+		if IsDir(CERDir) == true && IsDir(BDMVDir) == true {
+			return true, filepath.Join(filepath.Dir(CERDir), filepath.Base(filepath.Dir(CERDir))+common.VideoExtMp4)
+		}
+	}
+
+	return false, ""
 }
 
 func SearchTVNfo(dir string) ([]string, error) {

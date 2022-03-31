@@ -23,9 +23,10 @@ func TestEmbyHelper_GetRecentlyAddVideoList(t *testing.T) {
 
 	//embyConfig := settings.NewEmbySettings()
 	//embyConfig.Enable = true
-	//embyConfig.AddressUrl = "http://123:8096"
-	//embyConfig.APIKey = "123"
-	//embyConfig.SkipWatched = true
+	//embyConfig.AddressUrl = "http://192.168.50.252:8096"
+	//embyConfig.APIKey = "1"
+	//embyConfig.SkipWatched = false
+	//embyConfig.MaxRequestVideoNumber = 1000
 	//embyConfig.MoviePathsMapping["X:\\电影"] = "/mnt/share1/电影"
 	//embyConfig.MoviePathsMapping["X:\\连续剧"] = "/mnt/share1/连续剧"
 	//
@@ -34,7 +35,7 @@ func TestEmbyHelper_GetRecentlyAddVideoList(t *testing.T) {
 	//if err != nil {
 	//	t.Fatal(err)
 	//}
-	//
+
 	//println(len(movieList), len(seriesList))
 }
 
@@ -128,4 +129,8 @@ func TestEmbyHelper_GetPlayedItemsSubtitle(t *testing.T) {
 	//		t.Fatal("not found,", subPhyPath)
 	//	}
 	//}
+}
+
+func TestEmbyHelper_GetRecentlyAddVideoList1(t *testing.T) {
+
 }
