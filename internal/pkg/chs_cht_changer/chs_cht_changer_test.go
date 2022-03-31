@@ -1,6 +1,7 @@
 package chs_cht_changer
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/change_file_encode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
 	"testing"
@@ -34,7 +35,13 @@ func TestProcess(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Process(tt.args.srcSubFileFPath, tt.args.desChineseLanguageType); (err != nil) != tt.wantErr {
+
+			err := change_file_encode.Process(tt.args.srcSubFileFPath, 0)
+			if err != nil {
+				t.Errorf("change_file_encode.Process() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if err = Process(tt.args.srcSubFileFPath, tt.args.desChineseLanguageType); (err != nil) != tt.wantErr {
 				t.Errorf("Process() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// Process 使用前务必转换字幕文件为 UTF-8 来使用，否则会遇到乱码
 func Process(srcSubFileFPath string, desChineseLanguageType int) error {
 
 	// 默认 0 是 简体 ，1 是 繁体
