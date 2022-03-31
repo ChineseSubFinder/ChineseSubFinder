@@ -3,7 +3,6 @@ FROM library/node:16-alpine as builder
 USER root
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
-add ./.npmrc /usr/src/app
 add ./package.json /usr/src/app
 add ./package-lock.json /usr/src/app
 add ./.npmrc /usr/src/app

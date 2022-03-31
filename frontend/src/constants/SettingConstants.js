@@ -23,3 +23,11 @@ export const DESC_ENCODE_TYPE_NAME_MAP = {
   [DESC_ENCODE_TYPE_UTF8]: 'UTF-8',
   [DESC_ENCODE_TYPE_GBK]: 'GBK',
 };
+
+export const AUTO_CONVERT_LANG_CHS = 0;
+export const AUTO_CONVERT_LANG_CHT = 1;
+
+export const AUTO_CONVERT_LANG_NAME_MAP = {
+  [AUTO_CONVERT_LANG_CHS]: '转简体',
+  [AUTO_CONVERT_LANG_CHT]: '轉繁體',
+};
