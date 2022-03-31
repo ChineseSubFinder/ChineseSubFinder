@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/change_file_encode"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/chs_cht_changer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	subcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
@@ -210,7 +211,17 @@ func (d *Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFi
 			return err
 		}
 	}
+
 	// 判断是否需要进行简繁互转
+	// 一定得是 UTF-8 才能够执行简繁转换
+	// 测试了先转 UTF-8 进行简繁转换然后再转 GBK，有些时候会出错，所以还是不支持这样先
+	if d.settings.ExperimentalFunction.ChsChtChanger.Enable == true &&
+		d.settings.ExperimentalFunction.AutoChangeSubEncode.DesEncodeType == 0 {
+		err = chs_cht_changer.Process(desSubFullPath, d.settings.ExperimentalFunction.ChsChtChanger.DesChineseLanguageType)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
