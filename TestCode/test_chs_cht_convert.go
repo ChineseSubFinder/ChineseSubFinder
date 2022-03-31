@@ -9,19 +9,19 @@ func convertChsCht() {
 	*/
 	dicter := sat.DefaultDict()
 	println("---------------------")
-	sstr := "什麼"
+	sstr := "什麼sdg as 123"
 	println(sstr)
 	// 转换到 简体
 	println(dicter.Read(sstr))
 	// 转换到 繁体
 	println(dicter.ReadReverse(sstr))
 	println("---------------------")
-	sstr = "什么"
+	sstr = "11什asd么56"
 	println(sstr)
 	println(dicter.Read(sstr))
 	println(dicter.ReadReverse(sstr))
 	println("---------------------")
-	sstr = "簡繁轉換"
+	sstr = "asd簡繁as25轉s換66"
 	println(sstr)
 	println(dicter.Read(sstr))
 	println(dicter.ReadReverse(sstr))
