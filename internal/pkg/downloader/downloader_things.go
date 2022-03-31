@@ -210,6 +210,7 @@ func (d *Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFi
 			return err
 		}
 	}
+	// 判断是否需要进行简繁互转
 
 	return nil
 }

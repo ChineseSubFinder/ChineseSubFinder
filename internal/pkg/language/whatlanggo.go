@@ -108,7 +108,7 @@ func SubLangStatistics2SubLangType(countLineFeed, AllLines float32, langDict map
 	if hasChinese {
 		for _, line := range chLines {
 			// 判断是简体还是繁体
-			if chDict.IsChs(line, 0.9) == true {
+			if ChDict.IsChs(line, 0.9) == true {
 				isChsCount++
 			}
 		}
