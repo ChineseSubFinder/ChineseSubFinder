@@ -29,6 +29,7 @@ const (
 	VideoExtMkv  = ".mkv"
 	VideoExtRmvb = ".rmvb"
 	VideoExtIso  = ".iso"
+	VideoExtM2ts = ".m2ts"
 )
 
 const (

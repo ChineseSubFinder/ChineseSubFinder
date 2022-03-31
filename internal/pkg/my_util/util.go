@@ -252,11 +252,13 @@ func IsWantedVideoExtDef(fileName string) bool {
 		global_value.DefExtMap[common.VideoExtMkv] = common.VideoExtMkv
 		global_value.DefExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
 		global_value.DefExtMap[common.VideoExtIso] = common.VideoExtIso
+		global_value.DefExtMap[common.VideoExtM2ts] = common.VideoExtM2ts
 
 		global_value.WantedExtMap[common.VideoExtMp4] = common.VideoExtMp4
 		global_value.WantedExtMap[common.VideoExtMkv] = common.VideoExtMkv
 		global_value.WantedExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
 		global_value.WantedExtMap[common.VideoExtIso] = common.VideoExtIso
+		global_value.WantedExtMap[common.VideoExtM2ts] = common.VideoExtM2ts
 
 		for _, videoExt := range global_value.CustomVideoExts {
 			global_value.WantedExtMap[videoExt] = videoExt
