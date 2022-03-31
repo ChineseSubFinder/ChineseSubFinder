@@ -159,32 +159,52 @@ func DownloadSubtitleInAllSiteByOneSeries(Suppliers []ifaces.ISupplier, seriesIn
 	for key := range seriesInfo.NeedDlEpsKeyList {
 		log_helper.GetLogger().Infoln(common.QueueName, i, seriesInfo.Name, "-", key)
 	}
+	// TODO 资源占用较高，把这里的并发给取消
 	// 同时进行查询
-	subInfosChannel := make(chan []supplier.SubInfo)
-	for _, oneSupplier := range Suppliers {
-		nowSupplier := oneSupplier
-		go func() {
-			var subInfos []supplier.SubInfo
-			defer func() {
-				subInfosChannel <- subInfos
-				log_helper.GetLogger().Infoln(common.QueueName, i, nowSupplier.GetSupplierName(), "End...")
-			}()
+	//subInfosChannel := make(chan []supplier.SubInfo)
+	//for _, oneSupplier := range Suppliers {
+	//	nowSupplier := oneSupplier
+	//	go func() {
+	//		var subInfos []supplier.SubInfo
+	//		defer func() {
+	//			subInfosChannel <- subInfos
+	//			log_helper.GetLogger().Infoln(common.QueueName, i, nowSupplier.GetSupplierName(), "End...")
+	//		}()
+	//
+	//		log_helper.GetLogger().Infoln(common.QueueName, i, nowSupplier.GetSupplierName(), "Start...")
+	//		// 一次性把这一部连续剧的所有字幕下载完
+	//		subInfos, err := nowSupplier.GetSubListFromFile4Series(seriesInfo)
+	//		if err != nil {
+	//			log_helper.GetLogger().Errorln(common.QueueName, i, nowSupplier.GetSupplierName(), "GetSubListFromFile4Series", err)
+	//		}
+	//		// 把后缀名给改好
+	//		sub_helper.ChangeVideoExt2SubExt(subInfos)
+	//	}()
+	//}
+	//for i := 0; i < len(Suppliers); i++ {
+	//	v, ok := <-subInfosChannel
+	//	if ok == true && v != nil {
+	//		outSUbInfos = append(outSUbInfos, v...)
+	//	}
+	//}
 
-			log_helper.GetLogger().Infoln(common.QueueName, i, nowSupplier.GetSupplierName(), "Start...")
-			// 一次性把这一部连续剧的所有字幕下载完
-			subInfos, err := nowSupplier.GetSubListFromFile4Series(seriesInfo)
-			if err != nil {
-				log_helper.GetLogger().Errorln(common.QueueName, i, nowSupplier.GetSupplierName(), "GetSubListFromFile4Series", err)
-			}
-			// 把后缀名给改好
-			sub_helper.ChangeVideoExt2SubExt(subInfos)
-		}()
-	}
-	for i := 0; i < len(Suppliers); i++ {
-		v, ok := <-subInfosChannel
-		if ok == true && v != nil {
-			outSUbInfos = append(outSUbInfos, v...)
+	for _, oneSupplier := range Suppliers {
+
+		var subInfos []supplier.SubInfo
+		log_helper.GetLogger().Infoln(common.QueueName, i, oneSupplier.GetSupplierName(), "Start...")
+		// 一次性把这一部连续剧的所有字幕下载完
+		subInfos, err := oneSupplier.GetSubListFromFile4Series(seriesInfo)
+		if err != nil {
+			log_helper.GetLogger().Errorln(common.QueueName, i, oneSupplier.GetSupplierName(), "GetSubListFromFile4Series", err)
+			log_helper.GetLogger().Infoln(common.QueueName, i, oneSupplier.GetSupplierName(), "End")
+			continue
 		}
+		// 把后缀名给改好
+		sub_helper.ChangeVideoExt2SubExt(subInfos)
+
+		outSUbInfos = append(outSUbInfos, subInfos...)
+
+		log_helper.GetLogger().Infoln(common.QueueName, i, oneSupplier.GetSupplierName(), "End")
 	}
 
 	return outSUbInfos

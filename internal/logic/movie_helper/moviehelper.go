@@ -27,24 +27,38 @@ func OneMovieDlSubInAllSite(Suppliers []ifaces.ISupplier, oneVideoFullPath strin
 	}()
 
 	var outSUbInfos = make([]supplier.SubInfo, 0)
-	// 同时进行查询
-	subInfosChannel := make(chan []supplier.SubInfo)
+	// TODO 资源占用较高，把这里的并发给取消
+	//// 同时进行查询
+	//subInfosChannel := make(chan []supplier.SubInfo)
+	//log_helper.GetLogger().Infoln(common.QueueName, i, "DlSub Start", oneVideoFullPath)
+	//for _, oneSupplier := range Suppliers {
+	//	nowSupplier := oneSupplier
+	//	go func() {
+	//		subInfos, err := OneMovieDlSubInOneSite(oneVideoFullPath, i, nowSupplier)
+	//		if err != nil {
+	//			log_helper.GetLogger().Errorln(common.QueueName, i, nowSupplier.GetSupplierName(), "oneMovieDlSubInOneSite", err)
+	//		}
+	//		subInfosChannel <- subInfos
+	//	}()
+	//}
+	//for index := 0; index < len(Suppliers); index++ {
+	//	v, ok := <-subInfosChannel
+	//	if ok == true && v != nil {
+	//		outSUbInfos = append(outSUbInfos, v...)
+	//	}
+	//}
+
 	log_helper.GetLogger().Infoln(common.QueueName, i, "DlSub Start", oneVideoFullPath)
 	for _, oneSupplier := range Suppliers {
-		nowSupplier := oneSupplier
-		go func() {
-			subInfos, err := OneMovieDlSubInOneSite(oneVideoFullPath, i, nowSupplier)
-			if err != nil {
-				log_helper.GetLogger().Errorln(common.QueueName, i, nowSupplier.GetSupplierName(), "oneMovieDlSubInOneSite", err)
-			}
-			subInfosChannel <- subInfos
-		}()
-	}
-	for index := 0; index < len(Suppliers); index++ {
-		v, ok := <-subInfosChannel
-		if ok == true && v != nil {
-			outSUbInfos = append(outSUbInfos, v...)
+
+		log_helper.GetLogger().Infoln(common.QueueName, i, oneSupplier.GetSupplierName(), oneVideoFullPath)
+
+		subInfos, err := OneMovieDlSubInOneSite(oneVideoFullPath, i, oneSupplier)
+		if err != nil {
+			log_helper.GetLogger().Errorln(common.QueueName, i, oneSupplier.GetSupplierName(), "oneMovieDlSubInOneSite", err)
+			continue
 		}
+		outSUbInfos = append(outSUbInfos, subInfos...)
 	}
 
 	for index, info := range outSUbInfos {
