@@ -217,6 +217,8 @@ func (d *Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFi
 	// 测试了先转 UTF-8 进行简繁转换然后再转 GBK，有些时候会出错，所以还是不支持这样先
 	if d.settings.ExperimentalFunction.ChsChtChanger.Enable == true &&
 		d.settings.ExperimentalFunction.AutoChangeSubEncode.DesEncodeType == 0 {
+		d.log.Infoln("----------------------------------")
+		d.log.Infoln("chs_cht_changer to", d.settings.ExperimentalFunction.ChsChtChanger.GetDesChineseLanguageTypeString())
 		err = chs_cht_changer.Process(desSubFullPath, d.settings.ExperimentalFunction.ChsChtChanger.DesChineseLanguageType)
 		if err != nil {
 			return err
