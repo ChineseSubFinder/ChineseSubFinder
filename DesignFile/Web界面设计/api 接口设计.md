@@ -56,7 +56,11 @@
             "auto_change_sub_encode": {
                 "enable": false,
                 "des_encode_type": 0, // 默认 0 是 UTF-8，1 是 GBK
-            }
+            },
+           "chs_cht_changer": {
+               "enable": false,
+                "des_chinese_language_type": 0, // 默认 0 是 简体，1 是 繁体
+           }
 	}
 }
 ```
@@ -151,7 +155,11 @@
             "auto_change_sub_encode": {
                 "enable": false,
                 "des_encode_type": 0, // 默认 0 是 UTF-8，1 是 GBK
-            }
+            },
+            "chs_cht_changer": {
+               "enable": false,
+                "des_chinese_language_type": 0, // 默认 0 是 简体，1 是 繁体
+           }
 		}
     }
 }
@@ -339,7 +347,11 @@
             "auto_change_sub_encode": {
                 "enable": false,
                 "des_encode_type": 0, // 默认 0 是 UTF-8，1 是 GBK
-            }
+            },
+            "chs_cht_changer": {
+               "enable": false,
+                "des_chinese_language_type": 0, // 默认 0 是 简体，1 是 繁体
+           }
 		}
 }
 ```
@@ -486,7 +498,11 @@
             "auto_change_sub_encode": {
                 "enable": false,
                 "des_encode_type": 0, // 默认 0 是 UTF-8，1 是 GBK
-            }
+            },
+            "chs_cht_changer": {
+               "enable": false,
+                "des_chinese_language_type": 0, // 默认 0 是 简体，1 是 繁体
+           }
 	 	}
     }
 ```
@@ -554,7 +570,11 @@
             "auto_change_sub_encode": {
                 "enable": false,
                 "des_encode_type": 0, // 默认 0 是 UTF-8，1 是 GBK
-            }
+            },
+            "chs_cht_changer": {
+               "enable": false,
+                "des_chinese_language_type": 0, // 默认 0 是 简体，1 是 繁体
+           }
 		}
     }
 }
