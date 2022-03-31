@@ -139,11 +139,17 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 		})
 		if errors.Is(err, context.DeadlineExceeded) {
 			// 超时
+			if page != nil {
+				page.Close()
+			}
 			return nil, err
 		} else if err == nil {
 			// 没有问题
 			return page, nil
 		}
+	}
+	if page != nil {
+		page.Close()
 	}
 	return nil, err
 }
@@ -156,6 +162,9 @@ func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration,
 	}
 	pageString, err := page.HTML()
 	if err != nil {
+		if page != nil {
+			page.Close()
+		}
 		return "", nil, err
 	}
 	// 每次搜索间隔
