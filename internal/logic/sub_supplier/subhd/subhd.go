@@ -34,13 +34,12 @@ import (
 )
 
 type Supplier struct {
-	settings         settings.Settings
-	log              *logrus.Logger
-	topic            int
-	tt               time.Duration
-	debugMode        bool
-	httpProxyAddress string
-	isAlive          bool
+	settings  settings.Settings
+	log       *logrus.Logger
+	topic     int
+	tt        time.Duration
+	debugMode bool
+	isAlive   bool
 }
 
 func NewSupplier(_settings settings.Settings) *Supplier {
@@ -60,12 +59,6 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 	sup.debugMode = sup.settings.AdvancedSettings.DebugMode
 	if sup.debugMode == true {
 		sup.tt = common.OneMovieProcessTimeOut
-	}
-	// 判断是否启用代理
-	if sup.settings.AdvancedSettings.ProxySettings.UseHttpProxy == true {
-		sup.httpProxyAddress = sup.settings.AdvancedSettings.ProxySettings.HttpProxyAddress
-	} else {
-		sup.httpProxyAddress = ""
 	}
 
 	return &sup
@@ -105,7 +98,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowser(s.httpProxyAddress, true)
+	browser, err := rod_helper.NewBrowserEx(true, s.settings)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +221,7 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInf
 
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowser(s.httpProxyAddress, true)
+	browser, err := rod_helper.NewBrowserEx(true, s.settings)
 	if err != nil {
 		return nil, err
 	}

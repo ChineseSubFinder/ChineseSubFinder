@@ -8,6 +8,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_useragent"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
@@ -18,12 +19,26 @@ import (
 	"time"
 )
 
-/**
- * @Description: 			新建一个支持代理的 browser 对象，使用完毕后，需要删除 adblockFilePath 文件夹
- * @param httpProxyURL		http://127.0.0.1:10809
- * @return *rod.Browser
- * @return error
- */
+func NewBrowserEx(loadAdblock bool, _settings settings.Settings, preLoadUrl ...string) (*rod.Browser, error) {
+
+	httpProxyURL := ""
+
+	if _settings.AdvancedSettings.ProxySettings.UseHttpProxy == true &&
+		len(_settings.AdvancedSettings.ProxySettings.HttpProxyAddress) > 0 {
+
+		httpProxyURL = _settings.AdvancedSettings.ProxySettings.HttpProxyAddress
+	}
+
+	if _settings.ExperimentalFunction.RemoteChromeSettings.Enable == false {
+		return NewBrowser(httpProxyURL, loadAdblock, preLoadUrl...)
+	} else {
+		return NewBrowserFromDocker(httpProxyURL, _settings.ExperimentalFunction.RemoteChromeSettings.RemoteDockerURL,
+			_settings.ExperimentalFunction.RemoteChromeSettings.RemoteAdblockPath,
+			_settings.ExperimentalFunction.RemoteChromeSettings.ReMoteUserDataDir,
+			loadAdblock, preLoadUrl...)
+	}
+}
+
 func NewBrowser(httpProxyURL string, loadAdblock bool, preLoadUrl ...string) (*rod.Browser, error) {
 
 	var err error
@@ -65,7 +80,63 @@ func NewBrowser(httpProxyURL string, loadAdblock bool, preLoadUrl ...string) (*r
 	}
 
 	// 如果加载了插件，那么就需要进行一定的耗时操作，等待其第一次的加载完成
+	if loadAdblock == true {
+		_, page, err := HttpGetFromBrowser(browser, "https://www.qq.com", 15*time.Second)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			if page != nil {
+				_ = page.Close()
+			}
+		}()
+	}
+	if len(preLoadUrl) > 0 {
+		_, page, err := HttpGetFromBrowser(browser, preLoadUrl[0], 15*time.Second)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			if page != nil {
+				_ = page.Close()
+			}
+		}()
+	}
 
+	return browser, nil
+}
+
+func NewBrowserFromDocker(httpProxyURL, remoteDockerURL string, remoteAdblockPath, reMoteUserDataDir string,
+	loadAdblock bool, preLoadUrl ...string) (*rod.Browser, error) {
+	var browser *rod.Browser
+
+	err := rod.Try(func() {
+
+		purl := ""
+		var l *launcher.Launcher
+		if loadAdblock == true {
+			l = launcher.MustNewManaged(remoteDockerURL)
+			purl = l.Delete("disable-extensions").
+				Set("load-extension", remoteAdblockPath).
+				Proxy(httpProxyURL).
+				Headless(false). // 插件模式需要设置这个
+				UserDataDir(reMoteUserDataDir).
+				MustLaunch()
+		} else {
+			l = launcher.MustNewManaged(remoteDockerURL)
+			purl = l.
+				Proxy(httpProxyURL).
+				UserDataDir(reMoteUserDataDir).
+				MustLaunch()
+		}
+
+		browser = rod.New().Client(l.Client()).ControlURL(purl).MustConnect()
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// 如果加载了插件，那么就需要进行一定的耗时操作，等待其第一次的加载完成
 	if loadAdblock == true {
 		_, page, err := HttpGetFromBrowser(browser, "https://www.qq.com", 15*time.Second)
 		if err != nil {
@@ -88,31 +159,6 @@ func NewBrowser(httpProxyURL string, loadAdblock bool, preLoadUrl ...string) (*r
 				_ = page.Close()
 			}
 		}()
-	}
-
-	return browser, nil
-}
-
-/**
- * @Description: 			访问目标 Url，返回 page，只是这个 page 有效，如果再次出发其他的事件无效
- * @param desURL			目标 Url
- * @param httpProxyURL		http://127.0.0.1:10809
- * @param timeOut			超时时间
- * @param maxRetryTimes		当是非超时 err 的时候，最多可以重试几次
- * @return *rod.Page
- * @return error
- */
-func NewBrowserFromDocker(httpProxyURL, remoteDockerURL string) (*rod.Browser, error) {
-	var browser *rod.Browser
-
-	err := rod.Try(func() {
-		l := launcher.MustNewManaged(remoteDockerURL)
-		u := l.Proxy(httpProxyURL).MustLaunch()
-		l.Headless(false).XVFB()
-		browser = rod.New().Client(l.Client()).ControlURL(u).MustConnect()
-	})
-	if err != nil {
-		return nil, err
 	}
 
 	return browser, nil
@@ -179,7 +225,7 @@ func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration,
 
 // ReloadBrowser 提前把浏览器下载好
 func ReloadBrowser() {
-	newBrowser, err := NewBrowser("", true)
+	newBrowser, err := NewBrowserEx(true, settings.Settings{})
 	if err != nil {
 		return
 	}

@@ -71,7 +71,7 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 func (s *Supplier) CheckAlive() (bool, int64) {
 
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowser(s.httpProxyAddress, true, common.SubZiMuKuRootUrl)
+	browser, err := rod_helper.NewBrowserEx(true, s.settings, common.SubZiMuKuRootUrl)
 	if err != nil {
 		return false, 0
 	}
@@ -101,7 +101,7 @@ func (s Supplier) GetSupplierName() string {
 func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowser(s.httpProxyAddress, true, common.SubZiMuKuRootUrl)
+	browser, err := rod_helper.NewBrowserEx(true, s.settings, common.SubZiMuKuRootUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 
 	var err error
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowser(s.httpProxyAddress, true, common.SubZiMuKuRootUrl)
+	browser, err := rod_helper.NewBrowserEx(true, s.settings, common.SubZiMuKuRootUrl)
 	if err != nil {
 		return nil, err
 	}
