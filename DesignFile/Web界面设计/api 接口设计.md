@@ -60,6 +60,12 @@
            "chs_cht_changer": {
                "enable": false,
                 "des_chinese_language_type": 0, // 默认 0 是 简体，1 是 繁体
+           },
+           "remote_chrome_settings": {
+               "enable": false,
+                "remote_docker_url": "ws://192.168.50.135:9222", // 这个是 go-rod 的远程镜像容器地址 ws://192.168.50.135:9222
+               "remote_adblock_path": "/mnt/share/adblock1_2_3", // 注意这个 go-rod 的远程镜像容器对应的目录， ADBlock 需要展开成文件夹 /mnt/share/adblock1_2_3
+               "re_mote_user_data_dir": "/mnt/share/tmp", // 注意这个 go-rod 的远程镜像容器对应的目录，用户缓存文件地址
            }
 	}
 }
@@ -159,6 +165,12 @@
             "chs_cht_changer": {
                "enable": false,
                 "des_chinese_language_type": 0, // 默认 0 是 简体，1 是 繁体
+           },
+            "remote_chrome_settings": {
+               "enable": false,
+                "remote_docker_url": "ws://192.168.50.135:9222", // 这个是 go-rod 的远程镜像容器地址 ws://192.168.50.135:9222
+               "remote_adblock_path": "/mnt/share/adblock1_2_3", // 注意这个 go-rod 的远程镜像容器对应的目录， ADBlock 需要展开成文件夹 /mnt/share/adblock1_2_3
+               "re_mote_user_data_dir": "/mnt/share/tmp", // 注意这个 go-rod 的远程镜像容器对应的目录，用户缓存文件地址
            }
 		}
     }
@@ -351,6 +363,12 @@
             "chs_cht_changer": {
                "enable": false,
                 "des_chinese_language_type": 0, // 默认 0 是 简体，1 是 繁体
+           },
+            "remote_chrome_settings": {
+               "enable": false,
+                "remote_docker_url": "ws://192.168.50.135:9222", // 这个是 go-rod 的远程镜像容器地址 ws://192.168.50.135:9222
+               "remote_adblock_path": "/mnt/share/adblock1_2_3", // 注意这个 go-rod 的远程镜像容器对应的目录， ADBlock 需要展开成文件夹 /mnt/share/adblock1_2_3
+               "re_mote_user_data_dir": "/mnt/share/tmp", // 注意这个 go-rod 的远程镜像容器对应的目录，用户缓存文件地址
            }
 		}
 }
@@ -500,6 +518,12 @@
             "chs_cht_changer": {
                "enable": false,
                 "des_chinese_language_type": 0, // 默认 0 是 简体，1 是 繁体
+           },
+            "remote_chrome_settings": {
+               "enable": false,
+                "remote_docker_url": "ws://192.168.50.135:9222", // 这个是 go-rod 的远程镜像容器地址 ws://192.168.50.135:9222
+               "remote_adblock_path": "/mnt/share/adblock1_2_3", // 注意这个 go-rod 的远程镜像容器对应的目录， ADBlock 需要展开成文件夹 /mnt/share/adblock1_2_3
+               "re_mote_user_data_dir": "/mnt/share/tmp", // 注意这个 go-rod 的远程镜像容器对应的目录，用户缓存文件地址
            }
 	 	}
     }
@@ -572,6 +596,12 @@
             "chs_cht_changer": {
                "enable": false,
                 "des_chinese_language_type": 0, // 默认 0 是 简体，1 是 繁体
+           },
+            "remote_chrome_settings": {
+               "enable": false,
+                "remote_docker_url": "ws://192.168.50.135:9222", // 这个是 go-rod 的远程镜像容器地址 ws://192.168.50.135:9222
+               "remote_adblock_path": "/mnt/share/adblock1_2_3", // 注意这个 go-rod 的远程镜像容器对应的目录， ADBlock 需要展开成文件夹 /mnt/share/adblock1_2_3
+               "re_mote_user_data_dir": "/mnt/share/tmp", // 注意这个 go-rod 的远程镜像容器对应的目录，用户缓存文件地址
            }
 		}
     }
