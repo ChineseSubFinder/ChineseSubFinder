@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_useragent"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -52,7 +53,7 @@ func NewBrowser(httpProxyURL string, loadAdblock bool, preLoadUrl ...string) (*r
 	})
 
 	// 随机的 rod 子文件夹名称
-	nowUserData := filepath.Join(global_value.DefRodTmpRootFolder, my_util.RandStringBytesMaskImprSrcSB(20))
+	nowUserData := filepath.Join(global_value.DefRodTmpRootFolder(), my_util.RandStringBytesMaskImprSrcSB(20))
 	var browser *rod.Browser
 	err = rod.Try(func() {
 		purl := ""
@@ -265,7 +266,7 @@ func Clear() {
 		defer browser.MustClose()
 	})
 
-	err := my_util.ClearRodTmpRootFolder()
+	err := my_folder.ClearRodTmpRootFolder()
 	if err != nil {
 		log_helper.GetLogger().Errorln("ClearRodTmpRootFolder", err)
 		return
@@ -291,14 +292,14 @@ func releaseAdblock() (string, error) {
 
 	log_helper.GetLogger().Infoln("releaseAdblock start")
 
-	adblockFolderPath := global_value.AdblockTmpFolder
+	adblockFolderPath := global_value.AdblockTmpFolder()
 	err := os.MkdirAll(filepath.Join(adblockFolderPath), os.ModePerm)
 	if err != nil {
 		return "", err
 	}
 	desPath := filepath.Join(adblockFolderPath, "RunAdblock")
 	// 清理之前缓存的信息
-	_ = my_util.ClearFolder(desPath)
+	_ = my_folder.ClearFolder(desPath)
 	// 具体把 adblock zip 解压下载到哪里
 	outZipFileFPath := filepath.Join(adblockFolderPath, "adblock.zip")
 	adblockZipFile, err := os.Create(outZipFileFPath)

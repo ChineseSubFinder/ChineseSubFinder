@@ -88,7 +88,7 @@ func (h HotFix001) fixMovie(movieRootDir string) (OutStruct001, error) {
 	}
 	// 先找出有那些电影文件夹和连续剧文件夹
 	var movieFullPathList = make([]string, 0)
-	movieFullPathList, err = my_util.SearchMatchedVideoFile(movieRootDir)
+	movieFullPathList, err = my_util.SearchMatchedVideoFile(log_helper.GetLogger(), movieRootDir)
 	if err != nil {
 		return outStruct, err
 	}

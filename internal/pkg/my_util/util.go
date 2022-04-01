@@ -7,13 +7,12 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	browser "github.com/allanpk716/fake-useragent"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"io"
 	"math"
 	"net/http"
@@ -72,7 +71,7 @@ func NewHttpClient(_proxySettings ...settings.ProxySettings) *resty.Client {
 }
 
 // DownFile 从指定的 url 下载文件
-func DownFile(urlStr string, _proxySettings ...settings.ProxySettings) ([]byte, string, error) {
+func DownFile(l *logrus.Logger, urlStr string, _proxySettings ...settings.ProxySettings) ([]byte, string, error) {
 	var proxySettings settings.ProxySettings
 	if len(_proxySettings) > 0 {
 		proxySettings = _proxySettings[0]
@@ -82,17 +81,17 @@ func DownFile(urlStr string, _proxySettings ...settings.ProxySettings) ([]byte, 
 	if err != nil {
 		return nil, "", err
 	}
-	filename := GetFileName(resp.RawResponse)
+	filename := GetFileName(l, resp.RawResponse)
 
 	if filename == "" {
-		log_helper.GetLogger().Warningln("DownFile.GetFileName is string.empty", urlStr)
+		l.Warningln("DownFile.GetFileName is string.empty", urlStr)
 	}
 
 	return resp.Body(), filename, nil
 }
 
 // GetFileName 获取下载文件的文件名
-func GetFileName(resp *http.Response) string {
+func GetFileName(l *logrus.Logger, resp *http.Response) string {
 	contentDisposition := resp.Header.Get("Content-Disposition")
 	if len(contentDisposition) == 0 {
 		return ""
@@ -100,7 +99,7 @@ func GetFileName(resp *http.Response) string {
 	re := regexp.MustCompile(`filename=["]*([^"]+)["]*`)
 	matched := re.FindStringSubmatch(contentDisposition)
 	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
-		log_helper.GetLogger().Errorln("GetFileName.Content-Disposition", contentDisposition)
+		l.Errorln("GetFileName.Content-Disposition", contentDisposition)
 		return ""
 	}
 	return matched[1]
@@ -133,11 +132,11 @@ func IsFile(filePath string) bool {
 }
 
 // VideoNameSearchKeywordMaker 拼接视频搜索的 title 和 年份
-func VideoNameSearchKeywordMaker(title string, year string) string {
+func VideoNameSearchKeywordMaker(l *logrus.Logger, title string, year string) string {
 	iYear, err := strconv.Atoi(year)
 	if err != nil {
 		// 允许的错误
-		log_helper.GetLogger().Errorln("VideoNameSearchKeywordMaker", "year to int", err)
+		l.Errorln("VideoNameSearchKeywordMaker", "year to int", err)
 		iYear = 0
 	}
 	searchKeyword := title
@@ -149,12 +148,12 @@ func VideoNameSearchKeywordMaker(title string, year string) string {
 }
 
 // SearchMatchedVideoFileFromDirs 搜索符合后缀名的视频文件
-func SearchMatchedVideoFileFromDirs(dirs []string) ([]string, error) {
+func SearchMatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) ([]string, error) {
 
 	var fileFullPathList = make([]string, 0)
 	for _, dir := range dirs {
 
-		matchedVideoFile, err := SearchMatchedVideoFile(dir)
+		matchedVideoFile, err := SearchMatchedVideoFile(l, dir)
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +165,7 @@ func SearchMatchedVideoFileFromDirs(dirs []string) ([]string, error) {
 }
 
 // SearchMatchedVideoFile 搜索符合后缀名的视频文件，现在也会把 BDMV 的文件搜索出来，但是这个并不是一个视频文件，需要在后续特殊处理
-func SearchMatchedVideoFile(dir string) ([]string, error) {
+func SearchMatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 
 	var fileFullPathList = make([]string, 0)
 	pathSep := string(os.PathSeparator)
@@ -178,7 +177,7 @@ func SearchMatchedVideoFile(dir string) ([]string, error) {
 		fullPath := dir + pathSep + curFile.Name()
 		if curFile.IsDir() {
 			// 内层的错误就无视了
-			oneList, _ := SearchMatchedVideoFile(fullPath)
+			oneList, _ := SearchMatchedVideoFile(l, fullPath)
 			if oneList != nil {
 				fileFullPathList = append(fileFullPathList, oneList...)
 			}
@@ -198,11 +197,11 @@ func SearchMatchedVideoFile(dir string) ([]string, error) {
 				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
 				fi, err := curFile.Info()
 				if err != nil {
-					log_helper.GetLogger().Debugln("SearchMatchedVideoFile, file.Info:", fullPath, err)
+					l.Debugln("SearchMatchedVideoFile, file.Info:", fullPath, err)
 					continue
 				}
 				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
-					log_helper.GetLogger().Debugln("SearchMatchedVideoFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
+					l.Debugln("SearchMatchedVideoFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
 					continue
 				}
 				fileFullPathList = append(fileFullPathList, fullPath)
@@ -237,7 +236,7 @@ func FileNameIsBDMV(id_bdmv_fileFPath string) (bool, string) {
 	return false, ""
 }
 
-func SearchTVNfo(dir string) ([]string, error) {
+func SearchTVNfo(l *logrus.Logger, dir string) ([]string, error) {
 
 	var fileFullPathList = make([]string, 0)
 	pathSep := string(os.PathSeparator)
@@ -249,7 +248,7 @@ func SearchTVNfo(dir string) ([]string, error) {
 		fullPath := dir + pathSep + curFile.Name()
 		if curFile.IsDir() {
 			// 内层的错误就无视了
-			oneList, _ := SearchTVNfo(fullPath)
+			oneList, _ := SearchTVNfo(l, fullPath)
 			if oneList != nil {
 				fileFullPathList = append(fileFullPathList, oneList...)
 			}
@@ -262,11 +261,11 @@ func SearchTVNfo(dir string) ([]string, error) {
 				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
 				fi, err := curFile.Info()
 				if err != nil {
-					log_helper.GetLogger().Debugln("SearchTVNfo, file.Info:", fullPath, err)
+					l.Debugln("SearchTVNfo, file.Info:", fullPath, err)
 					continue
 				}
 				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
-					log_helper.GetLogger().Debugln("SearchTVNfo file.Size() == 4096 && Prefix Name == ._*", fullPath)
+					l.Debugln("SearchTVNfo file.Size() == 4096 && Prefix Name == ._*", fullPath)
 					continue
 				}
 				fileFullPathList = append(fileFullPathList, fullPath)
@@ -279,25 +278,25 @@ func SearchTVNfo(dir string) ([]string, error) {
 // IsWantedVideoExtDef 后缀名是否符合规则
 func IsWantedVideoExtDef(fileName string) bool {
 
-	if len(global_value.WantedExtMap) < 1 {
-		global_value.DefExtMap[common.VideoExtMp4] = common.VideoExtMp4
-		global_value.DefExtMap[common.VideoExtMkv] = common.VideoExtMkv
-		global_value.DefExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
-		global_value.DefExtMap[common.VideoExtIso] = common.VideoExtIso
-		global_value.DefExtMap[common.VideoExtM2ts] = common.VideoExtM2ts
+	if len(_wantedExtMap) < 1 {
+		_defExtMap[common.VideoExtMp4] = common.VideoExtMp4
+		_defExtMap[common.VideoExtMkv] = common.VideoExtMkv
+		_defExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
+		_defExtMap[common.VideoExtIso] = common.VideoExtIso
+		_defExtMap[common.VideoExtM2ts] = common.VideoExtM2ts
 
-		global_value.WantedExtMap[common.VideoExtMp4] = common.VideoExtMp4
-		global_value.WantedExtMap[common.VideoExtMkv] = common.VideoExtMkv
-		global_value.WantedExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
-		global_value.WantedExtMap[common.VideoExtIso] = common.VideoExtIso
-		global_value.WantedExtMap[common.VideoExtM2ts] = common.VideoExtM2ts
+		_wantedExtMap[common.VideoExtMp4] = common.VideoExtMp4
+		_wantedExtMap[common.VideoExtMkv] = common.VideoExtMkv
+		_wantedExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
+		_wantedExtMap[common.VideoExtIso] = common.VideoExtIso
+		_wantedExtMap[common.VideoExtM2ts] = common.VideoExtM2ts
 
-		for _, videoExt := range global_value.CustomVideoExts {
-			global_value.WantedExtMap[videoExt] = videoExt
+		for _, videoExt := range _customVideoExts {
+			_wantedExtMap[videoExt] = videoExt
 		}
 	}
 	fileExt := strings.ToLower(filepath.Ext(fileName))
-	_, bFound := global_value.WantedExtMap[fileExt]
+	_, bFound := _wantedExtMap[fileExt]
 	return bFound
 }
 
@@ -370,7 +369,7 @@ func CopyDir(src string, dst string) error {
 }
 
 // CloseChrome 强行结束没有关闭的 Chrome 进程
-func CloseChrome() {
+func CloseChrome(l *logrus.Logger) {
 
 	cmdString := ""
 	var command *exec.Cmd
@@ -392,12 +391,12 @@ func CloseChrome() {
 		command = exec.Command("osascript", "-s", "h", "-e", cmdString)
 	}
 	if cmdString == "" || command == nil {
-		log_helper.GetLogger().Errorln("CloseChrome OS:", sysType)
+		l.Errorln("CloseChrome OS:", sysType)
 		return
 	}
 	err := command.Run()
 	if err != nil {
-		log_helper.GetLogger().Warningln("CloseChrome", err)
+		l.Warningln("CloseChrome", err)
 	}
 }
 
@@ -680,3 +679,9 @@ func GetFileSHA1String(fileFPath string) (string, error) {
 
 	return fmt.Sprintf("%x", md5.Sum(hashBytes)), nil
 }
+
+var (
+	_wantedExtMap    = make(map[string]string) // 人工确认的需要监控的视频后缀名
+	_defExtMap       = make(map[string]string) // 内置支持的视频后缀名列表
+	_customVideoExts = make([]string, 0)       // 用户额外自定义的视频后缀名列表
+)

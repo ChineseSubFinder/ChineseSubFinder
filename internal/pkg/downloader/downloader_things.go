@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/change_file_encode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/chs_cht_changer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	subcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
@@ -28,7 +29,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 	// 调试缓存，把下载好的字幕写到对应的视频目录下，方便调试
 	if d.settings.AdvancedSettings.DebugMode == true {
 
-		err = my_util.CopyFiles2DebugFolder([]string{videoFileName}, organizeSubFiles)
+		err = my_folder.CopyFiles2DebugFolder([]string{videoFileName}, organizeSubFiles)
 		if err != nil {
 			d.log.Errorln("copySubFile2DesFolder", err)
 		}
@@ -130,7 +131,7 @@ func (d *Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSu
 		for _, sub := range subs {
 			subFileName := filepath.Base(sub)
 
-			newSeasonSubRootPath, err := my_util.GetDebugFolderByName([]string{
+			newSeasonSubRootPath, err := my_folder.GetDebugFolderByName([]string{
 				filepath.Base(seriesInfo.DirPath),
 				"Sub_" + seasonKey})
 			if err != nil {
@@ -217,7 +218,6 @@ func (d *Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFi
 	// 测试了先转 UTF-8 进行简繁转换然后再转 GBK，有些时候会出错，所以还是不支持这样先
 	if d.settings.ExperimentalFunction.AutoChangeSubEncode.Enable == true &&
 		d.settings.ExperimentalFunction.AutoChangeSubEncode.DesEncodeType == 0 &&
-
 		d.settings.ExperimentalFunction.ChsChtChanger.Enable == true {
 		d.log.Infoln("----------------------------------")
 		d.log.Infoln("chs_cht_changer to", d.settings.ExperimentalFunction.ChsChtChanger.GetDesChineseLanguageTypeString())

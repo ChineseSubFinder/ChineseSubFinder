@@ -151,7 +151,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	// 再开始下载字幕
 	for i, v := range tmpXunLeiSubListChinese {
 		tmpLang := language.LangConverter4Sub_Supplier(v.Language)
-		data, filename, err := my_util.DownFile(v.Surl)
+		data, filename, err := my_util.DownFile(s.log, v.Surl)
 		if err != nil {
 			s.log.Errorln("xunlei pkg.DownFile:", err)
 			continue

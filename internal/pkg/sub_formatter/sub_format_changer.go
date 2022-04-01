@@ -85,7 +85,7 @@ func (s SubFormatChanger) autoDetectMovieThenChangeTo(outStruct *RenameResults, 
 	}
 	// 先找出有那些电影文件夹和连续剧文件夹
 	var movieFullPathList = make([]string, 0)
-	movieFullPathList, err = my_util.SearchMatchedVideoFile(movieRootDir)
+	movieFullPathList, err = my_util.SearchMatchedVideoFile(log_helper.GetLogger(), movieRootDir)
 	// fmt.Println("No. of Movies: ", len(movieFullPathList), "  dir:  ", s.movieRootDir)
 	if err != nil {
 		return err

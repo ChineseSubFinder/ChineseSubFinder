@@ -9,9 +9,9 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
@@ -48,9 +48,6 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	log_helper.GetLogger().Infoln("PreDownloadProcess.Init() Start...")
 
 	// ------------------------------------------------------------------------
-	// 初始化全局变量
-	global_value.Init(settings.GetSettings().AdvancedSettings.CustomVideoExts)
-	// ------------------------------------------------------------------------
 	// 初始化通知缓存模块
 	notify_center.Notify = notify_center.NewNotifyCenter(settings.GetSettings().DeveloperSettings.BarkServerAddress)
 	// 清理通知中心
@@ -59,7 +56,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	// 获取验证码
 	nowTT := time.Now()
 	nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
-	updateTimeString, code, err := something_static.GetCodeFromWeb(nowTimeFileNamePrix)
+	updateTimeString, code, err := something_static.GetCodeFromWeb(log_helper.GetLogger(), nowTimeFileNamePrix)
 	if err != nil {
 		notify_center.Notify.Add("GetSubhdCode", "GetCodeFromWeb,"+err.Error())
 		log_helper.GetLogger().Errorln("something_static.GetCodeFromWeb", err)
@@ -101,7 +98,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	}
 	// ------------------------------------------------------------------------
 	// 清理自定义的 rod 缓存目录
-	err = my_util.ClearRodTmpRootFolder()
+	err = my_folder.ClearRodTmpRootFolder()
 	if err != nil {
 		p.gError = errors.New("ClearRodTmpRootFolder " + err.Error())
 		return p

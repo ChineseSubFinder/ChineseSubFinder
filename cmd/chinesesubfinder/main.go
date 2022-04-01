@@ -16,9 +16,9 @@ func init() {
 
 	log_helper.GetLogger().Infoln("ChineseSubFinder Version:", AppVersion)
 
-	global_value.AppVersion = AppVersion
+	global_value.SetAppVersion(AppVersion)
 
-	global_value.ExtEnCode = ExtEnCode
+	global_value.SetExtEnCode(ExtEnCode)
 
 	if my_util.OSCheck() == false {
 		log_helper.GetLogger().Panicln(`You should search runtime.GOOS in the project, Implement unimplemented function`)

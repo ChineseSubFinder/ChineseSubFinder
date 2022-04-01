@@ -128,7 +128,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 				subExt = "." + subExt
 			}
 
-			data, _, err := my_util.DownFile(file.Link)
+			data, _, err := my_util.DownFile(s.log, file.Link)
 			if err != nil {
 				s.log.Error(err)
 				continue

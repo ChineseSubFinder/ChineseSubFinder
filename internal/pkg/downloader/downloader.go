@@ -14,6 +14,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	subCommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
@@ -201,7 +202,7 @@ func (d *Downloader) RefreshEmbySubList() error {
 func (d *Downloader) DownloadSub4Movie() error {
 	defer func() {
 		// 所有的电影字幕下载完成，抉择完成，需要清理缓存目录
-		err := my_util.ClearRootTmpFolder()
+		err := my_folder.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error("ClearRootTmpFolder", err)
 		}
@@ -223,7 +224,7 @@ func (d *Downloader) DownloadSub4Movie() error {
 	// 优先判断特殊的操作
 	if d.needForcedScanAndDownSub == true {
 		// 全扫描
-		d.movieFileFullPathList, err = my_util.SearchMatchedVideoFileFromDirs(d.settings.CommonSettings.MoviePaths)
+		d.movieFileFullPathList, err = my_util.SearchMatchedVideoFileFromDirs(d.log, d.settings.CommonSettings.MoviePaths)
 		if err != nil {
 			return err
 		}
@@ -231,7 +232,7 @@ func (d *Downloader) DownloadSub4Movie() error {
 		// 是否是通过 emby_helper api 获取的列表
 		if d.embyHelper == nil {
 			// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
-			d.movieFileFullPathList, err = my_util.SearchMatchedVideoFileFromDirs(d.settings.CommonSettings.MoviePaths)
+			d.movieFileFullPathList, err = my_util.SearchMatchedVideoFileFromDirs(d.log, d.settings.CommonSettings.MoviePaths)
 			if err != nil {
 				return err
 			}
@@ -291,13 +292,13 @@ func (d *Downloader) DownloadSub4Series() error {
 	var err error
 	defer func() {
 		// 所有的连续剧字幕下载完成，抉择完成，需要清理缓存目录
-		err := my_util.ClearRootTmpFolder()
+		err := my_folder.ClearRootTmpFolder()
 		if err != nil {
 			d.log.Error("ClearRootTmpFolder", err)
 		}
 		d.log.Infoln("Download Series Sub End...")
 
-		my_util.CloseChrome()
+		my_util.CloseChrome(d.log)
 		d.log.Infoln("CloseChrome")
 	}()
 	d.log.Infoln("Download Series Sub Started...")

@@ -239,7 +239,7 @@ func (s Supplier) getSubListFromMovie(browser *rod.Browser, fileFPath string) ([
 		}
 	}
 	// 如果没有，那么就用文件名查找
-	searchKeyword := my_util.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
+	searchKeyword := my_util.VideoNameSearchKeywordMaker(s.log, info.Title, imdbInfo.Year)
 
 	s.log.Debugln(s.GetSupplierName(), fileFPath, "VideoNameSearchKeywordMaker Keyword:", searchKeyword)
 
@@ -605,7 +605,7 @@ func (s Supplier) step3(browser *rod.Browser, subDownloadPageUrl string) (string
 	fileByte := []byte{0}
 	downloadSuccess := false
 	err = rod.Try(func() {
-		tmpDir := filepath.Join(global_value.DefTmpFolder, "downloads")
+		tmpDir := filepath.Join(global_value.DefTmpFolder(), "downloads")
 		wait := browser.WaitDownload(tmpDir)
 		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()

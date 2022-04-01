@@ -68,7 +68,7 @@ func SetFullNewSettings(inSettings *Settings) error {
 
 func NewSettings() *Settings {
 
-	nowConfigFPath := filepath.Join(global_value.ConfigRootDirFPath, configName)
+	nowConfigFPath := filepath.Join(global_value.ConfigRootDirFPath(), configName)
 
 	return &Settings{
 		configFPath:           nowConfigFPath,

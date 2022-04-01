@@ -4,6 +4,7 @@ import (
 	b64 "encoding/base64"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 )
@@ -74,13 +75,13 @@ func writeFile(saveFileFPath, enString, nowTime string) error {
 	return nil
 }
 
-func GetCodeFromWeb(nowTimeFileNamePrix string) (string, string, error) {
+func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string) (string, string, error) {
 	const baseCodeFileUrl = "https://cdn.jsdelivr.net/gh/"
 	const whichProject = "allanpk716/SomeThingsStatic/"
 
 	desUrl := baseCodeFileUrl + whichProject + nowTimeFileNamePrix + common.StaticFileName00
 
-	fileBytes, _, err := my_util.DownFile(desUrl)
+	fileBytes, _, err := my_util.DownFile(l, desUrl)
 	if err != nil {
 		return "", "", err
 	}

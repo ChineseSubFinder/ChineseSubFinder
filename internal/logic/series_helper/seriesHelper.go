@@ -34,7 +34,7 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *models.IMDBInfo, forcedSc
 		return nil, err
 	}
 	// 搜索所有的视频
-	videoFiles, err := my_util.SearchMatchedVideoFile(seriesDir)
+	videoFiles, err := my_util.SearchMatchedVideoFile(log_helper.GetLogger(), seriesDir)
 	if err != nil {
 		return nil, err
 	}
@@ -266,7 +266,7 @@ func GetSeriesListFromDirs(dirs []string) (*treemap.Map, error) {
 func GetSeriesList(dir string) ([]string, error) {
 
 	// 需要把所有 tvshow.nfo 搜索出来，那么这些文件对应的目录就是目标连续剧的目录
-	tvNFOs, err := my_util.SearchTVNfo(dir)
+	tvNFOs, err := my_util.SearchTVNfo(log_helper.GetLogger(), dir)
 	if err != nil {
 		return nil, err
 	}

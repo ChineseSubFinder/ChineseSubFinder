@@ -207,7 +207,7 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 		}
 	}
 	// 如果没有，那么就用文件名查找
-	searchKeyword := my_util.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
+	searchKeyword := my_util.VideoNameSearchKeywordMaker(s.log, info.Title, imdbInfo.Year)
 	subInfoList, err = s.getSubListFromKeyword4Movie(searchKeyword)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "keyword:", searchKeyword)
@@ -491,7 +491,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *
 	fileName := ""
 	fileByte := []byte{0}
 	err = rod.Try(func() {
-		tmpDir := filepath.Join(global_value.DefTmpFolder, "downloads")
+		tmpDir := filepath.Join(global_value.DefTmpFolder(), "downloads")
 		wait := browser.WaitDownload(tmpDir)
 		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()
@@ -604,7 +604,7 @@ func (s Supplier) passWaterWall(page *rod.Page) {
 	shadowbg := slideBgEl.MustResource()
 	// 取得原始圖像
 	src := slideBgEl.MustProperty("src")
-	fullbg, _, err := my_util.DownFile(strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
+	fullbg, _, err := my_util.DownFile(s.log, strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
 	if err != nil {
 		panic(err)
 	}
@@ -674,7 +674,7 @@ search:
 
 	if s.debugMode == true {
 		//截圖保存
-		page.MustScreenshot(global_value.DefDebugFolder, "result.png")
+		page.MustScreenshot(global_value.DefDebugFolder(), "result.png")
 	}
 }
 

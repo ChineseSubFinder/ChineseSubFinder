@@ -14,6 +14,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_file_hash"
@@ -74,7 +75,7 @@ func NewScanPlayedVideoSubInfo(_settings settings.Settings) (*ScanPlayedVideoSub
 	// 字幕命名格式解析器
 	scanPlayedVideoSubInfo.subFormatter = emby.NewFormatter()
 	// 缓存目录的根目录
-	shareRootDir, err := my_util.GetShareSubRootFolder()
+	shareRootDir, err := my_folder.GetShareSubRootFolder()
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +231,7 @@ func (s *ScanPlayedVideoSubInfo) scan(ctx context.Context, inData interface{}) e
 	s.log.Infoln("-----------------------------------------------")
 	s.log.Infoln("ScanPlayedVideoSubInfo", videoTypes, "Sub Start...")
 
-	shareRootDir, err := my_util.GetShareSubRootFolder()
+	shareRootDir, err := my_folder.GetShareSubRootFolder()
 	if err != nil {
 		return err
 	}

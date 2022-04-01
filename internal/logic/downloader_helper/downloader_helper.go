@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
@@ -41,7 +42,7 @@ func (d *DownloaderHelper) Start() error {
 	defer func() {
 		d.logger.Infoln("Download One End...")
 		notify_center.Notify.Send()
-		my_util.CloseChrome()
+		my_util.CloseChrome(d.logger)
 		rod_helper.Clear()
 	}()
 
@@ -90,7 +91,7 @@ func (d *DownloaderHelper) Start() error {
 	}
 	d.logger.Infoln("Will Scan SubFixCache Folder, Clear files that are more than 7 * 24 hours old")
 	// 清理多天没有使用的时间轴字幕校正缓存文件
-	err = my_util.ClearIdleSubFixCacheFolder(global_value.DefSubFixCacheFolder, 7*24*time.Hour)
+	err = my_folder.ClearIdleSubFixCacheFolder(d.logger, global_value.DefSubFixCacheFolder(), 7*24*time.Hour)
 	if err != nil {
 		d.logger.Errorln("ClearIdleSubFixCacheFolder", err)
 		return err
