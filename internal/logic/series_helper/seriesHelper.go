@@ -6,7 +6,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
@@ -17,6 +16,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
+	gModels "github.com/allanpk716/ChineseSubModels/models"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/jinzhu/now"
 	"path/filepath"
@@ -25,7 +25,7 @@ import (
 )
 
 // ReadSeriesInfoFromDir 读取剧集的信息，只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList
-func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *models.IMDBInfo, forcedScanAndDownloadSub bool) (*series.SeriesInfo, error) {
+func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *gModels.IMDBInfo, forcedScanAndDownloadSub bool) (*series.SeriesInfo, error) {
 
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
@@ -97,7 +97,7 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *models.IMDBInfo, forcedSc
 }
 
 // ReadSeriesInfoFromEmby 将 Emby API 读取到的数据进行转换到通用的结构中，需要填充那些剧集需要下载，这样要的是一个连续剧的，不是所有的传入
-func ReadSeriesInfoFromEmby(seriesDir string, imdbInfo *models.IMDBInfo, seriesList []emby.EmbyMixInfo) (*series.SeriesInfo, error) {
+func ReadSeriesInfoFromEmby(seriesDir string, imdbInfo *gModels.IMDBInfo, seriesList []emby.EmbyMixInfo) (*series.SeriesInfo, error) {
 
 	seriesInfo, err := getSeriesInfoFromDir(seriesDir, imdbInfo)
 	if err != nil {
@@ -122,7 +122,7 @@ func ReadSeriesInfoFromEmby(seriesDir string, imdbInfo *models.IMDBInfo, seriesL
 }
 
 // SkipChineseSeries 跳过中文连续剧
-func SkipChineseSeries(seriesRootPath string, _proxySettings ...settings.ProxySettings) (bool, *models.IMDBInfo, error) {
+func SkipChineseSeries(seriesRootPath string, _proxySettings ...settings.ProxySettings) (bool, *gModels.IMDBInfo, error) {
 	var proxySettings settings.ProxySettings
 	if len(_proxySettings) > 0 {
 		proxySettings = _proxySettings[0]
@@ -330,7 +330,7 @@ func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo, forcedScanAndD
 	return needDlSubEpsList, needDlSeasonList
 }
 
-func getSeriesInfoFromDir(seriesDir string, imdbInfo *models.IMDBInfo) (*series.SeriesInfo, error) {
+func getSeriesInfoFromDir(seriesDir string, imdbInfo *gModels.IMDBInfo) (*series.SeriesInfo, error) {
 	seriesInfo := series.SeriesInfo{}
 	// 只考虑 IMDB 去查询，文件名目前发现可能会跟电影重复，导致很麻烦，本来也有前置要求要削刮器处理的
 	videoInfo, err := decode.GetImdbInfo4SeriesDir(seriesDir)
