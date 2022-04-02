@@ -84,24 +84,28 @@ func NewBrowser(httpProxyURL string, loadAdblock bool, preLoadUrl ...string) (*r
 	if loadAdblock == true {
 		_, page, err := HttpGetFromBrowser(browser, "https://www.qq.com", 15*time.Second)
 		if err != nil {
+			if browser != nil {
+				browser.Close()
+			}
 			return nil, err
 		}
-		defer func() {
-			if page != nil {
-				_ = page.Close()
-			}
-		}()
+
+		if page != nil {
+			_ = page.Close()
+		}
 	}
 	if len(preLoadUrl) > 0 {
 		_, page, err := HttpGetFromBrowser(browser, preLoadUrl[0], 15*time.Second)
 		if err != nil {
+			if browser != nil {
+				browser.Close()
+			}
 			return nil, err
 		}
-		defer func() {
-			if page != nil {
-				_ = page.Close()
-			}
-		}()
+
+		if page != nil {
+			_ = page.Close()
+		}
 	}
 
 	return browser, nil
@@ -141,25 +145,29 @@ func NewBrowserFromDocker(httpProxyURL, remoteDockerURL string, remoteAdblockPat
 	if loadAdblock == true {
 		_, page, err := HttpGetFromBrowser(browser, "https://www.qq.com", 15*time.Second)
 		if err != nil {
+			if browser != nil {
+				browser.Close()
+			}
 			return nil, err
 		}
-		defer func() {
-			if page != nil {
-				_ = page.Close()
-			}
-		}()
+
+		if page != nil {
+			_ = page.Close()
+		}
 	}
 
 	if len(preLoadUrl) > 0 {
 		_, page, err := HttpGetFromBrowser(browser, preLoadUrl[0], 15*time.Second)
 		if err != nil {
+			if browser != nil {
+				browser.Close()
+			}
 			return nil, err
 		}
-		defer func() {
-			if page != nil {
-				_ = page.Close()
-			}
-		}()
+
+		if page != nil {
+			_ = page.Close()
+		}
 	}
 
 	return browser, nil
@@ -175,6 +183,9 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 		UserAgent: random_useragent.RandomUserAgent(true),
 	})
 	if err != nil {
+		if page != nil {
+			page.Close()
+		}
 		return nil, err
 	}
 	page = page.Timeout(timeOut)
@@ -244,27 +255,27 @@ func ReloadBrowser() {
 
 // Clear 清理缓存
 func Clear() {
-	_ = rod.Try(func() {
-		l := launcher.New().
-			Headless(false).
-			Devtools(true)
-
-		defer func() {
-			l.Cleanup() // remove launcher.FlagUserDataDir
-			log_helper.GetLogger().Infoln("rod clean up done.")
-		}()
-
-		url := l.MustLaunch()
-		// Trace shows verbose debug information for each action executed
-		// Slowmotion is a debug related function that waits 2 seconds between
-		// each action, making it easier to inspect what your code is doing.
-		browser := rod.New().
-			ControlURL(url).
-			Trace(true).
-			SlowMotion(2 * time.Second).
-			MustConnect()
-		defer browser.MustClose()
-	})
+	//_ = rod.Try(func() {
+	//	l := launcher.New().
+	//		Headless(false).
+	//		Devtools(true)
+	//
+	//	defer func() {
+	//		l.Cleanup() // remove launcher.FlagUserDataDir
+	//		log_helper.GetLogger().Infoln("rod clean up done.")
+	//	}()
+	//
+	//	url := l.MustLaunch()
+	//	// Trace shows verbose debug information for each action executed
+	//	// Slowmotion is a debug related function that waits 2 seconds between
+	//	// each action, making it easier to inspect what your code is doing.
+	//	browser := rod.New().
+	//		ControlURL(url).
+	//		Trace(true).
+	//		SlowMotion(2 * time.Second).
+	//		MustConnect()
+	//	defer browser.MustClose()
+	//})
 
 	err := my_folder.ClearRodTmpRootFolder()
 	if err != nil {
