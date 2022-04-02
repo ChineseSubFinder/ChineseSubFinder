@@ -7,6 +7,7 @@ require (
 	github.com/StalkR/imdb v1.0.7
 	github.com/Tnze/go.num/v2 v2.0.0-20191006170829-cb483d4c9152
 	github.com/abadojack/whatlanggo v1.0.1
+	github.com/allanpk716/ChineseSubModels v0.0.2
 	github.com/allanpk716/fake-useragent v0.2.1
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
 	github.com/baabaaox/go-webrtcvad v1.0.1
@@ -72,7 +73,6 @@ require (
 	github.com/Microsoft/go-winio v0.4.16 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
-	github.com/allanpk716/ChineseSubModels v0.0.1 // indirect
 	github.com/andybalholm/brotli v1.0.0 // indirect
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect

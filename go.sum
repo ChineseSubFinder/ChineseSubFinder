@@ -50,8 +50,8 @@ github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuy
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
-github.com/allanpk716/ChineseSubModels v0.0.1 h1:RP7tw/dhGWB22uurgYZ8dvdsPRA8hZTD0GtoQiJqah8=
-github.com/allanpk716/ChineseSubModels v0.0.1/go.mod h1:4Yd7MJ5jPxCKSHUJkJT8wlrC8wj2Rh5D4yLtXAEp1uE=
+github.com/allanpk716/ChineseSubModels v0.0.2 h1:8bBe1M0RWuQxM05ucoLsG4WpIHKwcf7aeQzk/k3hXps=
+github.com/allanpk716/ChineseSubModels v0.0.2/go.mod h1:4Yd7MJ5jPxCKSHUJkJT8wlrC8wj2Rh5D4yLtXAEp1uE=
 github.com/allanpk716/fake-useragent v0.2.1 h1:5EurHovAMGNwMZNbZ2cFOH8HsLdHwopnnKWCsV3PtNI=
 github.com/allanpk716/fake-useragent v0.2.1/go.mod h1:U3tmrxBYvSPeQKQ/9x59CXJPkHbU4x4eXw3ji5TDhPk=
 github.com/allanpk716/go-parse-torrent-name v0.0.0-20220212145434-430ea25cbba7 h1:5AYgeYsVjtDPG5sUS77lyeEPiRMduIKstLjkBLiVPRc=
