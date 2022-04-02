@@ -606,7 +606,7 @@ func (s Supplier) step3(browser *rod.Browser, subDownloadPageUrl string) (string
 	downloadSuccess := false
 	err = rod.Try(func() {
 		tmpDir := filepath.Join(global_value.DefTmpFolder(), "downloads")
-		wait := browser.WaitDownload(tmpDir)
+		wait := browser.Timeout(10 * time.Second).WaitDownload(tmpDir)
 		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()
 			downloadPath := filepath.Join(tmpDir, info.GUID)
