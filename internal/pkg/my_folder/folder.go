@@ -317,6 +317,17 @@ func ClearShareSubFolderByYear(year int) error {
 	return ClearFolder(nowTmpFolder)
 }
 
+// ClearShareSubFolderByYearAndName 清理指定的缓存文件夹
+func ClearShareSubFolderByYearAndName(year int, name string) error {
+
+	nowTmpFolder, err := GetShareFolderByYear(year)
+	if err != nil {
+		return err
+	}
+
+	return ClearFolder(filepath.Join(nowTmpFolder, name))
+}
+
 // --------------------------------------------------------------
 // Common
 // --------------------------------------------------------------
