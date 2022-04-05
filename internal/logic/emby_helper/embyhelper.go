@@ -6,6 +6,7 @@ import (
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/path_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
@@ -305,6 +306,16 @@ func (em *EmbyHelper) findMappingPath(fileFPathWithEmby string, isMovieOrSeries 
 // X:\电影    - /mnt/share1/电影
 // X:\连续剧  - /mnt/share1/连续剧
 func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMovieOrSeries bool) bool {
+
+	defer func() {
+		// 见 https://github.com/allanpk716/ChineseSubFinder/issues/278
+		// 进行字符串操作的时候，可能会把 smb://123 转义为 smb:/123
+		if mixInfo != nil {
+			mixInfo.PhysicalRootPath = path_helper.FixShareFileProtocolsPath(mixInfo.PhysicalRootPath)
+			mixInfo.PhysicalVideoFileFullPath = path_helper.FixShareFileProtocolsPath(mixInfo.PhysicalVideoFileFullPath)
+		}
+	}()
+
 	// 这里进行路径匹配的时候需要考虑嵌套路径的问题
 	// 比如，映射了 /电影  以及 /电影/AA ，那么如果有一部电影 /电影/AA/xx/xx.mkv 那么，应该匹配的是最长的路径 /电影/AA
 	matchedEmbyPaths := make([]string, 0)
