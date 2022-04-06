@@ -15,7 +15,7 @@
 	"common_settings": {
         "interval_or_assign": true,
 		"scan_interval": "12h",
-        "scan_assign": "? * 0,8,18 * * ? *",
+        "scan_assign": "0 6,10,18 * * *", // 6、10、18 三个时间点进行字幕的扫描 https://pkg.go.dev/github.com/robfig/cron/v3
 		"threads": 12,
 		"run_scan_at_start_up": true,
 		"movie_paths": ["aaa", "bbb"],
