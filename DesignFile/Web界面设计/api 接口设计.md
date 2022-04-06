@@ -14,9 +14,7 @@
 	},
 	"common_settings": {
         "interval_or_assign_or_custom": 0,// 0 是 固定间隔，1 是指定时间点，2 是符合 cron 的自定义规则
-		"scan_interval": "12h",// 由前端给用户选择时间间隔，验证传递过来
-        "scan_assign": "0 6,10,18 * * *", // 6、10、18 三个时间点进行字幕的扫描，由前端给用户选择时间点，验证传递过来 https://pkg.go.dev/github.com/robfig/cron/v3
-        "scan_custom": "0 6,10,18 * * *", // 这里是由用户传递过来的可执行 cron 规则，需要前端验证传递过来
+		"scan_interval": "12h",// 由前端给用户选择时间间隔，验证传递过来 https://pkg.go.dev/github.com/robfig/cron/v3
 		"threads": 12,
 		"run_scan_at_start_up": true,
 		"movie_paths": ["aaa", "bbb"],
@@ -306,13 +304,13 @@
 
 ### 检查 cron 自定义规则是否可用
 
-`POST /check-custom-cron`
+`POST /check-cron`
 
 请求参数：
 
 ```javascript
 {
-  scan_custom: '0 6,10,18 * * *';
+  scan_interval: '0 6,10,18 * * *';
 }
 ```
 
