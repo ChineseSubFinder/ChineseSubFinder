@@ -13,7 +13,9 @@
 		"password": "123456"
 	},
 	"common_settings": {
+        "interval_or_assign": true,
 		"scan_interval": "12h",
+        "scan_assign": "? * 0,8,18 * * ? *",
 		"threads": 12,
 		"run_scan_at_start_up": true,
 		"movie_paths": ["aaa", "bbb"],
