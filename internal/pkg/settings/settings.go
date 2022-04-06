@@ -128,8 +128,8 @@ func (s *Settings) Check() {
 		// 并发线程的范围控制
 		if s.CommonSettings.Threads <= 0 {
 			s.CommonSettings.Threads = 1
-		} else if s.CommonSettings.Threads >= 3 {
-			s.CommonSettings.Threads = 3
+		} else if s.CommonSettings.Threads >= 1 {
+			s.CommonSettings.Threads = 1
 		}
 	}
 }

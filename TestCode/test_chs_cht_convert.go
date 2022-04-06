@@ -1,6 +1,8 @@
 package TestCode
 
-import "github.com/go-creed/sat"
+import (
+	"github.com/go-creed/sat"
+)
 
 func convertChsCht() {
 	/*

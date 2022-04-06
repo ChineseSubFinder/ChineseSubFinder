@@ -32,7 +32,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 
 	ch.c = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
-	entryID, err := ch.c.AddFunc("@every "+settings.GetSettings().CommonSettings.ScanInterval, ch.coreSubDownloadProcess)
+	entryID, err := ch.c.AddFunc(settings.GetSettings().CommonSettings.ScanInterval, ch.coreSubDownloadProcess)
 	if err != nil {
 		log_helper.GetLogger().Panicln("CronHelper Cron entryID:", entryID, "Error:", err)
 	}
@@ -50,19 +50,20 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		log_helper.GetLogger().Infoln("First Time coreSubDownloadProcess End")
 
 	} else {
-		log_helper.GetLogger().Infoln("RunAtStartup: false, so will not Run At Startup, wait",
-			settings.GetSettings().CommonSettings.ScanInterval, "to Download")
+		log_helper.GetLogger().Infoln("RunAtStartup: false, so will not Run At Startup")
 	}
 
 	log_helper.GetLogger().Infoln("CronHelper Start...")
-	log_helper.GetLogger().Infoln("Next Sub Scan Will Process After", settings.GetSettings().CommonSettings.ScanInterval)
 	ch.c.Start()
 
 	// 只有定时任务 start 之后才能拿到信息
 	if len(ch.c.Entries()) > 0 {
+
 		// 不会马上启动扫描，那么就需要设置当前的时间，且为 waiting
 		tttt := ch.c.Entries()[0].Next.Format("2006-01-02 15:04:05")
 		common.SetSubScanJobStatusWaiting(tttt)
+
+		log_helper.GetLogger().Infoln("Next Sub Scan Will Process At:", tttt)
 	} else {
 		log_helper.GetLogger().Errorln("Can't get cron jobs, will not send SubScanJobStatus")
 	}
