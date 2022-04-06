@@ -30,6 +30,19 @@ func NewCronHelper() *CronHelper {
 // runImmediately == false 那么 ch.c.Start() 是不会阻塞的
 func (ch *CronHelper) Start(runImmediately bool) {
 
+	_, err := cron.ParseStandard(settings.GetSettings().CommonSettings.ScanInterval)
+	if err != nil {
+		log_helper.GetLogger().Warningln("CommonSettings.ScanInterval format error, after v0.25.x , need reset this at WebUI")
+		// 如果解析错误了，就需要重新赋值默认值过来，然后保存
+		nowSettings := settings.GetSettings()
+		nowSettings.CommonSettings.ScanInterval = settings.NewCommonSettings().ScanInterval
+		err = settings.SetFullNewSettings(nowSettings)
+		if err != nil {
+			log_helper.GetLogger().Panicln("CronHelper.SetFullNewSettings:", err)
+			return
+		}
+	}
+
 	ch.c = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
 	entryID, err := ch.c.AddFunc(settings.GetSettings().CommonSettings.ScanInterval, ch.coreSubDownloadProcess)
