@@ -304,7 +304,25 @@
 }
 ```
 
+### 检查 cron 自定义规则是否可用
 
+`POST /check-custom-cron`
+
+请求参数：
+
+```javascript
+{
+  scan_custom: '0 6,10,18 * * *';
+}
+```
+
+返回 HTTP 码 200：
+
+```javascript
+{
+	message: "ok" // ok 是正确，不正确则是 err 的string具体错误
+}
+```
 
 ### 获取默认的设置数据结构
 
