@@ -19,7 +19,6 @@ type Settings struct {
 	EmbySettings          *EmbySettings          `json:"emby_settings"`
 	DeveloperSettings     *DeveloperSettings     `json:"developer_settings"`
 	TimelineFixerSettings *TimelineFixerSettings `json:"timeline_fixer_settings"`
-	SuppliersSettings     *SuppliersSettings     `json:"suppliers_settings"`
 	ExperimentalFunction  *ExperimentalFunction  `json:"experimental_function"`
 }
 
@@ -79,7 +78,6 @@ func NewSettings() *Settings {
 		EmbySettings:          NewEmbySettings(),
 		DeveloperSettings:     NewDeveloperSettings(),
 		TimelineFixerSettings: NewTimelineFixerSettings(),
-		SuppliersSettings:     NewSuppliersSettings(),
 		ExperimentalFunction:  NewExperimentalFunction(),
 	}
 }
