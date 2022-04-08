@@ -169,7 +169,7 @@ func (s *Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShoote
 			"lang":     qLan,
 		}).
 		SetResult(&jsonList).
-		Post(s.settings.SuppliersSettings.Shooter.RootUrl)
+		Post(s.settings.AdvancedSettings.SuppliersSettings.Shooter.RootUrl)
 	if err != nil {
 		if resp != nil {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", fileName, err.Error())

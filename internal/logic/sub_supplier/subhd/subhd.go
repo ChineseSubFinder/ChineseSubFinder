@@ -65,7 +65,7 @@ func NewSupplier(_settings *settings.Settings, _logger *logrus.Logger) *Supplier
 
 func (s *Supplier) CheckAlive() (bool, int64) {
 
-	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(s.settings.SuppliersSettings.SubHD.RootUrl, s.settings.AdvancedSettings.ProxySettings.HttpProxyAddress)
+	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, s.settings.AdvancedSettings.ProxySettings.HttpProxyAddress)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
 		s.isAlive = false
@@ -93,8 +93,8 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 		s.log.Errorln(s.GetSupplierName(), "GetDailyDownloadCount", err)
 		return true
 	}
-	if count > s.settings.SuppliersSettings.Zimuku.DailyDownloadLimit {
-		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.SuppliersSettings.SubHD.DailyDownloadLimit, "Now Is:", count)
+	if count > s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit {
+		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.AdvancedSettings.SuppliersSettings.SubHD.DailyDownloadLimit, "Now Is:", count)
 		return true
 	}
 	// 没有超限
@@ -176,7 +176,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 			int64(i),
 			hdContent.Filename,
 			language.ChineseSimple,
-			my_util.AddBaseUrl(s.settings.SuppliersSettings.SubHD.RootUrl, item.Url),
+			my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, item.Url),
 			0,
 			0, hdContent.Ext, hdContent.Data)
 		oneSubInfo.Season = item.Season
@@ -274,7 +274,7 @@ func (s *Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubIn
 			continue
 		}
 		subInfos = append(subInfos, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple,
-			my_util.AddBaseUrl(s.settings.SuppliersSettings.SubHD.RootUrl, item.Url),
+			my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, item.Url),
 			0,
 			0,
 			hdContent.Ext,
@@ -347,7 +347,7 @@ func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 		}
 	}()
 
-	result, page, err := rod_helper.HttpGetFromBrowser(browser, fmt.Sprintf(s.settings.SuppliersSettings.SubHD.RootUrl+common.SubSubHDSearchUrl, url.QueryEscape(keyword)), s.tt)
+	result, page, err := rod_helper.HttpGetFromBrowser(browser, fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl+common.SubSubHDSearchUrl, url.QueryEscape(keyword)), s.tt)
 	if err != nil {
 		return "", err
 	}
@@ -415,7 +415,7 @@ func (s *Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSe
 			notify_center.Notify.Add("subhd_step1", err.Error())
 		}
 	}()
-	detailPageUrl = my_util.AddBaseUrl(s.settings.SuppliersSettings.SubHD.RootUrl, detailPageUrl)
+	detailPageUrl = my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, detailPageUrl)
 	result, page, err := rod_helper.HttpGetFromBrowser(browser, detailPageUrl, s.tt)
 	if err != nil {
 		return nil, err
@@ -458,7 +458,7 @@ func (s *Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSe
 
 		listItem := HdListItem{}
 		listItem.Url = downUrl
-		listItem.BaseUrl = s.settings.SuppliersSettings.SubHD.RootUrl
+		listItem.BaseUrl = s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl
 		listItem.Title = title
 		listItem.DownCount = downCount
 
@@ -485,7 +485,7 @@ func (s *Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (boo
 			notify_center.Notify.Add("subhd_step2Ex", err.Error())
 		}
 	}()
-	subDownloadPageUrl = my_util.AddBaseUrl(s.settings.SuppliersSettings.SubHD.RootUrl, subDownloadPageUrl)
+	subDownloadPageUrl = my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, subDownloadPageUrl)
 
 	_, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageUrl, s.tt)
 	if err != nil {

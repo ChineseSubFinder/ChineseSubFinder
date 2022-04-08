@@ -184,7 +184,7 @@ func (s *Supplier) getSubInfos(filePath, cid string) (SublistSliceXunLei, error)
 	httpClient := my_util.NewHttpClient(*s.settings.AdvancedSettings.ProxySettings)
 	resp, err := httpClient.R().
 		SetResult(&jsonList).
-		Get(fmt.Sprintf(s.settings.SuppliersSettings.Xunlei.RootUrl, cid))
+		Get(fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.Xunlei.RootUrl, cid))
 	if err != nil {
 		if resp != nil {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", filePath, err.Error())

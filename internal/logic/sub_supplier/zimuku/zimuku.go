@@ -70,7 +70,7 @@ func NewSupplier(_settings *settings.Settings, _logger *logrus.Logger) *Supplier
 func (s *Supplier) CheckAlive() (bool, int64) {
 
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(true, s.settings, s.settings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserEx(true, s.settings, s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		return false, 0
 	}
@@ -79,7 +79,7 @@ func (s *Supplier) CheckAlive() (bool, int64) {
 	}()
 
 	begin := time.Now() //判断代理访问时间
-	_, page, err := rod_helper.HttpGetFromBrowser(browser, s.settings.SuppliersSettings.Zimuku.RootUrl, 15*time.Second)
+	_, page, err := rod_helper.HttpGetFromBrowser(browser, s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, 15*time.Second)
 	if err != nil {
 		return false, 0
 	}
@@ -101,8 +101,8 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 		s.log.Errorln(s.GetSupplierName(), "GetDailyDownloadCount", err)
 		return true
 	}
-	if count > s.settings.SuppliersSettings.Zimuku.DailyDownloadLimit {
-		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.SuppliersSettings.Zimuku.DailyDownloadLimit, "Now Is:", count)
+	if count > s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit {
+		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit, "Now Is:", count)
 		return true
 	}
 	// 没有超限
@@ -116,7 +116,7 @@ func (s *Supplier) GetSupplierName() string {
 func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(true, s.settings, s.settings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserEx(true, s.settings, s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 
 	var err error
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(true, s.settings, s.settings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserEx(true, s.settings, s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -414,7 +414,7 @@ func (s *Supplier) whichSubInfoNeedDownload(browser *rod.Browser, subInfos SubIn
 		// 默认都是包含中文字幕的，然后具体使用的时候再进行区分
 
 		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, language2.ChineseSimple,
-			my_util.AddBaseUrl(s.settings.SuppliersSettings.Zimuku.RootUrl, subInfo.SubDownloadPageUrl), 0,
+			my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, subInfo.SubDownloadPageUrl), 0,
 			0, filepath.Ext(fileName), data)
 
 		oneSubInfo.Season = subInfo.Season
@@ -439,7 +439,7 @@ func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 		}
 	}()
 
-	desUrl := fmt.Sprintf(s.settings.SuppliersSettings.Zimuku.RootUrl+common.SubZiMuKuSearchFormatUrl, url.QueryEscape(keyword))
+	desUrl := fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl+common.SubZiMuKuSearchFormatUrl, url.QueryEscape(keyword))
 	result, page, err := rod_helper.HttpGetFromBrowser(browser, desUrl, s.tt)
 	if err != nil {
 		return "", err
@@ -470,7 +470,7 @@ func (s *Supplier) step1(browser *rod.Browser, filmDetailPageUrl string) (SubRes
 	var subResult SubResult
 	subResult.SubInfos = SubInfos{}
 
-	filmDetailPageUrl = my_util.AddBaseUrl(s.settings.SuppliersSettings.Zimuku.RootUrl, filmDetailPageUrl)
+	filmDetailPageUrl = my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, filmDetailPageUrl)
 
 	result, page, err := rod_helper.HttpGetFromBrowser(browser, filmDetailPageUrl, s.tt)
 	if err != nil {
@@ -571,7 +571,7 @@ func (s *Supplier) step2(browser *rod.Browser, subInfo *SubInfo) error {
 			notify_center.Notify.Add("zimuku_step2", err.Error())
 		}
 	}()
-	detailUrl := my_util.AddBaseUrl(s.settings.SuppliersSettings.Zimuku.RootUrl, subInfo.DetailUrl)
+	detailUrl := my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, subInfo.DetailUrl)
 	result, page, err := rod_helper.HttpGetFromBrowser(browser, detailUrl, s.tt)
 	if err != nil {
 		return err
@@ -589,7 +589,7 @@ func (s *Supplier) step2(browser *rod.Browser, subInfo *SubInfo) error {
 	if strings.Contains(matched[0][1], "://") {
 		subInfo.SubDownloadPageUrl = matched[0][1]
 	} else {
-		subInfo.SubDownloadPageUrl = fmt.Sprintf("%s%s", s.settings.SuppliersSettings.Zimuku.RootUrl, matched[0][1])
+		subInfo.SubDownloadPageUrl = fmt.Sprintf("%s%s", s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, matched[0][1])
 	}
 	return nil
 }
@@ -602,7 +602,7 @@ func (s *Supplier) step3(browser *rod.Browser, subDownloadPageUrl string) (strin
 			notify_center.Notify.Add("zimuku_step3", err.Error())
 		}
 	}()
-	subDownloadPageUrl = my_util.AddBaseUrl(s.settings.SuppliersSettings.Zimuku.RootUrl, subDownloadPageUrl)
+	subDownloadPageUrl = my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, subDownloadPageUrl)
 	result, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageUrl, s.tt)
 	if err != nil {
 		return "", nil, err
