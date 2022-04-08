@@ -12,6 +12,8 @@ type ISupplier interface {
 
 	GetSupplierName() string
 
+	OverDailyDownloadLimit() bool
+
 	GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error)
 
 	GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error)

@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/robfig/cron/v3"
+	"github.com/sirupsen/logrus"
 	"sync"
 	"time"
 )
@@ -18,11 +19,17 @@ type CronHelper struct {
 	cronHelperRunningLock         sync.Mutex
 	c                             *cron.Cron
 	dh                            *downloader_helper.DownloaderHelper
+
+	sets *settings.Settings
+	log  *logrus.Logger
 }
 
-func NewCronHelper() *CronHelper {
+func NewCronHelper(_log *logrus.Logger, _sets *settings.Settings) *CronHelper {
 
-	ch := CronHelper{}
+	ch := CronHelper{
+		log:  _log,
+		sets: _sets,
+	}
 	return &ch
 }
 
@@ -30,24 +37,24 @@ func NewCronHelper() *CronHelper {
 // runImmediately == false 那么 ch.c.Start() 是不会阻塞的
 func (ch *CronHelper) Start(runImmediately bool) {
 
-	_, err := cron.ParseStandard(settings.GetSettings().CommonSettings.ScanInterval)
+	_, err := cron.ParseStandard(ch.sets.CommonSettings.ScanInterval)
 	if err != nil {
-		log_helper.GetLogger().Warningln("CommonSettings.ScanInterval format error, after v0.25.x , need reset this at WebUI")
+		ch.log.Warningln("CommonSettings.ScanInterval format error, after v0.25.x , need reset this at WebUI")
 		// 如果解析错误了，就需要重新赋值默认值过来，然后保存
-		nowSettings := settings.GetSettings()
+		nowSettings := ch.sets
 		nowSettings.CommonSettings.ScanInterval = settings.NewCommonSettings().ScanInterval
 		err = settings.SetFullNewSettings(nowSettings)
 		if err != nil {
-			log_helper.GetLogger().Panicln("CronHelper.SetFullNewSettings:", err)
+			ch.log.Panicln("CronHelper.SetFullNewSettings:", err)
 			return
 		}
 	}
 
 	ch.c = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
-	entryID, err := ch.c.AddFunc(settings.GetSettings().CommonSettings.ScanInterval, ch.coreSubDownloadProcess)
+	entryID, err := ch.c.AddFunc(ch.sets.CommonSettings.ScanInterval, ch.coreSubDownloadProcess)
 	if err != nil {
-		log_helper.GetLogger().Panicln("CronHelper Cron entryID:", entryID, "Error:", err)
+		ch.log.Panicln("CronHelper Cron entryID:", entryID, "Error:", err)
 	}
 
 	ch.cronHelperRunningLock.Lock()
@@ -56,17 +63,17 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// 是否在定时器开启前先执行一次任务
 	if runImmediately == true {
 
-		log_helper.GetLogger().Infoln("First Time coreSubDownloadProcess Start")
+		ch.log.Infoln("First Time coreSubDownloadProcess Start")
 
 		ch.coreSubDownloadProcess()
 
-		log_helper.GetLogger().Infoln("First Time coreSubDownloadProcess End")
+		ch.log.Infoln("First Time coreSubDownloadProcess End")
 
 	} else {
-		log_helper.GetLogger().Infoln("RunAtStartup: false, so will not Run At Startup")
+		ch.log.Infoln("RunAtStartup: false, so will not Run At Startup")
 	}
 
-	log_helper.GetLogger().Infoln("CronHelper Start...")
+	ch.log.Infoln("CronHelper Start...")
 	ch.c.Start()
 
 	// 只有定时任务 start 之后才能拿到信息
@@ -76,9 +83,9 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		tttt := ch.c.Entries()[0].Next.Format("2006-01-02 15:04:05")
 		common.SetSubScanJobStatusWaiting(tttt)
 
-		log_helper.GetLogger().Infoln("Next Sub Scan Will Process At:", tttt)
+		ch.log.Infoln("Next Sub Scan Will Process At:", tttt)
 	} else {
-		log_helper.GetLogger().Errorln("Can't get cron jobs, will not send SubScanJobStatus")
+		ch.log.Errorln("Can't get cron jobs, will not send SubScanJobStatus")
 	}
 }
 
@@ -99,9 +106,9 @@ func (ch *CronHelper) Stop() {
 		nowContext := ch.c.Stop()
 		select {
 		case <-time.After(5 * time.Minute):
-			log_helper.GetLogger().Warningln("Wait over 5 min, CronHelper is timeout")
+			ch.log.Warningln("Wait over 5 min, CronHelper is timeout")
 		case <-nowContext.Done():
-			log_helper.GetLogger().Infoln("CronHelper.Stop() Done.")
+			ch.log.Infoln("CronHelper.Stop() Done.")
 		}
 	} else {
 		// Stop stops the cron scheduler if it is running; otherwise it does nothing.
@@ -109,9 +116,9 @@ func (ch *CronHelper) Stop() {
 		nowContext := ch.c.Stop()
 		select {
 		case <-time.After(5 * time.Second):
-			log_helper.GetLogger().Warningln("Wait over 5 s, CronHelper is timeout")
+			ch.log.Warningln("Wait over 5 s, CronHelper is timeout")
 		case <-nowContext.Done():
-			log_helper.GetLogger().Infoln("CronHelper.Stop() Done.")
+			ch.log.Infoln("CronHelper.Stop() Done.")
 		}
 	}
 
@@ -164,7 +171,7 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 		ch.fullSubDownloadProcessing = false
 		ch.fullSubDownloadProcessingLock.Unlock()
 
-		log_helper.GetLogger().Infoln(log_helper.OnceSubsScanEnd)
+		ch.log.Infoln(log_helper.OnceSubsScanEnd)
 
 		// 下载完后，应该继续是等待
 		tttt := ch.c.Entries()[0].Next.Format("2006-01-02 15:04:05")
@@ -177,28 +184,28 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 
 	// ------------------------------------------------------------------------
 	// 如果是 Debug 模式，那么就需要写入特殊文件
-	if settings.GetSettings().AdvancedSettings.DebugMode == true {
+	if ch.sets.AdvancedSettings.DebugMode == true {
 		err := log_helper.WriteDebugFile()
 		if err != nil {
-			log_helper.GetLogger().Errorln("log_helper.WriteDebugFile " + err.Error())
+			ch.log.Errorln("log_helper.WriteDebugFile " + err.Error())
 		}
 		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Debug")
 	} else {
 		err := log_helper.DeleteDebugFile()
 		if err != nil {
-			log_helper.GetLogger().Errorln("log_helper.DeleteDebugFile " + err.Error())
+			ch.log.Errorln("log_helper.DeleteDebugFile " + err.Error())
 		}
 		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Info")
 	}
 	// ------------------------------------------------------------------------
 	// 开始标记，这个是单次扫描的开始
-	log_helper.GetLogger().Infoln(log_helper.OnceSubsScanStart)
+	ch.log.Infoln(log_helper.OnceSubsScanStart)
 
 	// 扫描字幕任务开始，先是扫描阶段，那么是拿不到有多少视频需要扫描的数量的
 	common.SetSubScanJobStatusPreparing(time.Now().Format("2006-01-02 15:04:05"))
 
 	// 下载前的初始化
-	preDownloadProcess := pre_download_process.NewPreDownloadProcess()
+	preDownloadProcess := pre_download_process.NewPreDownloadProcess(ch.log, ch.sets)
 	err := preDownloadProcess.
 		Init().
 		Check().
@@ -207,8 +214,8 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 		ReloadBrowser().
 		Wait()
 	if err != nil {
-		log_helper.GetLogger().Errorln("pre_download_process", "Error:", err)
-		log_helper.GetLogger().Errorln("Skip DownloaderHelper.Start()")
+		ch.log.Errorln("pre_download_process", "Error:", err)
+		ch.log.Errorln("Skip DownloaderHelper.Start()")
 		return
 	}
 	// 开始下载
@@ -216,7 +223,7 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 		preDownloadProcess.SubSupplierHub)
 	err = ch.dh.Start()
 	if err != nil {
-		log_helper.GetLogger().Errorln("downloader_helper.Start()", "Error:", err)
+		ch.log.Errorln("downloader_helper.Start()", "Error:", err)
 		return
 	}
 }

@@ -5,7 +5,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	movieHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/movie_helper"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
@@ -18,17 +17,17 @@ import (
 )
 
 type SubSupplierHub struct {
-	settings settings.Settings
+	settings *settings.Settings
 
 	Suppliers []ifaces.ISupplier
 
 	log *logrus.Logger
 }
 
-func NewSubSupplierHub(_settings settings.Settings, one ifaces.ISupplier, _inSupplier ...ifaces.ISupplier) *SubSupplierHub {
+func NewSubSupplierHub(_settings *settings.Settings, _logger *logrus.Logger, one ifaces.ISupplier, _inSupplier ...ifaces.ISupplier) *SubSupplierHub {
 	s := SubSupplierHub{}
 	s.settings = _settings
-	s.log = log_helper.GetLogger()
+	s.log = _logger
 	s.Suppliers = make([]ifaces.ISupplier, 0)
 	s.Suppliers = append(s.Suppliers, one)
 	if len(_inSupplier) > 0 {
@@ -56,7 +55,7 @@ func (d *SubSupplierHub) DelSubSupplier(one ifaces.ISupplier) {
 }
 
 // DownloadSub4Movie 某一个电影字幕下载，下载完毕后，返回下载缓存每个字幕的位置
-func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, forcedScanAndDownloadSub bool) ([]string, error) {
+func (d *SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, forcedScanAndDownloadSub bool) ([]string, error) {
 
 	if forcedScanAndDownloadSub == false {
 		// 非强制扫描的时候，需要判断这个视频根目录是否有 .ignore 文件，有也跳过
@@ -112,7 +111,7 @@ func (d SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, force
 }
 
 // DownloadSub4Series 某一部连续剧的字幕下载，下载完毕后，返回下载缓存每个字幕的位置
-func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int, forcedScanAndDownloadSub bool) (*series.SeriesInfo, map[string][]string, error) {
+func (d *SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int, forcedScanAndDownloadSub bool) (*series.SeriesInfo, map[string][]string, error) {
 
 	if forcedScanAndDownloadSub == false {
 		// 非强制扫描的时候，需要判断这个视频根目录是否有 .ignore 文件，有也跳过
@@ -144,7 +143,7 @@ func (d SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int, forc
 }
 
 // DownloadSub4SeriesFromEmby 通过 Emby 查询到的信息进行字幕下载，下载完毕后，返回下载缓存每个字幕的位置
-func (d SubSupplierHub) DownloadSub4SeriesFromEmby(seriesDirPath string, seriesList []emby.EmbyMixInfo, index int) (*series.SeriesInfo, map[string][]string, error) {
+func (d *SubSupplierHub) DownloadSub4SeriesFromEmby(seriesDirPath string, seriesList []emby.EmbyMixInfo, index int) (*series.SeriesInfo, map[string][]string, error) {
 
 	// 跳过中文的连续剧，不是一定要跳过的
 	skip, imdbInfo, err := seriesHelper.SkipChineseSeries(seriesDirPath, *d.settings.AdvancedSettings.ProxySettings)
@@ -166,7 +165,7 @@ func (d SubSupplierHub) DownloadSub4SeriesFromEmby(seriesDirPath string, seriesL
 	return seriesInfo, organizeSubFiles, nil
 }
 
-// CheckSubSiteStatus 检测多个字幕提供的网站是否是有效的
+// CheckSubSiteStatus 检测多个字幕提供的网站是否是有效的，是否下载次数超限
 func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 
 	outStatus := backend.ReplyCheckStatus{
@@ -192,7 +191,9 @@ func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 
 	suppliersLen := len(d.Suppliers)
 	for i := 0; i < suppliersLen; {
-		if d.Suppliers[i].IsAlive() == false {
+
+		// 网络检测是否有效，以及每次的下载次数限制检测
+		if d.Suppliers[i].IsAlive() == false || d.Suppliers[i].OverDailyDownloadLimit() == true {
 
 			d.DelSubSupplier(d.Suppliers[i])
 			// 删除后，从头再来
@@ -208,7 +209,7 @@ func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 	return outStatus
 }
 
-func (d SubSupplierHub) dlSubFromSeriesInfo(seriesDirPath string, index int, seriesInfo *series.SeriesInfo, err error) (map[string][]string, error) {
+func (d *SubSupplierHub) dlSubFromSeriesInfo(seriesDirPath string, index int, seriesInfo *series.SeriesInfo, err error) (map[string][]string, error) {
 	// 下载好的字幕
 	subInfos := seriesHelper.DownloadSubtitleInAllSiteByOneSeries(d.Suppliers, seriesInfo, index)
 	// 整理字幕，比如解压什么的

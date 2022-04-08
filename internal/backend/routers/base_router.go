@@ -5,12 +5,13 @@ import (
 	v1 "github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/v1"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/middle"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/gin-gonic/gin"
 )
 
 func InitRouter(router *gin.Engine, cronHelper *cron_helper.CronHelper) {
 
-	cbBase := base.NewControllerBase()
+	cbBase := base.NewControllerBase(log_helper.GetLogger())
 	cbV1 := v1.NewControllerBase(cronHelper)
 	// 基础的路由
 	router.GET("/system-status", cbBase.SystemStatusHandler)

@@ -57,7 +57,7 @@ require (
 	github.com/ysmood/gson v0.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 	golang.org/x/net v0.0.0-20220114011407-0dd24b26b47d
-	golang.org/x/sys v0.0.0-20220111092808-5a964db01320 // indirect
+	golang.org/x/sys v0.0.0-20220406163625-3f8b81556e12 // indirect
 	golang.org/x/text v0.3.7
 	gonum.org/v1/gonum v0.9.3
 	gopkg.in/errgo.v2 v2.1.0
@@ -78,6 +78,7 @@ require (
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
 	github.com/bodgit/plumbing v1.1.0 // indirect
 	github.com/bodgit/windows v1.0.0 // indirect
+	github.com/bwmarrin/snowflake v0.3.0 // indirect
 	github.com/connesc/cipherio v0.2.1 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
@@ -116,6 +117,9 @@ require (
 	github.com/ugorji/go/codec v1.2.6 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
+	github.com/xujiajun/mmap-go v1.0.1 // indirect
+	github.com/xujiajun/nutsdb v0.8.0 // indirect
+	github.com/xujiajun/utils v0.0.0-20190123093513-8bf096c4f53b // indirect
 	github.com/ysmood/goob v0.3.0 // indirect
 	github.com/ysmood/leakless v0.7.0 // indirect
 	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect

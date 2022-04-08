@@ -1,6 +1,7 @@
 package my_util
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
 	"testing"
@@ -9,7 +10,7 @@ import (
 func TestCloseChrome(t *testing.T) {
 
 	// BUG: will produce Logs under this dir
-	CloseChrome()
+	CloseChrome(log_helper.GetLogger())
 }
 
 func TestFileNameIsBDMV(t *testing.T) {
@@ -21,4 +22,10 @@ func TestFileNameIsBDMV(t *testing.T) {
 		t.Fatal("FileNameIsBDMV error")
 	}
 	println(fakeVideoFPath)
+}
+
+func TestGetRestOfDaySec(t *testing.T) {
+
+	rest := GetRestOfDaySec()
+	println(rest)
 }

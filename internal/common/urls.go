@@ -1,12 +1,12 @@
 package common
 
 const (
-	SubXunLeiRootUrl  = "http://sub.xmp.sandai.net:8000/subxl/%s.json"
-	SubShooterRootUrl = "https://www.shooter.cn/api/subapi.php"
+	SubXunLeiRootUrlDef  = "http://sub.xmp.sandai.net:8000/subxl/%s.json"
+	SubShooterRootUrlDef = "https://www.shooter.cn/api/subapi.php"
 
-	SubZiMuKuRootUrl         = "https://zimuku.org"
-	SubZiMuKuSearchFormatUrl = SubZiMuKuRootUrl + "/search?q=%s"
+	SubZiMuKuRootUrlDef      = "https://zimuku.org"
+	SubZiMuKuSearchFormatUrl = "/search?q=%s"
 
-	SubSubHDRootUrl   = "https://subhd.tv"
-	SubSubHDSearchUrl = SubSubHDRootUrl + "/search/%s"
+	SubSubHDRootUrlDef = "https://subhd.tv"
+	SubSubHDSearchUrl  = "/search/%s"
 )

@@ -1,8 +1,10 @@
 package my_util
 
 import (
+	"bytes"
 	"crypto/md5"
 	"crypto/sha1"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
@@ -678,6 +680,42 @@ func GetFileSHA1String(fileFPath string) (string, error) {
 	hashBytes := h.Sum(nil)
 
 	return fmt.Sprintf("%x", md5.Sum(hashBytes)), nil
+}
+
+func GetRestOfDaySec() time.Duration {
+
+	nowTime := time.Now()
+	todayLast := nowTime.Format("2006-01-02") + " 23:59:59"
+	todayLastTime, _ := time.ParseInLocation("2006-01-02 15:04:05", todayLast, time.Local)
+	// 今天剩余的时间（s）
+	restOfDaySec := time.Duration(todayLastTime.Unix()-time.Now().Local().Unix()) * time.Second
+
+	return restOfDaySec
+}
+
+// IntToBytes 整形转换成字节
+func IntToBytes(n int) ([]byte, error) {
+	x := int32(n)
+
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	err := binary.Write(bytesBuffer, binary.BigEndian, x)
+	if err != nil {
+		return nil, err
+	}
+	return bytesBuffer.Bytes(), nil
+}
+
+// BytesToInt 字节转换成整形
+func BytesToInt(b []byte) (int, error) {
+	bytesBuffer := bytes.NewBuffer(b)
+
+	var x int32
+	err := binary.Read(bytesBuffer, binary.BigEndian, &x)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(x), nil
 }
 
 var (

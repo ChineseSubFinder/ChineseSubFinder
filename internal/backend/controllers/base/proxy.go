@@ -9,11 +9,10 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
-	"github.com/huandu/go-clone"
 	"net/http"
 )
 
-func (cb ControllerBase) CheckProxyHandler(c *gin.Context) {
+func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
@@ -26,17 +25,18 @@ func (cb ControllerBase) CheckProxyHandler(c *gin.Context) {
 		return
 	}
 
-	tmpSettings := clone.Clone(*settings.GetSettings()).(settings.Settings)
+	tmpSettings := settings.GetSettings()
 	tmpSettings.AdvancedSettings.ProxySettings.UseHttpProxy = true
 	tmpSettings.AdvancedSettings.ProxySettings.HttpProxyAddress = checkProxy.HttpProxyAddress
 
 	// 使用提交过来的这个代理地址，测试多个字幕网站的可用性
 	subSupplierHub := subSupplier.NewSubSupplierHub(
 		tmpSettings,
-		zimuku.NewSupplier(tmpSettings),
-		xunlei.NewSupplier(tmpSettings),
-		shooter.NewSupplier(tmpSettings),
-		subhd.NewSupplier(tmpSettings),
+		cb.log,
+		zimuku.NewSupplier(tmpSettings, cb.log),
+		xunlei.NewSupplier(tmpSettings, cb.log),
+		shooter.NewSupplier(tmpSettings, cb.log),
+		subhd.NewSupplier(tmpSettings, cb.log),
 	)
 
 	outStatus := subSupplierHub.CheckSubSiteStatus()

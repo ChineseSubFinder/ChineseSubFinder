@@ -5,16 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
-	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
 	"math"
 	"os"
@@ -24,20 +23,20 @@ import (
 )
 
 type Supplier struct {
-	settings settings.Settings
+	settings *settings.Settings
 	log      *logrus.Logger
 	topic    int
 	isAlive  bool
 }
 
-func NewSupplier(_settings settings.Settings) *Supplier {
+func NewSupplier(_settings *settings.Settings, _logger *logrus.Logger) *Supplier {
 
 	sup := Supplier{}
-	sup.log = log_helper.GetLogger()
+	sup.log = _logger
 	sup.topic = common.DownloadSubsPerSite
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
-	sup.settings = clone.Clone(_settings).(settings.Settings)
+	sup.settings = _settings
 	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
 		sup.topic = sup.settings.AdvancedSettings.Topic
 	}
@@ -63,23 +62,28 @@ func (s *Supplier) IsAlive() bool {
 	return s.isAlive
 }
 
-func (s Supplier) GetSupplierName() string {
+func (s *Supplier) OverDailyDownloadLimit() bool {
+	// 对于这个接口暂时没有限制
+	return false
+}
+
+func (s *Supplier) GetSupplierName() string {
 	return common.SubSiteShooter
 }
 
-func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
+func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 	return s.getSubListFromFile(filePath)
 }
 
-func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	return s.downloadSub4Series(seriesInfo)
 }
 
-func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+func (s *Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	return s.downloadSub4Series(seriesInfo)
 }
 
-func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error) {
+func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error) {
 
 	defer func() {
 		s.log.Debugln(s.GetSupplierName(), filePath, "End...")
@@ -133,6 +137,11 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 				s.log.Error(err)
 				continue
 			}
+			// 下载成功需要统计到今天的次数中
+			_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName())
+			if err != nil {
+				s.log.Warningln(s.GetSupplierName(), "getSubListFromFile.AddDailyDownloadCount", err)
+			}
 
 			onSub := supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, language.ChineseSimple, file.Link, 0, shooter.Delay, subExt, data)
 			outSubInfoList = append(outSubInfoList, *onSub)
@@ -147,7 +156,7 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	return outSubInfoList, nil
 }
 
-func (s Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShooter, error) {
+func (s *Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShooter, error) {
 
 	var jsonList []SublistShooter
 
@@ -160,7 +169,7 @@ func (s Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShooter
 			"lang":     qLan,
 		}).
 		SetResult(&jsonList).
-		Post(common.SubShooterRootUrl)
+		Post(s.settings.SuppliersSettings.Shooter.RootUrl)
 	if err != nil {
 		if resp != nil {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", fileName, err.Error())
@@ -212,7 +221,7 @@ func ComputeFileHash(filePath string) (string, error) {
 	return hash, nil
 }
 
-func (s Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+func (s *Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	var allSupplierSubInfo = make([]supplier.SubInfo, 0)
 
 	index := 0
