@@ -32,7 +32,29 @@
 		"save_multi_sub": true,
 		"custom_video_exts": ["aaa", "bbb"],
 		"fix_time_line": true,
-		"topic": 0
+		"topic": 0,
+         "suppliers_settings": {
+                "xunlei":	{
+                    "name": "xunlei",
+                    "root_url": "xxx",
+                    "daily_download_limit": -1
+                },
+                 "shooter":	{
+                    "name": "shooter",
+                    "root_url": "xxx",
+                    "daily_download_limit": -1
+                },
+                 "subhd":	{
+                    "name": "subhd",
+                    "root_url": "xxx",
+                    "daily_download_limit": -1
+                },
+                 "zimuku":	{
+                    "name": "zimuku",
+                    "root_url": "xxx",
+                    "daily_download_limit": -1
+                },
+            }
 	},
 	"emby_settings": {
 		"enable": true,
