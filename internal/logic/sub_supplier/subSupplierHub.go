@@ -191,11 +191,16 @@ func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 	}
 
 	suppliersLen := len(d.Suppliers)
-	for i := 0; i < suppliersLen; i++ {
+	for i := 0; i < suppliersLen; {
 		if d.Suppliers[i].IsAlive() == false {
+
 			d.DelSubSupplier(d.Suppliers[i])
+			// 删除后，从头再来
+			suppliersLen = len(d.Suppliers)
+			i = 0
+			continue
 		}
-		suppliersLen = len(d.Suppliers)
+		i++
 	}
 
 	d.log.Infoln("Check Sub Supplier End")
