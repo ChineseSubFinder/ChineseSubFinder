@@ -102,9 +102,36 @@
       <q-separator spaced inset></q-separator>
 
       <q-item>
+        <q-item-section>
+          <q-item-label class="q-mb-sm">字幕源设置</q-item-label>
+          <q-item v-for="item in ['xunlei', 'shooter', 'subhd', 'zimuku']" :key="item" clickable>
+            <q-item-section avatar class="text-bold" style="width: 120px">
+              {{ form.suppliers_settings[item].name }}
+            </q-item-section>
+            <q-item-section class="text-grey-8">
+              <q-item-label :lines="1">
+                {{ form.suppliers_settings[item].root_url }}
+              </q-item-label>
+              <q-item-label style="font-size: 90%">
+                每日下载次数限制：{{ form.suppliers_settings[item].daily_download_limit }}
+              </q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <edit-sub-source-btn-dialog
+                :data="form.suppliers_settings[item]"
+                @update="(data) => handleSubSourceUpdate(item, data)"
+              />
+            </q-item-section>
+          </q-item>
+        </q-item-section>
+      </q-item>
+
+      <q-separator spaced inset />
+
+      <q-item>
         <q-item-section class="items-start" top>
           <q-item-label>自定义视频扩展名</q-item-label>
-          <q-item-label caption>原生支持mp4、mkv、rmvb、iso</q-item-label>
+          <q-item-label caption>原生支持mp4、mkv、rmvb、iso、m2ts</q-item-label>
           <template v-for="(item, i) in form.custom_video_exts" :key="i">
             <div class="row items-center q-gutter-x-md" :class="{ 'q-mt-md': i === 0 }">
               <q-input
@@ -164,6 +191,7 @@ import {
 import { formModel } from 'pages/settings/useSettings';
 import { toRefs } from '@vueuse/core';
 import ProxyCheckBtn from 'components/ProxyCheckBtn';
+import EditSubSourceBtnDialog from 'pages/settings/EditSubSourceBtnDialog';
 
 const subNameFormatDescMap = {
   [SUB_NAME_FORMAT_NORMAL]: '兼容性更好，AAA.zh.ass or AAA.zh.default.ass。',
@@ -171,4 +199,9 @@ const subNameFormatDescMap = {
 };
 
 const { advanced_settings: form } = toRefs(formModel);
+
+const handleSubSourceUpdate = (item, data) => {
+  formModel.advanced_settings.suppliers_settings[item].root_url = data.url;
+  formModel.advanced_settings.suppliers_settings[item].daily_download_limit = data.dailyLimit;
+};
 </script>

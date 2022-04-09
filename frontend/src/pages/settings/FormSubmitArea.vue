@@ -8,6 +8,6 @@
 
 <script setup>
 import { resetForm, submitting } from 'pages/settings/useSettings';
-import ExportSettingBtnDialog from 'pages/settings/exportSettingBtnDialog';
+import ExportSettingBtnDialog from 'pages/settings/ExportSettingBtnDialog';
 import { isJobRunning } from 'src/store/systemState';
 </script>
