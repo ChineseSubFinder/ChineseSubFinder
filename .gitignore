@@ -84,3 +84,5 @@ TestData/
 /internal/logic/sub_supplier/zimuku/cache
 /internal/logic/movie_helper/Logs
 /TestCode/Logs
+/internal/logic/task_queue/task_queue
+/internal/logic/task_queue/Logs
