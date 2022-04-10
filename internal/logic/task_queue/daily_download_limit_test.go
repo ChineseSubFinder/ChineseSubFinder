@@ -37,11 +37,6 @@ func TestGetDailyDownloadCount(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("GetDailyDownloadCount() got = %v, want %v", got, tt.want)
 			}
-
-			//err = DelBucket(tt.args.supplierName)
-			//if err != nil {
-			//	t.Errorf("DelBucket(), err = %v", err.Error())
-			//}
 		})
 	}
 }
@@ -72,6 +67,55 @@ func TestAddDailyDownloadCount(t *testing.T) {
 				t.Errorf("AddDailyDownloadCount() got = %v, want %v", got, tt.want)
 			}
 
+			got, err = AddDailyDownloadCount(tt.args.supplierName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AddDailyDownloadCount() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want+1 {
+				t.Errorf("AddDailyDownloadCount() got = %v, want %v", got, tt.want)
+			}
 		})
+	}
+
+	err := DelDb()
+	if err != nil {
+		return
+	}
+}
+
+func TestAddGetDailyDownloadCount(t *testing.T) {
+
+	addCount, err := AddDailyDownloadCount(supplieName)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	getDailyDownloadCount, err := GetDailyDownloadCount(supplieName)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	if addCount != getDailyDownloadCount {
+		t.Fatalf("not the same")
+	}
+
+	addCount, err = AddDailyDownloadCount(supplieName)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	getDailyDownloadCount, err = GetDailyDownloadCount(supplieName)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	if addCount != getDailyDownloadCount {
+		t.Fatalf("not the same")
+	}
+
+	err = DelDb()
+	if err != nil {
+		return
 	}
 }

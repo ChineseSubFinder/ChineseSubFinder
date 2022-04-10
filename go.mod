@@ -68,6 +68,8 @@ require (
 	gorm.io/gorm v1.22.5
 )
 
+require github.com/dgraph-io/badger/v3 v3.2103.2
+
 require (
 	github.com/EDDYCJY/fake-useragent v0.2.0 // indirect
 	github.com/Microsoft/go-winio v0.4.16 // indirect
@@ -78,11 +80,9 @@ require (
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
 	github.com/bodgit/plumbing v1.1.0 // indirect
 	github.com/bodgit/windows v1.0.0 // indirect
-	github.com/bwmarrin/snowflake v0.3.0 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/connesc/cipherio v0.2.1 // indirect
-	github.com/dgraph-io/badger/v3 v3.2103.2 // indirect
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
@@ -125,8 +125,6 @@ require (
 	github.com/ugorji/go/codec v1.2.6 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	github.com/xujiajun/mmap-go v1.0.1 // indirect
-	github.com/xujiajun/utils v0.0.0-20190123093513-8bf096c4f53b // indirect
 	github.com/ysmood/goob v0.3.0 // indirect
 	github.com/ysmood/leakless v0.7.0 // indirect
 	go.opencensus.io v0.22.5 // indirect
