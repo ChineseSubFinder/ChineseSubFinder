@@ -4,7 +4,6 @@ import (
 	"crypto/sha1"
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
@@ -13,6 +12,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/sirupsen/logrus"
@@ -33,7 +33,7 @@ func NewSupplier(_settings *settings.Settings, _logger *logrus.Logger) *Supplier
 
 	sup := Supplier{}
 	sup.log = _logger
-	sup.topic = common.DownloadSubsPerSite
+	sup.topic = common2.DownloadSubsPerSite
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
 	sup.settings = _settings
@@ -75,7 +75,7 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 }
 
 func (s *Supplier) GetSupplierName() string {
-	return common.SubSiteXunLei
+	return common2.SubSiteXunLei
 }
 
 func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
@@ -119,7 +119,7 @@ func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, erro
 	var tmpXunLeiSubListChinese = make([]SublistXunLei, 0)
 	var outSubList []supplier.SubInfo
 	if len(cid) == 0 {
-		return nil, common.XunLeiCIdIsEmpty
+		return nil, common2.XunLeiCIdIsEmpty
 	}
 
 	jsonList, err = s.getSubInfos(filePath, cid)

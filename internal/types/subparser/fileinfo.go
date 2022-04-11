@@ -1,8 +1,8 @@
 package subparser
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"math"
 	"sort"
@@ -33,10 +33,10 @@ func (f *FileInfo) SortDialogues() {
 
 // GetTimeFormat 获取时间轴的格式化格式
 func (f FileInfo) GetTimeFormat() string {
-	if f.Ext == common.SubExtASS || f.Ext == common.SubExtSSA {
-		return common.TimeFormatPoint2
+	if f.Ext == common2.SubExtASS || f.Ext == common2.SubExtSSA {
+		return common2.TimeFormatPoint2
 	} else {
-		return common.TimeFormatPoint3
+		return common2.TimeFormatPoint3
 	}
 }
 

@@ -1,11 +1,9 @@
 package sub_supplier
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	movieHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/movie_helper"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
@@ -44,6 +42,7 @@ func (d *SubSupplierHub) AddSubSupplier(one ifaces.ISupplier) {
 	d.Suppliers = append(d.Suppliers, one)
 }
 
+// DelSubSupplier 移除一个下载器
 func (d *SubSupplierHub) DelSubSupplier(one ifaces.ISupplier) {
 
 	for i := 0; i < len(d.Suppliers); i++ {
@@ -54,26 +53,22 @@ func (d *SubSupplierHub) DelSubSupplier(one ifaces.ISupplier) {
 	}
 }
 
-// DownloadSub4Movie 某一个电影字幕下载，下载完毕后，返回下载缓存每个字幕的位置
-func (d *SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, forcedScanAndDownloadSub bool) ([]string, error) {
+// MovieNeedDlSub 电影是否符合要求需要下载字幕，比如
+func (d *SubSupplierHub) MovieNeedDlSub(videoFullPath string, skipChineseMovie, forcedScanAndDownloadSub bool) bool {
 
-	if forcedScanAndDownloadSub == false {
-		// 非强制扫描的时候，需要判断这个视频根目录是否有 .ignore 文件，有也跳过
-		if my_util.IsFile(filepath.Join(filepath.Dir(videoFullPath), common.Ignore)) == true {
-			d.log.Infoln("Found", common.Ignore, "Skip", videoFullPath)
-			// 跳过下载字幕
-			return nil, nil
+	var err error
+	if skipChineseMovie == true {
+		var skip bool
+		// 跳过中文的电影，不是一定要跳过的
+		skip, err = movieHelper.SkipChineseMovie(videoFullPath, d.settings.AdvancedSettings.ProxySettings)
+		if err != nil {
+			d.log.Warnln("SkipChineseMovie", videoFullPath, err)
+		}
+		if skip == true {
+			return false
 		}
 	}
 
-	// 跳过中文的电影，不是一定要跳过的
-	skip, err := movieHelper.SkipChineseMovie(videoFullPath, *d.settings.AdvancedSettings.ProxySettings)
-	if err != nil {
-		d.log.Warnln("SkipChineseMovie", videoFullPath, err)
-	}
-	if skip == true {
-		return nil, nil
-	}
 	var needDlSub = false
 	if forcedScanAndDownloadSub == true {
 		// 强制下载字幕
@@ -81,88 +76,85 @@ func (d *SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int, forc
 	} else {
 		needDlSub, err = movieHelper.MovieNeedDlSub(videoFullPath)
 		if err != nil {
-			return nil, errors.Newf("MovieNeedDlSub %v %v", videoFullPath, err)
+			d.log.Errorln(errors.Newf("MovieNeedDlSub %v %v", videoFullPath, err))
+			return false
 		}
 	}
-	if needDlSub == true {
-		// 需要下载字幕
-		// 下载所有字幕
-		subInfos := movieHelper.OneMovieDlSubInAllSite(d.Suppliers, videoFullPath, index)
-		// 整理字幕，比如解压什么的
-		organizeSubFiles, err := sub_helper.OrganizeDlSubFiles(filepath.Base(videoFullPath), subInfos)
+
+	return needDlSub
+}
+
+// SeriesNeedDlSub 连续剧是否符合要求需要下载字幕
+func (d *SubSupplierHub) SeriesNeedDlSub(seriesRootPath string, skipChineseMovie, forcedScanAndDownloadSub bool) (bool, *series.SeriesInfo, error) {
+
+	if skipChineseMovie == true {
+		var skip bool
+		var err error
+		// 跳过中文的电影，不是一定要跳过的
+		skip, _, err = seriesHelper.SkipChineseSeries(seriesRootPath, d.settings.AdvancedSettings.ProxySettings)
 		if err != nil {
-			return nil, errors.Newf("OrganizeDlSubFiles %v %v", videoFullPath, err)
+			d.log.Warnln("SkipChineseMovie", seriesRootPath, err)
 		}
-		// 因为是下载电影，需要合并返回
-		var outSubFileFullPathList = make([]string, 0)
-		for s := range organizeSubFiles {
-			outSubFileFullPathList = append(outSubFileFullPathList, organizeSubFiles[s]...)
+		if skip == true {
+			return false, nil, nil
 		}
-
-		for i, subFile := range outSubFileFullPathList {
-			d.log.Debugln("OneMovieDlSubInAllSite", videoFullPath, i, "SubFileFPath:", subFile)
-		}
-
-		return outSubFileFullPathList, nil
-	} else {
-		// 无需下载字幕
-		return nil, nil
 	}
+
+	// 读取本地的视频和字幕信息
+	seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(seriesRootPath, forcedScanAndDownloadSub, d.settings.AdvancedSettings.ProxySettings)
+	if err != nil {
+		return false, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesRootPath, err)
+	}
+
+	return true, seriesInfo, nil
+}
+
+// DownloadSub4Movie 某一个电影字幕下载，下载完毕后，返回下载缓存每个字幕的位置，这里将只关心下载字幕，判断是否在时间范围内要不要下载不在这里判断，包括是否是中文视频的问题
+func (d *SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]string, error) {
+
+	// 下载所有字幕
+	subInfos := movieHelper.OneMovieDlSubInAllSite(d.Suppliers, videoFullPath, index)
+	// 整理字幕，比如解压什么的
+	organizeSubFiles, err := sub_helper.OrganizeDlSubFiles(filepath.Base(videoFullPath), subInfos)
+	if err != nil {
+		return nil, errors.Newf("OrganizeDlSubFiles %v %v", videoFullPath, err)
+	}
+	// 因为是下载电影，需要合并返回
+	var outSubFileFullPathList = make([]string, 0)
+	for s := range organizeSubFiles {
+		outSubFileFullPathList = append(outSubFileFullPathList, organizeSubFiles[s]...)
+	}
+
+	for i, subFile := range outSubFileFullPathList {
+		d.log.Debugln("OneMovieDlSubInAllSite", videoFullPath, i, "SubFileFPath:", subFile)
+	}
+
+	return outSubFileFullPathList, nil
 }
 
 // DownloadSub4Series 某一部连续剧的字幕下载，下载完毕后，返回下载缓存每个字幕的位置
-func (d *SubSupplierHub) DownloadSub4Series(seriesDirPath string, index int, forcedScanAndDownloadSub bool) (*series.SeriesInfo, map[string][]string, error) {
+func (d *SubSupplierHub) DownloadSub4Series(seriesDirPath string, seriesInfo *series.SeriesInfo, index int) (map[string][]string, error) {
 
-	if forcedScanAndDownloadSub == false {
-		// 非强制扫描的时候，需要判断这个视频根目录是否有 .ignore 文件，有也跳过
-		if my_util.IsFile(filepath.Join(seriesDirPath, common.Ignore)) == true {
-			d.log.Infoln("Found", common.Ignore, "Skip", seriesDirPath)
-			// 跳过下载字幕
-			return nil, nil, nil
-		}
-	}
-
-	// 跳过中文的连续剧，不是一定要跳过的
-	skip, imdbInfo, err := seriesHelper.SkipChineseSeries(seriesDirPath, *d.settings.AdvancedSettings.ProxySettings)
+	organizeSubFiles, err := d.dlSubFromSeriesInfo(seriesDirPath, index, seriesInfo)
 	if err != nil {
-		d.log.Warnln("SkipChineseSeries", seriesDirPath, err)
+		return nil, err
 	}
-	if skip == true {
-		return nil, nil, nil
-	}
-	// 读取本地的视频和字幕信息
-	seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(seriesDirPath, imdbInfo, forcedScanAndDownloadSub)
-	if err != nil {
-		return nil, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesDirPath, err)
-	}
-	organizeSubFiles, err := d.dlSubFromSeriesInfo(seriesDirPath, index, seriesInfo, err)
-	if err != nil {
-		return nil, nil, err
-	}
-	return seriesInfo, organizeSubFiles, nil
+	return organizeSubFiles, nil
 }
 
 // DownloadSub4SeriesFromEmby 通过 Emby 查询到的信息进行字幕下载，下载完毕后，返回下载缓存每个字幕的位置
-func (d *SubSupplierHub) DownloadSub4SeriesFromEmby(seriesDirPath string, seriesList []emby.EmbyMixInfo, index int) (*series.SeriesInfo, map[string][]string, error) {
+func (d *SubSupplierHub) DownloadSub4SeriesFromEmby(seriesDirPath string, seriesList []emby.EmbyMixInfo, index int) (map[string][]string, error) {
 
-	// 跳过中文的连续剧，不是一定要跳过的
-	skip, imdbInfo, err := seriesHelper.SkipChineseSeries(seriesDirPath, *d.settings.AdvancedSettings.ProxySettings)
-	if err != nil {
-		d.log.Warnln("SkipChineseSeries", seriesDirPath, err)
-	}
-	if skip == true {
-		return nil, nil, nil
-	}
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := seriesHelper.ReadSeriesInfoFromEmby(seriesDirPath, imdbInfo, seriesList)
+	seriesInfo, err := seriesHelper.ReadSeriesInfoFromEmby(seriesDirPath, seriesList, d.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
-		return nil, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesDirPath, err)
+		return nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesDirPath, err)
 	}
-	organizeSubFiles, err := d.dlSubFromSeriesInfo(seriesDirPath, index, seriesInfo, err)
+	organizeSubFiles, err := d.dlSubFromSeriesInfo(seriesDirPath, index, seriesInfo)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return seriesInfo, organizeSubFiles, nil
+	return organizeSubFiles, nil
 }
 
 // CheckSubSiteStatus 检测多个字幕提供的网站是否是有效的，是否下载次数超限
@@ -209,7 +201,7 @@ func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 	return outStatus
 }
 
-func (d *SubSupplierHub) dlSubFromSeriesInfo(seriesDirPath string, index int, seriesInfo *series.SeriesInfo, err error) (map[string][]string, error) {
+func (d *SubSupplierHub) dlSubFromSeriesInfo(seriesDirPath string, index int, seriesInfo *series.SeriesInfo) (map[string][]string, error) {
 	// 下载好的字幕
 	subInfos := seriesHelper.DownloadSubtitleInAllSiteByOneSeries(d.Suppliers, seriesInfo, index)
 	// 整理字幕，比如解压什么的

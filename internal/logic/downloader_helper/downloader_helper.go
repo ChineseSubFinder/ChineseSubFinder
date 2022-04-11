@@ -4,7 +4,6 @@ import (
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
@@ -18,15 +17,15 @@ import (
 type DownloaderHelper struct {
 	subSupplierHub *subSupplier.SubSupplierHub
 	downloader     *downloader.Downloader
-	settings       settings.Settings
+	settings       *settings.Settings
 	logger         *logrus.Logger
 }
 
-func NewDownloaderHelper(settings settings.Settings, _subSupplierHub *subSupplier.SubSupplierHub) *DownloaderHelper {
+func NewDownloaderHelper(settings *settings.Settings, logger *logrus.Logger, _subSupplierHub *subSupplier.SubSupplierHub) *DownloaderHelper {
 	return &DownloaderHelper{
 		subSupplierHub: _subSupplierHub,
 		settings:       settings,
-		logger:         log_helper.GetLogger(),
+		logger:         logger,
 	}
 }
 
@@ -34,7 +33,7 @@ func NewDownloaderHelper(settings settings.Settings, _subSupplierHub *subSupplie
 func (d *DownloaderHelper) Start() error {
 	var err error
 	// 下载实例
-	d.downloader, err = downloader.NewDownloader(d.subSupplierHub, sub_formatter.GetSubFormatter(d.settings.AdvancedSettings.SubNameFormatter), d.settings)
+	d.downloader, err = downloader.NewDownloader(d.subSupplierHub, sub_formatter.GetSubFormatter(d.settings.AdvancedSettings.SubNameFormatter), d.settings, d.logger)
 	if err != nil {
 		d.logger.Errorln("NewDownloader", err)
 	}
@@ -59,17 +58,6 @@ func (d *DownloaderHelper) Start() error {
 		if err != nil {
 			d.logger.Errorln("RestoreFixTimelineBK", err)
 		}
-	}
-	// 刷新 Emby 的字幕，如果下载了字幕倒是没有刷新，则先刷新一次，便于后续的 Emby api 统计逻辑
-	err = d.downloader.RefreshEmbySubList()
-	if err != nil {
-		d.logger.Errorln("RefreshEmbySubList", err)
-		return err
-	}
-	err = d.downloader.GetUpdateVideoListFromEmby()
-	if err != nil {
-		d.logger.Errorln("GetUpdateVideoListFromEmby", err)
-		return err
 	}
 	// 开始下载，电影
 	err = d.downloader.DownloadSub4Movie()

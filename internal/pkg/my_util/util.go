@@ -7,10 +7,10 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	browser "github.com/allanpk716/fake-useragent"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
@@ -152,6 +152,11 @@ func VideoNameSearchKeywordMaker(l *logrus.Logger, title string, year string) st
 // SearchMatchedVideoFileFromDirs 搜索符合后缀名的视频文件
 func SearchMatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) ([]string, error) {
 
+	defer func() {
+		l.Debugln("SearchMatchedVideoFileFromDirs End ----------------")
+	}()
+	l.Debugln("SearchMatchedVideoFileFromDirs Start ----------------")
+
 	var fileFullPathList = make([]string, 0)
 	for _, dir := range dirs {
 
@@ -161,6 +166,10 @@ func SearchMatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) ([]string, 
 		}
 
 		fileFullPathList = append(fileFullPathList, matchedVideoFile...)
+	}
+
+	for _, s := range fileFullPathList {
+		l.Debugln(s)
 	}
 
 	return fileFullPathList, nil

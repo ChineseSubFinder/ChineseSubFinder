@@ -2,8 +2,8 @@ package something_static
 
 import (
 	b64 "encoding/base64"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"

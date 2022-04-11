@@ -8,7 +8,7 @@ import (
 func TestReadSeriesInfoFromDir(t *testing.T) {
 
 	series := unit_test_helper.GetTestDataResourceRootPath([]string{"series", "Loki"}, 4, false)
-	seriesInfo, err := ReadSeriesInfoFromDir(series, nil, false)
+	seriesInfo, err := ReadSeriesInfoFromDir(series, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,5 +19,18 @@ func TestReadSeriesInfoFromDir(t *testing.T) {
 		for j, subInfo := range info.SubAlreadyDownloadedList {
 			println("Sub:", j, subInfo.Title, subInfo.Season, subInfo.Episode, subInfo.Language.String())
 		}
+	}
+}
+
+func TestGetSeriesListFromDirs(t *testing.T) {
+
+	series := unit_test_helper.GetTestDataResourceRootPath([]string{"series"}, 4, false)
+	got, err := GetSeriesListFromDirs([]string{series})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got.Size() < 1 {
+		t.Fatal("GetSeriesListFromDirs got len < 1")
 	}
 }

@@ -3,7 +3,6 @@ package sub_formatter
 import (
 	"errors"
 	"fmt"
-	interCommon "github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	movieHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/movie_helper"
@@ -15,6 +14,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/normal"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	interCommon "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"gorm.io/gorm"
 	"os"

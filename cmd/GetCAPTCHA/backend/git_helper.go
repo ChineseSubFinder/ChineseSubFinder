@@ -3,10 +3,10 @@ package backend
 import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/something_static"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"

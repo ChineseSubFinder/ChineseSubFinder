@@ -12,7 +12,7 @@ func TestGetVideoInfoFromIMDB(t *testing.T) {
 	//imdbID := "tt3032476" 	// 风骚律师
 	//imdbID := "tt6468322" 	// 纸钞屋
 	imdbID := "tt15299712" // 云南虫谷
-	imdbInfo, err := GetVideoInfoFromIMDB(imdbID)
+	imdbInfo, err := GetVideoInfoFromIMDBWeb(imdbID)
 	if err != nil {
 		t.Fatal(err)
 	}

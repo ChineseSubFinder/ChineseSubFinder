@@ -2,9 +2,9 @@ package decode
 
 import (
 	"errors"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/beevik/etree"
 	PTN "github.com/middelink/go-parse-torrent-name"
 	"os"
@@ -34,7 +34,7 @@ func getImdbAndYearMovieXml(movieFilePath string) (types.VideoIMDBInfo, error) {
 	if videoInfo.ImdbId != "" {
 		return videoInfo, nil
 	}
-	return videoInfo, common.CanNotFindIMDBID
+	return videoInfo, common2.CanNotFindIMDBID
 }
 
 func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo, error) {
@@ -91,7 +91,7 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo,
 	if imdbInfo.ImdbId != "" {
 		return imdbInfo, nil
 	}
-	return imdbInfo, common.CanNotFindIMDBID
+	return imdbInfo, common2.CanNotFindIMDBID
 }
 
 // GetImdbInfo4Movie 从电影视频文件获取 IMDB info
@@ -135,7 +135,7 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	}
 	// 根据找到的开始解析
 	if movieNameNfoFPath == "" && movieXmlFPath == "" && nfoFilePath == "" {
-		return imdbInfo, common.NoMetadataFile
+		return imdbInfo, common2.NoMetadataFile
 	}
 	// 优先分析 movieName.nfo 文件
 	if movieNameNfoFPath != "" {
@@ -163,7 +163,7 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 		}
 	}
 
-	return imdbInfo, common.CanNotFindIMDBID
+	return imdbInfo, common2.CanNotFindIMDBID
 }
 
 // GetImdbInfo4SeriesDir 从一个连续剧的根目录获取 IMDB info
@@ -193,7 +193,7 @@ func GetImdbInfo4SeriesDir(seriesDir string) (types.VideoIMDBInfo, error) {
 	}
 	// 根据找到的开始解析
 	if nfoFilePath == "" {
-		return imdbInfo, common.NoMetadataFile
+		return imdbInfo, common2.NoMetadataFile
 	}
 	imdbInfo, err = getImdbAndYearNfo(nfoFilePath, "tvshow")
 	if err != nil {
@@ -272,7 +272,7 @@ func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoIMDBInfo, error
 	if imdbInfo.ReleaseDate != "" {
 		return imdbInfo, nil
 	}
-	return imdbInfo, common.CanNotFindEpAiredTime
+	return imdbInfo, common2.CanNotFindEpAiredTime
 }
 
 // GetVideoInfoFromFileName 从文件名推断文件信息
@@ -433,7 +433,7 @@ func IsFakeBDMVWorked(fakseVideFPath string) (bool, string) {
 
 	CERDir := filepath.Join(rootDir, "CERTIFICATE")
 	BDMVDir := filepath.Join(rootDir, "BDMV")
-	idBDMVFPath := filepath.Join(CERDir, common.FileBDMV)
+	idBDMVFPath := filepath.Join(CERDir, common2.FileBDMV)
 
 	if IsDir(CERDir) == true && IsDir(BDMVDir) == true && IsFile(idBDMVFPath) == true {
 		return true, idBDMVFPath

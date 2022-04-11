@@ -1,6 +1,8 @@
 package settings
 
-import "github.com/allanpk716/ChineseSubFinder/internal/common"
+import (
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
+)
 
 type AdvancedSettings struct {
 	ProxySettings              *ProxySettings     `json:"proxy_settings"`
@@ -12,7 +14,8 @@ type AdvancedSettings struct {
 	CustomVideoExts            []string           `json:"custom_video_exts""`             // 自定义视频扩展名，是在原有基础上新增。
 	FixTimeLine                bool               `json:"fix_time_line"`                  // 开启校正字幕时间轴，默认 false
 	Topic                      int                `json:"topic"`                          // 搜索结果的时候，返回 Topic N 以内的
-	SuppliersSettings          *SuppliersSettings `json:"suppliers_settings"`
+	SuppliersSettings          *SuppliersSettings `json:"suppliers_settings"`             // 每个字幕源的设置
+	TaskQueue                  *TaskQueue         `json:"task_queue"`                     // 任务队列的设置
 }
 
 func NewAdvancedSettings() *AdvancedSettings {
@@ -21,5 +24,6 @@ func NewAdvancedSettings() *AdvancedSettings {
 		CustomVideoExts:   make([]string, 0),
 		Topic:             common.DownloadSubsPerSite,
 		SuppliersSettings: NewSuppliersSettings(),
+		TaskQueue:         NewTaskQueue(),
 	}
 }

@@ -14,11 +14,11 @@ import (
 	"time"
 )
 
-// GetVideoInfoFromIMDB 从 IMDB ID 查询影片的信息
-func GetVideoInfoFromIMDB(imdbID string, _proxySettings ...settings.ProxySettings) (*imdb.Title, error) {
+// GetVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
+func GetVideoInfoFromIMDBWeb(imdbID string, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
 
 	var cli *http.Client
-	var proxySettings settings.ProxySettings
+	var proxySettings *settings.ProxySettings
 	if len(_proxySettings) > 0 && _proxySettings[0].UseHttpProxy == true || len(_proxySettings[0].HttpProxyAddress) > 0 {
 		proxySettings = _proxySettings[0]
 
@@ -51,12 +51,7 @@ func GetVideoInfoFromIMDB(imdbID string, _proxySettings ...settings.ProxySetting
 }
 
 // GetVideoIMDBInfoFromLocal 从本地获取 IMDB 信息，如果找不到则去网络获取并写入本地缓存
-func GetVideoIMDBInfoFromLocal(imdbID string, _proxySettings ...settings.ProxySettings) (*gModels.IMDBInfo, error) {
-
-	var proxySettings settings.ProxySettings
-	if len(_proxySettings) > 0 {
-		proxySettings = _proxySettings[0]
-	}
+func GetVideoIMDBInfoFromLocal(imdbID string, _proxySettings ...*settings.ProxySettings) (*gModels.IMDBInfo, error) {
 
 	log_helper.GetLogger().Debugln("GetVideoIMDBInfoFromLocal", 0)
 
@@ -69,7 +64,7 @@ func GetVideoIMDBInfoFromLocal(imdbID string, _proxySettings ...settings.ProxySe
 
 	if len(imdbInfos) <= 0 {
 		// 没有找到，去网上获取
-		t, err := GetVideoInfoFromIMDB(imdbID, proxySettings)
+		t, err := GetVideoInfoFromIMDBWeb(imdbID, _proxySettings...)
 		if err != nil {
 			return nil, err
 		}
@@ -93,12 +88,12 @@ func GetVideoIMDBInfoFromLocal(imdbID string, _proxySettings ...settings.ProxySe
 }
 
 // IsChineseVideo 从 imdbID 去查询判断是否是中文视频
-func IsChineseVideo(imdbID string, _proxySettings ...settings.ProxySettings) (bool, *gModels.IMDBInfo, error) {
+func IsChineseVideo(imdbID string, _proxySettings ...*settings.ProxySettings) (bool, *gModels.IMDBInfo, error) {
 
 	const chName0 = "chinese"
 	const chName1 = "mandarin"
 
-	var proxySettings settings.ProxySettings
+	var proxySettings *settings.ProxySettings
 	if len(_proxySettings) > 0 {
 		proxySettings = _proxySettings[0]
 	}

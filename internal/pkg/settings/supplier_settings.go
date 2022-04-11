@@ -1,6 +1,8 @@
 package settings
 
-import "github.com/allanpk716/ChineseSubFinder/internal/common"
+import (
+	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
+)
 
 type SuppliersSettings struct {
 	Xunlei  *OneSupplierSettings `json:"xunlei"`
@@ -11,10 +13,10 @@ type SuppliersSettings struct {
 
 func NewSuppliersSettings() *SuppliersSettings {
 	return &SuppliersSettings{
-		Xunlei:  NewOneSupplierSettings(common.SubSiteXunLei, common.SubXunLeiRootUrlDef, -1),
-		Shooter: NewOneSupplierSettings(common.SubSiteShooter, common.SubShooterRootUrlDef, -1),
-		SubHD:   NewOneSupplierSettings(common.SubSiteSubHd, common.SubSubHDRootUrlDef, 50),
-		Zimuku:  NewOneSupplierSettings(common.SubSiteZiMuKu, common.SubZiMuKuRootUrlDef, 50),
+		Xunlei:  NewOneSupplierSettings(common2.SubSiteXunLei, common2.SubXunLeiRootUrlDef, -1),
+		Shooter: NewOneSupplierSettings(common2.SubSiteShooter, common2.SubShooterRootUrlDef, -1),
+		SubHD:   NewOneSupplierSettings(common2.SubSiteSubHd, common2.SubSubHDRootUrlDef, 50),
+		Zimuku:  NewOneSupplierSettings(common2.SubSiteZiMuKu, common2.SubZiMuKuRootUrlDef, 50),
 	}
 }
 

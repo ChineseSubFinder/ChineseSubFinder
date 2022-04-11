@@ -229,9 +229,3 @@ func (d *Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFi
 
 	return nil
 }
-
-type DownloadInputData struct {
-	OneVideoFullPath string
-	OneSeriesPath    string
-	RootDirPath      string
-}

@@ -27,4 +27,7 @@ const (
 
 	// 今日有那些视频进行了字幕的下载
 	BucketNamePrefixDailyVideoDownloadCounter = "DailyVideoDownloadCounter"
+
+	// 单机缓存的视频下载队列
+	BucketNamePrefixVideoSubDownloadQueue = "VideoSubDownloadQueue"
 )

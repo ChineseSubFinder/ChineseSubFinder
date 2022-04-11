@@ -12,7 +12,7 @@ import (
 
 func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 
-	browser, err := rod_helper.NewBrowser("", true, settings.NewSettings().SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowser("", true, settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 
 func TestSupplier_GetSubListFromFile(t *testing.T) {
 
-	browser, err := rod_helper.NewBrowser("", true, settings.NewSettings().SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowser("", true, settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +73,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(ser, nil, false)
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(ser, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,7 +97,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 
 func TestSupplier_getSubListFromKeyword(t *testing.T) {
 
-	browser, err := rod_helper.NewBrowser("", true, settings.NewSettings().SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowser("", true, settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		t.Fatal(err)
 	}

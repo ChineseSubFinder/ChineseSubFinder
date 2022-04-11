@@ -3,7 +3,6 @@ package pre_download_process
 import (
 	"errors"
 	"fmt"
-	commonValue "github.com/allanpk716/ChineseSubFinder/internal/common"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
@@ -20,6 +19,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/url_connectedness_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/sirupsen/logrus"
 	"time"
 )
@@ -67,7 +67,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 		p.log.Errorln("something_static.GetCodeFromWeb", err)
 		p.log.Errorln("Skip Subhd download")
 		// 没有则需要清空
-		commonValue.SubhdCode = ""
+		common2.SubhdCode = ""
 	} else {
 
 		// 获取到的更新时间不是当前的日期，那么本次也跳过本次
@@ -75,17 +75,17 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 		if err != nil {
 			p.log.Errorln("something_static.GetCodeFromWeb.time.Parse", err)
 			// 没有则需要清空
-			commonValue.SubhdCode = ""
+			common2.SubhdCode = ""
 		} else {
 
 			nowTime := time.Now()
 			if codeTime.YearDay() != nowTime.YearDay() {
 				// 没有则需要清空
-				commonValue.SubhdCode = ""
+				common2.SubhdCode = ""
 				p.log.Warningln("something_static.GetCodeFromWeb, GetCodeTime:", updateTimeString, "NowTime:", time.Now().String(), "Skip")
 			} else {
 				p.log.Infoln("GetCode", updateTimeString, code)
-				commonValue.SubhdCode = code
+				common2.SubhdCode = code
 			}
 		}
 	}
@@ -98,7 +98,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 		xunlei.NewSupplier(p.sets, p.log),
 		shooter.NewSupplier(p.sets, p.log),
 	)
-	if commonValue.SubhdCode != "" {
+	if common2.SubhdCode != "" {
 		// 如果找到 code 了，那么就可以继续用这个实例
 		p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.sets, p.log))
 	}
@@ -194,7 +194,7 @@ func (p *PreDownloadProcess) HotFix() *PreDownloadProcess {
 	p.log.Infoln("PreDownloadProcess.HotFix() Start...")
 	// ------------------------------------------------------------------------
 	// 开始修复
-	p.log.Infoln(commonValue.NotifyStringTellUserWait)
+	p.log.Infoln(common2.NotifyStringTellUserWait)
 	err := hot_fix.HotFixProcess(types.HotFixParam{
 		MovieRootDirs:  p.sets.CommonSettings.MoviePaths,
 		SeriesRootDirs: p.sets.CommonSettings.SeriesPaths,
@@ -225,7 +225,7 @@ func (p *PreDownloadProcess) ChangeSubNameFormat() *PreDownloadProcess {
 		如果数据库没有记录经过转换，那么默认从 Emby 的格式作为检测的起点，转换到目标的格式
 		然后需要在数据库中记录本次的转换结果
 	*/
-	p.log.Infoln(commonValue.NotifyStringTellUserWait)
+	p.log.Infoln(common2.NotifyStringTellUserWait)
 	renameResults, err := sub_formatter.SubFormatChangerProcess(
 		p.sets.CommonSettings.MoviePaths,
 		p.sets.CommonSettings.SeriesPaths,

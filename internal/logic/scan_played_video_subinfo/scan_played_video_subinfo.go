@@ -3,7 +3,6 @@ package scan_played_video_subinfo
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
@@ -22,6 +21,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_share_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_control"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubModels/models"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -291,7 +291,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	s.log.Debugln(1)
 
-	// 使用 shooter 的技术 hash 的算法，得到视频的唯一 ID
+	// 使用本程序的 hash 的算法，得到视频的唯一 ID
 	fileHash, err := sub_file_hash.Calculate(videoFPath)
 	if err != nil {
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".ComputeFileHash", videoFPath, err)
@@ -392,7 +392,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	if isMovie == false {
 		// 连续剧的时候，如果可能应该获取是 第几季  第几集
-		torrentInfo, _, err := decode.GetVideoInfoFromFileFullPath(subCacheFPath)
+		torrentInfo, _, err := decode.GetVideoInfoFromFileFullPath(videoFPath)
 		if err != nil {
 			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoInfoFromFileFullPath", imdbInfo4Video.Title, err)
 			return

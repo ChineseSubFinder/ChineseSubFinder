@@ -219,7 +219,8 @@ func (ch *CronHelper) coreSubDownloadProcess() {
 		return
 	}
 	// 开始下载
-	ch.dh = downloader_helper.NewDownloaderHelper(*settings.GetSettings(true),
+	ch.dh = downloader_helper.NewDownloaderHelper(settings.GetSettings(true),
+		ch.log,
 		preDownloadProcess.SubSupplierHub)
 	err = ch.dh.Start()
 	if err != nil {

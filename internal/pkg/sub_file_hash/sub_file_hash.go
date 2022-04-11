@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"math"
 	"os"
 )

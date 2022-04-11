@@ -2,13 +2,13 @@ package emby_helper
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/path_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/panjf2000/ants/v2"
@@ -378,7 +378,7 @@ func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMo
 
 		if len(mixInfo.VideoInfo.MediaSources) > 0 && mixInfo.VideoInfo.MediaSources[0].Container == "bluray" {
 			// 这个就是蓝光了
-			fakeVideoFPath := filepath.Join(mixInfo.VideoInfo.Path, filepath.Base(mixInfo.VideoInfo.Path)+common.VideoExtMp4)
+			fakeVideoFPath := filepath.Join(mixInfo.VideoInfo.Path, filepath.Base(mixInfo.VideoInfo.Path)+common2.VideoExtMp4)
 			mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(fakeVideoFPath, pathSlices[0].Path, nowPhRootPath)
 			// 这个电影的文件夹
 			mixInfo.VideoFolderName = filepath.Base(filepath.Dir(fakeVideoFPath))
@@ -515,8 +515,8 @@ func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries
 // filterNoChineseSubVideoList 将没有中文字幕的视频找出来
 func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) ([]emby.EmbyMixInfo, error) {
 	currentTime := time.Now()
-	dayRange3Months, _ := time.ParseDuration(common.DownloadSubDuring3Months)
-	dayRange7Days, _ := time.ParseDuration(common.DownloadSubDuring7Days)
+	dayRange3Months, _ := time.ParseDuration(common2.DownloadSubDuring3Months)
+	dayRange7Days, _ := time.ParseDuration(common2.DownloadSubDuring7Days)
 
 	var noSubVideoList = make([]emby.EmbyMixInfo, 0)
 	// TODO 这里有一种情况需要考虑的，如果内置有中文的字幕，那么是否需要跳过，目前暂定的一定要有外置的字幕
@@ -667,7 +667,7 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 		var tmpSubContentLenList = make([]int, 0)
 		for _, index := range insideEngSUbIndexList {
 			// TODO 这里默认是去 Emby 去拿字幕，但是其实可以缓存在视频文件同级的目录下，这样后续就无需多次下载了，毕竟每次下载都需要读取完整的视频
-			subFileData, err := em.embyApi.GetSubFileData(videoId, mediaSourcesId, fmt.Sprintf("%d", index), common.SubExtSRT)
+			subFileData, err := em.embyApi.GetSubFileData(videoId, mediaSourcesId, fmt.Sprintf("%d", index), common2.SubExtSRT)
 			if err != nil {
 				return false, nil, nil, err
 			}
@@ -683,9 +683,9 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 	}
 	// 这里才是下载最佳的那个字幕
 	for i := 0; i < 2; i++ {
-		tmpExt := common.SubExtSRT
+		tmpExt := common2.SubExtSRT
 		if i == 1 {
-			tmpExt = common.SubExtASS
+			tmpExt = common2.SubExtASS
 		}
 		subFileData, err := em.embyApi.GetSubFileData(videoId, mediaSourcesId, fmt.Sprintf("%d", InsideEngSubIndex), tmpExt)
 		if err != nil {

@@ -1,6 +1,8 @@
 package settings
 
-import "github.com/allanpk716/ChineseSubFinder/internal/common"
+import (
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
+)
 
 type EmbySettings struct {
 	Enable                bool              `json:"enable"`                   // 是否启用

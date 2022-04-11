@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
@@ -16,6 +15,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/url_connectedness_helper"
+	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -45,7 +45,7 @@ func NewSupplier(_settings *settings.Settings, _logger *logrus.Logger) *Supplier
 
 	sup := Supplier{}
 	sup.log = _logger
-	sup.topic = common.DownloadSubsPerSite
+	sup.topic = common2.DownloadSubsPerSite
 
 	sup.settings = _settings
 	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
@@ -54,10 +54,10 @@ func NewSupplier(_settings *settings.Settings, _logger *logrus.Logger) *Supplier
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
 	// 默认超时是 2 * 60s，如果是调试模式则是 5 min
-	sup.tt = common.HTMLTimeOut
+	sup.tt = common2.HTMLTimeOut
 	sup.debugMode = sup.settings.AdvancedSettings.DebugMode
 	if sup.debugMode == true {
-		sup.tt = common.OneMovieProcessTimeOut
+		sup.tt = common2.OneMovieProcessTimeOut
 	}
 
 	return &sup
@@ -102,7 +102,7 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 }
 
 func (s *Supplier) GetSupplierName() string {
-	return common.SubSiteSubHd
+	return common2.SubSiteSubHd
 }
 
 func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
@@ -347,7 +347,7 @@ func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 		}
 	}()
 
-	result, page, err := rod_helper.HttpGetFromBrowser(browser, fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl+common.SubSubHDSearchUrl, url.QueryEscape(keyword)), s.tt)
+	result, page, err := rod_helper.HttpGetFromBrowser(browser, fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl+common2.SubSubHDSearchUrl, url.QueryEscape(keyword)), s.tt)
 	if err != nil {
 		return "", err
 	}
@@ -358,7 +358,7 @@ func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 	re := regexp.MustCompile(`共\s*(\d+)\s*条`)
 	matched := re.FindAllStringSubmatch(result, -1)
 	if matched == nil || len(matched) < 1 {
-		return "", common.SubHDStep0SubCountElementNotFound
+		return "", common2.SubHDStep0SubCountElementNotFound
 	}
 	subCount, err := decode.GetNumber2int(matched[0][0])
 	if err != nil {
@@ -378,7 +378,7 @@ func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 	if ok == true {
 
 		if len(imgSelection.Nodes) < 1 {
-			return "", common.SubHDStep0ImgParentLessThan1
+			return "", common2.SubHDStep0ImgParentLessThan1
 		}
 		step1Url := ""
 		if imgSelection.Nodes[0].Parent.Data == "a" {
@@ -399,11 +399,11 @@ func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 			}
 		}
 		if step1Url == "" {
-			return "", common.SubHDStep0HrefIsNull
+			return "", common2.SubHDStep0HrefIsNull
 		}
 		return step1Url, nil
 	} else {
-		return "", common.SubHDStep0HrefIsNull
+		return "", common2.SubHDStep0HrefIsNull
 	}
 }
 
@@ -549,7 +549,7 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, 
 			element.MustClick()
 			time.Sleep(time.Second * 2)
 			// 填写“验证码”
-			page.MustEval(`$("#gzhcode").attr("value","` + common.SubhdCode + `");`)
+			page.MustEval(`$("#gzhcode").attr("value","` + common2.SubhdCode + `");`)
 			// 是否有“完成验证”按钮
 			downBtn := doc.Find(btnCommitCode)
 			if len(downBtn.Nodes) < 1 {
@@ -609,7 +609,7 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, 
 	hdContent.Data = fileByte
 
 	if downloadSuccess == false {
-		return false, &hdContent, common.SubHDStep2ExCannotFindDownloadBtn
+		return false, &hdContent, common2.SubHDStep2ExCannotFindDownloadBtn
 	}
 
 	// 下载成功需要统计到今天的次数中

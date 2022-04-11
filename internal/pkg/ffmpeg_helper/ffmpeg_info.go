@@ -1,12 +1,12 @@
 package ffmpeg_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"os"
 	"path/filepath"

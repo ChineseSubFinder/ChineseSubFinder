@@ -2,7 +2,6 @@ package sub_helper
 
 import (
 	"errors"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/archive_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
@@ -12,6 +11,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"math"

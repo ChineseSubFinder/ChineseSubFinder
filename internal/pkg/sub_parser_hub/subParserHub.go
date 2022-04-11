@@ -1,10 +1,10 @@
 package sub_parser_hub
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	languageConst "github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"os"

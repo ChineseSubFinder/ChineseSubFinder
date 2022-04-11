@@ -2,7 +2,6 @@ package series_helper
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
@@ -13,6 +12,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -24,24 +24,21 @@ import (
 	"time"
 )
 
-// ReadSeriesInfoFromDir 读取剧集的信息，只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList
-func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *gModels.IMDBInfo, forcedScanAndDownloadSub bool) (*series.SeriesInfo, error) {
+func readSeriesInfo(seriesDir string, _proxySettings ...*settings.ProxySettings) (*series.SeriesInfo, map[string][]series.SubInfo, error) {
 
 	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
 
-	seriesInfo, err := getSeriesInfoFromDir(seriesDir, imdbInfo)
+	seriesInfo, err := getSeriesInfoFromDir(seriesDir, _proxySettings...)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	// 搜索所有的视频
-	videoFiles, err := my_util.SearchMatchedVideoFile(log_helper.GetLogger(), seriesDir)
-	if err != nil {
-		return nil, err
-	}
+	seriesInfo.NeedDlSeasonDict = make(map[int]int)
+	seriesInfo.NeedDlEpsKeyList = make(map[string]series.EpisodeInfo)
+
 	// 搜索所有的字幕
 	subFiles, err := sub_helper.SearchMatchedSubFileByDir(seriesDir)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	// 字幕字典 S01E01 - []SubInfo
 	SubDict := make(map[string][]series.SubInfo)
@@ -80,6 +77,22 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *gModels.IMDBInfo, forcedS
 		}
 		SubDict[epsKey] = append(SubDict[epsKey], oneFileSubInfo)
 	}
+
+	return seriesInfo, SubDict, nil
+}
+
+// ReadSeriesInfoFromDir 读取剧集的信息，只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList
+func ReadSeriesInfoFromDir(seriesDir string, forcedScanAndDownloadSub bool, _proxySettings ...*settings.ProxySettings) (*series.SeriesInfo, error) {
+
+	seriesInfo, SubDict, err := readSeriesInfo(seriesDir, _proxySettings...)
+	if err != nil {
+		return nil, err
+	}
+	// 搜索所有的视频
+	videoFiles, err := my_util.SearchMatchedVideoFile(log_helper.GetLogger(), seriesDir)
+	if err != nil {
+		return nil, err
+	}
 	// 视频字典 S01E01 - EpisodeInfo
 	EpisodeDict := make(map[string]series.EpisodeInfo)
 	for _, videoFile := range videoFiles {
@@ -96,17 +109,15 @@ func ReadSeriesInfoFromDir(seriesDir string, imdbInfo *gModels.IMDBInfo, forcedS
 	return seriesInfo, nil
 }
 
-// ReadSeriesInfoFromEmby 将 Emby API 读取到的数据进行转换到通用的结构中，需要填充那些剧集需要下载，这样要的是一个连续剧的，不是所有的传入
-func ReadSeriesInfoFromEmby(seriesDir string, imdbInfo *gModels.IMDBInfo, seriesList []emby.EmbyMixInfo) (*series.SeriesInfo, error) {
+// ReadSeriesInfoFromEmby 将 Emby API 读取到的数据进行转换到通用的结构中，需要填充那些剧集需要下载，这样要的是一个连续剧的，不是所有的传入(只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList)
+func ReadSeriesInfoFromEmby(seriesDir string, seriesList []emby.EmbyMixInfo, _proxySettings ...*settings.ProxySettings) (*series.SeriesInfo, error) {
 
-	seriesInfo, err := getSeriesInfoFromDir(seriesDir, imdbInfo)
+	seriesInfo, SubDict, err := readSeriesInfo(seriesDir, _proxySettings...)
 	if err != nil {
 		return nil, err
 	}
-	seriesInfo.NeedDlSeasonDict = make(map[int]int)
-	seriesInfo.NeedDlEpsKeyList = make(map[string]series.EpisodeInfo)
+
 	EpisodeDict := make(map[string]series.EpisodeInfo)
-	SubDict := make(map[string][]series.SubInfo)
 	for _, info := range seriesList {
 		getEpsInfoAndSubDic(info.PhysicalVideoFileFullPath, EpisodeDict, SubDict)
 	}
@@ -122,17 +133,14 @@ func ReadSeriesInfoFromEmby(seriesDir string, imdbInfo *gModels.IMDBInfo, series
 }
 
 // SkipChineseSeries 跳过中文连续剧
-func SkipChineseSeries(seriesRootPath string, _proxySettings ...settings.ProxySettings) (bool, *gModels.IMDBInfo, error) {
-	var proxySettings settings.ProxySettings
-	if len(_proxySettings) > 0 {
-		proxySettings = _proxySettings[0]
-	}
+func SkipChineseSeries(seriesRootPath string, _proxySettings ...*settings.ProxySettings) (bool, *gModels.IMDBInfo, error) {
+
 	imdbInfo, err := decode.GetImdbInfo4SeriesDir(seriesRootPath)
 	if err != nil {
 		return false, nil, err
 	}
 
-	isChineseVideo, t, err := imdb_helper.IsChineseVideo(imdbInfo.ImdbId, proxySettings)
+	isChineseVideo, t, err := imdb_helper.IsChineseVideo(imdbInfo.ImdbId, _proxySettings...)
 	if err != nil {
 		return false, nil, err
 	}
@@ -255,7 +263,7 @@ func GetSeriesListFromDirs(dirs []string) (*treemap.Map, error) {
 			fileFullPathMap.Put(dir, seriesList)
 		} else {
 			value = append(value.([]string), seriesList...)
-			fileFullPathMap.Put(value, dir)
+			fileFullPathMap.Put(dir, value)
 		}
 	}
 
@@ -330,19 +338,25 @@ func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo, forcedScanAndD
 	return needDlSubEpsList, needDlSeasonList
 }
 
-func getSeriesInfoFromDir(seriesDir string, imdbInfo *gModels.IMDBInfo) (*series.SeriesInfo, error) {
+func getSeriesInfoFromDir(seriesDir string, _proxySettings ...*settings.ProxySettings) (*series.SeriesInfo, error) {
 	seriesInfo := series.SeriesInfo{}
 	// 只考虑 IMDB 去查询，文件名目前发现可能会跟电影重复，导致很麻烦，本来也有前置要求要削刮器处理的
 	videoInfo, err := decode.GetImdbInfo4SeriesDir(seriesDir)
 	if err != nil {
 		return nil, err
 	}
+
+	imdbInfoFromLocal, err := imdb_helper.GetVideoIMDBInfoFromLocal(videoInfo.ImdbId, _proxySettings...)
+	if err != nil {
+		return nil, err
+	}
+
 	// 使用 IMDB ID 得到通用的剧集名称
 	// 以 IMDB 的信息为准
-	if imdbInfo != nil {
-		seriesInfo.Name = imdbInfo.Name
-		seriesInfo.ImdbId = imdbInfo.IMDBID
-		seriesInfo.Year = imdbInfo.Year
+	if imdbInfoFromLocal != nil {
+		seriesInfo.Name = imdbInfoFromLocal.Name
+		seriesInfo.ImdbId = imdbInfoFromLocal.IMDBID
+		seriesInfo.Year = imdbInfoFromLocal.Year
 	} else {
 		seriesInfo.Name = videoInfo.Title
 		seriesInfo.ImdbId = videoInfo.ImdbId
