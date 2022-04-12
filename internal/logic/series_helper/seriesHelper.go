@@ -110,7 +110,7 @@ func ReadSeriesInfoFromDir(seriesDir string, forcedScanAndDownloadSub bool, _pro
 }
 
 // ReadSeriesInfoFromEmby 将 Emby API 读取到的数据进行转换到通用的结构中，需要填充那些剧集需要下载，这样要的是一个连续剧的，不是所有的传入(只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList)
-func ReadSeriesInfoFromEmby(seriesDir string, seriesList []emby.EmbyMixInfo, _proxySettings ...*settings.ProxySettings) (*series.SeriesInfo, error) {
+func ReadSeriesInfoFromEmby(seriesDir string, seriesVideoList []emby.EmbyMixInfo, forcedScanAndDownloadSub bool, _proxySettings ...*settings.ProxySettings) (*series.SeriesInfo, error) {
 
 	seriesInfo, SubDict, err := readSeriesInfo(seriesDir, _proxySettings...)
 	if err != nil {
@@ -118,7 +118,7 @@ func ReadSeriesInfoFromEmby(seriesDir string, seriesList []emby.EmbyMixInfo, _pr
 	}
 
 	EpisodeDict := make(map[string]series.EpisodeInfo)
-	for _, info := range seriesList {
+	for _, info := range seriesVideoList {
 		getEpsInfoAndSubDic(info.PhysicalVideoFileFullPath, EpisodeDict, SubDict)
 	}
 
@@ -127,7 +127,7 @@ func ReadSeriesInfoFromEmby(seriesDir string, seriesList []emby.EmbyMixInfo, _pr
 		seriesInfo.SeasonDict[episodeInfo.Season] = episodeInfo.Season
 	}
 
-	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(seriesInfo, false)
+	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(seriesInfo, forcedScanAndDownloadSub)
 
 	return seriesInfo, nil
 }
