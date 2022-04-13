@@ -27,7 +27,7 @@ type OneJob struct {
 func NewOneJob(videoType common.VideoType, videoFPath string, taskPriority int) *OneJob {
 
 	ob := &OneJob{VideoType: videoType, VideoFPath: videoFPath, TaskPriority: taskPriority}
-	ob.Id = my_util.GenerateAccessToken() // 其实是 UUID
+	ob.Id = my_util.Get2UUID()
 	ob.VideoName = filepath.Base(videoFPath)
 	// -------------------------------------------------
 	// 使用本程序的 hash 的算法，得到视频的唯一 ID

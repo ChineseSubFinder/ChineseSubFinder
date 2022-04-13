@@ -658,6 +658,12 @@ func GenerateAccessToken() string {
 	return u4.String()
 }
 
+func Get2UUID() string {
+	u4 := uuid.New()
+	u5 := uuid.New()
+	return u4.String() + u5.String()
+}
+
 func UrlJoin(hostUrl, subUrl string) (string, error) {
 
 	u, err := url.Parse(hostUrl)
