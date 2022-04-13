@@ -59,6 +59,18 @@ func (d *DownloaderHelper) Start() error {
 			d.logger.Errorln("RestoreFixTimelineBK", err)
 		}
 	}
+	// 先进行扫描
+	scanResult, err := d.downloader.ScanMovieAndSeriesWait2DownloadSub()
+	if err != nil {
+		d.logger.Errorln("ScanMovieAndSeriesWait2DownloadSub", err)
+		return err
+	}
+	// 过滤出需要下载的视频有那些，并放入队列中
+	err = d.downloader.FilterMovieAndSeriesNeedDownload(scanResult)
+	if err != nil {
+		d.logger.Errorln("FilterMovieAndSeriesNeedDownload", err)
+		return err
+	}
 	// 开始下载，电影
 	err = d.downloader.DownloadSub4Movie()
 	if err != nil {

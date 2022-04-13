@@ -43,7 +43,6 @@ func NewOneJob(videoType common.VideoType, videoFPath string, taskPriority int) 
 	}
 	// -------------------------------------------------
 	ob.JobStatus = Waiting
-	ob.TaskPriority = 5
 	nTime := time.Now()
 	ob.AddedTime = nTime
 	ob.UpdateTime = nTime

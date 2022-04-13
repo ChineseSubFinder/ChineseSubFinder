@@ -68,7 +68,10 @@ require (
 	gorm.io/gorm v1.22.5
 )
 
-require github.com/dgraph-io/badger/v3 v3.2103.2
+require (
+	github.com/davecgh/go-spew v1.1.1
+	github.com/dgraph-io/badger/v3 v3.2103.2
+)
 
 require (
 	github.com/EDDYCJY/fake-useragent v0.2.0 // indirect

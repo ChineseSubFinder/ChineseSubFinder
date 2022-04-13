@@ -199,7 +199,8 @@ func (d *Downloader) filterMovieAndSeriesNeedDownloadNormal(normal *NormalScanVi
 		if d.subSupplierHub.MovieNeedDlSub(oneMovieFPath, d.needForcedScanAndDownSub) == false {
 			continue
 		}
-		_, err := d.downloadQueue.RPush(*TTaskqueue.NewOneJob(
+
+		err := d.downloadQueue.Push(*TTaskqueue.NewOneJob(
 			common.Movie, oneMovieFPath, 5,
 		))
 		if err != nil {
@@ -230,7 +231,7 @@ func (d *Downloader) filterMovieAndSeriesNeedDownloadNormal(normal *NormalScanVi
 				oneJob.Season = episodeInfo.Season
 				oneJob.Episode = episodeInfo.Episode
 
-				_, err = d.downloadQueue.RPush(*oneJob)
+				err = d.downloadQueue.Push(*oneJob)
 				if err != nil {
 					d.log.Errorln("FilterMovieAndSeriesNeedDownload.Normal.Series.NewOneJob", err)
 					continue
@@ -250,7 +251,7 @@ func (d *Downloader) filterMovieAndSeriesNeedDownloadEmby(emby *EmbyScanVideoRes
 		if d.subSupplierHub.MovieNeedDlSub(oneMovieFPath.PhysicalVideoFileFullPath, d.needForcedScanAndDownSub) == false {
 			continue
 		}
-		_, err := d.downloadQueue.RPush(*TTaskqueue.NewOneJob(
+		err := d.downloadQueue.Push(*TTaskqueue.NewOneJob(
 			common.Movie, oneMovieFPath.PhysicalVideoFileFullPath, 5,
 		))
 		if err != nil {
@@ -281,7 +282,7 @@ func (d *Downloader) filterMovieAndSeriesNeedDownloadEmby(emby *EmbyScanVideoRes
 				oneJob.Season = episodeInfo.Season
 				oneJob.Episode = episodeInfo.Episode
 
-				_, err = d.downloadQueue.RPush(*oneJob)
+				err = d.downloadQueue.Push(*oneJob)
 				if err != nil {
 					d.log.Errorln("FilterMovieAndSeriesNeedDownload.Normal.Series.NewOneJob", err)
 					continue
