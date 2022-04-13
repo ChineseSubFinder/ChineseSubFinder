@@ -204,7 +204,11 @@ func (d *Downloader) filterMovieAndSeriesNeedDownloadNormal(normal *NormalScanVi
 			common.Movie, oneMovieFPath, 5,
 		))
 		if err != nil {
-			return err
+			d.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.Movie.NewOneJob", err)
+			continue
+		}
+		if bok == false {
+			d.log.Warningln("filterMovieAndSeriesNeedDownloadNormal", common.Movie.String(), oneMovieFPath, "downloadQueue.Add == false")
 		}
 	}
 	// Normal 过滤，连续剧
@@ -216,7 +220,7 @@ func (d *Downloader) filterMovieAndSeriesNeedDownloadNormal(normal *NormalScanVi
 			// 因为可能回去 Web 获取 IMDB 信息，所以这里的错误不返回
 			bNeedDlSub, seriesInfo, err := d.subSupplierHub.SeriesNeedDlSub(oneSeriesRootDir, d.needForcedScanAndDownSub)
 			if err != nil {
-				d.log.Errorln("FilterMovieAndSeriesNeedDownload.SeriesNeedDlSub", err)
+				d.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub", err)
 				continue
 			}
 			if bNeedDlSub == false {
@@ -231,10 +235,13 @@ func (d *Downloader) filterMovieAndSeriesNeedDownloadNormal(normal *NormalScanVi
 				oneJob.Season = episodeInfo.Season
 				oneJob.Episode = episodeInfo.Episode
 
-				err = d.downloadQueue.Push(*oneJob)
+				bok, err := d.downloadQueue.Add(*oneJob)
 				if err != nil {
-					d.log.Errorln("FilterMovieAndSeriesNeedDownload.Normal.Series.NewOneJob", err)
+					d.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.Series.NewOneJob", err)
 					continue
+				}
+				if bok == false {
+					d.log.Warningln("filterMovieAndSeriesNeedDownloadNormal", common.Series.String(), episodeInfo.FileFullPath, "downloadQueue.Add == false")
 				}
 			}
 		}
@@ -246,20 +253,23 @@ func (d *Downloader) filterMovieAndSeriesNeedDownloadNormal(normal *NormalScanVi
 func (d *Downloader) filterMovieAndSeriesNeedDownloadEmby(emby *EmbyScanVideoResult) error {
 	// ----------------------------------------
 	// Emby 过滤，电影
-	for _, oneMovieFPath := range emby.MovieSubNeedDlEmbyMixInfoList {
+	for _, oneMovieMixInfo := range emby.MovieSubNeedDlEmbyMixInfoList {
 		// 放入队列
-		if d.subSupplierHub.MovieNeedDlSub(oneMovieFPath.PhysicalVideoFileFullPath, d.needForcedScanAndDownSub) == false {
+		if d.subSupplierHub.MovieNeedDlSub(oneMovieMixInfo.PhysicalVideoFileFullPath, d.needForcedScanAndDownSub) == false {
 			continue
 		}
-		err := d.downloadQueue.Push(*TTaskqueue.NewOneJob(
-			common.Movie, oneMovieFPath.PhysicalVideoFileFullPath, 5,
+		bok, err := d.downloadQueue.Add(*TTaskqueue.NewOneJob(
+			common.Movie, oneMovieMixInfo.PhysicalVideoFileFullPath, 5,
 		))
 		if err != nil {
-			return err
+			d.log.Errorln("filterMovieAndSeriesNeedDownloadEmby.Movie.NewOneJob", err)
+			continue
+		}
+		if bok == false {
+			d.log.Warningln("filterMovieAndSeriesNeedDownloadEmby", common.Movie.String(), oneMovieMixInfo.PhysicalVideoFileFullPath, "downloadQueue.Add == false")
 		}
 	}
 	// Emby 过滤，连续剧
-
 	for _, embyMixInfos := range emby.SeriesSubNeedDlEmbyMixInfoMap {
 
 		for _, mixInfo := range embyMixInfos {
@@ -282,10 +292,13 @@ func (d *Downloader) filterMovieAndSeriesNeedDownloadEmby(emby *EmbyScanVideoRes
 				oneJob.Season = episodeInfo.Season
 				oneJob.Episode = episodeInfo.Episode
 
-				err = d.downloadQueue.Push(*oneJob)
+				bok, err := d.downloadQueue.Add(*oneJob)
 				if err != nil {
-					d.log.Errorln("FilterMovieAndSeriesNeedDownload.Normal.Series.NewOneJob", err)
+					d.log.Errorln("filterMovieAndSeriesNeedDownloadEmby.Series.NewOneJob", err)
 					continue
+				}
+				if bok == false {
+					d.log.Warningln("filterMovieAndSeriesNeedDownloadEmby", common.Series.String(), episodeInfo.FileFullPath, "downloadQueue.Add == false")
 				}
 			}
 		}
