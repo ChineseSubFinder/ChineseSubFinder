@@ -169,6 +169,9 @@ func (t *TaskQueue) GetOneWaiting() (bool, task_queue.OneJob, error) {
 
 func (t *TaskQueue) Get(status task_queue.JobStatus) (bool, []task_queue.OneJob, error) {
 
+	defer t.queueLock.Unlock()
+	t.queueLock.Lock()
+
 	outOneJobs := make([]task_queue.OneJob, 0)
 	// 如果队列里面没有东西，则返回 false
 	if t.isEmpty() == true {
@@ -192,6 +195,9 @@ func (t *TaskQueue) Get(status task_queue.JobStatus) (bool, []task_queue.OneJob,
 }
 
 func (t *TaskQueue) GetTaskPriority(taskPriority int, status task_queue.JobStatus) (bool, []task_queue.OneJob, error) {
+
+	defer t.queueLock.Unlock()
+	t.queueLock.Lock()
 
 	outOneJobs := make([]task_queue.OneJob, 0)
 	// 如果队列里面没有东西，则返回 false

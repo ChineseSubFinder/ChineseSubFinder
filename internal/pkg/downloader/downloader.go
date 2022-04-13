@@ -200,7 +200,7 @@ func (d *Downloader) filterMovieAndSeriesNeedDownloadNormal(normal *NormalScanVi
 			continue
 		}
 
-		err := d.downloadQueue.Push(*TTaskqueue.NewOneJob(
+		bok, err := d.downloadQueue.Add(*TTaskqueue.NewOneJob(
 			common.Movie, oneMovieFPath, 5,
 		))
 		if err != nil {
