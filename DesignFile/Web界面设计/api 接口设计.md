@@ -709,11 +709,15 @@
 
 ```javascript
 {
-  status: "rinning"; // running or stoped
+  status: "rinning"; // running or stopped or stopping
 }
 ```
 
-> running 或者是 stoped，前者是正在运行，后者是已经停止或者没有执行，如果开始的耗时的执行流程，停止的时候可以需要点时间，有可能上分钟级别。
+> 有三种状态：
+>
+> * running，正在运行中
+> * stopping，正在结束中
+> * stopped，已经结束
 
 返回 HTTP 码 204
 
