@@ -8,6 +8,7 @@ import (
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	subTimelineFixerPKG "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
@@ -227,35 +228,35 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 	// Emby 过滤，连续剧
 	for _, embyMixInfos := range emby.SeriesSubNeedDlEmbyMixInfoMap {
 
+		if len(embyMixInfos) < 1 {
+			continue
+		}
+
+		// 只需要从一集取信息即可
 		for _, mixInfo := range embyMixInfos {
 
-			// 因为可能回去 Web 获取 IMDB 信息，所以这里的错误不返回
-			bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(mixInfo.PhysicalSeriesRootDir, v.needForcedScanAndDownSub)
+			// 放入队列
+			oneJob := TTaskqueue.NewOneJob(
+				common.Series, mixInfo.PhysicalVideoFileFullPath, task_queue.DefaultTaskPriorityLevel,
+				mixInfo.VideoInfo.Id,
+			)
+
+			info, _, err := decode.GetVideoInfoFromFileFullPath(mixInfo.PhysicalVideoFileFullPath)
 			if err != nil {
-				v.log.Errorln("FilterMovieAndSeriesNeedDownload.SeriesNeedDlSub", err)
+				v.log.Errorln("filterMovieAndSeriesNeedDownloadEmby.Series.GetVideoInfoFromFileFullPath", err)
 				continue
 			}
-			if bNeedDlSub == false {
+			oneJob.Season = info.Season
+			oneJob.Episode = info.Episode
+			oneJob.SeriesRootDirPath = mixInfo.PhysicalSeriesRootDir
+
+			bok, err := v.downloadQueue.Add(*oneJob)
+			if err != nil {
+				v.log.Errorln("filterMovieAndSeriesNeedDownloadEmby.Series.NewOneJob", err)
 				continue
 			}
-
-			for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
-				// 放入队列
-				oneJob := TTaskqueue.NewOneJob(
-					common.Series, episodeInfo.FileFullPath, task_queue.DefaultTaskPriorityLevel,
-				)
-				oneJob.Season = episodeInfo.Season
-				oneJob.Episode = episodeInfo.Episode
-				oneJob.SeriesRootDirPath = seriesInfo.DirPath
-
-				bok, err := v.downloadQueue.Add(*oneJob)
-				if err != nil {
-					v.log.Errorln("filterMovieAndSeriesNeedDownloadEmby.Series.NewOneJob", err)
-					continue
-				}
-				if bok == false {
-					v.log.Warningln("filterMovieAndSeriesNeedDownloadEmby", common.Series.String(), episodeInfo.FileFullPath, "downloadQueue.Add == false")
-				}
+			if bok == false {
+				v.log.Warningln("filterMovieAndSeriesNeedDownloadEmby", common.Series.String(), mixInfo.PhysicalVideoFileFullPath, "downloadQueue.Add == false")
 			}
 		}
 	}

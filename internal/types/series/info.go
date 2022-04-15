@@ -22,6 +22,7 @@ type SeriesInfo struct {
 }
 
 type EpisodeInfo struct {
+	MediaServerInsideVideoID string
 	Title                    string
 	Season                   int
 	Episode                  int
