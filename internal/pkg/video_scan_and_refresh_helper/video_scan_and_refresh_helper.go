@@ -60,6 +60,13 @@ func (v *VideoScanAndRefreshHelper) ReadSpeFile() error {
 // ScanMovieAndSeriesWait2DownloadSub 扫描出有那些电影、连续剧需要进行字幕下载的
 func (v *VideoScanAndRefreshHelper) ScanMovieAndSeriesWait2DownloadSub() (*ScanVideoResult, error) {
 
+	if v.settings.EmbySettings.Enable == false {
+		v.embyHelper = nil
+
+	} else {
+		v.embyHelper = embyHelper.NewEmbyHelper(v.settings.EmbySettings)
+	}
+
 	var err error
 	// -----------------------------------------------------
 	// 强制下载和常规模式（没有媒体服务器）
@@ -120,14 +127,18 @@ func (v *VideoScanAndRefreshHelper) ScanMovieAndSeriesWait2DownloadSub() (*ScanV
 // FilterMovieAndSeriesNeedDownload 过滤出需要下载字幕的视频，比如是否跳过中文的剧集，是否超过3个月的下载时间，丢入队列中
 func (v *VideoScanAndRefreshHelper) FilterMovieAndSeriesNeedDownload(scanVideoResult *ScanVideoResult) error {
 
-	err := v.filterMovieAndSeriesNeedDownloadNormal(scanVideoResult.Normal)
-	if err != nil {
-		return err
+	if scanVideoResult.Normal != nil {
+		err := v.filterMovieAndSeriesNeedDownloadNormal(scanVideoResult.Normal)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = v.filterMovieAndSeriesNeedDownloadEmby(scanVideoResult.Emby)
-	if err != nil {
-		return err
+	if scanVideoResult.Emby != nil {
+		err := v.filterMovieAndSeriesNeedDownloadEmby(scanVideoResult.Emby)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -219,7 +230,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 		for _, mixInfo := range embyMixInfos {
 
 			// 因为可能回去 Web 获取 IMDB 信息，所以这里的错误不返回
-			bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(mixInfo.PhysicalRootPath, v.needForcedScanAndDownSub)
+			bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(mixInfo.PhysicalSeriesRootDir, v.needForcedScanAndDownSub)
 			if err != nil {
 				v.log.Errorln("FilterMovieAndSeriesNeedDownload.SeriesNeedDlSub", err)
 				continue

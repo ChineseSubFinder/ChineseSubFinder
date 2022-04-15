@@ -62,7 +62,7 @@ func NewScanPlayedVideoSubInfo(_settings settings.Settings) (*ScanPlayedVideoSub
 	scanPlayedVideoSubInfo.settings.Check()
 	// 初始化 Emby API 接口
 	if scanPlayedVideoSubInfo.settings.EmbySettings.Enable == true && scanPlayedVideoSubInfo.settings.EmbySettings.AddressUrl != "" && scanPlayedVideoSubInfo.settings.EmbySettings.APIKey != "" {
-		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(*scanPlayedVideoSubInfo.settings.EmbySettings)
+		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(scanPlayedVideoSubInfo.settings.EmbySettings)
 	}
 
 	// 初始化任务控制

@@ -23,13 +23,13 @@ import (
 
 type EmbyHelper struct {
 	embyApi    *embyHelper.EmbyApi
-	EmbyConfig settings.EmbySettings
+	EmbyConfig *settings.EmbySettings
 	threads    int
 	timeOut    time.Duration
 	listLock   sync.Mutex
 }
 
-func NewEmbyHelper(embyConfig settings.EmbySettings) *EmbyHelper {
+func NewEmbyHelper(embyConfig *settings.EmbySettings) *EmbyHelper {
 	em := EmbyHelper{EmbyConfig: embyConfig}
 	em.embyApi = embyHelper.NewEmbyApi(embyConfig)
 	em.threads = 6
@@ -407,6 +407,7 @@ func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMo
 			// 说明没有找到连续剧文件夹的名称，那么就应该跳过
 			return false
 		}
+		mixInfo.PhysicalSeriesRootDir = strings.ReplaceAll(mixInfo.Ancestors[ancestorIndex].Path, pathSlices[0].Path, nowPhRootPath)
 		mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
 		mixInfo.PhysicalRootPath = strings.ReplaceAll(mixInfo.Ancestors[ancestorIndex+1].Path, pathSlices[0].Path, nowPhRootPath)
 		// 这个剧集的文件夹

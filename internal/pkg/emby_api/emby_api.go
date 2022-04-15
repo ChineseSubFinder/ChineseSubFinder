@@ -14,13 +14,13 @@ import (
 )
 
 type EmbyApi struct {
-	embyConfig settings.EmbySettings
+	embyConfig *settings.EmbySettings
 	threads    int
 	timeOut    time.Duration
 	client     *resty.Client
 }
 
-func NewEmbyApi(embyConfig settings.EmbySettings) *EmbyApi {
+func NewEmbyApi(embyConfig *settings.EmbySettings) *EmbyApi {
 	em := EmbyApi{}
 	em.embyConfig = embyConfig
 	// 检查是否超过范围
