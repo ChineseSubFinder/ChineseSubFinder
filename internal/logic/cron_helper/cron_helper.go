@@ -163,6 +163,7 @@ func (ch *CronHelper) Stop() {
 
 	ch.cronLock.Lock()
 	ch.cronHelperRunning = false
+	ch.stopping = false
 	ch.cronLock.Unlock()
 
 	common.SetSubScanJobStatusNil()
