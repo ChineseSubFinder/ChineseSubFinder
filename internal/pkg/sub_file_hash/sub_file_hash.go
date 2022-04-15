@@ -9,6 +9,7 @@ import (
 	"os"
 )
 
+// Calculate 视频文件的唯一ID
 func Calculate(filePath string) (string, error) {
 
 	h := sha1.New()

@@ -153,7 +153,7 @@ func SkipChineseSeries(seriesRootPath string, _proxySettings ...*settings.ProxyS
 }
 
 // DownloadSubtitleInAllSiteByOneSeries 一部连续剧，在所有的网站，下载相应的字幕
-func DownloadSubtitleInAllSiteByOneSeries(Suppliers []ifaces.ISupplier, seriesInfo *series.SeriesInfo, i int) []supplier.SubInfo {
+func DownloadSubtitleInAllSiteByOneSeries(Suppliers []ifaces.ISupplier, seriesInfo *series.SeriesInfo, i int64) []supplier.SubInfo {
 
 	defer func() {
 		log_helper.GetLogger().Infoln(i, "DlSub End", seriesInfo.DirPath)

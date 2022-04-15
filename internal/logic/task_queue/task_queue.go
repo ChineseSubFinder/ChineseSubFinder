@@ -1,9 +1,11 @@
 package task_queue
 
 import (
+	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
+	taskQueue2 "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/sirupsen/logrus"
@@ -77,6 +79,26 @@ func (t *TaskQueue) Size() int {
 	return t.taskKeyMap.Size()
 }
 
+func (t *TaskQueue) checkPriority(oneJob taskQueue2.OneJob) taskQueue2.OneJob {
+
+	if oneJob.TaskPriority > taskPriorityCount {
+		oneJob.TaskPriority = taskPriorityCount
+	}
+
+	if oneJob.TaskPriority < 0 {
+		oneJob.TaskPriority = 0
+	}
+
+	return oneJob
+}
+
+func (t *TaskQueue) degrade(oneJob taskQueue2.OneJob) taskQueue2.OneJob {
+
+	oneJob.TaskPriority -= 1
+
+	return t.checkPriority(oneJob)
+}
+
 // Add 放入元素，放入的时候会根据 TaskPriority 进行归类，存在的不会新增和更新
 func (t *TaskQueue) Add(oneJob task_queue.OneJob) (bool, error) {
 
@@ -86,6 +108,8 @@ func (t *TaskQueue) Add(oneJob task_queue.OneJob) (bool, error) {
 	if t.isExist(oneJob.Id) == true {
 		return false, nil
 	}
+	// 检查权限范围
+	oneJob = t.checkPriority(oneJob)
 	// 插入到统一的 KeyMap
 	t.taskKeyMap.Put(oneJob.Id, oneJob.TaskPriority)
 	// 分配到具体的优先级 map 中
@@ -113,6 +137,8 @@ func (t *TaskQueue) Update(oneJob task_queue.OneJob) (bool, error) {
 	// 这里需要判断是否有优先级的 Update，如果有就需要把之前缓存的表给更新
 	// 然后再插入到新的表中
 	taskPriorityIndex, _ := t.taskKeyMap.Get(oneJob.Id)
+	// 检查权限范围
+	oneJob = t.checkPriority(oneJob)
 	if oneJob.TaskPriority != taskPriorityIndex {
 		// 优先级修改
 		// 先删除原有的优先级
@@ -134,8 +160,58 @@ func (t *TaskQueue) Update(oneJob task_queue.OneJob) (bool, error) {
 	return true, nil
 }
 
-// GetOneWaiting 获取一个元素，按优先级，0 - taskPriorityCount 的级别去拿去任务，不会移除任务
-func (t *TaskQueue) GetOneWaiting() (bool, task_queue.OneJob, error) {
+// AutoDetectUpdateJobStatus 根据任务的生命周期图，进行自动判断更新，见《任务的生命周期》流程图
+func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue.OneJob, inErr error) {
+
+	defer t.queueLock.Unlock()
+	t.queueLock.Lock()
+
+	// 检查权限范围
+	oneJob = t.checkPriority(oneJob)
+
+	if inErr == nil {
+		// 没有错误就是完成
+		oneJob.JobStatus = taskQueue2.Done
+	} else {
+		// 超过了时间限制，默认是 90 天, A.Before(B) : A < B
+		if oneJob.AddedTime.AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.ExpirationTime).Before(time.Now()) == true {
+			// 超过 90 天了
+			oneJob.JobStatus = taskQueue2.Failed
+		} else {
+			// 还在 90 天内
+			// 是否是首次，那么就看它的 Level 是否是在 5，然后 retry == 0
+			if oneJob.TaskPriority == DefaultTaskPriorityLevel && oneJob.RetryTimes == 0 {
+				// 需要重置到 L6
+				oneJob.RetryTimes = 0
+				oneJob.TaskPriority = FirstRetryTaskPriorityLevel
+			} else {
+				if oneJob.RetryTimes > t.settings.AdvancedSettings.TaskQueue.MaxRetryTimes {
+					// 超过重试次数会进行一次降级，然后重置这个次数
+					oneJob.RetryTimes = 0
+					oneJob = t.degrade(oneJob)
+				}
+			}
+
+			// 强制为 waiting
+			oneJob.JobStatus = taskQueue2.Waiting
+		}
+		// 传入的错误需要放进来
+		oneJob.ErrorInfo = inErr.Error()
+	}
+
+	bok, err := t.Update(oneJob)
+	if err != nil {
+		t.log.Errorln("AutoDetectUpdateJobStatus", oneJob.VideoFPath, err)
+		return
+	}
+	if bok == false {
+		t.log.Warningln("AutoDetectUpdateJobStatus ==", oneJob.VideoFPath, "Job.ID", oneJob.Id, "Not Found")
+		return
+	}
+}
+
+// GetOneWaitingJob 获取一个元素，按优先级，0 - taskPriorityCount 的级别去拿去任务，不会移除任务
+func (t *TaskQueue) GetOneWaitingJob() (bool, task_queue.OneJob, error) {
 
 	defer t.queueLock.Unlock()
 	t.queueLock.Lock()
@@ -160,14 +236,14 @@ func (t *TaskQueue) GetOneWaiting() (bool, task_queue.OneJob, error) {
 		})
 
 		if found == true {
-			break
+			return true, tOneJob, nil
 		}
 	}
 
-	return true, tOneJob, nil
+	return false, tOneJob, nil
 }
 
-func (t *TaskQueue) Get(status task_queue.JobStatus) (bool, []task_queue.OneJob, error) {
+func (t *TaskQueue) GetJobsByStatus(status task_queue.JobStatus) (bool, []task_queue.OneJob, error) {
 
 	defer t.queueLock.Unlock()
 	t.queueLock.Lock()
@@ -194,7 +270,8 @@ func (t *TaskQueue) Get(status task_queue.JobStatus) (bool, []task_queue.OneJob,
 	return true, outOneJobs, nil
 }
 
-func (t *TaskQueue) GetTaskPriority(taskPriority int, status task_queue.JobStatus) (bool, []task_queue.OneJob, error) {
+// GetJobsByPriorityAndStatus 根据任务优先级和状态获取任务列表
+func (t *TaskQueue) GetJobsByPriorityAndStatus(taskPriority int, status task_queue.JobStatus) (bool, []task_queue.OneJob, error) {
 
 	defer t.queueLock.Unlock()
 	t.queueLock.Lock()
@@ -315,14 +392,33 @@ func (t *TaskQueue) save(taskPriority int) error {
 	return nil
 }
 
-// isExist 是否已经存在
+// isExist 是否已经存在，对内，无锁
 func (t *TaskQueue) isExist(jobID string) bool {
 	_, bok := t.taskKeyMap.Get(jobID)
 	return bok
 }
 
+// IsExist 是否已经存在，对外，有锁
+func (t *TaskQueue) IsExist(jobID string) bool {
+
+	defer t.queueLock.Unlock()
+	t.queueLock.Lock()
+
+	_, bok := t.taskKeyMap.Get(jobID)
+	return bok
+}
+
+// isEmpty 对内，无锁
 func (t *TaskQueue) isEmpty() bool {
 	return t.taskKeyMap.Empty()
 }
 
-const taskPriorityCount = 10
+const (
+	taskPriorityCount           = 10
+	DefaultTaskPriorityLevel    = 5
+	FirstRetryTaskPriorityLevel = 6
+)
+
+var (
+	ErrNotSubFound = errors.New("Not Sub Found")
+)

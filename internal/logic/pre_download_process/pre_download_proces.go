@@ -8,17 +8,12 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/something_static"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/url_connectedness_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/sirupsen/logrus"
 	"time"
@@ -180,86 +175,6 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 	return p
 }
 
-func (p *PreDownloadProcess) HotFix() *PreDownloadProcess {
-
-	if p.gError != nil {
-		p.log.Infoln("Skip PreDownloadProcess.Check()")
-		return p
-	}
-	p.stageName = stageNameCHotFix
-
-	defer func() {
-		p.log.Infoln("PreDownloadProcess.HotFix() End")
-	}()
-	p.log.Infoln("PreDownloadProcess.HotFix() Start...")
-	// ------------------------------------------------------------------------
-	// 开始修复
-	p.log.Infoln(common2.NotifyStringTellUserWait)
-	err := hot_fix.HotFixProcess(types.HotFixParam{
-		MovieRootDirs:  p.sets.CommonSettings.MoviePaths,
-		SeriesRootDirs: p.sets.CommonSettings.SeriesPaths,
-	})
-	if err != nil {
-		p.log.Errorln("hot_fix.HotFixProcess()", err)
-		p.gError = err
-		return p
-	}
-
-	return p
-}
-
-func (p *PreDownloadProcess) ChangeSubNameFormat() *PreDownloadProcess {
-
-	if p.gError != nil {
-		p.log.Infoln("Skip PreDownloadProcess.ChangeSubNameFormat()")
-		return p
-	}
-	p.stageName = stageNameChangeSubNameFormat
-	defer func() {
-		p.log.Infoln("PreDownloadProcess.ChangeSubNameFormat() End")
-	}()
-	p.log.Infoln("PreDownloadProcess.ChangeSubNameFormat() Start...")
-	// ------------------------------------------------------------------------
-	/*
-		字幕命名格式转换，需要数据库支持
-		如果数据库没有记录经过转换，那么默认从 Emby 的格式作为检测的起点，转换到目标的格式
-		然后需要在数据库中记录本次的转换结果
-	*/
-	p.log.Infoln(common2.NotifyStringTellUserWait)
-	renameResults, err := sub_formatter.SubFormatChangerProcess(
-		p.sets.CommonSettings.MoviePaths,
-		p.sets.CommonSettings.SeriesPaths,
-		common.FormatterName(p.sets.AdvancedSettings.SubNameFormatter))
-	// 出错的文件有哪一些
-	for s, i := range renameResults.ErrFiles {
-		p.log.Errorln("reformat ErrFile:"+s, i)
-	}
-	if err != nil {
-		p.log.Errorln("SubFormatChangerProcess() Error", err)
-		p.gError = err
-		return p
-	}
-
-	return p
-}
-
-func (p *PreDownloadProcess) ReloadBrowser() *PreDownloadProcess {
-
-	if p.gError != nil {
-		p.log.Infoln("Skip PreDownloadProcess.ReloadBrowser()")
-		return p
-	}
-	p.stageName = stageNameReloadBrowser
-	defer func() {
-		p.log.Infoln("PreDownloadProcess.ReloadBrowser() End")
-	}()
-	p.log.Infoln("PreDownloadProcess.ReloadBrowser() Start...")
-	// ------------------------------------------------------------------------
-	// ReloadBrowser 提前把浏览器下载好
-	rod_helper.ReloadBrowser()
-	return p
-}
-
 func (p *PreDownloadProcess) Wait() error {
 	defer func() {
 		p.log.Infoln("PreDownloadProcess.Wait() Done.")
@@ -274,9 +189,6 @@ func (p *PreDownloadProcess) Wait() error {
 }
 
 const (
-	stageNameInit                = "Init"
-	stageNameCheck               = "Check"
-	stageNameCHotFix             = "HotFix"
-	stageNameChangeSubNameFormat = "ChangeSubNameFormat"
-	stageNameReloadBrowser       = "ReloadBrowser"
+	stageNameInit  = "Init"
+	stageNameCheck = "Check"
 )

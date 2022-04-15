@@ -1,6 +1,8 @@
 package downloader
 
 import (
+	"errors"
+	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/change_file_encode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/chs_cht_changer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
@@ -15,11 +17,11 @@ import (
 )
 
 // oneVideoSelectBestSub 一个视频，选择最佳的一个字幕（也可以保存所有网站第一个最佳字幕）
-func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFiles []string) {
+func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubFiles []string) error {
 
 	// 如果没有则直接跳过
 	if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
-		return
+		return nil
 	}
 
 	var err error
@@ -31,6 +33,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 
 		err = my_folder.CopyFiles2DebugFolder([]string{videoFileName}, organizeSubFiles)
 		if err != nil {
+			// 这个错误可以忍
 			d.log.Errorln("copySubFile2DesFolder", err)
 		}
 	}
@@ -53,7 +56,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 		finalSubFile = d.mk.SelectOneSubFile(organizeSubFiles)
 		if finalSubFile == nil {
 			d.log.Warnln("Found", len(organizeSubFiles), " subtitles but not one fit:", oneVideoFullPath)
-			return
+			return nil
 		}
 		/*
 			这里还有一个梗，Emby、jellyfin 支持 default 和 forced 扩展字段
@@ -68,15 +71,14 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 		// 找到了，写入文件
 		err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile, "", bSetDefault, false)
 		if err != nil {
-			d.log.Errorln("SaveMultiSub:", d.settings.AdvancedSettings.SaveMultiSub, "writeSubFile2VideoPath:", err)
-			return
+			return errors.New(fmt.Sprintf("SaveMultiSub: %v, writeSubFile2VideoPath, Error: %v ", d.settings.AdvancedSettings.SaveMultiSub, err))
 		}
 	} else {
 		// 每个网站 Top1 的字幕
 		siteNames, finalSubFiles := d.mk.SelectEachSiteTop1SubFile(organizeSubFiles)
 		if len(siteNames) < 0 {
 			d.log.Warnln("SelectEachSiteTop1SubFile found none sub file")
-			return
+			return nil
 		}
 		// 多网站 Top 1 字幕保存的时候，第一个设置为 Default 即可
 		/*
@@ -93,8 +95,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 				}
 				err = d.writeSubFile2VideoPath(oneVideoFullPath, file, siteNames[i], setDefault, false)
 				if err != nil {
-					d.log.Errorln("SaveMultiSub:", d.settings.AdvancedSettings.SaveMultiSub, "writeSubFile2VideoPath:", err)
-					return
+					return errors.New(fmt.Sprintf("SaveMultiSub: %v, writeSubFile2VideoPath, Error: %v ", d.settings.AdvancedSettings.SaveMultiSub, err))
 				}
 			}
 		} else {
@@ -108,13 +109,14 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 			for i := len(finalSubFiles) - 1; i > -1; i-- {
 				err = d.writeSubFile2VideoPath(oneVideoFullPath, finalSubFiles[i], siteNames[i], false, false)
 				if err != nil {
-					d.log.Errorln("SaveMultiSub:", d.settings.AdvancedSettings.SaveMultiSub, "writeSubFile2VideoPath:", err)
-					return
+					return errors.New(fmt.Sprintf("SaveMultiSub: %v, writeSubFile2VideoPath, Error: %v ", d.settings.AdvancedSettings.SaveMultiSub, err))
 				}
 			}
 		}
 	}
 	// -------------------------------------------------
+
+	return nil
 }
 
 // saveFullSeasonSub 这里就需要单独存储到连续剧每一季的文件夹的特殊文件夹中。需要跟 DeleteOneSeasonSubCacheFolder 关联起来

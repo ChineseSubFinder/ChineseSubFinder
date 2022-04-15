@@ -1,11 +1,12 @@
 package task_queue
 
 import (
+	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
-	"github.com/davecgh/go-spew/spew"
 	"testing"
 )
 
@@ -18,7 +19,7 @@ func TestTaskQueue_AddAndGetAndDel(t *testing.T) {
 
 	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger())
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, "", i))
+		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}
@@ -27,7 +28,7 @@ func TestTaskQueue_AddAndGetAndDel(t *testing.T) {
 		}
 	}
 
-	bok, waitingJobs, err := taskQueue.Get(task_queue.Waiting)
+	bok, waitingJobs, err := taskQueue.GetJobsByStatus(task_queue.Waiting)
 	if err != nil {
 		t.Fatal("TestTaskQueue.Get", err)
 	}
@@ -70,7 +71,7 @@ func TestTaskQueue_AddAndClear(t *testing.T) {
 
 	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger())
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, "", i))
+		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}
@@ -98,7 +99,7 @@ func TestTaskQueue_Update(t *testing.T) {
 
 	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger())
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, "", i))
+		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}
@@ -107,7 +108,7 @@ func TestTaskQueue_Update(t *testing.T) {
 		}
 	}
 
-	bok, waitingJobs, err := taskQueue.Get(task_queue.Waiting)
+	bok, waitingJobs, err := taskQueue.GetJobsByStatus(task_queue.Waiting)
 	if err != nil {
 		t.Fatal("TestTaskQueue.Get", err)
 	}
@@ -139,7 +140,7 @@ func TestTaskQueue_Update(t *testing.T) {
 		}
 	}
 
-	bok, commitedJobs, err := taskQueue.Get(task_queue.Committed)
+	bok, committedJobs, err := taskQueue.GetJobsByStatus(task_queue.Committed)
 	if err != nil {
 		t.Fatal("TestTaskQueue.Get", err)
 	}
@@ -147,8 +148,8 @@ func TestTaskQueue_Update(t *testing.T) {
 		t.Fatal("TestTaskQueue.Get == false")
 	}
 
-	if len(commitedJobs) != taskPriorityCount+1 {
-		t.Fatal("len(commitedJobs) != taskPriorityCount")
+	if len(committedJobs) != taskPriorityCount+1 {
+		t.Fatal("len(committedJobs) != taskPriorityCount")
 	}
 }
 
@@ -161,7 +162,7 @@ func TestTaskQueue_UpdateAdGetOneWaiting(t *testing.T) {
 
 	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger())
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, spew.Sprintf("%d", i), i))
+		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, fmt.Sprintf("%d", i), i))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}
@@ -170,12 +171,12 @@ func TestTaskQueue_UpdateAdGetOneWaiting(t *testing.T) {
 		}
 	}
 
-	bok, waitingJob, err := taskQueue.GetOneWaiting()
+	bok, waitingJob, err := taskQueue.GetOneWaitingJob()
 	if err != nil {
-		t.Fatal("TestTaskQueue.GetOneWaiting", err)
+		t.Fatal("TestTaskQueue.GetOneWaitingJob", err)
 	}
 	if bok == false {
-		t.Fatal("TestTaskQueue.GetOneWaiting == false")
+		t.Fatal("TestTaskQueue.GetOneWaitingJob == false")
 	}
 
 	if waitingJob.TaskPriority != 0 {
@@ -191,12 +192,12 @@ func TestTaskQueue_UpdateAdGetOneWaiting(t *testing.T) {
 		t.Fatal("TestTaskQueue.Update == false")
 	}
 
-	bok, waitingJob, err = taskQueue.GetOneWaiting()
+	bok, waitingJob, err = taskQueue.GetOneWaitingJob()
 	if err != nil {
-		t.Fatal("TestTaskQueue.GetOneWaiting", err)
+		t.Fatal("TestTaskQueue.GetOneWaitingJob", err)
 	}
 	if bok == false {
-		t.Fatal("TestTaskQueue.GetOneWaiting == false")
+		t.Fatal("TestTaskQueue.GetOneWaitingJob == false")
 	}
 
 	if waitingJob.TaskPriority != 1 {
@@ -213,7 +214,7 @@ func TestTaskQueue_UpdatePriority(t *testing.T) {
 
 	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger())
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, spew.Sprintf("%d", i), i))
+		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, fmt.Sprintf("%d", i), i))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}
@@ -222,12 +223,12 @@ func TestTaskQueue_UpdatePriority(t *testing.T) {
 		}
 	}
 
-	bok, waitingJob, err := taskQueue.GetOneWaiting()
+	bok, waitingJob, err := taskQueue.GetOneWaitingJob()
 	if err != nil {
-		t.Fatal("TestTaskQueue.GetOneWaiting", err)
+		t.Fatal("TestTaskQueue.GetOneWaitingJob", err)
 	}
 	if bok == false {
-		t.Fatal("TestTaskQueue.GetOneWaiting == false")
+		t.Fatal("TestTaskQueue.GetOneWaitingJob == false")
 	}
 
 	if waitingJob.TaskPriority != 0 {
@@ -243,24 +244,24 @@ func TestTaskQueue_UpdatePriority(t *testing.T) {
 		t.Fatal("TestTaskQueue.Update == false")
 	}
 
-	bok, waitingJobs, err := taskQueue.GetTaskPriority(0, task_queue.Waiting)
+	bok, waitingJobs, err := taskQueue.GetJobsByPriorityAndStatus(0, task_queue.Waiting)
 	if err != nil {
-		t.Fatal("TestTaskQueue.GetTaskPriority", err)
+		t.Fatal("TestTaskQueue.GetJobsByPriorityAndStatus", err)
 	}
 	if bok == false {
-		t.Fatal("TestTaskQueue.GetTaskPriority == false")
+		t.Fatal("TestTaskQueue.GetJobsByPriorityAndStatus == false")
 	}
 
 	if len(waitingJobs) != 0 {
 		t.Fatal("len(waitingJobs) != 0")
 	}
 
-	bok, waitingJobs, err = taskQueue.GetTaskPriority(1, task_queue.Waiting)
+	bok, waitingJobs, err = taskQueue.GetJobsByPriorityAndStatus(1, task_queue.Waiting)
 	if err != nil {
-		t.Fatal("TestTaskQueue.GetTaskPriority", err)
+		t.Fatal("TestTaskQueue.GetJobsByPriorityAndStatus", err)
 	}
 	if bok == false {
-		t.Fatal("TestTaskQueue.GetTaskPriority == false")
+		t.Fatal("TestTaskQueue.GetJobsByPriorityAndStatus == false")
 	}
 
 	if len(waitingJobs) != 2 {

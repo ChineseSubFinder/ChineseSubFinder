@@ -134,10 +134,13 @@ func (d *SubSupplierHub) SeriesNeedDlSubFromEmby(seriesRootPath string, seriesVi
 }
 
 // DownloadSub4Movie 某一个电影字幕下载，下载完毕后，返回下载缓存每个字幕的位置，这里将只关心下载字幕，判断是否在时间范围内要不要下载不在这里判断，包括是否是中文视频的问题
-func (d *SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]string, error) {
+func (d *SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int64) ([]string, error) {
 
 	// 下载所有字幕
 	subInfos := movieHelper.OneMovieDlSubInAllSite(d.Suppliers, videoFullPath, index)
+	if subInfos == nil {
+		return nil, nil
+	}
 	// 整理字幕，比如解压什么的
 	organizeSubFiles, err := sub_helper.OrganizeDlSubFiles(filepath.Base(videoFullPath), subInfos)
 	if err != nil {
@@ -157,7 +160,7 @@ func (d *SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int) ([]s
 }
 
 // DownloadSub4Series 某一部连续剧的字幕下载，下载完毕后，返回下载缓存每个字幕的位置（通用的下载逻辑，前面把常规（没有媒体服务器模式）和 Emby 这样的模式都转换到想到的下载接口上
-func (d *SubSupplierHub) DownloadSub4Series(seriesDirPath string, seriesInfo *series.SeriesInfo, index int) (map[string][]string, error) {
+func (d *SubSupplierHub) DownloadSub4Series(seriesDirPath string, seriesInfo *series.SeriesInfo, index int64) (map[string][]string, error) {
 
 	organizeSubFiles, err := d.dlSubFromSeriesInfo(seriesDirPath, index, seriesInfo)
 	if err != nil {
@@ -210,7 +213,7 @@ func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 	return outStatus
 }
 
-func (d *SubSupplierHub) dlSubFromSeriesInfo(seriesDirPath string, index int, seriesInfo *series.SeriesInfo) (map[string][]string, error) {
+func (d *SubSupplierHub) dlSubFromSeriesInfo(seriesDirPath string, index int64, seriesInfo *series.SeriesInfo) (map[string][]string, error) {
 	// 下载好的字幕
 	subInfos := seriesHelper.DownloadSubtitleInAllSiteByOneSeries(d.Suppliers, seriesInfo, index)
 	// 整理字幕，比如解压什么的

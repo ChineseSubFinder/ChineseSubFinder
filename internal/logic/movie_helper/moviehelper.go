@@ -20,34 +20,13 @@ import (
 )
 
 // OneMovieDlSubInAllSite 一部电影在所有的网站下载相应的字幕
-func OneMovieDlSubInAllSite(Suppliers []ifaces.ISupplier, oneVideoFullPath string, i int) []supplier.SubInfo {
+func OneMovieDlSubInAllSite(Suppliers []ifaces.ISupplier, oneVideoFullPath string, i int64) []supplier.SubInfo {
 
 	defer func() {
 		log_helper.GetLogger().Infoln(common.QueueName, i, "DlSub End", oneVideoFullPath)
 	}()
 
 	var outSUbInfos = make([]supplier.SubInfo, 0)
-	// TODO 资源占用较高，把这里的并发给取消
-	//// 同时进行查询
-	//subInfosChannel := make(chan []supplier.SubInfo)
-	//log_helper.GetLogger().Infoln(common.QueueName, i, "DlSub Start", oneVideoFullPath)
-	//for _, oneSupplier := range Suppliers {
-	//	nowSupplier := oneSupplier
-	//	go func() {
-	//		subInfos, err := OneMovieDlSubInOneSite(oneVideoFullPath, i, nowSupplier)
-	//		if err != nil {
-	//			log_helper.GetLogger().Errorln(common.QueueName, i, nowSupplier.GetSupplierName(), "oneMovieDlSubInOneSite", err)
-	//		}
-	//		subInfosChannel <- subInfos
-	//	}()
-	//}
-	//for index := 0; index < len(Suppliers); index++ {
-	//	v, ok := <-subInfosChannel
-	//	if ok == true && v != nil {
-	//		outSUbInfos = append(outSUbInfos, v...)
-	//	}
-	//}
-
 	log_helper.GetLogger().Infoln(common.QueueName, i, "DlSub Start", oneVideoFullPath)
 	for _, oneSupplier := range Suppliers {
 
@@ -69,7 +48,7 @@ func OneMovieDlSubInAllSite(Suppliers []ifaces.ISupplier, oneVideoFullPath strin
 }
 
 // OneMovieDlSubInOneSite 一部电影在一个站点下载字幕
-func OneMovieDlSubInOneSite(oneVideoFullPath string, i int, supplier ifaces.ISupplier) ([]supplier.SubInfo, error) {
+func OneMovieDlSubInOneSite(oneVideoFullPath string, i int64, supplier ifaces.ISupplier) ([]supplier.SubInfo, error) {
 	defer func() {
 		log_helper.GetLogger().Infoln(common.QueueName, i, supplier.GetSupplierName(), "End...")
 	}()

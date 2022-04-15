@@ -305,7 +305,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	// 先把 IMDB 信息查询查来，不管是从数据库还是网络（查询出来也得写入到数据库）
 	if imdbInfo, ok = imdbInfoCache[imdbInfo4Video.ImdbId]; ok == false {
 		// 不存在，那么就去查询和新建缓存
-		imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(imdbInfo4Video.ImdbId, *s.settings.AdvancedSettings.ProxySettings)
+		imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(imdbInfo4Video.ImdbId, s.settings.AdvancedSettings.ProxySettings)
 		if err != nil {
 			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoIMDBInfoFromLocal", videoFPath, err)
 			return
