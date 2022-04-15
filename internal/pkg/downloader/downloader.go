@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	markSystem "github.com/allanpk716/ChineseSubFinder/internal/logic/mark_system"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_download_process"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
@@ -37,7 +37,8 @@ type Downloader struct {
 	subTimelineFixerHelperEx *sub_timeline_fixer.SubTimelineFixerHelperEx // 字幕时间轴校正
 	downloaderLock           sync.Mutex                                   // 取消执行 task control 的 Lock
 	downloadQueue            *task_queue.TaskQueue                        // 需要下载的视频的队列
-	supplierChecking         bool                                         // 正在检测字幕源有效性
+	//supplierChecking         bool                                         // 正在检测字幕源有效性
+	//queueDownloading         bool                                         // 正在下载个视频的字幕
 }
 
 func NewDownloader(inSubFormatter ifaces.ISubFormatter, _settings *settings.Settings, log *logrus.Logger, downloadQueue *task_queue.TaskQueue) *Downloader {
@@ -80,28 +81,13 @@ func (d *Downloader) SupplierCheck() {
 		if p := recover(); p != nil {
 			d.log.Errorln("Downloader.SupplierCheck() panic")
 		}
-
-		d.downloaderLock.Lock()
-		d.supplierChecking = false
 		d.downloaderLock.Unlock()
 
 		d.log.Infoln("Download.SupplierCheck() End")
 	}()
 
+	d.downloaderLock.Lock()
 	d.log.Infoln("Download.SupplierCheck() Start ...")
-
-	supplierChecking := false
-	d.downloaderLock.Lock()
-	supplierChecking = d.supplierChecking
-	d.downloaderLock.Unlock()
-	if supplierChecking == true {
-		d.log.Warningln("Download.SupplierCheck() only run once, skip")
-		return
-	}
-
-	d.downloaderLock.Lock()
-	d.supplierChecking = true
-	d.downloaderLock.Unlock()
 
 	// 创建一个 chan 用于任务的中断和超时
 	done := make(chan interface{}, 1)
@@ -112,19 +98,27 @@ func (d *Downloader) SupplierCheck() {
 			panicChan <- p
 		}
 		// 下载前的初始化
-		d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
-		preDownloadProcess := pre_download_process.NewPreDownloadProcess(d.log, d.settings)
-		err := preDownloadProcess.Init().Check().Wait()
-		if err != nil {
-			done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
-		} else {
-			// 更新 SubSupplierHub 实例
-			d.downloaderLock.Lock()
-			d.subSupplierHub = preDownloadProcess.SubSupplierHub
-			d.downloaderLock.Unlock()
+		//d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
+		//preDownloadProcess := pre_download_process.NewPreDownloadProcess(d.log, d.settings)
+		//err := preDownloadProcess.Init().Check().Wait()
+		//if err != nil {
+		//	done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
+		//} else {
+		//	// 更新 SubSupplierHub 实例
+		//	d.downloaderLock.Lock()
+		//	d.subSupplierHub = preDownloadProcess.SubSupplierHub
+		//	d.downloaderLock.Unlock()
+		//
+		//	done <- nil
+		//}
 
-			done <- nil
-		}
+		subSupplierHub := subSupplier.NewSubSupplierHub(
+			d.settings,
+			d.log,
+			xunlei.NewSupplier(d.settings, d.log),
+		)
+		d.subSupplierHub = subSupplierHub
+		done <- nil
 	}()
 
 	select {
@@ -150,24 +144,15 @@ func (d *Downloader) QueueDownloader() {
 		if p := recover(); p != nil {
 			d.log.Errorln("Downloader.QueueDownloader() panic")
 		}
-
+		d.downloaderLock.Unlock()
 		d.log.Infoln("Download.QueueDownloader() End")
 	}()
 
-	var downloadCounter int64
-	downloadCounter = 0
-
+	d.downloaderLock.Lock()
 	d.log.Infoln("Download.QueueDownloader() Start ...")
 
-	// 如果正在 check supplier 的状态，那么就跳过本次
-	supplierChecking := false
-	d.downloaderLock.Lock()
-	supplierChecking = d.supplierChecking
-	d.downloaderLock.Unlock()
-	if supplierChecking == true {
-		d.log.Infoln("SupplierCheck is running, Skip QueueDownloader this time")
-		return
-	}
+	var downloadCounter int64
+	downloadCounter = 0
 	// 从队列取数据出来
 	bok, oneJob, err := d.downloadQueue.GetOneWaitingJob()
 	if err != nil {
@@ -239,11 +224,8 @@ func (d *Downloader) Cancel() {
 
 func (d *Downloader) movieDlFunc(ctx context.Context, job taskQueue2.OneJob, downloadIndex int64) error {
 
-	var nowSubSupplierHub *subSupplier.SubSupplierHub
-	d.downloaderLock.Lock()
-	nowSubSupplierHub = d.subSupplierHub
-	d.downloaderLock.Unlock()
-	if nowSubSupplierHub == nil {
+	nowSubSupplierHub := d.subSupplierHub
+	if nowSubSupplierHub.Suppliers == nil || len(nowSubSupplierHub.Suppliers) < 1 {
 		d.log.Infoln("Wait SupplierCheck Update *subSupplierHub, movieDlFunc Skip this time")
 		return nil
 	}
@@ -274,15 +256,11 @@ func (d *Downloader) movieDlFunc(ctx context.Context, job taskQueue2.OneJob, dow
 
 func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, downloadIndex int64) error {
 
-	var nowSubSupplierHub *subSupplier.SubSupplierHub
-	d.downloaderLock.Lock()
-	nowSubSupplierHub = d.subSupplierHub
-	d.downloaderLock.Unlock()
-	if nowSubSupplierHub == nil {
-		d.log.Infoln("Wait SupplierCheck Update *subSupplierHub, seriesDlFunc Skip this time")
+	nowSubSupplierHub := d.subSupplierHub
+	if nowSubSupplierHub.Suppliers == nil || len(nowSubSupplierHub.Suppliers) < 1 {
+		d.log.Infoln("Wait SupplierCheck Update *subSupplierHub, movieDlFunc Skip this time")
 		return nil
 	}
-
 	var err error
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
 	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(job.SeriesRootDirPath, false, d.settings.AdvancedSettings.ProxySettings)

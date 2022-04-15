@@ -122,11 +122,8 @@ func (t *TaskQueue) Add(oneJob task_queue.OneJob) (bool, error) {
 	return true, nil
 }
 
-// Update 更新素，不存在则会失败
-func (t *TaskQueue) Update(oneJob task_queue.OneJob) (bool, error) {
-
-	defer t.queueLock.Unlock()
-	t.queueLock.Lock()
+// update 更新素，不存在则会失败，内部用，没有锁
+func (t *TaskQueue) update(oneJob task_queue.OneJob) (bool, error) {
 
 	if t.isExist(oneJob.Id) == false {
 		return false, nil
@@ -160,6 +157,15 @@ func (t *TaskQueue) Update(oneJob task_queue.OneJob) (bool, error) {
 	return true, nil
 }
 
+// Update 更新素，不存在则会失败
+func (t *TaskQueue) Update(oneJob task_queue.OneJob) (bool, error) {
+
+	defer t.queueLock.Unlock()
+	t.queueLock.Lock()
+
+	return t.update(oneJob)
+}
+
 // AutoDetectUpdateJobStatus 根据任务的生命周期图，进行自动判断更新，见《任务的生命周期》流程图
 func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue.OneJob, inErr error) {
 
@@ -172,8 +178,9 @@ func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue.OneJob, inErr er
 	if inErr == nil {
 		// 没有错误就是完成
 		oneJob.JobStatus = taskQueue2.Done
+		oneJob.DownloadTimes += 1
 	} else {
-		// 超过了时间限制，默认是 90 天, A.Before(B) : A < B
+		// 超过了时间限制，默认是 90 天, A.Before(B) : A < B == true
 		if oneJob.AddedTime.AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.ExpirationTime).Before(time.Now()) == true {
 			// 超过 90 天了
 			oneJob.JobStatus = taskQueue2.Failed
@@ -197,9 +204,11 @@ func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue.OneJob, inErr er
 		}
 		// 传入的错误需要放进来
 		oneJob.ErrorInfo = inErr.Error()
+		oneJob.DownloadTimes += 1
 	}
 
-	bok, err := t.Update(oneJob)
+	// 这里不要用错了，要用无锁的，不然会阻塞
+	bok, err := t.update(oneJob)
 	if err != nil {
 		t.log.Errorln("AutoDetectUpdateJobStatus", oneJob.VideoFPath, err)
 		return
@@ -228,7 +237,11 @@ func (t *TaskQueue) GetOneWaitingJob() (bool, task_queue.OneJob, error) {
 		t.taskPriorityMapList[TaskPriority].Each(func(key interface{}, value interface{}) {
 
 			tOneJob = value.(task_queue.OneJob)
-			if tOneJob.JobStatus == task_queue.Waiting {
+			// 任务的 UpdateTime 与现在的时间大于单个字幕下载的间隔
+			// 默认是 12h, A.After(B) : A > B == true
+			// 见《任务队列设计》--以优先级顺序取出描述
+			if tOneJob.JobStatus == task_queue.Waiting && (tOneJob.DownloadTimes == 0 ||
+				tOneJob.UpdateTime.AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.OneSubDownloadInterval).After(time.Now()) == true && tOneJob.DownloadTimes > 0) {
 				// 找到就返回
 				found = true
 				return

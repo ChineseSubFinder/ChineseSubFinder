@@ -26,6 +26,7 @@ type OneJob struct {
 	UpdateTime               time.Time        `json:"update_time"`                  // 任务更新的时间
 	MediaServerInsideVideoID string           `json:"media_server_inside_video_id"` // 媒体服务器中，这个视频的 ID，如果是 Emby 就对应它内部这个视频的 ID，后续用于指定刷新视频信息
 	ErrorInfo                string           `json:"error_info"`                   // 这个任务的错误信息
+	DownloadTimes            int              `json:"download_times"`               // 下载的次数，用于统计下载过几次
 }
 
 func NewOneJob(videoType common.VideoType, videoFPath string, taskPriority int, MediaServerInsideVideoID ...string) *OneJob {
