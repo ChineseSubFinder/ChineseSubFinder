@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -700,6 +701,25 @@ func GetFileSHA1String(fileFPath string) (string, error) {
 	hashBytes := h.Sum(nil)
 
 	return fmt.Sprintf("%x", md5.Sum(hashBytes)), nil
+}
+
+// GetFileSHA256String 获取文件的 SHA256 字符串
+func GetFileSHA256String(fileFPath string) (string, error) {
+
+	fp, err := os.Open(fileFPath)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = fp.Close()
+	}()
+
+	partAll, err := io.ReadAll(fp)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", sha256.Sum256(partAll)), nil
 }
 
 func GetRestOfDaySec() time.Duration {

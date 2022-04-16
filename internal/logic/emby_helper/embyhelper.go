@@ -378,11 +378,13 @@ func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMo
 
 		if len(mixInfo.VideoInfo.MediaSources) > 0 && mixInfo.VideoInfo.MediaSources[0].Container == "bluray" {
 			// 这个就是蓝光了
-			fakeVideoFPath := filepath.Join(mixInfo.VideoInfo.Path, filepath.Base(mixInfo.VideoInfo.Path)+common2.VideoExtMp4)
+			// 先替换再拼接，不然会出现拼接完成后，在 Windows 下会把 /mnt/share1/电影 变为这样了 \mnt\share1\电影\失控玩家 (2021)\失控玩家 (2021).mp4
+			videoReplacedDirFPath := strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
+			fakeVideoFPath := filepath.Join(videoReplacedDirFPath, filepath.Base(mixInfo.VideoInfo.Path)+common2.VideoExtMp4)
 			mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(fakeVideoFPath, pathSlices[0].Path, nowPhRootPath)
 			// 这个电影的文件夹
-			mixInfo.VideoFolderName = filepath.Base(filepath.Dir(fakeVideoFPath))
-			mixInfo.VideoFileName = filepath.Base(fakeVideoFPath)
+			mixInfo.VideoFolderName = filepath.Base(mixInfo.VideoInfo.Path)
+			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path) + common2.VideoExtMp4
 		} else {
 			// 常规的电影情况，也就是有一个具体的视频文件 .mp4 or .mkv
 			mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
@@ -451,7 +453,8 @@ func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries
 		return &mixInfo, nil
 	}
 
-	p, err := ants.NewPoolWithFunc(em.threads, func(inData interface{}) {
+	// em.threads
+	p, err := ants.NewPoolWithFunc(1, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), em.timeOut)

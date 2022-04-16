@@ -315,10 +315,10 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	s.log.Debugln(3)
 
-	// 当前扫描到的找个字幕的 sha1 是否已经存在与缓存中了
-	tmpSHA1String, err := my_util.GetFileSHA1String(orgSubFPath)
+	// 当前扫描到的找个字幕的 sha256 是否已经存在与缓存中了
+	tmpSHA256String, err := my_util.GetFileSHA256String(orgSubFPath)
 	if err != nil {
-		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "orgSubFPath.GetFileSHA1String", videoFPath, err)
+		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "orgSubFPath.GetFileSHA256String", videoFPath, err)
 		return
 	}
 
@@ -327,8 +327,8 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	// 判断找到的关联字幕信息是否已经存在了，不存在则新增关联
 	for _, cacheInfo := range imdbInfo.VideoSubInfos {
 
-		if cacheInfo.SHA1 == tmpSHA1String {
-			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "SHA1 Exist == true, Skip", orgSubFPath)
+		if cacheInfo.SHA256 == tmpSHA256String {
+			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "SHA256 Exist == true, Skip", orgSubFPath)
 			return
 		}
 	}
@@ -369,10 +369,10 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	s.log.Debugln(8)
 
-	// 计算需要插入字幕的 sha1
-	saveSHA1String, err := my_util.GetFileSHA1String(subCacheFPath)
+	// 计算需要插入字幕的 sha256
+	saveSHA256String, err := my_util.GetFileSHA256String(subCacheFPath)
 	if err != nil {
-		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "GetFileSHA1String", videoFPath, err)
+		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "GetFileSHA256String", videoFPath, err)
 		return
 	}
 
@@ -387,7 +387,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 		fileInfo.Lang.String(),
 		subRelPath,
 		extraSubPreName,
-		saveSHA1String,
+		saveSHA256String,
 	)
 
 	if isMovie == false {
@@ -421,7 +421,7 @@ func (s *ScanPlayedVideoSubInfo) delSubInfo(imdbInfo *models.IMDBInfo, cacheInfo
 	}
 	// 继续删除这个对象
 	dao.GetDb().Delete(cacheInfo)
-	s.log.Infoln("Delete Not Exist or SHA1 not the same， Sub Association", cacheInfo.SubName)
+	s.log.Infoln("Delete Not Exist or SHA256 not the same， Sub Association", cacheInfo.SubName)
 
 	return true
 }

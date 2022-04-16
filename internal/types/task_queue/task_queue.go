@@ -1,7 +1,7 @@
 package task_queue
 
 import (
-	"crypto/sha1"
+	"crypto/sha256"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_file_hash"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
@@ -32,23 +32,19 @@ func NewOneJob(videoType common.VideoType, videoFPath string, taskPriority int, 
 
 	ob := &OneJob{VideoType: videoType, VideoFPath: videoFPath, TaskPriority: taskPriority}
 
-	sha1FilePathID := func() string {
-		// ID 由 SHA1 来计算出来作为唯一性
-		h := sha1.New()
-		h.Write([]byte(videoFPath))
-		bs := h.Sum(nil)
-		return fmt.Sprintf("%x", bs)
+	sha256FilePathID := func() string {
+		return fmt.Sprintf("%x", sha256.Sum256([]byte(videoFPath)))
 	}
 
 	/*
 		sub_file_hash.Calculate 现在支持内部的 fake 蓝光视频地址了，会解析到 BDMV 中最大的那个视频流文件来计算
-		所以上面这个函数如果 errors 了，才需要使用这个伪造的路径进行 sha1 加密即可
+		所以上面这个函数如果 errors 了，才需要使用这个伪造的路径进行 sha256 加密即可
 	*/
-	sha1String, err := sub_file_hash.Calculate(videoFPath)
+	sha256String, err := sub_file_hash.Calculate(videoFPath)
 	if err != nil {
-		ob.Id = sha1FilePathID()
+		ob.Id = sha256FilePathID()
 	} else {
-		ob.Id = sha1String
+		ob.Id = sha256String
 	}
 
 	ob.VideoName = filepath.Base(videoFPath)

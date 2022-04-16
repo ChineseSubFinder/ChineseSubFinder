@@ -87,3 +87,4 @@ TestData/
 /internal/logic/task_queue/task_queue
 /internal/logic/task_queue/Logs
 /task_queue
+/internal/pkg/sub_file_hash/Logs
