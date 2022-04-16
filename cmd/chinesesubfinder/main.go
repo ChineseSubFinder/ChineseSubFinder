@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_job"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -28,14 +27,14 @@ func init() {
 
 func main() {
 
-	// ----------------------------------------------
-	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
-	pj := pre_job.NewPreJob(settings.GetSettings(), log_helper.GetLogger())
-	err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
-	if err != nil {
-		log_helper.GetLogger().Panicln("pre_job", err)
-	}
-	// ----------------------------------------------
+	//// ----------------------------------------------
+	//// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
+	//pj := pre_job.NewPreJob(settings.GetSettings(), log_helper.GetLogger())
+	//err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
+	//if err != nil {
+	//	log_helper.GetLogger().Panicln("pre_job", err)
+	//}
+	//// ----------------------------------------------
 	//scan, err := scan_played_video_subinfo.NewScanPlayedVideoSubInfo(*settings.GetSettings())
 	//if err != nil {
 	//	log_helper.GetLogger().Panicln(err)
