@@ -1,8 +1,7 @@
 package sub_file_hash
 
 import (
-	"crypto/md5"
-	"crypto/sha1"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
@@ -23,7 +22,6 @@ func Calculate(filePath string) (string, error) {
 		filePath = bdmvBigFileFPath
 	}
 
-	h := sha1.New()
 	fp, err := os.Open(filePath)
 	if err != nil {
 		return "", err
@@ -78,10 +76,9 @@ func Calculate(filePath string) (string, error) {
 		//_ = f.Close()
 	}
 
-	h.Write(fullBlock)
-	hashBytes := h.Sum(nil)
+	sum := sha256.Sum256(fullBlock)
 
-	return fmt.Sprintf("%x", md5.Sum(hashBytes)), nil
+	return fmt.Sprintf("%x", sum), nil
 }
 
 func getBDMVBigFileFPath(STREAMDir string) (string, error) {
@@ -126,4 +123,4 @@ const (
 	onePointLen    = 4 * 1024
 )
 
-const checkHash = "f08d48a3e2cd6a02f9fd8ac92743dd3e"
+const checkHash = "f5176762cb6d62471d71511fdddeb7b80c9a7a8939fce5cf172100b4a404a048"
