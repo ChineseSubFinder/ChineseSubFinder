@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_job"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -27,21 +28,14 @@ func init() {
 
 func main() {
 
-	cronHelper := cron_helper.NewCronHelper(log_helper.GetLogger(), settings.GetSettings())
-	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {
-		// 如果没有完成，那么就不开启
-		log_helper.GetLogger().Infoln("Need do Setup")
-	} else {
-		// 是否完成了 Setup，如果完成了，那么就开启第一次的扫描
-		go func() {
-			log_helper.GetLogger().Infoln("Setup is Done")
-			cronHelper.Start(settings.GetSettings().CommonSettings.RunScanAtStartUp)
-		}()
+	// ----------------------------------------------
+	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
+	pj := pre_job.NewPreJob(settings.GetSettings(), log_helper.GetLogger())
+	err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
+	if err != nil {
+		log_helper.GetLogger().Panicln("pre_job", err)
 	}
-
-	nowPort := readCustomPortFile()
-	log_helper.GetLogger().Infoln(fmt.Sprintf("WebUI will listen at 0.0.0.0:%d", nowPort))
-
+	// ----------------------------------------------
 	//scan, err := scan_played_video_subinfo.NewScanPlayedVideoSubInfo(*settings.GetSettings())
 	//if err != nil {
 	//	log_helper.GetLogger().Panicln(err)
@@ -59,7 +53,21 @@ func main() {
 	//		log_helper.GetLogger().Panicln(err)
 	//	}
 	//}
+	// ----------------------------------------------
+	cronHelper := cron_helper.NewCronHelper(log_helper.GetLogger(), settings.GetSettings())
+	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {
+		// 如果没有完成，那么就不开启
+		log_helper.GetLogger().Infoln("Need do Setup")
+	} else {
+		// 是否完成了 Setup，如果完成了，那么就开启第一次的扫描
+		go func() {
+			log_helper.GetLogger().Infoln("Setup is Done")
+			cronHelper.Start(settings.GetSettings().CommonSettings.RunScanAtStartUp)
+		}()
+	}
 
+	nowPort := readCustomPortFile()
+	log_helper.GetLogger().Infoln(fmt.Sprintf("WebUI will listen at 0.0.0.0:%d", nowPort))
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
 	backend.StartBackEnd(nowPort, cronHelper)
 }

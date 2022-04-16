@@ -61,14 +61,6 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		sub_formatter.GetSubFormatter(ch.sets.AdvancedSettings.SubNameFormatter),
 		ch.sets, ch.log, ch.downloadQueue)
 	// ----------------------------------------------
-	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
-	//pj := pre_job.NewPreJob(ch.sets, ch.log)
-	//err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
-	//if err != nil {
-	//	ch.log.Panicln("pre_job", err)
-	//	return
-	//}
-	// ----------------------------------------------
 	// 判断扫描任务的时间间隔是否符合要求，不符合则重写默认值
 	_, err := cron.ParseStandard(ch.sets.CommonSettings.ScanInterval)
 	if err != nil {
