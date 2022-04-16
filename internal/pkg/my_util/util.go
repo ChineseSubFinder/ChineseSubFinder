@@ -204,6 +204,11 @@ func SearchMatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 				// 不是期望的视频后缀名则跳过
 				continue
 			} else {
+				// 这里还有一种情况，就是蓝光， BDMV 下面会有一个 STREAM 文件夹，里面很多 m2ts 的视频组成
+				if filepath.Base(filepath.Dir(fullPath)) == "STREAM" {
+					l.Debugln("SearchMatchedVideoFile, Skip BDMV.STREAM:", fullPath)
+					continue
+				}
 
 				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
 				fi, err := curFile.Info()

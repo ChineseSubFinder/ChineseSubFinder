@@ -37,8 +37,6 @@ type Downloader struct {
 	subTimelineFixerHelperEx *sub_timeline_fixer.SubTimelineFixerHelperEx // 字幕时间轴校正
 	downloaderLock           sync.Mutex                                   // 取消执行 task control 的 Lock
 	downloadQueue            *task_queue.TaskQueue                        // 需要下载的视频的队列
-	//supplierChecking         bool                                         // 正在检测字幕源有效性
-	//queueDownloading         bool                                         // 正在下载个视频的字幕
 }
 
 func NewDownloader(inSubFormatter ifaces.ISubFormatter, _settings *settings.Settings, log *logrus.Logger, downloadQueue *task_queue.TaskQueue) *Downloader {
