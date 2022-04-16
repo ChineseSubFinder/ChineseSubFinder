@@ -100,7 +100,7 @@ func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, erro
 
 	if my_util.IsFile(filePath) == false {
 		// 这里传入的可能是蓝光结构的伪造存在的视频文件，需要检查一次这个文件是否存在
-		bok, _ := decode.IsFakeBDMVWorked(filePath)
+		bok, _, _ := decode.IsFakeBDMVWorked(filePath)
 		if bok == false {
 
 			nowError := errors.New(fmt.Sprintf("%s %s %s",

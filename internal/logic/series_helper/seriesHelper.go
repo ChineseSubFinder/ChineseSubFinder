@@ -168,21 +168,21 @@ func DownloadSubtitleInAllSiteByOneSeries(Suppliers []ifaces.ISupplier, seriesIn
 		log_helper.GetLogger().Infoln(common.QueueName, i, seriesInfo.Name, "-", key)
 	}
 
-	for index, oneSupplier := range Suppliers {
+	for _, oneSupplier := range Suppliers {
 
 		oneSupplierFunc := func() {
 			defer func() {
-				log_helper.GetLogger().Infoln(common.QueueName, index, i, oneSupplier.GetSupplierName(), "End")
+				log_helper.GetLogger().Infoln(common.QueueName, i, oneSupplier.GetSupplierName(), "End")
 				log_helper.GetLogger().Infoln("------------------------------------------")
 			}()
 
 			var subInfos []supplier.SubInfo
 			log_helper.GetLogger().Infoln("------------------------------------------")
-			log_helper.GetLogger().Infoln(common.QueueName, index, i, oneSupplier.GetSupplierName(), "Start...")
+			log_helper.GetLogger().Infoln(common.QueueName, i, oneSupplier.GetSupplierName(), "Start...")
 			// 一次性把这一部连续剧的所有字幕下载完
 			subInfos, err := oneSupplier.GetSubListFromFile4Series(seriesInfo)
 			if err != nil {
-				log_helper.GetLogger().Errorln(common.QueueName, index, i, oneSupplier.GetSupplierName(), "GetSubListFromFile4Series", err)
+				log_helper.GetLogger().Errorln(common.QueueName, i, oneSupplier.GetSupplierName(), "GetSubListFromFile4Series", err)
 				return
 			}
 			// 把后缀名给改好

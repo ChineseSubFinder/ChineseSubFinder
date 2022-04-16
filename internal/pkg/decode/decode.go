@@ -333,7 +333,7 @@ func GetVideoInfoFromFileFullPath(videoFileFullPath string) (*PTN.TorrentInfo, t
 	} else {
 		// 再次判断是否是蓝光结构
 		// 因为在前面扫描视频的时候，发现特殊的蓝光结构会伪造一个不存在的 xx.mp4 的视频文件过来，这里就需要额外检测一次
-		bok, idBDMVFPath := IsFakeBDMVWorked(videoFileFullPath)
+		bok, idBDMVFPath, _ := IsFakeBDMVWorked(videoFileFullPath)
 		if bok == false {
 			return nil, time.Time{}, err
 		}
@@ -426,20 +426,21 @@ func IsDir(path string) bool {
 	return s.IsDir()
 }
 
-// IsFakeBDMVWorked 传入的是伪造的不存在的蓝光结构的视频全路径，如果是就返回 true 和 id.bdmv 的绝对路径
-func IsFakeBDMVWorked(fakseVideFPath string) (bool, string) {
+// IsFakeBDMVWorked 传入的是伪造的不存在的蓝光结构的视频全路径，如果是就返回 true 和 id.bdmv 的绝对路径 和 STREAM 绝对路径
+func IsFakeBDMVWorked(fakseVideFPath string) (bool, string, string) {
 
 	rootDir := filepath.Dir(fakseVideFPath)
 
 	CERDir := filepath.Join(rootDir, "CERTIFICATE")
 	BDMVDir := filepath.Join(rootDir, "BDMV")
+	STREAMDir := filepath.Join(BDMVDir, "STREAM")
 	idBDMVFPath := filepath.Join(CERDir, common2.FileBDMV)
 
 	if IsDir(CERDir) == true && IsDir(BDMVDir) == true && IsFile(idBDMVFPath) == true {
-		return true, idBDMVFPath
+		return true, idBDMVFPath, STREAMDir
 	}
 
-	return false, ""
+	return false, "", ""
 }
 
 const (

@@ -3,14 +3,25 @@ package sub_file_hash
 import (
 	"crypto/md5"
 	"crypto/sha1"
+	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"math"
 	"os"
 )
 
-// Calculate 视频文件的唯一ID
+// Calculate 视频文件的唯一ID，支持内程序内的 Fake 蓝光视频文件路径
 func Calculate(filePath string) (string, error) {
+
+	bok, _, STREAMDir := decode.IsFakeBDMVWorked(filePath)
+	if bok == true {
+		bdmvBigFileFPath, err := getBDMVBigFileFPath(STREAMDir)
+		if err != nil {
+			return "", err
+		}
+		filePath = bdmvBigFileFPath
+	}
 
 	h := sha1.New()
 	fp, err := os.Open(filePath)
@@ -71,6 +82,43 @@ func Calculate(filePath string) (string, error) {
 	hashBytes := h.Sum(nil)
 
 	return fmt.Sprintf("%x", md5.Sum(hashBytes)), nil
+}
+
+func getBDMVBigFileFPath(STREAMDir string) (string, error) {
+
+	// 因为上面可以检测出是否是蓝光电影，这里就是找到蓝光中最大的一个流文件，然后交给后续进行特征提取
+	pathSep := string(os.PathSeparator)
+	maxFileFPath := ""
+	var maxFileSize int64
+	maxFileSize = 0
+	files, err := os.ReadDir(STREAMDir)
+	if err != nil {
+		return "", err
+	}
+	for _, curFile := range files {
+
+		fullPath := STREAMDir + pathSep + curFile.Name()
+
+		if curFile.IsDir() {
+			// 只关心这一个文件夹
+			continue
+		}
+		// 文件
+		info, err := curFile.Info()
+		if err != nil {
+			continue
+		}
+		if info.Size() > maxFileSize {
+			maxFileSize = info.Size()
+			maxFileFPath = fullPath
+		}
+	}
+
+	if maxFileFPath == "" {
+		return "", errors.New("getBDMVBigFileFPath no file found")
+	}
+
+	return maxFileFPath, nil
 }
 
 const (
