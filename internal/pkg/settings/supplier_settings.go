@@ -15,8 +15,8 @@ func NewSuppliersSettings() *SuppliersSettings {
 	return &SuppliersSettings{
 		Xunlei:  NewOneSupplierSettings(common2.SubSiteXunLei, common2.SubXunLeiRootUrlDef, -1),
 		Shooter: NewOneSupplierSettings(common2.SubSiteShooter, common2.SubShooterRootUrlDef, -1),
-		SubHD:   NewOneSupplierSettings(common2.SubSiteSubHd, common2.SubSubHDRootUrlDef, 50),
-		Zimuku:  NewOneSupplierSettings(common2.SubSiteZiMuKu, common2.SubZiMuKuRootUrlDef, 50),
+		SubHD:   NewOneSupplierSettings(common2.SubSiteSubHd, common2.SubSubHDRootUrlDef, 20),
+		Zimuku:  NewOneSupplierSettings(common2.SubSiteZiMuKu, common2.SubZiMuKuRootUrlDef, 20),
 	}
 }
 

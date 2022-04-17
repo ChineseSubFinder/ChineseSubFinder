@@ -31,7 +31,7 @@ import (
 )
 
 type ScanPlayedVideoSubInfo struct {
-	settings settings.Settings
+	settings *settings.Settings
 	log      *logrus.Logger
 
 	embyHelper *embyHelper.EmbyHelper
@@ -50,7 +50,7 @@ type ScanPlayedVideoSubInfo struct {
 	shareRootDir string
 }
 
-func NewScanPlayedVideoSubInfo(_settings settings.Settings) (*ScanPlayedVideoSubInfo, error) {
+func NewScanPlayedVideoSubInfo(_settings *settings.Settings) (*ScanPlayedVideoSubInfo, error) {
 	var err error
 	var scanPlayedVideoSubInfo ScanPlayedVideoSubInfo
 	scanPlayedVideoSubInfo.log = log_helper.GetLogger()
@@ -62,7 +62,7 @@ func NewScanPlayedVideoSubInfo(_settings settings.Settings) (*ScanPlayedVideoSub
 	scanPlayedVideoSubInfo.settings.Check()
 	// 初始化 Emby API 接口
 	if scanPlayedVideoSubInfo.settings.EmbySettings.Enable == true && scanPlayedVideoSubInfo.settings.EmbySettings.AddressUrl != "" && scanPlayedVideoSubInfo.settings.EmbySettings.APIKey != "" {
-		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(scanPlayedVideoSubInfo.settings.EmbySettings)
+		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(scanPlayedVideoSubInfo.settings)
 	}
 
 	// 初始化任务控制
