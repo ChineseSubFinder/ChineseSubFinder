@@ -65,7 +65,7 @@ func (v *VideoScanAndRefreshHelper) ScanMovieAndSeriesWait2DownloadSub() (*ScanV
 		v.embyHelper = nil
 
 	} else {
-		v.embyHelper = embyHelper.NewEmbyHelper(v.settings.EmbySettings)
+		v.embyHelper = embyHelper.NewEmbyHelper(v.settings)
 	}
 
 	var err error

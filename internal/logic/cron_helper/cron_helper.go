@@ -40,7 +40,7 @@ func NewCronHelper(_log *logrus.Logger, _sets *settings.Settings) *CronHelper {
 	return &ch
 }
 
-// Start 开启定时器任务，这个任务是非阻塞的，scanVideoProcess 仅仅可能是这个函数执行耗时而已
+// Start 开启定时器任务，这个任务是非阻塞的，scanVideoProcessAdd2DownloadQueue 仅仅可能是这个函数执行耗时而已
 // runImmediately == false 那么 ch.c.Start() 是不会阻塞的
 func (ch *CronHelper) Start(runImmediately bool) {
 
@@ -77,9 +77,9 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// ----------------------------------------------
 	ch.c = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
-	ch.entryIDScanVideoProcess, err = ch.c.AddFunc(ch.sets.CommonSettings.ScanInterval, ch.scanVideoProcess)
+	ch.entryIDScanVideoProcess, err = ch.c.AddFunc(ch.sets.CommonSettings.ScanInterval, ch.scanVideoProcessAdd2DownloadQueue)
 	if err != nil {
-		ch.log.Panicln("CronHelper scanVideoProcess, Cron entryID:", ch.entryIDScanVideoProcess, "Error:", err)
+		ch.log.Panicln("CronHelper scanVideoProcessAdd2DownloadQueue, Cron entryID:", ch.entryIDScanVideoProcess, "Error:", err)
 	}
 	ch.entryIDSupplierCheck, err = ch.c.AddFunc("@every 1h", ch.downloader.SupplierCheck)
 	if err != nil {
@@ -93,13 +93,13 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// 是否在定时器开启前先执行一次任务
 	if runImmediately == true {
 
-		ch.log.Infoln("First Time scanVideoProcess Start")
+		ch.log.Infoln("First Time scanVideoProcessAdd2DownloadQueue Start")
 
-		ch.scanVideoProcess()
+		ch.scanVideoProcessAdd2DownloadQueue()
 
 		ch.downloader.SupplierCheck()
 
-		ch.log.Infoln("First Time scanVideoProcess End")
+		ch.log.Infoln("First Time scanVideoProcessAdd2DownloadQueue End")
 
 	} else {
 		ch.log.Infoln("RunAtStartup: false, so will not Run At Startup")
@@ -190,8 +190,8 @@ func (ch *CronHelper) CronRunningStatusString() string {
 	}
 }
 
-// scanVideoProcess 定时执行的视频扫描任务，提交给任务队列，然后由额外的下载者线程去取队列中的任务下载
-func (ch *CronHelper) scanVideoProcess() {
+// scanVideoProcessAdd2DownloadQueue 定时执行的视频扫描任务，提交给任务队列，然后由额外的下载者线程去取队列中的任务下载
+func (ch *CronHelper) scanVideoProcessAdd2DownloadQueue() {
 
 	defer func() {
 		ch.cronLock.Lock()

@@ -122,7 +122,7 @@ func SkipChineseMovie(videoFullPath string, _proxySettings ...*settings.ProxySet
 	}
 }
 
-func MovieNeedDlSub(videoFullPath string) (bool, error) {
+func MovieNeedDlSub(videoFullPath string, ExpirationTime int) (bool, error) {
 	// 视频下面有不有字幕
 	found, _, _, err := MovieHasChineseSub(videoFullPath)
 	if err != nil {
@@ -130,7 +130,6 @@ func MovieNeedDlSub(videoFullPath string) (bool, error) {
 	}
 	// 资源下载的时间后的多少天内都进行字幕的自动下载，替换原有的字幕
 	currentTime := time.Now()
-	dayRange, _ := time.ParseDuration(common.DownloadSubDuring3Months)
 	mInfo, modifyTime, err := decode.GetVideoInfoFromFileFullPath(videoFullPath)
 	if err != nil {
 		return false, err
@@ -165,11 +164,11 @@ func MovieNeedDlSub(videoFullPath string) (bool, error) {
 		}
 
 		// 3个月内，或者没有字幕都要进行下载
-		if baseTime.Add(dayRange).After(currentTime) == true || found == false {
+		if baseTime.AddDate(0, 0, ExpirationTime).After(currentTime) == true || found == false {
 			// 需要下载的
 			return true, nil
 		} else {
-			if baseTime.Add(dayRange).After(currentTime) == false {
+			if baseTime.AddDate(0, 0, ExpirationTime).After(currentTime) == false {
 				log_helper.GetLogger().Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because movie has sub and downloaded or aired more than 3 months")
 				return false, nil
 			}

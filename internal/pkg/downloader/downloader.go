@@ -151,8 +151,8 @@ func (d *Downloader) QueueDownloader() {
 
 	var downloadCounter int64
 	downloadCounter = 0
-	// 从队列取数据出来
-	bok, oneJob, err := d.downloadQueue.GetOneWaitingJob()
+	// 从队列取数据出来，见《任务生命周期》
+	bok, oneJob, err := d.downloadQueue.GetOneJob()
 	if err != nil {
 		d.log.Errorln("d.downloadQueue.GetOneWaitingJob()", err)
 		return
@@ -261,7 +261,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	}
 	var err error
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(job.SeriesRootDirPath, false, d.settings.AdvancedSettings.ProxySettings)
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(job.SeriesRootDirPath, d.settings.AdvancedSettings.TaskQueue.ExpirationTime, false, d.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("seriesDlFunc.ReadSeriesInfoFromDir, Error: %v", err))
 		d.downloadQueue.AutoDetectUpdateJobStatus(job, err)

@@ -13,11 +13,6 @@ const EmbyApiGetItemsLimitMin = 50
 const EmbyApiGetItemsLimitMax = 50000
 
 const (
-	DownloadSubDuring3Months = "2160h"
-	DownloadSubDuring7Days   = "168h"
-)
-
-const (
 	SubSiteZiMuKu  = "zimuku"
 	SubSiteSubHd   = "subhd"
 	SubSiteShooter = "shooter"

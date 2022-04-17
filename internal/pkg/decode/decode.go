@@ -202,8 +202,8 @@ func GetImdbInfo4SeriesDir(seriesDir string) (types.VideoIMDBInfo, error) {
 	return imdbInfo, nil
 }
 
-// GetSeriesImdbInfoFromEpisode 从一集获取这个 Series 的 IMDB info
-func GetSeriesImdbInfoFromEpisode(oneEpFPath string) (types.VideoIMDBInfo, error) {
+// GetSeriesSeasonImdbInfoFromEpisode 从一集获取这个 Series 的 IMDB info
+func GetSeriesSeasonImdbInfoFromEpisode(oneEpFPath string) (types.VideoIMDBInfo, error) {
 
 	var err error
 	// 当前季的路径

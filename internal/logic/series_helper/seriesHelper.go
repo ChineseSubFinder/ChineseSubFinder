@@ -82,7 +82,7 @@ func readSeriesInfo(seriesDir string, _proxySettings ...*settings.ProxySettings)
 }
 
 // ReadSeriesInfoFromDir 读取剧集的信息，只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList
-func ReadSeriesInfoFromDir(seriesDir string, forcedScanAndDownloadSub bool, _proxySettings ...*settings.ProxySettings) (*series.SeriesInfo, error) {
+func ReadSeriesInfoFromDir(seriesDir string, ExpirationTime int, forcedScanAndDownloadSub bool, _proxySettings ...*settings.ProxySettings) (*series.SeriesInfo, error) {
 
 	seriesInfo, SubDict, err := readSeriesInfo(seriesDir, _proxySettings...)
 	if err != nil {
@@ -104,13 +104,13 @@ func ReadSeriesInfoFromDir(seriesDir string, forcedScanAndDownloadSub bool, _pro
 		seriesInfo.SeasonDict[episodeInfo.Season] = episodeInfo.Season
 	}
 
-	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(seriesInfo, forcedScanAndDownloadSub)
+	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(seriesInfo, ExpirationTime, forcedScanAndDownloadSub)
 
 	return seriesInfo, nil
 }
 
 // ReadSeriesInfoFromEmby 将 Emby API 读取到的数据进行转换到通用的结构中，需要填充那些剧集需要下载，这样要的是一个连续剧的，不是所有的传入(只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList)
-func ReadSeriesInfoFromEmby(seriesDir string, seriesVideoList []emby.EmbyMixInfo, forcedScanAndDownloadSub bool, _proxySettings ...*settings.ProxySettings) (*series.SeriesInfo, error) {
+func ReadSeriesInfoFromEmby(seriesDir string, seriesVideoList []emby.EmbyMixInfo, ExpirationTime int, forcedScanAndDownloadSub bool, _proxySettings ...*settings.ProxySettings) (*series.SeriesInfo, error) {
 
 	seriesInfo, SubDict, err := readSeriesInfo(seriesDir, _proxySettings...)
 	if err != nil {
@@ -127,7 +127,7 @@ func ReadSeriesInfoFromEmby(seriesDir string, seriesVideoList []emby.EmbyMixInfo
 		seriesInfo.SeasonDict[episodeInfo.Season] = episodeInfo.Season
 	}
 
-	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(seriesInfo, forcedScanAndDownloadSub)
+	seriesInfo.NeedDlEpsKeyList, seriesInfo.NeedDlSeasonDict = whichSeasonEpsNeedDownloadSub(seriesInfo, ExpirationTime, forcedScanAndDownloadSub)
 
 	return seriesInfo, nil
 }
@@ -267,12 +267,10 @@ func GetSeriesList(dir string) ([]string, error) {
 }
 
 // whichSeasonEpsNeedDownloadSub 有那些 Eps 需要下载的，按 SxEx 反回 epsKey
-func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo, forcedScanAndDownloadSub bool) (map[string]series.EpisodeInfo, map[int]int) {
+func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo, ExpirationTime int, forcedScanAndDownloadSub bool) (map[string]series.EpisodeInfo, map[int]int) {
 	var needDlSubEpsList = make(map[string]series.EpisodeInfo, 0)
 	var needDlSeasonList = make(map[int]int, 0)
 	currentTime := time.Now()
-	// 3个月
-	dayRange, _ := time.ParseDuration(common.DownloadSubDuring3Months)
 	// 直接强制所有视频都下载字幕
 	if forcedScanAndDownloadSub == true {
 		for _, epsInfo := range seriesInfo.EpList {
@@ -301,7 +299,7 @@ func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo, forcedScanAndD
 			baseTime = epsInfo.ModifyTime
 		}
 
-		if len(epsInfo.SubAlreadyDownloadedList) < 1 || baseTime.Add(dayRange).After(currentTime) == true {
+		if len(epsInfo.SubAlreadyDownloadedList) < 1 || baseTime.AddDate(0, 0, ExpirationTime).After(currentTime) == true {
 			// 添加
 			epsKey := my_util.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
 			needDlSubEpsList[epsKey] = epsInfo
@@ -309,7 +307,7 @@ func whichSeasonEpsNeedDownloadSub(seriesInfo *series.SeriesInfo, forcedScanAndD
 		} else {
 			if len(epsInfo.SubAlreadyDownloadedList) > 0 {
 				log_helper.GetLogger().Infoln("Skip because find sub file and downloaded or aired over 3 months,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
-			} else if baseTime.Add(dayRange).After(currentTime) == false {
+			} else if baseTime.AddDate(0, 0, ExpirationTime).After(currentTime) == false {
 				log_helper.GetLogger().Infoln("Skip because 3 months pass,", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 			}
 		}

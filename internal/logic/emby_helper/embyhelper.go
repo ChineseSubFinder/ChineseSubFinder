@@ -22,16 +22,16 @@ import (
 )
 
 type EmbyHelper struct {
-	embyApi    *embyHelper.EmbyApi
-	EmbyConfig *settings.EmbySettings
-	threads    int
-	timeOut    time.Duration
-	listLock   sync.Mutex
+	embyApi  *embyHelper.EmbyApi
+	settings *settings.Settings
+	threads  int
+	timeOut  time.Duration
+	listLock sync.Mutex
 }
 
-func NewEmbyHelper(embyConfig *settings.EmbySettings) *EmbyHelper {
-	em := EmbyHelper{EmbyConfig: embyConfig}
-	em.embyApi = embyHelper.NewEmbyApi(embyConfig)
+func NewEmbyHelper(_settings *settings.Settings) *EmbyHelper {
+	em := EmbyHelper{settings: _settings}
+	em.embyApi = embyHelper.NewEmbyApi(_settings.EmbySettings)
 	em.threads = 6
 	em.timeOut = 60 * time.Second
 	return &em
@@ -255,14 +255,14 @@ func (em *EmbyHelper) findMappingPath(fileFPathWithEmby string, isMovieOrSeries 
 	matchedEmbyPaths := make([]string, 0)
 	if isMovieOrSeries == true {
 		// 电影的情况
-		for _, embyPath := range em.EmbyConfig.MoviePathsMapping {
+		for _, embyPath := range em.settings.EmbySettings.MoviePathsMapping {
 			if strings.HasPrefix(fileFPathWithEmby, embyPath) == true {
 				matchedEmbyPaths = append(matchedEmbyPaths, embyPath)
 			}
 		}
 	} else {
 		// 连续剧的情况
-		for _, embyPath := range em.EmbyConfig.SeriesPathsMapping {
+		for _, embyPath := range em.settings.EmbySettings.SeriesPathsMapping {
 			if strings.HasPrefix(fileFPathWithEmby, embyPath) == true {
 				matchedEmbyPaths = append(matchedEmbyPaths, embyPath)
 			}
@@ -279,7 +279,7 @@ func (em *EmbyHelper) findMappingPath(fileFPathWithEmby string, isMovieOrSeries 
 	nowPhRootPath := ""
 	if isMovieOrSeries == true {
 		// 电影的情况
-		for physicalPath, embyPath := range em.EmbyConfig.MoviePathsMapping {
+		for physicalPath, embyPath := range em.settings.EmbySettings.MoviePathsMapping {
 			if embyPath == pathSlices[0].Path {
 				nowPhRootPath = physicalPath
 				break
@@ -287,7 +287,7 @@ func (em *EmbyHelper) findMappingPath(fileFPathWithEmby string, isMovieOrSeries 
 		}
 	} else {
 		// 连续剧的情况
-		for physicalPath, embyPath := range em.EmbyConfig.SeriesPathsMapping {
+		for physicalPath, embyPath := range em.settings.EmbySettings.SeriesPathsMapping {
 			if embyPath == pathSlices[0].Path {
 				nowPhRootPath = physicalPath
 				break
@@ -321,14 +321,14 @@ func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMo
 	matchedEmbyPaths := make([]string, 0)
 	if isMovieOrSeries == true {
 		// 电影的情况
-		for _, embyPath := range em.EmbyConfig.MoviePathsMapping {
+		for _, embyPath := range em.settings.EmbySettings.MoviePathsMapping {
 			if strings.HasPrefix(mixInfo.VideoInfo.Path, embyPath) == true {
 				matchedEmbyPaths = append(matchedEmbyPaths, embyPath)
 			}
 		}
 	} else {
 		// 连续剧的情况
-		for _, embyPath := range em.EmbyConfig.SeriesPathsMapping {
+		for _, embyPath := range em.settings.EmbySettings.SeriesPathsMapping {
 			if strings.HasPrefix(mixInfo.VideoInfo.Path, embyPath) == true {
 				matchedEmbyPaths = append(matchedEmbyPaths, embyPath)
 			}
@@ -344,7 +344,7 @@ func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMo
 	nowPhRootPath := ""
 	if isMovieOrSeries == true {
 		// 电影的情况
-		for physicalPath, embyPath := range em.EmbyConfig.MoviePathsMapping {
+		for physicalPath, embyPath := range em.settings.EmbySettings.MoviePathsMapping {
 			if embyPath == pathSlices[0].Path {
 				nowPhRootPath = physicalPath
 				break
@@ -352,7 +352,7 @@ func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMo
 		}
 	} else {
 		// 连续剧的情况
-		for physicalPath, embyPath := range em.EmbyConfig.SeriesPathsMapping {
+		for physicalPath, embyPath := range em.settings.EmbySettings.SeriesPathsMapping {
 			if embyPath == pathSlices[0].Path {
 				nowPhRootPath = physicalPath
 				break
@@ -519,8 +519,6 @@ func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries
 // filterNoChineseSubVideoList 将没有中文字幕的视频找出来
 func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) ([]emby.EmbyMixInfo, error) {
 	currentTime := time.Now()
-	dayRange3Months, _ := time.ParseDuration(common2.DownloadSubDuring3Months)
-	dayRange7Days, _ := time.ParseDuration(common2.DownloadSubDuring7Days)
 
 	var noSubVideoList = make([]emby.EmbyMixInfo, 0)
 	// TODO 这里有一种情况需要考虑的，如果内置有中文的字幕，那么是否需要跳过，目前暂定的一定要有外置的字幕
@@ -528,7 +526,7 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 
 		needDlSub3Month := false
 		// 3个月内，或者没有字幕都要进行下载
-		if info.VideoInfo.PremiereDate.Add(dayRange3Months).After(currentTime) == true {
+		if info.VideoInfo.PremiereDate.AddDate(0, 0, em.settings.AdvancedSettings.TaskQueue.ExpirationTime).After(currentTime) == true {
 			// 需要下载的
 			needDlSub3Month = true
 		}
@@ -563,7 +561,7 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 		if haveExternalChineseSub == false {
 			// 没有外置字幕
 			// 如果创建了7天，且有内置的中文字幕，那么也不进行下载了
-			if info.VideoInfo.DateCreated.Add(dayRange7Days).After(currentTime) == false && haveInsideChineseSub == true {
+			if info.VideoInfo.DateCreated.AddDate(0, 0, em.settings.AdvancedSettings.TaskQueue.DownloadSubDuringXDays).After(currentTime) == false && haveInsideChineseSub == true {
 				log_helper.GetLogger().Debugln("Create Over 7 Days, And It Has Inside ChineseSub, Than Skip", info.VideoFileName)
 				continue
 			}

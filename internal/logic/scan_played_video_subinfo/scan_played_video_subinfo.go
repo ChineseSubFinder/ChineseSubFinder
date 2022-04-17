@@ -281,7 +281,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	if isMovie == true {
 		imdbInfo4Video, err = decode.GetImdbInfo4Movie(videoFPath)
 	} else {
-		imdbInfo4Video, err = decode.GetSeriesImdbInfoFromEpisode(videoFPath)
+		imdbInfo4Video, err = decode.GetSeriesSeasonImdbInfoFromEpisode(videoFPath)
 	}
 	if err != nil {
 		// 如果找不到当前电影的 IMDB Info 本地文件，那么就跳过

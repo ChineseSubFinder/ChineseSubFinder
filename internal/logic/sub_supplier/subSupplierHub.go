@@ -74,7 +74,7 @@ func (d *SubSupplierHub) MovieNeedDlSub(videoFullPath string, forcedScanAndDownl
 		// 强制下载字幕
 		needDlSub = true
 	} else {
-		needDlSub, err = movieHelper.MovieNeedDlSub(videoFullPath)
+		needDlSub, err = movieHelper.MovieNeedDlSub(videoFullPath, d.settings.AdvancedSettings.TaskQueue.ExpirationTime)
 		if err != nil {
 			d.log.Errorln(errors.Newf("MovieNeedDlSub %v %v", videoFullPath, err))
 			return false
@@ -101,7 +101,7 @@ func (d *SubSupplierHub) SeriesNeedDlSub(seriesRootPath string, forcedScanAndDow
 	}
 
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(seriesRootPath, forcedScanAndDownloadSub, d.settings.AdvancedSettings.ProxySettings)
+	seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(seriesRootPath, d.settings.AdvancedSettings.TaskQueue.ExpirationTime, forcedScanAndDownloadSub, d.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		return false, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesRootPath, err)
 	}
@@ -110,7 +110,7 @@ func (d *SubSupplierHub) SeriesNeedDlSub(seriesRootPath string, forcedScanAndDow
 }
 
 // SeriesNeedDlSubFromEmby 连续剧是否符合要求需要下载字幕
-func (d *SubSupplierHub) SeriesNeedDlSubFromEmby(seriesRootPath string, seriesVideoList []emby.EmbyMixInfo, skipChineseMovie, forcedScanAndDownloadSub bool) (bool, *series.SeriesInfo, error) {
+func (d *SubSupplierHub) SeriesNeedDlSubFromEmby(seriesRootPath string, seriesVideoList []emby.EmbyMixInfo, ExpirationTime int, skipChineseMovie, forcedScanAndDownloadSub bool) (bool, *series.SeriesInfo, error) {
 
 	if skipChineseMovie == true {
 		var skip bool
@@ -125,7 +125,7 @@ func (d *SubSupplierHub) SeriesNeedDlSubFromEmby(seriesRootPath string, seriesVi
 		}
 	}
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := seriesHelper.ReadSeriesInfoFromEmby(seriesRootPath, seriesVideoList, forcedScanAndDownloadSub, d.settings.AdvancedSettings.ProxySettings)
+	seriesInfo, err := seriesHelper.ReadSeriesInfoFromEmby(seriesRootPath, seriesVideoList, ExpirationTime, forcedScanAndDownloadSub, d.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		return false, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesRootPath, err)
 	}
