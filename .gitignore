@@ -88,3 +88,4 @@ TestData/
 /internal/logic/task_queue/Logs
 /task_queue
 /internal/pkg/sub_file_hash/Logs
+/internal/logic/sub_supplier/xunlei/task_queue

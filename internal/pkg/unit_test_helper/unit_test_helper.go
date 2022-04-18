@@ -70,19 +70,30 @@ func GenerateShooterVideoFile(videoPartsRootPath string) (string, error) {
 	*/
 	for _, name := range partNames {
 
-		partF, err := os.Open(filepath.Join(videoPartsRootPath, name+ext))
-		if err != nil {
-			return "", err
+		onePart := func() error {
+			partF, err := os.Open(filepath.Join(videoPartsRootPath, name+ext))
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = partF.Close()
+			}()
+			partAll, err := io.ReadAll(partF)
+			if err != nil {
+				return err
+			}
+			int64Numb, err := strconv.ParseInt(name, 10, 64)
+			if err != nil {
+				return err
+			}
+			_, err = f.WriteAt(partAll, int64Numb)
+			if err != nil {
+				return err
+			}
+			return nil
 		}
-		partAll, err := io.ReadAll(partF)
-		if err != nil {
-			return "", err
-		}
-		int64Numb, err := strconv.ParseInt(name, 10, 64)
-		if err != nil {
-			return "", err
-		}
-		_, err = f.WriteAt(partAll, int64Numb)
+
+		err = onePart()
 		if err != nil {
 			return "", err
 		}
@@ -118,19 +129,31 @@ func GenerateXunleiVideoFile(videoPartsRootPath string) (string, error) {
 	*/
 	for _, name := range partNames {
 
-		partF, err := os.Open(filepath.Join(videoPartsRootPath, name+ext))
-		if err != nil {
-			return "", err
+		onePart := func() error {
+			partF, err := os.Open(filepath.Join(videoPartsRootPath, name+ext))
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = partF.Close()
+			}()
+			partAll, err := io.ReadAll(partF)
+			if err != nil {
+				return err
+			}
+			int64Numb, err := strconv.ParseInt(name, 10, 64)
+			if err != nil {
+				return err
+			}
+			_, err = f.WriteAt(partAll, int64Numb)
+			if err != nil {
+				return err
+			}
+
+			return nil
 		}
-		partAll, err := io.ReadAll(partF)
-		if err != nil {
-			return "", err
-		}
-		int64Numb, err := strconv.ParseInt(name, 10, 64)
-		if err != nil {
-			return "", err
-		}
-		_, err = f.WriteAt(partAll, int64Numb)
+
+		err = onePart()
 		if err != nil {
 			return "", err
 		}
@@ -166,19 +189,31 @@ func GenerateCSFVideoFile(videoPartsRootPath string) (string, error) {
 	*/
 	for _, name := range partNames {
 
-		partF, err := os.Open(filepath.Join(videoPartsRootPath, name+ext))
-		if err != nil {
-			return "", err
+		onePart := func() error {
+			partF, err := os.Open(filepath.Join(videoPartsRootPath, name+ext))
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = partF.Close()
+			}()
+			partAll, err := io.ReadAll(partF)
+			if err != nil {
+				return err
+			}
+			int64Numb, err := strconv.ParseInt(name, 10, 64)
+			if err != nil {
+				return err
+			}
+			_, err = f.WriteAt(partAll, int64Numb)
+			if err != nil {
+				return err
+			}
+
+			return nil
 		}
-		partAll, err := io.ReadAll(partF)
-		if err != nil {
-			return "", err
-		}
-		int64Numb, err := strconv.ParseInt(name, 10, 64)
-		if err != nil {
-			return "", err
-		}
-		_, err = f.WriteAt(partAll, int64Numb)
+
+		err = onePart()
 		if err != nil {
 			return "", err
 		}

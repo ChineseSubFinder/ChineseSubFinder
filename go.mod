@@ -57,7 +57,7 @@ require (
 	github.com/ysmood/gson v0.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 	golang.org/x/net v0.0.0-20220114011407-0dd24b26b47d
-	golang.org/x/sys v0.0.0-20220406163625-3f8b81556e12 // indirect
+	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 	golang.org/x/text v0.3.7
 	gonum.org/v1/gonum v0.9.3
 	gopkg.in/errgo.v2 v2.1.0
@@ -68,7 +68,10 @@ require (
 	gorm.io/gorm v1.22.5
 )
 
-require github.com/dgraph-io/badger/v3 v3.2103.2
+require (
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
+	github.com/dgraph-io/badger/v3 v3.2103.2
+)
 
 require (
 	github.com/EDDYCJY/fake-useragent v0.2.0 // indirect
@@ -77,7 +80,6 @@ require (
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/andybalholm/brotli v1.0.0 // indirect
 	github.com/andybalholm/cascadia v1.2.0 // indirect
-	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
 	github.com/bodgit/plumbing v1.1.0 // indirect
 	github.com/bodgit/windows v1.0.0 // indirect
@@ -131,6 +133,7 @@ require (
 	go.opencensus.io v0.22.5 // indirect
 	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect
 	golang.org/x/exp v0.0.0-20211123021643-48cbe7f80d7c // indirect
+	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
