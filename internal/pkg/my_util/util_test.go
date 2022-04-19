@@ -2,6 +2,7 @@ package my_util
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
 	"testing"
@@ -28,4 +29,13 @@ func TestGetRestOfDaySec(t *testing.T) {
 
 	rest := GetRestOfDaySec()
 	println(rest)
+}
+
+func TestGetPublicIP(t *testing.T) {
+
+	got, err := GetPublicIP(settings.NewTaskQueue())
+	if err != nil {
+		t.Fatal(err)
+	}
+	println(got)
 }

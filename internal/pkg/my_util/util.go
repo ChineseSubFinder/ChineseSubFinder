@@ -73,6 +73,26 @@ func NewHttpClient(_proxySettings ...settings.ProxySettings) *resty.Client {
 	return httpClient
 }
 
+func GetPublicIP(queue *settings.TaskQueue, _proxySettings ...settings.ProxySettings) (string, error) {
+
+	var client *resty.Client
+	if len(_proxySettings) > 0 {
+		client = NewHttpClient(_proxySettings[0])
+	} else {
+		client = NewHttpClient()
+	}
+
+	targetSite := "http://myexternalip.com/raw"
+	if queue.CheckPublicIPTargetSite != "" {
+		targetSite = queue.CheckPublicIPTargetSite
+	}
+	response, err := client.R().Get(targetSite)
+	if err != nil {
+		return "", err
+	}
+	return response.String(), err
+}
+
 // DownFile 从指定的 url 下载文件
 func DownFile(l *logrus.Logger, urlStr string, _proxySettings ...settings.ProxySettings) ([]byte, string, error) {
 	var proxySettings settings.ProxySettings
