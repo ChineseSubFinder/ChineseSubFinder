@@ -138,7 +138,8 @@ func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, erro
 				continue
 			}
 			// 下载成功需要统计到今天的次数中
-			_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName())
+			_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName(),
+				my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
 			if err != nil {
 				s.log.Warningln(s.GetSupplierName(), "getSubListFromFile.AddDailyDownloadCount", err)
 			}
@@ -160,7 +161,7 @@ func (s *Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShoote
 
 	var jsonList []SublistShooter
 
-	httpClient := my_util.NewHttpClient(*s.settings.AdvancedSettings.ProxySettings)
+	httpClient := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	resp, err := httpClient.R().
 		SetFormData(map[string]string{
 			"filehash": fileHash,

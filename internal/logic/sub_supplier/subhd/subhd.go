@@ -88,7 +88,8 @@ func (s *Supplier) IsAlive() bool {
 func (s *Supplier) OverDailyDownloadLimit() bool {
 
 	// 需要查询今天的限额
-	count, err := task_queue.GetDailyDownloadCount(s.GetSupplierName())
+	count, err := task_queue.GetDailyDownloadCount(s.GetSupplierName(),
+		my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "GetDailyDownloadCount", err)
 		return true
@@ -613,7 +614,8 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, 
 	}
 
 	// 下载成功需要统计到今天的次数中
-	_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName())
+	_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName(),
+		my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
 	if err != nil {
 		s.log.Warningln(s.GetSupplierName(), "getSubListFromFile.AddDailyDownloadCount", err)
 	}

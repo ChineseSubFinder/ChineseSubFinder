@@ -8,14 +8,14 @@ import (
 
 // GetDailyDownloadCount 根据字幕提供者的名称，获取今日下载计数的次数，仅仅统计次数，并不确认是那个视频的字幕下载
 // whichDay nowTime.Format("2006-01-02")
-func GetDailyDownloadCount(supplierName string, whichDay ...string) (int, error) {
+func GetDailyDownloadCount(supplierName string, publicIP string, whichDay ...string) (int, error) {
 
 	KeyName := ""
 	if len(whichDay) > 0 {
-		KeyName = supplierName + "_" + whichDay[0]
+		KeyName = supplierName + "_" + whichDay[0] + "_" + publicIP
 	} else {
 		nowTime := time.Now()
-		KeyName = supplierName + "_" + nowTime.Format("2006-01-02")
+		KeyName = supplierName + "_" + nowTime.Format("2006-01-02") + "_" + publicIP
 	}
 
 	outCount := 0
@@ -51,14 +51,14 @@ func GetDailyDownloadCount(supplierName string, whichDay ...string) (int, error)
 }
 
 // AddDailyDownloadCount 根据字幕提供者的名称，今日下载计数的次数+1，仅仅统计次数，并不确认是那个视频的字幕下载。TTL 多加 5s 确保今天过去（暂时去除 TTL）
-func AddDailyDownloadCount(supplierName string, whichDay ...string) (int, error) {
+func AddDailyDownloadCount(supplierName string, publicIP string, whichDay ...string) (int, error) {
 
 	nowTime := time.Now()
 	// 今天剩余的时间（s）
 	//restOfDaySecond := my_util.GetRestOfDaySec()
-	KeyName := supplierName + "_" + nowTime.Format("2006-01-02")
+	KeyName := supplierName + "_" + nowTime.Format("2006-01-02") + "_" + publicIP
 
-	dailyDownloadCount, err := GetDailyDownloadCount(supplierName, whichDay...)
+	dailyDownloadCount, err := GetDailyDownloadCount(supplierName, publicIP, whichDay...)
 	if err != nil {
 		return 0, err
 	}
@@ -89,6 +89,7 @@ func AddDailyDownloadCount(supplierName string, whichDay ...string) (int, error)
 	return dailyDownloadCount, nil
 }
 
+// DelDailyDownloadCount 不是定版。这里需要搜索前缀去删除，因为引入了 Public IP 的分类
 func DelDailyDownloadCount(supplierName string, whichDay ...string) error {
 
 	KeyName := ""

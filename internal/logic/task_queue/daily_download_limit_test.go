@@ -29,7 +29,7 @@ func TestGetDailyDownloadCount(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			got, err := GetDailyDownloadCount(tt.args.supplierName, tt.args.whichDay...)
+			got, err := GetDailyDownloadCount(tt.args.supplierName, "", tt.args.whichDay...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetDailyDownloadCount() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -58,7 +58,7 @@ func TestAddDailyDownloadCount(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			got, err := AddDailyDownloadCount(tt.args.supplierName)
+			got, err := AddDailyDownloadCount(tt.args.supplierName, "")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AddDailyDownloadCount() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -67,7 +67,7 @@ func TestAddDailyDownloadCount(t *testing.T) {
 				t.Errorf("AddDailyDownloadCount() got = %v, want %v", got, tt.want)
 			}
 
-			got, err = AddDailyDownloadCount(tt.args.supplierName)
+			got, err = AddDailyDownloadCount(tt.args.supplierName, "")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AddDailyDownloadCount() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -86,12 +86,12 @@ func TestAddDailyDownloadCount(t *testing.T) {
 
 func TestAddGetDailyDownloadCount(t *testing.T) {
 
-	addCount, err := AddDailyDownloadCount(supplieName)
+	addCount, err := AddDailyDownloadCount(supplieName, "")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
 
-	getDailyDownloadCount, err := GetDailyDownloadCount(supplieName)
+	getDailyDownloadCount, err := GetDailyDownloadCount(supplieName, "")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -100,12 +100,12 @@ func TestAddGetDailyDownloadCount(t *testing.T) {
 		t.Fatalf("not the same")
 	}
 
-	addCount, err = AddDailyDownloadCount(supplieName)
+	addCount, err = AddDailyDownloadCount(supplieName, "")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
 
-	getDailyDownloadCount, err = GetDailyDownloadCount(supplieName)
+	getDailyDownloadCount, err = GetDailyDownloadCount(supplieName, "")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

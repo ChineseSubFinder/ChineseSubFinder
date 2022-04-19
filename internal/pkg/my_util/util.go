@@ -32,11 +32,11 @@ import (
 )
 
 // NewHttpClient 新建一个 resty 的对象
-func NewHttpClient(_proxySettings ...settings.ProxySettings) *resty.Client {
+func NewHttpClient(_proxySettings ...*settings.ProxySettings) *resty.Client {
 	//const defUserAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"
 	//const defUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41"
 
-	var proxySettings settings.ProxySettings
+	var proxySettings *settings.ProxySettings
 	var HttpProxy, UserAgent, Referer string
 
 	if len(_proxySettings) > 0 {
@@ -73,7 +73,7 @@ func NewHttpClient(_proxySettings ...settings.ProxySettings) *resty.Client {
 	return httpClient
 }
 
-func GetPublicIP(queue *settings.TaskQueue, _proxySettings ...settings.ProxySettings) (string, error) {
+func GetPublicIP(queue *settings.TaskQueue, _proxySettings ...*settings.ProxySettings) string {
 
 	var client *resty.Client
 	if len(_proxySettings) > 0 {
@@ -88,14 +88,14 @@ func GetPublicIP(queue *settings.TaskQueue, _proxySettings ...settings.ProxySett
 	}
 	response, err := client.R().Get(targetSite)
 	if err != nil {
-		return "", err
+		return ""
 	}
-	return response.String(), err
+	return response.String()
 }
 
 // DownFile 从指定的 url 下载文件
-func DownFile(l *logrus.Logger, urlStr string, _proxySettings ...settings.ProxySettings) ([]byte, string, error) {
-	var proxySettings settings.ProxySettings
+func DownFile(l *logrus.Logger, urlStr string, _proxySettings ...*settings.ProxySettings) ([]byte, string, error) {
+	var proxySettings *settings.ProxySettings
 	if len(_proxySettings) > 0 {
 		proxySettings = _proxySettings[0]
 	}
