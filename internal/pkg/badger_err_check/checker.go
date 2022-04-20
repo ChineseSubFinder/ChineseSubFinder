@@ -1,4 +1,4 @@
-package task_queue
+package badger_err_check
 
 import "github.com/dgraph-io/badger/v3"
 

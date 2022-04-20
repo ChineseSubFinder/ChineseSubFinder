@@ -17,6 +17,7 @@ type AdvancedSettings struct {
 	SuppliersSettings          *SuppliersSettings `json:"suppliers_settings"`             // 每个字幕源的设置
 	ScanLogic                  *ScanLogic         `json:"scan_logic"`                     // 扫描的逻辑
 	TaskQueue                  *TaskQueue         `json:"task_queue"`                     // 任务队列的设置
+	DownloadFileCache          *DownloadFileCache `json:"download_file_cache"`            // 下载文件的缓存
 }
 
 func NewAdvancedSettings() *AdvancedSettings {
@@ -27,5 +28,6 @@ func NewAdvancedSettings() *AdvancedSettings {
 		SuppliersSettings: NewSuppliersSettings(),
 		ScanLogic:         NewScanLogic(false, false),
 		TaskQueue:         NewTaskQueue(),
+		DownloadFileCache: NewDownloadFileCache(),
 	}
 }

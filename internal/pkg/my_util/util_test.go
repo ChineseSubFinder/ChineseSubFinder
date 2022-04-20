@@ -33,9 +33,6 @@ func TestGetRestOfDaySec(t *testing.T) {
 
 func TestGetPublicIP(t *testing.T) {
 
-	got, err := GetPublicIP(settings.NewTaskQueue())
-	if err != nil {
-		t.Fatal(err)
-	}
+	got := GetPublicIP(settings.NewTaskQueue())
 	println(got)
 }

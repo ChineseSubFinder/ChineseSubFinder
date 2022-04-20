@@ -3,6 +3,7 @@ package task_queue
 import (
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/badger_err_check"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	taskQueue2 "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
@@ -401,7 +402,7 @@ func (t *TaskQueue) read() {
 				var item *badger.Item
 				item, err = tx.Get(key)
 				if err != nil {
-					if IsErrOk(err) == true {
+					if badger_err_check.IsErrOk(err) == true {
 						return nil
 					}
 					return err

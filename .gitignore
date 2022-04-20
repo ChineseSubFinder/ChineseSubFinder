@@ -89,3 +89,6 @@ TestData/
 /task_queue
 /internal/pkg/sub_file_hash/Logs
 /internal/logic/sub_supplier/xunlei/task_queue
+/internal/pkg/download_file_cache/ChineseSubFinderSettings.json
+/internal/pkg/download_file_cache/Logs
+/internal/pkg/download_file_cache/download_sub_cache
