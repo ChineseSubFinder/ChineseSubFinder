@@ -31,13 +31,11 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 
 	// 使用提交过来的这个代理地址，测试多个字幕网站的可用性
 	subSupplierHub := subSupplier.NewSubSupplierHub(
-		tmpSettings,
-		cb.log,
 		// 这里无需传递下载字幕的缓存实例
-		zimuku.NewSupplier(tmpSettings, cb.log, nil),
-		xunlei.NewSupplier(tmpSettings, cb.log, nil),
-		shooter.NewSupplier(tmpSettings, cb.log, nil),
-		subhd.NewSupplier(tmpSettings, cb.log, nil),
+		zimuku.NewSupplier(cb.fileDownloader),
+		xunlei.NewSupplier(cb.fileDownloader),
+		shooter.NewSupplier(cb.fileDownloader),
+		subhd.NewSupplier(cb.fileDownloader),
 	)
 
 	outStatus := subSupplierHub.CheckSubSiteStatus()

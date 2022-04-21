@@ -232,8 +232,7 @@ func (ch *CronHelper) scanVideoProcessAdd2DownloadQueue() {
 	// ----------------------------------------------------------------------------------------
 	// 扫描有那些视频需要下载字幕，放入队列中，然后会有下载者去这个队列取出来进行下载
 	videoScanAndRefreshHelper := video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
-		ch.sets,
-		ch.log,
+		ch.fileDownloader,
 		ch.downloadQueue)
 
 	ch.log.Infoln("Video Scan Started...")

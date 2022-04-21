@@ -1,20 +1,20 @@
 package base
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
 type ControllerBase struct {
-	log *logrus.Logger
+	fileDownloader *file_downloader.FileDownloader
 }
 
-func NewControllerBase(_logger *logrus.Logger) *ControllerBase {
+func NewControllerBase(fileDownloader *file_downloader.FileDownloader) *ControllerBase {
 	return &ControllerBase{
-		log: _logger,
+		fileDownloader: fileDownloader,
 	}
 }
 

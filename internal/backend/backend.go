@@ -6,6 +6,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/routers"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/ws_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -14,7 +15,7 @@ import (
 )
 
 // StartBackEnd 开启后端的服务器
-func StartBackEnd(httpPort int, cronHelper *cron_helper.CronHelper) {
+func StartBackEnd(fileDownloader *file_downloader.FileDownloader, httpPort int, cronHelper *cron_helper.CronHelper) {
 
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = ioutil.Discard
@@ -22,7 +23,7 @@ func StartBackEnd(httpPort int, cronHelper *cron_helper.CronHelper) {
 	engine := gin.Default()
 	// 默认所有都通过
 	engine.Use(cors.Default())
-	routers.InitRouter(engine, cronHelper)
+	routers.InitRouter(fileDownloader, engine, cronHelper)
 
 	engine.GET("/", func(c *gin.Context) {
 		c.Header("content-type", "text/html;charset=utf-8")
