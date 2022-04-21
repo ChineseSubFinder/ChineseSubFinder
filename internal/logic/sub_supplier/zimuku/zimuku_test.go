@@ -128,7 +128,7 @@ func TestSupplier_step3(t *testing.T) {
 	// 调试用，不作为单元测试的一个考核，因为可能不可控
 	//dlUrl := "https://zmk.pw/dld/162150.html"
 	//s := Supplier{}
-	//fileName, datas, err := s.step3(dlUrl)
+	//fileName, datas, err := s.DownFile(dlUrl)
 	//if err != nil {
 	//	t.Fatal(err)
 	//}

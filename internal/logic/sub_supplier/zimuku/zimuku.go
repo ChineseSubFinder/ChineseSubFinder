@@ -417,25 +417,20 @@ func (s *Supplier) whichSubInfoNeedDownload(browser *rod.Browser, subInfos SubIn
 
 	// 第四级界面，具体字幕下载
 	for i, subInfo := range tmpSubInfo {
-		s.log.Debugln(s.GetSupplierName(), "step3 -> subInfo.SubDownloadPageUrl:", i, subInfo.SubDownloadPageUrl)
-		fileName, data, err := s.step3(browser, subInfo.SubDownloadPageUrl)
+
+		s.log.Debugln(s.GetSupplierName(), "GetEx:", i, subInfo.SubDownloadPageUrl)
+
+		subInfo, err := s.fileDownloader.GetEx(s.GetSupplierName(), browser, subInfo.SubDownloadPageUrl, int64(i), subInfo.Season, subInfo.Episode, s.DownFile)
 		if err != nil {
-			s.log.Error(s.GetSupplierName(), "step 3", err)
+			s.log.Errorln(s.GetSupplierName(), "GetEx", subInfo.Name, err)
 			continue
 		}
-		// 默认都是包含中文字幕的，然后具体使用的时候再进行区分
 
-		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, language2.ChineseSimple,
-			my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, subInfo.SubDownloadPageUrl), 0,
-			0, filepath.Ext(fileName), data)
-
-		oneSubInfo.Season = subInfo.Season
-		oneSubInfo.Episode = subInfo.Episode
-		outSubInfoList = append(outSubInfoList, *oneSubInfo)
+		outSubInfoList = append(outSubInfoList, *subInfo)
 	}
 
 	for i, info := range outSubInfoList {
-		s.log.Debugln(s.GetSupplierName(), "step3 -> Downloaded File Info", i, "FileName:", info.Name, "FileUrl:", info.FileUrl)
+		s.log.Debugln(s.GetSupplierName(), "DownFile -> Downloaded File Info", i, "FileName:", info.Name, "FileUrl:", info.FileUrl)
 	}
 
 	// 返回前，需要把每一个 Eps 的 Season Episode 信息填充到每个 SubInfo 中
@@ -606,18 +601,18 @@ func (s *Supplier) step2(browser *rod.Browser, subInfo *SubInfo) error {
 	return nil
 }
 
-// step3 第三级界面，具体字幕下载 ZiMuKuDownloadUrlStep3NotFound ZiMuKuDownloadUrlStep3AllFailed
-func (s *Supplier) step3(browser *rod.Browser, subDownloadPageUrl string) (string, []byte, error) {
+// DownFile 第三级界面，具体字幕下载 ZiMuKuDownloadUrlStep3NotFound ZiMuKuDownloadUrlDownFileFailed
+func (s *Supplier) DownFile(browser *rod.Browser, subDownloadPageUrl string, TopN int64, Season, Episode int) (*supplier.SubInfo, error) {
 	var err error
 	defer func() {
 		if err != nil {
-			notify_center.Notify.Add("zimuku_step3", err.Error())
+			notify_center.Notify.Add("zimuku_DownFile", err.Error())
 		}
 	}()
-	subDownloadPageUrl = my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, subDownloadPageUrl)
-	result, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageUrl, s.tt)
+	subDownloadPageFullUrl := my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, subDownloadPageUrl)
+	result, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageFullUrl, s.tt)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 	defer func() {
 		_ = page.Close()
@@ -625,8 +620,8 @@ func (s *Supplier) step3(browser *rod.Browser, subDownloadPageUrl string) (strin
 	re := regexp.MustCompile(`<li><a\s+rel="nofollow"\s+href="([^"]*/download/[^"]+)"`)
 	matched := re.FindAllStringSubmatch(result, -1)
 	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
-		s.log.Debugln("Step3,sub download url not found", subDownloadPageUrl)
-		return "", nil, common2.ZiMuKuDownloadUrlStep3NotFound
+		s.log.Debugln("Step3,sub download url not found", subDownloadPageFullUrl)
+		return nil, common2.ZiMuKuDownloadUrlStep3NotFound
 	}
 
 	fileName := ""
@@ -658,23 +653,23 @@ func (s *Supplier) step3(browser *rod.Browser, subDownloadPageUrl string) (strin
 		downloadSuccess = true
 	})
 	if err != nil {
-		s.log.Errorln("ZiMuKu step3 DownloadFile", err)
-		return "", nil, err
+		s.log.Errorln("ZiMuKu DownFile DownloadFile", err)
+		return nil, err
 	}
 	if downloadSuccess == true {
 		s.log.Debugln("Step3,DownFile, FileName:", fileName, "DataLen:", len(fileByte))
 
-		// 下载成功需要统计到今天的次数中
-		_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName(),
-			my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
-		if err != nil {
-			s.log.Warningln(s.GetSupplierName(), "getSubListFromFile.AddDailyDownloadCount", err)
-		}
+		inSubInfo := supplier.NewSubInfo(s.GetSupplierName(), 1, fileName, language2.ChineseSimple,
+			subDownloadPageUrl, 0, 0, filepath.Ext(fileName), fileByte)
 
-		return fileName, fileByte, nil
+		inSubInfo.TopN = TopN
+		inSubInfo.Season = Season
+		inSubInfo.Episode = Episode
+
+		return inSubInfo, nil
 	} else {
-		s.log.Debugln("Step3,sub download url not found", subDownloadPageUrl)
-		return "", nil, common2.ZiMuKuDownloadUrlStep3AllFailed
+		s.log.Debugln("Step3,sub download url not found", subDownloadPageFullUrl)
+		return nil, common2.ZiMuKuDownloadUrlDownFileFailed
 	}
 }
 

@@ -175,25 +175,13 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 		pkgcommon.SetSubScanJobStatusScanSeriesSub(i+1, len(seriesInfo.NeedDlEpsKeyList),
 			fmt.Sprintf("%v - S%v-E%v", item.Title, item.Season, item.Episode))
 
-		bok, hdContent, err := s.step2Ex(browser, item.Url)
+		subInfo, err := s.fileDownloader.GetEx(s.GetSupplierName(), browser, item.Url, int64(i), item.Season, item.Episode, s.DownFile)
 		if err != nil {
-			s.log.Errorln("subhd step2Ex", err)
+			s.log.Errorln(s.GetSupplierName(), "GetEx", subInfo.Name, err)
 			continue
 		}
-		if bok == false {
-			s.log.Errorln("subhd step2Ex return false")
-			continue
-		}
-		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(),
-			int64(i),
-			hdContent.Filename,
-			language.ChineseSimple,
-			my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, item.Url),
-			0,
-			0, hdContent.Ext, hdContent.Data)
-		oneSubInfo.Season = item.Season
-		oneSubInfo.Episode = item.Episode
-		subInfos = append(subInfos, *oneSubInfo)
+
+		subInfos = append(subInfos, *subInfo)
 	}
 
 	return subInfos, nil
@@ -275,22 +263,14 @@ func (s *Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubIn
 	}
 
 	for i, item := range subList {
-		bok, hdContent, err := s.step2Ex(browser, item.Url)
-		time.Sleep(time.Second)
+
+		subInfo, err := s.fileDownloader.GetEx(s.GetSupplierName(), browser, item.Url, int64(i), 0, 0, s.DownFile)
 		if err != nil {
-			s.log.Errorln("subhd step2Ex", err)
+			s.log.Errorln(s.GetSupplierName(), "GetEx", subInfo.Name, err)
 			continue
 		}
-		if bok == false {
-			s.log.Errorln("subhd step2Ex return false")
-			continue
-		}
-		subInfos = append(subInfos, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple,
-			my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, item.Url),
-			0,
-			0,
-			hdContent.Ext,
-			hdContent.Data))
+
+		subInfos = append(subInfos, *subInfo)
 	}
 
 	return subInfos, nil
@@ -489,19 +469,19 @@ func (s *Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSe
 	return lists, nil
 }
 
-// step2Ex 下载字幕 过防水墙
-func (s *Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (bool, *HdContent, error) {
+// DownFile 下载字幕 过防水墙
+func (s *Supplier) DownFile(browser *rod.Browser, subDownloadPageUrl string, TopN int64, Season, Episode int) (*supplier.SubInfo, error) {
 	var err error
 	defer func() {
 		if err != nil {
-			notify_center.Notify.Add("subhd_step2Ex", err.Error())
+			notify_center.Notify.Add("subhd_DownFile", err.Error())
 		}
 	}()
-	subDownloadPageUrl = my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, subDownloadPageUrl)
+	subDownloadPageFullUrl := my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, subDownloadPageUrl)
 
-	_, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageUrl, s.tt)
+	_, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageFullUrl, s.tt)
 	if err != nil {
-		return false, nil, err
+		return nil, err
 	}
 	defer func() {
 		_ = page.Close()
@@ -509,18 +489,19 @@ func (s *Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (boo
 
 	// 需要先判断是否先要输入验证码，然后才到下载界面
 	// 下载字幕
-	bok, content, err := s.downloadSubFile(browser, page)
+	subInfo, err := s.downloadSubFile(browser, page, subDownloadPageUrl)
 	if err != nil {
-		return false, nil, err
-	}
-	if bok == false {
-		return false, nil, nil
+		return nil, err
 	}
 
-	return true, content, nil
+	subInfo.TopN = TopN
+	subInfo.Season = Season
+	subInfo.Episode = Episode
+
+	return subInfo, nil
 }
 
-func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *HdContent, error) {
+func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDownloadPageUrl string) (*supplier.SubInfo, error) {
 
 	var err error
 	var doc *goquery.Document
@@ -613,25 +594,15 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, 
 		downloadSuccess = true
 	})
 	if err != nil {
-		return false, nil, err
+		return nil, err
 	}
-	var hdContent HdContent
-	hdContent.Filename = fileName
-	hdContent.Ext = filepath.Ext(fileName)
-	hdContent.Data = fileByte
 
+	inSubInfo := supplier.NewSubInfo(s.GetSupplierName(), 1, fileName, language.ChineseSimple, subDownloadPageUrl, 0, 0, filepath.Ext(fileName), fileByte)
 	if downloadSuccess == false {
-		return false, &hdContent, common2.SubHDStep2ExCannotFindDownloadBtn
+		return nil, common2.SubHDStep2ExCannotFindDownloadBtn
 	}
 
-	// 下载成功需要统计到今天的次数中
-	_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName(),
-		my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
-	if err != nil {
-		s.log.Warningln(s.GetSupplierName(), "getSubListFromFile.AddDailyDownloadCount", err)
-	}
-
-	return downloadSuccess, &hdContent, nil
+	return inSubInfo, nil
 }
 
 func (s *Supplier) passWaterWall(page *rod.Page) {
@@ -735,11 +706,11 @@ type HdListItem struct {
 	Episode    int    // 第几集，默认-1
 }
 
-type HdContent struct {
-	Filename string `json:"filename"`
-	Ext      string `json:"ext"`
-	Data     []byte `json:"data"`
-}
+//type HdContent struct {
+//	Filename string `json:"filename"`
+//	Ext      string `json:"ext"`
+//	Data     []byte `json:"data"`
+//}
 
 const TCode = "#TencentCaptcha"
 const btnClickCodeBtn = "button.btn-danger"
