@@ -75,6 +75,7 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	return &downloader
 }
 
+// SupplierCheck 检查字幕源是否有效，会影响后续的字幕源是否参与下载
 func (d *Downloader) SupplierCheck() {
 
 	defer func() {
@@ -112,6 +113,7 @@ func (d *Downloader) SupplierCheck() {
 		//	done <- nil
 		//}
 
+		// 这里是调试使用的，指定了只用一个字幕源
 		subSupplierHub := subSupplier.NewSubSupplierHub(xunlei.NewSupplier(d.fileDownloader))
 		d.subSupplierHub = subSupplierHub
 		done <- nil
@@ -134,6 +136,7 @@ func (d *Downloader) SupplierCheck() {
 	}
 }
 
+// QueueDownloader 从字幕队列中取一个视频的字幕下载任务出来，并且开始下载
 func (d *Downloader) QueueDownloader() {
 
 	defer func() {
