@@ -92,3 +92,8 @@ TestData/
 /internal/pkg/download_file_cache/ChineseSubFinderSettings.json
 /internal/pkg/download_file_cache/Logs
 /internal/pkg/download_file_cache/download_sub_cache
+/internal/logic/sub_supplier/subhd/download_sub_cache
+/internal/logic/sub_supplier/subhd/task_queue
+/internal/logic/sub_supplier/xunlei/download_sub_cache
+/internal/logic/sub_supplier/zimuku/download_sub_cache
+/internal/logic/sub_supplier/zimuku/task_queue

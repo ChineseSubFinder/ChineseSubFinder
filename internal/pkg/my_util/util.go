@@ -41,10 +41,11 @@ func NewHttpClient(_proxySettings ...*settings.ProxySettings) *resty.Client {
 
 	if len(_proxySettings) > 0 {
 		proxySettings = _proxySettings[0]
+		if proxySettings.UseHttpProxy == true && len(proxySettings.HttpProxyAddress) > 0 {
+			HttpProxy = proxySettings.HttpProxyAddress
+		}
 	}
-	if proxySettings.UseHttpProxy == true && len(proxySettings.HttpProxyAddress) > 0 {
-		HttpProxy = proxySettings.HttpProxyAddress
-	}
+
 	// 随机的 Browser
 	UserAgent = browser.Random()
 
@@ -53,22 +54,22 @@ func NewHttpClient(_proxySettings ...*settings.ProxySettings) *resty.Client {
 	httpClient.SetRetryCount(2)
 	if HttpProxy != "" {
 		httpClient.SetProxy(HttpProxy)
+
+		if len(proxySettings.Referer) > 0 {
+			Referer = proxySettings.Referer
+		}
+
+		if len(Referer) > 0 {
+			httpClient.SetHeader("Referer", Referer)
+		}
 	} else {
 		httpClient.RemoveProxy()
-	}
-
-	if len(proxySettings.Referer) > 0 {
-		Referer = proxySettings.Referer
 	}
 
 	httpClient.SetHeaders(map[string]string{
 		"Content-Type": "application/json",
 		"User-Agent":   UserAgent,
 	})
-
-	if len(Referer) > 0 {
-		httpClient.SetHeader("Referer", Referer)
-	}
 
 	return httpClient
 }
@@ -99,7 +100,14 @@ func DownFile(l *logrus.Logger, urlStr string, _proxySettings ...*settings.Proxy
 	if len(_proxySettings) > 0 {
 		proxySettings = _proxySettings[0]
 	}
-	httpClient := NewHttpClient(proxySettings)
+
+	var httpClient *resty.Client
+	if proxySettings != nil {
+		httpClient = NewHttpClient(proxySettings)
+	} else {
+		httpClient = NewHttpClient()
+	}
+
 	resp, err := httpClient.R().Get(urlStr)
 	if err != nil {
 		return nil, "", err

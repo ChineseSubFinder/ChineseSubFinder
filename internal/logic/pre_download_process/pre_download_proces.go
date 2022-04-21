@@ -90,15 +90,13 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	// ------------------------------------------------------------------------
 	// 构建每个字幕站点下载者的实例
 	p.SubSupplierHub = subSupplier.NewSubSupplierHub(
-		p.sets,
-		p.log,
-		zimuku.NewSupplier(p.sets, p.log, p.fileDownloader),
-		xunlei.NewSupplier(p.sets, p.log, p.fileDownloader),
-		shooter.NewSupplier(p.sets, p.log, p.fileDownloader),
+		zimuku.NewSupplier(p.fileDownloader),
+		xunlei.NewSupplier(p.fileDownloader),
+		shooter.NewSupplier(p.fileDownloader),
 	)
 	if common2.SubhdCode != "" {
 		// 如果找到 code 了，那么就可以继续用这个实例
-		p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.sets, p.log, p.fileDownloader))
+		p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.fileDownloader))
 	}
 	// ------------------------------------------------------------------------
 	// 清理自定义的 rod 缓存目录
