@@ -302,6 +302,55 @@ func (em *EmbyHelper) findMappingPath(fileFPathWithEmby string, isMovieOrSeries 
 	return true, pathSlices[0].Path, nowPhRootPath
 }
 
+// getVideoIMDBId 从视频的内部 ID 找到 IMDB id
+func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*emby.EmbyMixInfo, error) {
+
+	if isMovieOrSeries == true {
+		// 电影的情况
+		info, err := em.embyApi.GetItemVideoInfo(videoID)
+		if err != nil {
+			return nil, err
+		}
+
+		ancs, err := em.embyApi.GetItemAncestors(videoID)
+		if err != nil {
+			return nil, err
+		}
+
+		mixInfo := emby.EmbyMixInfo{IMDBId: info.ProviderIds.Imdb, Ancestors: ancs, VideoInfo: info}
+
+		return &mixInfo, nil
+	} else {
+		// 连续剧的情况，需要从一集对算到 series 目录，得到内部 series 的 ID，然后再得到 IMDB ID
+		ancs, err := em.embyApi.GetItemAncestors(videoID)
+		if err != nil {
+			return nil, err
+		}
+		// 暂时不支持蓝光，因为没有下载到对应的连续剧蓝光视频
+		ancestorIndex := -1
+		// 找到连续剧文件夹这一层
+		for i, ancestor := range ancs {
+			if ancestor.Type == "Series" {
+				ancestorIndex = i
+				break
+			}
+		}
+		if ancestorIndex == -1 {
+			// 说明没有找到连续剧文件夹的名称，那么就应该跳过
+			return nil, nil
+		}
+
+		info, err := em.embyApi.GetItemVideoInfo(ancs[ancestorIndex].ID)
+		if err != nil {
+			return nil, err
+		}
+
+		mixInfo := emby.EmbyMixInfo{IMDBId: info.ProviderIds.Imdb, Ancestors: ancs, VideoInfo: info}
+
+		return &mixInfo, nil
+	}
+}
+
 // findMappingPathWithMixInfo 从 Emby 内置路径匹配到物理路径
 // X:\电影    - /mnt/share1/电影
 // X:\连续剧  - /mnt/share1/连续剧
@@ -310,6 +359,7 @@ func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMo
 	defer func() {
 		// 见 https://github.com/allanpk716/ChineseSubFinder/issues/278
 		// 进行字符串操作的时候，可能会把 smb://123 转义为 smb:/123
+		// 修复了个寂寞，没用，这个逻辑保留，但是没用哈。因为就不支持 SMB 的客户端协议
 		if mixInfo != nil {
 			mixInfo.PhysicalRootPath = path_helper.FixShareFileProtocolsPath(mixInfo.PhysicalRootPath)
 			mixInfo.PhysicalVideoFileFullPath = path_helper.FixShareFileProtocolsPath(mixInfo.PhysicalVideoFileFullPath)
@@ -424,33 +474,30 @@ func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMo
 func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries bool) ([]emby.EmbyMixInfo, error) {
 	var filterVideoEmbyInfo = make([]emby.EmbyMixInfo, 0)
 
-	queryFunc := func(m string) (*emby.EmbyMixInfo, error) {
-		info, err := em.embyApi.GetItemVideoInfo(m)
+	// 这个方法是使用两边的路径映射表来实现的转换，使用的体验不佳，很多人搞不定
+	queryFuncByMatchPath := func(m string) (*emby.EmbyMixInfo, error) {
+
+		oneMixInfo, err := em.getMoreVideoInfo(m, isMovieOrSeries)
 		if err != nil {
 			return nil, err
 		}
-		ancs, err := em.embyApi.GetItemAncestors(m)
-		if err != nil {
-			return nil, err
-		}
-		mixInfo := emby.EmbyMixInfo{Ancestors: ancs, VideoInfo: info}
 		if isMovieOrSeries == true {
 			// 电影
 			// 过滤掉不符合要求的,拼接绝对路径
-			isFit := em.findMappingPathWithMixInfo(&mixInfo, isMovieOrSeries)
+			isFit := em.findMappingPathWithMixInfo(oneMixInfo, isMovieOrSeries)
 			if isFit == false {
 				return nil, err
 			}
 		} else {
 			// 连续剧
 			// 过滤掉不符合要求的,拼接绝对路径
-			isFit := em.findMappingPathWithMixInfo(&mixInfo, isMovieOrSeries)
+			isFit := em.findMappingPathWithMixInfo(oneMixInfo, isMovieOrSeries)
 			if isFit == false {
 				return nil, err
 			}
 		}
 
-		return &mixInfo, nil
+		return oneMixInfo, nil
 	}
 
 	// em.threads
@@ -469,7 +516,7 @@ func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries
 				}
 			}()
 
-			info, err := queryFunc(data.Id)
+			info, err := queryFuncByMatchPath(data.Id)
 			outData := OutData{
 				Info: info,
 				Err:  err,

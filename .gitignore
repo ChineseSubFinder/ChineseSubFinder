@@ -97,3 +97,4 @@ TestData/
 /internal/logic/sub_supplier/xunlei/download_sub_cache
 /internal/logic/sub_supplier/zimuku/download_sub_cache
 /internal/logic/sub_supplier/zimuku/task_queue
+/internal/pkg/emby_api/Logs

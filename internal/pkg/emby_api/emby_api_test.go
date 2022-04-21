@@ -6,9 +6,10 @@ import (
 )
 
 var ec = settings.EmbySettings{
+	Enable:                true,
 	AddressUrl:            "http://192.168.50.252:8096",
-	APIKey:                "1",
-	MaxRequestVideoNumber: 1000,
+	APIKey:                "bc1e3ffe000c4546adbe9ce6945d861c",
+	MaxRequestVideoNumber: 100,
 }
 
 // TODO 暂不方便在其他环境进行单元测试
@@ -27,22 +28,31 @@ func TestEmbyHelper_GetRecentlyItems(t *testing.T) {
 
 // TODO 暂不方便在其他环境进行单元测试
 func TestEmbyHelper_GetItemsAncestors(t *testing.T) {
-	//em := NewEmbyApi(ec)
-	//items, err := em.GetItemAncestors("96564")
-	//if err != nil {
-	//	t.Fatal(err)
-	//}
-	//
-	//if len(items) < 1 {
-	//	t.Fatal("less than 1")
-	//}
-	//
-	//println(items[0].Name, items[0].Path)
+
+	// 95813 -- 命运夜
+	// 96564 -- The Bad Batch - S01E11
+	// R&M S05E10  2 org english, 5 简英 145499
+	// R&M 15430
+	// 基地 S01E03 166840
+	// 基地 S01E04 173354
+	// 算牌人 166837
+	// 327198
+	em := NewEmbyApi(&ec)
+	items, err := em.GetItemAncestors("145499")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(items) < 1 {
+		t.Fatal("less than 1")
+	}
+
+	println(items[0].Name, items[0].Path)
 }
 
 // TODO 暂不方便在其他环境进行单元测试
 func TestEmbyHelper_GetItemVideoInfoByUserId(t *testing.T) {
-	//em := NewEmbyApi(ec)
+	//em := NewEmbyApi(&ec)
 	//// 95813 -- 命运夜
 	//// 96564 -- The Bad Batch - S01E11
 	//// 108766 -- R&M - S05E06
@@ -79,7 +89,7 @@ func TestEmbyHelper_UpdateVideoSubList(t *testing.T) {
 
 // TODO 暂不方便在其他环境进行单元测试
 func TestEmbyHelper_GetUserIdList(t *testing.T) {
-	//em := NewEmbyApi(ec)
+	//em := NewEmbyApi(&ec)
 	//userIds, err := em.GetUserIdList()
 	//if err != nil {
 	//	t.Fatal(err)
@@ -91,19 +101,21 @@ func TestEmbyHelper_GetUserIdList(t *testing.T) {
 
 // TODO 暂不方便在其他环境进行单元测试
 func TestEmbyHelper_GetItemVideoInfo(t *testing.T) {
-	//em := NewEmbyApi(ec)
-	//// 95813 -- 命运夜
-	//// 96564 -- The Bad Batch - S01E11
-	//// R&M S05E10  2 org english, 5 简英 145499
-	//// 基地 S01E03 166840
-	//// 基地 S01E04 173354
-	//// 算牌人 166837
-	//videoInfo, err := em.GetItemVideoInfo("327198")
-	//if err != nil {
-	//	t.Fatal(err)
-	//}
-	//
-	//println(videoInfo.Name, videoInfo.Path, videoInfo.MediaSources[0].Id)
+	em := NewEmbyApi(&ec)
+	// 95813 -- 命运夜
+	// 96564 -- The Bad Batch - S01E11
+	// R&M S05E10  2 org english, 5 简英 145499
+	// R&M 15430
+	// 基地 S01E03 166840
+	// 基地 S01E04 173354
+	// 算牌人 166837
+	// 327198
+	videoInfo, err := em.GetItemVideoInfo("15430")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	println(videoInfo.Name, videoInfo.Path, videoInfo.MediaSources[0].Id)
 }
 
 // TODO 暂不方便在其他环境进行单元测试

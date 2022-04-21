@@ -217,7 +217,6 @@ func (em EmbyApi) GetUserIdList() (emby.EmbyUsers, error) {
 	if err != nil {
 		return emby.EmbyUsers{}, err
 	}
-
 	return recItems, nil
 }
 
@@ -239,7 +238,8 @@ func (em EmbyApi) GetItemAncestors(id string) ([]emby.EmbyItemsAncestors, error)
 	return recItems, nil
 }
 
-// GetItemVideoInfo 在 API 调试界面 -- UserLibraryService
+// GetItemVideoInfo 在 API 调试界面 -- UserLibraryService，如果是电影，那么是可以从 ProviderIds 得到 IMDB ID 的
+// 如果是连续剧，那么不能使用一集的ID取获取，需要是这个剧集的 ID，注意一季的ID也是不行的
 func (em EmbyApi) GetItemVideoInfo(id string) (emby.EmbyVideoInfo, error) {
 
 	var recItem emby.EmbyVideoInfo
