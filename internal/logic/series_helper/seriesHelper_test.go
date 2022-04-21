@@ -8,7 +8,7 @@ import (
 func TestReadSeriesInfoFromDir(t *testing.T) {
 
 	series := unit_test_helper.GetTestDataResourceRootPath([]string{"series", "Loki"}, 4, false)
-	seriesInfo, err := ReadSeriesInfoFromDir(series, false)
+	seriesInfo, err := ReadSeriesInfoFromDir(series, 90, false)
 	if err != nil {
 		t.Fatal(err)
 	}

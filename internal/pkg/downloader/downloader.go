@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	markSystem "github.com/allanpk716/ChineseSubFinder/internal/logic/mark_system"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
@@ -28,6 +29,7 @@ import (
 type Downloader struct {
 	settings                 *settings.Settings
 	log                      *logrus.Logger
+	fileDownloader           *file_downloader.FileDownloader
 	ctx                      context.Context
 	cancel                   context.CancelFunc
 	subSupplierHub           *subSupplier.SubSupplierHub                  // 字幕提供源的集合，这个需要定时进行扫描，这些字幕源是否有效，以及下载验证码信息
@@ -39,13 +41,13 @@ type Downloader struct {
 	downloadQueue            *task_queue.TaskQueue                        // 需要下载的视频的队列
 }
 
-func NewDownloader(inSubFormatter ifaces.ISubFormatter, _settings *settings.Settings, log *logrus.Logger, downloadQueue *task_queue.TaskQueue) *Downloader {
+func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_downloader.FileDownloader, downloadQueue *task_queue.TaskQueue) *Downloader {
 
 	var downloader Downloader
 	downloader.subFormatter = inSubFormatter
-	downloader.log = log
+	downloader.log = fileDownloader.Log
 	// 参入设置信息
-	downloader.settings = _settings
+	downloader.settings = fileDownloader.Settings
 	// 检测是否某些参数超出范围
 	downloader.settings.Check()
 	// 这里就不单独弄一个 settings.SubNameFormatter 字段来传递值了，因为 inSubFormatter 就已经知道是什么 formatter 了
@@ -110,11 +112,7 @@ func (d *Downloader) SupplierCheck() {
 		//	done <- nil
 		//}
 
-		subSupplierHub := subSupplier.NewSubSupplierHub(
-			d.settings,
-			d.log,
-			xunlei.NewSupplier(d.settings, d.log),
-		)
+		subSupplierHub := subSupplier.NewSubSupplierHub(xunlei.NewSupplier(d.fileDownloader))
 		d.subSupplierHub = subSupplierHub
 		done <- nil
 	}()

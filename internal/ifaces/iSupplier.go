@@ -1,8 +1,10 @@
 package ifaces
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
+	"github.com/sirupsen/logrus"
 )
 
 type ISupplier interface {
@@ -13,6 +15,10 @@ type ISupplier interface {
 	GetSupplierName() string
 
 	OverDailyDownloadLimit() bool
+
+	GetLogger() *logrus.Logger
+
+	GetSettings() *settings.Settings
 
 	GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error)
 

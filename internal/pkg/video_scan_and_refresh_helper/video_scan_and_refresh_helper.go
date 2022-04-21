@@ -2,11 +2,12 @@ package video_scan_and_refresh_helper
 
 import (
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/forced_scan_and_down_sub"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/restore_fix_timeline_bk"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -20,8 +21,9 @@ import (
 )
 
 type VideoScanAndRefreshHelper struct {
-	settings                 *settings.Settings          // 设置的实例
-	log                      *logrus.Logger              // 日志实例
+	settings                 *settings.Settings // 设置的实例
+	log                      *logrus.Logger     // 日志实例
+	fileDownloader           *file_downloader.FileDownloader
 	needForcedScanAndDownSub bool                        // 将会强制扫描所有的视频，下载字幕，替换已经存在的字幕，不进行时间段和已存在则跳过的判断。且不会进过 Emby API 的逻辑，智能进行强制去以本程序的方式去扫描。
 	NeedRestoreFixTimeLineBK bool                        // 从 csf-bk 文件还原时间轴修复前的字幕文件
 	embyHelper               *embyHelper.EmbyHelper      // Emby 的实例
@@ -29,11 +31,10 @@ type VideoScanAndRefreshHelper struct {
 	subSupplierHub           *subSupplier.SubSupplierHub // 字幕提供源的集合，仅仅是 check 是否需要下载字幕是足够的，如果要下载则需要额外的初始化和检查
 }
 
-func NewVideoScanAndRefreshHelper(settings *settings.Settings, log *logrus.Logger, downloadQueue *task_queue.TaskQueue) *VideoScanAndRefreshHelper {
-	return &VideoScanAndRefreshHelper{settings: settings, log: log, downloadQueue: downloadQueue,
+func NewVideoScanAndRefreshHelper(fileDownloader *file_downloader.FileDownloader, downloadQueue *task_queue.TaskQueue) *VideoScanAndRefreshHelper {
+	return &VideoScanAndRefreshHelper{settings: fileDownloader.Settings, log: fileDownloader.Log, downloadQueue: downloadQueue,
 		subSupplierHub: subSupplier.NewSubSupplierHub(
-			settings, log,
-			zimuku.NewSupplier(settings, log),
+			xunlei.NewSupplier(fileDownloader),
 		)}
 }
 

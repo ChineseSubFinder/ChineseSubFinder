@@ -1,6 +1,7 @@
 package cron_helper
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
@@ -15,8 +16,9 @@ import (
 )
 
 type CronHelper struct {
-	stopping                bool                   // 正在停止
-	cronHelperRunning       bool                   // 这个是定时器启动的状态，它为true，不代表核心函数在执行
+	stopping                bool // 正在停止
+	cronHelperRunning       bool // 这个是定时器启动的状态，它为true，不代表核心函数在执行
+	fileDownloader          *file_downloader.FileDownloader
 	downloadQueue           *task_queue.TaskQueue  // 需要下载的视频的队列
 	downloader              *downloader.Downloader // 下载者线程
 	cronLock                sync.Mutex             // 锁
@@ -28,13 +30,14 @@ type CronHelper struct {
 	entryIDQueueDownloader  cron.EntryID
 }
 
-func NewCronHelper(_log *logrus.Logger, _sets *settings.Settings) *CronHelper {
+func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 
 	ch := CronHelper{
-		log:  _log,
-		sets: _sets,
+		fileDownloader: fileDownloader,
+		log:            fileDownloader.Log,
+		sets:           fileDownloader.Settings,
 		// 实例化下载队列
-		downloadQueue: task_queue.NewTaskQueue("LocalSubDownloadQueue", _sets, _log),
+		downloadQueue: task_queue.NewTaskQueue("LocalSubDownloadQueue", fileDownloader.Settings, fileDownloader.Log),
 	}
 
 	return &ch
@@ -59,7 +62,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// 初始化下载者，里面的两个 func 需要使用定时器启动 SupplierCheck QueueDownloader
 	ch.downloader = downloader.NewDownloader(
 		sub_formatter.GetSubFormatter(ch.sets.AdvancedSettings.SubNameFormatter),
-		ch.sets, ch.log, ch.downloadQueue)
+		ch.fileDownloader, ch.downloadQueue)
 	// ----------------------------------------------
 	// 判断扫描任务的时间间隔是否符合要求，不符合则重写默认值
 	_, err := cron.ParseStandard(ch.sets.CommonSettings.ScanInterval)

@@ -22,10 +22,10 @@ type SubSupplierHub struct {
 	log *logrus.Logger
 }
 
-func NewSubSupplierHub(_settings *settings.Settings, _logger *logrus.Logger, one ifaces.ISupplier, _inSupplier ...ifaces.ISupplier) *SubSupplierHub {
+func NewSubSupplierHub(one ifaces.ISupplier, _inSupplier ...ifaces.ISupplier) *SubSupplierHub {
 	s := SubSupplierHub{}
-	s.settings = _settings
-	s.log = _logger
+	s.settings = one.GetSettings()
+	s.log = one.GetLogger()
 	s.Suppliers = make([]ifaces.ISupplier, 0)
 	s.Suppliers = append(s.Suppliers, one)
 	if len(_inSupplier) > 0 {

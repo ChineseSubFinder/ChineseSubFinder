@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
@@ -23,20 +24,22 @@ import (
 )
 
 type Supplier struct {
-	settings *settings.Settings
-	log      *logrus.Logger
-	topic    int
-	isAlive  bool
+	settings       *settings.Settings
+	log            *logrus.Logger
+	fileDownloader *file_downloader.FileDownloader
+	topic          int
+	isAlive        bool
 }
 
-func NewSupplier(_settings *settings.Settings, _logger *logrus.Logger) *Supplier {
+func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 
 	sup := Supplier{}
-	sup.log = _logger
+	sup.log = fileDownloader.Log
+	sup.fileDownloader = fileDownloader
 	sup.topic = common2.DownloadSubsPerSite
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
-	sup.settings = _settings
+	sup.settings = fileDownloader.Settings
 	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
 		sup.topic = sup.settings.AdvancedSettings.Topic
 	}
@@ -72,6 +75,14 @@ func (s *Supplier) IsAlive() bool {
 func (s *Supplier) OverDailyDownloadLimit() bool {
 	// 对于这个接口暂时没有限制
 	return false
+}
+
+func (s *Supplier) GetLogger() *logrus.Logger {
+	return s.log
+}
+
+func (s *Supplier) GetSettings() *settings.Settings {
+	return s.settings
 }
 
 func (s *Supplier) GetSupplierName() string {

@@ -33,10 +33,11 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 	subSupplierHub := subSupplier.NewSubSupplierHub(
 		tmpSettings,
 		cb.log,
-		zimuku.NewSupplier(tmpSettings, cb.log),
-		xunlei.NewSupplier(tmpSettings, cb.log),
-		shooter.NewSupplier(tmpSettings, cb.log),
-		subhd.NewSupplier(tmpSettings, cb.log),
+		// 这里无需传递下载字幕的缓存实例
+		zimuku.NewSupplier(tmpSettings, cb.log, nil),
+		xunlei.NewSupplier(tmpSettings, cb.log, nil),
+		shooter.NewSupplier(tmpSettings, cb.log, nil),
+		subhd.NewSupplier(tmpSettings, cb.log, nil),
 	)
 
 	outStatus := subSupplierHub.CheckSubSiteStatus()

@@ -3,6 +3,7 @@ package pre_download_process
 import (
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
@@ -25,13 +26,15 @@ type PreDownloadProcess struct {
 
 	sets           *settings.Settings
 	log            *logrus.Logger
+	fileDownloader *file_downloader.FileDownloader
 	SubSupplierHub *subSupplier.SubSupplierHub
 }
 
-func NewPreDownloadProcess(_log *logrus.Logger, _sets *settings.Settings) *PreDownloadProcess {
+func NewPreDownloadProcess(_log *logrus.Logger, _sets *settings.Settings, fileDownloader *file_downloader.FileDownloader) *PreDownloadProcess {
 	return &PreDownloadProcess{
-		log:  _log,
-		sets: _sets,
+		log:            _log,
+		sets:           _sets,
+		fileDownloader: fileDownloader,
 	}
 }
 
@@ -89,13 +92,13 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	p.SubSupplierHub = subSupplier.NewSubSupplierHub(
 		p.sets,
 		p.log,
-		zimuku.NewSupplier(p.sets, p.log),
-		xunlei.NewSupplier(p.sets, p.log),
-		shooter.NewSupplier(p.sets, p.log),
+		zimuku.NewSupplier(p.sets, p.log, p.fileDownloader),
+		xunlei.NewSupplier(p.sets, p.log, p.fileDownloader),
+		shooter.NewSupplier(p.sets, p.log, p.fileDownloader),
 	)
 	if common2.SubhdCode != "" {
 		// 如果找到 code 了，那么就可以继续用这个实例
-		p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.sets, p.log))
+		p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.sets, p.log, p.fileDownloader))
 	}
 	// ------------------------------------------------------------------------
 	// 清理自定义的 rod 缓存目录
