@@ -118,7 +118,13 @@ func GetFileName(l *logrus.Logger, resp *http.Response) string {
 	contentDisposition := resp.Header.Get("Content-Disposition")
 	if len(contentDisposition) == 0 {
 		m := regexp.MustCompile(`^(.*/)?(?:$|(.+?)(?:(\.[^.]*$)|$))`).FindStringSubmatch(resp.Request.URL.String())
-		return m[2]+m[3]
+
+		if m == nil || len(m) < 4 {
+			l.Warningln("GetFileName.regexp.MustCompile.FindStringSubmatch", resp.Request.URL.String())
+			return ""
+		}
+
+		return m[2] + m[3]
 	}
 	re := regexp.MustCompile(`filename=["]*([^"]+)["]*`)
 	matched := re.FindStringSubmatch(contentDisposition)
