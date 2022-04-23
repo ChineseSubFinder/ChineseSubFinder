@@ -7,7 +7,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
-	gModels "github.com/allanpk716/ChineseSubModels/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
@@ -69,7 +68,7 @@ func InitDb() error {
 	}
 	// 迁移 schema
 	err = db.AutoMigrate(&models.HotFix{}, &models.SubFormatRec{},
-		&gModels.IMDBInfo{}, &gModels.VideoSubInfo{})
+		&models.IMDBInfo{}, &models.VideoSubInfo{})
 	if err != nil {
 		return errors.New(fmt.Sprintf("db AutoMigrate error, %s", err.Error()))
 	}

@@ -7,7 +7,6 @@ require (
 	github.com/StalkR/imdb v1.0.7
 	github.com/Tnze/go.num/v2 v2.0.0-20191006170829-cb483d4c9152
 	github.com/abadojack/whatlanggo v1.0.1
-	github.com/allanpk716/ChineseSubModels v0.0.3
 	github.com/allanpk716/fake-useragent v0.2.1
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
 	github.com/baabaaox/go-webrtcvad v1.0.1

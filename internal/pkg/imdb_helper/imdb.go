@@ -4,10 +4,10 @@ import (
 	"crypto/tls"
 	"github.com/StalkR/imdb"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
+	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	gModels "github.com/allanpk716/ChineseSubModels/models"
 	"net/http"
 	"net/url"
 	"strings"
@@ -51,14 +51,14 @@ func GetVideoInfoFromIMDBWeb(imdbID string, _proxySettings ...*settings.ProxySet
 }
 
 // GetVideoIMDBInfoFromLocal 从本地获取 IMDB 信息，如果找不到则去网络获取并写入本地缓存
-func GetVideoIMDBInfoFromLocal(imdbID string, _proxySettings ...*settings.ProxySettings) (*gModels.IMDBInfo, error) {
+func GetVideoIMDBInfoFromLocal(imdbID string, _proxySettings ...*settings.ProxySettings) (*models.IMDBInfo, error) {
 
 	log_helper.GetLogger().Debugln("GetVideoIMDBInfoFromLocal", 0)
 
 	// 首先从数据库中查找是否存在这个 IMDB 信息，如果不存在再使用 Web 查找，且写入数据库
-	var imdbInfos []gModels.IMDBInfo
+	var imdbInfos []models.IMDBInfo
 	// 把嵌套关联的 has many 的信息都查询出来
-	dao.GetDb().Preload("VideoSubInfos").Limit(1).Where(&gModels.IMDBInfo{IMDBID: imdbID}).Find(&imdbInfos)
+	dao.GetDb().Preload("VideoSubInfos").Limit(1).Where(&models.IMDBInfo{IMDBID: imdbID}).Find(&imdbInfos)
 
 	log_helper.GetLogger().Debugln("GetVideoIMDBInfoFromLocal", 1)
 
@@ -71,8 +71,8 @@ func GetVideoIMDBInfoFromLocal(imdbID string, _proxySettings ...*settings.ProxyS
 		log_helper.GetLogger().Debugln("GetVideoIMDBInfoFromLocal", 2)
 
 		// 存入数据库
-		nowIMDBInfo := gModels.NewIMDBInfo(imdbID, t.Name, t.Year, t.Description, t.Languages, t.AKA)
-		imdbInfos = make([]gModels.IMDBInfo, 0)
+		nowIMDBInfo := models.NewIMDBInfo(imdbID, t.Name, t.Year, t.Description, t.Languages, t.AKA)
+		imdbInfos = make([]models.IMDBInfo, 0)
 		imdbInfos = append(imdbInfos, *nowIMDBInfo)
 		dao.GetDb().Create(nowIMDBInfo)
 
@@ -88,7 +88,7 @@ func GetVideoIMDBInfoFromLocal(imdbID string, _proxySettings ...*settings.ProxyS
 }
 
 // IsChineseVideo 从 imdbID 去查询判断是否是中文视频
-func IsChineseVideo(imdbID string, _proxySettings ...*settings.ProxySettings) (bool, *gModels.IMDBInfo, error) {
+func IsChineseVideo(imdbID string, _proxySettings ...*settings.ProxySettings) (bool, *models.IMDBInfo, error) {
 
 	const chName0 = "chinese"
 	const chName1 = "mandarin"
