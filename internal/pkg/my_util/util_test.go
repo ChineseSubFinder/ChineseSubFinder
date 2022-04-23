@@ -34,5 +34,10 @@ func TestGetRestOfDaySec(t *testing.T) {
 func TestGetPublicIP(t *testing.T) {
 
 	got := GetPublicIP(log_helper.GetLogger(), settings.NewTaskQueue())
-	println(got)
+	println("NoProxy:", got)
+
+	got = GetPublicIP(log_helper.GetLogger(), settings.NewTaskQueue(),
+		settings.NewProxySettings(true, false, "",
+			true, "127.0.0.1:10808"))
+	println("UseProxy", got)
 }

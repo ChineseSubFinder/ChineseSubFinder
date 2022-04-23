@@ -158,7 +158,10 @@ func (s *Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShoote
 
 	var jsonList []SublistShooter
 
-	httpClient := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	if err != nil {
+		return nil, err
+	}
 	resp, err := httpClient.R().
 		SetFormData(map[string]string{
 			"filehash": fileHash,

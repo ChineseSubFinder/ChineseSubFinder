@@ -17,8 +17,11 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/net/context"
+	"golang.org/x/net/proxy"
 	"io"
 	"math"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -33,63 +36,85 @@ import (
 )
 
 // NewHttpClient 新建一个 resty 的对象
-func NewHttpClient(_proxySettings ...*settings.ProxySettings) *resty.Client {
+func NewHttpClient(_proxySettings ...*settings.ProxySettings) (*resty.Client, error) {
 	//const defUserAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"
 	//const defUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41"
 
 	var proxySettings *settings.ProxySettings
-	var HttpProxy, UserAgent, Referer string
+	var HttpProxyAddress, socket5ProxyAddress, UserAgent, Referer string
 
 	if len(_proxySettings) > 0 {
 		proxySettings = _proxySettings[0]
 		if proxySettings.UseHttpProxy == true && len(proxySettings.HttpProxyAddress) > 0 {
-			HttpProxy = proxySettings.HttpProxyAddress
+			HttpProxyAddress = proxySettings.HttpProxyAddress
+		}
+		if proxySettings.UseSocks5Proxy == true && len(proxySettings.Socks5ProxyAddress) > 0 {
+			socket5ProxyAddress = proxySettings.Socks5ProxyAddress
 		}
 	}
-
+	// ------------------------------------------------
 	// 随机的 Browser
 	UserAgent = browser.Random()
-
+	// ------------------------------------------------
 	httpClient := resty.New()
 	httpClient.SetTimeout(common.HTMLTimeOut)
 	httpClient.SetRetryCount(2)
-	if HttpProxy != "" {
-		httpClient.SetProxy(HttpProxy)
-
+	// ------------------------------------------------
+	// 设置 Referer
+	if len(_proxySettings) > 0 {
 		if len(proxySettings.Referer) > 0 {
 			Referer = proxySettings.Referer
 		}
-
 		if len(Referer) > 0 {
 			httpClient.SetHeader("Referer", Referer)
 		}
-	} else {
-		httpClient.RemoveProxy()
 	}
-
+	// ------------------------------------------------
+	// 设置 Header
 	httpClient.SetHeaders(map[string]string{
 		"Content-Type": "application/json",
 		"User-Agent":   UserAgent,
 	})
-
+	// ------------------------------------------------
+	// 不要求安全链接
 	httpClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
-
-	return httpClient
-}
-
-func getPublicIP(inputSite string, queue *settings.TaskQueue, _proxySettings ...*settings.ProxySettings) string {
-
-	var client *resty.Client
-	client = NewHttpClient(_proxySettings...)
-
-	targetSite := ""
-	if queue.CheckPublicIPTargetSite != "" {
-		targetSite = queue.CheckPublicIPTargetSite
+	// ------------------------------------------------
+	if len(_proxySettings) == 0 {
+		// 无需设置代理
+		return httpClient, nil
+	}
+	// ------------------------------------------------
+	if proxySettings.UseSocks5OrHttpProxy == false {
+		// http 代理
+		if HttpProxyAddress != "" {
+			httpClient.SetProxy(HttpProxyAddress)
+		} else {
+			httpClient.RemoveProxy()
+		}
 	} else {
-		targetSite = inputSite
+		// socket5 代理
+		dialer, err := proxy.SOCKS5("tcp", socket5ProxyAddress, nil, proxy.Direct)
+		if err != nil {
+			return nil, err
+		}
+		dialContext := func(ctx context.Context, network, address string) (net.Conn, error) {
+			return dialer.Dial(network, address)
+		}
+		transport := &http.Transport{DialContext: dialContext, DisableKeepAlives: true}
+		httpClient.SetTransport(transport)
 	}
 
-	response, err := client.R().Get(targetSite)
+	return httpClient, nil
+}
+
+func getPublicIP(inputSite string, _proxySettings ...*settings.ProxySettings) string {
+
+	var client *resty.Client
+	client, err := NewHttpClient(_proxySettings...)
+	if err != nil {
+		return ""
+	}
+	response, err := client.R().Get(inputSite)
 	if err != nil {
 		return ""
 	}
@@ -98,18 +123,29 @@ func getPublicIP(inputSite string, queue *settings.TaskQueue, _proxySettings ...
 
 func GetPublicIP(log *logrus.Logger, queue *settings.TaskQueue, _proxySettings ...*settings.ProxySettings) string {
 
-	publicIPSites := []string{
-		"https://api.ipify.org/",
+	defPublicIPSites := []string{
 		"https://myip.biturl.top/",
 		"https://ip4.seeip.org/",
 		"https://ipecho.net/plain",
 		"https://api-ipv4.ip.sb/ip",
+		"https://api.ipify.org/",
 		"http://myexternalip.com/raw",
 	}
 
-	for i, publicIPSite := range publicIPSites {
+	customPublicIPSites := make([]string, 0)
+	if queue.CheckPublicIPTargetSite != "" {
+		// 自定义了公网IP查询网站
+		tSites := strings.Split(queue.CheckPublicIPTargetSite, ";")
+		if tSites != nil && len(tSites) > 0 {
+			customPublicIPSites = append(customPublicIPSites, tSites...)
+		}
+	} else {
+		customPublicIPSites = append(customPublicIPSites, defPublicIPSites...)
+	}
+
+	for i, publicIPSite := range customPublicIPSites {
 		log.Debugln("[GetPublicIP]", i, publicIPSite)
-		publicIP := getPublicIP(publicIPSite, queue, _proxySettings...)
+		publicIP := getPublicIP(publicIPSite, _proxySettings...)
 
 		matcheds := regex_things.ReMatchIP.FindAllString(publicIP, -1)
 
@@ -123,18 +159,13 @@ func GetPublicIP(log *logrus.Logger, queue *settings.TaskQueue, _proxySettings .
 
 // DownFile 从指定的 url 下载文件
 func DownFile(l *logrus.Logger, urlStr string, _proxySettings ...*settings.ProxySettings) ([]byte, string, error) {
-	var proxySettings *settings.ProxySettings
-	if len(_proxySettings) > 0 {
-		proxySettings = _proxySettings[0]
-	}
 
+	var err error
 	var httpClient *resty.Client
-	if proxySettings != nil {
-		httpClient = NewHttpClient(proxySettings)
-	} else {
-		httpClient = NewHttpClient()
+	httpClient, err = NewHttpClient(_proxySettings...)
+	if err != nil {
+		return nil, "", err
 	}
-
 	resp, err := httpClient.R().Get(urlStr)
 	if err != nil {
 		return nil, "", err

@@ -184,7 +184,10 @@ func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, erro
 func (s *Supplier) getSubInfos(filePath, cid string) (SublistSliceXunLei, error) {
 	var jsonList SublistSliceXunLei
 
-	httpClient := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	if err != nil {
+		return jsonList, err
+	}
 	resp, err := httpClient.R().
 		SetResult(&jsonList).
 		Get(fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.Xunlei.RootUrl, cid))
