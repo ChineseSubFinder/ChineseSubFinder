@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -70,6 +71,8 @@ func NewHttpClient(_proxySettings ...*settings.ProxySettings) *resty.Client {
 		"Content-Type": "application/json",
 		"User-Agent":   UserAgent,
 	})
+
+	httpClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
 	return httpClient
 }
