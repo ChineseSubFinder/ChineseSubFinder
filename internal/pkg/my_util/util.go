@@ -77,24 +77,48 @@ func NewHttpClient(_proxySettings ...*settings.ProxySettings) *resty.Client {
 	return httpClient
 }
 
-func GetPublicIP(queue *settings.TaskQueue, _proxySettings ...*settings.ProxySettings) string {
+func getPublicIP(inputSite string, queue *settings.TaskQueue, _proxySettings ...*settings.ProxySettings) string {
 
 	var client *resty.Client
-	if len(_proxySettings) > 0 {
-		client = NewHttpClient(_proxySettings[0])
-	} else {
-		client = NewHttpClient()
-	}
+	client = NewHttpClient(_proxySettings...)
 
-	targetSite := "http://myexternalip.com/raw"
+	targetSite := ""
 	if queue.CheckPublicIPTargetSite != "" {
 		targetSite = queue.CheckPublicIPTargetSite
+	} else {
+		targetSite = inputSite
 	}
+
 	response, err := client.R().Get(targetSite)
 	if err != nil {
 		return ""
 	}
 	return response.String()
+}
+
+func GetPublicIP(log *logrus.Logger, queue *settings.TaskQueue, _proxySettings ...*settings.ProxySettings) string {
+
+	publicIPSites := []string{
+		"https://api.ipify.org/",
+		"https://myip.biturl.top/",
+		"https://ip4.seeip.org/",
+		"https://ipecho.net/plain",
+		"https://api-ipv4.ip.sb/ip",
+		"http://myexternalip.com/raw",
+	}
+
+	for i, publicIPSite := range publicIPSites {
+		log.Debugln("[GetPublicIP]", i, publicIPSite)
+		publicIP := getPublicIP(publicIPSite, queue, _proxySettings...)
+
+		matcheds := regex_things.ReMatchIP.FindAllString(publicIP, -1)
+
+		if publicIP != "" || matcheds == nil || len(matcheds) == 0 {
+			return publicIP
+		}
+	}
+
+	return ""
 }
 
 // DownFile 从指定的 url 下载文件

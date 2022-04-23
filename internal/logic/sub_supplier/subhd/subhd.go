@@ -92,7 +92,7 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 
 	// 需要查询今天的限额
 	count, err := task_queue.GetDailyDownloadCount(s.GetSupplierName(),
-		my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
+		my_util.GetPublicIP(s.log, s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "GetDailyDownloadCount", err)
 		return true

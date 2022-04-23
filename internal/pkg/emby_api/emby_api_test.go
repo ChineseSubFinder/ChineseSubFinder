@@ -8,7 +8,7 @@ import (
 var ec = settings.EmbySettings{
 	Enable:                true,
 	AddressUrl:            "http://192.168.50.252:8096",
-	APIKey:                "bc1e3ffe000c4546adbe9ce6945d861c",
+	APIKey:                "123",
 	MaxRequestVideoNumber: 100,
 }
 

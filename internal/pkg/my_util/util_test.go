@@ -33,6 +33,6 @@ func TestGetRestOfDaySec(t *testing.T) {
 
 func TestGetPublicIP(t *testing.T) {
 
-	got := GetPublicIP(settings.NewTaskQueue())
+	got := GetPublicIP(log_helper.GetLogger(), settings.NewTaskQueue())
 	println(got)
 }

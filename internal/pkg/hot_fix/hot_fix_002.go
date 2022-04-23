@@ -2,6 +2,7 @@ package hot_fix
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
+	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 )
 

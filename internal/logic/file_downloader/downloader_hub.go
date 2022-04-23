@@ -44,7 +44,7 @@ func (f *FileDownloader) Get(supplierName string, topN int64, videoFileName stri
 		}
 		// 下载成功需要统计到今天的次数中
 		_, err = task_queue.AddDailyDownloadCount(supplierName,
-			my_util.GetPublicIP(f.Settings.AdvancedSettings.TaskQueue, f.Settings.AdvancedSettings.ProxySettings))
+			my_util.GetPublicIP(f.Log, f.Settings.AdvancedSettings.TaskQueue, f.Settings.AdvancedSettings.ProxySettings))
 		if err != nil {
 			f.Log.Warningln(supplierName, "FileDownloader.Get.AddDailyDownloadCount", err)
 		}
@@ -87,7 +87,7 @@ func (f *FileDownloader) GetEx(supplierName string, browser *rod.Browser, subDow
 		}
 		// 下载成功需要统计到今天的次数中
 		_, err = task_queue.AddDailyDownloadCount(supplierName,
-			my_util.GetPublicIP(f.Settings.AdvancedSettings.TaskQueue, f.Settings.AdvancedSettings.ProxySettings))
+			my_util.GetPublicIP(f.Log, f.Settings.AdvancedSettings.TaskQueue, f.Settings.AdvancedSettings.ProxySettings))
 		if err != nil {
 			f.Log.Warningln(supplierName, "FileDownloader.GetEx.AddDailyDownloadCount", err)
 		}
