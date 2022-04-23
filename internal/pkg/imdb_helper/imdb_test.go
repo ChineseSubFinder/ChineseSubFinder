@@ -45,7 +45,7 @@ func TestIsChineseVideo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, _, err := IsChineseVideo(tt.args.imdbID, tt.args._reqParam...)
+			got, _, err := IsChineseVideo(tt.args.imdbID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("IsChineseVideo() error = %v, wantErr %v", err, tt.wantErr)
 				return

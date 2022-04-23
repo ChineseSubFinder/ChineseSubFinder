@@ -110,7 +110,7 @@ func SkipChineseMovie(videoFullPath string, _proxySettings ...*settings.ProxySet
 	if err != nil {
 		return false, err
 	}
-	isChineseVideo, _, err := imdb_helper.IsChineseVideo(imdbInfo.ImdbId, _proxySettings...)
+	isChineseVideo, _, err := imdb_helper.IsChineseVideo(imdbInfo, _proxySettings...)
 	if err != nil {
 		return false, err
 	}

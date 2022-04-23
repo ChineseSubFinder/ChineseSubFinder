@@ -36,7 +36,7 @@ func main() {
 	//	log_helper.GetLogger().Panicln("pre_job", err)
 	//}
 	//// ----------------------------------------------
-	//scan, err := scan_played_video_subinfo.NewScanPlayedVideoSubInfo(*settings.GetSettings())
+	//scan, err := scan_played_video_subinfo.NewScanPlayedVideoSubInfo(log_helper.GetLogger(), settings.GetSettings())
 	//if err != nil {
 	//	log_helper.GetLogger().Panicln(err)
 	//}

@@ -1,6 +1,7 @@
 package video_scan_and_refresh_helper
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/forced_scan_and_down_sub"
@@ -9,7 +10,9 @@ import (
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
+	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	subTimelineFixerPKG "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
@@ -18,17 +21,18 @@ import (
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/sirupsen/logrus"
+	"path/filepath"
 )
 
 type VideoScanAndRefreshHelper struct {
-	settings                 *settings.Settings // 设置的实例
-	log                      *logrus.Logger     // 日志实例
-	fileDownloader           *file_downloader.FileDownloader
-	needForcedScanAndDownSub bool                        // 将会强制扫描所有的视频，下载字幕，替换已经存在的字幕，不进行时间段和已存在则跳过的判断。且不会进过 Emby API 的逻辑，智能进行强制去以本程序的方式去扫描。
-	NeedRestoreFixTimeLineBK bool                        // 从 csf-bk 文件还原时间轴修复前的字幕文件
-	embyHelper               *embyHelper.EmbyHelper      // Emby 的实例
-	downloadQueue            *task_queue.TaskQueue       // 需要下载的视频的队列
-	subSupplierHub           *subSupplier.SubSupplierHub // 字幕提供源的集合，仅仅是 check 是否需要下载字幕是足够的，如果要下载则需要额外的初始化和检查
+	settings                 *settings.Settings              // 设置的实例
+	log                      *logrus.Logger                  // 日志实例
+	fileDownloader           *file_downloader.FileDownloader // 文件下载器
+	needForcedScanAndDownSub bool                            // 将会强制扫描所有的视频，下载字幕，替换已经存在的字幕，不进行时间段和已存在则跳过的判断。且不会进过 Emby API 的逻辑，智能进行强制去以本程序的方式去扫描。
+	NeedRestoreFixTimeLineBK bool                            // 从 csf-bk 文件还原时间轴修复前的字幕文件
+	embyHelper               *embyHelper.EmbyHelper          // Emby 的实例
+	downloadQueue            *task_queue.TaskQueue           // 需要下载的视频的队列
+	subSupplierHub           *subSupplier.SubSupplierHub     // 字幕提供源的集合，仅仅是 check 是否需要下载字幕是足够的，如果要下载则需要额外的初始化和检查
 }
 
 func NewVideoScanAndRefreshHelper(fileDownloader *file_downloader.FileDownloader, downloadQueue *task_queue.TaskQueue) *VideoScanAndRefreshHelper {
@@ -69,41 +73,44 @@ func (v *VideoScanAndRefreshHelper) ScanMovieAndSeriesWait2DownloadSub() (*ScanV
 		v.embyHelper = embyHelper.NewEmbyHelper(v.settings)
 	}
 
+	outScanVideoResult := ScanVideoResult{}
 	var err error
-	// -----------------------------------------------------
-	// 强制下载和常规模式（没有媒体服务器）
-	if v.needForcedScanAndDownSub == true || v.embyHelper == nil {
-
-		normalScanResult := NormalScanVideoResult{}
-		// 直接由本程序自己去扫描视频视频有哪些
-		// 全扫描
-		if v.needForcedScanAndDownSub == true {
-			v.log.Infoln("Forced Scan And DownSub")
+	// ------------------------------------------------------------------------------
+	// ------------------------------------------------------------------------------
+	// 由于需要进行视频信息的缓存，用于后续的逻辑，那么本地视频的扫描默认都会进行
+	normalScanResult := NormalScanVideoResult{}
+	// 直接由本程序自己去扫描视频视频有哪些
+	// 全扫描
+	if v.needForcedScanAndDownSub == true {
+		v.log.Infoln("Forced Scan And DownSub")
+	}
+	// --------------------------------------------------
+	// 电影
+	// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
+	normalScanResult.MovieFileFullPathList, err = my_util.SearchMatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
+	if err != nil {
+		return nil, err
+	}
+	// --------------------------------------------------
+	// 连续剧
+	// 遍历连续剧总目录下的第一层目录
+	normalScanResult.SeriesDirMap, err = seriesHelper.GetSeriesListFromDirs(v.settings.CommonSettings.SeriesPaths)
+	if err != nil {
+		return nil, err
+	}
+	// ------------------------------------------------------------------------------
+	// 输出调试信息，有那些连续剧文件夹名称
+	normalScanResult.SeriesDirMap.Each(func(key interface{}, value interface{}) {
+		for i, s := range value.([]string) {
+			v.log.Debugln("embyHelper == nil GetSeriesList", i, s)
 		}
-		// --------------------------------------------------
-		// 电影
-		// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
-		normalScanResult.MovieFileFullPathList, err = my_util.SearchMatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
-		if err != nil {
-			return nil, err
-		}
-		// --------------------------------------------------
-		// 连续剧
-		// 遍历连续剧总目录下的第一层目录
-		normalScanResult.SeriesDirMap, err = seriesHelper.GetSeriesListFromDirs(v.settings.CommonSettings.SeriesPaths)
-		if err != nil {
-			return nil, err
-		}
-		// ------------------------------------------------------------------------------
-		// 输出调试信息，有那些连续剧文件夹名称
-		normalScanResult.SeriesDirMap.Each(func(key interface{}, value interface{}) {
-			for i, s := range value.([]string) {
-				v.log.Debugln("embyHelper == nil GetSeriesList", i, s)
-			}
-		})
-		// ------------------------------------------------------------------------------
-		return &ScanVideoResult{Normal: &normalScanResult}, nil
-	} else {
+	})
+	// ------------------------------------------------------------------------------
+	outScanVideoResult.Normal = &normalScanResult
+	// ------------------------------------------------------------------------------
+	// ------------------------------------------------------------------------------
+	// 从 Emby 获取视频
+	if v.embyHelper != nil {
 		// TODO 如果后续支持了 Jellyfin、Plex 那么这里需要额外正在对应的扫描逻辑
 		// 进过 emby_helper api 的信息读取
 		embyScanResult := EmbyScanVideoResult{}
@@ -122,8 +129,45 @@ func (v *VideoScanAndRefreshHelper) ScanMovieAndSeriesWait2DownloadSub() (*ScanV
 			return nil, err
 		}
 		// ------------------------------------------------------------------------------
-		return &ScanVideoResult{Emby: &embyScanResult}, nil
+		outScanVideoResult.Emby = &embyScanResult
 	}
+
+	return &outScanVideoResult, nil
+}
+
+// UpdateLocalVideoCacheInfo 将扫描到的信息缓存到本地中，用于后续的 Video 展示界面 和 Emby IMDB ID 匹配进行路径的转换
+func (v *VideoScanAndRefreshHelper) UpdateLocalVideoCacheInfo(scanVideoResult *ScanVideoResult) error {
+	// 这里只使用 Normal 情况下获取到的信息
+	if scanVideoResult.Normal == nil {
+		return nil
+	}
+
+	// 电影
+	for i, oneMovieFPath := range scanVideoResult.Normal.MovieFileFullPathList {
+
+		v.log.Debugln("UpdateLocalVideoCacheInfo", i, oneMovieFPath)
+		videoImdbInfo, err := decode.GetImdbInfo4Movie(oneMovieFPath)
+		if err != nil {
+			// 允许的错误，跳过，继续进行文件名的搜索
+			v.log.Warningln("GetImdbInfo4Movie", oneMovieFPath, err)
+			continue
+		}
+		// 获取 IMDB 信息
+		localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(videoImdbInfo, v.settings.AdvancedSettings.ProxySettings)
+		if err != nil {
+			v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", videoImdbInfo.ImdbId, oneMovieFPath, err)
+			continue
+		}
+		// 插入数据
+		localInfo := models.NewMovieOrSeriesLocalInfo(true, 0, filepath.Dir(oneMovieFPath))
+		err = dao.GetDb().Model(localIMDBInfo).Association("MovieOrSeriesLocalInfos").Append(localInfo)
+		if err != nil {
+			v.log.Errorln("UpdateLocalVideoCacheInfo", oneMovieFPath, err)
+			continue
+		}
+	}
+
+	return nil
 }
 
 // FilterMovieAndSeriesNeedDownload 过滤出需要下载字幕的视频，比如是否跳过中文的剧集，是否超过3个月的下载时间，丢入队列中

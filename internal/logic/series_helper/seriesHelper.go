@@ -140,7 +140,7 @@ func SkipChineseSeries(seriesRootPath string, _proxySettings ...*settings.ProxyS
 		return false, nil, err
 	}
 
-	isChineseVideo, t, err := imdb_helper.IsChineseVideo(imdbInfo.ImdbId, _proxySettings...)
+	isChineseVideo, t, err := imdb_helper.IsChineseVideo(imdbInfo, _proxySettings...)
 	if err != nil {
 		return false, nil, err
 	}
@@ -323,7 +323,7 @@ func getSeriesInfoFromDir(seriesDir string, _proxySettings ...*settings.ProxySet
 		return nil, err
 	}
 
-	imdbInfoFromLocal, err := imdb_helper.GetVideoIMDBInfoFromLocal(videoInfo.ImdbId, _proxySettings...)
+	imdbInfoFromLocal, err := imdb_helper.GetVideoIMDBInfoFromLocal(videoInfo, _proxySettings...)
 	if err != nil {
 		return nil, err
 	}

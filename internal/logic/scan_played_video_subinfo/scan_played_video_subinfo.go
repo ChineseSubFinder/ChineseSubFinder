@@ -12,7 +12,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -50,10 +49,10 @@ type ScanPlayedVideoSubInfo struct {
 	shareRootDir string
 }
 
-func NewScanPlayedVideoSubInfo(_settings *settings.Settings) (*ScanPlayedVideoSubInfo, error) {
+func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings) (*ScanPlayedVideoSubInfo, error) {
 	var err error
 	var scanPlayedVideoSubInfo ScanPlayedVideoSubInfo
-	scanPlayedVideoSubInfo.log = log_helper.GetLogger()
+	scanPlayedVideoSubInfo.log = log
 	// 参入设置信息
 	// 最大获取的视频数目设置到 100W
 	_settings.EmbySettings.MaxRequestVideoNumber = 1000000
@@ -66,7 +65,7 @@ func NewScanPlayedVideoSubInfo(_settings *settings.Settings) (*ScanPlayedVideoSu
 	}
 
 	// 初始化任务控制
-	scanPlayedVideoSubInfo.taskControl, err = task_control.NewTaskControl(scanPlayedVideoSubInfo.settings.CommonSettings.Threads, log_helper.GetLogger())
+	scanPlayedVideoSubInfo.taskControl, err = task_control.NewTaskControl(scanPlayedVideoSubInfo.settings.CommonSettings.Threads, log)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +267,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	if my_util.IsFile(orgSubFPath) == false {
 
-		log_helper.GetLogger().Errorln("Skip", orgSubFPath, "not exist")
+		s.log.Errorln("Skip", orgSubFPath, "not exist")
 		return
 	}
 
@@ -305,7 +304,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	// 先把 IMDB 信息查询查来，不管是从数据库还是网络（查询出来也得写入到数据库）
 	if imdbInfo, ok = imdbInfoCache[imdbInfo4Video.ImdbId]; ok == false {
 		// 不存在，那么就去查询和新建缓存
-		imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(imdbInfo4Video.ImdbId, s.settings.AdvancedSettings.ProxySettings)
+		imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(imdbInfo4Video, s.settings.AdvancedSettings.ProxySettings)
 		if err != nil {
 			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoIMDBInfoFromLocal", videoFPath, err)
 			return

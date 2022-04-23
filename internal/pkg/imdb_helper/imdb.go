@@ -8,14 +8,16 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
 
 // GetVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
-func GetVideoInfoFromIMDBWeb(imdbID string, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
+func GetVideoInfoFromIMDBWeb(imdbInfo types.VideoIMDBInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
 
 	var cli *http.Client
 	var proxySettings *settings.ProxySettings
@@ -41,37 +43,47 @@ func GetVideoInfoFromIMDBWeb(imdbID string, _proxySettings ...*settings.ProxySet
 		}
 	}
 
-	t, err := imdb.NewTitle(cli, imdbID)
+	t, err := imdb.NewTitle(cli, imdbInfo.ImdbId)
 	if err != nil {
 		notify_center.Notify.Add("imdb model - imdb.NewTitle :", err.Error())
 		return nil, err
+	}
+	if t.Year == 0 {
+		// IMDB 信息获取的库(1.0.7)，目前有bug，比如，tt6856242 年份为 0
+		if imdbInfo.Year != "" {
+			year, err := strconv.Atoi(imdbInfo.Year)
+			if err != nil {
+				return nil, err
+			}
+			t.Year = year
+		}
 	}
 
 	return t, nil
 }
 
 // GetVideoIMDBInfoFromLocal 从本地获取 IMDB 信息，如果找不到则去网络获取并写入本地缓存
-func GetVideoIMDBInfoFromLocal(imdbID string, _proxySettings ...*settings.ProxySettings) (*models.IMDBInfo, error) {
+func GetVideoIMDBInfoFromLocal(imdbInfo types.VideoIMDBInfo, _proxySettings ...*settings.ProxySettings) (*models.IMDBInfo, error) {
 
 	log_helper.GetLogger().Debugln("GetVideoIMDBInfoFromLocal", 0)
 
 	// 首先从数据库中查找是否存在这个 IMDB 信息，如果不存在再使用 Web 查找，且写入数据库
 	var imdbInfos []models.IMDBInfo
 	// 把嵌套关联的 has many 的信息都查询出来
-	dao.GetDb().Preload("VideoSubInfos").Limit(1).Where(&models.IMDBInfo{IMDBID: imdbID}).Find(&imdbInfos)
+	dao.GetDb().Preload("VideoSubInfos").Limit(1).Where(&models.IMDBInfo{IMDBID: imdbInfo.ImdbId}).Find(&imdbInfos)
 
 	log_helper.GetLogger().Debugln("GetVideoIMDBInfoFromLocal", 1)
 
 	if len(imdbInfos) <= 0 {
 		// 没有找到，去网上获取
-		t, err := GetVideoInfoFromIMDBWeb(imdbID, _proxySettings...)
+		t, err := GetVideoInfoFromIMDBWeb(imdbInfo, _proxySettings...)
 		if err != nil {
 			return nil, err
 		}
 		log_helper.GetLogger().Debugln("GetVideoIMDBInfoFromLocal", 2)
 
 		// 存入数据库
-		nowIMDBInfo := models.NewIMDBInfo(imdbID, t.Name, t.Year, t.Description, t.Languages, t.AKA)
+		nowIMDBInfo := models.NewIMDBInfo(imdbInfo.ImdbId, t.Name, t.Year, t.Description, t.Languages, t.AKA)
 		imdbInfos = make([]models.IMDBInfo, 0)
 		imdbInfos = append(imdbInfos, *nowIMDBInfo)
 		dao.GetDb().Create(nowIMDBInfo)
@@ -88,7 +100,7 @@ func GetVideoIMDBInfoFromLocal(imdbID string, _proxySettings ...*settings.ProxyS
 }
 
 // IsChineseVideo 从 imdbID 去查询判断是否是中文视频
-func IsChineseVideo(imdbID string, _proxySettings ...*settings.ProxySettings) (bool, *models.IMDBInfo, error) {
+func IsChineseVideo(imdbInfo types.VideoIMDBInfo, _proxySettings ...*settings.ProxySettings) (bool, *models.IMDBInfo, error) {
 
 	const chName0 = "chinese"
 	const chName1 = "mandarin"
@@ -98,7 +110,7 @@ func IsChineseVideo(imdbID string, _proxySettings ...*settings.ProxySettings) (b
 		proxySettings = _proxySettings[0]
 	}
 
-	localIMDBInfo, err := GetVideoIMDBInfoFromLocal(imdbID, proxySettings)
+	localIMDBInfo, err := GetVideoIMDBInfoFromLocal(imdbInfo, proxySettings)
 	if err != nil {
 		return false, nil, err
 	}
