@@ -351,6 +351,18 @@ func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*e
 	}
 }
 
+// 根据 IMDB ID 自动转换路径
+func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyMixInfo, isMovieOrSeries bool) bool {
+
+	if isMovieOrSeries == true {
+
+	} else {
+
+	}
+
+	return false
+}
+
 // findMappingPathWithMixInfo 从 Emby 内置路径匹配到物理路径
 // X:\电影    - /mnt/share1/电影
 // X:\连续剧  - /mnt/share1/连续剧

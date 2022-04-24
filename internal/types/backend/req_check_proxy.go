@@ -1,5 +1,7 @@
 package backend
 
+import "github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+
 type ReqCheckProxy struct {
-	HttpProxyAddress string `json:"http_proxy_address"  binding:"required"`
+	ProxySettings settings.ProxySettings `json:"proxy_settings"  binding:"required"`
 }

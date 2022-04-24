@@ -48,7 +48,9 @@ func GetVideoIMDBInfoFromLocal(imdbInfo types.VideoIMDBInfo, _proxySettings ...*
 	// 首先从数据库中查找是否存在这个 IMDB 信息，如果不存在再使用 Web 查找，且写入数据库
 	var imdbInfos []models.IMDBInfo
 	// 把嵌套关联的 has many 的信息都查询出来
-	dao.GetDb().Preload("VideoSubInfos").Limit(1).Where(&models.IMDBInfo{IMDBID: imdbInfo.ImdbId}).Find(&imdbInfos)
+	dao.GetDb().
+		Preload("VideoSubInfos").
+		Limit(1).Where(&models.IMDBInfo{IMDBID: imdbInfo.ImdbId}).Find(&imdbInfos)
 
 	log_helper.GetLogger().Debugln("GetVideoIMDBInfoFromLocal", 1)
 
@@ -83,12 +85,7 @@ func IsChineseVideo(imdbInfo types.VideoIMDBInfo, _proxySettings ...*settings.Pr
 	const chName0 = "chinese"
 	const chName1 = "mandarin"
 
-	var proxySettings *settings.ProxySettings
-	if len(_proxySettings) > 0 {
-		proxySettings = _proxySettings[0]
-	}
-
-	localIMDBInfo, err := GetVideoIMDBInfoFromLocal(imdbInfo, proxySettings)
+	localIMDBInfo, err := GetVideoIMDBInfoFromLocal(imdbInfo, _proxySettings...)
 	if err != nil {
 		return false, nil, err
 	}

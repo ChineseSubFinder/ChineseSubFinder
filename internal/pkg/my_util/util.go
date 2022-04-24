@@ -17,11 +17,8 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
-	"golang.org/x/net/proxy"
 	"io"
 	"math"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -42,16 +39,10 @@ func NewHttpClient(_proxySettings ...*settings.ProxySettings) (*resty.Client, er
 	//const defUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41"
 
 	var proxySettings *settings.ProxySettings
-	var HttpProxyAddress, socket5ProxyAddress, UserAgent, Referer string
+	var UserAgent, Referer string
 
 	if len(_proxySettings) > 0 {
 		proxySettings = _proxySettings[0]
-		if proxySettings.UseHttpProxy == true && len(proxySettings.HttpProxyAddress) > 0 {
-			HttpProxyAddress = proxySettings.HttpProxyAddress
-		}
-		if proxySettings.UseSocks5Proxy == true && len(proxySettings.Socks5ProxyAddress) > 0 {
-			socket5ProxyAddress = proxySettings.Socks5ProxyAddress
-		}
 	}
 	// ------------------------------------------------
 	// 随机的 Browser
@@ -80,29 +71,18 @@ func NewHttpClient(_proxySettings ...*settings.ProxySettings) (*resty.Client, er
 	// 不要求安全链接
 	httpClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 	// ------------------------------------------------
-	if len(_proxySettings) == 0 {
+	if len(_proxySettings) == 0 ||
+		(proxySettings != nil && proxySettings.UseProxy == false) {
 		// 无需设置代理
 		return httpClient, nil
 	}
 	// ------------------------------------------------
-	if proxySettings.UseSocks5OrHttpProxy == false {
-		// http 代理
-		if HttpProxyAddress != "" {
-			httpClient.SetProxy(HttpProxyAddress)
-		} else {
-			httpClient.RemoveProxy()
-		}
+	// http 代理
+	HttpProxyAddress := proxySettings.GetLocalHttpProxyUrl()
+	if HttpProxyAddress != "" {
+		httpClient.SetProxy(HttpProxyAddress)
 	} else {
-		// socket5 代理
-		dialer, err := proxy.SOCKS5("tcp", socket5ProxyAddress, nil, proxy.Direct)
-		if err != nil {
-			return nil, err
-		}
-		dialContext := func(ctx context.Context, network, address string) (net.Conn, error) {
-			return dialer.Dial(network, address)
-		}
-		transport := &http.Transport{DialContext: dialContext, DisableKeepAlives: true}
-		httpClient.SetTransport(transport)
+		httpClient.RemoveProxy()
 	}
 
 	return httpClient, nil

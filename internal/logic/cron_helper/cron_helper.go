@@ -242,6 +242,11 @@ func (ch *CronHelper) scanVideoProcessAdd2DownloadQueue() {
 		ch.log.Errorln("ScanMovieAndSeriesWait2DownloadSub", err)
 		return
 	}
+	err = videoScanAndRefreshHelper.UpdateLocalVideoCacheInfo(scanResult)
+	if err != nil {
+		ch.log.Errorln("UpdateLocalVideoCacheInfo", err)
+		return
+	}
 	// 过滤出需要下载的视频有那些，并放入队列中
 	err = videoScanAndRefreshHelper.FilterMovieAndSeriesNeedDownload(scanResult)
 	if err != nil {

@@ -68,7 +68,8 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 
 func (s *Supplier) CheckAlive() (bool, int64) {
 
-	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, s.settings.AdvancedSettings.ProxySettings.HttpProxyAddress)
+	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl,
+		s.settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl())
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
 		s.isAlive = false

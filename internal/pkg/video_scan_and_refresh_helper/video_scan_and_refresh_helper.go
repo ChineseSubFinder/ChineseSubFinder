@@ -10,12 +10,12 @@ import (
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	subTimelineFixerPKG "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
+	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
@@ -159,13 +159,38 @@ func (v *VideoScanAndRefreshHelper) UpdateLocalVideoCacheInfo(scanVideoResult *S
 			continue
 		}
 		// 插入数据
-		localInfo := models.NewMovieOrSeriesLocalInfo(true, 0, filepath.Dir(oneMovieFPath))
-		err = dao.GetDb().Model(localIMDBInfo).Association("MovieOrSeriesLocalInfos").Append(localInfo)
-		if err != nil {
-			v.log.Errorln("UpdateLocalVideoCacheInfo", oneMovieFPath, err)
-			continue
-		}
+		localIMDBInfo.RootDirPath = filepath.Dir(oneMovieFPath)
+		localIMDBInfo.IsMovie = true
+		dao.GetDb().Save(localIMDBInfo)
 	}
+	// 连续剧
+	scanVideoResult.Normal.SeriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
+
+		for _, oneSeriesRootDir := range seriesNames.([]string) {
+
+			seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(oneSeriesRootDir,
+				v.settings.AdvancedSettings.TaskQueue.ExpirationTime,
+				false,
+				v.settings.AdvancedSettings.ProxySettings)
+
+			if err != nil {
+				v.log.Warningln("ReadSeriesInfoFromDir", oneSeriesRootDir, err)
+				continue
+			}
+			// 获取 IMDB 信息
+			localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(
+				types.VideoIMDBInfo{ImdbId: seriesInfo.ImdbId},
+				v.settings.AdvancedSettings.ProxySettings)
+			if err != nil {
+				v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", seriesInfo.ImdbId, seriesInfo.DirPath, err)
+				continue
+			}
+			// 插入数据
+			localIMDBInfo.RootDirPath = filepath.Dir(seriesInfo.DirPath)
+			localIMDBInfo.IsMovie = false
+			dao.GetDb().Save(localIMDBInfo)
+		}
+	})
 
 	return nil
 }

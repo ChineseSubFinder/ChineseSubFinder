@@ -1,6 +1,7 @@
 package my_util
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/local_http_proxy_server"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
@@ -36,10 +37,24 @@ func TestGetPublicIP(t *testing.T) {
 	got := GetPublicIP(log_helper.GetLogger(), settings.NewTaskQueue())
 	println("NoProxy:", got)
 
-	got = GetPublicIP(log_helper.GetLogger(), settings.NewTaskQueue(),
-		settings.NewProxySettings(true, false, "",
-			true, "127.0.0.1:10808"))
-	println("UseProxy", got)
+	sock5ProxySettings := settings.NewProxySettings(true, "socks5", local_http_proxy_server.LocalHttpProxyPort,
+		"127.0.0.1", "10808", "", "")
+
+	got = GetPublicIP(log_helper.GetLogger(), settings.NewTaskQueue(), sock5ProxySettings)
+	println("UseProxy socks5:", got)
+	err := sock5ProxySettings.CloseLocalHttpProxyServer()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	httpProxySettings := settings.NewProxySettings(true, "http", local_http_proxy_server.LocalHttpProxyPort,
+		"127.0.0.1", "10809", "", "")
+	got = GetPublicIP(log_helper.GetLogger(), settings.NewTaskQueue(), httpProxySettings)
+	println("UseProxy http:", got)
+	err = httpProxySettings.CloseLocalHttpProxyServer()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestSortByModTime(t *testing.T) {

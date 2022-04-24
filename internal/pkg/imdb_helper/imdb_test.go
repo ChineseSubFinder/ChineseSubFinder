@@ -1,7 +1,6 @@
 package imdb_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"testing"
 )
@@ -23,8 +22,7 @@ func TestGetVideoInfoFromIMDB(t *testing.T) {
 
 func TestIsChineseVideo(t *testing.T) {
 	type args struct {
-		imdbID    string
-		_reqParam []settings.ProxySettings
+		imdbID string
 	}
 	tests := []struct {
 		name    string

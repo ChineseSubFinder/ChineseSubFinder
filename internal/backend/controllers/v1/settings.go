@@ -43,6 +43,12 @@ func (cb ControllerBase) SettingsHandler(c *gin.Context) {
 			if err != nil {
 				return
 			}
+			if settings.GetSettings().AdvancedSettings.ProxySettings.UseProxy == false {
+				err = settings.GetSettings().AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
+				if err != nil {
+					return
+				}
+			}
 			c.JSON(http.StatusOK, backend.ReplyCommon{Message: "Settings Save Success"})
 		}
 	default:

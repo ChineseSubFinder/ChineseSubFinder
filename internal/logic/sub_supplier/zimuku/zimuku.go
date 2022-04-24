@@ -61,12 +61,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 		sup.tt = common2.OneMovieProcessTimeOut
 	}
 	// 判断是否启用代理
-	if sup.settings.AdvancedSettings.ProxySettings.UseHttpProxy == true {
-		sup.httpProxyAddress = sup.settings.AdvancedSettings.ProxySettings.HttpProxyAddress
-	} else {
-		sup.httpProxyAddress = ""
-	}
-
+	sup.httpProxyAddress = sup.settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl()
 	return &sup
 }
 

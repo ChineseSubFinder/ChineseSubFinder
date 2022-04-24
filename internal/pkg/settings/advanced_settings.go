@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/local_http_proxy_server"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 )
 
@@ -22,7 +23,7 @@ type AdvancedSettings struct {
 
 func NewAdvancedSettings() *AdvancedSettings {
 	return &AdvancedSettings{
-		ProxySettings:     &ProxySettings{},
+		ProxySettings:     NewProxySettings(false, "http", local_http_proxy_server.LocalHttpProxyPort, "127.0.0.1", "10809", "", ""),
 		CustomVideoExts:   make([]string, 0),
 		Topic:             common.DownloadSubsPerSite,
 		SuppliersSettings: NewSuppliersSettings(),

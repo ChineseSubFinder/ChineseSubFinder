@@ -22,18 +22,11 @@ import (
 
 func NewBrowserEx(loadAdblock bool, _settings *settings.Settings, preLoadUrl ...string) (*rod.Browser, error) {
 
-	httpProxyURL := ""
-
-	if _settings.AdvancedSettings.ProxySettings.UseHttpProxy == true &&
-		len(_settings.AdvancedSettings.ProxySettings.HttpProxyAddress) > 0 {
-
-		httpProxyURL = _settings.AdvancedSettings.ProxySettings.HttpProxyAddress
-	}
-
 	if _settings.ExperimentalFunction.RemoteChromeSettings.Enable == false {
-		return NewBrowser(httpProxyURL, loadAdblock, preLoadUrl...)
+		return NewBrowser(_settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(), loadAdblock, preLoadUrl...)
 	} else {
-		return NewBrowserFromDocker(httpProxyURL, _settings.ExperimentalFunction.RemoteChromeSettings.RemoteDockerURL,
+		return NewBrowserFromDocker(_settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
+			_settings.ExperimentalFunction.RemoteChromeSettings.RemoteDockerURL,
 			_settings.ExperimentalFunction.RemoteChromeSettings.RemoteAdblockPath,
 			_settings.ExperimentalFunction.RemoteChromeSettings.ReMoteUserDataDir,
 			loadAdblock, preLoadUrl...)
