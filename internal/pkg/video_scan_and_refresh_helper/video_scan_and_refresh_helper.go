@@ -226,27 +226,23 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 
 			v.log.Infoln("updateLocalVideoCacheInfo", i, oneSeriesRootDir)
 
-			seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(v.log,
-				oneSeriesRootDir,
-				v.settings.AdvancedSettings.TaskQueue.ExpirationTime,
-				false,
-				v.settings.AdvancedSettings.ProxySettings)
-
+			videoInfo, err := decode.GetImdbInfo4SeriesDir(oneSeriesRootDir)
 			if err != nil {
-				v.log.Warningln("ReadSeriesInfoFromDir", oneSeriesRootDir, err)
+				v.log.Warningln("GetImdbInfo4SeriesDir", oneSeriesRootDir, err)
 				continue
 			}
+
 			// 获取 IMDB 信息
 			localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(
 				v.log,
-				types.VideoIMDBInfo{ImdbId: seriesInfo.ImdbId},
+				types.VideoIMDBInfo{ImdbId: videoInfo.ImdbId},
 				v.settings.AdvancedSettings.ProxySettings)
 			if err != nil {
-				v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", seriesInfo.ImdbId, seriesInfo.DirPath, err)
+				v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", videoInfo.ImdbId, oneSeriesRootDir, err)
 				continue
 			}
 			// 插入数据
-			localIMDBInfo.RootDirPath = filepath.Dir(seriesInfo.DirPath)
+			localIMDBInfo.RootDirPath = oneSeriesRootDir
 			localIMDBInfo.IsMovie = false
 			dao.GetDb().Save(localIMDBInfo)
 		}
