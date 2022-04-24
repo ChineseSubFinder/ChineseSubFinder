@@ -126,7 +126,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(true, s.settings)
+	browser, err := rod_helper.NewBrowserEx(s.log, true, s.settings)
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +242,7 @@ func (s *Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubIn
 
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(true, s.settings)
+	browser, err := rod_helper.NewBrowserEx(s.log, true, s.settings)
 	if err != nil {
 		return nil, err
 	}

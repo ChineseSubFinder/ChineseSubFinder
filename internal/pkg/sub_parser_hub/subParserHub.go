@@ -3,10 +3,10 @@ package sub_parser_hub
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	languageConst "github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -14,12 +14,14 @@ import (
 )
 
 type SubParserHub struct {
+	log    *logrus.Logger
 	Parser []ifaces.ISubParser
 }
 
 // NewSubParserHub 处理的字幕文件需要符合 [siteName]_ 的前缀描述，是本程序专用的
-func NewSubParserHub(parser ifaces.ISubParser, _parser ...ifaces.ISubParser) *SubParserHub {
+func NewSubParserHub(log *logrus.Logger, parser ifaces.ISubParser, _parser ...ifaces.ISubParser) *SubParserHub {
 	s := SubParserHub{}
+	s.log = log
 	s.Parser = make([]ifaces.ISubParser, 0)
 	s.Parser = append(s.Parser, parser)
 	if len(_parser) > 0 {
@@ -77,15 +79,15 @@ func (p SubParserHub) IsSubHasChinese(fileFPath string) bool {
 	// 增加判断已存在的字幕是否有中文
 	bFind, file, err := p.DetermineFileTypeFromFile(fileFPath)
 	if err != nil {
-		log_helper.GetLogger().Errorln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, err)
+		p.log.Errorln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, err)
 		return false
 	}
 	if bFind == false {
-		log_helper.GetLogger().Warnln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, "not support SubType")
+		p.log.Warnln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, "not support SubType")
 		return false
 	}
 	if language.HasChineseLang(file.Lang) == false {
-		log_helper.GetLogger().Warnln("IsSubHasChinese.HasChineseLang", fileFPath, "not chinese sub, is ", file.Lang.String())
+		p.log.Warnln("IsSubHasChinese.HasChineseLang", fileFPath, "not chinese sub, is ", file.Lang.String())
 		return false
 	}
 
@@ -180,7 +182,7 @@ func IsEmbySubChineseLangStringWanted(inLangString string) bool {
 }
 
 // SearchMatchedSubFile 搜索符合后缀名的字幕文件
-func SearchMatchedSubFile(dir string) ([]string, error) {
+func SearchMatchedSubFile(log *logrus.Logger, dir string) ([]string, error) {
 
 	var fileFullPathList = make([]string, 0)
 	pathSep := string(os.PathSeparator)
@@ -192,7 +194,7 @@ func SearchMatchedSubFile(dir string) ([]string, error) {
 		fullPath := dir + pathSep + curFile.Name()
 		if curFile.IsDir() {
 			// 内层的错误就无视了
-			oneList, _ := SearchMatchedSubFile(fullPath)
+			oneList, _ := SearchMatchedSubFile(log, fullPath)
 			if oneList != nil {
 				fileFullPathList = append(fileFullPathList, oneList...)
 			}
@@ -205,11 +207,11 @@ func SearchMatchedSubFile(dir string) ([]string, error) {
 				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
 				fi, err := curFile.Info()
 				if err != nil {
-					log_helper.GetLogger().Debugln("SearchMatchedSubFile, file.Info:", fullPath, err)
+					log.Debugln("SearchMatchedSubFile, file.Info:", fullPath, err)
 					continue
 				}
 				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
-					log_helper.GetLogger().Debugln("SearchMatchedSubFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
+					log.Debugln("SearchMatchedSubFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
 					continue
 				}
 				fileFullPathList = append(fileFullPathList, fullPath)

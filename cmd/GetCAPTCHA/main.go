@@ -3,16 +3,41 @@ package main
 import (
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend"
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/robfig/cron/v3"
+	"github.com/sirupsen/logrus"
+	"path/filepath"
+	"time"
 )
+
+func newLog() *logrus.Logger {
+	var level logrus.Level
+	// --------------------------------------------------
+	// 之前是读取配置文件，现在改为，读取当前目录下，是否有一个特殊的文件，有则启动 Debug 日志级别
+	// 那么怎么写入这个文件，就靠额外的逻辑控制了
+	if my_util.IsFile(filepath.Join(global_value.ConfigRootDirFPath(), log_helper.DebugFileName)) == true {
+		level = logrus.DebugLevel
+	} else {
+		level = logrus.InfoLevel
+	}
+	logger := log_helper.NewLogHelper(log_helper.LogNameGetCAPTCHA,
+		global_value.ConfigRootDirFPath(),
+		level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
+	logger.AddHook(log_helper.NewLoggerHub())
+
+	return logger
+}
+
+func init() {
+	loggerBase = newLog()
+}
 
 func main() {
 
-	log_helper.SetLoggerName(log_helper.LogNameGetCAPTCHA)
-
-	notify_center.Notify = notify_center.NewNotifyCenter(config.GetConfig().WhenSubSupplierInvalidWebHook)
+	notify_center.Notify = notify_center.NewNotifyCenter(loggerBase, config.GetConfig().WhenSubSupplierInvalidWebHook)
 
 	// 任务还没执行完，下一次执行时间到来，下一次执行就跳过不执行
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
@@ -21,20 +46,20 @@ func main() {
 
 		err := Process()
 		if err != nil {
-			log_helper.GetLogger().Errorln(err.Error())
+			loggerBase.Errorln(err.Error())
 			return
 		}
 	})
 	if err != nil {
-		log_helper.GetLogger().Errorln("cron entryID:", entryID, "Error:", err)
+		loggerBase.Errorln("cron entryID:", entryID, "Error:", err)
 		return
 	}
 	// 先执行一次
-	log_helper.GetLogger().Infoln("-----------------------------------------")
-	log_helper.GetLogger().Infoln("First Time Start")
+	loggerBase.Infoln("-----------------------------------------")
+	loggerBase.Infoln("First Time Start")
 	err = Process()
 	if err != nil {
-		log_helper.GetLogger().Errorln(err.Error())
+		loggerBase.Errorln(err.Error())
 	}
 
 	c.Start()
@@ -55,17 +80,19 @@ func Process() error {
 		notify_center.Notify.Send()
 	}()
 
-	log_helper.GetLogger().Infoln("-----------------------------------------")
+	loggerBase.Infoln("-----------------------------------------")
 
-	codeB64, err := backend.GetCode(config.GetConfig().DesURL)
+	codeB64, err := backend.GetCode(loggerBase, config.GetConfig().DesURL)
 	if err != nil {
 		return err
 	}
 
-	err = backend.GitProcess(*config.GetConfig(), codeB64)
+	err = backend.GitProcess(loggerBase, *config.GetConfig(), codeB64)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
+
+var loggerBase *logrus.Logger

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"gorm.io/driver/sqlite"
@@ -20,8 +19,7 @@ func GetDb() *gorm.DB {
 		once.Do(func() {
 			err := InitDb()
 			if err != nil {
-				log_helper.GetLogger().Errorln("dao.InitDb()", err)
-				log_helper.GetLogger().Panicln(err)
+				panic(err)
 			}
 		})
 	}

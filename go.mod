@@ -70,6 +70,7 @@ require (
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/dgraph-io/badger/v3 v3.2103.2
+	github.com/elazarl/goproxy v0.0.0-20220417044921-416226498f94
 )
 
 require (
@@ -88,7 +89,6 @@ require (
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
-	github.com/elazarl/goproxy v0.0.0-20220417044921-416226498f94 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect

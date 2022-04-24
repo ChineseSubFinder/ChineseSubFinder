@@ -1,20 +1,21 @@
 package notify_center
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/go-resty/resty/v2"
+	"github.com/sirupsen/logrus"
 	"net/url"
 	"sync"
 )
 
 type NotifyCenter struct {
+	log        *logrus.Logger
 	webhookUrl string
 	infos      map[string]string
 	mu         sync.Mutex
 }
 
-func NewNotifyCenter(webhookUrl string) *NotifyCenter {
-	n := NotifyCenter{webhookUrl: webhookUrl}
+func NewNotifyCenter(log *logrus.Logger, webhookUrl string) *NotifyCenter {
+	n := NotifyCenter{log: log, webhookUrl: webhookUrl}
 	n.infos = make(map[string]string)
 	return &n
 }
@@ -36,7 +37,7 @@ func (n *NotifyCenter) Send() {
 	for s, s2 := range n.infos {
 		_, err := client.R().Get(n.webhookUrl + s + "/" + url.QueryEscape(s2))
 		if err != nil {
-			log_helper.GetLogger().Errorln("NewNotifyCenter.Send", err)
+			n.log.Errorln("NewNotifyCenter.Send", err)
 			return
 		}
 	}

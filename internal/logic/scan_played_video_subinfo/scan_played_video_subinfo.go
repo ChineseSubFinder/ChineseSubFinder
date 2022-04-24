@@ -61,7 +61,7 @@ func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings)
 	scanPlayedVideoSubInfo.settings.Check()
 	// 初始化 Emby API 接口
 	if scanPlayedVideoSubInfo.settings.EmbySettings.Enable == true && scanPlayedVideoSubInfo.settings.EmbySettings.AddressUrl != "" && scanPlayedVideoSubInfo.settings.EmbySettings.APIKey != "" {
-		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(scanPlayedVideoSubInfo.settings)
+		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(log, scanPlayedVideoSubInfo.settings)
 	}
 
 	// 初始化任务控制
@@ -304,7 +304,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	// 先把 IMDB 信息查询查来，不管是从数据库还是网络（查询出来也得写入到数据库）
 	if imdbInfo, ok = imdbInfoCache[imdbInfo4Video.ImdbId]; ok == false {
 		// 不存在，那么就去查询和新建缓存
-		imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(imdbInfo4Video, s.settings.AdvancedSettings.ProxySettings)
+		imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(s.log, imdbInfo4Video, s.settings.AdvancedSettings.ProxySettings)
 		if err != nil {
 			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoIMDBInfoFromLocal", videoFPath, err)
 			return

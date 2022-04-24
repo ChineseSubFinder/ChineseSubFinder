@@ -2,17 +2,17 @@ package language
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/charset"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/axgle/mahonia"
 	nzlov "github.com/nzlov/chardet"
+	"github.com/sirupsen/logrus"
 	"strings"
 )
 
 // ConvertToString 将字符串从原始编码转换到目标编码，需要配合字符串检测编码库使用 chardet.NewTextDetector()
-func ConvertToString(src string, srcCode string, tagCode string) string {
+func ConvertToString(log *logrus.Logger, src string, srcCode string, tagCode string) string {
 	defer func() {
 		if err := recover(); err != nil {
-			log_helper.GetLogger().Errorln("ConvertToString panic:", err)
+			log.Errorln("ConvertToString panic:", err)
 		}
 	}()
 	srcCoder := mahonia.NewDecoder(srcCode)

@@ -63,19 +63,11 @@ func (v *VideoScanAndRefreshHelper) ReadSpeFile() error {
 	return nil
 }
 
-// ScanMovieAndSeriesWait2DownloadSub 扫描出有那些电影、连续剧需要进行字幕下载的
-func (v *VideoScanAndRefreshHelper) ScanMovieAndSeriesWait2DownloadSub() (*ScanVideoResult, error) {
+// ScanNormalMovieAndSeries 没有媒体服务器，扫描出有那些电影、连续剧需要进行字幕下载的
+func (v *VideoScanAndRefreshHelper) ScanNormalMovieAndSeries() (*ScanVideoResult, error) {
 
-	if v.settings.EmbySettings.Enable == false {
-		v.embyHelper = nil
-
-	} else {
-		v.embyHelper = embyHelper.NewEmbyHelper(v.settings)
-	}
-
-	outScanVideoResult := ScanVideoResult{}
 	var err error
-	// ------------------------------------------------------------------------------
+	outScanVideoResult := ScanVideoResult{}
 	// ------------------------------------------------------------------------------
 	// 由于需要进行视频信息的缓存，用于后续的逻辑，那么本地视频的扫描默认都会进行
 	normalScanResult := NormalScanVideoResult{}
@@ -94,7 +86,7 @@ func (v *VideoScanAndRefreshHelper) ScanMovieAndSeriesWait2DownloadSub() (*ScanV
 	// --------------------------------------------------
 	// 连续剧
 	// 遍历连续剧总目录下的第一层目录
-	normalScanResult.SeriesDirMap, err = seriesHelper.GetSeriesListFromDirs(v.settings.CommonSettings.SeriesPaths)
+	normalScanResult.SeriesDirMap, err = seriesHelper.GetSeriesListFromDirs(v.log, v.settings.CommonSettings.SeriesPaths)
 	if err != nil {
 		return nil, err
 	}
@@ -108,6 +100,26 @@ func (v *VideoScanAndRefreshHelper) ScanMovieAndSeriesWait2DownloadSub() (*ScanV
 	// ------------------------------------------------------------------------------
 	outScanVideoResult.Normal = &normalScanResult
 	// ------------------------------------------------------------------------------
+	// 将扫描到的信息缓存到本地中，用于后续的 Video 展示界面 和 Emby IMDB ID 匹配进行路径的转换
+	err = v.updateLocalVideoCacheInfo(&outScanVideoResult)
+	if err != nil {
+		return nil, err
+	}
+
+	return &outScanVideoResult, nil
+}
+
+// ScanEmbyMovieAndSeries Emby媒体服务器，扫描出有那些电影、连续剧需要进行字幕下载的
+func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *ScanVideoResult) error {
+
+	if v.settings.EmbySettings.Enable == false {
+		v.embyHelper = nil
+
+	} else {
+		v.embyHelper = embyHelper.NewEmbyHelper(v.log, v.settings)
+	}
+	var err error
+
 	// ------------------------------------------------------------------------------
 	// 从 Emby 获取视频
 	if v.embyHelper != nil {
@@ -116,81 +128,21 @@ func (v *VideoScanAndRefreshHelper) ScanMovieAndSeriesWait2DownloadSub() (*ScanV
 		embyScanResult := EmbyScanVideoResult{}
 		v.log.Infoln("Movie Sub Dl From Emby API...")
 		// Emby 情况，从 Emby 获取视频信息
-		err = v.RefreshEmbySubList()
+		err = v.refreshEmbySubList()
 		if err != nil {
-			v.log.Errorln("RefreshEmbySubList", err)
-			return nil, err
+			v.log.Errorln("refreshEmbySubList", err)
+			return err
 		}
 		// ------------------------------------------------------------------------------
 		// 有哪些更新的视频列表，包含电影、连续剧
-		embyScanResult.MovieSubNeedDlEmbyMixInfoList, embyScanResult.SeriesSubNeedDlEmbyMixInfoMap, err = v.GetUpdateVideoListFromEmby()
+		embyScanResult.MovieSubNeedDlEmbyMixInfoList, embyScanResult.SeriesSubNeedDlEmbyMixInfoMap, err = v.getUpdateVideoListFromEmby()
 		if err != nil {
-			v.log.Errorln("GetUpdateVideoListFromEmby", err)
-			return nil, err
+			v.log.Errorln("getUpdateVideoListFromEmby", err)
+			return err
 		}
 		// ------------------------------------------------------------------------------
-		outScanVideoResult.Emby = &embyScanResult
+		scanVideoResult.Emby = &embyScanResult
 	}
-
-	return &outScanVideoResult, nil
-}
-
-// UpdateLocalVideoCacheInfo 将扫描到的信息缓存到本地中，用于后续的 Video 展示界面 和 Emby IMDB ID 匹配进行路径的转换
-func (v *VideoScanAndRefreshHelper) UpdateLocalVideoCacheInfo(scanVideoResult *ScanVideoResult) error {
-	// 这里只使用 Normal 情况下获取到的信息
-	if scanVideoResult.Normal == nil {
-		return nil
-	}
-
-	// 电影
-	for i, oneMovieFPath := range scanVideoResult.Normal.MovieFileFullPathList {
-
-		v.log.Debugln("UpdateLocalVideoCacheInfo", i, oneMovieFPath)
-		videoImdbInfo, err := decode.GetImdbInfo4Movie(oneMovieFPath)
-		if err != nil {
-			// 允许的错误，跳过，继续进行文件名的搜索
-			v.log.Warningln("GetImdbInfo4Movie", oneMovieFPath, err)
-			continue
-		}
-		// 获取 IMDB 信息
-		localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(videoImdbInfo, v.settings.AdvancedSettings.ProxySettings)
-		if err != nil {
-			v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", videoImdbInfo.ImdbId, oneMovieFPath, err)
-			continue
-		}
-		// 插入数据
-		localIMDBInfo.RootDirPath = filepath.Dir(oneMovieFPath)
-		localIMDBInfo.IsMovie = true
-		dao.GetDb().Save(localIMDBInfo)
-	}
-	// 连续剧
-	scanVideoResult.Normal.SeriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
-
-		for _, oneSeriesRootDir := range seriesNames.([]string) {
-
-			seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(oneSeriesRootDir,
-				v.settings.AdvancedSettings.TaskQueue.ExpirationTime,
-				false,
-				v.settings.AdvancedSettings.ProxySettings)
-
-			if err != nil {
-				v.log.Warningln("ReadSeriesInfoFromDir", oneSeriesRootDir, err)
-				continue
-			}
-			// 获取 IMDB 信息
-			localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(
-				types.VideoIMDBInfo{ImdbId: seriesInfo.ImdbId},
-				v.settings.AdvancedSettings.ProxySettings)
-			if err != nil {
-				v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", seriesInfo.ImdbId, seriesInfo.DirPath, err)
-				continue
-			}
-			// 插入数据
-			localIMDBInfo.RootDirPath = filepath.Dir(seriesInfo.DirPath)
-			localIMDBInfo.IsMovie = false
-			dao.GetDb().Save(localIMDBInfo)
-		}
-	})
 
 	return nil
 }
@@ -211,6 +163,94 @@ func (v *VideoScanAndRefreshHelper) FilterMovieAndSeriesNeedDownload(scanVideoRe
 			return err
 		}
 	}
+
+	return nil
+}
+
+func (v *VideoScanAndRefreshHelper) refreshEmbySubList() error {
+
+	if v.embyHelper == nil {
+		return nil
+	}
+
+	bRefresh := false
+	defer func() {
+		if bRefresh == true {
+			v.log.Infoln("Refresh Emby Sub List Success")
+		} else {
+			v.log.Errorln("Refresh Emby Sub List Error")
+		}
+	}()
+	v.log.Infoln("Refresh Emby Sub List Start...")
+	//------------------------------------------------------
+	bRefresh, err := v.embyHelper.RefreshEmbySubList()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// updateLocalVideoCacheInfo 将扫描到的信息缓存到本地中，用于后续的 Video 展示界面 和 Emby IMDB ID 匹配进行路径的转换
+func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *ScanVideoResult) error {
+	// 这里只使用 Normal 情况下获取到的信息
+	if scanVideoResult.Normal == nil {
+		return nil
+	}
+
+	// 电影
+	for i, oneMovieFPath := range scanVideoResult.Normal.MovieFileFullPathList {
+
+		v.log.Infoln("updateLocalVideoCacheInfo", i, oneMovieFPath)
+		videoImdbInfo, err := decode.GetImdbInfo4Movie(oneMovieFPath)
+		if err != nil {
+			// 允许的错误，跳过，继续进行文件名的搜索
+			v.log.Warningln("GetImdbInfo4Movie", oneMovieFPath, err)
+			continue
+		}
+		// 获取 IMDB 信息
+		localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(v.log, videoImdbInfo, v.settings.AdvancedSettings.ProxySettings)
+		if err != nil {
+			v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", videoImdbInfo.ImdbId, oneMovieFPath, err)
+			continue
+		}
+		// 插入数据
+		localIMDBInfo.RootDirPath = filepath.Dir(oneMovieFPath)
+		localIMDBInfo.IsMovie = true
+		dao.GetDb().Save(localIMDBInfo)
+	}
+	// 连续剧
+	scanVideoResult.Normal.SeriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
+
+		for i, oneSeriesRootDir := range seriesNames.([]string) {
+
+			v.log.Infoln("updateLocalVideoCacheInfo", i, oneSeriesRootDir)
+
+			seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(v.log,
+				oneSeriesRootDir,
+				v.settings.AdvancedSettings.TaskQueue.ExpirationTime,
+				false,
+				v.settings.AdvancedSettings.ProxySettings)
+
+			if err != nil {
+				v.log.Warningln("ReadSeriesInfoFromDir", oneSeriesRootDir, err)
+				continue
+			}
+			// 获取 IMDB 信息
+			localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(
+				v.log,
+				types.VideoIMDBInfo{ImdbId: seriesInfo.ImdbId},
+				v.settings.AdvancedSettings.ProxySettings)
+			if err != nil {
+				v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", seriesInfo.ImdbId, seriesInfo.DirPath, err)
+				continue
+			}
+			// 插入数据
+			localIMDBInfo.RootDirPath = filepath.Dir(seriesInfo.DirPath)
+			localIMDBInfo.IsMovie = false
+			dao.GetDb().Save(localIMDBInfo)
+		}
+	})
 
 	return nil
 }
@@ -334,15 +374,15 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 	return nil
 }
 
-// GetUpdateVideoListFromEmby 这里首先会进行近期影片的获取，然后对这些影片进行刷新，然后在获取字幕列表，最终得到需要字幕获取的 video 列表
-func (v *VideoScanAndRefreshHelper) GetUpdateVideoListFromEmby() ([]emby.EmbyMixInfo, map[string][]emby.EmbyMixInfo, error) {
+// getUpdateVideoListFromEmby 这里首先会进行近期影片的获取，然后对这些影片进行刷新，然后在获取字幕列表，最终得到需要字幕获取的 video 列表
+func (v *VideoScanAndRefreshHelper) getUpdateVideoListFromEmby() ([]emby.EmbyMixInfo, map[string][]emby.EmbyMixInfo, error) {
 	if v.embyHelper == nil {
 		return nil, nil, nil
 	}
 	defer func() {
-		v.log.Infoln("GetUpdateVideoListFromEmby End")
+		v.log.Infoln("getUpdateVideoListFromEmby End")
 	}()
-	v.log.Infoln("GetUpdateVideoListFromEmby Start...")
+	v.log.Infoln("getUpdateVideoListFromEmby Start...")
 	//------------------------------------------------------
 	var err error
 	var movieList []emby.EmbyMixInfo
@@ -352,43 +392,19 @@ func (v *VideoScanAndRefreshHelper) GetUpdateVideoListFromEmby() ([]emby.EmbyMix
 		return nil, nil, err
 	}
 	// 输出调试信息
-	v.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList Start")
+	v.log.Debugln("getUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList Start")
 	for _, info := range movieList {
 		v.log.Debugln(info.PhysicalVideoFileFullPath)
 	}
-	v.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList End")
+	v.log.Debugln("getUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList End")
 
-	v.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap Start")
+	v.log.Debugln("getUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap Start")
 	for s := range seriesSubNeedDlMap {
 		v.log.Debugln(s)
 	}
-	v.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap End")
+	v.log.Debugln("getUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap End")
 
 	return movieList, seriesSubNeedDlMap, nil
-}
-
-func (v *VideoScanAndRefreshHelper) RefreshEmbySubList() error {
-
-	if v.embyHelper == nil {
-		return nil
-	}
-
-	bRefresh := false
-	defer func() {
-		if bRefresh == true {
-			v.log.Infoln("Refresh Emby Sub List Success")
-		} else {
-			v.log.Errorln("Refresh Emby Sub List Error")
-		}
-	}()
-	v.log.Infoln("Refresh Emby Sub List Start...")
-	//------------------------------------------------------
-	bRefresh, err := v.embyHelper.RefreshEmbySubList()
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (v *VideoScanAndRefreshHelper) RestoreFixTimelineBK() error {
@@ -396,7 +412,7 @@ func (v *VideoScanAndRefreshHelper) RestoreFixTimelineBK() error {
 	defer v.log.Infoln("End Restore Fix Timeline BK")
 	v.log.Infoln("Start Restore Fix Timeline BK...")
 	//------------------------------------------------------
-	_, err := subTimelineFixerPKG.Restore(v.settings.CommonSettings.MoviePaths, v.settings.CommonSettings.SeriesPaths)
+	_, err := subTimelineFixerPKG.Restore(v.log, v.settings.CommonSettings.MoviePaths, v.settings.CommonSettings.SeriesPaths)
 	if err != nil {
 		return err
 	}

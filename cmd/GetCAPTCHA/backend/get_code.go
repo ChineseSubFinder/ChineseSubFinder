@@ -3,20 +3,20 @@ package backend
 import (
 	b64 "encoding/base64"
 	"errors"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/go-rod/rod/lib/proto"
+	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
 )
 
-func GetCode(codeUrl string) (string, error) {
+func GetCode(log *logrus.Logger, codeUrl string) (string, error) {
 
 	defer func() {
-		log_helper.GetLogger().Infoln("End Get Code")
+		log.Infoln("End Get Code")
 	}()
 
-	log_helper.GetLogger().Infoln("Start Get Code...")
+	log.Infoln("Start Get Code...")
 	browser, err := rod_helper.NewBrowser("", false)
 	if err != nil {
 		return "", err
@@ -52,8 +52,8 @@ func GetCode(codeUrl string) (string, error) {
 
 	sEnc := b64.StdEncoding.EncodeToString([]byte(code))
 
-	log_helper.GetLogger().Infoln("code:", code)
-	log_helper.GetLogger().Infoln("sEnc:", sEnc)
+	log.Infoln("code:", code)
+	log.Infoln("sEnc:", sEnc)
 
 	return sEnc, nil
 }

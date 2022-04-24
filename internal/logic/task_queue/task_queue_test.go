@@ -17,7 +17,7 @@ func TestTaskQueue_AddAndGetAndDel(t *testing.T) {
 	}()
 	DelDb()
 
-	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger())
+	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger4Tester())
 	for i := taskPriorityCount; i >= 0; i-- {
 		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
@@ -69,7 +69,7 @@ func TestTaskQueue_AddAndClear(t *testing.T) {
 	}()
 	DelDb()
 
-	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger())
+	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger4Tester())
 	for i := taskPriorityCount; i >= 0; i-- {
 		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
@@ -97,7 +97,7 @@ func TestTaskQueue_Update(t *testing.T) {
 	}()
 	DelDb()
 
-	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger())
+	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger4Tester())
 	for i := taskPriorityCount; i >= 0; i-- {
 		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
@@ -160,7 +160,7 @@ func TestTaskQueue_UpdateAdGetOneWaiting(t *testing.T) {
 	}()
 	DelDb()
 
-	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger())
+	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger4Tester())
 	for i := taskPriorityCount; i >= 0; i-- {
 		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, fmt.Sprintf("%d", i), i))
 		if err != nil {
@@ -212,7 +212,7 @@ func TestTaskQueue_UpdatePriority(t *testing.T) {
 	}()
 	DelDb()
 
-	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger())
+	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger4Tester())
 	for i := taskPriorityCount; i >= 0; i-- {
 		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, fmt.Sprintf("%d", i), i))
 		if err != nil {

@@ -61,7 +61,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// ----------------------------------------------
 	// 初始化下载者，里面的两个 func 需要使用定时器启动 SupplierCheck QueueDownloader
 	ch.downloader = downloader.NewDownloader(
-		sub_formatter.GetSubFormatter(ch.sets.AdvancedSettings.SubNameFormatter),
+		sub_formatter.GetSubFormatter(ch.log, ch.sets.AdvancedSettings.SubNameFormatter),
 		ch.fileDownloader, ch.downloadQueue)
 	// ----------------------------------------------
 	// 判断扫描任务的时间间隔是否符合要求，不符合则重写默认值
@@ -206,22 +206,6 @@ func (ch *CronHelper) scanVideoProcessAdd2DownloadQueue() {
 		tttt := ch.c.Entry(ch.entryIDScanVideoProcess).Next.Format("2006-01-02 15:04:05")
 		common.SetSubScanJobStatusWaiting(tttt)
 	}()
-
-	// ------------------------------------------------------------------------
-	// 如果是 Debug 模式，那么就需要写入特殊文件
-	if ch.sets.AdvancedSettings.DebugMode == true {
-		err := log_helper.WriteDebugFile()
-		if err != nil {
-			ch.log.Errorln("log_helper.WriteDebugFile " + err.Error())
-		}
-		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Debug")
-	} else {
-		err := log_helper.DeleteDebugFile()
-		if err != nil {
-			ch.log.Errorln("log_helper.DeleteDebugFile " + err.Error())
-		}
-		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Info")
-	}
 	// ------------------------------------------------------------------------
 	// 开始标记，这个是单次扫描的开始
 	ch.log.Infoln(log_helper.OnceSubsScanStart)
@@ -237,14 +221,14 @@ func (ch *CronHelper) scanVideoProcessAdd2DownloadQueue() {
 
 	ch.log.Infoln("Video Scan Started...")
 	// 先进行扫描
-	scanResult, err := videoScanAndRefreshHelper.ScanMovieAndSeriesWait2DownloadSub()
+	scanResult, err := videoScanAndRefreshHelper.ScanNormalMovieAndSeries()
 	if err != nil {
-		ch.log.Errorln("ScanMovieAndSeriesWait2DownloadSub", err)
+		ch.log.Errorln("ScanNormalMovieAndSeries", err)
 		return
 	}
-	err = videoScanAndRefreshHelper.UpdateLocalVideoCacheInfo(scanResult)
+	err = videoScanAndRefreshHelper.ScanEmbyMovieAndSeries(scanResult)
 	if err != nil {
-		ch.log.Errorln("UpdateLocalVideoCacheInfo", err)
+		ch.log.Errorln("ScanEmbyMovieAndSeries", err)
 		return
 	}
 	// 过滤出需要下载的视频有那些，并放入队列中

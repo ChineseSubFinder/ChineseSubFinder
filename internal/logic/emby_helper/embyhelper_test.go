@@ -43,7 +43,7 @@ func TestEmbyHelper_GetRecentlyAddVideoList(t *testing.T) {
 func TestEmbyHelper_RefreshEmbySubList(t *testing.T) {
 	//config := config.GetConfig()
 	//em := NewEmbyHelper(config.EmbyConfig)
-	//bok, err := em.RefreshEmbySubList()
+	//bok, err := em.refreshEmbySubList()
 	//if err != nil {
 	//	t.Fatal(err)
 	//}

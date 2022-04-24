@@ -2,7 +2,6 @@ package decode
 
 import (
 	"errors"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/beevik/etree"
@@ -149,7 +148,6 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	if movieXmlFPath != "" {
 		imdbInfo, err = getImdbAndYearMovieXml(movieXmlFPath)
 		if err != nil {
-			log_helper.GetLogger().Errorln("getImdbAndYearMovieXml error, move on:", err)
 		} else {
 			return imdbInfo, nil
 		}

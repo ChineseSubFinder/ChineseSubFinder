@@ -29,7 +29,7 @@ func TestGetList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	xunlie := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	xunlie := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger4Tester()))
 	outList, err := xunlie.getSubListFromFile(gVideoFPath)
 	if err != nil {
 		t.Error(err)

@@ -3,15 +3,17 @@ package emby_helper
 import (
 	"fmt"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/path_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/panjf2000/ants/v2"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"path"
 	"path/filepath"
@@ -23,15 +25,16 @@ import (
 
 type EmbyHelper struct {
 	embyApi  *embyHelper.EmbyApi
+	log      *logrus.Logger
 	settings *settings.Settings
 	threads  int
 	timeOut  time.Duration
 	listLock sync.Mutex
 }
 
-func NewEmbyHelper(_settings *settings.Settings) *EmbyHelper {
-	em := EmbyHelper{settings: _settings}
-	em.embyApi = embyHelper.NewEmbyApi(_settings.EmbySettings)
+func NewEmbyHelper(_log *logrus.Logger, _settings *settings.Settings) *EmbyHelper {
+	em := EmbyHelper{log: _log, settings: _settings}
+	em.embyApi = embyHelper.NewEmbyApi(_log, _settings.EmbySettings)
 	em.threads = 6
 	em.timeOut = 60 * time.Second
 	return &em
@@ -49,23 +52,23 @@ func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle() ([]emby.Emb
 	if err != nil {
 		return nil, nil, err
 	}
-	log_helper.GetLogger().Debugln("-----------------")
+	em.log.Debugln("-----------------")
 	noSubSeriesList, err := em.filterNoChineseSubVideoList(filterSeriesList)
 	if err != nil {
 		return nil, nil, err
 	}
 	// 输出调试信息
-	log_helper.GetLogger().Debugln("-----------------")
-	log_helper.GetLogger().Debugln("filterNoChineseSubVideoList found no chinese movie", len(noSubMovieList))
+	em.log.Debugln("-----------------")
+	em.log.Debugln("filterNoChineseSubVideoList found no chinese movie", len(noSubMovieList))
 	for index, info := range filterMovieList {
-		log_helper.GetLogger().Debugln(index, info.VideoFileName)
+		em.log.Debugln(index, info.VideoFileName)
 	}
-	log_helper.GetLogger().Debugln("-----------------")
-	log_helper.GetLogger().Debugln("filterNoChineseSubVideoList found no chinese series", len(noSubSeriesList))
+	em.log.Debugln("-----------------")
+	em.log.Debugln("filterNoChineseSubVideoList found no chinese series", len(noSubSeriesList))
 	for index, info := range filterSeriesList {
-		log_helper.GetLogger().Debugln(index, info.VideoFileName)
+		em.log.Debugln(index, info.VideoFileName)
 	}
-	log_helper.GetLogger().Debugln("-----------------")
+	em.log.Debugln("-----------------")
 	// 需要将连续剧零散的每一集，进行合并到一个连续剧下面，也就是这个连续剧有那些需要更新的
 	var seriesMap = make(map[string][]emby.EmbyMixInfo)
 	for _, info := range noSubSeriesList {
@@ -91,21 +94,21 @@ func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby.EmbyMixInfo, []emby.Emby
 	var EpisodeIdList = make([]string, 0)
 	var MovieIdList = make([]string, 0)
 
-	log_helper.GetLogger().Debugln("-----------------")
-	log_helper.GetLogger().Debugln("GetRecentlyAddVideoListWithNoChineseSubtitle - GetRecentlyItems Count", len(items.Items))
+	em.log.Debugln("-----------------")
+	em.log.Debugln("GetRecentlyAddVideoListWithNoChineseSubtitle - GetRecentlyItems Count", len(items.Items))
 
 	// 分类
 	for index, item := range items.Items {
 		if item.Type == videoTypeEpisode {
 			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
 			EpisodeIdList = append(EpisodeIdList, item.Id)
-			log_helper.GetLogger().Debugln("Episode:", index, item.SeriesName, item.ParentIndexNumber, item.IndexNumber)
+			em.log.Debugln("Episode:", index, item.SeriesName, item.ParentIndexNumber, item.IndexNumber)
 		} else if item.Type == videoTypeMovie {
 			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
 			MovieIdList = append(MovieIdList, item.Id)
-			log_helper.GetLogger().Debugln("Movie:", index, item.Name)
+			em.log.Debugln("Movie:", index, item.Name)
 		} else {
-			log_helper.GetLogger().Debugln("GetRecentlyItems - Is not a goal video type:", index, item.Name, item.Type)
+			em.log.Debugln("GetRecentlyItems - Is not a goal video type:", index, item.Name, item.Type)
 		}
 	}
 
@@ -119,17 +122,17 @@ func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby.EmbyMixInfo, []emby.Emby
 		return nil, nil, err
 	}
 	// 输出调试信息
-	log_helper.GetLogger().Debugln("-----------------")
-	log_helper.GetLogger().Debugln("getMoreVideoInfoList found valid movie", len(filterMovieList))
+	em.log.Debugln("-----------------")
+	em.log.Debugln("getMoreVideoInfoList found valid movie", len(filterMovieList))
 	for index, info := range filterMovieList {
-		log_helper.GetLogger().Debugln(index, info.VideoFileName)
+		em.log.Debugln(index, info.VideoFileName)
 	}
-	log_helper.GetLogger().Debugln("-----------------")
-	log_helper.GetLogger().Debugln("getMoreVideoInfoList found valid series", len(filterSeriesList))
+	em.log.Debugln("-----------------")
+	em.log.Debugln("getMoreVideoInfoList found valid series", len(filterSeriesList))
 	for index, info := range filterSeriesList {
-		log_helper.GetLogger().Debugln(index, info.VideoFileName)
+		em.log.Debugln(index, info.VideoFileName)
 	}
-	log_helper.GetLogger().Debugln("-----------------")
+	em.log.Debugln("-----------------")
 	return filterMovieList, filterSeriesList, nil
 }
 
@@ -186,12 +189,12 @@ func (em *EmbyHelper) GetPlayedItemsSubtitle() (map[string]string, map[string]st
 			}
 			// 首先不能越界
 			if videoInfoByUserId.GetDefaultSubIndex() < 0 || len(videoInfo.MediaStreams)-1 < videoInfoByUserId.GetDefaultSubIndex() {
-				log_helper.GetLogger().Debugln("GetPlayedItemsSubtitle", videoInfo.Name, "SubIndex Out Of Range")
+				em.log.Debugln("GetPlayedItemsSubtitle", videoInfo.Name, "SubIndex Out Of Range")
 				continue
 			}
 			// 然后找出来的字幕必须是外置字幕，内置还导出个啥子
 			if videoInfo.MediaStreams[videoInfoByUserId.GetDefaultSubIndex()].IsExternal == false {
-				log_helper.GetLogger().Debugln("GetPlayedItemsSubtitle", videoInfo.Name,
+				em.log.Debugln("GetPlayedItemsSubtitle", videoInfo.Name,
 					"Get Played SubIndex", videoInfoByUserId.GetDefaultSubIndex(),
 					"is IsExternal == false, Skip")
 				continue
@@ -211,7 +214,7 @@ func (em *EmbyHelper) GetPlayedItemsSubtitle() (map[string]string, map[string]st
 	for key, value := range movieEmbyFPathMap {
 		bok, prefixOldPath, prefixNewPath := em.findMappingPath(key, true)
 		if bok == false {
-			log_helper.GetLogger().Warningln("GetPlayedItemsSubtitle.findMappingPath miss matched,", key)
+			em.log.Warningln("GetPlayedItemsSubtitle.findMappingPath miss matched,", key)
 			continue
 		}
 		phyVideoPath := strings.ReplaceAll(key, prefixOldPath, prefixNewPath)
@@ -222,7 +225,7 @@ func (em *EmbyHelper) GetPlayedItemsSubtitle() (map[string]string, map[string]st
 	for key, value := range seriesEmbyFPathMap {
 		bok, prefixOldPath, prefixNewPath := em.findMappingPath(key, false)
 		if bok == false {
-			log_helper.GetLogger().Warningln("GetPlayedItemsSubtitle.findMappingPath miss matched,", key)
+			em.log.Warningln("GetPlayedItemsSubtitle.findMappingPath miss matched,", key)
 			continue
 		}
 		phyVideoPath := strings.ReplaceAll(key, prefixOldPath, prefixNewPath)
@@ -353,6 +356,14 @@ func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*e
 
 // 根据 IMDB ID 自动转换路径
 func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyMixInfo, isMovieOrSeries bool) bool {
+
+	// 获取 IMDB 信息
+	localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(em.log, types.VideoIMDBInfo{ImdbId: mixInfo.IMDBId}, em.settings.AdvancedSettings.ProxySettings)
+	if err != nil {
+		return false
+	}
+
+	println(localIMDBInfo.RootDirPath)
 
 	if isMovieOrSeries == true {
 
@@ -493,19 +504,40 @@ func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries
 		if err != nil {
 			return nil, err
 		}
-		if isMovieOrSeries == true {
-			// 电影
-			// 过滤掉不符合要求的,拼接绝对路径
-			isFit := em.findMappingPathWithMixInfo(oneMixInfo, isMovieOrSeries)
-			if isFit == false {
-				return nil, err
+
+		if em.settings.EmbySettings.AutoOrManual == true {
+			// 通过 IMDB ID 自动转换路径
+			if isMovieOrSeries == true {
+				// 电影
+				// 过滤掉不符合要求的,拼接绝对路径
+				isFit := em.autoFindMappingPathWithMixInfoByIMDBId(oneMixInfo, isMovieOrSeries)
+				if isFit == false {
+					return nil, err
+				}
+			} else {
+				// 连续剧
+				// 过滤掉不符合要求的,拼接绝对路径
+				isFit := em.autoFindMappingPathWithMixInfoByIMDBId(oneMixInfo, isMovieOrSeries)
+				if isFit == false {
+					return nil, err
+				}
 			}
 		} else {
-			// 连续剧
-			// 过滤掉不符合要求的,拼接绝对路径
-			isFit := em.findMappingPathWithMixInfo(oneMixInfo, isMovieOrSeries)
-			if isFit == false {
-				return nil, err
+			// 通过手动的路径映射
+			if isMovieOrSeries == true {
+				// 电影
+				// 过滤掉不符合要求的,拼接绝对路径
+				isFit := em.findMappingPathWithMixInfo(oneMixInfo, isMovieOrSeries)
+				if isFit == false {
+					return nil, err
+				}
+			} else {
+				// 连续剧
+				// 过滤掉不符合要求的,拼接绝对路径
+				isFit := em.findMappingPathWithMixInfo(oneMixInfo, isMovieOrSeries)
+				if isFit == false {
+					return nil, err
+				}
 			}
 		}
 
@@ -540,7 +572,7 @@ func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries
 		case outData := <-done:
 			// 收到结果，需要加锁
 			if outData.Err != nil {
-				log_helper.GetLogger().Errorln("getMoreVideoInfoList.NewPoolWithFunc got Err", outData.Err)
+				em.log.Errorln("getMoreVideoInfoList.NewPoolWithFunc got Err", outData.Err)
 				return
 			}
 			if outData.Info == nil {
@@ -551,9 +583,9 @@ func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries
 			em.listLock.Unlock()
 			return
 		case p := <-panicChan:
-			log_helper.GetLogger().Errorln("getMoreVideoInfoList.NewPoolWithFunc got panic", p)
+			em.log.Errorln("getMoreVideoInfoList.NewPoolWithFunc got panic", p)
 		case <-ctx.Done():
-			log_helper.GetLogger().Errorln("getMoreVideoInfoList.NewPoolWithFunc got time out", ctx.Err())
+			em.log.Errorln("getMoreVideoInfoList.NewPoolWithFunc got time out", ctx.Err())
 			return
 		}
 	})
@@ -567,7 +599,7 @@ func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries
 		wg.Add(1)
 		err = p.Invoke(InputData{Id: m, Wg: &wg})
 		if err != nil {
-			log_helper.GetLogger().Errorln("getMoreVideoInfoList ants.Invoke", err)
+			em.log.Errorln("getMoreVideoInfoList ants.Invoke", err)
 		}
 	}
 	wg.Wait()
@@ -621,7 +653,7 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 			// 没有外置字幕
 			// 如果创建了7天，且有内置的中文字幕，那么也不进行下载了
 			if info.VideoInfo.DateCreated.AddDate(0, 0, em.settings.AdvancedSettings.TaskQueue.DownloadSubDuringXDays).After(currentTime) == false && haveInsideChineseSub == true {
-				log_helper.GetLogger().Debugln("Create Over 7 Days, And It Has Inside ChineseSub, Than Skip", info.VideoFileName)
+				em.log.Debugln("Create Over 7 Days, And It Has Inside ChineseSub, Than Skip", info.VideoFileName)
 				continue
 			}
 			//// 如果创建了三个月，还是没有字幕，那么也不进行下载了
@@ -634,7 +666,7 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 			// 有外置字幕
 			// 如果视频发布时间超过两年了，有字幕就直接跳过了，一般字幕稳定了
 			if currentTime.Year()-2 > info.VideoInfo.PremiereDate.Year() {
-				log_helper.GetLogger().Debugln("Create Over 2 Years, And It Has External ChineseSub, Than Skip", info.VideoFileName)
+				em.log.Debugln("Create Over 2 Years, And It Has External ChineseSub, Than Skip", info.VideoFileName)
 				continue
 			}
 			// 有中文字幕，且如果在三个月内，则需要继续下载字幕`
@@ -784,13 +816,13 @@ func (em *EmbyHelper) CheckPath(pathType string) ([]string, error) {
 		if item.Type == videoTypeEpisode {
 			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
 			EpisodeIdList = append(EpisodeIdList, item.Id)
-			log_helper.GetLogger().Debugln("Episode:", index, item.SeriesName, item.ParentIndexNumber, item.IndexNumber)
+			em.log.Debugln("Episode:", index, item.SeriesName, item.ParentIndexNumber, item.IndexNumber)
 		} else if item.Type == videoTypeMovie {
 			// 这个里面可能混有其他的内容，比如目标是连续剧，但是 emby_helper 其实会把其他的混合内容也标记进去
 			MovieIdList = append(MovieIdList, item.Id)
-			log_helper.GetLogger().Debugln("Movie:", index, item.Name)
+			em.log.Debugln("Movie:", index, item.Name)
 		} else {
-			log_helper.GetLogger().Debugln("GetRecentlyItems - Is not a goal video type:", index, item.Name, item.Type)
+			em.log.Debugln("GetRecentlyItems - Is not a goal video type:", index, item.Name, item.Type)
 		}
 	}
 

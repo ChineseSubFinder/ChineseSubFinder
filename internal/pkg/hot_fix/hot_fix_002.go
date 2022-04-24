@@ -3,7 +3,7 @@ package hot_fix
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/sirupsen/logrus"
 )
 
 /*
@@ -11,10 +11,11 @@ import (
 	那么之前有的需要进行清理一次，然后才能够正确的执行后续新的 sha256 的逻辑
 */
 type HotFix002 struct {
+	log *logrus.Logger
 }
 
-func NewHotFix002() *HotFix002 {
-	return &HotFix002{}
+func NewHotFix002(log *logrus.Logger) *HotFix002 {
+	return &HotFix002{log: log}
 }
 
 func (h HotFix002) GetKey() string {
@@ -24,10 +25,10 @@ func (h HotFix002) GetKey() string {
 func (h HotFix002) Process() (interface{}, error) {
 
 	defer func() {
-		log_helper.GetLogger().Infoln("Hotfix", h.GetKey(), "End")
+		h.log.Infoln("Hotfix", h.GetKey(), "End")
 	}()
 
-	log_helper.GetLogger().Infoln("Hotfix", h.GetKey(), "Start...")
+	h.log.Infoln("Hotfix", h.GetKey(), "Start...")
 
 	return h.process()
 }
@@ -37,12 +38,12 @@ func (h HotFix002) process() (bool, error) {
 	delSubInfo := func(imdbInfo *models.IMDBInfo, cacheInfo *models.VideoSubInfo) bool {
 		err := dao.GetDb().Model(imdbInfo).Association("VideoSubInfos").Delete(cacheInfo)
 		if err != nil {
-			log_helper.GetLogger().Warningln("ScanPlayedVideoSubInfo.Scan", ".Delete Association", cacheInfo.SubName, err)
+			h.log.Warningln("ScanPlayedVideoSubInfo.Scan", ".Delete Association", cacheInfo.SubName, err)
 			return false
 		}
 		// 继续删除这个对象
 		dao.GetDb().Delete(cacheInfo)
-		log_helper.GetLogger().Infoln("HotFix 002， Sub Association", cacheInfo.SubName)
+		h.log.Infoln("HotFix 002， Sub Association", cacheInfo.SubName)
 
 		return true
 	}

@@ -23,7 +23,7 @@ func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 
 	//imdbId1 := "tt3228774"
 	videoName := "黑白魔女库伊拉"
-	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger4Tester()))
 	outList, err := s.getSubListFromKeyword(browser, videoName)
 	if err != nil {
 		t.Error(err)
@@ -53,7 +53,7 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	movie1 := filepath.Join(rootDir, "zimuku", "movies", "The Devil All the Time (2020)", "The Devil All the Time (2020) WEBDL-1080p.mkv")
-	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger4Tester()))
 	outList, err := s.getSubListFromMovie(browser, movie1)
 	if err != nil {
 		t.Error(err)
@@ -85,7 +85,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	//epsMap[1] = 4
 	//series_helper2.SetTheSpecifiedEps2Download(seriesInfo, epsMap)
 
-	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger4Tester()))
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -114,7 +114,7 @@ func TestSupplier_getSubListFromKeyword(t *testing.T) {
 	//imdbID := "tt15299712" // 云南虫谷
 	//imdbID := "tt3626476"  // Vacation Friends (2021)
 	imdbID := "tt11192306" // Superman.and.Lois
-	zimuku := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	zimuku := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger4Tester()))
 	subInfos, err := zimuku.getSubListFromKeyword(browser, imdbID)
 	if err != nil {
 		t.Fatal(err)
@@ -139,7 +139,7 @@ func TestSupplier_step3(t *testing.T) {
 
 func TestSupplier_CheckAlive(t *testing.T) {
 
-	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger4Tester()))
 	alive, _ := s.CheckAlive()
 	if alive == false {
 		t.Fatal("CheckAlive == false")

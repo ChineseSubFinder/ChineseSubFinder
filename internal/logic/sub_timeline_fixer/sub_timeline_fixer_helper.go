@@ -27,6 +27,7 @@ package sub_timeline_fixer
 //)
 //
 //type SubTimelineFixerHelper struct {
+//  log *logrus.Logger
 //	embyHelper       *emby_helper.EmbyHelper
 //	EmbyConfig       emby.EmbyConfig
 //	FixerConfig      sub_timeline_fiexer.SubTimelineFixerConfig
@@ -37,8 +38,9 @@ package sub_timeline_fixer
 //	timeOut          time.Duration
 //}
 //
-//func NewSubTimelineFixerHelper(embyConfig emby.EmbyConfig, subTimelineFixerConfig sub_timeline_fiexer.SubTimelineFixerConfig) *SubTimelineFixerHelper {
+//func NewSubTimelineFixerHelper(log *logrus.Logger, embyConfig emby.EmbyConfig, subTimelineFixerConfig sub_timeline_fiexer.SubTimelineFixerConfig) *SubTimelineFixerHelper {
 //	sub := SubTimelineFixerHelper{
+//
 //		EmbyConfig:       embyConfig,
 //		FixerConfig:      subTimelineFixerConfig,
 //		embyHelper:       emby_helper.NewEmbyHelper(embyConfig),
@@ -65,7 +67,7 @@ package sub_timeline_fixer
 //
 //	// 首先得开启，不然就直接跳过不执行
 //	if s.EmbyConfig.FixTimeLine == false {
-//		log_helper.GetLogger().Debugf("EmbyConfig.FixTimeLine = false, Skip")
+//		s.log.Debugf("EmbyConfig.FixTimeLine = false, Skip")
 //		return nil
 //	}
 //
@@ -75,19 +77,19 @@ package sub_timeline_fixer
 //	}
 //
 //	// 输出调试信息
-//	log_helper.GetLogger().Debugln("FixRecentlyItemsSubTimeline - DebugInfo - movieList Start")
+//	s.log.Debugln("FixRecentlyItemsSubTimeline - DebugInfo - movieList Start")
 //	for s, value := range movieList {
-//		log_helper.GetLogger().Debugln(s, value)
+//		s.log.Debugln(s, value)
 //	}
-//	log_helper.GetLogger().Debugln("FixRecentlyItemsSubTimeline - DebugInfo - movieList End")
+//	s.log.Debugln("FixRecentlyItemsSubTimeline - DebugInfo - movieList End")
 //
-//	log_helper.GetLogger().Debugln("FixRecentlyItemsSubTimeline - DebugInfo - seriesList Start")
+//	s.log.Debugln("FixRecentlyItemsSubTimeline - DebugInfo - seriesList Start")
 //	for s, _ := range seriesList {
-//		log_helper.GetLogger().Debugln(s)
+//		s.log.Debugln(s)
 //	}
-//	log_helper.GetLogger().Debugln("FixRecentlyItemsSubTimeline - DebugInfo - seriesList End")
+//	s.log.Debugln("FixRecentlyItemsSubTimeline - DebugInfo - seriesList End")
 //
-//	log_helper.GetLogger().Debugln("Start movieList fix Timeline")
+//	s.log.Debugln("Start movieList fix Timeline")
 //	// 先做电影的字幕校正、然后才是连续剧的
 //	for _, info := range movieList {
 //		// path.Dir 在 Windows 有梗，所以换个方式获取路径
@@ -97,9 +99,9 @@ package sub_timeline_fixer
 //			return err
 //		}
 //	}
-//	log_helper.GetLogger().Debugln("End movieList fix Timeline")
+//	s.log.Debugln("End movieList fix Timeline")
 //
-//	log_helper.GetLogger().Debugln("Start seriesList fix Timeline")
+//	s.log.Debugln("Start seriesList fix Timeline")
 //	for _, infos := range seriesList {
 //		for _, info := range infos {
 //			// path.Dir 在 Windows 有梗，所以换个方式获取路径
@@ -110,16 +112,16 @@ package sub_timeline_fixer
 //			}
 //		}
 //	}
-//	log_helper.GetLogger().Debugln("End seriesList fix Timeline")
+//	s.log.Debugln("End seriesList fix Timeline")
 //
 //	// 强制调用，测试 CGO=1 编译问题
-//	log_helper.GetLogger().Debugln("VAD Mode", vad.Mode)
+//	s.log.Debugln("VAD Mode", vad.Mode)
 //
 //	return nil
 //}
 //
 //func (s SubTimelineFixerHelper) fixOneVideoSub(videoId string, videoRootPath string) error {
-//	log_helper.GetLogger().Debugln("fixOneVideoSub VideoROotPath:", videoRootPath)
+//	s.log.Debugln("fixOneVideoSub VideoROotPath:", videoRootPath)
 //	// internalEngSub 默认第一个是 srt 然后第二个是 ass，就不要去遍历了
 //	found, internalEngSub, containChineseSubFile, err := s.embyHelper.GetInternalEngSubAndExChineseEnglishSub(videoId)
 //	if err != nil {
@@ -127,11 +129,11 @@ package sub_timeline_fixer
 //	}
 //
 //	if found == false {
-//		log_helper.GetLogger().Debugln("GetInternalEngSubAndExChineseEnglishSub - found == false")
+//		s.log.Debugln("GetInternalEngSubAndExChineseEnglishSub - found == false")
 //		return nil
 //	}
 //
-//	log_helper.GetLogger().Debugln("internalEngSub:", len(internalEngSub), "containChineseSubFile:", len(containChineseSubFile))
+//	s.log.Debugln("internalEngSub:", len(internalEngSub), "containChineseSubFile:", len(containChineseSubFile))
 //	// 需要先把原有的外置字幕带有 -fix 的删除，然后再做修正
 //	// 不然如果调整了条件，之前修复的本次其实就不修正了，那么就会“残留”下来，误以为是本次配置的信息导致的
 //	for _, exSubInfo := range containChineseSubFile {
@@ -143,11 +145,11 @@ package sub_timeline_fixer
 //		subFileNeedRemove := filepath.Join(videoRootPath, exSubInfo.FileName)
 //
 //		if videoRootPath == "" {
-//			log_helper.GetLogger().Debugln("videoRootPath == \"\", Skip Remove:", subFileNeedRemove)
+//			s.log.Debugln("videoRootPath == \"\", Skip Remove:", subFileNeedRemove)
 //			continue
 //		}
 //
-//		log_helper.GetLogger().Debugln("Remove fixed sub:", subFileNeedRemove)
+//		s.log.Debugln("Remove fixed sub:", subFileNeedRemove)
 //		err = os.Remove(subFileNeedRemove)
 //		if err != nil {
 //			return err
@@ -165,18 +167,18 @@ package sub_timeline_fixer
 //			continue
 //		}
 //
-//		log_helper.GetLogger().Debugln("fixSubTimeline start")
+//		s.log.Debugln("fixSubTimeline start")
 //		bFound, subFixInfos, subNewName, err := s.fixSubTimeline(internalEngSub[inSelectSubIndex], exSubInfo)
 //		if err != nil {
 //			return err
 //		}
 //		if bFound == false {
-//			log_helper.GetLogger().Debugln("fixSubTimeline bFound == false", exSubInfo.FileName)
+//			s.log.Debugln("fixSubTimeline bFound == false", exSubInfo.FileName)
 //			continue
 //		}
 //		// 调试的时候用
 //		if videoRootPath == "" {
-//			log_helper.GetLogger().Debugln("videoRootPath == \"\", Skip fix sub:", exSubInfo.FileName)
+//			s.log.Debugln("videoRootPath == \"\", Skip fix sub:", exSubInfo.FileName)
 //			continue
 //		}
 //		for _, info := range subFixInfos {
@@ -186,7 +188,7 @@ package sub_timeline_fixer
 //			if err != nil {
 //				return err
 //			}
-//			log_helper.GetLogger().Infoln("Sub Timeline fixed:", desFixedSubFullName)
+//			s.log.Infoln("Sub Timeline fixed:", desFixedSubFullName)
 //		}
 //	}
 //
@@ -196,7 +198,7 @@ package sub_timeline_fixer
 //// fixSubTimeline 修复时间轴，containChineseSubFile 这里可能是，只要是带有中文的都算，简体、繁体、简英、繁英，需要后续额外的判断
 //func (s SubTimelineFixerHelper) fixSubTimeline(enSubFile emby.SubInfo, containChineseSubFile emby.SubInfo) (bool, []sub_timeline_fixer.SubFixInfo, string, error) {
 //	fixedSubName := ""
-//	log_helper.GetLogger().Debugln("fixSubTimeline - DetermineFileTypeFromBytes", enSubFile.FileName)
+//	s.log.Debugln("fixSubTimeline - DetermineFileTypeFromBytes", enSubFile.FileName)
 //	bFind, infoBase, err := s.subParserHub.DetermineFileTypeFromBytes(enSubFile.Content, enSubFile.Ext)
 //	if err != nil {
 //		return false, nil, fixedSubName, err
@@ -211,7 +213,7 @@ package sub_timeline_fixer
 //	*/
 //	sub_helper.MergeMultiDialogue4EngSubtitle(infoBase)
 //
-//	log_helper.GetLogger().Debugln("fixSubTimeline - DetermineFileTypeFromBytes", containChineseSubFile.FileName)
+//	s.log.Debugln("fixSubTimeline - DetermineFileTypeFromBytes", containChineseSubFile.FileName)
 //	bFind, infoSrc, err := s.subParserHub.DetermineFileTypeFromBytes(containChineseSubFile.Content, containChineseSubFile.Ext)
 //	if err != nil {
 //		return false, nil, fixedSubName, err
@@ -252,14 +254,14 @@ package sub_timeline_fixer
 //	}
 //	bok, offsetTime, sd, err := s.subTimelineFixer.GetOffsetTimeV1(infoBase, infoSrc, filepath.Join(cacheTmpPath, infoSrc.Name+"-bar.html"), filepath.Join(cacheTmpPath, infoSrc.Name+".log"))
 //	if offsetTime != 0 {
-//		log_helper.GetLogger().Infoln(infoSrc.Name, "offset time is", fmt.Sprintf("%f", offsetTime), "s")
+//		s.log.Infoln(infoSrc.Name, "offset time is", fmt.Sprintf("%f", offsetTime), "s")
 //	}
 //	// 超过 SD 阈值了
 //	if sd > s.FixerConfig.V1_MaxStartTimeDiffSD {
-//		log_helper.GetLogger().Infoln(infoSrc.Name, "Start Time Diff SD, skip", fmt.Sprintf("%f", sd))
+//		s.log.Infoln(infoSrc.Name, "Start Time Diff SD, skip", fmt.Sprintf("%f", sd))
 //		return false, nil, fixedSubName, nil
 //	} else {
-//		log_helper.GetLogger().Infoln(infoSrc.Name, "Start Time Diff SD", fmt.Sprintf("%f", sd))
+//		s.log.Infoln(infoSrc.Name, "Start Time Diff SD", fmt.Sprintf("%f", sd))
 //	}
 //
 //	if err != nil || bok == false {
@@ -268,7 +270,7 @@ package sub_timeline_fixer
 //
 //	// 偏移很小就无视了
 //	if offsetTime < s.FixerConfig.V1_MinOffset && offsetTime > -s.FixerConfig.V1_MinOffset {
-//		log_helper.GetLogger().Infoln(infoSrc.Name, fmt.Sprintf("Min Offset Config is %f, skip ", s.FixerConfig.V1_MinOffset), fmt.Sprintf("now is %f", offsetTime))
+//		s.log.Infoln(infoSrc.Name, fmt.Sprintf("Min Offset Config is %f, skip ", s.FixerConfig.V1_MinOffset), fmt.Sprintf("now is %f", offsetTime))
 //		return false, nil, fixedSubName, nil
 //	}
 //	// 写入校准时间轴后的字幕
@@ -277,7 +279,7 @@ package sub_timeline_fixer
 //		// 符合已知的字幕命名格式，不符合就跳过，都跳过也行，就不做任何操作而已
 //		bMatch, fileNameWithOutExt, subExt, subLang, extraSubName := formatter.IsMatchThisFormat(infoSrc.Name)
 //		if bMatch == false {
-//			log_helper.GetLogger().Debugln(fmt.Sprintf("%s IsMatchThisFormat == false, Skip, %s", formatter.GetFormatterName(), infoSrc.Name))
+//			s.log.Debugln(fmt.Sprintf("%s IsMatchThisFormat == false, Skip, %s", formatter.GetFormatterName(), infoSrc.Name))
 //			continue
 //		}
 //		// 是否包含 default 关键词，暂时无需判断 forced

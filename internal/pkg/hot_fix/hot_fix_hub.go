@@ -6,18 +6,18 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/sirupsen/logrus"
 )
 
 // HotFixProcess 去 DB 中查询 Hotfix 的标记，看有那些需要修复，那些已经修复完毕
-func HotFixProcess(param types.HotFixParam) error {
+func HotFixProcess(log *logrus.Logger, param types.HotFixParam) error {
 
 	// -----------------------------------------------------------------------
 	// 一共有多少个 HotFix 要修复，需要固定下来
 	hotfixCases := []ifaces.IHotFix{
-		NewHotFix001(param.MovieRootDirs, param.SeriesRootDirs),
-		NewHotFix002(),
+		NewHotFix001(log, param.MovieRootDirs, param.SeriesRootDirs),
+		NewHotFix002(log),
 	}
 	// -----------------------------------------------------------------------
 	// 找现在有多少个 hotfix 执行过了
@@ -46,19 +46,19 @@ func HotFixProcess(param types.HotFixParam) error {
 			outStruct := processResult.(OutStruct001)
 			if err != nil {
 				for i, file := range outStruct.ErrFiles {
-					log_helper.GetLogger().Errorln("Hotfix 001, rename failed,", i, file)
+					log.Errorln("Hotfix 001, rename failed,", i, file)
 				}
 				// 如果任意故障则跳出后续的修复
-				log_helper.GetLogger().Errorln("Hotfix 001 failed, break")
+				log.Errorln("Hotfix 001 failed, break")
 				return err
 			} else {
 				for i, file := range outStruct.RenamedFiles {
-					log_helper.GetLogger().Infoln("Hotfix 001, rename done,", i, file)
+					log.Infoln("Hotfix 001, rename done,", i, file)
 				}
 			}
 			break
 		case "002":
-			log_helper.GetLogger().Infoln("Hotfix 002, process == ", processResult.(bool))
+			log.Infoln("Hotfix 002, process == ", processResult.(bool))
 			break
 		default:
 			continue
@@ -68,15 +68,15 @@ func HotFixProcess(param types.HotFixParam) error {
 		result = dao.GetDb().Create(&markHotFixDone)
 		if result == nil {
 			nowError := errors.New(fmt.Sprintf("hotfix %s is done, but record failed, dao.GetDb().Create return nil", hotfixCase.GetKey()))
-			log_helper.GetLogger().Errorln(nowError)
+			log.Errorln(nowError)
 			return nowError
 		}
 		if result.Error != nil {
 			nowError := errors.New(fmt.Sprintf("hotfix %s is done, but record failed, %s", hotfixCase.GetKey(), result.Error))
-			log_helper.GetLogger().Errorln(nowError)
+			log.Errorln(nowError)
 			return nowError
 		}
-		log_helper.GetLogger().Infoln("Hotfix", hotfixCase.GetKey(), "is Recorded")
+		log.Infoln("Hotfix", hotfixCase.GetKey(), "is Recorded")
 		// 找到了，目前的逻辑是成功才插入，那么查询到了，就默认是执行成功了
 	}
 	return nil

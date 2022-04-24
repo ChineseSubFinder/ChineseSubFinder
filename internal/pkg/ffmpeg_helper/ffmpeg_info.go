@@ -1,27 +1,29 @@
 package ffmpeg_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 type FFMPEGInfo struct {
+	log              *logrus.Logger
 	VideoFullPath    string                // 视频文件的路径
 	AudioInfoList    []AudioInfo           // 内置音频列表
 	SubtitleInfoList []SubtitleInfo        // 内置字幕列表
 	ExternalSubInfos []*subparser.FileInfo // 外置字幕列表
 }
 
-func NewFFMPEGInfo(videoFullPath string) *FFMPEGInfo {
+func NewFFMPEGInfo(log *logrus.Logger, videoFullPath string) *FFMPEGInfo {
 	return &FFMPEGInfo{
+		log:              log,
 		VideoFullPath:    videoFullPath,
 		AudioInfoList:    make([]AudioInfo, 0),
 		SubtitleInfoList: make([]SubtitleInfo, 0),
@@ -42,7 +44,7 @@ func (f *FFMPEGInfo) IsExported(exportType ExportType) bool {
 	bProcessDone := false
 	nowCacheFolder, err := f.GetCacheFolderFPath()
 	if err != nil {
-		log_helper.GetLogger().Errorln("FFMPEGInfo.IsExported.GetCacheFolderFPath", f.VideoFullPath, err.Error())
+		f.log.Errorln("FFMPEGInfo.IsExported.GetCacheFolderFPath", f.VideoFullPath, err.Error())
 		return false
 	}
 	tmpNowExportedMaskFile := filepath.Join(nowCacheFolder, exportedMakeFileName)

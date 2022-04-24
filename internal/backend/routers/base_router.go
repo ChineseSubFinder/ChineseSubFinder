@@ -12,7 +12,7 @@ import (
 func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engine, cronHelper *cron_helper.CronHelper) {
 
 	cbBase := base.NewControllerBase(fileDownloader)
-	cbV1 := v1.NewControllerBase(cronHelper)
+	cbV1 := v1.NewControllerBase(fileDownloader.Log, cronHelper)
 	// 基础的路由
 	router.GET("/system-status", cbBase.SystemStatusHandler)
 

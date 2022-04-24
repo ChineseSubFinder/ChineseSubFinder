@@ -1,7 +1,6 @@
 package task_queue
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/dgraph-io/badger/v3"
 	"path/filepath"
@@ -20,7 +19,7 @@ func GetDb() *badger.DB {
 		// 这边数据库会自动创建这个目录文件
 		dbBase, err = badger.Open(opt)
 		if err != nil {
-			log_helper.GetLogger().Panicln("task_queue.GetDb()", err)
+			panic(err)
 		}
 
 		go badgerGC(dbBase)

@@ -2,11 +2,11 @@ package emby_api
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/go-resty/resty/v2"
 	"github.com/panjf2000/ants/v2"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"net/http"
 	"sync"
@@ -14,14 +14,16 @@ import (
 )
 
 type EmbyApi struct {
+	log        *logrus.Logger
 	embyConfig *settings.EmbySettings
 	threads    int
 	timeOut    time.Duration
 	client     *resty.Client
 }
 
-func NewEmbyApi(embyConfig *settings.EmbySettings) *EmbyApi {
+func NewEmbyApi(log *logrus.Logger, embyConfig *settings.EmbySettings) *EmbyApi {
 	em := EmbyApi{}
+	em.log = log
 	em.embyConfig = embyConfig
 	// 检查是否超过范围
 	em.embyConfig.Check()
@@ -43,7 +45,7 @@ func (em EmbyApi) RefreshRecentlyVideoInfo() error {
 		return err
 	}
 
-	log_helper.GetLogger().Debugln("RefreshRecentlyVideoInfo - GetRecentlyItems Count", len(items.Items))
+	em.log.Debugln("RefreshRecentlyVideoInfo - GetRecentlyItems Count", len(items.Items))
 
 	updateFunc := func(i interface{}) error {
 		tmpId := i.(string)
@@ -70,13 +72,13 @@ func (em EmbyApi) RefreshRecentlyVideoInfo() error {
 		select {
 		case err = <-done:
 			if err != nil {
-				log_helper.GetLogger().Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got error", err)
+				em.log.Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got error", err)
 			}
 			return
 		case p := <-panicChan:
-			log_helper.GetLogger().Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got panic", p)
+			em.log.Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got panic", p)
 		case <-ctx.Done():
-			log_helper.GetLogger().Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got time out", ctx.Err())
+			em.log.Errorln("RefreshRecentlyVideoInfo.NewPoolWithFunc got time out", ctx.Err())
 			return
 		}
 	})
@@ -89,7 +91,7 @@ func (em EmbyApi) RefreshRecentlyVideoInfo() error {
 		wg.Add(1)
 		err = p.Invoke(InputData{Id: item.Id, Wg: &wg})
 		if err != nil {
-			log_helper.GetLogger().Errorln("RefreshRecentlyVideoInfo ants.Invoke", err)
+			em.log.Errorln("RefreshRecentlyVideoInfo ants.Invoke", err)
 		}
 	}
 	wg.Wait()
@@ -131,7 +133,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 	var recItemExsitMap = make(map[string]emby.EmbyRecentlyItem)
 	var err error
 	if em.embyConfig.SkipWatched == false {
-		log_helper.GetLogger().Debugln("Emby Setting SkipWatched = false")
+		em.log.Debugln("Emby Setting SkipWatched = false")
 
 		// 默认是不指定某一个User的视频列表
 		_, err = em.client.R().
@@ -152,7 +154,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 			return emby.EmbyRecentlyItems{}, err
 		}
 	} else {
-		log_helper.GetLogger().Debugln("Emby Setting SkipWatched = true")
+		em.log.Debugln("Emby Setting SkipWatched = true")
 
 		var userIds emby.EmbyUsers
 		userIds, err = em.GetUserIdList()
@@ -190,7 +192,7 @@ func (em EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 		}
 
 		for id := range recItemExsitMap {
-			log_helper.GetLogger().Debugln("Skip Watched Video:", recItemMap[id].Type, recItemMap[id].Name)
+			em.log.Debugln("Skip Watched Video:", recItemMap[id].Type, recItemMap[id].Name)
 			delete(recItemMap, id)
 		}
 

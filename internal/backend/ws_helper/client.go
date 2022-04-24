@@ -9,6 +9,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend/ws"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/log_hub"
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"sync"
 	"time"
@@ -48,12 +49,17 @@ var upGrader = websocket.Upgrader{
 }
 
 type Client struct {
+	log              *logrus.Logger
 	hub              *Hub
 	conn             *websocket.Conn // 与服务器连接实例
 	sendLogLineIndex int             // 日志发送到那个位置了
 	authed           bool            // 是否已经通过认证
 	send             chan []byte     // 发送给 client 的内容 bytes
 	closeOnce        sync.Once
+}
+
+func NewClient(log *logrus.Logger, hub *Hub, conn *websocket.Conn, sendLogLineIndex int, authed bool, send chan []byte) *Client {
+	return &Client{log: log, hub: hub, conn: conn, sendLogLineIndex: sendLogLineIndex, authed: authed, send: send}
 }
 
 func (c *Client) close() {
@@ -68,7 +74,7 @@ func (c *Client) readPump() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			log_helper.GetLogger().Debugln("readPump.recover", err)
+			c.log.Debugln("readPump.recover", err)
 		}
 	}()
 
@@ -82,7 +88,7 @@ func (c *Client) readPump() {
 	c.conn.SetReadLimit(maxMessageSize)
 	err = c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	if err != nil {
-		log_helper.GetLogger().Debugln("readPump.SetReadDeadline", err)
+		c.log.Debugln("readPump.SetReadDeadline", err)
 		return
 	}
 	c.conn.SetPongHandler(func(string) error {
@@ -93,7 +99,7 @@ func (c *Client) readPump() {
 		_, message, err = c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log_helper.GetLogger().Debugln("readPump.IsUnexpectedCloseError", err)
+				c.log.Debugln("readPump.IsUnexpectedCloseError", err)
 			}
 			return
 		}
@@ -101,7 +107,7 @@ func (c *Client) readPump() {
 		revMessage := ws.BaseMessage{}
 		err = json.Unmarshal(message, &revMessage)
 		if err != nil {
-			log_helper.GetLogger().Debugln("readPump.BaseMessage.parse", err)
+			c.log.Debugln("readPump.BaseMessage.parse", err)
 			return
 		}
 
@@ -115,7 +121,7 @@ func (c *Client) readPump() {
 			login := ws.Login{}
 			err = json.Unmarshal([]byte(revMessage.Data), &login)
 			if err != nil {
-				log_helper.GetLogger().Debugln("readPump.Login.parse", err)
+				c.log.Debugln("readPump.Login.parse", err)
 				return
 			}
 
@@ -124,7 +130,7 @@ func (c *Client) readPump() {
 				// 发送 token 失败的消息
 				outBytes, err := AuthReply(ws.AuthError)
 				if err != nil {
-					log_helper.GetLogger().Debugln("readPump.AuthReply", err)
+					c.log.Debugln("readPump.AuthReply", err)
 					return
 				}
 				c.send <- outBytes
@@ -135,7 +141,7 @@ func (c *Client) readPump() {
 				// Token 通过
 				outBytes, err := AuthReply(ws.AuthOk)
 				if err != nil {
-					log_helper.GetLogger().Debugln("readPump.AuthReply", err)
+					c.log.Debugln("readPump.AuthReply", err)
 					return
 				}
 				c.send <- outBytes
@@ -153,7 +159,7 @@ func (c *Client) writePump() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			log_helper.GetLogger().Debugln("writePump.recover", err)
+			c.log.Debugln("writePump.recover", err)
 		}
 	}()
 
@@ -182,42 +188,42 @@ func (c *Client) writePump() {
 			// 当然首先还是得先把当前消息的发送超时，给确定下来
 			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err != nil {
-				log_helper.GetLogger().Debugln("writePump.SetWriteDeadline", err)
+				c.log.Debugln("writePump.SetWriteDeadline", err)
 				return
 			}
 			if ok == false {
 				// The hub closed the channel.
 				err = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				if err != nil {
-					log_helper.GetLogger().Debugln("writePump close hub WriteMessage", err)
+					c.log.Debugln("writePump close hub WriteMessage", err)
 				}
 				return
 			}
 
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
-				log_helper.GetLogger().Debugln("writePump.NextWriter", err)
+				c.log.Debugln("writePump.NextWriter", err)
 				return
 			}
 			_, err = w.Write(message)
 			if err != nil {
-				log_helper.GetLogger().Debugln("writePump.Write", err)
+				c.log.Debugln("writePump.Write", err)
 				return
 			}
 
 			if err := w.Close(); err != nil {
-				log_helper.GetLogger().Debugln("writePump.Close", err)
+				c.log.Debugln("writePump.Close", err)
 				return
 			}
 		case <-pingTicker.C:
 			// 心跳相关，这里是定时器到了触发的间隔，设置发送下一条心跳的超时时间
 			if err := c.conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
-				log_helper.GetLogger().Debugln("writePump.pingTicker.C.SetWriteDeadline", err)
+				c.log.Debugln("writePump.pingTicker.C.SetWriteDeadline", err)
 				return
 			}
 			// 然后发送心跳
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				log_helper.GetLogger().Debugln("writePump.pingTicker.C.WriteMessage", err)
+				c.log.Debugln("writePump.pingTicker.C.WriteMessage", err)
 				return
 			}
 		case <-subScanJobStatusTicker.C:
@@ -234,7 +240,7 @@ func (c *Client) writePump() {
 			// 统一丢到 send 里面得了
 			outLogsBytes, err := SubScanJobStatusReply(info)
 			if err != nil {
-				log_helper.GetLogger().Debugln("writePump.SubScanJobStatusReply", err)
+				c.log.Debugln("writePump.SubScanJobStatusReply", err)
 				return
 			}
 			c.send <- outLogsBytes
@@ -253,7 +259,7 @@ func (c *Client) writePump() {
 			// 这里需要考虑一次性的信息太多，超过发送的缓冲区，所以需要拆分发送
 			outLogsBytes, err := RunningLogReply(nowRunningLog, c.sendLogLineIndex)
 			if err != nil {
-				log_helper.GetLogger().Debugln("writePump.RunningLogReply", err)
+				c.log.Debugln("writePump.RunningLogReply", err)
 				return
 			}
 			// 拆分到一条日志来发送
@@ -341,21 +347,22 @@ func SubScanJobStatusReply(info *ws.SubDownloadJobInfo) ([]byte, error) {
 }
 
 // ServeWs 每个 Client 连接 ws 上线时触发
-func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+func ServeWs(log *logrus.Logger, hub *Hub, w http.ResponseWriter, r *http.Request) {
 
 	conn, err := upGrader.Upgrade(w, r, nil)
 	if err != nil {
-		log_helper.GetLogger().Errorln("ServeWs.Upgrade", err)
+		log.Errorln("ServeWs.Upgrade", err)
 		return
 	}
 
-	client := &Client{
-		hub:              hub,
-		conn:             conn,
-		sendLogLineIndex: 0,
-		authed:           false,
-		send:             make(chan []byte, bufSize),
-	}
+	client := NewClient(
+		log,
+		hub,
+		conn,
+		0,
+		false,
+		make(chan []byte, bufSize),
+	)
 	client.hub.register <- client
 
 	go client.writePump()

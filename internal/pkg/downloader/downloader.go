@@ -59,10 +59,10 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
 	sitesSequence = append(sitesSequence, common.SubSiteShooter)
 	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
-	downloader.mk = markSystem.NewMarkingSystem(sitesSequence, downloader.settings.AdvancedSettings.SubTypePriority)
+	downloader.mk = markSystem.NewMarkingSystem(downloader.log, sitesSequence, downloader.settings.AdvancedSettings.SubTypePriority)
 
 	// 初始化，字幕校正的实例
-	downloader.subTimelineFixerHelperEx = sub_timeline_fixer.NewSubTimelineFixerHelperEx(*downloader.settings.TimelineFixerSettings)
+	downloader.subTimelineFixerHelperEx = sub_timeline_fixer.NewSubTimelineFixerHelperEx(downloader.log, *downloader.settings.TimelineFixerSettings)
 
 	if downloader.settings.AdvancedSettings.FixTimeLine == true {
 		downloader.subTimelineFixerHelperEx.Check()
@@ -262,7 +262,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	}
 	var err error
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(job.SeriesRootDirPath, d.settings.AdvancedSettings.TaskQueue.ExpirationTime, false, d.settings.AdvancedSettings.ProxySettings)
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(d.log, job.SeriesRootDirPath, d.settings.AdvancedSettings.TaskQueue.ExpirationTime, false, d.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("seriesDlFunc.ReadSeriesInfoFromDir, Error: %v", err))
 		d.downloadQueue.AutoDetectUpdateJobStatus(job, err)

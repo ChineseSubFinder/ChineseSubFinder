@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"errors"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_useragent"
@@ -14,16 +13,17 @@ import (
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/mholt/archiver/v3"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
 )
 
-func NewBrowserEx(loadAdblock bool, _settings *settings.Settings, preLoadUrl ...string) (*rod.Browser, error) {
+func NewBrowserEx(log *logrus.Logger, loadAdblock bool, _settings *settings.Settings, preLoadUrl ...string) (*rod.Browser, error) {
 
 	if _settings.ExperimentalFunction.RemoteChromeSettings.Enable == false {
-		return NewBrowser(_settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(), loadAdblock, preLoadUrl...)
+		return NewBrowser(log, _settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(), loadAdblock, preLoadUrl...)
 	} else {
 		return NewBrowserFromDocker(_settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
 			_settings.ExperimentalFunction.RemoteChromeSettings.RemoteDockerURL,
@@ -33,15 +33,15 @@ func NewBrowserEx(loadAdblock bool, _settings *settings.Settings, preLoadUrl ...
 	}
 }
 
-func NewBrowser(httpProxyURL string, loadAdblock bool, preLoadUrl ...string) (*rod.Browser, error) {
+func NewBrowser(log *logrus.Logger, httpProxyURL string, loadAdblock bool, preLoadUrl ...string) (*rod.Browser, error) {
 
 	var err error
 
 	once.Do(func() {
-		adblockSavePath, err = releaseAdblock()
+		adblockSavePath, err = releaseAdblock(log)
 		if err != nil {
-			log_helper.GetLogger().Errorln("releaseAdblock", err)
-			log_helper.GetLogger().Panicln("releaseAdblock", err)
+			log.Errorln("releaseAdblock", err)
+			log.Panicln("releaseAdblock", err)
 		}
 	})
 
@@ -229,8 +229,8 @@ func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration,
 }
 
 // ReloadBrowser 提前把浏览器下载好
-func ReloadBrowser() {
-	newBrowser, err := NewBrowserEx(true, settings.GetSettings())
+func ReloadBrowser(log *logrus.Logger) {
+	newBrowser, err := NewBrowserEx(log, true, settings.GetSettings())
 	if err != nil {
 		return
 	}
@@ -247,7 +247,7 @@ func ReloadBrowser() {
 }
 
 // Clear 清理缓存
-func Clear() {
+func Clear(log *logrus.Logger) {
 	//_ = rod.Try(func() {
 	//	l := launcher.New().
 	//		Headless(false).
@@ -255,7 +255,7 @@ func Clear() {
 	//
 	//	defer func() {
 	//		l.Cleanup() // remove launcher.FlagUserDataDir
-	//		log_helper.GetLogger().Infoln("rod clean up done.")
+	//		log.Infoln("rod clean up done.")
 	//	}()
 	//
 	//	url := l.MustLaunch()
@@ -272,11 +272,11 @@ func Clear() {
 
 	err := my_folder.ClearRodTmpRootFolder()
 	if err != nil {
-		log_helper.GetLogger().Errorln("ClearRodTmpRootFolder", err)
+		log.Errorln("ClearRodTmpRootFolder", err)
 		return
 	}
 
-	log_helper.GetLogger().Infoln("ClearRodTmpRootFolder Done")
+	log.Infoln("ClearRodTmpRootFolder Done")
 }
 
 func newPage(browser *rod.Browser) (*rod.Page, error) {
@@ -288,13 +288,13 @@ func newPage(browser *rod.Browser) (*rod.Page, error) {
 }
 
 // releaseAdblock 从程序中释放 adblock 插件出来到本地路径
-func releaseAdblock() (string, error) {
+func releaseAdblock(log *logrus.Logger) (string, error) {
 
 	defer func() {
-		log_helper.GetLogger().Infoln("releaseAdblock end")
+		log.Infoln("releaseAdblock end")
 	}()
 
-	log_helper.GetLogger().Infoln("releaseAdblock start")
+	log.Infoln("releaseAdblock start")
 
 	adblockFolderPath := global_value.AdblockTmpFolder()
 	err := os.MkdirAll(filepath.Join(adblockFolderPath), os.ModePerm)

@@ -9,40 +9,79 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/sirupsen/logrus"
 	"os"
+	"path/filepath"
 	"strconv"
+	"time"
 )
 
-func init() {
+func newLog() *logrus.Logger {
+	var level logrus.Level
+	// --------------------------------------------------
+	// 之前是读取配置文件，现在改为，读取当前目录下，是否有一个特殊的文件，有则启动 Debug 日志级别
+	// 那么怎么写入这个文件，就靠额外的逻辑控制了
+	if my_util.IsFile(filepath.Join(global_value.ConfigRootDirFPath(), log_helper.DebugFileName)) == true {
+		level = logrus.DebugLevel
+	} else {
+		level = logrus.InfoLevel
+	}
+	logger := log_helper.NewLogHelper(log_helper.LogNameChineseSubFinder,
+		global_value.ConfigRootDirFPath(),
+		level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
+	logger.AddHook(log_helper.NewLoggerHub())
 
-	log_helper.GetLogger().Infoln("ChineseSubFinder Version:", AppVersion)
+	return logger
+}
+
+func init() {
+	loggerBase = newLog()
+	// --------------------------------------------------
+	loggerBase.Infoln("ChineseSubFinder Version:", AppVersion)
 
 	global_value.SetAppVersion(AppVersion)
 
 	global_value.SetExtEnCode(ExtEnCode)
 
 	if my_util.OSCheck() == false {
-		log_helper.GetLogger().Panicln(`You should search runtime.GOOS in the project, Implement unimplemented function`)
+		loggerBase.Panicln(`You should search runtime.GOOS in the project, Implement unimplemented function`)
 	}
 }
 
 func main() {
 
-	//// ----------------------------------------------
+	// ------------------------------------------------------------------------
+	// 如果是 Debug 模式，那么就需要写入特殊文件
+	if settings.GetSettings().AdvancedSettings.DebugMode == true {
+		err := log_helper.WriteDebugFile()
+		if err != nil {
+			loggerBase.Errorln("log_helper.WriteDebugFile " + err.Error())
+		}
+		loggerBase = newLog()
+		loggerBase.Infoln("Reload Log Settings, level = Debug")
+	} else {
+		err := log_helper.DeleteDebugFile()
+		if err != nil {
+			loggerBase.Errorln("log_helper.DeleteDebugFile " + err.Error())
+		}
+		loggerBase = newLog()
+		loggerBase.Infoln("Reload Log Settings, level = Info")
+	}
+	// ------------------------------------------------------------------------
 	//// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
-	//pj := pre_job.NewPreJob(settings.GetSettings(), log_helper.GetLogger())
+	//pj := pre_job.NewPreJob(settings.GetSettings(), loggerBase)
 	//err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
 	//if err != nil {
-	//	log_helper.GetLogger().Panicln("pre_job", err)
+	//	loggerBase.Panicln("pre_job", err)
 	//}
 	//// ----------------------------------------------
-	//scan, err := scan_played_video_subinfo.NewScanPlayedVideoSubInfo(log_helper.GetLogger(), settings.GetSettings())
+	//scan, err := scan_played_video_subinfo.NewScanPlayedVideoSubInfo(loggerBase, settings.GetSettings())
 	//if err != nil {
-	//	log_helper.GetLogger().Panicln(err)
+	//	loggerBase.Panicln(err)
 	//}
 	//bok, err := scan.GetPlayedItemsSubtitle()
 	//if err != nil {
-	//	log_helper.GetLogger().Panicln(err)
+	//	loggerBase.Panicln(err)
 	//}
 	//if bok == true {
 	//
@@ -50,25 +89,25 @@ func main() {
 	//
 	//	err = scan.Scan()
 	//	if err != nil {
-	//		log_helper.GetLogger().Panicln(err)
+	//		loggerBase.Panicln(err)
 	//	}
 	//}
 	// ----------------------------------------------
-	fileDownloader := file_downloader.NewFileDownloader(settings.GetSettings(), log_helper.GetLogger())
+	fileDownloader := file_downloader.NewFileDownloader(settings.GetSettings(), loggerBase)
 	cronHelper := cron_helper.NewCronHelper(fileDownloader)
 	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {
 		// 如果没有完成，那么就不开启
-		log_helper.GetLogger().Infoln("Need do Setup")
+		loggerBase.Infoln("Need do Setup")
 	} else {
 		// 是否完成了 Setup，如果完成了，那么就开启第一次的扫描
 		go func() {
-			log_helper.GetLogger().Infoln("Setup is Done")
+			loggerBase.Infoln("Setup is Done")
 			cronHelper.Start(settings.GetSettings().CommonSettings.RunScanAtStartUp)
 		}()
 	}
 
 	nowPort := readCustomPortFile()
-	log_helper.GetLogger().Infoln(fmt.Sprintf("WebUI will listen at 0.0.0.0:%d", nowPort))
+	loggerBase.Infoln(fmt.Sprintf("WebUI will listen at 0.0.0.0:%d", nowPort))
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
 	backend.StartBackEnd(fileDownloader, nowPort, cronHelper)
 }
@@ -79,19 +118,19 @@ func readCustomPortFile() int {
 	} else {
 		bytes, err := os.ReadFile(customPort)
 		if err != nil {
-			log_helper.GetLogger().Errorln("ReadFile CustomPort Error", err)
-			log_helper.GetLogger().Infoln("Use DefPort", defPort)
+			loggerBase.Errorln("ReadFile CustomPort Error", err)
+			loggerBase.Infoln("Use DefPort", defPort)
 			return defPort
 		}
 
 		atoi, err := strconv.Atoi(string(bytes))
 		if err != nil {
-			log_helper.GetLogger().Errorln("Atoi CustomPort Error", err)
-			log_helper.GetLogger().Infoln("Use DefPort", defPort)
+			loggerBase.Errorln("Atoi CustomPort Error", err)
+			loggerBase.Infoln("Use DefPort", defPort)
 			return defPort
 		}
 
-		log_helper.GetLogger().Infoln("Use CustomPort", atoi)
+		loggerBase.Infoln("Use CustomPort", atoi)
 		return atoi
 	}
 }
@@ -108,3 +147,5 @@ const (
 	defPort    = 19035
 	customPort = "CustomPort"
 )
+
+var loggerBase *logrus.Logger

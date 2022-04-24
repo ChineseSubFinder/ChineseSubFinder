@@ -6,13 +6,13 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/jinzhu/now"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,39 +20,39 @@ import (
 )
 
 // OneMovieDlSubInAllSite 一部电影在所有的网站下载相应的字幕
-func OneMovieDlSubInAllSite(Suppliers []ifaces.ISupplier, oneVideoFullPath string, i int64) []supplier.SubInfo {
+func OneMovieDlSubInAllSite(log *logrus.Logger, Suppliers []ifaces.ISupplier, oneVideoFullPath string, i int64) []supplier.SubInfo {
 
 	defer func() {
-		log_helper.GetLogger().Infoln(common.QueueName, i, "DlSub End", oneVideoFullPath)
+		log.Infoln(common.QueueName, i, "DlSub End", oneVideoFullPath)
 	}()
 
 	var outSUbInfos = make([]supplier.SubInfo, 0)
-	log_helper.GetLogger().Infoln(common.QueueName, i, "DlSub Start", oneVideoFullPath)
+	log.Infoln(common.QueueName, i, "DlSub Start", oneVideoFullPath)
 	for _, oneSupplier := range Suppliers {
 
-		log_helper.GetLogger().Infoln(common.QueueName, i, oneSupplier.GetSupplierName(), oneVideoFullPath)
+		log.Infoln(common.QueueName, i, oneSupplier.GetSupplierName(), oneVideoFullPath)
 
-		subInfos, err := OneMovieDlSubInOneSite(oneVideoFullPath, i, oneSupplier)
+		subInfos, err := OneMovieDlSubInOneSite(log, oneVideoFullPath, i, oneSupplier)
 		if err != nil {
-			log_helper.GetLogger().Errorln(common.QueueName, i, oneSupplier.GetSupplierName(), "oneMovieDlSubInOneSite", err)
+			log.Errorln(common.QueueName, i, oneSupplier.GetSupplierName(), "oneMovieDlSubInOneSite", err)
 			continue
 		}
 		outSUbInfos = append(outSUbInfos, subInfos...)
 	}
 
 	for index, info := range outSUbInfos {
-		log_helper.GetLogger().Debugln(common.QueueName, i, "OneMovieDlSubInAllSite get sub", index, "Name:", info.Name, "FileUrl:", info.FileUrl)
+		log.Debugln(common.QueueName, i, "OneMovieDlSubInAllSite get sub", index, "Name:", info.Name, "FileUrl:", info.FileUrl)
 	}
 
 	return outSUbInfos
 }
 
 // OneMovieDlSubInOneSite 一部电影在一个站点下载字幕
-func OneMovieDlSubInOneSite(oneVideoFullPath string, i int64, supplier ifaces.ISupplier) ([]supplier.SubInfo, error) {
+func OneMovieDlSubInOneSite(log *logrus.Logger, oneVideoFullPath string, i int64, supplier ifaces.ISupplier) ([]supplier.SubInfo, error) {
 	defer func() {
-		log_helper.GetLogger().Infoln(common.QueueName, i, supplier.GetSupplierName(), "End...")
+		log.Infoln(common.QueueName, i, supplier.GetSupplierName(), "End...")
 	}()
-	log_helper.GetLogger().Infoln(common.QueueName, i, supplier.GetSupplierName(), "Start...")
+	log.Infoln(common.QueueName, i, supplier.GetSupplierName(), "Start...")
 	subInfos, err := supplier.GetSubListFromFile4Movie(oneVideoFullPath)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func OneMovieDlSubInOneSite(oneVideoFullPath string, i int64, supplier ifaces.IS
 }
 
 // MovieHasChineseSub 这个视频文件的目录下面有字幕文件了没有
-func MovieHasChineseSub(videoFilePath string) (bool, []string, []string, error) {
+func MovieHasChineseSub(log *logrus.Logger, videoFilePath string) (bool, []string, []string, error) {
 	dir := filepath.Dir(videoFilePath)
 	videoFileName := filepath.Base(videoFilePath)
 	videoFileName = strings.ReplaceAll(videoFileName, filepath.Ext(videoFileName), "")
@@ -87,7 +87,7 @@ func MovieHasChineseSub(videoFilePath string) (bool, []string, []string, error) 
 			}
 			// 字幕文件是否包含中文
 			subFileFullPath := filepath.Join(dir, curFile.Name())
-			if sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()).IsSubHasChinese(subFileFullPath) == true {
+			if sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log)).IsSubHasChinese(subFileFullPath) == true {
 				if bFoundChineseSub == false {
 					bFoundChineseSub = true
 				}
@@ -104,27 +104,27 @@ func MovieHasChineseSub(videoFilePath string) (bool, []string, []string, error) 
 }
 
 // SkipChineseMovie 跳过中文的电影
-func SkipChineseMovie(videoFullPath string, _proxySettings ...*settings.ProxySettings) (bool, error) {
+func SkipChineseMovie(log *logrus.Logger, videoFullPath string, _proxySettings ...*settings.ProxySettings) (bool, error) {
 
 	imdbInfo, err := decode.GetImdbInfo4Movie(videoFullPath)
 	if err != nil {
 		return false, err
 	}
-	isChineseVideo, _, err := imdb_helper.IsChineseVideo(imdbInfo, _proxySettings...)
+	isChineseVideo, _, err := imdb_helper.IsChineseVideo(log, imdbInfo, _proxySettings...)
 	if err != nil {
 		return false, err
 	}
 	if isChineseVideo == true {
-		log_helper.GetLogger().Infoln("Skip", videoFullPath, "Sub Download, because movie is Chinese")
+		log.Infoln("Skip", videoFullPath, "Sub Download, because movie is Chinese")
 		return true, nil
 	} else {
 		return false, nil
 	}
 }
 
-func MovieNeedDlSub(videoFullPath string, ExpirationTime int) (bool, error) {
+func MovieNeedDlSub(log *logrus.Logger, videoFullPath string, ExpirationTime int) (bool, error) {
 	// 视频下面有不有字幕
-	found, _, _, err := MovieHasChineseSub(videoFullPath)
+	found, _, _, err := MovieHasChineseSub(log, videoFullPath)
 	if err != nil {
 		return false, err
 	}
@@ -141,14 +141,14 @@ func MovieNeedDlSub(videoFullPath string, ExpirationTime int) (bool, error) {
 			return true, nil
 		} else {
 			// 有字幕了，没必要每次都刷新，跳过
-			log_helper.GetLogger().Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because movie has sub and published more than 2 years")
+			log.Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because movie has sub and published more than 2 years")
 			return false, nil
 		}
 	} else {
 		// 读取不到 IMDB 信息也能接受
 		videoIMDBInfo, err := decode.GetImdbInfo4Movie(videoFullPath)
 		if err != nil {
-			log_helper.GetLogger().Errorln("MovieNeedDlSub.GetImdbInfo4Movie", err)
+			log.Errorln("MovieNeedDlSub.GetImdbInfo4Movie", err)
 		}
 		// 如果播出时间能够读取到，那么就以这个完后推算 3个月
 		// 如果读取不到 Aired Time 那么，下载后的 ModifyTime 3个月天内，都进行字幕的下载
@@ -156,7 +156,7 @@ func MovieNeedDlSub(videoFullPath string, ExpirationTime int) (bool, error) {
 		if videoIMDBInfo.ReleaseDate != "" {
 			baseTime, err = now.Parse(videoIMDBInfo.ReleaseDate)
 			if err != nil {
-				log_helper.GetLogger().Errorln("Movie parse AiredTime", err)
+				log.Errorln("Movie parse AiredTime", err)
 				baseTime = modifyTime
 			}
 		} else {
@@ -169,11 +169,11 @@ func MovieNeedDlSub(videoFullPath string, ExpirationTime int) (bool, error) {
 			return true, nil
 		} else {
 			if baseTime.AddDate(0, 0, ExpirationTime).After(currentTime) == false {
-				log_helper.GetLogger().Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because movie has sub and downloaded or aired more than 3 months")
+				log.Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because movie has sub and downloaded or aired more than 3 months")
 				return false, nil
 			}
 			if found == true {
-				log_helper.GetLogger().Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because sub file found")
+				log.Infoln("Skip", filepath.Base(videoFullPath), "Sub Download, because sub file found")
 				return false, nil
 			}
 
