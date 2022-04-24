@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/PuerkitoBio/goquery v1.7.1
-	github.com/StalkR/imdb v1.0.7
+	github.com/StalkR/imdb v1.0.8
 	github.com/Tnze/go.num/v2 v2.0.0-20191006170829-cb483d4c9152
 	github.com/abadojack/whatlanggo v1.0.1
 	github.com/allanpk716/fake-useragent v0.2.1

@@ -100,3 +100,4 @@ TestData/
 /internal/pkg/emby_api/Logs
 /internal/logic/sub_supplier/shooter/download_sub_cache
 /internal/logic/sub_supplier/shooter/task_queue
+/internal/pkg/imdb_helper/Logs

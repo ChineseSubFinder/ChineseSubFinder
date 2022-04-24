@@ -1,49 +1,27 @@
 package imdb_helper
 
 import (
-	"crypto/tls"
 	"github.com/StalkR/imdb"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
-	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // GetVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
 func GetVideoInfoFromIMDBWeb(imdbInfo types.VideoIMDBInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
 
-	var cli *http.Client
-	var proxySettings *settings.ProxySettings
-	if len(_proxySettings) > 0 && _proxySettings[0].UseHttpProxy == true || len(_proxySettings[0].HttpProxyAddress) > 0 {
-		proxySettings = _proxySettings[0]
-
-		proxy, err := url.Parse(proxySettings.HttpProxyAddress)
-		if err != nil {
-			return nil, err
-		}
-		tr := &http.Transport{
-			Proxy:           http.ProxyURL(proxy),
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-
-		cli = &http.Client{
-			Timeout:   15 * time.Second,
-			Transport: tr,
-		}
-	} else {
-		cli = &http.Client{
-			Timeout: 15 * time.Second,
-		}
+	client, err := my_util.NewHttpClient(_proxySettings...)
+	if err != nil {
+		return nil, err
 	}
 
-	t, err := imdb.NewTitle(cli, imdbInfo.ImdbId)
+	t, err := imdb.NewTitle(client.GetClient(), imdbInfo.ImdbId)
 	if err != nil {
 		notify_center.Notify.Add("imdb model - imdb.NewTitle :", err.Error())
 		return nil, err
