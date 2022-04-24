@@ -64,12 +64,12 @@ func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoIMDBInfo,
 		log.Debugln("GetVideoIMDBInfoFromLocal", 2)
 
 		time.Sleep(my_util.RandomSecondDuration(1, 3))
-
+		log.Debugln("GetVideoIMDBInfoFromLocal", 2, 1)
 		// 存入数据库
 		nowIMDBInfo := models.NewIMDBInfo(imdbInfo.ImdbId, t.Name, t.Year, t.Description, t.Languages, t.AKA)
-		imdbInfos = make([]models.IMDBInfo, 0)
-		imdbInfos = append(imdbInfos, *nowIMDBInfo)
+		log.Debugln("GetVideoIMDBInfoFromLocal", 2, 2)
 		dao.GetDb().Create(nowIMDBInfo)
+		log.Debugln("GetVideoIMDBInfoFromLocal", 2, 3)
 
 		log.Debugln("GetVideoIMDBInfoFromLocal", 3)
 
