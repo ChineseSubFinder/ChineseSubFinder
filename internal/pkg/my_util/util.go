@@ -263,6 +263,9 @@ func SearchMatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) ([]string, 
 		fileFullPathList = append(fileFullPathList, matchedVideoFile...)
 	}
 
+	// 排序，从最新的到最早的
+	SortByModTime(fileFullPathList)
+
 	for _, s := range fileFullPathList {
 		l.Debugln(s)
 	}

@@ -91,9 +91,6 @@ func (v *VideoScanAndRefreshHelper) ScanMovieAndSeriesWait2DownloadSub() (*ScanV
 	if err != nil {
 		return nil, err
 	}
-	// 排序，从最新的到最早的
-	my_util.SortByModTime(normalScanResult.MovieFileFullPathList)
-
 	// --------------------------------------------------
 	// 连续剧
 	// 遍历连续剧总目录下的第一层目录
