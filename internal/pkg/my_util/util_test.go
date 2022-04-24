@@ -41,3 +41,30 @@ func TestGetPublicIP(t *testing.T) {
 			true, "127.0.0.1:10808"))
 	println("UseProxy", got)
 }
+
+func TestSortByModTime(t *testing.T) {
+	//type args struct {
+	//	fileList []string
+	//}
+	//tests := []struct {
+	//	name string
+	//	args args
+	//	want []string
+	//}{
+	//	{name: "001", args: args{fileList: []string{
+	//		"X:\\电影\\21座桥 (2019)\\21座桥 (2019) 720p AAC.mp4",
+	//		"X:\\电影\\Texas Chainsaw Massacre (2022)\\Texas Chainsaw Massacre (2022) WEBDL-1080p.mkv",
+	//		"X:\\电影\\76 Days (2020)\\76 Days (2020) WEBDL-1080p.mkv"}},
+	//		want: []string{
+	//			"a",
+	//			"b",
+	//			"c"}},
+	//}
+	//for _, tt := range tests {
+	//	t.Run(tt.name, func(t *testing.T) {
+	//		if got := SortByModTime(tt.args.fileList); !reflect.DeepEqual(got, tt.want) {
+	//			t.Errorf("SortByModTime() = %v, want %v", got, tt.want)
+	//		}
+	//	})
+	//}
+}

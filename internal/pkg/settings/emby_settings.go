@@ -12,6 +12,7 @@ type EmbySettings struct {
 	SkipWatched           bool              `json:"skip_watched"`             // 是否跳过已经观看的
 	MoviePathsMapping     map[string]string `json:"movie_paths_mapping"`      // 电影目录的映射，一旦 common setting 的目录修改，需要提示用户确认映射
 	SeriesPathsMapping    map[string]string `json:"series_paths_mapping"`     // 连续剧目录的映射，一旦 common setting 的目录修改，需要提示用户确认映射
+	AutoOrManual          bool              `json:"auto_or_manual"`           // 自动或手动模式，自动 IMDB ID 匹配，还是使用手动目录
 }
 
 func NewEmbySettings() *EmbySettings {

@@ -23,7 +23,7 @@ type OneJob struct {
 	JobStatus                JobStatus        `json:"job_status"`                   // 任务的状态
 	TaskPriority             int              `json:"task_priority" default:"5"`    // 任务的优先级，0 - 10 个级别，0 是最高，10 是最低
 	RetryTimes               int              `json:"retry_times"`                  // 重试了多少次
-	CreateTime               time.Time        `json:"create_time"`                  // 视频的发布时间或者是文件的创建时间
+	CreatedTime              time.Time        `json:"created_time"`                 // 视频的发布时间或者是文件的创建时间
 	AddedTime                time.Time        `json:"added_time"`                   // 任务添加的时间
 	UpdateTime               time.Time        `json:"update_time"`                  // 任务更新的时间
 	MediaServerInsideVideoID string           `json:"media_server_inside_video_id"` // 媒体服务器中，这个视频的 ID，如果是 Emby 就对应它内部这个视频的 ID，后续用于指定刷新视频信息
@@ -64,12 +64,12 @@ func NewOneJob(videoType common.VideoType, videoFPath string, taskPriority int, 
 
 		imdbInfo4Movie, err := decode.GetImdbInfo4Movie(videoFPath)
 		if err == nil {
-			ob.CreateTime, err = dateparse.ParseAny(imdbInfo4Movie.ReleaseDate)
+			ob.CreatedTime, err = dateparse.ParseAny(imdbInfo4Movie.ReleaseDate)
 		}
 	} else if ob.VideoType == common.Series {
 		imdbInfo4Eps, err := decode.GetImdbInfo4OneSeriesEpisode(videoFPath)
 		if err == nil {
-			ob.CreateTime, err = dateparse.ParseAny(imdbInfo4Eps.ReleaseDate)
+			ob.CreatedTime, err = dateparse.ParseAny(imdbInfo4Eps.ReleaseDate)
 		}
 	}
 

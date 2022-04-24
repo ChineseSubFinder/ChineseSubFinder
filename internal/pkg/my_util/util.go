@@ -30,6 +30,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -310,6 +311,7 @@ func SearchMatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 					l.Debugln("SearchMatchedVideoFile, file.Info:", fullPath, err)
 					continue
 				}
+
 				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
 					l.Debugln("SearchMatchedVideoFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
 					continue
@@ -319,6 +321,60 @@ func SearchMatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 		}
 	}
 	return fileFullPathList, nil
+}
+
+func GetFileModTime(fileFPath string) time.Time {
+
+	if IsFile(fileFPath) == true {
+		// 存在
+		fi, err := os.Stat(fileFPath)
+		if err != nil {
+			return time.Time{}
+		}
+
+		return fi.ModTime()
+	} else {
+		// 不存在才需要考虑蓝光情况
+		bok, idBDMVFPath, _ := decode.IsFakeBDMVWorked(fileFPath)
+		if bok == false {
+			// 也不是蓝光
+			return time.Time{}
+		}
+		// 获取这个蓝光 ID BDMV 文件的时间
+		fInfo, err := os.Stat(idBDMVFPath)
+		if err != nil {
+			return time.Time{}
+		}
+		return fInfo.ModTime()
+	}
+}
+
+// SortByModTime 根据文件的 Mod Time 进行排序，递减
+func SortByModTime(fileList []string) []string {
+
+	byModTime := make(ByModTime, 0)
+	byModTime = append(byModTime, fileList...)
+	sort.Sort(sort.Reverse(byModTime))
+
+	return byModTime
+}
+
+type ByModTime []string
+
+func (fis ByModTime) Len() int {
+	return len(fis)
+}
+
+func (fis ByModTime) Swap(i, j int) {
+	fis[i], fis[j] = fis[j], fis[i]
+}
+
+func (fis ByModTime) Less(i, j int) bool {
+
+	aModTime := GetFileModTime(fis[i])
+	bModTime := GetFileModTime(fis[j])
+
+	return aModTime.Before(bModTime)
 }
 
 // FileNameIsBDMV 是否是 BDMV 蓝光目录，符合返回 true，以及 fakseVideoFPath
