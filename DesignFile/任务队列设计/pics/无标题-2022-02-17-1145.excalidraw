@@ -5840,8 +5840,8 @@
     },
     {
       "type": "text",
-      "version": 362,
-      "versionNonce": 230147087,
+      "version": 427,
+      "versionNonce": 326815403,
       "isDeleted": false,
       "id": "kf9bJUBBy53N2n-Y-nvZV",
       "fillStyle": "hachure",
@@ -5855,7 +5855,7 @@
       "strokeColor": "#000000",
       "backgroundColor": "#fab005",
       "width": 1653,
-      "height": 141,
+      "height": 188,
       "seed": 68355649,
       "groupIds": [],
       "strokeSharpness": "sharp",
@@ -5865,22 +5865,22 @@
           "type": "arrow"
         }
       ],
-      "updated": 1650036100357,
+      "updated": 1650771157539,
       "link": null,
       "locked": false,
       "fontSize": 36,
       "fontFamily": 2,
-      "text": "1. 任务的状态要是 Waiting && （2. 和 3. 满足任意条件）\n2. 任务的 UpdateTime 与现在的时间大于单个字幕下载的间隔 && DownloadTimes > 0 // 不是第一次执行\n3. DownloadTimes == 0 // 第一次放入",
-      "baseline": 132,
+      "text": "1. 任务的状态要是 Waiting && （2. 和 3. 和 4. 满足任意条件）\n2. 任务的 UpdateTime 与现在的时间大于单个字幕下载的间隔 && DownloadTimes > 0 // 不是第一次执行\n3. DownloadTimes == 0 // 第一次放入\n4. 如果任务的优先级 <= 3",
+      "baseline": 179,
       "textAlign": "left",
       "verticalAlign": "top",
       "containerId": null,
-      "originalText": "1. 任务的状态要是 Waiting && （2. 和 3. 满足任意条件）\n2. 任务的 UpdateTime 与现在的时间大于单个字幕下载的间隔 && DownloadTimes > 0 // 不是第一次执行\n3. DownloadTimes == 0 // 第一次放入"
+      "originalText": "1. 任务的状态要是 Waiting && （2. 和 3. 和 4. 满足任意条件）\n2. 任务的 UpdateTime 与现在的时间大于单个字幕下载的间隔 && DownloadTimes > 0 // 不是第一次执行\n3. DownloadTimes == 0 // 第一次放入\n4. 如果任务的优先级 <= 3"
     },
     {
       "type": "arrow",
-      "version": 465,
-      "versionNonce": 497125473,
+      "version": 531,
+      "versionNonce": 291440005,
       "isDeleted": false,
       "id": "Ae5TLs-Dfv2_Cq6MQzZFw",
       "fillStyle": "hachure",
@@ -5893,13 +5893,13 @@
       "y": -4287.867412821079,
       "strokeColor": "#000000",
       "backgroundColor": "#fab005",
-      "width": 511.5238757161176,
-      "height": 623.7144160093358,
+      "width": 502.0033397436382,
+      "height": 583.794257979428,
       "seed": 1511167265,
       "groupIds": [],
       "strokeSharpness": "round",
       "boundElements": [],
-      "updated": 1650036100357,
+      "updated": 1650771157539,
       "link": null,
       "locked": false,
       "startBinding": {
@@ -5925,8 +5925,8 @@
           -141.79886965074093
         ],
         [
-          511.5238757161176,
-          -623.7144160093358
+          502.0033397436382,
+          -583.794257979428
         ]
       ]
     },
@@ -6460,41 +6460,30 @@
       "originalText": "下载次数+1"
     },
     {
-      "id": "oHpy9JRU51m0gmAHi09Xk",
       "type": "arrow",
-      "x": -267.6847794825572,
-      "y": -3108.6148877825076,
-      "width": 1.7269362601807074,
-      "height": 71.66648113577457,
-      "angle": 0,
-      "strokeColor": "#000000",
-      "backgroundColor": "transparent",
+      "version": 29,
+      "versionNonce": 1994801737,
+      "isDeleted": false,
+      "id": "oHpy9JRU51m0gmAHi09Xk",
       "fillStyle": "solid",
       "strokeWidth": 1,
       "strokeStyle": "solid",
       "roughness": 0,
       "opacity": 100,
+      "angle": 0,
+      "x": -267.6847794825572,
+      "y": -3108.6148877825076,
+      "strokeColor": "#000000",
+      "backgroundColor": "transparent",
+      "width": 1.7269362601807074,
+      "height": 71.66648113577457,
+      "seed": 213525769,
       "groupIds": [],
       "strokeSharpness": "round",
-      "seed": 213525769,
-      "version": 29,
-      "versionNonce": 1994801737,
-      "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1650079255246,
       "link": null,
       "locked": false,
-      "points": [
-        [
-          0,
-          0
-        ],
-        [
-          1.7269362601807074,
-          71.66648113577457
-        ]
-      ],
-      "lastCommittedPoint": null,
       "startBinding": {
         "elementId": "bcdToR8--3pb8gjlseEuU",
         "focus": -0.014196081498920434,
@@ -6505,8 +6494,19 @@
         "focus": -0.01721689600967173,
         "gap": 3.1440009254661874
       },
+      "lastCommittedPoint": null,
       "startArrowhead": null,
-      "endArrowhead": "arrow"
+      "endArrowhead": "arrow",
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          1.7269362601807074,
+          71.66648113577457
+        ]
+      ]
     },
     {
       "type": "rectangle",
@@ -6710,41 +6710,30 @@
       "originalText": "重置到 L5"
     },
     {
-      "id": "VMKVeiITSzNww-XkqYU_S",
       "type": "arrow",
-      "x": -269.15091572110623,
-      "y": -3346.2814527239134,
-      "width": 0,
-      "height": 100,
-      "angle": 0,
-      "strokeColor": "#000000",
-      "backgroundColor": "transparent",
+      "version": 49,
+      "versionNonce": 1041065767,
+      "isDeleted": false,
+      "id": "VMKVeiITSzNww-XkqYU_S",
       "fillStyle": "solid",
       "strokeWidth": 1,
       "strokeStyle": "solid",
       "roughness": 0,
       "opacity": 100,
+      "angle": 0,
+      "x": -269.15091572110623,
+      "y": -3346.2814527239134,
+      "strokeColor": "#000000",
+      "backgroundColor": "transparent",
+      "width": 0,
+      "height": 100,
+      "seed": 900856295,
       "groupIds": [],
       "strokeSharpness": "round",
-      "seed": 900856295,
-      "version": 49,
-      "versionNonce": 1041065767,
-      "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1650079283081,
       "link": null,
       "locked": false,
-      "points": [
-        [
-          0,
-          0
-        ],
-        [
-          0,
-          100
-        ]
-      ],
-      "lastCommittedPoint": null,
       "startBinding": {
         "elementId": "vJQFU6NCERIsjnIAZEISf",
         "focus": -0.03511408606165719,
@@ -6755,40 +6744,51 @@
         "focus": 0.015450300735405306,
         "gap": 5.66668701171875
       },
+      "lastCommittedPoint": null,
       "startArrowhead": null,
-      "endArrowhead": "arrow"
+      "endArrowhead": "arrow",
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          100
+        ]
+      ]
     },
     {
-      "id": "fnplq6dCSsctg0ixpHDam",
       "type": "text",
-      "x": -749.1510683089969,
-      "y": -3660.7813001360228,
-      "width": 302,
-      "height": 95,
-      "angle": 0,
-      "strokeColor": "#a61e4d",
-      "backgroundColor": "transparent",
+      "version": 80,
+      "versionNonce": 1293262121,
+      "isDeleted": false,
+      "id": "fnplq6dCSsctg0ixpHDam",
       "fillStyle": "solid",
       "strokeWidth": 1,
       "strokeStyle": "solid",
       "roughness": 0,
       "opacity": 100,
+      "angle": 0,
+      "x": -749.1510683089969,
+      "y": -3660.7813001360228,
+      "strokeColor": "#a61e4d",
+      "backgroundColor": "transparent",
+      "width": 302,
+      "height": 95,
+      "seed": 777050887,
       "groupIds": [],
       "strokeSharpness": "sharp",
-      "seed": 777050887,
-      "version": 80,
-      "versionNonce": 1293262121,
-      "isDeleted": false,
-      "boundElements": null,
+      "boundElements": [],
       "updated": 1650079421548,
       "link": null,
       "locked": false,
-      "text": "Done任务还需要再\n3个月后进行删除",
       "fontSize": 36,
       "fontFamily": 2,
+      "text": "Done任务还需要再\n3个月后进行删除",
+      "baseline": 86,
       "textAlign": "left",
       "verticalAlign": "top",
-      "baseline": 86,
       "containerId": null,
       "originalText": "Done任务还需要再\n3个月后进行删除"
     }
