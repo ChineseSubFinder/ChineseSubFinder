@@ -42,7 +42,7 @@ func GetVideoInfoFromIMDBWeb(imdbInfo types.VideoIMDBInfo, _proxySettings ...*se
 }
 
 // GetVideoIMDBInfoFromLocal 从本地获取 IMDB 信息
-func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, _proxySettings ...*settings.ProxySettings) (*models.IMDBInfo, error) {
+func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoIMDBInfo) (*models.IMDBInfo, error) {
 
 	/*
 		这里需要注意一个细节，之前理想情况下是从 Web 获取完整的 IMDB Info 回来，放入本地存储
@@ -99,7 +99,7 @@ func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, _proxySett
 
 	log.Debugln("IsChineseVideo", 0)
 
-	localIMDBInfo, err := GetVideoIMDBInfoFromLocal(log, imdbInfo, _proxySettings...)
+	localIMDBInfo, err := GetVideoIMDBInfoFromLocal(log, imdbInfo)
 	if err != nil {
 		return false, nil, err
 	}

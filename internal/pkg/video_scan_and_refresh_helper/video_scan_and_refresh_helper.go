@@ -15,7 +15,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	subTimelineFixerPKG "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
@@ -114,7 +113,6 @@ func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *Scan
 
 	if v.settings.EmbySettings.Enable == false {
 		v.embyHelper = nil
-
 	} else {
 		v.embyHelper = embyHelper.NewEmbyHelper(v.log, v.settings)
 	}
@@ -150,14 +148,14 @@ func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *Scan
 // FilterMovieAndSeriesNeedDownload 过滤出需要下载字幕的视频，比如是否跳过中文的剧集，是否超过3个月的下载时间，丢入队列中
 func (v *VideoScanAndRefreshHelper) FilterMovieAndSeriesNeedDownload(scanVideoResult *ScanVideoResult) error {
 
-	if scanVideoResult.Normal != nil {
+	if scanVideoResult.Normal != nil && v.settings.EmbySettings.Enable == false {
 		err := v.filterMovieAndSeriesNeedDownloadNormal(scanVideoResult.Normal)
 		if err != nil {
 			return err
 		}
 	}
 
-	if scanVideoResult.Emby != nil {
+	if scanVideoResult.Emby != nil && v.settings.EmbySettings.Enable == true {
 		err := v.filterMovieAndSeriesNeedDownloadEmby(scanVideoResult.Emby)
 		if err != nil {
 			return err
@@ -209,15 +207,19 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 			continue
 		}
 		// 获取 IMDB 信息
-		localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(v.log, videoImdbInfo, v.settings.AdvancedSettings.ProxySettings)
+		localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(v.log, videoImdbInfo)
 		if err != nil {
 			v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", videoImdbInfo.ImdbId, oneMovieFPath, err)
 			continue
 		}
-		// 插入数据
-		localIMDBInfo.RootDirPath = filepath.Dir(oneMovieFPath)
-		localIMDBInfo.IsMovie = true
-		dao.GetDb().Save(localIMDBInfo)
+
+		movieDirPath := filepath.Dir(oneMovieFPath)
+		if localIMDBInfo.RootDirPath != movieDirPath || localIMDBInfo.IsMovie != true {
+			// 更新数据
+			localIMDBInfo.RootDirPath = movieDirPath
+			localIMDBInfo.IsMovie = true
+			dao.GetDb().Save(localIMDBInfo)
+		}
 	}
 	// 连续剧
 	scanVideoResult.Normal.SeriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
@@ -233,18 +235,17 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 			}
 
 			// 获取 IMDB 信息
-			localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(
-				v.log,
-				types.VideoIMDBInfo{ImdbId: videoInfo.ImdbId},
-				v.settings.AdvancedSettings.ProxySettings)
+			localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(v.log, videoInfo)
 			if err != nil {
 				v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", videoInfo.ImdbId, oneSeriesRootDir, err)
 				continue
 			}
-			// 插入数据
-			localIMDBInfo.RootDirPath = oneSeriesRootDir
-			localIMDBInfo.IsMovie = false
-			dao.GetDb().Save(localIMDBInfo)
+			if localIMDBInfo.RootDirPath != oneSeriesRootDir || localIMDBInfo.IsMovie != false {
+				// 更新数据
+				localIMDBInfo.RootDirPath = oneSeriesRootDir
+				localIMDBInfo.IsMovie = false
+				dao.GetDb().Save(localIMDBInfo)
+			}
 		}
 	})
 

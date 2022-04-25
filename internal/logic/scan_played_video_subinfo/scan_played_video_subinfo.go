@@ -70,7 +70,7 @@ func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings)
 		return nil, err
 	}
 	// 字幕解析器
-	scanPlayedVideoSubInfo.subParserHub = sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
+	scanPlayedVideoSubInfo.subParserHub = sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log))
 	// 字幕命名格式解析器
 	scanPlayedVideoSubInfo.subFormatter = emby.NewFormatter()
 	// 缓存目录的根目录
@@ -148,7 +148,7 @@ func (s *ScanPlayedVideoSubInfo) Clear() {
 		}
 	}
 	// 搜索缓存文件夹所有的字幕出来，对比上面的 map 进行比较
-	subFiles, err := sub_parser_hub.SearchMatchedSubFile(s.shareRootDir)
+	subFiles, err := sub_parser_hub.SearchMatchedSubFile(s.log, s.shareRootDir)
 	if err != nil {
 		return
 	}
@@ -304,7 +304,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	// 先把 IMDB 信息查询查来，不管是从数据库还是网络（查询出来也得写入到数据库）
 	if imdbInfo, ok = imdbInfoCache[imdbInfo4Video.ImdbId]; ok == false {
 		// 不存在，那么就去查询和新建缓存
-		imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(s.log, imdbInfo4Video, s.settings.AdvancedSettings.ProxySettings)
+		imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(s.log, imdbInfo4Video)
 		if err != nil {
 			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoIMDBInfoFromLocal", videoFPath, err)
 			return
@@ -336,7 +336,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	// 新增插入
 	// 把现有的字幕 copy 到缓存目录中
-	bok, subCacheFPath := sub_share_center.CopySub2Cache(orgSubFPath, imdbInfo.IMDBID, imdbInfo.Year)
+	bok, subCacheFPath := sub_share_center.CopySub2Cache(s.log, orgSubFPath, imdbInfo.IMDBID, imdbInfo.Year)
 	if bok == false {
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".CopySub2Cache", orgSubFPath, err)
 		return

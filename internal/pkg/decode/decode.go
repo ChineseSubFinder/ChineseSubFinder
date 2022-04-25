@@ -93,7 +93,7 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo,
 	return imdbInfo, common2.CanNotFindIMDBID
 }
 
-// GetImdbInfo4Movie 从电影视频文件获取 IMDB info
+// GetImdbInfo4Movie 从电影视频文件获取 IMDB info，只能确定拿到 IMDB ID 是靠谱的
 func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	imdbInfo := types.VideoIMDBInfo{}
 	// movie 当前的目录
@@ -119,11 +119,11 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 		if upperName == MetadataMovieXml {
 			// 找 movie.xml
 			movieXmlFPath = filepath.Join(dirPth, fi.Name())
-			break
+
 		} else if upperName == movieNfoFileName {
 			// movieName.nfo 文件
 			movieNameNfoFPath = filepath.Join(dirPth, fi.Name())
-			break
+
 		} else {
 			// 找 *.nfo，很可能是 movie.nfo
 			ok := strings.HasSuffix(fi.Name(), suffixNameNfo)
@@ -333,7 +333,7 @@ func GetVideoInfoFromFileFullPath(videoFileFullPath string) (*PTN.TorrentInfo, t
 		// 因为在前面扫描视频的时候，发现特殊的蓝光结构会伪造一个不存在的 xx.mp4 的视频文件过来，这里就需要额外检测一次
 		bok, idBDMVFPath, _ := IsFakeBDMVWorked(videoFileFullPath)
 		if bok == false {
-			return nil, time.Time{}, err
+			return nil, time.Time{}, errors.New("GetVideoInfoFromFileFullPath.IsFakeBDMVWorked == false")
 		}
 
 		// 获取这个蓝光 ID BDMV 文件的时间
