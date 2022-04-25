@@ -342,13 +342,23 @@ func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*e
 			// 说明没有找到连续剧文件夹的名称，那么就应该跳过
 			return nil, nil
 		}
-
+		// 这里的目标是从 Emby 获取 IMDB ID
 		info, err := em.embyApi.GetItemVideoInfo(ancs[ancestorIndex].ID)
 		if err != nil {
 			return nil, err
 		}
+		nowSeriesIMDBID := info.ProviderIds.Imdb
+		// 然后还是要跟电影一样的使用 Video ID 去获取 Ancestors 和 VideoInfo，而上面一步获取的是这个 Series 的 ID
+		info, err = em.embyApi.GetItemVideoInfo(videoID)
+		if err != nil {
+			return nil, err
+		}
+		ancs, err = em.embyApi.GetItemAncestors(videoID)
+		if err != nil {
+			return nil, err
+		}
 
-		mixInfo := emby.EmbyMixInfo{IMDBId: info.ProviderIds.Imdb, Ancestors: ancs, VideoInfo: info}
+		mixInfo := emby.EmbyMixInfo{IMDBId: nowSeriesIMDBID, Ancestors: ancs, VideoInfo: info}
 
 		return &mixInfo, nil
 	}
@@ -358,12 +368,20 @@ func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*e
 func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyMixInfo, isMovieOrSeries bool) bool {
 
 	if mixInfo.IMDBId == "" {
+		em.log.Debugln("autoFindMappingPathWithMixInfoByIMDBId", " mixInfo.IMDBId == \"\"")
 		return false
 	}
 
 	// 获取 IMDB 信息
-	localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(em.log, types.VideoIMDBInfo{ImdbId: mixInfo.IMDBId})
+	localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(em.log, types.VideoIMDBInfo{ImdbId: mixInfo.IMDBId}, true)
 	if err != nil {
+		em.log.Errorln("autoFindMappingPathWithMixInfoByIMDBId.GetVideoIMDBInfoFromLocal", err)
+		return false
+	}
+
+	if localIMDBInfo.RootDirPath == "" {
+		// 说明这个不是从本程序挂在的视频目录中正常扫描出来的视频，这里可能是因为 Emby 新建出来的
+		em.log.Debugln("autoFindMappingPathWithMixInfoByIMDBId", " localIMDBInfo.RootDirPath == \"\"")
 		return false
 	}
 
@@ -416,7 +434,7 @@ func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyM
 
 		mixInfo.PhysicalSeriesRootDir = localIMDBInfo.RootDirPath
 		mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, mixInfo.Ancestors[ancestorIndex].Path, localIMDBInfo.RootDirPath)
-		mixInfo.PhysicalRootPath = filepath.Dir(mixInfo.PhysicalVideoFileFullPath)
+		mixInfo.PhysicalRootPath = filepath.Dir(localIMDBInfo.RootDirPath)
 		// 这个剧集的文件夹
 		mixInfo.VideoFolderName = filepath.Base(mixInfo.Ancestors[ancestorIndex].Path)
 		mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)

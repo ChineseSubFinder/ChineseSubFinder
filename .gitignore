@@ -101,3 +101,5 @@ TestData/
 /internal/logic/sub_supplier/shooter/download_sub_cache
 /internal/logic/sub_supplier/shooter/task_queue
 /internal/pkg/imdb_helper/Logs
+/internal/logic/sub_parser/ass/Logs
+/internal/pkg/sub_formatter/opendebuglog

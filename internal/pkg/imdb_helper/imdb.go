@@ -1,6 +1,8 @@
 package imdb_helper
 
 import (
+	"errors"
+	"fmt"
 	"github.com/StalkR/imdb"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
@@ -8,14 +10,13 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
-	"github.com/jinzhu/now"
 	"github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 )
 
-// GetVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
-func GetVideoInfoFromIMDBWeb(imdbInfo types.VideoIMDBInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
+// getVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
+func getVideoInfoFromIMDBWeb(imdbInfo types.VideoIMDBInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
 
 	client, err := my_util.NewHttpClient(_proxySettings...)
 	if err != nil {
@@ -42,7 +43,7 @@ func GetVideoInfoFromIMDBWeb(imdbInfo types.VideoIMDBInfo, _proxySettings ...*se
 }
 
 // GetVideoIMDBInfoFromLocal 从本地获取 IMDB 信息
-func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoIMDBInfo) (*models.IMDBInfo, error) {
+func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, skipCreate ...bool) (*models.IMDBInfo, error) {
 
 	/*
 		这里需要注意一个细节，之前理想情况下是从 Web 获取完整的 IMDB Info 回来，放入本地存储
@@ -67,17 +68,15 @@ func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoIMDBInfo)
 	log.Debugln("GetVideoIMDBInfoFromLocal", 1)
 
 	if len(imdbInfos) <= 0 {
+
+		if len(skipCreate) > 0 && skipCreate[0] == true {
+			return nil, errors.New(fmt.Sprintf("skip insert, imdbInfo.ImdbId = %v", imdbInfo.ImdbId))
+		}
+
 		// 没有找到，新增，存储本地，但是信息肯定是不完整的，需要在判断是否是中文的时候再次去外网获取补全信息
 		log.Debugln("GetVideoIMDBInfoFromLocal", 2)
-
-		releaseTime, err := now.Parse(imdbInfo.ReleaseDate)
-		if err != nil {
-			log.Errorln("GetVideoIMDBInfoFromLocal:", imdbInfo.Title, "now.Parse:", imdbInfo.ReleaseDate, "Error:", err)
-			return nil, err
-		}
-		log.Debugln("GetVideoIMDBInfoFromLocal", 2-1)
 		// 存入数据库
-		nowIMDBInfo := models.NewIMDBInfo(imdbInfo.ImdbId, imdbInfo.Title, releaseTime.Year(), "", []string{}, []string{})
+		nowIMDBInfo := models.NewIMDBInfo(imdbInfo.ImdbId, "", 0, "", []string{}, []string{})
 		dao.GetDb().Create(nowIMDBInfo)
 
 		log.Debugln("GetVideoIMDBInfoFromLocal", 3)
@@ -107,14 +106,16 @@ func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, _proxySett
 		// 需要去外网获去补全信息，然后更新本地的信息
 		log.Debugln("IsChineseVideo", 1)
 
-		t, err := GetVideoInfoFromIMDBWeb(imdbInfo, _proxySettings...)
+		t, err := getVideoInfoFromIMDBWeb(imdbInfo, _proxySettings...)
 		if err != nil {
-			log.Errorln("IsChineseVideo.GetVideoInfoFromIMDBWeb,", imdbInfo.Title, err)
+			log.Errorln("IsChineseVideo.getVideoInfoFromIMDBWeb,", imdbInfo.Title, err)
 			return false, nil, err
 		}
 
 		log.Debugln("IsChineseVideo", 2)
 
+		localIMDBInfo.Name = t.Name
+		localIMDBInfo.Year = t.Year
 		localIMDBInfo.AKA = t.AKA
 		localIMDBInfo.Description = t.Description
 		localIMDBInfo.Languages = t.Languages

@@ -44,6 +44,7 @@ type Downloader struct {
 func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_downloader.FileDownloader, downloadQueue *task_queue.TaskQueue) *Downloader {
 
 	var downloader Downloader
+	downloader.fileDownloader = fileDownloader
 	downloader.subFormatter = inSubFormatter
 	downloader.log = fileDownloader.Log
 	// 参入设置信息

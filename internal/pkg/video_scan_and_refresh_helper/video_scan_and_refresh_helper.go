@@ -214,7 +214,7 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 		}
 
 		movieDirPath := filepath.Dir(oneMovieFPath)
-		if localIMDBInfo.RootDirPath != movieDirPath || localIMDBInfo.IsMovie != true {
+		if (movieDirPath != "" && localIMDBInfo.RootDirPath != movieDirPath) || localIMDBInfo.IsMovie != true {
 			// 更新数据
 			localIMDBInfo.RootDirPath = movieDirPath
 			localIMDBInfo.IsMovie = true
@@ -240,7 +240,7 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 				v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", videoInfo.ImdbId, oneSeriesRootDir, err)
 				continue
 			}
-			if localIMDBInfo.RootDirPath != oneSeriesRootDir || localIMDBInfo.IsMovie != false {
+			if (oneSeriesRootDir != "" && localIMDBInfo.RootDirPath != oneSeriesRootDir) || localIMDBInfo.IsMovie != false {
 				// 更新数据
 				localIMDBInfo.RootDirPath = oneSeriesRootDir
 				localIMDBInfo.IsMovie = false
