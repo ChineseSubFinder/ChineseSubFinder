@@ -357,6 +357,10 @@ func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*e
 // 根据 IMDB ID 自动转换路径
 func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyMixInfo, isMovieOrSeries bool) bool {
 
+	if mixInfo.IMDBId == "" {
+		return false
+	}
+
 	// 获取 IMDB 信息
 	localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(em.log, types.VideoIMDBInfo{ImdbId: mixInfo.IMDBId})
 	if err != nil {
@@ -366,7 +370,6 @@ func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyM
 	// 下面开始实际的路径替换，从 emby 的内部路径转换为 本程序读取到视频的路径
 	if isMovieOrSeries == true {
 		// 电影
-
 		// 这里需要考虑蓝光的情况，这种目录比较特殊，在 emby 获取的时候，可以知道这个是否是蓝光，是的话，需要特殊处理
 		// 伪造一个虚假不存在的 .mp4 文件向后提交给电影的下载函数
 		/*
@@ -386,8 +389,10 @@ func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyM
 			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path) + common2.VideoExtMp4
 		} else {
 			// 常规的电影情况，也就是有一个具体的视频文件 .mp4 or .mkv
-
+			// 在 Windows 下，如果操作 linux 的路径 /mnt/abc/123 filepath.Dir 那么得到的是 \mnt\abc
+			// 那么临时方案是使用替换掉方法去得到 Dir 路径，比如是 /mnt/abc/123.mp4 replace 123.mp4 那么得到 /mnt/abc/ 还需要把最后一个字符删除
 			videoDirPath := strings.ReplaceAll(mixInfo.VideoInfo.Path, filepath.Base(mixInfo.VideoInfo.Path), "")
+			videoDirPath = videoDirPath[:len(videoDirPath)-1]
 			mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, videoDirPath, localIMDBInfo.RootDirPath)
 			// 这个电影的文件夹
 			mixInfo.VideoFolderName = filepath.Base(filepath.Dir(mixInfo.VideoInfo.Path))
@@ -409,16 +414,9 @@ func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyM
 			return false
 		}
 
-		// mixInfo.Ancestors[ancestorIndex].Path, localIMDBInfo.RootDirPath
 		mixInfo.PhysicalSeriesRootDir = localIMDBInfo.RootDirPath
-		//mixInfo.PhysicalSeriesRootDir = strings.ReplaceAll(mixInfo.Ancestors[ancestorIndex].Path, pathSlices[0].Path, nowPhRootPath)
-
 		mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, mixInfo.Ancestors[ancestorIndex].Path, localIMDBInfo.RootDirPath)
-		//mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
-
-		mixInfo.PhysicalRootPath = strings.ReplaceAll(mixInfo.Ancestors[ancestorIndex+1].Path, mixInfo.Ancestors[ancestorIndex].Path, localIMDBInfo.RootDirPath)
-		//mixInfo.PhysicalRootPath = strings.ReplaceAll(mixInfo.Ancestors[ancestorIndex+1].Path, pathSlices[0].Path, nowPhRootPath)
-
+		mixInfo.PhysicalRootPath = filepath.Dir(mixInfo.PhysicalVideoFileFullPath)
 		// 这个剧集的文件夹
 		mixInfo.VideoFolderName = filepath.Base(mixInfo.Ancestors[ancestorIndex].Path)
 		mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path)
