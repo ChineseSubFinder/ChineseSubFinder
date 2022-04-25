@@ -8,10 +8,10 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/jinzhu/now"
 	"github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // GetVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
@@ -44,6 +44,17 @@ func GetVideoInfoFromIMDBWeb(imdbInfo types.VideoIMDBInfo, _proxySettings ...*se
 // GetVideoIMDBInfoFromLocal 从本地获取 IMDB 信息，如果找不到则去网络获取并写入本地缓存
 func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, _proxySettings ...*settings.ProxySettings) (*models.IMDBInfo, error) {
 
+	/*
+		这里需要注意一个细节，之前理想情况下是从 Web 获取完整的 IMDB Info 回来，放入本地存储
+		获取的时候如果本地有就拿本地的，没有则从 Web 获取，然后写入本地存储
+		但是实际的使用中发现，其实只有在判断视频是否是中文的时候才有必要去获取 Web 上完整的 IMDB Info 信息
+		如果一开始就需要从 Web 上获取，那么这个过程非常的缓慢，很耽误时间，所以还是切换为两层逻辑
+		1. 第一次，优先获取本地的 IMDB Info，写入数据库缓存
+		2. 如果需要判断视频是否是中文的时候，再去获取 Web 上完整的 IMDB Info 信息，更新写入本地存储
+		3. 因为现在默认是不跳过中文视频扫描的，所以如果开启后，则会再判断的时候访问外网获取，然后写入本地，过程会比较慢
+		4. 同时，再发送字幕和 IMDB Info 到服务器的时候，也需要判断是否 IMDB Info 信息是否齐全，否则就需要从外网获取齐全后再上传
+	*/
+
 	log.Debugln("GetVideoIMDBInfoFromLocal", 0)
 
 	// 首先从数据库中查找是否存在这个 IMDB 信息，如果不存在再使用 Web 查找，且写入数据库
@@ -56,20 +67,18 @@ func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoIMDBInfo,
 	log.Debugln("GetVideoIMDBInfoFromLocal", 1)
 
 	if len(imdbInfos) <= 0 {
-		// 没有找到，去网上获取
-		t, err := GetVideoInfoFromIMDBWeb(imdbInfo, _proxySettings...)
-		if err != nil {
-			return nil, err
-		}
+		// 没有找到，新增，存储本地，但是信息肯定是不完整的，需要在判断是否是中文的时候再次去外网获取补全信息
 		log.Debugln("GetVideoIMDBInfoFromLocal", 2)
 
-		time.Sleep(my_util.RandomSecondDuration(1, 3))
-		log.Debugln("GetVideoIMDBInfoFromLocal", 2, 1)
+		releaseTime, err := now.Parse(imdbInfo.ReleaseDate)
+		if err != nil {
+			log.Errorln("GetVideoIMDBInfoFromLocal:", imdbInfo.Title, "now.Parse:", imdbInfo.ReleaseDate, "Error:", err)
+			return nil, err
+		}
+		log.Debugln("GetVideoIMDBInfoFromLocal", 2-1)
 		// 存入数据库
-		nowIMDBInfo := models.NewIMDBInfo(imdbInfo.ImdbId, t.Name, t.Year, t.Description, t.Languages, t.AKA)
-		log.Debugln("GetVideoIMDBInfoFromLocal", 2, 2)
+		nowIMDBInfo := models.NewIMDBInfo(imdbInfo.ImdbId, imdbInfo.Title, releaseTime.Year(), "", []string{}, []string{})
 		dao.GetDb().Create(nowIMDBInfo)
-		log.Debugln("GetVideoIMDBInfoFromLocal", 2, 3)
 
 		log.Debugln("GetVideoIMDBInfoFromLocal", 3)
 
@@ -88,14 +97,38 @@ func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, _proxySett
 	const chName0 = "chinese"
 	const chName1 = "mandarin"
 
+	log.Debugln("IsChineseVideo", 0)
+
 	localIMDBInfo, err := GetVideoIMDBInfoFromLocal(log, imdbInfo, _proxySettings...)
 	if err != nil {
 		return false, nil, err
 	}
-	if len(localIMDBInfo.Languages) <= 0 {
-		return false, nil, nil
+	if len(localIMDBInfo.Description) <= 0 {
+		// 需要去外网获去补全信息，然后更新本地的信息
+		log.Debugln("IsChineseVideo", 1)
+
+		t, err := GetVideoInfoFromIMDBWeb(imdbInfo, _proxySettings...)
+		if err != nil {
+			log.Errorln("IsChineseVideo.GetVideoInfoFromIMDBWeb,", imdbInfo.Title, err)
+			return false, nil, err
+		}
+
+		log.Debugln("IsChineseVideo", 2)
+
+		localIMDBInfo.AKA = t.AKA
+		localIMDBInfo.Description = t.Description
+		localIMDBInfo.Languages = t.Languages
+
+		log.Debugln("IsChineseVideo", 3)
+
+		dao.GetDb().Save(localIMDBInfo)
+
+		log.Debugln("IsChineseVideo", 4)
 	}
 	firstLangLowCase := strings.ToLower(localIMDBInfo.Languages[0])
+
+	log.Debugln("IsChineseVideo", 5)
+
 	// 判断第一语言是否是中文
 	switch firstLangLowCase {
 	case chName0, chName1:

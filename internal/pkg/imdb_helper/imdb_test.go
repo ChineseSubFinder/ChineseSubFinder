@@ -1,6 +1,7 @@
 package imdb_helper
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"testing"
 )
@@ -45,7 +46,7 @@ func TestIsChineseVideo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, _, err := IsChineseVideo(types.VideoIMDBInfo{ImdbId: tt.args.imdbID})
+			got, _, err := IsChineseVideo(log_helper.GetLogger4Tester(), types.VideoIMDBInfo{ImdbId: tt.args.imdbID})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("IsChineseVideo() error = %v, wantErr %v", err, tt.wantErr)
 				return
