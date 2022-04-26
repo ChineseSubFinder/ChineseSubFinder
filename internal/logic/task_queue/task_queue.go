@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/badger_err_check"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	taskQueue2 "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
@@ -11,6 +13,8 @@ import (
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/emirpasic/gods/sets/treeset"
 	"github.com/sirupsen/logrus"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -36,6 +40,9 @@ func NewTaskQueue(queueName string, settings *settings.Settings, log *logrus.Log
 		tq.taskPriorityMapList = append(tq.taskPriorityMapList, treemap.NewWithStringComparator())
 	}
 	tq.read()
+
+	tq.afterRead()
+
 	return tq
 }
 
@@ -293,12 +300,7 @@ func (t *TaskQueue) GetJobsByPriorityAndStatus(taskPriority int, status task_que
 	return true, outOneJobs, nil
 }
 
-// Del 删除一个元素
-func (t *TaskQueue) Del(jobId string) (bool, error) {
-
-	defer t.queueLock.Unlock()
-	t.queueLock.Lock()
-
+func (t *TaskQueue) del(jobId string) (bool, error) {
 	if t.isExist(jobId) == false {
 		return false, nil
 	}
@@ -327,8 +329,26 @@ func (t *TaskQueue) Del(jobId string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	// 删除任务的时候也需要删除对应的日志
+	pathRoot := filepath.Join(global_value.ConfigRootDirFPath(), "Logs")
+	fileFPath := filepath.Join(pathRoot, jobId)
+	if my_util.IsFile(fileFPath) == true {
+		err = os.Remove(fileFPath)
+		if err != nil {
+			t.log.Errorln("del job", jobId, "logfile,error:", err)
+		}
+	}
 
 	return true, nil
+}
+
+// Del 删除一个元素
+func (t *TaskQueue) Del(jobId string) (bool, error) {
+
+	defer t.queueLock.Unlock()
+	t.queueLock.Lock()
+
+	return t.del(jobId)
 }
 
 func (t *TaskQueue) read() {
@@ -382,6 +402,28 @@ func (t *TaskQueue) read() {
 				nowJobIDSet := jobIDSet.(*treeset.Set)
 				nowJobIDSet.Add(oneJob.Id)
 				t.taskGroupBySeries.Put(oneJob.SeriesRootDirPath, nowJobIDSet)
+			}
+		})
+	}
+}
+
+func (t *TaskQueue) afterRead() {
+	// 将 downloading 的任务重置为 failed
+	for TaskPriority := 0; TaskPriority <= taskPriorityCount; TaskPriority++ {
+		t.taskPriorityMapList[TaskPriority].Each(func(key interface{}, value interface{}) {
+
+			nowOneJob := value.(task_queue.OneJob)
+			if nowOneJob.JobStatus == task_queue.Downloading {
+				nowOneJob.JobStatus = task_queue.Failed
+				bok, err := t.update(nowOneJob)
+				if err != nil {
+					t.log.Errorln("afterRead.update failed", err)
+					return
+				}
+				if bok == false {
+					t.log.Errorln("afterRead.update failed")
+					return
+				}
 			}
 		})
 	}

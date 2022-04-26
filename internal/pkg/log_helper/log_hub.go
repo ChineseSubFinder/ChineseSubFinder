@@ -10,6 +10,7 @@ import (
 	easy "github.com/t-tomalak/logrus-easy-formatter"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -52,10 +53,18 @@ func (lh *LoggerHub) Levels() []logrus.Level {
 
 func (lh *LoggerHub) Fire(entry *logrus.Entry) error {
 
-	if entry.Message == OnceSubsScanStart {
+	// 如果是一次扫描的开始
+	if strings.HasPrefix(entry.Message, OnceSubsScanStart) {
 		// 收到日志的标志位，需要新开一个
 		if lh.onceStart == false {
-			lh.onceLogger = newOnceLogger()
+			// 这个日志的前缀是 OnceSubsScanStart ，然后通过 # 进行分割，得到任务的 ID
+
+			names := strings.Split(entry.Message, "#")
+			if len(names) > 1 {
+				lh.onceLogger = newOnceLogger(names[1])
+			} else {
+				lh.onceLogger = newOnceLogger(fmt.Sprintf("%v", time.Now().Unix()))
+			}
 			lh.onceStart = true
 			// 既然新的一次开始，就实例化新的实例出来使用
 			onceLog4RunningLock.Lock()
@@ -155,7 +164,7 @@ func GetSpiltOnceLog(log *log_hub.OnceLog) []*log_hub.OnceLog {
 	return outList
 }
 
-func newOnceLogger() *logrus.Logger {
+func newOnceLogger(logFileName string) *logrus.Logger {
 
 	var err error
 	Logger := logrus.New()
@@ -163,9 +172,8 @@ func newOnceLogger() *logrus.Logger {
 		TimestampFormat: "2006-01-02 15:04:05",
 		LogFormat:       "[%lvl%]: %time% - %msg%\n",
 	}
-	nowTime := time.Now()
 	pathRoot := filepath.Join(global_value.ConfigRootDirFPath(), "Logs")
-	fileName := fmt.Sprintf(onceLogPrefix+"%v.log", nowTime.Unix())
+	fileName := fmt.Sprintf(onceLogPrefix+"%v.log", logFileName)
 	fileAbsPath := filepath.Join(pathRoot, fileName)
 
 	// 注意这个函数的调用时机
@@ -267,7 +275,7 @@ var (
 )
 
 const (
-	onceLogMaxCount   = 20
+	onceLogMaxCount   = 10000
 	onceLogPrefix     = "Once-"
 	OnceSubsScanStart = "OneTimeSubtitleScanStart"
 	OnceSubsScanEnd   = "OneTimeSubtitleScanEnd"

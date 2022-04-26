@@ -152,6 +152,8 @@ func (d *Downloader) QueueDownloader() {
 
 	var downloadCounter int64
 	downloadCounter = 0
+	// 移除查过三个月的 Done 任务
+	d.downloadQueue.BeforeGetOneJob()
 	// 从队列取数据出来，见《任务生命周期》
 	bok, oneJob, err := d.downloadQueue.GetOneJob()
 	if err != nil {
