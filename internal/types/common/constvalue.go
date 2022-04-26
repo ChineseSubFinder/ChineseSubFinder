@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-const HTMLTimeOut = 2 * 60 * time.Second // HttpClient 超时时间
+const HTMLTimeOut = 5 * 60 * time.Second // HttpClient 超时时间
 const OneMovieProcessTimeOut = 5 * 60    // 一部电影，最多的处理时间
 const OneSeriesProcessTimeOut = 30 * 60  // 一部连续剧，最多的处理时间
 const ScanPlayedSubTimeOut = 30 * 60     // 扫描已经播放的字幕进行缓存的时间

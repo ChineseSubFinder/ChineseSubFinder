@@ -2,6 +2,7 @@ package subhd
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
@@ -89,7 +90,7 @@ func (s *Supplier) IsAlive() bool {
 	return s.isAlive
 }
 
-func (s *Supplier) OverDailyDownloadLimit() bool {
+func (s *Supplier) OverDailyDownloadLimitOverDailyDownloadLimit() bool {
 
 	// 需要查询今天的限额
 	count, err := task_queue.GetDailyDownloadCount(s.GetSupplierName(),
@@ -511,9 +512,14 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDown
 	fileByte := []byte{0}
 	err = rod.Try(func() {
 		tmpDir := filepath.Join(global_value.DefTmpFolder(), "downloads")
-		wait := browser.WaitDownload(tmpDir)
+		wait := browser.Timeout(30 * time.Second).WaitDownload(tmpDir)
 		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()
+
+			if info == nil {
+				return nil, "", errors.New("download sub timeout")
+			}
+
 			downloadPath := filepath.Join(tmpDir, info.GUID)
 			defer func() { _ = os.Remove(downloadPath) }()
 			b, err := os.ReadFile(downloadPath)
@@ -587,7 +593,6 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDown
 		if hasWaterWall == true {
 			s.passWaterWall(page)
 		}
-		time.Sleep(time.Second * 2)
 		fileByte, fileName, err = getDownloadFile()
 		if err != nil {
 			return

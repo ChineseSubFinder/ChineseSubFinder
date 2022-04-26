@@ -20,7 +20,7 @@ require (
 	github.com/go-echarts/go-echarts/v2 v2.2.4
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/go-resty/resty/v2 v2.6.0
-	github.com/go-rod/rod v0.101.7
+	github.com/go-rod/rod v0.106.1
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.4.2
@@ -53,7 +53,7 @@ require (
 	github.com/t-tomalak/logrus-easy-formatter v0.0.0-20190827215021-c074f06c5816
 	github.com/tidwall/gjson v1.9.4
 	github.com/ulikunitz/xz v0.5.10 // indirect
-	github.com/ysmood/gson v0.7.0 // indirect
+	github.com/ysmood/gson v0.7.1 // indirect
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 	golang.org/x/net v0.0.0-20220114011407-0dd24b26b47d
 	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
@@ -128,7 +128,7 @@ require (
 	github.com/ugorji/go/codec v1.2.6 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	github.com/ysmood/goob v0.3.0 // indirect
+	github.com/ysmood/goob v0.4.0 // indirect
 	github.com/ysmood/leakless v0.7.0 // indirect
 	go.opencensus.io v0.22.5 // indirect
 	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect
