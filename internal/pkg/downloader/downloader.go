@@ -162,6 +162,17 @@ func (d *Downloader) QueueDownloader() {
 		d.log.Infoln("Download Queue Is Empty, Skip This Time")
 		return
 	}
+	// 取出来后，需要标记为正在下载
+	oneJob.JobStatus = taskQueue2.Downloading
+	bok, err = d.downloadQueue.Update(oneJob)
+	if err != nil {
+		d.log.Errorln("d.downloadQueue.Update()", err)
+		return
+	}
+	if bok == false {
+		d.log.Errorln("d.downloadQueue.Update() Failed")
+		return
+	}
 	downloadCounter++
 	// 创建一个 chan 用于任务的中断和超时
 	done := make(chan interface{}, 1)
