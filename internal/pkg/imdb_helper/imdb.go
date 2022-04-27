@@ -15,8 +15,8 @@ import (
 	"strings"
 )
 
-// getVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
-func getVideoInfoFromIMDBWeb(imdbInfo types.VideoIMDBInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
+// GetVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
+func GetVideoInfoFromIMDBWeb(imdbInfo types.VideoIMDBInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
 
 	client, err := my_util.NewHttpClient(_proxySettings...)
 	if err != nil {
@@ -106,7 +106,7 @@ func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, _proxySett
 		// 需要去外网获去补全信息，然后更新本地的信息
 		log.Debugln("IsChineseVideo", 1)
 
-		t, err := getVideoInfoFromIMDBWeb(imdbInfo, _proxySettings...)
+		t, err := GetVideoInfoFromIMDBWeb(imdbInfo, _proxySettings...)
 		if err != nil {
 			log.Errorln("IsChineseVideo.getVideoInfoFromIMDBWeb,", imdbInfo.Title, err)
 			return false, nil, err
