@@ -46,6 +46,7 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 
 	var downloader Downloader
 	downloader.subFormatter = inSubFormatter
+	downloader.fileDownloader = fileDownloader
 	downloader.log = fileDownloader.Log
 	// 参入设置信息
 	downloader.settings = fileDownloader.Settings
