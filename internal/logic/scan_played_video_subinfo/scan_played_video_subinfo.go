@@ -22,6 +22,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_control"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
+	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"os"
@@ -55,12 +56,14 @@ func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings)
 	scanPlayedVideoSubInfo.log = log
 	// 参入设置信息
 	// 最大获取的视频数目设置到 100W
-	_settings.EmbySettings.MaxRequestVideoNumber = 1000000
-	scanPlayedVideoSubInfo.settings = _settings
+	scanPlayedVideoSubInfo.settings = clone.Clone(_settings).(*settings.Settings)
+	scanPlayedVideoSubInfo.settings.EmbySettings.MaxRequestVideoNumber = 1000000
 	// 检测是否某些参数超出范围
 	scanPlayedVideoSubInfo.settings.Check()
 	// 初始化 Emby API 接口
-	if scanPlayedVideoSubInfo.settings.EmbySettings.Enable == true && scanPlayedVideoSubInfo.settings.EmbySettings.AddressUrl != "" && scanPlayedVideoSubInfo.settings.EmbySettings.APIKey != "" {
+	if scanPlayedVideoSubInfo.settings.EmbySettings.Enable == true && scanPlayedVideoSubInfo.settings.EmbySettings.AddressUrl != "" &&
+		scanPlayedVideoSubInfo.settings.EmbySettings.APIKey != "" {
+
 		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(log, scanPlayedVideoSubInfo.settings)
 	}
 
