@@ -6,6 +6,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	markSystem "github.com/allanpk716/ChineseSubFinder/internal/logic/mark_system"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_download_process"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
@@ -101,19 +102,19 @@ func (d *Downloader) SupplierCheck() {
 			panicChan <- p
 		}
 		// 下载前的初始化
-		//d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
-		//preDownloadProcess := pre_download_process.NewPreDownloadProcess(d.log, d.settings)
-		//err := preDownloadProcess.Init().Check().Wait()
-		//if err != nil {
-		//	done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
-		//} else {
-		//	// 更新 SubSupplierHub 实例
-		//	d.downloaderLock.Lock()
-		//	d.subSupplierHub = preDownloadProcess.SubSupplierHub
-		//	d.downloaderLock.Unlock()
-		//
-		//	done <- nil
-		//}
+		d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
+		preDownloadProcess := pre_download_process.NewPreDownloadProcess(d.fileDownloader)
+		err := preDownloadProcess.Init().Check().Wait()
+		if err != nil {
+			done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
+		} else {
+			// 更新 SubSupplierHub 实例
+			d.downloaderLock.Lock()
+			d.subSupplierHub = preDownloadProcess.SubSupplierHub
+			d.downloaderLock.Unlock()
+
+			done <- nil
+		}
 
 		// 这里是调试使用的，指定了只用一个字幕源
 		subSupplierHub := subSupplier.NewSubSupplierHub(xunlei.NewSupplier(d.fileDownloader))

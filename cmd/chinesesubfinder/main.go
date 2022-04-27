@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_job"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/scan_played_video_subinfo"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
@@ -69,12 +70,12 @@ func main() {
 		loggerBase.Infoln("Reload Log Settings, level = Info")
 	}
 	// ------------------------------------------------------------------------
-	//// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
-	//pj := pre_job.NewPreJob(settings.GetSettings(), loggerBase)
-	//err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
-	//if err != nil {
-	//	loggerBase.Panicln("pre_job", err)
-	//}
+	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
+	pj := pre_job.NewPreJob(settings.GetSettings(), loggerBase)
+	err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
+	if err != nil {
+		loggerBase.Panicln("pre_job", err)
+	}
 	//// ----------------------------------------------
 	scan, err := scan_played_video_subinfo.NewScanPlayedVideoSubInfo(loggerBase, settings.GetSettings())
 	if err != nil {

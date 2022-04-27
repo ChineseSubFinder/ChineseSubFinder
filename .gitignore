@@ -102,3 +102,4 @@ TestData/
 /internal/logic/sub_supplier/shooter/task_queue
 /internal/pkg/imdb_helper/Logs
 /internal/logic/sub_supplier/zimuku/ChineseSubFinder-Cache.db
+/download_sub_cache

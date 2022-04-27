@@ -97,7 +97,7 @@ func (h HotFix001) fixMovie(movieRootDir string) (OutStruct001, error) {
 	for _, one := range movieFullPathList {
 		found := false
 		var fitMovieNameSubList = make([]string, 0)
-		found, _, fitMovieNameSubList, err = movieHelper.MovieHasChineseSub(one)
+		found, _, fitMovieNameSubList, err = movieHelper.MovieHasChineseSub(h.log, one)
 		if err != nil || found == false {
 			continue
 		}
@@ -134,7 +134,7 @@ func (h HotFix001) fixSeries(seriesRootDir string) (OutStruct001, error) {
 	// 连续剧
 	var seriesSubFiles = make([]string, 0)
 	for _, oneSeriesDir := range seriesDirList {
-		seriesSubFiles, err = sub_helper.SearchMatchedSubFileByDir(oneSeriesDir)
+		seriesSubFiles, err = sub_helper.SearchMatchedSubFileByDir(h.log, oneSeriesDir)
 		if err != nil {
 			return outStruct, err
 		}
