@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	taskQueue2 "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/dgraph-io/badger/v3"
@@ -331,7 +332,7 @@ func (t *TaskQueue) del(jobId string) (bool, error) {
 	}
 	// 删除任务的时候也需要删除对应的日志
 	pathRoot := filepath.Join(global_value.ConfigRootDirFPath(), "Logs")
-	fileFPath := filepath.Join(pathRoot, jobId)
+	fileFPath := filepath.Join(pathRoot, common.OnceLogPrefix+jobId+".log")
 	if my_util.IsFile(fileFPath) == true {
 		err = os.Remove(fileFPath)
 		if err != nil {

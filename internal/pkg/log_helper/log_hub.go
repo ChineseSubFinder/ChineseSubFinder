@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/log_hub"
 	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
@@ -173,7 +174,7 @@ func newOnceLogger(logFileName string) *logrus.Logger {
 		LogFormat:       "[%lvl%]: %time% - %msg%\n",
 	}
 	pathRoot := filepath.Join(global_value.ConfigRootDirFPath(), "Logs")
-	fileName := fmt.Sprintf(onceLogPrefix+"%v.log", logFileName)
+	fileName := fmt.Sprintf(common.OnceLogPrefix+"%v.log", logFileName)
 	fileAbsPath := filepath.Join(pathRoot, fileName)
 
 	// 注意这个函数的调用时机
@@ -206,7 +207,7 @@ func cleanAndLoadOnceLogs() {
 	pathRoot := filepath.Join(global_value.ConfigRootDirFPath(), "Logs")
 	// 扫描当前日志存储目录下有多少个符合要求的 Once- 日志
 	// 确保有且仅有最近的 20 次扫描日志记录存在即可
-	matches, err := filepath.Glob(filepath.Join(pathRoot, onceLogPrefix+"*.log"))
+	matches, err := filepath.Glob(filepath.Join(pathRoot, common.OnceLogPrefix+"*.log"))
 	if err != nil {
 		panic(err)
 	}
@@ -223,7 +224,7 @@ func cleanAndLoadOnceLogs() {
 			_ = os.Remove(matches[i])
 		}
 		// 将有存在价值的“单次”日志缓存到内存中，供 Web API 查询
-		matches, err = filepath.Glob(filepath.Join(pathRoot, onceLogPrefix+"*.log"))
+		matches, err = filepath.Glob(filepath.Join(pathRoot, common.OnceLogPrefix+"*.log"))
 		if err != nil {
 			panic(err)
 		}
@@ -275,8 +276,8 @@ var (
 )
 
 const (
-	onceLogMaxCount   = 10000
-	onceLogPrefix     = "Once-"
+	onceLogMaxCount = 10000
+
 	OnceSubsScanStart = "OneTimeSubtitleScanStart"
 	OnceSubsScanEnd   = "OneTimeSubtitleScanEnd"
 )
