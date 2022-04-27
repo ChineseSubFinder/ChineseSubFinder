@@ -1,7 +1,6 @@
 package task_queue
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/badger_err_check"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/dgraph-io/badger/v3"
 	"time"
@@ -27,12 +26,11 @@ func GetDailyDownloadCount(supplierName string, publicIP string, whichDay ...str
 			key := []byte(MergeBucketAndKeyName(BucketNamePrefixSupplierDailyDownloadCounter, KeyName))
 			e, err := tx.Get(key)
 			if err != nil {
-
-				if badger_err_check.IsErrOk(err) == true {
+				if err == badger.ErrKeyNotFound {
 					return nil
+				} else {
+					return err
 				}
-
-				return err
 			}
 			valCopy, err := e.ValueCopy(nil)
 			if err != nil {

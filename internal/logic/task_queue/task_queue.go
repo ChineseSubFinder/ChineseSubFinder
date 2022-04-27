@@ -3,7 +3,6 @@ package task_queue
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/badger_err_check"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -364,10 +363,11 @@ func (t *TaskQueue) read() {
 				var item *badger.Item
 				item, err = tx.Get(key)
 				if err != nil {
-					if badger_err_check.IsErrOk(err) == true {
-						return nil
+					if err == badger.ErrKeyNotFound {
+						continue
+					} else {
+						return err
 					}
-					return err
 				}
 				valCopy, err := item.ValueCopy(nil)
 				if err != nil {
@@ -437,11 +437,9 @@ func (t *TaskQueue) save(taskPriority int) error {
 		func(tx *badger.Txn) error {
 			var err error
 
-			key := []byte(MergeBucketAndKeyName(BucketNamePrefixVideoSubDownloadQueue,
+			key := []byte(MergeBucketAndKeyName(
+				BucketNamePrefixVideoSubDownloadQueue,
 				fmt.Sprintf("%s_%d", t.queueName, taskPriority)))
-			if err != nil {
-				return err
-			}
 
 			b, err := t.taskPriorityMapList[taskPriority].ToJSON()
 			if err != nil {

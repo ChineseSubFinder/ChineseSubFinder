@@ -2,7 +2,6 @@ package download_file_cache
 
 import (
 	"encoding/json"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/badger_err_check"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/dgraph-io/badger/v3"
@@ -28,11 +27,11 @@ func (d *DownloadFileCache) Get(fileUrlUID string) (bool, *supplier.SubInfo, err
 			e, err := tx.Get(key)
 			if err != nil {
 
-				if badger_err_check.IsErrOk(err) == true {
+				if err == badger.ErrKeyNotFound {
 					return nil
+				} else {
+					return err
 				}
-
-				return err
 			}
 			valCopy, err := e.ValueCopy(nil)
 			if err != nil {
