@@ -6,7 +6,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_job"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/scan_played_video_subinfo"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -75,24 +74,6 @@ func main() {
 	err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
 	if err != nil {
 		loggerBase.Panicln("pre_job", err)
-	}
-	//// ----------------------------------------------
-	scan, err := scan_played_video_subinfo.NewScanPlayedVideoSubInfo(loggerBase, settings.GetSettings())
-	if err != nil {
-		loggerBase.Panicln(err)
-	}
-	bok, err := scan.GetPlayedItemsSubtitle()
-	if err != nil {
-		loggerBase.Panicln(err)
-	}
-	if bok == true {
-
-		scan.Clear()
-
-		err = scan.Scan()
-		if err != nil {
-			loggerBase.Panicln(err)
-		}
 	}
 	// ----------------------------------------------
 	fileDownloader := file_downloader.NewFileDownloader(settings.GetSettings(), loggerBase)

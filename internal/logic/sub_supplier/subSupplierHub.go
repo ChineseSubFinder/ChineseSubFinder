@@ -206,6 +206,12 @@ func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 		i++
 	}
 
+	for _, supplier := range d.Suppliers {
+		if supplier.IsAlive() == true {
+			d.log.Infoln("Alive Supplier:", supplier.GetSupplierName())
+		}
+	}
+
 	d.log.Infoln("Check Sub Supplier End")
 
 	return outStatus

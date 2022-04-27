@@ -2,6 +2,7 @@ package cron_helper
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/scan_played_video_subinfo"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
@@ -15,18 +16,20 @@ import (
 )
 
 type CronHelper struct {
-	stopping                bool // 正在停止
-	cronHelperRunning       bool // 这个是定时器启动的状态，它为true，不代表核心函数在执行
-	fileDownloader          *file_downloader.FileDownloader
-	downloadQueue           *task_queue.TaskQueue  // 需要下载的视频的队列
-	downloader              *downloader.Downloader // 下载者线程
-	cronLock                sync.Mutex             // 锁
-	c                       *cron.Cron             // 定时器实例
-	sets                    *settings.Settings     // 设置实例
-	log                     *logrus.Logger         // 日志实例
-	entryIDScanVideoProcess cron.EntryID
-	entryIDSupplierCheck    cron.EntryID
-	entryIDQueueDownloader  cron.EntryID
+	stopping                      bool // 正在停止
+	cronHelperRunning             bool // 这个是定时器启动的状态，它为true，不代表核心函数在执行
+	scanPlayedVideoSubInfo        *scan_played_video_subinfo.ScanPlayedVideoSubInfo
+	fileDownloader                *file_downloader.FileDownloader
+	downloadQueue                 *task_queue.TaskQueue  // 需要下载的视频的队列
+	downloader                    *downloader.Downloader // 下载者线程
+	cronLock                      sync.Mutex             // 锁
+	c                             *cron.Cron             // 定时器实例
+	sets                          *settings.Settings     // 设置实例
+	log                           *logrus.Logger         // 日志实例
+	entryIDScanVideoProcess       cron.EntryID
+	entryIDSupplierCheck          cron.EntryID
+	entryIDQueueDownloader        cron.EntryID
+	entryIDScanPlayedVideoSubInfo cron.EntryID
 }
 
 func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
@@ -39,6 +42,11 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 		downloadQueue: task_queue.NewTaskQueue("LocalSubDownloadQueue", fileDownloader.Settings, fileDownloader.Log),
 	}
 
+	var err error
+	ch.scanPlayedVideoSubInfo, err = scan_played_video_subinfo.NewScanPlayedVideoSubInfo(ch.log, ch.sets)
+	if err != nil {
+		ch.log.Panicln(err)
+	}
 	return &ch
 }
 
@@ -90,6 +98,10 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	ch.entryIDQueueDownloader, err = ch.c.AddFunc("@every 15s", ch.downloader.QueueDownloader)
 	if err != nil {
 		ch.log.Panicln("CronHelper QueueDownloader, Cron entryID:", ch.entryIDQueueDownloader, "Error:", err)
+	}
+	ch.entryIDScanPlayedVideoSubInfo, err = ch.c.AddFunc("@every 24h", ch.scanPlayedVideoSub)
+	if err != nil {
+		ch.log.Panicln("CronHelper QueueDownloader, Cron entryID:", ch.entryIDScanPlayedVideoSubInfo, "Error:", err)
 	}
 
 	// 是否在定时器开启前先执行一次任务
@@ -144,6 +156,7 @@ func (ch *CronHelper) Stop() {
 	ch.cronLock.Unlock()
 
 	ch.downloader.Cancel()
+	ch.scanPlayedVideoSubInfo.Cancel()
 	// Stop stops the cron scheduler if it is running; otherwise it does nothing.
 	// A context is returned so the caller can wait for running jobs to complete.
 	nowContext := ch.c.Stop()
@@ -160,6 +173,21 @@ func (ch *CronHelper) Stop() {
 	ch.cronLock.Unlock()
 
 	common.SetSubScanJobStatusNil()
+}
+
+func (ch *CronHelper) scanPlayedVideoSub() {
+
+	bok, err := ch.scanPlayedVideoSubInfo.GetPlayedItemsSubtitle()
+	if err != nil {
+		ch.log.Panicln(err)
+	}
+	if bok == true {
+		ch.scanPlayedVideoSubInfo.Clear()
+		err = ch.scanPlayedVideoSubInfo.Scan()
+		if err != nil {
+			ch.log.Panicln(err)
+		}
+	}
 }
 
 func (ch *CronHelper) CronHelperRunning() bool {
