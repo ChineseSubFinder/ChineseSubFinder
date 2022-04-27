@@ -309,6 +309,21 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoIMDBInfoFromLocal", videoFPath, err)
 			return
 		}
+		if len(imdbInfo.Description) <= 0 {
+			// 需要去外网获去补全信息，然后更新本地的信息
+			t, err := imdb_helper.GetVideoInfoFromIMDBWeb(imdbInfo4Video, s.settings.AdvancedSettings.ProxySettings)
+			if err != nil {
+				s.log.Errorln("dealOneVideo.GetVideoInfoFromIMDBWeb,", imdbInfo4Video.Title, err)
+				return
+			}
+			imdbInfo.Year = t.Year
+			imdbInfo.AKA = t.AKA
+			imdbInfo.Description = t.Description
+			imdbInfo.Languages = t.Languages
+
+			dao.GetDb().Save(imdbInfo)
+		}
+
 		imdbInfoCache[imdbInfo4Video.ImdbId] = imdbInfo
 	}
 
