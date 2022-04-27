@@ -21,3 +21,7 @@ var (
 	SubHDStep2ExCannotFindDownloadBtn = errors.New("subhd step2ex can not find download btn")
 	SubHDDownloadUrlDownFileFailed    = errors.New("subhd download url DownFile failed")
 )
+
+var (
+	AllSiteDownloadSubNotFound = errors.New("all site download sub not found")
+)

@@ -24,7 +24,7 @@ type CronHelper struct {
 	downloader                    *downloader.Downloader // 下载者线程
 	cronLock                      sync.Mutex             // 锁
 	c                             *cron.Cron             // 定时器实例
-	sets                          *settings.Settings     // 设置实例
+	settings                      *settings.Settings     // 设置实例
 	log                           *logrus.Logger         // 日志实例
 	entryIDScanVideoProcess       cron.EntryID
 	entryIDSupplierCheck          cron.EntryID
@@ -37,13 +37,13 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 	ch := CronHelper{
 		fileDownloader: fileDownloader,
 		log:            fileDownloader.Log,
-		sets:           fileDownloader.Settings,
+		settings:       fileDownloader.Settings,
 		// 实例化下载队列
 		downloadQueue: task_queue.NewTaskQueue("LocalSubDownloadQueue", fileDownloader.Settings, fileDownloader.Log),
 	}
 
 	var err error
-	ch.scanPlayedVideoSubInfo, err = scan_played_video_subinfo.NewScanPlayedVideoSubInfo(ch.log, ch.sets)
+	ch.scanPlayedVideoSubInfo, err = scan_played_video_subinfo.NewScanPlayedVideoSubInfo(ch.log, ch.settings)
 	if err != nil {
 		ch.log.Panicln(err)
 	}
@@ -68,15 +68,15 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// ----------------------------------------------
 	// 初始化下载者，里面的两个 func 需要使用定时器启动 SupplierCheck QueueDownloader
 	ch.downloader = downloader.NewDownloader(
-		sub_formatter.GetSubFormatter(ch.log, ch.sets.AdvancedSettings.SubNameFormatter),
+		sub_formatter.GetSubFormatter(ch.log, ch.settings.AdvancedSettings.SubNameFormatter),
 		ch.fileDownloader, ch.downloadQueue)
 	// ----------------------------------------------
 	// 判断扫描任务的时间间隔是否符合要求，不符合则重写默认值
-	_, err := cron.ParseStandard(ch.sets.CommonSettings.ScanInterval)
+	_, err := cron.ParseStandard(ch.settings.CommonSettings.ScanInterval)
 	if err != nil {
 		ch.log.Warningln("CommonSettings.ScanInterval format error, after v0.25.x , need reset this at WebUI")
 		// 如果解析错误了，就需要重新赋值默认值过来，然后保存
-		nowSettings := ch.sets
+		nowSettings := ch.settings
 		nowSettings.CommonSettings.ScanInterval = settings.NewCommonSettings().ScanInterval
 		err = settings.SetFullNewSettings(nowSettings)
 		if err != nil {
@@ -87,7 +87,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// ----------------------------------------------
 	ch.c = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
-	ch.entryIDScanVideoProcess, err = ch.c.AddFunc(ch.sets.CommonSettings.ScanInterval, ch.scanVideoProcessAdd2DownloadQueue)
+	ch.entryIDScanVideoProcess, err = ch.c.AddFunc(ch.settings.CommonSettings.ScanInterval, ch.scanVideoProcessAdd2DownloadQueue)
 	if err != nil {
 		ch.log.Panicln("CronHelper scanVideoProcessAdd2DownloadQueue, Cron entryID:", ch.entryIDScanVideoProcess, "Error:", err)
 	}
@@ -109,7 +109,9 @@ func (ch *CronHelper) Start(runImmediately bool) {
 
 		ch.log.Infoln("First Time scanVideoProcessAdd2DownloadQueue Start")
 
-		ch.scanVideoProcessAdd2DownloadQueue()
+		if ch.settings.SpeedDevMode == false {
+			ch.scanVideoProcessAdd2DownloadQueue()
+		}
 
 		ch.downloader.SupplierCheck()
 

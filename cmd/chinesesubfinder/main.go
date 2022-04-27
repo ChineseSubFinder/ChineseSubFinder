@@ -68,12 +68,17 @@ func main() {
 		loggerBase = newLog()
 		loggerBase.Infoln("Reload Log Settings, level = Info")
 	}
+
+	// 是否开启开发模式，跳过某些流程
+	settings.GetSettings().SpeedDevMode = true
 	// ------------------------------------------------------------------------
 	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
-	pj := pre_job.NewPreJob(settings.GetSettings(), loggerBase)
-	err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
-	if err != nil {
-		loggerBase.Panicln("pre_job", err)
+	if settings.GetSettings().SpeedDevMode == false {
+		pj := pre_job.NewPreJob(settings.GetSettings(), loggerBase)
+		err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
+		if err != nil {
+			loggerBase.Panicln("pre_job", err)
+		}
 	}
 	// ----------------------------------------------
 	fileDownloader := file_downloader.NewFileDownloader(settings.GetSettings(), loggerBase)

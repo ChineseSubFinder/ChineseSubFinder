@@ -103,22 +103,27 @@ func (d *Downloader) SupplierCheck() {
 		}
 		// 下载前的初始化
 		d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
-		preDownloadProcess := pre_download_process.NewPreDownloadProcess(d.fileDownloader)
-		err := preDownloadProcess.Init().Check().Wait()
-		if err != nil {
-			done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
-		} else {
-			// 更新 SubSupplierHub 实例
-			d.downloaderLock.Lock()
-			d.subSupplierHub = preDownloadProcess.SubSupplierHub
-			d.downloaderLock.Unlock()
 
-			done <- nil
+		if d.settings.SpeedDevMode == true {
+			// 这里是调试使用的，指定了只用一个字幕源
+			subSupplierHub := subSupplier.NewSubSupplierHub(xunlei.NewSupplier(d.fileDownloader))
+			d.subSupplierHub = subSupplierHub
+		} else {
+
+			preDownloadProcess := pre_download_process.NewPreDownloadProcess(d.fileDownloader)
+			err := preDownloadProcess.Init().Check().Wait()
+			if err != nil {
+				done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
+			} else {
+				// 更新 SubSupplierHub 实例
+				d.downloaderLock.Lock()
+				d.subSupplierHub = preDownloadProcess.SubSupplierHub
+				d.downloaderLock.Unlock()
+
+				done <- nil
+			}
 		}
 
-		// 这里是调试使用的，指定了只用一个字幕源
-		subSupplierHub := subSupplier.NewSubSupplierHub(xunlei.NewSupplier(d.fileDownloader))
-		d.subSupplierHub = subSupplierHub
 		done <- nil
 	}()
 
