@@ -28,7 +28,7 @@ func readSeriesInfo(log *logrus.Logger, seriesDir string) (*series.SeriesInfo, m
 
 	subParserHub := sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log))
 
-	seriesInfo, err := getSeriesInfoFromDir(log, seriesDir)
+	seriesInfo, err := GetSeriesInfoFromDir(log, seriesDir)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -179,6 +179,12 @@ func DownloadSubtitleInAllSiteByOneSeries(log *logrus.Logger, Suppliers []ifaces
 			var subInfos []supplier.SubInfo
 			log.Infoln("------------------------------------------")
 			log.Infoln(common.QueueName, i, oneSupplier.GetSupplierName(), "Start...")
+
+			if oneSupplier.OverDailyDownloadLimit() == true {
+				log.Infoln(common.QueueName, i, oneSupplier.GetSupplierName(), "Over Daily Download Limit")
+				return
+			}
+
 			// 一次性把这一部连续剧的所有字幕下载完
 			subInfos, err := oneSupplier.GetSubListFromFile4Series(seriesInfo)
 			if err != nil {
@@ -198,31 +204,25 @@ func DownloadSubtitleInAllSiteByOneSeries(log *logrus.Logger, Suppliers []ifaces
 }
 
 // SetTheSpecifiedEps2Download 设置指定的 Eps 去下载，可以方便调试或者是后续新功能，能够手动指定 Eps 下载字幕
-func SetTheSpecifiedEps2Download(seriesInfo *series.SeriesInfo, epsMap map[int]int) {
+func SetTheSpecifiedEps2Download(seriesInfo *series.SeriesInfo, epsMap map[int][]int) {
 
 	seriesInfo.NeedDlSeasonDict = make(map[int]int, 0)
 	seriesInfo.SeasonDict = make(map[int]int, 0)
+	seriesInfo.NeedDlEpsKeyList = make(map[string]series.EpisodeInfo, 0)
 
-	nowNeedDlEpsKeyList := make(map[string]series.EpisodeInfo, 0)
 	for needDownloadSeason, needDownloadEp := range epsMap {
 
 		// 选择某一集去下载
 		seriesInfo.NeedDlSeasonDict[needDownloadSeason] = needDownloadSeason
 		seriesInfo.SeasonDict[needDownloadSeason] = needDownloadSeason
-		tmp := series.EpisodeInfo{}
-		for _, value := range seriesInfo.NeedDlEpsKeyList {
-			if value.Season == needDownloadSeason && value.Episode == needDownloadEp {
-				tmp = value
-				// 缓存下来
-				nowNeedDlEpsKeyList[fmt.Sprintf("S%dE%d", needDownloadSeason, needDownloadEp)] = tmp
-				break
+
+		for _, oneEps := range needDownloadEp {
+			tmp := series.EpisodeInfo{
+				Season:  needDownloadSeason,
+				Episode: oneEps,
 			}
+			seriesInfo.NeedDlEpsKeyList[fmt.Sprintf("S%dE%d", needDownloadSeason, oneEps)] = tmp
 		}
-	}
-	// 一次性写进去
-	seriesInfo.NeedDlEpsKeyList = make(map[string]series.EpisodeInfo, 0)
-	for s, info := range nowNeedDlEpsKeyList {
-		seriesInfo.NeedDlEpsKeyList[s] = info
 	}
 }
 
@@ -315,7 +315,7 @@ func whichSeasonEpsNeedDownloadSub(log *logrus.Logger, seriesInfo *series.Series
 	return needDlSubEpsList, needDlSeasonList
 }
 
-func getSeriesInfoFromDir(log *logrus.Logger, seriesDir string) (*series.SeriesInfo, error) {
+func GetSeriesInfoFromDir(log *logrus.Logger, seriesDir string) (*series.SeriesInfo, error) {
 	seriesInfo := series.SeriesInfo{}
 	// 只考虑 IMDB 去查询，文件名目前发现可能会跟电影重复，导致很麻烦，本来也有前置要求要削刮器处理的
 	videoInfo, err := decode.GetImdbInfo4SeriesDir(seriesDir)

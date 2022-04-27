@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_job"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -67,31 +68,18 @@ func main() {
 		loggerBase = newLog()
 		loggerBase.Infoln("Reload Log Settings, level = Info")
 	}
+
+	// 是否开启开发模式，跳过某些流程
+	settings.GetSettings().SpeedDevMode = true
 	// ------------------------------------------------------------------------
-	//// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
-	//pj := pre_job.NewPreJob(settings.GetSettings(), loggerBase)
-	//err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
-	//if err != nil {
-	//	loggerBase.Panicln("pre_job", err)
-	//}
-	//// ----------------------------------------------
-	//scan, err := scan_played_video_subinfo.NewScanPlayedVideoSubInfo(loggerBase, settings.GetSettings())
-	//if err != nil {
-	//	loggerBase.Panicln(err)
-	//}
-	//bok, err := scan.GetPlayedItemsSubtitle()
-	//if err != nil {
-	//	loggerBase.Panicln(err)
-	//}
-	//if bok == true {
-	//
-	//	scan.Clear()
-	//
-	//	err = scan.Scan()
-	//	if err != nil {
-	//		loggerBase.Panicln(err)
-	//	}
-	//}
+	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
+	if settings.GetSettings().SpeedDevMode == false {
+		pj := pre_job.NewPreJob(settings.GetSettings(), loggerBase)
+		err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
+		if err != nil {
+			loggerBase.Panicln("pre_job", err)
+		}
+	}
 	// ----------------------------------------------
 	fileDownloader := file_downloader.NewFileDownloader(settings.GetSettings(), loggerBase)
 	cronHelper := cron_helper.NewCronHelper(fileDownloader)

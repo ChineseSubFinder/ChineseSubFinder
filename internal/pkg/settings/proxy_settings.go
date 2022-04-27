@@ -12,7 +12,7 @@ type ProxySettings struct {
 	LocalHttpProxyServerPort string `json:"local_http_proxy_server_port" default:"19036"` // 本地代理服务器端口
 	InputProxyAddress        string `json:"input_proxy_address"`                          // 输入的代理地址
 	InputProxyPort           string `json:"input_proxy_port"`                             // 输入的代理端口
-	UserPWD                  bool   `json:"user_pwd"`                                     //是否使用用户名密码
+	NeedPWD                  bool   `json:"need_pwd"`                                     // 是否使用用户名密码
 	InputProxyUsername       string `json:"input_proxy_username"`                         // 输入的代理用户名
 	InputProxyPassword       string `json:"input_proxy_password"`                         // 输入的代理密码
 	Referer                  string `json:"-"`                                            // 可能下载文件的时候需要设置
@@ -32,7 +32,7 @@ func NewProxySettings(useProxy bool, useWhichProxyProtocol string,
 		InputProxyUsername: inputProxyUsername, InputProxyPassword: inputProxyPassword}
 
 	if inputProxyUsername != "" && inputProxyPassword != "" {
-		set.UserPWD = true
+		set.NeedPWD = true
 	}
 
 	return &set

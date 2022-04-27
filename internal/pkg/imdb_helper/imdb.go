@@ -113,7 +113,7 @@ func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, _proxySett
 		}
 
 		log.Debugln("IsChineseVideo", 2)
-
+		localIMDBInfo.Year = t.Year
 		localIMDBInfo.Name = t.Name
 		localIMDBInfo.Year = t.Year
 		localIMDBInfo.AKA = t.AKA

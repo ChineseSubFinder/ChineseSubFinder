@@ -103,3 +103,5 @@ TestData/
 /internal/pkg/imdb_helper/Logs
 /internal/logic/sub_parser/ass/Logs
 /internal/pkg/sub_formatter/opendebuglog
+/internal/logic/sub_supplier/zimuku/ChineseSubFinder-Cache.db
+/download_sub_cache

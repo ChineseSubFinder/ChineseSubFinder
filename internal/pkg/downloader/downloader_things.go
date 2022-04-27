@@ -10,6 +10,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	subcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"os"
@@ -21,7 +22,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 
 	// 如果没有则直接跳过
 	if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
-		return nil
+		return common.AllSiteDownloadSubNotFound
 	}
 
 	var err error
@@ -55,8 +56,9 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 		var finalSubFile *subparser.FileInfo
 		finalSubFile = d.mk.SelectOneSubFile(organizeSubFiles)
 		if finalSubFile == nil {
-			d.log.Warnln("Found", len(organizeSubFiles), " subtitles but not one fit:", oneVideoFullPath)
-			return nil
+			outString := fmt.Sprintln("Found", len(organizeSubFiles), " subtitles but not one fit:", oneVideoFullPath)
+			d.log.Warnln(outString)
+			return errors.New(outString)
 		}
 		/*
 			这里还有一个梗，Emby、jellyfin 支持 default 和 forced 扩展字段
@@ -77,8 +79,9 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 		// 每个网站 Top1 的字幕
 		siteNames, finalSubFiles := d.mk.SelectEachSiteTop1SubFile(organizeSubFiles)
 		if len(siteNames) < 0 {
-			d.log.Warnln("SelectEachSiteTop1SubFile found none sub file")
-			return nil
+			outString := fmt.Sprintln("SelectEachSiteTop1SubFile found none sub file")
+			d.log.Warnln(outString)
+			return errors.New(outString)
 		}
 		// 多网站 Top 1 字幕保存的时候，第一个设置为 Default 即可
 		/*

@@ -32,6 +32,11 @@ func OneMovieDlSubInAllSite(log *logrus.Logger, Suppliers []ifaces.ISupplier, on
 
 		log.Infoln(common.QueueName, i, oneSupplier.GetSupplierName(), oneVideoFullPath)
 
+		if oneSupplier.OverDailyDownloadLimit() == true {
+			log.Infoln(common.QueueName, i, oneSupplier.GetSupplierName(), "Over Daily Download Limit")
+			continue
+		}
+
 		subInfos, err := OneMovieDlSubInOneSite(log, oneVideoFullPath, i, oneSupplier)
 		if err != nil {
 			log.Errorln(common.QueueName, i, oneSupplier.GetSupplierName(), "oneMovieDlSubInOneSite", err)

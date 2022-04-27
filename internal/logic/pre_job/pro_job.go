@@ -39,7 +39,7 @@ func (p *PreJob) HotFix() *PreJob {
 	// ------------------------------------------------------------------------
 	// 开始修复
 	p.log.Infoln(common2.NotifyStringTellUserWait)
-	err := hot_fix.HotFixProcess(types.HotFixParam{
+	err := hot_fix.HotFixProcess(p.log, types.HotFixParam{
 		MovieRootDirs:  p.sets.CommonSettings.MoviePaths,
 		SeriesRootDirs: p.sets.CommonSettings.SeriesPaths,
 	})
@@ -70,7 +70,7 @@ func (p *PreJob) ChangeSubNameFormat() *PreJob {
 		然后需要在数据库中记录本次的转换结果
 	*/
 	p.log.Infoln(common2.NotifyStringTellUserWait)
-	renameResults, err := sub_formatter.SubFormatChangerProcess(
+	renameResults, err := sub_formatter.SubFormatChangerProcess(p.log,
 		p.sets.CommonSettings.MoviePaths,
 		p.sets.CommonSettings.SeriesPaths,
 		common.FormatterName(p.sets.AdvancedSettings.SubNameFormatter))
@@ -93,14 +93,13 @@ func (p *PreJob) ReloadBrowser() *PreJob {
 		p.log.Infoln("Skip PreJob.ReloadBrowser()")
 		return p
 	}
-	p.stageName = stageNameReloadBrowser
 	defer func() {
 		p.log.Infoln("PreJob.ReloadBrowser() End")
 	}()
 	p.log.Infoln("PreJob.ReloadBrowser() Start...")
 	// ------------------------------------------------------------------------
 	// ReloadBrowser 提前把浏览器下载好
-	rod_helper.ReloadBrowser()
+	rod_helper.ReloadBrowser(p.log)
 	return p
 }
 

@@ -12,6 +12,7 @@ import (
 )
 
 type Settings struct {
+	SpeedDevMode          bool // 是否为开发模式，代码开启这个会跳过某些流程，加快测试速度
 	configFPath           string
 	UserInfo              *UserInfo              `json:"user_info"`
 	CommonSettings        *CommonSettings        `json:"common_settings"`

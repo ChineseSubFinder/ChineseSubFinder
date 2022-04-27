@@ -22,6 +22,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_control"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
+	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"os"
@@ -55,12 +56,14 @@ func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings)
 	scanPlayedVideoSubInfo.log = log
 	// 参入设置信息
 	// 最大获取的视频数目设置到 100W
-	_settings.EmbySettings.MaxRequestVideoNumber = 1000000
-	scanPlayedVideoSubInfo.settings = _settings
+	scanPlayedVideoSubInfo.settings = clone.Clone(_settings).(*settings.Settings)
+	scanPlayedVideoSubInfo.settings.EmbySettings.MaxRequestVideoNumber = 1000000
 	// 检测是否某些参数超出范围
 	scanPlayedVideoSubInfo.settings.Check()
 	// 初始化 Emby API 接口
-	if scanPlayedVideoSubInfo.settings.EmbySettings.Enable == true && scanPlayedVideoSubInfo.settings.EmbySettings.AddressUrl != "" && scanPlayedVideoSubInfo.settings.EmbySettings.APIKey != "" {
+	if scanPlayedVideoSubInfo.settings.EmbySettings.Enable == true && scanPlayedVideoSubInfo.settings.EmbySettings.AddressUrl != "" &&
+		scanPlayedVideoSubInfo.settings.EmbySettings.APIKey != "" {
+
 		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(log, scanPlayedVideoSubInfo.settings)
 	}
 
@@ -309,6 +312,21 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoIMDBInfoFromLocal", videoFPath, err)
 			return
 		}
+		if len(imdbInfo.Description) <= 0 {
+			// 需要去外网获去补全信息，然后更新本地的信息
+			t, err := imdb_helper.GetVideoInfoFromIMDBWeb(imdbInfo4Video, s.settings.AdvancedSettings.ProxySettings)
+			if err != nil {
+				s.log.Errorln("dealOneVideo.GetVideoInfoFromIMDBWeb,", imdbInfo4Video.Title, err)
+				return
+			}
+			imdbInfo.Year = t.Year
+			imdbInfo.AKA = t.AKA
+			imdbInfo.Description = t.Description
+			imdbInfo.Languages = t.Languages
+
+			dao.GetDb().Save(imdbInfo)
+		}
+
 		imdbInfoCache[imdbInfo4Video.ImdbId] = imdbInfo
 	}
 

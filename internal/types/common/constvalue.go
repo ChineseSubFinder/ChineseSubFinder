@@ -4,10 +4,10 @@ import (
 	"time"
 )
 
-const HTMLTimeOut = 2 * 60 * time.Second // HttpClient 超时时间
+const HTMLTimeOut = 5 * 60 * time.Second // HttpClient 超时时间
 const OneMovieProcessTimeOut = 5 * 60    // 一部电影，最多的处理时间
 const OneSeriesProcessTimeOut = 30 * 60  // 一部连续剧，最多的处理时间
-const ScanPlayedSubTimeOut = 30 * 60     // 扫描已经播放的字幕进行缓存的时间
+const ScanPlayedSubTimeOut = 60 * 60     // 扫描已经播放的字幕进行缓存的时间
 const DownloadSubsPerSite = 1            // 默认，每个网站下载一个字幕，允许额外传参调整
 const EmbyApiGetItemsLimitMin = 50
 const EmbyApiGetItemsLimitMax = 50000
@@ -46,3 +46,5 @@ const (
 const QueueName = "Queue"
 
 const StaticFileName00 = "c31ViaG5Q.txt"
+
+const OnceLogPrefix = "Once-"

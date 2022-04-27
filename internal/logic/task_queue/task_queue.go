@@ -4,23 +4,30 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/badger_err_check"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	taskQueue2 "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/emirpasic/gods/maps/treemap"
+	"github.com/emirpasic/gods/sets/treeset"
 	"github.com/sirupsen/logrus"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 )
 
 type TaskQueue struct {
-	queueName           string
-	settings            *settings.Settings
-	log                 *logrus.Logger
-	taskPriorityMapList []*treemap.Map
-	taskKeyMap          *treemap.Map
-	queueLock           sync.Mutex // 公用这个锁
+	queueName           string             // 队列的名称
+	settings            *settings.Settings // 设置
+	log                 *logrus.Logger     // 日志
+	taskPriorityMapList []*treemap.Map     // 这里有 0-10 个优先级划分的存储 List，每Add一个数据的时候需要切换到这个 List 中去 save
+	taskKeyMap          *treemap.Map       // 以每个任务的唯一 JobID 来存储每个 Job，这样可以快速查询
+	taskGroupBySeries   *treemap.Map       // 以每个任务的 SeriesRootPath 来存储每个任务，然后内层是一个 treeset，后续可以遍历删除即可
+	queueLock           sync.Mutex         // 公用这个锁
 }
 
 func NewTaskQueue(queueName string, settings *settings.Settings, log *logrus.Logger) *TaskQueue {
@@ -28,11 +35,15 @@ func NewTaskQueue(queueName string, settings *settings.Settings, log *logrus.Log
 	tq := &TaskQueue{queueName: queueName, settings: settings, log: log,
 		taskPriorityMapList: make([]*treemap.Map, 0),
 		taskKeyMap:          treemap.NewWithStringComparator(),
+		taskGroupBySeries:   treemap.NewWithStringComparator(),
 	}
 	for i := 0; i <= taskPriorityCount; i++ {
 		tq.taskPriorityMapList = append(tq.taskPriorityMapList, treemap.NewWithStringComparator())
 	}
 	tq.read()
+
+	tq.afterRead()
+
 	return tq
 }
 
@@ -68,6 +79,8 @@ func (t *TaskQueue) Clear() error {
 	}
 
 	t.taskKeyMap.Clear()
+
+	t.taskGroupBySeries.Clear()
 
 	return nil
 }
@@ -117,6 +130,19 @@ func (t *TaskQueue) Add(oneJob task_queue.OneJob) (bool, error) {
 	t.taskKeyMap.Put(oneJob.Id, oneJob.TaskPriority)
 	// 分配到具体的优先级 map 中
 	t.taskPriorityMapList[oneJob.TaskPriority].Put(oneJob.Id, oneJob)
+	// 如果是连续剧，则需要存储到 taskGroupBySeries 中
+	jobIDSet, found := t.taskGroupBySeries.Get(oneJob.SeriesRootDirPath)
+	if found == false {
+		// 不存在
+		nowJobIDSet := treeset.NewWithStringComparator()
+		nowJobIDSet.Add(oneJob.Id)
+		t.taskGroupBySeries.Put(oneJob.SeriesRootDirPath, nowJobIDSet)
+	} else {
+		// 存在
+		nowJobIDSet := jobIDSet.(*treeset.Set)
+		nowJobIDSet.Add(oneJob.Id)
+		t.taskGroupBySeries.Put(oneJob.SeriesRootDirPath, nowJobIDSet)
+	}
 	err := t.save(oneJob.TaskPriority)
 	if err != nil {
 		return false, err
@@ -223,99 +249,6 @@ func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue.OneJob, inErr er
 	}
 }
 
-// GetOneJob 优先获取 GetOneWaitingJob 然后才是 GetOneDoneJob
-func (t *TaskQueue) GetOneJob() (bool, task_queue.OneJob, error) {
-	found, waitingJob, err := t.GetOneWaitingJob()
-	if err != nil {
-		return false, task_queue.OneJob{}, err
-	}
-	if found == false {
-		return t.GetOneDoneJob()
-	}
-
-	return true, waitingJob, nil
-}
-
-// GetOneWaitingJob 获取一个元素，按优先级，0 - taskPriorityCount 的级别去拿去任务，不会移除任务
-func (t *TaskQueue) GetOneWaitingJob() (bool, task_queue.OneJob, error) {
-
-	defer t.queueLock.Unlock()
-	t.queueLock.Lock()
-
-	// 如果队列里面没有东西，则返回 false
-	if t.isEmpty() == true {
-		return false, task_queue.OneJob{}, nil
-	}
-
-	found := false
-	tOneJob := task_queue.OneJob{}
-	for TaskPriority := 0; TaskPriority <= taskPriorityCount; TaskPriority++ {
-
-		t.taskPriorityMapList[TaskPriority].Each(func(key interface{}, value interface{}) {
-
-			tOneJob = value.(task_queue.OneJob)
-			// 任务的 UpdateTime 与现在的时间大于单个字幕下载的间隔
-			// 默认是 12h, A.After(B) : A > B == true
-			// 见《任务队列设计》--以优先级顺序取出描述
-			if tOneJob.JobStatus == task_queue.Waiting && (tOneJob.DownloadTimes == 0 ||
-				// 优先级 <= 3 也可以提前取出
-				TaskPriority <= HightTaskPriorityLevel ||
-				// 默认是 12h, A.After(B) : A > B == true
-				tOneJob.UpdateTime.AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.OneSubDownloadInterval).After(time.Now()) == false && tOneJob.DownloadTimes > 0) {
-				// 找到就返回
-				found = true
-				return
-			}
-		})
-
-		if found == true {
-			return true, tOneJob, nil
-		}
-	}
-
-	return false, tOneJob, nil
-}
-
-// GetOneDoneJob 获取一个元素，按优先级，0 - taskPriorityCount 的级别去拿去任务，不会移除任务
-func (t *TaskQueue) GetOneDoneJob() (bool, task_queue.OneJob, error) {
-
-	defer t.queueLock.Unlock()
-	t.queueLock.Lock()
-
-	// 如果队列里面没有东西，则返回 false
-	if t.isEmpty() == true {
-		return false, task_queue.OneJob{}, nil
-	}
-
-	found := false
-	tOneJob := task_queue.OneJob{}
-	for TaskPriority := 0; TaskPriority <= taskPriorityCount; TaskPriority++ {
-
-		t.taskPriorityMapList[TaskPriority].Each(func(key interface{}, value interface{}) {
-
-			tOneJob = value.(task_queue.OneJob)
-			// 任务的 UpdateTime 与现在的时间大于单个字幕下载的间隔
-			// 默认是 12h, A.After(B) : A > B == true
-			// 见《任务队列设计》--以优先级顺序取出描述
-			if tOneJob.JobStatus == task_queue.Done &&
-				// 要在 三个月内
-				tOneJob.CreatedTime.AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.ExpirationTime).After(time.Now()) == true &&
-				// 已经下载过的视频，要间隔 12 小时再次下载
-				tOneJob.UpdateTime.AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.OneSubDownloadInterval).After(time.Now()) == false {
-				// 找到就返回
-				found = true
-				return
-			}
-		})
-
-		if found == true {
-			return true, tOneJob, nil
-		}
-	}
-
-	return false, tOneJob, nil
-}
-
 func (t *TaskQueue) GetJobsByStatus(status task_queue.JobStatus) (bool, []task_queue.OneJob, error) {
 
 	defer t.queueLock.Unlock()
@@ -368,12 +301,7 @@ func (t *TaskQueue) GetJobsByPriorityAndStatus(taskPriority int, status task_que
 	return true, outOneJobs, nil
 }
 
-// Del 删除一个元素
-func (t *TaskQueue) Del(jobId string) (bool, error) {
-
-	defer t.queueLock.Unlock()
-	t.queueLock.Lock()
-
+func (t *TaskQueue) del(jobId string) (bool, error) {
 	if t.isExist(jobId) == false {
 		return false, nil
 	}
@@ -382,6 +310,19 @@ func (t *TaskQueue) Del(jobId string) (bool, error) {
 	if bok == false {
 		return false, nil
 	}
+	// 删除连续剧的 tree.Map 里面的 tree.Set 的元素
+	needDelJobObj, bok := t.taskPriorityMapList[taskPriority.(int)].Get(jobId)
+	if bok == false {
+		return false, nil
+	}
+	needDelJob := needDelJobObj.(task_queue.OneJob)
+	jobSetsObj, bok := t.taskGroupBySeries.Get(needDelJob.SeriesRootDirPath)
+	if bok == false {
+		return false, nil
+	}
+	jobSets := jobSetsObj.(*treeset.Set)
+	jobSets.Remove(jobId)
+	// 删除任务
 	t.taskKeyMap.Remove(jobId)
 	t.taskPriorityMapList[taskPriority.(int)].Remove(jobId)
 
@@ -389,8 +330,26 @@ func (t *TaskQueue) Del(jobId string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	// 删除任务的时候也需要删除对应的日志
+	pathRoot := filepath.Join(global_value.ConfigRootDirFPath(), "Logs")
+	fileFPath := filepath.Join(pathRoot, common.OnceLogPrefix+jobId+".log")
+	if my_util.IsFile(fileFPath) == true {
+		err = os.Remove(fileFPath)
+		if err != nil {
+			t.log.Errorln("del job", jobId, "logfile,error:", err)
+		}
+	}
 
 	return true, nil
+}
+
+// Del 删除一个元素
+func (t *TaskQueue) Del(jobId string) (bool, error) {
+
+	defer t.queueLock.Unlock()
+	t.queueLock.Lock()
+
+	return t.del(jobId)
 }
 
 func (t *TaskQueue) read() {
@@ -427,8 +386,46 @@ func (t *TaskQueue) read() {
 	}
 	// 需要把几个优先级的map中的key汇总
 	for i := 0; i < taskPriorityCount; i++ {
+		// JobID - OneJob
 		t.taskPriorityMapList[i].Each(func(key interface{}, value interface{}) {
+			// JobID -- taskPriority
 			t.taskKeyMap.Put(key, i)
+			// SeriesRootDirPath -- tree.Set(JobID)
+			oneJob := value.(task_queue.OneJob)
+			jobIDSet, found := t.taskGroupBySeries.Get(oneJob.SeriesRootDirPath)
+			if found == false {
+				// 不存在
+				nowJobIDSet := treeset.NewWithStringComparator()
+				nowJobIDSet.Add(oneJob.Id)
+				t.taskGroupBySeries.Put(oneJob.SeriesRootDirPath, nowJobIDSet)
+			} else {
+				// 存在
+				nowJobIDSet := jobIDSet.(*treeset.Set)
+				nowJobIDSet.Add(oneJob.Id)
+				t.taskGroupBySeries.Put(oneJob.SeriesRootDirPath, nowJobIDSet)
+			}
+		})
+	}
+}
+
+func (t *TaskQueue) afterRead() {
+	// 将 downloading 的任务重置为 failed
+	for TaskPriority := 0; TaskPriority <= taskPriorityCount; TaskPriority++ {
+		t.taskPriorityMapList[TaskPriority].Each(func(key interface{}, value interface{}) {
+
+			nowOneJob := value.(task_queue.OneJob)
+			if nowOneJob.JobStatus == task_queue.Downloading {
+				nowOneJob.JobStatus = task_queue.Failed
+				bok, err := t.update(nowOneJob)
+				if err != nil {
+					t.log.Errorln("afterRead.update failed", err)
+					return
+				}
+				if bok == false {
+					t.log.Errorln("afterRead.update failed")
+					return
+				}
+			}
 		})
 	}
 }
@@ -488,7 +485,7 @@ func (t *TaskQueue) isEmpty() bool {
 
 const (
 	taskPriorityCount           = 10
-	HightTaskPriorityLevel      = 3
+	HighTaskPriorityLevel       = 3
 	DefaultTaskPriorityLevel    = 5
 	FirstRetryTaskPriorityLevel = 6
 )

@@ -131,6 +131,7 @@ func GetPublicIP(log *logrus.Logger, queue *settings.TaskQueue, _proxySettings .
 		matcheds := regex_things.ReMatchIP.FindAllString(publicIP, -1)
 
 		if publicIP != "" || matcheds == nil || len(matcheds) == 0 {
+			log.Infoln("[GetPublicIP]", publicIP)
 			return publicIP
 		}
 	}

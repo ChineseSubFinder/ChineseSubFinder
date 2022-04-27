@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
@@ -39,8 +40,9 @@ func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
 
 func TestGetVADInfosFromSub(t *testing.T) {
 
+	log := log_helper.GetLogger4Tester()
 	// 这两个字幕是一样的，只不过是格式不同而已
-	subParserHub := sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
+	subParserHub := sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log))
 
 	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_helper", "org", "R&M-S05E10"}, 4, false)
 

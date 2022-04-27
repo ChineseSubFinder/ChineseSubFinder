@@ -6,11 +6,13 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	markSystem "github.com/allanpk716/ChineseSubFinder/internal/logic/mark_system"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_download_process"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -46,6 +48,7 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	var downloader Downloader
 	downloader.fileDownloader = fileDownloader
 	downloader.subFormatter = inSubFormatter
+	downloader.fileDownloader = fileDownloader
 	downloader.log = fileDownloader.Log
 	// 参入设置信息
 	downloader.settings = fileDownloader.Settings
@@ -100,23 +103,28 @@ func (d *Downloader) SupplierCheck() {
 			panicChan <- p
 		}
 		// 下载前的初始化
-		//d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
-		//preDownloadProcess := pre_download_process.NewPreDownloadProcess(d.log, d.settings)
-		//err := preDownloadProcess.Init().Check().Wait()
-		//if err != nil {
-		//	done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
-		//} else {
-		//	// 更新 SubSupplierHub 实例
-		//	d.downloaderLock.Lock()
-		//	d.subSupplierHub = preDownloadProcess.SubSupplierHub
-		//	d.downloaderLock.Unlock()
-		//
-		//	done <- nil
-		//}
+		d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
 
-		// 这里是调试使用的，指定了只用一个字幕源
-		subSupplierHub := subSupplier.NewSubSupplierHub(xunlei.NewSupplier(d.fileDownloader))
-		d.subSupplierHub = subSupplierHub
+		if d.settings.SpeedDevMode == true {
+			// 这里是调试使用的，指定了只用一个字幕源
+			subSupplierHub := subSupplier.NewSubSupplierHub(xunlei.NewSupplier(d.fileDownloader))
+			d.subSupplierHub = subSupplierHub
+		} else {
+
+			preDownloadProcess := pre_download_process.NewPreDownloadProcess(d.fileDownloader)
+			err := preDownloadProcess.Init().Check().Wait()
+			if err != nil {
+				done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
+			} else {
+				// 更新 SubSupplierHub 实例
+				d.downloaderLock.Lock()
+				d.subSupplierHub = preDownloadProcess.SubSupplierHub
+				d.downloaderLock.Unlock()
+
+				done <- nil
+			}
+		}
+
 		done <- nil
 	}()
 
@@ -144,6 +152,9 @@ func (d *Downloader) QueueDownloader() {
 		if p := recover(); p != nil {
 			d.log.Errorln("Downloader.QueueDownloader() panic")
 		}
+
+		d.log.Infoln(log_helper.OnceSubsScanEnd)
+
 		d.downloaderLock.Unlock()
 		d.log.Infoln("Download.QueueDownloader() End")
 	}()
@@ -153,6 +164,8 @@ func (d *Downloader) QueueDownloader() {
 
 	var downloadCounter int64
 	downloadCounter = 0
+	// 移除查过三个月的 Done 任务
+	d.downloadQueue.BeforeGetOneJob()
 	// 从队列取数据出来，见《任务生命周期》
 	bok, oneJob, err := d.downloadQueue.GetOneJob()
 	if err != nil {
@@ -163,6 +176,21 @@ func (d *Downloader) QueueDownloader() {
 		d.log.Infoln("Download Queue Is Empty, Skip This Time")
 		return
 	}
+	// 取出来后，需要标记为正在下载
+	oneJob.JobStatus = taskQueue2.Downloading
+	bok, err = d.downloadQueue.Update(oneJob)
+	if err != nil {
+		d.log.Errorln("d.downloadQueue.Update()", err)
+		return
+	}
+	if bok == false {
+		d.log.Errorln("d.downloadQueue.Update() Failed")
+		return
+	}
+	// ------------------------------------------------------------------------
+	// 开始标记，这个是单次扫描的开始，要注意格式，在日志的内部解析识别单个日志开头的时候需要特殊的格式
+	d.log.Infoln(log_helper.OnceSubsScanStart + "#" + oneJob.Id)
+	// ------------------------------------------------------------------------
 	downloadCounter++
 	// 创建一个 chan 用于任务的中断和超时
 	done := make(chan interface{}, 1)
@@ -263,15 +291,15 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	}
 	var err error
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(d.log, job.SeriesRootDirPath, d.settings.AdvancedSettings.TaskQueue.ExpirationTime, false)
+	seriesInfo, err := series_helper.GetSeriesInfoFromDir(d.log, job.SeriesRootDirPath)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("seriesDlFunc.ReadSeriesInfoFromDir, Error: %v", err))
 		d.downloadQueue.AutoDetectUpdateJobStatus(job, err)
 		return err
 	}
 	// 设置只有一集需要下载
-	epsMap := make(map[int]int, 0)
-	epsMap[job.Season] = job.Episode
+	epsMap := make(map[int][]int, 0)
+	epsMap[job.Season] = []int{job.Episode}
 	series_helper.SetTheSpecifiedEps2Download(seriesInfo, epsMap)
 	// 下载好的字幕文件
 	var organizeSubFiles map[string][]string

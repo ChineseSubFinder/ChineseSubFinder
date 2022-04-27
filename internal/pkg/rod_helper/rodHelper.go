@@ -75,7 +75,7 @@ func NewBrowser(log *logrus.Logger, httpProxyURL string, loadAdblock bool, preLo
 
 	// 如果加载了插件，那么就需要进行一定的耗时操作，等待其第一次的加载完成
 	if loadAdblock == true {
-		_, page, err := HttpGetFromBrowser(browser, "https://www.qq.com", 15*time.Second)
+		_, _, err := HttpGetFromBrowser(browser, "https://www.qq.com", 15*time.Second)
 		if err != nil {
 			if browser != nil {
 				browser.Close()
@@ -83,12 +83,12 @@ func NewBrowser(log *logrus.Logger, httpProxyURL string, loadAdblock bool, preLo
 			return nil, err
 		}
 
-		if page != nil {
-			_ = page.Close()
-		}
+		//if page != nil {
+		//	_ = page.Close()
+		//}
 	}
 	if len(preLoadUrl) > 0 {
-		_, page, err := HttpGetFromBrowser(browser, preLoadUrl[0], 15*time.Second)
+		_, _, err := HttpGetFromBrowser(browser, preLoadUrl[0], 15*time.Second)
 		if err != nil {
 			if browser != nil {
 				browser.Close()
@@ -96,9 +96,9 @@ func NewBrowser(log *logrus.Logger, httpProxyURL string, loadAdblock bool, preLo
 			return nil, err
 		}
 
-		if page != nil {
-			_ = page.Close()
-		}
+		//if page != nil {
+		//	_ = page.Close()
+		//}
 	}
 
 	return browser, nil
@@ -128,7 +128,7 @@ func NewBrowserFromDocker(httpProxyURL, remoteDockerURL string, remoteAdblockPat
 				MustLaunch()
 		}
 
-		browser = rod.New().Client(l.Client()).ControlURL(purl).MustConnect()
+		browser = rod.New().Client(l.MustClient()).ControlURL(purl).MustConnect()
 	})
 	if err != nil {
 		return nil, err
@@ -168,6 +168,8 @@ func NewBrowserFromDocker(httpProxyURL, remoteDockerURL string, remoteAdblockPat
 
 func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration, maxRetryTimes int) (*rod.Page, error) {
 
+	addSleepTime := time.Second * 10
+
 	page, err := newPage(browser)
 	if err != nil {
 		return nil, err
@@ -181,11 +183,12 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 		}
 		return nil, err
 	}
-	page = page.Timeout(timeOut)
+	page = page.Timeout(timeOut + addSleepTime)
 	nowRetryTimes := 0
 	for nowRetryTimes <= maxRetryTimes {
 		err = rod.Try(func() {
 			page.MustNavigate(desURL).MustWaitLoad()
+			time.Sleep(addSleepTime)
 			nowRetryTimes++
 		})
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -248,28 +251,6 @@ func ReloadBrowser(log *logrus.Logger) {
 
 // Clear 清理缓存
 func Clear(log *logrus.Logger) {
-	//_ = rod.Try(func() {
-	//	l := launcher.New().
-	//		Headless(false).
-	//		Devtools(true)
-	//
-	//	defer func() {
-	//		l.Cleanup() // remove launcher.FlagUserDataDir
-	//		log.Infoln("rod clean up done.")
-	//	}()
-	//
-	//	url := l.MustLaunch()
-	//	// Trace shows verbose debug information for each action executed
-	//	// Slowmotion is a debug related function that waits 2 seconds between
-	//	// each action, making it easier to inspect what your code is doing.
-	//	browser := rod.New().
-	//		ControlURL(url).
-	//		Trace(true).
-	//		SlowMotion(2 * time.Second).
-	//		MustConnect()
-	//	defer browser.MustClose()
-	//})
-
 	err := my_folder.ClearRodTmpRootFolder()
 	if err != nil {
 		log.Errorln("ClearRodTmpRootFolder", err)

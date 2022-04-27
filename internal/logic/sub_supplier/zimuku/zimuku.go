@@ -1,6 +1,7 @@
 package zimuku
 
 import (
+	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
@@ -624,9 +625,12 @@ func (s *Supplier) DownFile(browser *rod.Browser, subDownloadPageUrl string, Top
 	downloadSuccess := false
 	err = rod.Try(func() {
 		tmpDir := filepath.Join(global_value.DefTmpFolder(), "downloads")
-		wait := browser.Timeout(10 * time.Second).WaitDownload(tmpDir)
+		wait := browser.Timeout(30 * time.Second).WaitDownload(tmpDir)
 		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()
+			if info == nil {
+				return nil, "", errors.New("download sub timeout")
+			}
 			downloadPath := filepath.Join(tmpDir, info.GUID)
 			defer func() { _ = os.Remove(downloadPath) }()
 			b, err := os.ReadFile(downloadPath)
@@ -639,7 +643,6 @@ func (s *Supplier) DownFile(browser *rod.Browser, subDownloadPageUrl string, Top
 		element := page.MustElement(btnClickDownload)
 		// 直接可以下载
 		element.MustClick()
-		time.Sleep(time.Second * 2)
 		fileByte, fileName, err = getDownloadFile()
 		if err != nil {
 			return
