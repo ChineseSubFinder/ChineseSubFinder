@@ -90,7 +90,7 @@ func (s *Supplier) IsAlive() bool {
 	return s.isAlive
 }
 
-func (s *Supplier) OverDailyDownloadLimitOverDailyDownloadLimit() bool {
+func (s *Supplier) OverDailyDownloadLimit() bool {
 
 	// 需要查询今天的限额
 	count, err := task_queue.GetDailyDownloadCount(s.GetSupplierName(),

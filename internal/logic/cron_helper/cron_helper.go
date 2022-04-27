@@ -5,7 +5,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
@@ -200,15 +199,10 @@ func (ch *CronHelper) scanVideoProcessAdd2DownloadQueue() {
 		ch.cronLock.Lock()
 		ch.cronLock.Unlock()
 
-		ch.log.Infoln(log_helper.OnceSubsScanEnd)
-
 		// 下载完后，应该继续是等待
 		tttt := ch.c.Entry(ch.entryIDScanVideoProcess).Next.Format("2006-01-02 15:04:05")
 		common.SetSubScanJobStatusWaiting(tttt)
 	}()
-	// ------------------------------------------------------------------------
-	// 开始标记，这个是单次扫描的开始
-	ch.log.Infoln(log_helper.OnceSubsScanStart)
 
 	// 扫描字幕任务开始，先是扫描阶段，那么是拿不到有多少视频需要扫描的数量的
 	common.SetSubScanJobStatusPreparing(time.Now().Format("2006-01-02 15:04:05"))

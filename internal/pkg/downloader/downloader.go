@@ -11,6 +11,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -143,6 +144,9 @@ func (d *Downloader) QueueDownloader() {
 		if p := recover(); p != nil {
 			d.log.Errorln("Downloader.QueueDownloader() panic")
 		}
+
+		d.log.Infoln(log_helper.OnceSubsScanEnd)
+
 		d.downloaderLock.Unlock()
 		d.log.Infoln("Download.QueueDownloader() End")
 	}()
@@ -175,6 +179,10 @@ func (d *Downloader) QueueDownloader() {
 		d.log.Errorln("d.downloadQueue.Update() Failed")
 		return
 	}
+	// ------------------------------------------------------------------------
+	// 开始标记，这个是单次扫描的开始，要注意格式，在日志的内部解析识别单个日志开头的时候需要特殊的格式
+	d.log.Infoln(log_helper.OnceSubsScanStart + "#" + oneJob.Id)
+	// ------------------------------------------------------------------------
 	downloadCounter++
 	// 创建一个 chan 用于任务的中断和超时
 	done := make(chan interface{}, 1)

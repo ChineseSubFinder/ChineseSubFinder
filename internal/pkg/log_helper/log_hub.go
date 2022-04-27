@@ -3,7 +3,6 @@ package log_helper
 import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/log_hub"
 	"github.com/huandu/go-clone"
@@ -55,7 +54,7 @@ func (lh *LoggerHub) Levels() []logrus.Level {
 func (lh *LoggerHub) Fire(entry *logrus.Entry) error {
 
 	// 如果是一次扫描的开始
-	if strings.HasPrefix(entry.Message, OnceSubsScanStart) {
+	if strings.HasPrefix(entry.Message, OnceSubsScanStart) == true {
 		// 收到日志的标志位，需要新开一个
 		if lh.onceStart == false {
 			// 这个日志的前缀是 OnceSubsScanStart ，然后通过 # 进行分割，得到任务的 ID
@@ -68,9 +67,9 @@ func (lh *LoggerHub) Fire(entry *logrus.Entry) error {
 			}
 			lh.onceStart = true
 			// 既然新的一次开始，就实例化新的实例出来使用
-			onceLog4RunningLock.Lock()
+			onceLogsLock.Lock()
 			onceLog4Running = log_hub.NewOnceLog(0)
-			onceLog4RunningLock.Unlock()
+			onceLogsLock.Unlock()
 		}
 		return nil
 	} else if entry.Message == OnceSubsScanEnd {
@@ -105,45 +104,24 @@ func (lh *LoggerHub) Fire(entry *logrus.Entry) error {
 		lh.onceLogger.Panicln(entry.Message)
 	}
 
-	onceLog4RunningLock.Lock()
+	onceLogsLock.Lock()
 	onceLog4Running.LogLines = append(onceLog4Running.LogLines, *log_hub.NewOneLine(
 		entry.Level.String(),
 		entry.Time.Format("2006-01-02 15:04:05"),
 		entry.Message))
-	onceLog4RunningLock.Unlock()
+	onceLogsLock.Unlock()
 
 	return nil
 }
 
-// GetRecentOnceLogs 获取最近多少次扫描的日志信息
-func GetRecentOnceLogs(getHowMany int) []log_hub.OnceLog {
-	defer func() {
-		onceLogsLock.Unlock()
-	}()
-	onceLogsLock.Lock()
-
-	tmpOnceLogs := make([]log_hub.OnceLog, 0)
-
-	nowGetCount := getHowMany
-	if nowGetCount > len(onceLogs) {
-		nowGetCount = len(onceLogs)
-	}
-	for i := 0; i < nowGetCount; i++ {
-
-		tmpOnceLogs = append(tmpOnceLogs, onceLogs[i])
-	}
-
-	return tmpOnceLogs
-}
-
-// GetOnceLog4Running 当前正在扫描的日志内容，注意，开启任务，不代表就在扫描。不是设置值，因为创建了实例的副本
+// GetOnceLog4Running 当前正在运行任务的日志
 func GetOnceLog4Running() *log_hub.OnceLog {
 
 	var nowOnceRunningLog *log_hub.OnceLog
 
-	onceLog4RunningLock.Lock()
+	onceLogsLock.Lock()
 	nowOnceRunningLog = clone.Clone(onceLog4Running).(*log_hub.OnceLog)
-	onceLog4RunningLock.Unlock()
+	onceLogsLock.Unlock()
 
 	return nowOnceRunningLog
 }
@@ -202,8 +180,6 @@ func cleanAndLoadOnceLogs() {
 
 	onceLogsLock.Lock()
 
-	onceLogs = make([]log_hub.OnceLog, 0)
-
 	pathRoot := filepath.Join(global_value.ConfigRootDirFPath(), "Logs")
 	// 扫描当前日志存储目录下有多少个符合要求的 Once- 日志
 	// 确保有且仅有最近的 20 次扫描日志记录存在即可
@@ -229,50 +205,12 @@ func cleanAndLoadOnceLogs() {
 			panic(err)
 		}
 	}
-	j := 0
-	for i := len(matches) - 1; i >= 0; i-- {
-		// 需要逆序放入到缓存中，因为定义的是 Index = 0 是最新的一个完成的扫描日志
-		err = readLogFile(j, matches[i])
-		if err != nil {
-			j++
-			continue
-		}
-		j++
-	}
-}
-
-func readLogFile(index int, filePath string) error {
-
-	fBytes, err := os.ReadFile(filePath)
-	if err != nil {
-		return err
-	}
-	matched := regex_things.ReMathLogOneLine.FindAllStringSubmatch(string(fBytes), -1)
-	if matched == nil || len(matched) < 1 {
-		return nil
-	}
-
-	nowOnceLog := log_hub.NewOnceLog(index)
-	for _, oneLine := range matched {
-		nowOnceLog.LogLines = append(nowOnceLog.LogLines,
-			*log_hub.NewOneLine(
-				oneLine[2], // Level
-				oneLine[4], // DateTime
-				oneLine[5], // Content
-			))
-	}
-
-	onceLogs = append(onceLogs, *nowOnceLog)
-
-	return nil
 }
 
 var (
-	onceLoggerFile      *os.File                     // 单次扫描保存 Log 文件的实例
-	onceLogs            = make([]log_hub.OnceLog, 0) // 本地缓存的多次，单次扫描的 Log 内容
-	onceLogsLock        sync.Mutex                   // 对应的锁
-	onceLog4Running     = log_hub.NewOnceLog(0)      // 当前正在扫描时候日志的日志内容实例，注意，开启任务不代表就在扫描
-	onceLog4RunningLock sync.Mutex                   // 对应的锁
+	onceLoggerFile  *os.File                // 单次扫描保存 Log 文件的实例
+	onceLogsLock    sync.Mutex              // 对应的锁
+	onceLog4Running = log_hub.NewOnceLog(0) // 当前正在扫描时候日志的日志内容实例，注意，开启任务不代表就在扫描
 )
 
 const (

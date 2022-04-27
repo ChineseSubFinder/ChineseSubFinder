@@ -33,8 +33,6 @@ func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engi
 
 	router.GET("/def-settings", cbBase.DefSettingsHandler)
 
-	router.GET("/running-log", middle.CheckAuth(), cbBase.RunningLogHandler)
-
 	// v1路由: /v1/xxx
 	GroupV1 := router.Group("/" + cbV1.GetVersion())
 	{
