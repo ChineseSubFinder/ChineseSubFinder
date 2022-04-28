@@ -109,9 +109,9 @@ func (ch *CronHelper) Start(runImmediately bool) {
 
 		ch.log.Infoln("First Time scanVideoProcessAdd2DownloadQueue Start")
 
-		//if ch.settings.SpeedDevMode == false {
-		ch.scanVideoProcessAdd2DownloadQueue()
-		//}
+		if ch.settings.SpeedDevMode == false {
+			ch.scanVideoProcessAdd2DownloadQueue()
+		}
 
 		ch.downloader.SupplierCheck()
 

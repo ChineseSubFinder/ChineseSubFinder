@@ -290,17 +290,21 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 		return nil
 	}
 	var err error
+	// 设置只有一集需要下载
+	epsMap := make(map[int][]int, 0)
+	epsMap[job.Season] = []int{job.Episode}
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
-	seriesInfo, err := series_helper.GetSeriesInfoFromDir(d.log, job.SeriesRootDirPath)
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(
+		d.log, job.SeriesRootDirPath,
+		d.settings.AdvancedSettings.TaskQueue.ExpirationTime,
+		false,
+		false,
+		epsMap)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("seriesDlFunc.ReadSeriesInfoFromDir, Error: %v", err))
 		d.downloadQueue.AutoDetectUpdateJobStatus(job, err)
 		return err
 	}
-	// 设置只有一集需要下载
-	epsMap := make(map[int][]int, 0)
-	epsMap[job.Season] = []int{job.Episode}
-	series_helper.SetTheSpecifiedEps2Download(seriesInfo, epsMap)
 	// 下载好的字幕文件
 	var organizeSubFiles map[string][]string
 	// 下载的接口是统一的

@@ -1,6 +1,7 @@
 package task_queue
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
@@ -383,6 +384,24 @@ func (t *TaskQueue) read() {
 		})
 	if err != nil {
 		t.log.Panicln(err)
+	}
+	// 上面的操作仅仅是把 OneJob 的 JSON 弄了出来，还需要转换为 OneJob 的结构体
+	for i := 0; i < taskPriorityCount; i++ {
+		// JobID - OneJob
+		t.taskPriorityMapList[i].Each(func(key interface{}, value interface{}) {
+
+			jsonString, err := json.Marshal(value)
+			if err != nil {
+				t.log.Panicln(err)
+			}
+			nowOneJob := task_queue.OneJob{}
+			err = json.Unmarshal(jsonString, &nowOneJob)
+			if err != nil {
+				t.log.Panicln(err)
+				return
+			}
+			t.taskPriorityMapList[i].Put(key, nowOneJob)
+		})
 	}
 	// 需要把几个优先级的map中的key汇总
 	for i := 0; i < taskPriorityCount; i++ {

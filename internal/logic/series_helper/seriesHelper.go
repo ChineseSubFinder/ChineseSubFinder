@@ -1,7 +1,6 @@
 package series_helper
 
 import (
-	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
@@ -24,9 +23,7 @@ import (
 	"time"
 )
 
-func readSeriesInfo(log *logrus.Logger, seriesDir string) (*series.SeriesInfo, map[string][]series.SubInfo, error) {
-
-	subParserHub := sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log))
+func readSeriesInfo(log *logrus.Logger, seriesDir string, need2AnalyzeSub bool) (*series.SeriesInfo, map[string][]series.SubInfo, error) {
 
 	seriesInfo, err := GetSeriesInfoFromDir(log, seriesDir)
 	if err != nil {
@@ -35,13 +32,19 @@ func readSeriesInfo(log *logrus.Logger, seriesDir string) (*series.SeriesInfo, m
 	seriesInfo.NeedDlSeasonDict = make(map[int]int)
 	seriesInfo.NeedDlEpsKeyList = make(map[string]series.EpisodeInfo)
 
+	// 字幕字典 S01E01 - []SubInfo
+	SubDict := make(map[string][]series.SubInfo)
+
+	if need2AnalyzeSub == false {
+		return seriesInfo, SubDict, nil
+	}
+
 	// 搜索所有的字幕
+	subParserHub := sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log))
 	subFiles, err := sub_helper.SearchMatchedSubFileByDir(log, seriesDir)
 	if err != nil {
 		return nil, nil, err
 	}
-	// 字幕字典 S01E01 - []SubInfo
-	SubDict := make(map[string][]series.SubInfo)
 	for _, subFile := range subFiles {
 		// 判断这个字幕是否包含中文
 		if subParserHub.IsSubHasChinese(subFile) == false {
@@ -82,9 +85,14 @@ func readSeriesInfo(log *logrus.Logger, seriesDir string) (*series.SeriesInfo, m
 }
 
 // ReadSeriesInfoFromDir 读取剧集的信息，只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList
-func ReadSeriesInfoFromDir(log *logrus.Logger, seriesDir string, ExpirationTime int, forcedScanAndDownloadSub bool) (*series.SeriesInfo, error) {
+func ReadSeriesInfoFromDir(log *logrus.Logger,
+	seriesDir string,
+	ExpirationTime int,
+	forcedScanAndDownloadSub bool,
+	need2AnalyzeSub bool,
+	epsMap ...map[int][]int) (*series.SeriesInfo, error) {
 
-	seriesInfo, SubDict, err := readSeriesInfo(log, seriesDir)
+	seriesInfo, SubDict, err := readSeriesInfo(log, seriesDir, need2AnalyzeSub)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +104,7 @@ func ReadSeriesInfoFromDir(log *logrus.Logger, seriesDir string, ExpirationTime 
 	// 视频字典 S01E01 - EpisodeInfo
 	EpisodeDict := make(map[string]series.EpisodeInfo)
 	for _, videoFile := range videoFiles {
-		getEpsInfoAndSubDic(log, videoFile, EpisodeDict, SubDict)
+		getEpsInfoAndSubDic(log, videoFile, EpisodeDict, SubDict, epsMap...)
 	}
 
 	for _, episodeInfo := range EpisodeDict {
@@ -110,9 +118,9 @@ func ReadSeriesInfoFromDir(log *logrus.Logger, seriesDir string, ExpirationTime 
 }
 
 // ReadSeriesInfoFromEmby 将 Emby API 读取到的数据进行转换到通用的结构中，需要填充那些剧集需要下载，这样要的是一个连续剧的，不是所有的传入(只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList)
-func ReadSeriesInfoFromEmby(log *logrus.Logger, seriesDir string, seriesVideoList []emby.EmbyMixInfo, ExpirationTime int, forcedScanAndDownloadSub bool) (*series.SeriesInfo, error) {
+func ReadSeriesInfoFromEmby(log *logrus.Logger, seriesDir string, seriesVideoList []emby.EmbyMixInfo, ExpirationTime int, forcedScanAndDownloadSub bool, need2AnalyzeSub bool) (*series.SeriesInfo, error) {
 
-	seriesInfo, SubDict, err := readSeriesInfo(log, seriesDir)
+	seriesInfo, SubDict, err := readSeriesInfo(log, seriesDir, need2AnalyzeSub)
 	if err != nil {
 		return nil, err
 	}
@@ -201,29 +209,6 @@ func DownloadSubtitleInAllSiteByOneSeries(log *logrus.Logger, Suppliers []ifaces
 	}
 
 	return outSUbInfos
-}
-
-// SetTheSpecifiedEps2Download 设置指定的 Eps 去下载，可以方便调试或者是后续新功能，能够手动指定 Eps 下载字幕
-func SetTheSpecifiedEps2Download(seriesInfo *series.SeriesInfo, epsMap map[int][]int) {
-
-	seriesInfo.NeedDlSeasonDict = make(map[int]int, 0)
-	seriesInfo.SeasonDict = make(map[int]int, 0)
-	seriesInfo.NeedDlEpsKeyList = make(map[string]series.EpisodeInfo, 0)
-
-	for needDownloadSeason, needDownloadEp := range epsMap {
-
-		// 选择某一集去下载
-		seriesInfo.NeedDlSeasonDict[needDownloadSeason] = needDownloadSeason
-		seriesInfo.SeasonDict[needDownloadSeason] = needDownloadSeason
-
-		for _, oneEps := range needDownloadEp {
-			tmp := series.EpisodeInfo{
-				Season:  needDownloadSeason,
-				Episode: oneEps,
-			}
-			seriesInfo.NeedDlEpsKeyList[fmt.Sprintf("S%dE%d", needDownloadSeason, oneEps)] = tmp
-		}
-	}
 }
 
 // GetSeriesListFromDirs 获取这个目录下的所有文件夹名称，默认为一个连续剧的目录的List
@@ -353,13 +338,37 @@ func GetSeriesInfoFromDir(log *logrus.Logger, seriesDir string) (*series.SeriesI
 	return &seriesInfo, nil
 }
 
-func getEpsInfoAndSubDic(log *logrus.Logger, videoFile string, EpisodeDict map[string]series.EpisodeInfo, SubDict map[string][]series.SubInfo) {
+func getEpsInfoAndSubDic(log *logrus.Logger,
+	videoFile string,
+	EpisodeDict map[string]series.EpisodeInfo,
+	SubDict map[string][]series.SubInfo,
+	epsMap ...map[int][]int) {
 	// 正常来说，一集只有一个格式的视频，也就是 S01E01 只有一个，如果有多个则会只保存第一个
 	info, modifyTime, err := decode.GetVideoInfoFromFileFullPath(videoFile)
 	if err != nil {
 		log.Errorln("model.GetVideoInfoFromFileFullPath", videoFile, err)
 		return
 	}
+
+	if len(epsMap) > 0 {
+		// 如果这个视频不在需要下载的 Eps 列表中，那么就跳过后续的逻辑
+		epsList, ok := epsMap[0][info.Season]
+		if ok == false {
+			return
+		}
+		found := false
+		for _, oneEpsID := range epsList {
+			if oneEpsID == info.Episode {
+				// 在需要下载的 Eps 列表中
+				found = true
+				break
+			}
+		}
+		if found == false {
+			return
+		}
+	}
+
 	episodeInfo, err := decode.GetImdbInfo4OneSeriesEpisode(videoFile)
 	if err != nil {
 		log.Errorln("model.GetImdbInfo4OneSeriesEpisode", videoFile, err)

@@ -72,19 +72,23 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	//ser := "X:\\连续剧\\Money.Heist"
 	//ser := "X:\\连续剧\\黄石 (2018)"
 
-	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
-	ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")
-	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper.GetSeriesInfoFromDir(log_helper.GetLogger4Tester(), ser)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	// 可以指定几集去调试
 	epsMap := make(map[int][]int, 0)
 	epsMap[4] = []int{5, 6}
 	epsMap[1] = []int{1, 2, 3}
-	series_helper.SetTheSpecifiedEps2Download(seriesInfo, epsMap)
+
+	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
+	ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")
+	// 读取本地的视频和字幕信息
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(log_helper.GetLogger4Tester(),
+		ser,
+		90,
+		false,
+		false,
+		epsMap)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger4Tester()))
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)
