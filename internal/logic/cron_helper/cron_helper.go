@@ -87,18 +87,22 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// ----------------------------------------------
 	ch.c = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
+	// 这个暂时无法被取消执行
 	ch.entryIDScanVideoProcess, err = ch.c.AddFunc(ch.settings.CommonSettings.ScanInterval, ch.scanVideoProcessAdd2DownloadQueue)
 	if err != nil {
 		ch.log.Panicln("CronHelper scanVideoProcessAdd2DownloadQueue, Cron entryID:", ch.entryIDScanVideoProcess, "Error:", err)
 	}
+	// 这个可以由 ch.downloader.Cancel() 取消执行
 	ch.entryIDSupplierCheck, err = ch.c.AddFunc("@every 1h", ch.downloader.SupplierCheck)
 	if err != nil {
 		ch.log.Panicln("CronHelper SupplierCheck, Cron entryID:", ch.entryIDSupplierCheck, "Error:", err)
 	}
+	// 这个可以由 ch.downloader.Cancel() 取消执行
 	ch.entryIDQueueDownloader, err = ch.c.AddFunc("@every 15s", ch.downloader.QueueDownloader)
 	if err != nil {
 		ch.log.Panicln("CronHelper QueueDownloader, Cron entryID:", ch.entryIDQueueDownloader, "Error:", err)
 	}
+	// 这个可以由 ch.scanPlayedVideoSubInfo.Cancel() 取消执行
 	ch.entryIDScanPlayedVideoSubInfo, err = ch.c.AddFunc("@every 24h", ch.scanPlayedVideoSub)
 	if err != nil {
 		ch.log.Panicln("CronHelper QueueDownloader, Cron entryID:", ch.entryIDScanPlayedVideoSubInfo, "Error:", err)
@@ -109,9 +113,9 @@ func (ch *CronHelper) Start(runImmediately bool) {
 
 		ch.log.Infoln("First Time scanVideoProcessAdd2DownloadQueue Start")
 
-		if ch.settings.SpeedDevMode == false {
-			ch.scanVideoProcessAdd2DownloadQueue()
-		}
+		//if ch.settings.SpeedDevMode == false {
+		ch.scanVideoProcessAdd2DownloadQueue()
+		//}
 
 		ch.downloader.SupplierCheck()
 
