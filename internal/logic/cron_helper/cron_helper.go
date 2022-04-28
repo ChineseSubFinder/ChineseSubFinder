@@ -181,13 +181,13 @@ func (ch *CronHelper) scanPlayedVideoSub() {
 
 	bok, err := ch.scanPlayedVideoSubInfo.GetPlayedItemsSubtitle()
 	if err != nil {
-		ch.log.Panicln(err)
+		ch.log.Errorln(err)
 	}
 	if bok == true {
 		ch.scanPlayedVideoSubInfo.Clear()
 		err = ch.scanPlayedVideoSubInfo.Scan()
 		if err != nil {
-			ch.log.Panicln(err)
+			ch.log.Errorln(err)
 		}
 	}
 }
