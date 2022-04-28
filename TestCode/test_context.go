@@ -24,9 +24,12 @@ func DoThings(ctx context.Context) error {
 		panicChan := make(chan interface{}, 1)
 
 		go func() {
-			if p := recover(); p != nil {
-				panicChan <- p
-			}
+			defer func() {
+				if p := recover(); p != nil {
+					panicChan <- p
+				}
+			}()
+
 			// 匹配对应的 Eps 去处理
 			done <- baseHardWork(i)
 		}()

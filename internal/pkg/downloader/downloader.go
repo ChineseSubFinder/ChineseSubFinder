@@ -105,9 +105,11 @@ func (d *Downloader) SupplierCheck() {
 	// 接收内部任务的 panic
 	panicChan := make(chan interface{}, 1)
 	go func() {
-		if p := recover(); p != nil {
-			panicChan <- p
-		}
+		defer func() {
+			if p := recover(); p != nil {
+				panicChan <- p
+			}
+		}()
 		// 下载前的初始化
 		d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
 
@@ -350,9 +352,11 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 		// 接收内部任务的 panic
 		panicChan := make(chan interface{}, 1)
 		go func() {
-			if p := recover(); p != nil {
-				panicChan <- p
-			}
+			defer func() {
+				if p := recover(); p != nil {
+					panicChan <- p
+				}
+			}()
 			// 匹配对应的 Eps 去处理
 			done <- d.oneVideoSelectBestSub(episodeInfo.FileFullPath, organizeSubFiles[epsKey])
 		}()
@@ -395,9 +399,11 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 		}
 
 		go func() {
-			if p := recover(); p != nil {
-				panicChan <- p
-			}
+			defer func() {
+				if p := recover(); p != nil {
+					panicChan <- p
+				}
+			}()
 			// 匹配对应的 Eps 去处理
 			seasonEpsKey := my_util.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
 			done <- d.oneVideoSelectBestSub(episodeInfo.FileFullPath, fullSeasonSubDict[seasonEpsKey])
