@@ -434,7 +434,8 @@ func (t *TaskQueue) afterRead() {
 
 			nowOneJob := value.(task_queue.OneJob)
 			if nowOneJob.JobStatus == task_queue.Downloading {
-				nowOneJob.JobStatus = task_queue.Failed
+				nowOneJob.JobStatus = task_queue.Waiting
+				nowOneJob.DownloadTimes += 1
 				bok, err := t.update(nowOneJob)
 				if err != nil {
 					t.log.Errorln("afterRead.update failed", err)
@@ -508,5 +509,5 @@ const (
 )
 
 var (
-	ErrNotSubFound = errors.New("Not Sub Found")
+	ErrNoSubFound = errors.New("No Sub Found")
 )
