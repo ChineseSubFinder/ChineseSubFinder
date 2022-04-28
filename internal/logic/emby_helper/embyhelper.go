@@ -622,6 +622,10 @@ func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries
 
 		done := make(chan OutData, 1)
 		panicChan := make(chan interface{}, 1)
+		defer func() {
+			close(done)
+			close(panicChan)
+		}()
 		go func() {
 			defer func() {
 				if p := recover(); p != nil {

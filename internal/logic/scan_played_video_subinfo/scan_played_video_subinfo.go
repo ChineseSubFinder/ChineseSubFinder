@@ -252,9 +252,11 @@ func (s *ScanPlayedVideoSubInfo) scan(ctx context.Context, inData interface{}) e
 		select {
 		case <-ctx.Done():
 			{
+				close(stage)
 				return errors.New(fmt.Sprintf("cancel at scan: %s", videoFPath))
 			}
 		case <-stage:
+			close(stage)
 			break
 		}
 	}

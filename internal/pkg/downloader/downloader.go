@@ -104,6 +104,12 @@ func (d *Downloader) SupplierCheck() {
 	done := make(chan interface{}, 1)
 	// 接收内部任务的 panic
 	panicChan := make(chan interface{}, 1)
+
+	defer func() {
+		close(done)
+		close(panicChan)
+	}()
+
 	go func() {
 		defer func() {
 			if p := recover(); p != nil {
@@ -204,6 +210,12 @@ func (d *Downloader) QueueDownloader() {
 	done := make(chan interface{}, 1)
 	// 接收内部任务的 panic
 	panicChan := make(chan interface{}, 1)
+
+	defer func() {
+		close(done)
+		close(panicChan)
+	}()
+
 	go func() {
 		defer func() {
 			if p := recover(); p != nil {
@@ -369,14 +381,21 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 			} else {
 				save2LocalSubCount++
 			}
+			close(done)
+			close(panicChan)
 			break
 		case p := <-panicChan:
 			// 遇到内部的 panic，向外抛出
-			panic(p)
+			d.log.Errorln("seriesDlFunc.oneVideoSelectBestSub panicChan", p)
+			close(done)
+			close(panicChan)
+			break
 		case <-ctx.Done():
 			{
 				err = errors.New(fmt.Sprintf("cancel at NeedDlEpsKeyList.oneVideoSelectBestSub, %v S%dE%d", seriesInfo.Name, episodeInfo.Season, episodeInfo.Episode))
 				d.downloadQueue.AutoDetectUpdateJobStatus(job, err)
+				close(done)
+				close(panicChan)
 				return err
 			}
 		}
@@ -417,14 +436,21 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 			} else {
 				save2LocalSubCount++
 			}
+			close(done)
+			close(panicChan)
 			break
 		case p := <-panicChan:
 			// 遇到内部的 panic，向外抛出
-			panic(p)
+			d.log.Errorln("seriesDlFunc.oneVideoSelectBestSub panicChan", p)
+			close(done)
+			close(panicChan)
+			break
 		case <-ctx.Done():
 			{
 				err = errors.New(fmt.Sprintf("cancel at NeedDlEpsKeyList.oneVideoSelectBestSub, %v S%dE%d", seriesInfo.Name, episodeInfo.Season, episodeInfo.Episode))
 				d.downloadQueue.AutoDetectUpdateJobStatus(job, err)
+				close(done)
+				close(panicChan)
 				return err
 			}
 		}

@@ -127,6 +127,12 @@ func (tc *TaskControl) baseFuncHandler(inData interface{}) {
 
 	done := make(chan error, 1)
 	panicChan := make(chan interface{}, 1)
+
+	defer func() {
+		close(done)
+		close(panicChan)
+	}()
+
 	go func(ctx context.Context) {
 		defer func() {
 			if p := recover(); p != nil {

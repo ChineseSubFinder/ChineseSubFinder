@@ -311,6 +311,9 @@ func process(name string, timeTester TimeTester) ([]int, []int, []int, error) {
 func waitTimes(ctx context.Context, inData interface{}) error {
 
 	phase0 := make(chan interface{}, 1)
+	defer func() {
+		close(phase0)
+	}()
 	index := inData.(*TaskData)
 
 	dataEx := index.DataEx.(DataEx)
