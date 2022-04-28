@@ -122,15 +122,16 @@ func (v *VideoScanAndRefreshHelper) ScanNormalMovieAndSeries() (*ScanVideoResult
 	}
 	wg := sync.WaitGroup{}
 	var errMovie, errSeries error
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		// --------------------------------------------------
 		// 电影
 		// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
 		normalScanResult.MovieFileFullPathList, errMovie = my_util.SearchMatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
+		wg.Done()
 	}()
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		// --------------------------------------------------
 		// 连续剧
 		// 遍历连续剧总目录下的第一层目录
@@ -142,6 +143,7 @@ func (v *VideoScanAndRefreshHelper) ScanNormalMovieAndSeries() (*ScanVideoResult
 				v.log.Debugln("embyHelper == nil GetSeriesList", i, s)
 			}
 		})
+		wg.Done()
 	}()
 	wg.Wait()
 	if errMovie != nil {
@@ -252,7 +254,9 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 	// ------------------------------------------------------------------------------
 	// 电影
 	movieProcess := func(ctx context.Context, inData interface{}) error {
-		movieInputData := inData.(TaskInputData)
+
+		taskData := inData.(*task_control.TaskData)
+		movieInputData := taskData.DataEx.(TaskInputData)
 		v.log.Infoln("updateLocalVideoCacheInfo", movieInputData.Index, movieInputData.InputPath)
 		videoImdbInfo, err := decode.GetImdbInfo4Movie(movieInputData.InputPath)
 		if err != nil {
@@ -297,7 +301,8 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 	// ------------------------------------------------------------------------------
 	seriesProcess := func(ctx context.Context, inData interface{}) error {
 
-		seriesInputData := inData.(TaskInputData)
+		taskData := inData.(*task_control.TaskData)
+		seriesInputData := taskData.DataEx.(TaskInputData)
 		v.log.Infoln("updateLocalVideoCacheInfo", seriesInputData.Index, seriesInputData.InputPath)
 
 		videoInfo, err := decode.GetImdbInfo4SeriesDir(seriesInputData.InputPath)
@@ -352,7 +357,8 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 	// Normal 过滤，电影
 	movieProcess := func(ctx context.Context, inData interface{}) error {
 
-		movieInputData := inData.(TaskInputData)
+		taskData := inData.(*task_control.TaskData)
+		movieInputData := taskData.DataEx.(TaskInputData)
 		if v.subSupplierHub.MovieNeedDlSub(movieInputData.InputPath, v.needForcedScanAndDownSub) == false {
 			return nil
 		}
@@ -392,7 +398,8 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 	// Normal 过滤，连续剧
 	seriesProcess := func(ctx context.Context, inData interface{}) error {
 
-		seriesInputData := inData.(TaskInputData)
+		taskData := inData.(*task_control.TaskData)
+		seriesInputData := taskData.DataEx.(TaskInputData)
 		// 因为可能回去 Web 获取 IMDB 信息，所以这里的错误不返回
 		bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(seriesInputData.InputPath, v.needForcedScanAndDownSub)
 		if err != nil {

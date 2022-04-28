@@ -25,7 +25,6 @@ import (
 	"golang.org/x/net/context"
 	"path/filepath"
 	"sync"
-	"time"
 )
 
 // Downloader 实例化一次用一次，不要反复的使用，很多临时标志位需要清理。
@@ -76,7 +75,7 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	// 任务队列
 	downloader.downloadQueue = downloadQueue
 	// 单个任务的超时设置
-	downloader.ctx, downloader.cancel = context.WithTimeout(context.Background(), time.Duration(downloader.settings.AdvancedSettings.TaskQueue.OneJobTimeOut)*time.Second)
+	downloader.ctx, downloader.cancel = context.WithCancel(context.Background())
 	// 用于字幕下载后的刷新
 	if downloader.settings.EmbySettings.Enable == true {
 		downloader.embyApi = emby_api.NewEmbyApi(downloader.log, downloader.settings.EmbySettings)
@@ -131,10 +130,7 @@ func (d *Downloader) SupplierCheck() {
 				done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
 			} else {
 				// 更新 SubSupplierHub 实例
-				d.downloaderLock.Lock()
 				d.subSupplierHub = preDownloadProcess.SubSupplierHub
-				d.downloaderLock.Unlock()
-
 				done <- nil
 			}
 		}

@@ -229,9 +229,11 @@ func VideoNameSearchKeywordMaker(l *logrus.Logger, title string, year string) st
 func SearchMatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) ([]string, error) {
 
 	defer func() {
-		l.Debugln("SearchMatchedVideoFileFromDirs End ----------------")
+		l.Infoln("SearchMatchedVideoFileFromDirs End")
+		l.Infoln(" --------------------------------------------------")
 	}()
-	l.Debugln("SearchMatchedVideoFileFromDirs Start ----------------")
+	l.Infoln(" --------------------------------------------------")
+	l.Infoln("SearchMatchedVideoFileFromDirs Start...")
 
 	var fileFullPathList = make([]string, 0)
 	for _, dir := range dirs {
@@ -520,6 +522,12 @@ func CopyDir(src string, dst string) error {
 
 // CloseChrome 强行结束没有关闭的 Chrome 进程
 func CloseChrome(l *logrus.Logger) {
+
+	defer func() {
+		l.Infoln("CloseChrome End")
+	}()
+
+	l.Infoln("CloseChrome Start...")
 
 	cmdString := ""
 	var command *exec.Cmd

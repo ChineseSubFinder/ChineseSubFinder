@@ -215,6 +215,14 @@ func DownloadSubtitleInAllSiteByOneSeries(log *logrus.Logger, Suppliers []ifaces
 // GetSeriesListFromDirs 获取这个目录下的所有文件夹名称，默认为一个连续剧的目录的List
 func GetSeriesListFromDirs(log *logrus.Logger, dirs []string) (*treemap.Map, error) {
 
+	defer func() {
+		log.Infoln("GetSeriesListFromDirs End")
+		log.Infoln("------------------------------------------")
+	}()
+
+	log.Infoln("------------------------------------------")
+	log.Infoln("GetSeriesListFromDirs Start...")
+
 	var fileFullPathMap = treemap.NewWithStringComparator()
 	for _, dir := range dirs {
 
