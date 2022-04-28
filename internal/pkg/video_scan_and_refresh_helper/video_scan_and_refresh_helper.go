@@ -15,12 +15,15 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	subTimelineFixerPKG "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_control"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/net/context"
 	"path/filepath"
+	"sync"
 )
 
 type VideoScanAndRefreshHelper struct {
@@ -32,13 +35,55 @@ type VideoScanAndRefreshHelper struct {
 	embyHelper               *embyHelper.EmbyHelper          // Emby 的实例
 	downloadQueue            *task_queue.TaskQueue           // 需要下载的视频的队列
 	subSupplierHub           *subSupplier.SubSupplierHub     // 字幕提供源的集合，仅仅是 check 是否需要下载字幕是足够的，如果要下载则需要额外的初始化和检查
+	taskControl              *task_control.TaskControl       // 任务控制器
 }
 
 func NewVideoScanAndRefreshHelper(fileDownloader *file_downloader.FileDownloader, downloadQueue *task_queue.TaskQueue) *VideoScanAndRefreshHelper {
-	return &VideoScanAndRefreshHelper{settings: fileDownloader.Settings, log: fileDownloader.Log, downloadQueue: downloadQueue,
+	v := VideoScanAndRefreshHelper{settings: fileDownloader.Settings, log: fileDownloader.Log, downloadQueue: downloadQueue,
 		subSupplierHub: subSupplier.NewSubSupplierHub(
 			xunlei.NewSupplier(fileDownloader),
 		)}
+
+	var err error
+	v.taskControl, err = task_control.NewTaskControl(4, v.log)
+	if err != nil {
+		fileDownloader.Log.Panicln(err)
+	}
+	return &v
+}
+
+func (v *VideoScanAndRefreshHelper) Start() error {
+
+	defer func() {
+		v.log.Infoln("Video Scan End")
+		v.log.Infoln("------------------------------------")
+	}()
+
+	v.log.Infoln("------------------------------------")
+	v.log.Infoln("Video Scan Started...")
+	// 先进行扫描
+	scanResult, err := v.ScanNormalMovieAndSeries()
+	if err != nil {
+		v.log.Errorln("ScanNormalMovieAndSeries", err)
+		return err
+	}
+	err = v.ScanEmbyMovieAndSeries(scanResult)
+	if err != nil {
+		v.log.Errorln("ScanEmbyMovieAndSeries", err)
+		return err
+	}
+	// 过滤出需要下载的视频有那些，并放入队列中
+	err = v.FilterMovieAndSeriesNeedDownload(scanResult)
+	if err != nil {
+		v.log.Errorln("FilterMovieAndSeriesNeedDownload", err)
+		return err
+	}
+
+	return nil
+}
+
+func (v VideoScanAndRefreshHelper) Cancel() {
+	v.taskControl.Release()
 }
 
 // ReadSpeFile 优先级最高。读取特殊文件，启用一些特殊的功能，比如 forced_scan_and_down_sub
@@ -75,27 +120,36 @@ func (v *VideoScanAndRefreshHelper) ScanNormalMovieAndSeries() (*ScanVideoResult
 	if v.needForcedScanAndDownSub == true {
 		v.log.Infoln("Forced Scan And DownSub")
 	}
-	// --------------------------------------------------
-	// 电影
-	// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
-	normalScanResult.MovieFileFullPathList, err = my_util.SearchMatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
-	if err != nil {
-		return nil, err
+	wg := sync.WaitGroup{}
+	var errMovie, errSeries error
+	go func() {
+		wg.Add(1)
+		// --------------------------------------------------
+		// 电影
+		// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
+		normalScanResult.MovieFileFullPathList, errMovie = my_util.SearchMatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
+	}()
+	go func() {
+		wg.Add(1)
+		// --------------------------------------------------
+		// 连续剧
+		// 遍历连续剧总目录下的第一层目录
+		normalScanResult.SeriesDirMap, errSeries = seriesHelper.GetSeriesListFromDirs(v.log, v.settings.CommonSettings.SeriesPaths)
+		// ------------------------------------------------------------------------------
+		// 输出调试信息，有那些连续剧文件夹名称
+		normalScanResult.SeriesDirMap.Each(func(key interface{}, value interface{}) {
+			for i, s := range value.([]string) {
+				v.log.Debugln("embyHelper == nil GetSeriesList", i, s)
+			}
+		})
+	}()
+	wg.Wait()
+	if errMovie != nil {
+		return nil, errMovie
 	}
-	// --------------------------------------------------
-	// 连续剧
-	// 遍历连续剧总目录下的第一层目录
-	normalScanResult.SeriesDirMap, err = seriesHelper.GetSeriesListFromDirs(v.log, v.settings.CommonSettings.SeriesPaths)
-	if err != nil {
-		return nil, err
+	if errSeries != nil {
+		return nil, errSeries
 	}
-	// ------------------------------------------------------------------------------
-	// 输出调试信息，有那些连续剧文件夹名称
-	normalScanResult.SeriesDirMap.Each(func(key interface{}, value interface{}) {
-		for i, s := range value.([]string) {
-			v.log.Debugln("embyHelper == nil GetSeriesList", i, s)
-		}
-	})
 	// ------------------------------------------------------------------------------
 	outScanVideoResult.Normal = &normalScanResult
 	// ------------------------------------------------------------------------------
@@ -195,59 +249,100 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 	if scanVideoResult.Normal == nil {
 		return nil
 	}
-
+	// ------------------------------------------------------------------------------
 	// 电影
-	for i, oneMovieFPath := range scanVideoResult.Normal.MovieFileFullPathList {
-
-		v.log.Infoln("updateLocalVideoCacheInfo", i, oneMovieFPath)
-		videoImdbInfo, err := decode.GetImdbInfo4Movie(oneMovieFPath)
+	movieProcess := func(ctx context.Context, inData interface{}) error {
+		movieInputData := inData.(TaskInputData)
+		v.log.Infoln("updateLocalVideoCacheInfo", movieInputData.Index, movieInputData.InputPath)
+		videoImdbInfo, err := decode.GetImdbInfo4Movie(movieInputData.InputPath)
 		if err != nil {
 			// 允许的错误，跳过，继续进行文件名的搜索
-			v.log.Warningln("GetImdbInfo4Movie", oneMovieFPath, err)
-			continue
+			v.log.Warningln("GetImdbInfo4Movie", movieInputData.Index, err)
+			return err
 		}
 		// 获取 IMDB 信息
 		localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(v.log, videoImdbInfo)
 		if err != nil {
-			v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", videoImdbInfo.ImdbId, oneMovieFPath, err)
-			continue
+			v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", videoImdbInfo.ImdbId, movieInputData.InputPath, err)
+			return err
 		}
 
-		movieDirPath := filepath.Dir(oneMovieFPath)
+		movieDirPath := filepath.Dir(movieInputData.InputPath)
 		if (movieDirPath != "" && localIMDBInfo.RootDirPath != movieDirPath) || localIMDBInfo.IsMovie != true {
 			// 更新数据
 			localIMDBInfo.RootDirPath = movieDirPath
 			localIMDBInfo.IsMovie = true
 			dao.GetDb().Save(localIMDBInfo)
 		}
+
+		return nil
 	}
+	// ------------------------------------------------------------------------------
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common.ScanPlayedSubTimeOut)
+	// ------------------------------------------------------------------------------
+	for i, oneMovieFPath := range scanVideoResult.Normal.MovieFileFullPathList {
+		err := v.taskControl.Invoke(&task_control.TaskData{
+			Index: i,
+			Count: len(scanVideoResult.Normal.MovieFileFullPathList),
+			DataEx: TaskInputData{
+				Index:     i,
+				InputPath: oneMovieFPath,
+			},
+		})
+		if err != nil {
+			return err
+		}
+	}
+	v.taskControl.Hold()
+	// ------------------------------------------------------------------------------
+	seriesProcess := func(ctx context.Context, inData interface{}) error {
+
+		seriesInputData := inData.(TaskInputData)
+		v.log.Infoln("updateLocalVideoCacheInfo", seriesInputData.Index, seriesInputData.InputPath)
+
+		videoInfo, err := decode.GetImdbInfo4SeriesDir(seriesInputData.InputPath)
+		if err != nil {
+			v.log.Warningln("GetImdbInfo4SeriesDir", seriesInputData.InputPath, err)
+			return err
+		}
+
+		// 获取 IMDB 信息
+		localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(v.log, videoInfo)
+		if err != nil {
+			v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", videoInfo.ImdbId, seriesInputData.InputPath, err)
+			return err
+		}
+		if (seriesInputData.InputPath != "" && localIMDBInfo.RootDirPath != seriesInputData.InputPath) || localIMDBInfo.IsMovie != false {
+			// 更新数据
+			localIMDBInfo.RootDirPath = seriesInputData.InputPath
+			localIMDBInfo.IsMovie = false
+			dao.GetDb().Save(localIMDBInfo)
+		}
+
+		return nil
+	}
+	// ------------------------------------------------------------------------------
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", seriesProcess, common.ScanPlayedSubTimeOut)
+	// ------------------------------------------------------------------------------
 	// 连续剧
 	scanVideoResult.Normal.SeriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
 
 		for i, oneSeriesRootDir := range seriesNames.([]string) {
-
-			v.log.Infoln("updateLocalVideoCacheInfo", i, oneSeriesRootDir)
-
-			videoInfo, err := decode.GetImdbInfo4SeriesDir(oneSeriesRootDir)
+			err := v.taskControl.Invoke(&task_control.TaskData{
+				Index: i,
+				Count: len(seriesNames.([]string)),
+				DataEx: TaskInputData{
+					Index:     i,
+					InputPath: oneSeriesRootDir,
+				},
+			})
 			if err != nil {
-				v.log.Warningln("GetImdbInfo4SeriesDir", oneSeriesRootDir, err)
-				continue
-			}
-
-			// 获取 IMDB 信息
-			localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(v.log, videoInfo)
-			if err != nil {
-				v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", videoInfo.ImdbId, oneSeriesRootDir, err)
-				continue
-			}
-			if (oneSeriesRootDir != "" && localIMDBInfo.RootDirPath != oneSeriesRootDir) || localIMDBInfo.IsMovie != false {
-				// 更新数据
-				localIMDBInfo.RootDirPath = oneSeriesRootDir
-				localIMDBInfo.IsMovie = false
-				dao.GetDb().Save(localIMDBInfo)
+				v.log.Errorln(err)
+				return
 			}
 		}
 	})
+	v.taskControl.Hold()
 
 	return nil
 }
@@ -255,60 +350,105 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(normal *NormalScanVideoResult) error {
 	// ----------------------------------------
 	// Normal 过滤，电影
-	for _, oneMovieFPath := range normal.MovieFileFullPathList {
-		// 放入队列
-		if v.subSupplierHub.MovieNeedDlSub(oneMovieFPath, v.needForcedScanAndDownSub) == false {
-			continue
-		}
+	movieProcess := func(ctx context.Context, inData interface{}) error {
 
+		movieInputData := inData.(TaskInputData)
+		if v.subSupplierHub.MovieNeedDlSub(movieInputData.InputPath, v.needForcedScanAndDownSub) == false {
+			return nil
+		}
 		bok, err := v.downloadQueue.Add(*TTaskqueue.NewOneJob(
-			common.Movie, oneMovieFPath, task_queue.DefaultTaskPriorityLevel,
+			common.Movie, movieInputData.InputPath, task_queue.DefaultTaskPriorityLevel,
 		))
 		if err != nil {
 			v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.Movie.NewOneJob", err)
-			continue
+			return err
 		}
 		if bok == false {
-			v.log.Warningln("filterMovieAndSeriesNeedDownloadNormal", common.Movie.String(), oneMovieFPath, "downloadQueue.Add == false")
+			v.log.Warningln("filterMovieAndSeriesNeedDownloadNormal", common.Movie.String(), movieInputData.InputPath, "downloadQueue.Add == false")
+		}
+
+		return nil
+	}
+	// ----------------------------------------
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common.ScanPlayedSubTimeOut)
+	// ----------------------------------------
+	for i, oneMovieFPath := range normal.MovieFileFullPathList {
+		// 放入队列
+		err := v.taskControl.Invoke(&task_control.TaskData{
+			Index: i,
+			Count: len(normal.MovieFileFullPathList),
+			DataEx: TaskInputData{
+				Index:     i,
+				InputPath: oneMovieFPath,
+			},
+		})
+		if err != nil {
+			v.log.Errorln(err)
+			return err
 		}
 	}
+	v.taskControl.Hold()
+	// ----------------------------------------
 	// Normal 过滤，连续剧
+	seriesProcess := func(ctx context.Context, inData interface{}) error {
+
+		seriesInputData := inData.(TaskInputData)
+		// 因为可能回去 Web 获取 IMDB 信息，所以这里的错误不返回
+		bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(seriesInputData.InputPath, v.needForcedScanAndDownSub)
+		if err != nil {
+			v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub", err)
+			return err
+		}
+		if bNeedDlSub == false {
+			return nil
+		}
+
+		for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
+			// 放入队列
+			oneJob := TTaskqueue.NewOneJob(
+				common.Series, episodeInfo.FileFullPath, task_queue.DefaultTaskPriorityLevel,
+			)
+			oneJob.Season = episodeInfo.Season
+			oneJob.Episode = episodeInfo.Episode
+			oneJob.SeriesRootDirPath = seriesInfo.DirPath
+
+			bok, err := v.downloadQueue.Add(*oneJob)
+			if err != nil {
+				v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.Series.NewOneJob", err)
+				continue
+			}
+			if bok == false {
+				v.log.Warningln("filterMovieAndSeriesNeedDownloadNormal", common.Series.String(), episodeInfo.FileFullPath, "downloadQueue.Add == false")
+			}
+		}
+
+		return nil
+	}
+	// ----------------------------------------
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", seriesProcess, common.ScanPlayedSubTimeOut)
+	// ----------------------------------------
 	// seriesDirMap: dir <--> seriesList
 	normal.SeriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
 
-		for _, oneSeriesRootDir := range seriesNames.([]string) {
+		for i, oneSeriesRootDir := range seriesNames.([]string) {
 
-			// 因为可能回去 Web 获取 IMDB 信息，所以这里的错误不返回
-			bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(oneSeriesRootDir, v.needForcedScanAndDownSub)
+			// 放入队列
+			err := v.taskControl.Invoke(&task_control.TaskData{
+				Index: i,
+				Count: len(seriesNames.([]string)),
+				DataEx: TaskInputData{
+					Index:     i,
+					InputPath: oneSeriesRootDir,
+				},
+			})
 			if err != nil {
-				v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub", err)
-				continue
-			}
-			if bNeedDlSub == false {
-				continue
-			}
-
-			for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
-				// 放入队列
-				oneJob := TTaskqueue.NewOneJob(
-					common.Series, episodeInfo.FileFullPath, task_queue.DefaultTaskPriorityLevel,
-				)
-				oneJob.Season = episodeInfo.Season
-				oneJob.Episode = episodeInfo.Episode
-				oneJob.SeriesRootDirPath = seriesInfo.DirPath
-
-				bok, err := v.downloadQueue.Add(*oneJob)
-				if err != nil {
-					v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.Series.NewOneJob", err)
-					continue
-				}
-				if bok == false {
-					v.log.Warningln("filterMovieAndSeriesNeedDownloadNormal", common.Series.String(), episodeInfo.FileFullPath, "downloadQueue.Add == false")
-				}
+				v.log.Errorln(err)
+				return
 			}
 		}
 	})
-
+	v.taskControl.Hold()
+	// ----------------------------------------
 	return nil
 }
 
@@ -429,4 +569,9 @@ type NormalScanVideoResult struct {
 type EmbyScanVideoResult struct {
 	MovieSubNeedDlEmbyMixInfoList []emby.EmbyMixInfo
 	SeriesSubNeedDlEmbyMixInfoMap map[string][]emby.EmbyMixInfo
+}
+
+type TaskInputData struct {
+	Index     int
+	InputPath string
 }

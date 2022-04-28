@@ -16,16 +16,17 @@ import (
 )
 
 type CronHelper struct {
-	stopping                      bool // 正在停止
-	cronHelperRunning             bool // 这个是定时器启动的状态，它为true，不代表核心函数在执行
-	scanPlayedVideoSubInfo        *scan_played_video_subinfo.ScanPlayedVideoSubInfo
-	fileDownloader                *file_downloader.FileDownloader
-	downloadQueue                 *task_queue.TaskQueue  // 需要下载的视频的队列
-	downloader                    *downloader.Downloader // 下载者线程
-	cronLock                      sync.Mutex             // 锁
-	c                             *cron.Cron             // 定时器实例
-	settings                      *settings.Settings     // 设置实例
-	log                           *logrus.Logger         // 日志实例
+	stopping                      bool                                                     // 正在停止
+	cronHelperRunning             bool                                                     // 这个是定时器启动的状态，它为true，不代表核心函数在执行
+	scanPlayedVideoSubInfo        *scan_played_video_subinfo.ScanPlayedVideoSubInfo        // 扫描已经播放过的视频的字幕信息
+	fileDownloader                *file_downloader.FileDownloader                          // 文件下载器
+	downloadQueue                 *task_queue.TaskQueue                                    // 需要下载的视频的队列
+	downloader                    *downloader.Downloader                                   // 下载者线程
+	videoScanAndRefreshHelper     *video_scan_and_refresh_helper.VideoScanAndRefreshHelper // 视频扫描和刷新的帮助类
+	cronLock                      sync.Mutex                                               // 锁
+	c                             *cron.Cron                                               // 定时器实例
+	settings                      *settings.Settings                                       // 设置实例
+	log                           *logrus.Logger                                           // 日志实例
 	entryIDScanVideoProcess       cron.EntryID
 	entryIDSupplierCheck          cron.EntryID
 	entryIDQueueDownloader        cron.EntryID
@@ -43,10 +44,16 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 	}
 
 	var err error
+	// 扫描已播放
 	ch.scanPlayedVideoSubInfo, err = scan_played_video_subinfo.NewScanPlayedVideoSubInfo(ch.log, ch.settings)
 	if err != nil {
 		ch.log.Panicln(err)
 	}
+	// 字幕扫描器
+	ch.videoScanAndRefreshHelper = video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
+		ch.fileDownloader,
+		ch.downloadQueue)
+
 	return &ch
 }
 
@@ -161,6 +168,7 @@ func (ch *CronHelper) Stop() {
 	ch.stopping = true
 	ch.cronLock.Unlock()
 
+	ch.videoScanAndRefreshHelper.Cancel()
 	ch.downloader.Cancel()
 	ch.scanPlayedVideoSubInfo.Cancel()
 	// Stop stops the cron scheduler if it is running; otherwise it does nothing.
@@ -243,26 +251,9 @@ func (ch *CronHelper) scanVideoProcessAdd2DownloadQueue() {
 	// ----------------------------------------------------------------------------------------
 	// ----------------------------------------------------------------------------------------
 	// 扫描有那些视频需要下载字幕，放入队列中，然后会有下载者去这个队列取出来进行下载
-	videoScanAndRefreshHelper := video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
-		ch.fileDownloader,
-		ch.downloadQueue)
-
-	ch.log.Infoln("Video Scan Started...")
-	// 先进行扫描
-	scanResult, err := videoScanAndRefreshHelper.ScanNormalMovieAndSeries()
+	err := ch.videoScanAndRefreshHelper.Start()
 	if err != nil {
-		ch.log.Errorln("ScanNormalMovieAndSeries", err)
-		return
-	}
-	err = videoScanAndRefreshHelper.ScanEmbyMovieAndSeries(scanResult)
-	if err != nil {
-		ch.log.Errorln("ScanEmbyMovieAndSeries", err)
-		return
-	}
-	// 过滤出需要下载的视频有那些，并放入队列中
-	err = videoScanAndRefreshHelper.FilterMovieAndSeriesNeedDownload(scanResult)
-	if err != nil {
-		ch.log.Errorln("FilterMovieAndSeriesNeedDownload", err)
+		ch.log.Errorln(err)
 		return
 	}
 }
