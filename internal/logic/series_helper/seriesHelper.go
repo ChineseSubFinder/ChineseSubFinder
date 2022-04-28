@@ -164,16 +164,17 @@ func SkipChineseSeries(log *logrus.Logger, seriesRootPath string, _proxySettings
 func DownloadSubtitleInAllSiteByOneSeries(log *logrus.Logger, Suppliers []ifaces.ISupplier, seriesInfo *series.SeriesInfo, i int64) []supplier.SubInfo {
 
 	defer func() {
-		log.Infoln(i, "DlSub End", seriesInfo.DirPath)
+		log.Infoln(common.QueueName, i, "DlSub End", seriesInfo.DirPath)
+		log.Infoln("------------------------------------------")
 	}()
 	log.Infoln(common.QueueName, i, "DlSub Start", seriesInfo.DirPath)
-	log.Infoln(common.QueueName, i, seriesInfo.Name, "IMDB ID:", seriesInfo.ImdbId, "NeedDownloadSubs:", len(seriesInfo.NeedDlEpsKeyList))
+	log.Infoln(common.QueueName, i, "IMDB ID:", seriesInfo.ImdbId, "NeedDownloadSubs:", len(seriesInfo.NeedDlEpsKeyList))
 	var outSUbInfos = make([]supplier.SubInfo, 0)
 	if len(seriesInfo.NeedDlEpsKeyList) < 1 {
 		return outSUbInfos
 	}
 	for key := range seriesInfo.NeedDlEpsKeyList {
-		log.Infoln(common.QueueName, i, seriesInfo.Name, "-", key)
+		log.Infoln(common.QueueName, i, "NeedDownloadEps", "-", key)
 	}
 
 	for _, oneSupplier := range Suppliers {
