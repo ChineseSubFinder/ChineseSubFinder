@@ -12,6 +12,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -41,6 +42,7 @@ type Downloader struct {
 	subTimelineFixerHelperEx *sub_timeline_fixer.SubTimelineFixerHelperEx // 字幕时间轴校正
 	downloaderLock           sync.Mutex                                   // 取消执行 task control 的 Lock
 	downloadQueue            *task_queue.TaskQueue                        // 需要下载的视频的队列
+	embyApi                  *emby_api.EmbyApi                            // 用于下载完毕字幕的刷新
 }
 
 func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_downloader.FileDownloader, downloadQueue *task_queue.TaskQueue) *Downloader {
@@ -75,6 +77,10 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	downloader.downloadQueue = downloadQueue
 	// 单个任务的超时设置
 	downloader.ctx, downloader.cancel = context.WithTimeout(context.Background(), time.Duration(downloader.settings.AdvancedSettings.TaskQueue.OneJobTimeOut)*time.Second)
+	// 用于字幕下载后的刷新
+	if downloader.settings.EmbySettings.Enable == true {
+		downloader.embyApi = emby_api.NewEmbyApi(downloader.log, downloader.settings.EmbySettings)
+	}
 
 	return &downloader
 }
@@ -267,8 +273,8 @@ func (d *Downloader) movieDlFunc(ctx context.Context, job taskQueue2.OneJob, dow
 	}
 	// 返回的两个值都是 nil 的时候，就是没有下载到字幕
 	if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
-		d.log.Infoln(task_queue.ErrNotSubFound.Error(), filepath.Base(job.VideoFPath))
-		d.downloadQueue.AutoDetectUpdateJobStatus(job, task_queue.ErrNotSubFound)
+		d.log.Infoln(task_queue.ErrNoSubFound.Error(), filepath.Base(job.VideoFPath))
+		d.downloadQueue.AutoDetectUpdateJobStatus(job, task_queue.ErrNoSubFound)
 		return nil
 	}
 
@@ -279,6 +285,16 @@ func (d *Downloader) movieDlFunc(ctx context.Context, job taskQueue2.OneJob, dow
 	}
 
 	d.downloadQueue.AutoDetectUpdateJobStatus(job, nil)
+
+	// TODO 刷新字幕，这里是 Emby 的，如果是其他的，需要再对接对应的媒体服务器
+	if d.settings.EmbySettings.Enable == true && d.embyApi != nil && job.MediaServerInsideVideoID != "" {
+		err = d.embyApi.UpdateVideoSubList(job.MediaServerInsideVideoID)
+		if err != nil {
+			d.log.Errorln("UpdateVideoSubList", job.VideoFPath, job.MediaServerInsideVideoID, "Error:", err)
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -318,8 +334,8 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	}
 	// 是否下载到字幕了
 	if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
-		d.log.Infoln(task_queue.ErrNotSubFound.Error(), filepath.Base(job.VideoFPath), job.Season, job.Episode)
-		d.downloadQueue.AutoDetectUpdateJobStatus(job, task_queue.ErrNotSubFound)
+		d.log.Infoln(task_queue.ErrNoSubFound.Error(), filepath.Base(job.VideoFPath), job.Season, job.Episode)
+		d.downloadQueue.AutoDetectUpdateJobStatus(job, task_queue.ErrNoSubFound)
 		return nil
 	}
 
@@ -422,5 +438,14 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	}
 	// 哪怕有一个写入到本地成功了，也无需对本次任务报错
 	d.downloadQueue.AutoDetectUpdateJobStatus(job, nil)
+	// TODO 刷新字幕，这里是 Emby 的，如果是其他的，需要再对接对应的媒体服务器
+	if d.settings.EmbySettings.Enable == true && d.embyApi != nil && job.MediaServerInsideVideoID != "" {
+		err = d.embyApi.UpdateVideoSubList(job.MediaServerInsideVideoID)
+		if err != nil {
+			d.log.Errorln("UpdateVideoSubList", job.SeriesRootDirPath, job.MediaServerInsideVideoID, job.Season, job.Episode, "Error:", err)
+			return err
+		}
+	}
+
 	return nil
 }
