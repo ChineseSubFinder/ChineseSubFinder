@@ -325,11 +325,22 @@ func GetSeriesInfoFromDir(log *logrus.Logger, seriesDir string) (*series.SeriesI
 	// 使用 IMDB ID 得到通用的剧集名称
 	// 以 IMDB 的信息为准
 	if imdbInfoFromLocal != nil {
-		seriesInfo.Name = imdbInfoFromLocal.Name
+
+		if imdbInfoFromLocal.Name != "" {
+			seriesInfo.Name = imdbInfoFromLocal.Name
+		} else if videoInfo.Title != "" {
+			seriesInfo.Name = videoInfo.Title
+		} else {
+			seriesInfo.Name = filepath.Base(seriesDir)
+		}
 		seriesInfo.ImdbId = imdbInfoFromLocal.IMDBID
 		seriesInfo.Year = imdbInfoFromLocal.Year
 	} else {
-		seriesInfo.Name = videoInfo.Title
+		if videoInfo.Title != "" {
+			seriesInfo.Name = videoInfo.Title
+		} else {
+			seriesInfo.Name = filepath.Base(seriesDir)
+		}
 		seriesInfo.ImdbId = videoInfo.ImdbId
 		iYear, err := strconv.Atoi(videoInfo.Year)
 		if err != nil {
@@ -340,6 +351,7 @@ func GetSeriesInfoFromDir(log *logrus.Logger, seriesDir string) (*series.SeriesI
 			seriesInfo.Year = iYear
 		}
 	}
+
 	seriesInfo.ReleaseDate = videoInfo.ReleaseDate
 	seriesInfo.DirPath = seriesDir
 	seriesInfo.EpList = make([]series.EpisodeInfo, 0)

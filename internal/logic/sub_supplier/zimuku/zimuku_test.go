@@ -74,8 +74,8 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 
 	// 可以指定几集去调试
 	epsMap := make(map[int][]int, 0)
-	epsMap[4] = []int{5, 6}
-	epsMap[1] = []int{1, 2, 3}
+	epsMap[4] = []int{5}
+	//epsMap[1] = []int{1, 2, 3}
 
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")

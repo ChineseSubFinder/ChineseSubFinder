@@ -9,7 +9,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_download_process"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
@@ -120,7 +120,7 @@ func (d *Downloader) SupplierCheck() {
 
 		if d.settings.SpeedDevMode == true {
 			// 这里是调试使用的，指定了只用一个字幕源
-			subSupplierHub := subSupplier.NewSubSupplierHub(xunlei.NewSupplier(d.fileDownloader))
+			subSupplierHub := subSupplier.NewSubSupplierHub(zimuku.NewSupplier(d.fileDownloader))
 			d.subSupplierHub = subSupplierHub
 		} else {
 
