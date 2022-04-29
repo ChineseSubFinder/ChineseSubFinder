@@ -370,7 +370,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 			return err
 		}
 		if bok == false {
-			v.log.Warningln("filterMovieAndSeriesNeedDownloadNormal", common.Movie.String(), movieInputData.InputPath, "downloadQueue.Add == false")
+			v.log.Warningln(common.Movie.String(), movieInputData.InputPath, "downloadQueue isExisted")
 		}
 
 		return nil
@@ -425,7 +425,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 				continue
 			}
 			if bok == false {
-				v.log.Warningln("filterMovieAndSeriesNeedDownloadNormal", common.Series.String(), episodeInfo.FileFullPath, "downloadQueue.Add == false")
+				v.log.Warningln(common.Series.String(), episodeInfo.FileFullPath, "downloadQueue isExisted")
 			}
 		}
 
@@ -476,7 +476,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 			continue
 		}
 		if bok == false {
-			v.log.Warningln("filterMovieAndSeriesNeedDownloadEmby", common.Movie.String(), oneMovieMixInfo.PhysicalVideoFileFullPath, "downloadQueue.Add == false")
+			v.log.Warningln(common.Movie.String(), oneMovieMixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
 		}
 	}
 	// Emby 过滤，连续剧
@@ -510,7 +510,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 				continue
 			}
 			if bok == false {
-				v.log.Warningln("filterMovieAndSeriesNeedDownloadEmby", common.Series.String(), mixInfo.PhysicalVideoFileFullPath, "downloadQueue.Add == false")
+				v.log.Warningln(common.Series.String(), mixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
 			}
 		}
 	}

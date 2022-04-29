@@ -398,7 +398,6 @@ func (t *TaskQueue) read() {
 			err = json.Unmarshal(jsonString, &nowOneJob)
 			if err != nil {
 				t.log.Panicln(err)
-				return
 			}
 			t.taskPriorityMapList[i].Put(key, nowOneJob)
 		})

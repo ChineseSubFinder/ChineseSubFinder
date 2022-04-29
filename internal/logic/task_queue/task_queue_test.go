@@ -268,3 +268,75 @@ func TestTaskQueue_UpdatePriority(t *testing.T) {
 		t.Fatal("len(waitingJobs) != 2")
 	}
 }
+
+func TestTaskQueue_AddAndGetOneJob(t *testing.T) {
+
+	defer func() {
+		DelDb()
+	}()
+	DelDb()
+
+	taskQueue := NewTaskQueue("testQueue", settings.NewSettings(), log_helper.GetLogger4Tester())
+
+	for i := taskPriorityCount; i >= 0; i-- {
+		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, fmt.Sprintf("%d", i), DefaultTaskPriorityLevel))
+		if err != nil {
+			t.Fatal("TestTaskQueue.Add", err)
+		}
+		if bok == false {
+			t.Fatal("TestTaskQueue.Add == false")
+		}
+	}
+
+	bok, oneJob, err := taskQueue.GetOneJob()
+	if err != nil {
+		t.Fatal("TestTaskQueue.Add", err)
+	}
+	if bok == false {
+		t.Fatal("TestTaskQueue.Add == false")
+	}
+
+	println("VideoFPath", oneJob.VideoFPath)
+	println("TaskPriority", oneJob.TaskPriority)
+
+	taskQueue.AutoDetectUpdateJobStatus(oneJob, nil)
+
+	bok, oneJob, err = taskQueue.GetOneJob()
+	if err != nil {
+		t.Fatal("TestTaskQueue.Add", err)
+	}
+	if bok == false {
+		t.Fatal("TestTaskQueue.Add == false")
+	}
+
+	println("VideoFPath", oneJob.VideoFPath)
+	println("TaskPriority", oneJob.TaskPriority)
+
+	found, waitingJobs, err := taskQueue.GetJobsByStatus(task_queue.Waiting)
+	if err != nil {
+		return
+	}
+	println(found)
+	for i, job := range waitingJobs {
+		println("QueueDownloader Waiting:", i, job.VideoName)
+	}
+
+	found, waitingJobs, err = taskQueue.GetJobsByStatus(task_queue.Done)
+	if err != nil {
+		return
+	}
+	println(found)
+	for i, job := range waitingJobs {
+		println("QueueDownloader Done:", i, job.VideoName)
+	}
+
+	found, waitingJobs, err = taskQueue.GetJobsByStatus(task_queue.Failed)
+	if err != nil {
+		return
+	}
+	println(found)
+	for i, job := range waitingJobs {
+		println("QueueDownloader Failed:", i, job.VideoName)
+	}
+
+}

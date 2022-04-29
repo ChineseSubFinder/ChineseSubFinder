@@ -22,7 +22,7 @@ func GetDailyDownloadCount(supplierName string, publicIP string, whichDay ...str
 	err := GetDb().View(
 		func(tx *badger.Txn) error {
 			var err error
-
+			tx.Discard()
 			key := []byte(MergeBucketAndKeyName(BucketNamePrefixSupplierDailyDownloadCounter, KeyName))
 			e, err := tx.Get(key)
 			if err != nil {

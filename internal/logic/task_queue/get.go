@@ -26,6 +26,7 @@ func (t *TaskQueue) BeforeGetOneJob() {
 				if bok == false {
 					t.log.Errorf("GetOneWaitingJob.Del.Done ExpirationTime %v error: %s", t.settings.AdvancedSettings.TaskQueue.ExpirationTime, "Del failed")
 					return
+
 				}
 				return
 			}
@@ -61,7 +62,7 @@ func (t *TaskQueue) GetOneWaitingJob() (bool, task_queue.OneJob, error) {
 	tOneJob := task_queue.OneJob{}
 	for TaskPriority := 0; TaskPriority <= taskPriorityCount; TaskPriority++ {
 
-		t.taskPriorityMapList[TaskPriority].Each(func(key interface{}, value interface{}) {
+		t.taskPriorityMapList[TaskPriority].Any(func(key interface{}, value interface{}) bool {
 
 			tOneJob = value.(task_queue.OneJob)
 			// 任务的 UpdateTime 与现在的时间大于单个字幕下载的间隔
@@ -74,8 +75,10 @@ func (t *TaskQueue) GetOneWaitingJob() (bool, task_queue.OneJob, error) {
 				tOneJob.UpdateTime.AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.OneSubDownloadInterval).After(time.Now()) == false && tOneJob.DownloadTimes > 0) {
 				// 找到就返回
 				found = true
-				return
+				return true
 			}
+
+			return false
 		})
 
 		if found == true {
@@ -101,7 +104,7 @@ func (t *TaskQueue) GetOneDoneJob() (bool, task_queue.OneJob, error) {
 	tOneJob := task_queue.OneJob{}
 	for TaskPriority := 0; TaskPriority <= taskPriorityCount; TaskPriority++ {
 
-		t.taskPriorityMapList[TaskPriority].Each(func(key interface{}, value interface{}) {
+		t.taskPriorityMapList[TaskPriority].Any(func(key interface{}, value interface{}) bool {
 
 			tOneJob = value.(task_queue.OneJob)
 			// 任务的 UpdateTime 与现在的时间大于单个字幕下载的间隔
@@ -114,8 +117,10 @@ func (t *TaskQueue) GetOneDoneJob() (bool, task_queue.OneJob, error) {
 				tOneJob.UpdateTime.AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.OneSubDownloadInterval).After(time.Now()) == false {
 				// 找到就返回
 				found = true
-				return
+				return true
 			}
+
+			return false
 		})
 
 		if found == true {

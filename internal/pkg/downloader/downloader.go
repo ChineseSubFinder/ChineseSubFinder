@@ -163,12 +163,11 @@ func (d *Downloader) QueueDownloader() {
 			d.log.Errorln("Downloader.QueueDownloader() panic")
 		}
 
-		d.log.Infoln(log_helper.OnceSubsScanEnd)
-
 		d.downloaderLock.Unlock()
 		d.log.Infoln("Download.QueueDownloader() End")
 	}()
 
+	d.log.Infoln("Download.QueueDownloader() Try Start ...")
 	d.downloaderLock.Lock()
 	d.log.Infoln("Download.QueueDownloader() Start ...")
 
@@ -199,8 +198,14 @@ func (d *Downloader) QueueDownloader() {
 	}
 	// ------------------------------------------------------------------------
 	// 开始标记，这个是单次扫描的开始，要注意格式，在日志的内部解析识别单个日志开头的时候需要特殊的格式
+	d.log.Infoln("------------------------------------------")
 	d.log.Infoln(log_helper.OnceSubsScanStart + "#" + oneJob.Id)
 	// ------------------------------------------------------------------------
+	defer func() {
+		d.log.Infoln(log_helper.OnceSubsScanEnd)
+		d.log.Infoln("------------------------------------------")
+	}()
+
 	downloadCounter++
 	// 创建一个 chan 用于任务的中断和超时
 	done := make(chan interface{}, 1)
@@ -310,6 +315,16 @@ func (d *Downloader) movieDlFunc(ctx context.Context, job taskQueue2.OneJob, dow
 
 func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, downloadIndex int64) error {
 
+	// 创建一个 chan 用于任务的中断和超时
+	done := make(chan interface{}, 1)
+	// 接收内部任务的 panic
+	panicChan := make(chan interface{}, 1)
+
+	defer func() {
+		close(done)
+		close(panicChan)
+	}()
+
 	nowSubSupplierHub := d.subSupplierHub
 	if nowSubSupplierHub.Suppliers == nil || len(nowSubSupplierHub.Suppliers) < 1 {
 		d.log.Infoln("Wait SupplierCheck Update *subSupplierHub, movieDlFunc Skip this time")
@@ -355,10 +370,6 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	subVideoCount := 0
 	for epsKey, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 
-		// 创建一个 chan 用于任务的中断和超时
-		done := make(chan interface{}, 1)
-		// 接收内部任务的 panic
-		panicChan := make(chan interface{}, 1)
 		go func() {
 			defer func() {
 				if p := recover(); p != nil {
@@ -377,21 +388,15 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 			} else {
 				save2LocalSubCount++
 			}
-			close(done)
-			close(panicChan)
 			break
 		case p := <-panicChan:
 			// 遇到内部的 panic，向外抛出
 			d.log.Errorln("seriesDlFunc.oneVideoSelectBestSub panicChan", p)
-			close(done)
-			close(panicChan)
 			break
 		case <-ctx.Done():
 			{
 				err = errors.New(fmt.Sprintf("cancel at NeedDlEpsKeyList.oneVideoSelectBestSub, %v S%dE%d", seriesInfo.Name, episodeInfo.Season, episodeInfo.Episode))
 				d.downloadQueue.AutoDetectUpdateJobStatus(job, err)
-				close(done)
-				close(panicChan)
 				return err
 			}
 		}
@@ -404,10 +409,6 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	// 需要与有下载需求的季交叉
 	for _, episodeInfo := range seriesInfo.EpList {
 
-		// 创建一个 chan 用于任务的中断和超时
-		done := make(chan interface{}, 1)
-		// 接收内部任务的 panic
-		panicChan := make(chan interface{}, 1)
 		_, ok := seriesInfo.NeedDlSeasonDict[episodeInfo.Season]
 		if ok == false {
 			continue
@@ -432,21 +433,16 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 			} else {
 				save2LocalSubCount++
 			}
-			close(done)
-			close(panicChan)
+
 			break
 		case p := <-panicChan:
 			// 遇到内部的 panic，向外抛出
 			d.log.Errorln("seriesDlFunc.oneVideoSelectBestSub panicChan", p)
-			close(done)
-			close(panicChan)
 			break
 		case <-ctx.Done():
 			{
 				err = errors.New(fmt.Sprintf("cancel at NeedDlEpsKeyList.oneVideoSelectBestSub, %v S%dE%d", seriesInfo.Name, episodeInfo.Season, episodeInfo.Episode))
 				d.downloadQueue.AutoDetectUpdateJobStatus(job, err)
-				close(done)
-				close(panicChan)
 				return err
 			}
 		}
