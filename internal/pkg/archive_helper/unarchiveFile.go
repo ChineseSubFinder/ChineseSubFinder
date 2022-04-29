@@ -25,20 +25,53 @@ func UnArchiveFileEx(fileFullPath, desRootPath string) error {
 	if err != nil {
 		return err
 	}
-	err = filepath.Walk(desRootPath, func(path string, info fs.FileInfo, err error) error {
+	// --------------------------------------------------
+	doUnzipFun := func() error {
+		// 判断一次
+		needUnzipFileFPaths := make([]string, 0)
+		err = filepath.Walk(desRootPath, func(path string, info fs.FileInfo, err error) error {
 
-		// 然后对于解压的内容再次进行判断，如果有压缩包，那么就继续解压
-		if nowExt != ".zip" && nowExt != ".tar" && nowExt != ".rar" && nowExt != ".7z" {
-
-		} else {
-			err = UnArchiveFile(path, desRootPath)
+			if info.IsDir() == true {
+				return nil
+			}
+			nowExt := filepath.Ext(path)
+			// 然后对于解压的内容再次进行判断
+			if nowExt != ".zip" && nowExt != ".tar" && nowExt != ".rar" && nowExt != ".7z" {
+				return nil
+			} else {
+				needUnzipFileFPaths = append(needUnzipFileFPaths, path)
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		// 如果有压缩包，那么就继续解压，然后删除压缩包
+		for _, needUnzipFileFPath := range needUnzipFileFPaths {
+			err = UnArchiveFile(needUnzipFileFPath, desRootPath)
 			if err != nil {
 				return err
 			}
-			os.Remove(path)
+			err = os.Remove(needUnzipFileFPath)
+			if err != nil {
+				return err
+			}
 		}
+
 		return nil
-	})
+	}
+	// 第二次解压
+	err = doUnzipFun()
+	if err != nil {
+		return err
+	}
+	// 第三次解压
+	err = doUnzipFun()
+	if err != nil {
+		return err
+	}
+	// 第四次解压
+	err = doUnzipFun()
 	if err != nil {
 		return err
 	}

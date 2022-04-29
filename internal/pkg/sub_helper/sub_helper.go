@@ -70,7 +70,7 @@ func OrganizeDlSubFiles(log *logrus.Logger, tmpFolderName string, subInfos []sup
 			if err != nil {
 				return nil, err
 			}
-			err = archive_helper.UnArchiveFile(nowFileSaveFullPath, unzipTmpFolder)
+			err = archive_helper.UnArchiveFileEx(nowFileSaveFullPath, unzipTmpFolder)
 			// 解压完成后，遍历受支持的字幕列表，加入缓存列表
 			if err != nil {
 				log.Errorln("archiver.UnArchive", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
