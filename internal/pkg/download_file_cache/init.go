@@ -16,6 +16,7 @@ func GetDb() *badger.DB {
 		opt.ValueLogFileSize = 1 << 20
 		// 10 MB
 		opt.MemTableSize = 10 << 20
+		opt.BlockCacheSize = 20 << 20
 		// 这边数据库会自动创建这个目录文件
 		dbBase, err = badger.Open(opt)
 		if err != nil {
