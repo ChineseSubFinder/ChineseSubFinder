@@ -2,18 +2,20 @@ package xunlei
 
 import (
 	"crypto/sha1"
+	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
+	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
-	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
 	"math"
 	"os"
@@ -22,18 +24,22 @@ import (
 )
 
 type Supplier struct {
-	settings settings.Settings
-	log      *logrus.Logger
-	topic    int
+	settings       *settings.Settings
+	log            *logrus.Logger
+	fileDownloader *file_downloader.FileDownloader
+	topic          int
+	isAlive        bool
 }
 
-func NewSupplier(_settings settings.Settings) *Supplier {
+func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 
 	sup := Supplier{}
-	sup.log = log_helper.GetLogger()
-	sup.topic = common.DownloadSubsPerSite
+	sup.log = fileDownloader.Log
+	sup.fileDownloader = fileDownloader
+	sup.topic = common2.DownloadSubsPerSite
+	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
-	sup.settings = clone.Clone(_settings).(settings.Settings)
+	sup.settings = fileDownloader.Settings
 	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
 		sup.topic = sup.settings.AdvancedSettings.Topic
 	}
@@ -41,41 +47,61 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 	return &sup
 }
 
-func (s Supplier) CheckAlive() (bool, int64) {
+func (s *Supplier) CheckAlive() (bool, int64) {
 
 	// 计算当前时间
 	startT := time.Now()
 	jsonList, err := s.getSubInfos(checkFileName, checkCID)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
+		s.isAlive = false
 		return false, 0
 	}
 
 	if len(jsonList.Sublist) < 1 {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Sublist < 1")
+		s.isAlive = false
 		return false, 0
 	}
 
+	s.isAlive = true
 	return true, time.Since(startT).Milliseconds()
 }
 
-func (s Supplier) GetSupplierName() string {
-	return common.SubSiteXunLei
+func (s *Supplier) IsAlive() bool {
+	return s.isAlive
 }
 
-func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
+func (s *Supplier) OverDailyDownloadLimit() bool {
+	// 对于这个接口暂时没有限制
+	return false
+}
+
+func (s *Supplier) GetLogger() *logrus.Logger {
+	return s.log
+}
+
+func (s *Supplier) GetSettings() *settings.Settings {
+	return s.settings
+}
+
+func (s *Supplier) GetSupplierName() string {
+	return common2.SubSiteXunLei
+}
+
+func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 	return s.getSubListFromFile(filePath)
 }
 
-func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	return s.downloadSub4Series(seriesInfo)
 }
 
-func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+func (s *Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	return s.downloadSub4Series(seriesInfo)
 }
 
-func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error) {
+func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error) {
 
 	defer func() {
 		s.log.Debugln(s.GetSupplierName(), filePath, "End...")
@@ -83,12 +109,28 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 
 	s.log.Debugln(s.GetSupplierName(), filePath, "Start...")
 
+	if my_util.IsFile(filePath) == false {
+		// 这里传入的可能是蓝光结构的伪造存在的视频文件，需要检查一次这个文件是否存在
+		bok, _, _ := decode.IsFakeBDMVWorked(filePath)
+		if bok == false {
+
+			nowError := errors.New(fmt.Sprintf("%s %s %s",
+				s.GetSupplierName(),
+				filePath,
+				"not exist, and it`s not a Blue ray Video FakeFileName"))
+
+			s.log.Errorln(nowError)
+
+			return nil, nowError
+		}
+	}
+
 	cid, err := s.getCid(filePath)
 	var jsonList SublistSliceXunLei
 	var tmpXunLeiSubListChinese = make([]SublistXunLei, 0)
 	var outSubList []supplier.SubInfo
 	if len(cid) == 0 {
-		return nil, common.XunLeiCIdIsEmpty
+		return nil, common2.XunLeiCIdIsEmpty
 	}
 
 	jsonList, err = s.getSubInfos(filePath, cid)
@@ -124,10 +166,16 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	// 再开始下载字幕
 	for i, v := range tmpXunLeiSubListChinese {
 		tmpLang := language.LangConverter4Sub_Supplier(v.Language)
-		data, filename, err := my_util.DownFile(v.Surl)
+		data, filename, err := my_util.DownFile(s.log, v.Surl)
 		if err != nil {
 			s.log.Errorln("xunlei pkg.DownFile:", err)
 			continue
+		}
+		// 下载成功需要统计到今天的次数中
+		_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName(),
+			my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
+		if err != nil {
+			s.log.Warningln(s.GetSupplierName(), "getSubListFromFile.AddDailyDownloadCount", err)
 		}
 		ext := ""
 		if filename == "" {
@@ -142,13 +190,13 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	return outSubList, nil
 }
 
-func (s Supplier) getSubInfos(filePath, cid string) (SublistSliceXunLei, error) {
+func (s *Supplier) getSubInfos(filePath, cid string) (SublistSliceXunLei, error) {
 	var jsonList SublistSliceXunLei
 
-	httpClient := my_util.NewHttpClient(*s.settings.AdvancedSettings.ProxySettings)
+	httpClient := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	resp, err := httpClient.R().
 		SetResult(&jsonList).
-		Get(fmt.Sprintf(common.SubXunLeiRootUrl, cid))
+		Get(fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.Xunlei.RootUrl, cid))
 	if err != nil {
 		if resp != nil {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", filePath, err.Error())
@@ -161,7 +209,7 @@ func (s Supplier) getSubInfos(filePath, cid string) (SublistSliceXunLei, error) 
 }
 
 //getCid 获取指定文件的唯一 cid
-func (s Supplier) getCid(filePath string) (string, error) {
+func (s *Supplier) getCid(filePath string) (string, error) {
 	hash := ""
 	sha1Ctx := sha1.New()
 
@@ -199,7 +247,7 @@ func (s Supplier) getCid(filePath string) (string, error) {
 	return hash, nil
 }
 
-func (s Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+func (s *Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	var allSupplierSubInfo = make([]supplier.SubInfo, 0)
 	index := 0
 	// 这里拿到的 seriesInfo ，里面包含了，需要下载字幕的 Eps 信息

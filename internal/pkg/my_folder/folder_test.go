@@ -1,4 +1,4 @@
-package my_util
+package my_folder
 
 import (
 	"testing"

@@ -1,18 +1,21 @@
 package my_util
 
 import (
+	"bytes"
+	"crypto/md5"
 	"crypto/sha1"
+	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	browser "github.com/allanpk716/fake-useragent"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"io"
 	"math"
 	"net/http"
@@ -29,11 +32,11 @@ import (
 )
 
 // NewHttpClient 新建一个 resty 的对象
-func NewHttpClient(_proxySettings ...settings.ProxySettings) *resty.Client {
+func NewHttpClient(_proxySettings ...*settings.ProxySettings) *resty.Client {
 	//const defUserAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"
 	//const defUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41"
 
-	var proxySettings settings.ProxySettings
+	var proxySettings *settings.ProxySettings
 	var HttpProxy, UserAgent, Referer string
 
 	if len(_proxySettings) > 0 {
@@ -70,9 +73,29 @@ func NewHttpClient(_proxySettings ...settings.ProxySettings) *resty.Client {
 	return httpClient
 }
 
+func GetPublicIP(queue *settings.TaskQueue, _proxySettings ...*settings.ProxySettings) string {
+
+	var client *resty.Client
+	if len(_proxySettings) > 0 {
+		client = NewHttpClient(_proxySettings[0])
+	} else {
+		client = NewHttpClient()
+	}
+
+	targetSite := "http://myexternalip.com/raw"
+	if queue.CheckPublicIPTargetSite != "" {
+		targetSite = queue.CheckPublicIPTargetSite
+	}
+	response, err := client.R().Get(targetSite)
+	if err != nil {
+		return ""
+	}
+	return response.String()
+}
+
 // DownFile 从指定的 url 下载文件
-func DownFile(urlStr string, _proxySettings ...settings.ProxySettings) ([]byte, string, error) {
-	var proxySettings settings.ProxySettings
+func DownFile(l *logrus.Logger, urlStr string, _proxySettings ...*settings.ProxySettings) ([]byte, string, error) {
+	var proxySettings *settings.ProxySettings
 	if len(_proxySettings) > 0 {
 		proxySettings = _proxySettings[0]
 	}
@@ -81,17 +104,17 @@ func DownFile(urlStr string, _proxySettings ...settings.ProxySettings) ([]byte, 
 	if err != nil {
 		return nil, "", err
 	}
-	filename := GetFileName(resp.RawResponse)
+	filename := GetFileName(l, resp.RawResponse)
 
 	if filename == "" {
-		log_helper.GetLogger().Warningln("DownFile.GetFileName is string.empty", urlStr)
+		l.Warningln("DownFile.GetFileName is string.empty", urlStr)
 	}
 
 	return resp.Body(), filename, nil
 }
 
 // GetFileName 获取下载文件的文件名
-func GetFileName(resp *http.Response) string {
+func GetFileName(l *logrus.Logger, resp *http.Response) string {
 	contentDisposition := resp.Header.Get("Content-Disposition")
 	if len(contentDisposition) == 0 {
 		return ""
@@ -99,7 +122,7 @@ func GetFileName(resp *http.Response) string {
 	re := regexp.MustCompile(`filename=["]*([^"]+)["]*`)
 	matched := re.FindStringSubmatch(contentDisposition)
 	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
-		log_helper.GetLogger().Errorln("GetFileName.Content-Disposition", contentDisposition)
+		l.Errorln("GetFileName.Content-Disposition", contentDisposition)
 		return ""
 	}
 	return matched[1]
@@ -132,11 +155,11 @@ func IsFile(filePath string) bool {
 }
 
 // VideoNameSearchKeywordMaker 拼接视频搜索的 title 和 年份
-func VideoNameSearchKeywordMaker(title string, year string) string {
+func VideoNameSearchKeywordMaker(l *logrus.Logger, title string, year string) string {
 	iYear, err := strconv.Atoi(year)
 	if err != nil {
 		// 允许的错误
-		log_helper.GetLogger().Errorln("VideoNameSearchKeywordMaker", "year to int", err)
+		l.Errorln("VideoNameSearchKeywordMaker", "year to int", err)
 		iYear = 0
 	}
 	searchKeyword := title
@@ -148,12 +171,17 @@ func VideoNameSearchKeywordMaker(title string, year string) string {
 }
 
 // SearchMatchedVideoFileFromDirs 搜索符合后缀名的视频文件
-func SearchMatchedVideoFileFromDirs(dirs []string) ([]string, error) {
+func SearchMatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) ([]string, error) {
+
+	defer func() {
+		l.Debugln("SearchMatchedVideoFileFromDirs End ----------------")
+	}()
+	l.Debugln("SearchMatchedVideoFileFromDirs Start ----------------")
 
 	var fileFullPathList = make([]string, 0)
 	for _, dir := range dirs {
 
-		matchedVideoFile, err := SearchMatchedVideoFile(dir)
+		matchedVideoFile, err := SearchMatchedVideoFile(l, dir)
 		if err != nil {
 			return nil, err
 		}
@@ -161,11 +189,15 @@ func SearchMatchedVideoFileFromDirs(dirs []string) ([]string, error) {
 		fileFullPathList = append(fileFullPathList, matchedVideoFile...)
 	}
 
+	for _, s := range fileFullPathList {
+		l.Debugln(s)
+	}
+
 	return fileFullPathList, nil
 }
 
-// SearchMatchedVideoFile 搜索符合后缀名的视频文件
-func SearchMatchedVideoFile(dir string) ([]string, error) {
+// SearchMatchedVideoFile 搜索符合后缀名的视频文件，现在也会把 BDMV 的文件搜索出来，但是这个并不是一个视频文件，需要在后续特殊处理
+func SearchMatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 
 	var fileFullPathList = make([]string, 0)
 	pathSep := string(os.PathSeparator)
@@ -177,24 +209,36 @@ func SearchMatchedVideoFile(dir string) ([]string, error) {
 		fullPath := dir + pathSep + curFile.Name()
 		if curFile.IsDir() {
 			// 内层的错误就无视了
-			oneList, _ := SearchMatchedVideoFile(fullPath)
+			oneList, _ := SearchMatchedVideoFile(l, fullPath)
 			if oneList != nil {
 				fileFullPathList = append(fileFullPathList, oneList...)
 			}
 		} else {
 			// 这里就是文件了
+			bok, fakeBDMVVideoFile := FileNameIsBDMV(fullPath)
+			if bok == true {
+				// 这类文件后续的扫描字幕操作需要额外的处理
+				fileFullPathList = append(fileFullPathList, fakeBDMVVideoFile)
+				continue
+			}
 			if IsWantedVideoExtDef(curFile.Name()) == false {
+				// 不是期望的视频后缀名则跳过
 				continue
 			} else {
+				// 这里还有一种情况，就是蓝光， BDMV 下面会有一个 STREAM 文件夹，里面很多 m2ts 的视频组成
+				if filepath.Base(filepath.Dir(fullPath)) == "STREAM" {
+					l.Debugln("SearchMatchedVideoFile, Skip BDMV.STREAM:", fullPath)
+					continue
+				}
 
 				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
 				fi, err := curFile.Info()
 				if err != nil {
-					log_helper.GetLogger().Debugln("SearchMatchedVideoFile, file.Info:", fullPath, err)
+					l.Debugln("SearchMatchedVideoFile, file.Info:", fullPath, err)
 					continue
 				}
 				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
-					log_helper.GetLogger().Debugln("SearchMatchedVideoFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
+					l.Debugln("SearchMatchedVideoFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
 					continue
 				}
 				fileFullPathList = append(fileFullPathList, fullPath)
@@ -204,7 +248,32 @@ func SearchMatchedVideoFile(dir string) ([]string, error) {
 	return fileFullPathList, nil
 }
 
-func SearchTVNfo(dir string) ([]string, error) {
+// FileNameIsBDMV 是否是 BDMV 蓝光目录，符合返回 true，以及 fakseVideoFPath
+func FileNameIsBDMV(id_bdmv_fileFPath string) (bool, string) {
+	/*
+		这类蓝光视频比较特殊，它没有具体的一个后缀名的视频文件而是由两个文件夹来存储视频数据
+		* BDMV
+		* CERTIFICATE
+		但是不管如何，都需要使用一个文件作为锚点，就选定 CERTIFICATE 中的 id.bdmv 文件
+		后续的下载逻辑也需要单独为这个文件进行处理，比如，从这个文件向上一层获取 nfo 文件，
+		以及再上一层得到视频文件夹名称等
+	*/
+
+	if strings.ToLower(filepath.Base(id_bdmv_fileFPath)) == common.FileBDMV {
+
+		// 这个文件是确认了，那么就需要查看这个文件父级目录是不是 CERTIFICATE 文件夹
+		// 且 CERTIFICATE 需要和 BDMV 文件夹都存在
+		CERDir := filepath.Dir(id_bdmv_fileFPath)
+		BDMVDir := filepath.Join(filepath.Dir(CERDir), "BDMV")
+		if IsDir(CERDir) == true && IsDir(BDMVDir) == true {
+			return true, filepath.Join(filepath.Dir(CERDir), filepath.Base(filepath.Dir(CERDir))+common.VideoExtMp4)
+		}
+	}
+
+	return false, ""
+}
+
+func SearchTVNfo(l *logrus.Logger, dir string) ([]string, error) {
 
 	var fileFullPathList = make([]string, 0)
 	pathSep := string(os.PathSeparator)
@@ -216,7 +285,7 @@ func SearchTVNfo(dir string) ([]string, error) {
 		fullPath := dir + pathSep + curFile.Name()
 		if curFile.IsDir() {
 			// 内层的错误就无视了
-			oneList, _ := SearchTVNfo(fullPath)
+			oneList, _ := SearchTVNfo(l, fullPath)
 			if oneList != nil {
 				fileFullPathList = append(fileFullPathList, oneList...)
 			}
@@ -229,11 +298,11 @@ func SearchTVNfo(dir string) ([]string, error) {
 				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
 				fi, err := curFile.Info()
 				if err != nil {
-					log_helper.GetLogger().Debugln("SearchTVNfo, file.Info:", fullPath, err)
+					l.Debugln("SearchTVNfo, file.Info:", fullPath, err)
 					continue
 				}
 				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
-					log_helper.GetLogger().Debugln("SearchTVNfo file.Size() == 4096 && Prefix Name == ._*", fullPath)
+					l.Debugln("SearchTVNfo file.Size() == 4096 && Prefix Name == ._*", fullPath)
 					continue
 				}
 				fileFullPathList = append(fileFullPathList, fullPath)
@@ -246,23 +315,25 @@ func SearchTVNfo(dir string) ([]string, error) {
 // IsWantedVideoExtDef 后缀名是否符合规则
 func IsWantedVideoExtDef(fileName string) bool {
 
-	if len(global_value.WantedExtMap) < 1 {
-		global_value.DefExtMap[common.VideoExtMp4] = common.VideoExtMp4
-		global_value.DefExtMap[common.VideoExtMkv] = common.VideoExtMkv
-		global_value.DefExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
-		global_value.DefExtMap[common.VideoExtIso] = common.VideoExtIso
+	if len(_wantedExtMap) < 1 {
+		_defExtMap[common.VideoExtMp4] = common.VideoExtMp4
+		_defExtMap[common.VideoExtMkv] = common.VideoExtMkv
+		_defExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
+		_defExtMap[common.VideoExtIso] = common.VideoExtIso
+		_defExtMap[common.VideoExtM2ts] = common.VideoExtM2ts
 
-		global_value.WantedExtMap[common.VideoExtMp4] = common.VideoExtMp4
-		global_value.WantedExtMap[common.VideoExtMkv] = common.VideoExtMkv
-		global_value.WantedExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
-		global_value.WantedExtMap[common.VideoExtIso] = common.VideoExtIso
+		_wantedExtMap[common.VideoExtMp4] = common.VideoExtMp4
+		_wantedExtMap[common.VideoExtMkv] = common.VideoExtMkv
+		_wantedExtMap[common.VideoExtRmvb] = common.VideoExtRmvb
+		_wantedExtMap[common.VideoExtIso] = common.VideoExtIso
+		_wantedExtMap[common.VideoExtM2ts] = common.VideoExtM2ts
 
-		for _, videoExt := range global_value.CustomVideoExts {
-			global_value.WantedExtMap[videoExt] = videoExt
+		for _, videoExt := range _customVideoExts {
+			_wantedExtMap[videoExt] = videoExt
 		}
 	}
 	fileExt := strings.ToLower(filepath.Ext(fileName))
-	_, bFound := global_value.WantedExtMap[fileExt]
+	_, bFound := _wantedExtMap[fileExt]
 	return bFound
 }
 
@@ -335,7 +406,7 @@ func CopyDir(src string, dst string) error {
 }
 
 // CloseChrome 强行结束没有关闭的 Chrome 进程
-func CloseChrome() {
+func CloseChrome(l *logrus.Logger) {
 
 	cmdString := ""
 	var command *exec.Cmd
@@ -357,12 +428,12 @@ func CloseChrome() {
 		command = exec.Command("osascript", "-s", "h", "-e", cmdString)
 	}
 	if cmdString == "" || command == nil {
-		log_helper.GetLogger().Errorln("CloseChrome OS:", sysType)
+		l.Errorln("CloseChrome OS:", sysType)
 		return
 	}
 	err := command.Run()
 	if err != nil {
-		log_helper.GetLogger().Warningln("CloseChrome", err)
+		l.Warningln("CloseChrome", err)
 	}
 }
 
@@ -613,6 +684,12 @@ func GenerateAccessToken() string {
 	return u4.String()
 }
 
+func Get2UUID() string {
+	u4 := uuid.New()
+	u5 := uuid.New()
+	return u4.String() + u5.String()
+}
+
 func UrlJoin(hostUrl, subUrl string) (string, error) {
 
 	u, err := url.Parse(hostUrl)
@@ -622,3 +699,87 @@ func UrlJoin(hostUrl, subUrl string) (string, error) {
 	u.Path = path.Join(u.Path, subUrl)
 	return u.String(), nil
 }
+
+// GetFileSHA1String 获取文件的 SHA1 字符串
+func GetFileSHA1String(fileFPath string) (string, error) {
+	h := sha1.New()
+
+	fp, err := os.Open(fileFPath)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = fp.Close()
+	}()
+
+	partAll, err := io.ReadAll(fp)
+	if err != nil {
+		return "", err
+	}
+
+	h.Write(partAll)
+	hashBytes := h.Sum(nil)
+
+	return fmt.Sprintf("%x", md5.Sum(hashBytes)), nil
+}
+
+// GetFileSHA256String 获取文件的 SHA256 字符串
+func GetFileSHA256String(fileFPath string) (string, error) {
+
+	fp, err := os.Open(fileFPath)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = fp.Close()
+	}()
+
+	partAll, err := io.ReadAll(fp)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", sha256.Sum256(partAll)), nil
+}
+
+func GetRestOfDaySec() time.Duration {
+
+	nowTime := time.Now()
+	todayLast := nowTime.Format("2006-01-02") + " 23:59:59"
+	todayLastTime, _ := time.ParseInLocation("2006-01-02 15:04:05", todayLast, time.Local)
+	// 今天剩余的时间（s）
+	restOfDaySec := time.Duration(todayLastTime.Unix()-time.Now().Local().Unix()) * time.Second
+
+	return restOfDaySec
+}
+
+// IntToBytes 整形转换成字节
+func IntToBytes(n int) ([]byte, error) {
+	x := int32(n)
+
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	err := binary.Write(bytesBuffer, binary.BigEndian, x)
+	if err != nil {
+		return nil, err
+	}
+	return bytesBuffer.Bytes(), nil
+}
+
+// BytesToInt 字节转换成整形
+func BytesToInt(b []byte) (int, error) {
+	bytesBuffer := bytes.NewBuffer(b)
+
+	var x int32
+	err := binary.Read(bytesBuffer, binary.BigEndian, &x)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(x), nil
+}
+
+var (
+	_wantedExtMap    = make(map[string]string) // 人工确认的需要监控的视频后缀名
+	_defExtMap       = make(map[string]string) // 内置支持的视频后缀名列表
+	_customVideoExts = make([]string, 0)       // 用户额外自定义的视频后缀名列表
+)

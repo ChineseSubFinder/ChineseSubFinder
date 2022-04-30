@@ -2,17 +2,19 @@ package shooter
 
 import (
 	"crypto/md5"
+	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
-	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
 	"math"
 	"os"
@@ -22,18 +24,22 @@ import (
 )
 
 type Supplier struct {
-	settings settings.Settings
-	log      *logrus.Logger
-	topic    int
+	settings       *settings.Settings
+	log            *logrus.Logger
+	fileDownloader *file_downloader.FileDownloader
+	topic          int
+	isAlive        bool
 }
 
-func NewSupplier(_settings settings.Settings) *Supplier {
+func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 
 	sup := Supplier{}
-	sup.log = log_helper.GetLogger()
-	sup.topic = common.DownloadSubsPerSite
+	sup.log = fileDownloader.Log
+	sup.fileDownloader = fileDownloader
+	sup.topic = common2.DownloadSubsPerSite
+	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
-	sup.settings = clone.Clone(_settings).(settings.Settings)
+	sup.settings = fileDownloader.Settings
 	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
 		sup.topic = sup.settings.AdvancedSettings.Topic
 	}
@@ -41,35 +47,54 @@ func NewSupplier(_settings settings.Settings) *Supplier {
 	return &sup
 }
 
-func (s Supplier) CheckAlive() (bool, int64) {
+func (s *Supplier) CheckAlive() (bool, int64) {
 	// 计算当前时间
 	startT := time.Now()
 	_, err := s.getSubInfos(checkFileHash, checkFileName, qLan)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
+		s.isAlive = false
 		return false, 0
 	}
 	// 计算耗时
+	s.isAlive = true
 	return true, time.Since(startT).Milliseconds()
 }
 
-func (s Supplier) GetSupplierName() string {
-	return common.SubSiteShooter
+func (s *Supplier) IsAlive() bool {
+	return s.isAlive
 }
 
-func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
+func (s *Supplier) OverDailyDownloadLimit() bool {
+	// 对于这个接口暂时没有限制
+	return false
+}
+
+func (s *Supplier) GetLogger() *logrus.Logger {
+	return s.log
+}
+
+func (s *Supplier) GetSettings() *settings.Settings {
+	return s.settings
+}
+
+func (s *Supplier) GetSupplierName() string {
+	return common2.SubSiteShooter
+}
+
+func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 	return s.getSubListFromFile(filePath)
 }
 
-func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	return s.downloadSub4Series(seriesInfo)
 }
 
-func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+func (s *Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	return s.downloadSub4Series(seriesInfo)
 }
 
-func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error) {
+func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error) {
 
 	defer func() {
 		s.log.Debugln(s.GetSupplierName(), filePath, "End...")
@@ -81,12 +106,28 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	var outSubInfoList []supplier.SubInfo
 	var jsonList []SublistShooter
 
-	hash, err := s.computeFileHash(filePath)
+	if my_util.IsFile(filePath) == false {
+		// 这里传入的可能是蓝光结构的伪造存在的视频文件，需要检查一次这个文件是否存在
+		bok, _, _ := decode.IsFakeBDMVWorked(filePath)
+		if bok == false {
+
+			nowError := errors.New(fmt.Sprintf("%s %s %s",
+				s.GetSupplierName(),
+				filePath,
+				"not exist, and it`s not a Blue ray Video FakeFileName"))
+
+			s.log.Errorln(nowError)
+
+			return nil, nowError
+		}
+	}
+
+	hash, err := ComputeFileHash(filePath)
 	if err != nil {
 		return nil, err
 	}
 	if hash == "" {
-		return nil, common.ShooterFileHashIsEmpty
+		return nil, common2.ShooterFileHashIsEmpty
 	}
 
 	fileName := filepath.Base(filePath)
@@ -102,14 +143,19 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 				subExt = "." + subExt
 			}
 
-			data, _, err := my_util.DownFile(file.Link)
+			subInfo, err := s.fileDownloader.Get(s.GetSupplierName(), int64(i), fileName, language.ChineseSimple, file.Link, 0, shooter.Delay)
 			if err != nil {
 				s.log.Error(err)
 				continue
 			}
+			// 下载成功需要统计到今天的次数中
+			_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName(),
+				my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
+			if err != nil {
+				s.log.Warningln(s.GetSupplierName(), "getSubListFromFile.AddDailyDownloadCount", err)
+			}
 
-			onSub := supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, language.ChineseSimple, file.Link, 0, shooter.Delay, subExt, data)
-			outSubInfoList = append(outSubInfoList, *onSub)
+			outSubInfoList = append(outSubInfoList, *subInfo)
 			// 如果够了那么多个字幕就返回
 			if len(outSubInfoList) >= s.topic {
 				return outSubInfoList, nil
@@ -121,11 +167,11 @@ func (s Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, error
 	return outSubInfoList, nil
 }
 
-func (s Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShooter, error) {
+func (s *Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShooter, error) {
 
 	var jsonList []SublistShooter
 
-	httpClient := my_util.NewHttpClient(*s.settings.AdvancedSettings.ProxySettings)
+	httpClient := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	resp, err := httpClient.R().
 		SetFormData(map[string]string{
 			"filehash": fileHash,
@@ -134,7 +180,7 @@ func (s Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShooter
 			"lang":     qLan,
 		}).
 		SetResult(&jsonList).
-		Post(common.SubShooterRootUrl)
+		Post(s.settings.AdvancedSettings.SuppliersSettings.Shooter.RootUrl)
 	if err != nil {
 		if resp != nil {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", fileName, err.Error())
@@ -146,7 +192,7 @@ func (s Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShooter
 	return jsonList, nil
 }
 
-func (s Supplier) computeFileHash(filePath string) (string, error) {
+func ComputeFileHash(filePath string) (string, error) {
 	hash := ""
 	fp, err := os.Open(filePath)
 	if err != nil {
@@ -161,7 +207,7 @@ func (s Supplier) computeFileHash(filePath string) (string, error) {
 	}
 	size := float64(stat.Size())
 	if size < 0xF000 {
-		return "", common.VideoFileIsTooSmall
+		return "", common2.VideoFileIsTooSmall
 	}
 	samplePositions := [4]int64{
 		4 * 1024,
@@ -186,7 +232,7 @@ func (s Supplier) computeFileHash(filePath string) (string, error) {
 	return hash, nil
 }
 
-func (s Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+func (s *Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	var allSupplierSubInfo = make([]supplier.SubInfo, 0)
 
 	index := 0

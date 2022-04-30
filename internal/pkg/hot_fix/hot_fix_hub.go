@@ -17,6 +17,7 @@ func HotFixProcess(param types.HotFixParam) error {
 	// 一共有多少个 HotFix 要修复，需要固定下来
 	hotfixCases := []ifaces.IHotFix{
 		NewHotFix001(param.MovieRootDirs, param.SeriesRootDirs),
+		NewHotFix002(),
 	}
 	// -----------------------------------------------------------------------
 	// 找现在有多少个 hotfix 执行过了
@@ -55,6 +56,9 @@ func HotFixProcess(param types.HotFixParam) error {
 					log_helper.GetLogger().Infoln("Hotfix 001, rename done,", i, file)
 				}
 			}
+			break
+		case "002":
+			log_helper.GetLogger().Infoln("Hotfix 002, process == ", processResult.(bool))
 			break
 		default:
 			continue

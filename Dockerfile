@@ -3,6 +3,7 @@ FROM library/node:16-alpine as frontBuilder
 USER root
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
+add ./frontend/.npmrc /usr/src/app
 add ./frontend/package.json /usr/src/app
 add ./frontend/package-lock.json /usr/src/app
 RUN npm ci
@@ -19,7 +20,7 @@ LABEL stage=gobuilder
 ENV CGO_ENABLED 1
 ENV GO111MODULE=on
 ENV GOOS linux
-ENV GOPROXY https://goproxy.cn,direct
+#ENV GOPROXY https://goproxy.cn,direct
 
 # 切换工作目录
 WORKDIR /homelab/buildspace
@@ -34,7 +35,7 @@ RUN cd ./cmd/chinesesubfinder \
 # 运行时环境
 FROM lsiobase/ubuntu:bionic
 
-ENV TZ=Asia/Shanghai \
+ENV TZ=Asia/Shanghai PERMS=true \
     PUID=1026 PGID=100
 
 RUN ln -s /root/.cache/rod/chromium-856583/chrome-linux/chrome /usr/bin/chrome && \

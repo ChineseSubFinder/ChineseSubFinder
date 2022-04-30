@@ -27,6 +27,9 @@ const regStringSRT2 = `(\d+)\n([\d:.]+)\s+-{2}\>\s+([\d:.]+)\n([\s\S]*?(\n{1,2}|
 const regStringSRTime = `([\d:,]+)\s+-{2}\>\s+([\d:,]+)`
 const regStringSRTime2 = `([\d:.]+)\s+-{2}\>\s+([\d:.]+)`
 
+// 匹配 srt 的字幕特效，需要移除这些
+var ReMatchSrtSubtitleEffects = regexp.MustCompile(`(?m)([1-9]\d*\.?\d*)|(0\.\d*[1-9])`)
+
 var ReMatchDialogueASS = regexp.MustCompile(regStringASS)
 var ReMatchDialogueSRT = regexp.MustCompile(regStringSRT)
 var ReMatchDialogueSRT2 = regexp.MustCompile(regStringSRT2)

@@ -1,6 +1,8 @@
 package TestCode
 
-import "github.com/go-creed/sat"
+import (
+	"github.com/go-creed/sat"
+)
 
 func convertChsCht() {
 	/*
@@ -8,13 +10,22 @@ func convertChsCht() {
 		dicter.ReadReverse 转繁体
 	*/
 	dicter := sat.DefaultDict()
-	sstr := "什麼"
+	println("---------------------")
+	sstr := "什麼sdg as 123"
+	println(sstr)
+	// 转换到 简体
+	println(dicter.Read(sstr))
+	// 转换到 繁体
+	println(dicter.ReadReverse(sstr))
+	println("---------------------")
+	sstr = "11什asd么56"
+	println(sstr)
 	println(dicter.Read(sstr))
 	println(dicter.ReadReverse(sstr))
-	sstr = "什么"
+	println("---------------------")
+	sstr = "asd簡繁as25轉s換66"
+	println(sstr)
 	println(dicter.Read(sstr))
 	println(dicter.ReadReverse(sstr))
-	sstr = "簡繁轉換"
-	println(dicter.Read(sstr))
-	println(dicter.ReadReverse(sstr))
+	println("---------------------")
 }

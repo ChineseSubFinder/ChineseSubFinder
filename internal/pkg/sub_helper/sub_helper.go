@@ -2,15 +2,16 @@ package sub_helper
 
 import (
 	"errors"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/archive_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"math"
@@ -27,7 +28,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 	// 缓存列表，整理后的字幕列表
 	// SxEx - []string 字幕的路径
 	var siteSubInfoDict = make(map[string][]string)
-	tmpFolderFullPath, err := my_util.GetTmpFolderByName(tmpFolderName)
+	tmpFolderFullPath, err := my_folder.GetTmpFolderByName(tmpFolderName)
 	if err != nil {
 		return nil, err
 	}
@@ -348,7 +349,7 @@ func SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath string) error {
 // DeleteOneSeasonSubCacheFolder 删除一个连续剧中的所有一季字幕的缓存文件夹
 func DeleteOneSeasonSubCacheFolder(seriesDir string) error {
 
-	debugFolderByName, err := my_util.GetDebugFolderByName([]string{filepath.Base(seriesDir)})
+	debugFolderByName, err := my_folder.GetDebugFolderByName([]string{filepath.Base(seriesDir)})
 	if err != nil {
 		return err
 	}

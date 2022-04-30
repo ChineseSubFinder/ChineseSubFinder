@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	gModels "github.com/allanpk716/ChineseSubModels/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
@@ -66,7 +68,8 @@ func InitDb() error {
 		return errors.New(fmt.Sprintf("failed to connect database, %s", err.Error()))
 	}
 	// 迁移 schema
-	err = db.AutoMigrate(&models.HotFix{}, &models.SubFormatRec{})
+	err = db.AutoMigrate(&models.HotFix{}, &models.SubFormatRec{},
+		&gModels.IMDBInfo{}, &gModels.VideoSubInfo{})
 	if err != nil {
 		return errors.New(fmt.Sprintf("db AutoMigrate error, %s", err.Error()))
 	}
@@ -75,7 +78,7 @@ func InitDb() error {
 }
 
 func getDbName() string {
-	return filepath.Join(my_util.GetConfigRootDirFPath(), dbFileName)
+	return filepath.Join(my_folder.GetConfigRootDirFPath(), dbFileName)
 }
 
 var (

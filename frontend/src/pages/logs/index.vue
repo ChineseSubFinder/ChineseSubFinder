@@ -65,6 +65,7 @@ import { computed } from 'vue';
 import LogViewer from 'components/LogViewer';
 import { getExportSettings, useSettings } from 'pages/settings/useSettings';
 import { gotoGithubIssuePage } from 'src/utils/CommonUtils';
+import { systemState } from 'src/store/systemState';
 
 const { logList, currentIndex, currentItem } = useLogList();
 
@@ -89,7 +90,7 @@ const downloadLog = (logLines) => {
   const filename = `${logLines[0]?.date_time || 'output'}.log`;
   const configString = JSON.stringify(getExportSettings(), null, 2);
   const logString = getTextLogContent(logLines);
-  const content = `config:\n${configString}\n\nlog:\n${logString}`;
+  const content = `version: ${systemState.systemInfo?.version}\n\nconfig:\n${configString}\n\nlog:\n${logString}`;
   saveText(filename, content);
 };
 </script>

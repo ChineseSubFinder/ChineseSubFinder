@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
@@ -17,7 +16,7 @@ func (cb ControllerBase) JobStartHandler(c *gin.Context) {
 
 	if cb.cronHelper.CronHelperRunning() == false {
 		go func() {
-			cb.cronHelper.Start(settings.GetSettings().CommonSettings.RunScanAtStartUp)
+			cb.cronHelper.Start(settings.GetSettings(true).CommonSettings.RunScanAtStartUp)
 		}()
 	}
 
@@ -51,25 +50,7 @@ func (cb ControllerBase) JobStatusHandler(c *gin.Context) {
 		cb.ErrorProcess(c, "JobStatusHandler", err)
 	}()
 
-	cronStatus := cb.cronHelper.CronHelperRunning()
-	coreJobStatus := cb.cronHelper.FullDownloadProcessRunning()
-
-	if coreJobStatus == true {
-		// 核心任务在运行就是运行
-		c.JSON(http.StatusOK, backend.ReplyJobStatus{
-			Status: cron_helper.Running,
-		})
-	} else {
-		// 核心任务没有运行，再判断是否定时器启动了
-		if cronStatus == true {
-			c.JSON(http.StatusOK, backend.ReplyJobStatus{
-				Status: cron_helper.Running,
-			})
-		} else {
-			c.JSON(http.StatusOK, backend.ReplyJobStatus{
-				Status: cron_helper.Stopped,
-			})
-		}
-	}
-
+	c.JSON(http.StatusOK, backend.ReplyJobStatus{
+		Status: cb.cronHelper.CronRunningStatusString(),
+	})
 }

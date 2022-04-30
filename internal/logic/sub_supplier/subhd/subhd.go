@@ -5,23 +5,22 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/url_connectedness_helper"
+	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/launcher"
-	"github.com/huandu/go-clone"
 	"github.com/nfnt/resize"
 	"github.com/sirupsen/logrus"
 	"image/jpeg"
@@ -35,70 +34,98 @@ import (
 )
 
 type Supplier struct {
-	settings         settings.Settings
-	log              *logrus.Logger
-	topic            int
-	rodLauncher      *launcher.Launcher
-	tt               time.Duration
-	debugMode        bool
-	httpProxyAddress string
+	settings       *settings.Settings
+	log            *logrus.Logger
+	fileDownloader *file_downloader.FileDownloader
+	topic          int
+	tt             time.Duration
+	debugMode      bool
+	isAlive        bool
 }
 
-func NewSupplier(_settings settings.Settings) *Supplier {
+func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 
 	sup := Supplier{}
-	sup.log = log_helper.GetLogger()
-	sup.topic = common.DownloadSubsPerSite
+	sup.log = fileDownloader.Log
+	sup.fileDownloader = fileDownloader
+	sup.topic = common2.DownloadSubsPerSite
 
-	sup.settings = clone.Clone(_settings).(settings.Settings)
+	sup.settings = fileDownloader.Settings
 	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
 		sup.topic = sup.settings.AdvancedSettings.Topic
 	}
+	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
 	// 默认超时是 2 * 60s，如果是调试模式则是 5 min
-	sup.tt = common.HTMLTimeOut
+	sup.tt = common2.HTMLTimeOut
 	sup.debugMode = sup.settings.AdvancedSettings.DebugMode
 	if sup.debugMode == true {
-		sup.tt = common.OneMovieProcessTimeOut
-	}
-	// 判断是否启用代理
-	if sup.settings.AdvancedSettings.ProxySettings.UseHttpProxy == true {
-		sup.httpProxyAddress = sup.settings.AdvancedSettings.ProxySettings.HttpProxyAddress
-	} else {
-		sup.httpProxyAddress = ""
+		sup.tt = common2.OneMovieProcessTimeOut
 	}
 
 	return &sup
 }
 
-func (s Supplier) CheckAlive() (bool, int64) {
+func (s *Supplier) CheckAlive() (bool, int64) {
 
-	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(common.SubSubHDRootUrl, s.settings.AdvancedSettings.ProxySettings.HttpProxyAddress)
+	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, s.settings.AdvancedSettings.ProxySettings.HttpProxyAddress)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
+		s.isAlive = false
 		return false, 0
 	}
 	if proxyStatus == false {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Status != 200")
+		s.isAlive = false
 		return false, proxySpeed
 	}
 
+	s.isAlive = true
 	return true, proxySpeed
 }
 
-func (s Supplier) GetSupplierName() string {
-	return common.SubSiteSubHd
+func (s *Supplier) IsAlive() bool {
+	return s.isAlive
 }
 
-func (s Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
+func (s *Supplier) OverDailyDownloadLimit() bool {
+
+	// 需要查询今天的限额
+	count, err := task_queue.GetDailyDownloadCount(s.GetSupplierName(),
+		my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
+	if err != nil {
+		s.log.Errorln(s.GetSupplierName(), "GetDailyDownloadCount", err)
+		return true
+	}
+	if count > s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit {
+		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.AdvancedSettings.SuppliersSettings.SubHD.DailyDownloadLimit, "Now Is:", count)
+		return true
+	}
+	// 没有超限
+	return false
+}
+
+func (s *Supplier) GetLogger() *logrus.Logger {
+	return s.log
+}
+
+func (s *Supplier) GetSettings() *settings.Settings {
+	return s.settings
+}
+
+func (s *Supplier) GetSupplierName() string {
+	return common2.SubSiteSubHd
+}
+
+func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 	return s.getSubListFromFile4Movie(filePath)
 }
 
-func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowser(s.httpProxyAddress, true)
+	browser, err := rod_helper.NewBrowserEx(true, s.settings)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +184,12 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 			s.log.Errorln("subhd step2Ex return false")
 			continue
 		}
-		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple, my_util.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0,
+		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(),
+			int64(i),
+			hdContent.Filename,
+			language.ChineseSimple,
+			my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, item.Url),
+			0,
 			0, hdContent.Ext, hdContent.Data)
 		oneSubInfo.Season = item.Season
 		oneSubInfo.Episode = item.Episode
@@ -167,11 +199,11 @@ func (s Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]su
 	return subInfos, nil
 }
 
-func (s Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+func (s *Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 	panic("not implemented")
 }
 
-func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
+func (s *Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 	/*
 		虽然是传入视频文件路径，但是其实需要读取对应的视频文件目录下的
 		movie.xml 以及 *.nfo，找到 IMDB id
@@ -207,7 +239,7 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 		}
 	}
 	// 如果没有，那么就用文件名查找
-	searchKeyword := my_util.VideoNameSearchKeywordMaker(info.Title, imdbInfo.Year)
+	searchKeyword := my_util.VideoNameSearchKeywordMaker(s.log, info.Title, imdbInfo.Year)
 	subInfoList, err = s.getSubListFromKeyword4Movie(searchKeyword)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "keyword:", searchKeyword)
@@ -217,11 +249,11 @@ func (s Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo,
 	return subInfoList, nil
 }
 
-func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInfo, error) {
+func (s *Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInfo, error) {
 
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowser(s.httpProxyAddress, true)
+	browser, err := rod_helper.NewBrowserEx(true, s.settings)
 	if err != nil {
 		return nil, err
 	}
@@ -253,13 +285,18 @@ func (s Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInf
 			s.log.Errorln("subhd step2Ex return false")
 			continue
 		}
-		subInfos = append(subInfos, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple, my_util.AddBaseUrl(common.SubSubHDRootUrl, item.Url), 0, 0, hdContent.Ext, hdContent.Data))
+		subInfos = append(subInfos, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple,
+			my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, item.Url),
+			0,
+			0,
+			hdContent.Ext,
+			hdContent.Data))
 	}
 
 	return subInfos, nil
 }
 
-func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, allSubList []HdListItem) []HdListItem {
+func (s *Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, allSubList []HdListItem) []HdListItem {
 	// 字幕很多，考虑效率，需要做成字典
 	// key SxEx - SubInfos
 	var allSubDict = make(map[string][]HdListItem)
@@ -314,7 +351,7 @@ func (s Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, all
 }
 
 // step0 找到这个影片的详情列表
-func (s Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
+func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 	var err error
 	defer func() {
 		if err != nil {
@@ -322,7 +359,7 @@ func (s Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 		}
 	}()
 
-	result, page, err := s.httpGetFromBrowser(browser, fmt.Sprintf(common.SubSubHDSearchUrl, url.QueryEscape(keyword)))
+	result, page, err := rod_helper.HttpGetFromBrowser(browser, fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl+common2.SubSubHDSearchUrl, url.QueryEscape(keyword)), s.tt)
 	if err != nil {
 		return "", err
 	}
@@ -333,7 +370,7 @@ func (s Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 	re := regexp.MustCompile(`共\s*(\d+)\s*条`)
 	matched := re.FindAllStringSubmatch(result, -1)
 	if matched == nil || len(matched) < 1 {
-		return "", common.SubHDStep0SubCountElementNotFound
+		return "", common2.SubHDStep0SubCountElementNotFound
 	}
 	subCount, err := decode.GetNumber2int(matched[0][0])
 	if err != nil {
@@ -353,7 +390,7 @@ func (s Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 	if ok == true {
 
 		if len(imgSelection.Nodes) < 1 {
-			return "", common.SubHDStep0ImgParentLessThan1
+			return "", common2.SubHDStep0ImgParentLessThan1
 		}
 		step1Url := ""
 		if imgSelection.Nodes[0].Parent.Data == "a" {
@@ -374,24 +411,24 @@ func (s Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 			}
 		}
 		if step1Url == "" {
-			return "", common.SubHDStep0HrefIsNull
+			return "", common2.SubHDStep0HrefIsNull
 		}
 		return step1Url, nil
 	} else {
-		return "", common.SubHDStep0HrefIsNull
+		return "", common2.SubHDStep0HrefIsNull
 	}
 }
 
 // step1 获取影片的详情字幕列表
-func (s Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSeries bool) ([]HdListItem, error) {
+func (s *Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSeries bool) ([]HdListItem, error) {
 	var err error
 	defer func() {
 		if err != nil {
 			notify_center.Notify.Add("subhd_step1", err.Error())
 		}
 	}()
-	detailPageUrl = my_util.AddBaseUrl(common.SubSubHDRootUrl, detailPageUrl)
-	result, page, err := s.httpGetFromBrowser(browser, detailPageUrl)
+	detailPageUrl = my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, detailPageUrl)
+	result, page, err := rod_helper.HttpGetFromBrowser(browser, detailPageUrl, s.tt)
 	if err != nil {
 		return nil, err
 	}
@@ -433,7 +470,7 @@ func (s Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSer
 
 		listItem := HdListItem{}
 		listItem.Url = downUrl
-		listItem.BaseUrl = common.SubSubHDRootUrl
+		listItem.BaseUrl = s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl
 		listItem.Title = title
 		listItem.DownCount = downCount
 
@@ -453,16 +490,16 @@ func (s Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSer
 }
 
 // step2Ex 下载字幕 过防水墙
-func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (bool, *HdContent, error) {
+func (s *Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (bool, *HdContent, error) {
 	var err error
 	defer func() {
 		if err != nil {
 			notify_center.Notify.Add("subhd_step2Ex", err.Error())
 		}
 	}()
-	subDownloadPageUrl = my_util.AddBaseUrl(common.SubSubHDRootUrl, subDownloadPageUrl)
+	subDownloadPageUrl = my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, subDownloadPageUrl)
 
-	_, page, err := s.httpGetFromBrowser(browser, subDownloadPageUrl)
+	_, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageUrl, s.tt)
 	if err != nil {
 		return false, nil, err
 	}
@@ -483,7 +520,7 @@ func (s Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (bool
 	return true, content, nil
 }
 
-func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *HdContent, error) {
+func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *HdContent, error) {
 
 	var err error
 	var doc *goquery.Document
@@ -491,7 +528,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *
 	fileName := ""
 	fileByte := []byte{0}
 	err = rod.Try(func() {
-		tmpDir := filepath.Join(global_value.DefTmpFolder, "downloads")
+		tmpDir := filepath.Join(global_value.DefTmpFolder(), "downloads")
 		wait := browser.WaitDownload(tmpDir)
 		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()
@@ -524,7 +561,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *
 			element.MustClick()
 			time.Sleep(time.Second * 2)
 			// 填写“验证码”
-			page.MustEval(`$("#gzhcode").attr("value","` + common.SubhdCode + `");`)
+			page.MustEval(`$("#gzhcode").attr("value","` + common2.SubhdCode + `");`)
 			// 是否有“完成验证”按钮
 			downBtn := doc.Find(btnCommitCode)
 			if len(downBtn.Nodes) < 1 {
@@ -533,7 +570,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *
 			element = page.MustElement(btnCommitCode)
 			benCommit := element.MustText()
 			if strings.Contains(benCommit, "验证") == false {
-				log_helper.GetLogger().Errorln("btn not found 完整验证")
+				s.log.Errorln("btn not found 完整验证")
 				return
 			}
 			element.MustClick()
@@ -548,7 +585,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *
 			time.Sleep(time.Second * 2)
 		} else {
 
-			log_helper.GetLogger().Errorln("btn not found 下载验证 or 下载")
+			s.log.Errorln("btn not found 下载验证 or 下载")
 			return
 		}
 		// 更新 page 的实例对应的 doc Content
@@ -563,7 +600,7 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *
 		if len(waterWall.Nodes) >= 1 {
 			hasWaterWall = true
 		}
-		log_helper.GetLogger().Debugln("Need pass WaterWall", hasWaterWall)
+		s.log.Debugln("Need pass WaterWall", hasWaterWall)
 		// 过墙
 		if hasWaterWall == true {
 			s.passWaterWall(page)
@@ -584,13 +621,20 @@ func (s Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *
 	hdContent.Data = fileByte
 
 	if downloadSuccess == false {
-		return false, &hdContent, common.SubHDStep2ExCannotFindDownloadBtn
+		return false, &hdContent, common2.SubHDStep2ExCannotFindDownloadBtn
+	}
+
+	// 下载成功需要统计到今天的次数中
+	_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName(),
+		my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
+	if err != nil {
+		s.log.Warningln(s.GetSupplierName(), "getSubListFromFile.AddDailyDownloadCount", err)
 	}
 
 	return downloadSuccess, &hdContent, nil
 }
 
-func (s Supplier) passWaterWall(page *rod.Page) {
+func (s *Supplier) passWaterWall(page *rod.Page) {
 	//等待驗證碼窗體載入
 	page.MustElement("#tcaptcha_iframe").MustWaitLoad()
 	//進入到iframe
@@ -604,7 +648,7 @@ func (s Supplier) passWaterWall(page *rod.Page) {
 	shadowbg := slideBgEl.MustResource()
 	// 取得原始圖像
 	src := slideBgEl.MustProperty("src")
-	fullbg, _, err := my_util.DownFile(strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
+	fullbg, _, err := my_util.DownFile(s.log, strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
 	if err != nil {
 		panic(err)
 	}
@@ -674,28 +718,8 @@ search:
 
 	if s.debugMode == true {
 		//截圖保存
-		page.MustScreenshot(global_value.DefDebugFolder, "result.png")
+		page.MustScreenshot(global_value.DefDebugFolder(), "result.png")
 	}
-}
-
-func (s Supplier) httpGetFromBrowser(browser *rod.Browser, inputUrl string) (string, *rod.Page, error) {
-
-	page, err := rod_helper.NewPageNavigate(browser, inputUrl, s.tt, 5)
-	if err != nil {
-		return "", nil, err
-	}
-	pageString, err := page.HTML()
-	if err != nil {
-		return "", nil, err
-	}
-	// 每次搜索间隔
-	if s.debugMode == true {
-		time.Sleep(my_util.RandomSecondDuration(5, 10))
-	} else {
-		time.Sleep(my_util.RandomSecondDuration(5, 20))
-	}
-
-	return pageString, page, nil
 }
 
 type HdListItem struct {

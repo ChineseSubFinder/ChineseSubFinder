@@ -3,73 +3,55 @@ package downloader
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
-	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/forced_scan_and_down_sub"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	markSystem "github.com/allanpk716/ChineseSubFinder/internal/logic/mark_system"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/restore_fix_timeline_bk"
-	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
-	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	subCommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
-	subTimelineFixerPKG "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_control"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
-	"github.com/emirpasic/gods/maps/treemap"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
+	taskQueue2 "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 // Downloader 实例化一次用一次，不要反复的使用，很多临时标志位需要清理。
 type Downloader struct {
-	settings settings.Settings
-	log      *logrus.Logger
-
-	subSupplierHub *subSupplier.SubSupplierHub
-
-	mk                       *markSystem.MarkingSystem // MarkingSystem
-	embyHelper               *embyHelper.EmbyHelper
-	movieFileFullPathList    []string                      //  多个需要搜索字幕的电影文件全路径
-	seriesSubNeedDlMap       map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录，连续剧文件夹名称 -- 每一集的 EmbyMixInfo List
-	subFormatter             ifaces.ISubFormatter          //	字幕格式化命名的实现
-	subNameFormatter         subCommon.FormatterName       // 从 inSubFormatter 推断出来
-	needForcedScanAndDownSub bool                          // 将会强制扫描所有的视频，下载字幕，替换已经存在的字幕，不进行时间段和已存在则跳过的判断。且不会进过 Emby API 的逻辑，智能进行强制去以本程序的方式去扫描。
-	NeedRestoreFixTimeLineBK bool                          // 从 csf-bk 文件还原时间轴修复前的字幕文件
-
+	settings                 *settings.Settings
+	log                      *logrus.Logger
+	fileDownloader           *file_downloader.FileDownloader
+	ctx                      context.Context
+	cancel                   context.CancelFunc
+	subSupplierHub           *subSupplier.SubSupplierHub                  // 字幕提供源的集合，这个需要定时进行扫描，这些字幕源是否有效，以及下载验证码信息
+	mk                       *markSystem.MarkingSystem                    // MarkingSystem，字幕的评价系统
+	subFormatter             ifaces.ISubFormatter                         // 字幕格式化命名的实现
+	subNameFormatter         subCommon.FormatterName                      // 从 inSubFormatter 推断出来
 	subTimelineFixerHelperEx *sub_timeline_fixer.SubTimelineFixerHelperEx // 字幕时间轴校正
-
-	taskControl  *task_control.TaskControl
-	canceled     bool
-	canceledLock sync.Mutex
+	downloaderLock           sync.Mutex                                   // 取消执行 task control 的 Lock
+	downloadQueue            *task_queue.TaskQueue                        // 需要下载的视频的队列
 }
 
-func NewDownloader(_supplierHub *subSupplier.SubSupplierHub, inSubFormatter ifaces.ISubFormatter, _settings settings.Settings) (*Downloader, error) {
+func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_downloader.FileDownloader, downloadQueue *task_queue.TaskQueue) *Downloader {
 
 	var downloader Downloader
-	var err error
 	downloader.subFormatter = inSubFormatter
-	downloader.log = log_helper.GetLogger()
+	downloader.log = fileDownloader.Log
 	// 参入设置信息
-	downloader.settings = _settings
+	downloader.settings = fileDownloader.Settings
 	// 检测是否某些参数超出范围
 	downloader.settings.Check()
-	// 初始化 Emby API 接口
-	if downloader.settings.EmbySettings.Enable == true && downloader.settings.EmbySettings.AddressUrl != "" && downloader.settings.EmbySettings.APIKey != "" {
-		downloader.embyHelper = embyHelper.NewEmbyHelper(*downloader.settings.EmbySettings)
-	}
 	// 这里就不单独弄一个 settings.SubNameFormatter 字段来传递值了，因为 inSubFormatter 就已经知道是什么 formatter 了
 	downloader.subNameFormatter = subCommon.FormatterName(downloader.subFormatter.GetFormatterFormatterName())
-
-	downloader.subSupplierHub = _supplierHub
 
 	var sitesSequence = make([]string, 0)
 	// TODO 这里写固定了抉择字幕的顺序
@@ -79,449 +61,268 @@ func NewDownloader(_supplierHub *subSupplier.SubSupplierHub, inSubFormatter ifac
 	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
 	downloader.mk = markSystem.NewMarkingSystem(sitesSequence, downloader.settings.AdvancedSettings.SubTypePriority)
 
-	downloader.movieFileFullPathList = make([]string, 0)
-	downloader.seriesSubNeedDlMap = make(map[string][]emby.EmbyMixInfo)
-
 	// 初始化，字幕校正的实例
 	downloader.subTimelineFixerHelperEx = sub_timeline_fixer.NewSubTimelineFixerHelperEx(*downloader.settings.TimelineFixerSettings)
 
 	if downloader.settings.AdvancedSettings.FixTimeLine == true {
 		downloader.subTimelineFixerHelperEx.Check()
 	}
-	// 初始化任务控制
-	downloader.taskControl, err = task_control.NewTaskControl(downloader.settings.CommonSettings.Threads, log_helper.GetLogger())
-	if err != nil {
-		return nil, err
-	}
+	// 任务队列
+	downloader.downloadQueue = downloadQueue
+	// 单个任务的超时设置
+	downloader.ctx, downloader.cancel = context.WithTimeout(context.Background(), time.Duration(downloader.settings.AdvancedSettings.TaskQueue.OneJobTimeOut)*time.Second)
 
-	return &downloader, nil
+	return &downloader
 }
 
-// ReadSpeFile 优先级最高。读取特殊文件，启用一些特殊的功能，比如 forced_scan_and_down_sub
-func (d *Downloader) ReadSpeFile() error {
-	// 理论上是一次性的，用了这个文件就应该没了
-	// 强制的字幕扫描
-	needProcessForcedScanAndDownSub, err := forced_scan_and_down_sub.CheckSpeFile()
-	if err != nil {
-		return err
-	}
-	d.needForcedScanAndDownSub = needProcessForcedScanAndDownSub
-	// 从 csf-bk 文件还原时间轴修复前的字幕文件
-	needProcessRestoreFixTimelineBK, err := restore_fix_timeline_bk.CheckSpeFile()
-	if err != nil {
-		return err
-	}
-	d.NeedRestoreFixTimeLineBK = needProcessRestoreFixTimelineBK
+func (d *Downloader) SupplierCheck() {
 
-	d.log.Infoln("NeedRestoreFixTimeLineBK ==", needProcessRestoreFixTimelineBK)
-
-	return nil
-}
-
-// GetUpdateVideoListFromEmby 这里首先会进行近期影片的获取，然后对这些影片进行刷新，然后在获取字幕列表，最终得到需要字幕获取的 video 列表
-func (d *Downloader) GetUpdateVideoListFromEmby() error {
-	if d.embyHelper == nil {
-		return nil
-	}
 	defer func() {
-		d.log.Infoln("GetUpdateVideoListFromEmby End")
-	}()
-	d.log.Infoln("GetUpdateVideoListFromEmby Start...")
-	//------------------------------------------------------
-	// 是否取消执行
-	nowCancel := false
-	d.canceledLock.Lock()
-	nowCancel = d.canceled
-	d.canceledLock.Unlock()
-	if nowCancel == true {
-		d.log.Infoln("GetUpdateVideoListFromEmby Canceled")
-		return nil
-	}
-	var err error
-	var movieList []emby.EmbyMixInfo
-	movieList, d.seriesSubNeedDlMap, err = d.embyHelper.GetRecentlyAddVideoList()
-	if err != nil {
-		return err
-	}
-	// 获取全路径
-	for _, info := range movieList {
-		d.movieFileFullPathList = append(d.movieFileFullPathList, info.PhysicalVideoFileFullPath)
-	}
-	// 输出调试信息
-	d.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap Start")
-	for s := range d.seriesSubNeedDlMap {
-		d.log.Debugln(s)
-	}
-	d.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - seriesSubNeedDlMap End")
-
-	d.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList Start")
-	for s, value := range d.movieFileFullPathList {
-		d.log.Debugln(s, value)
-	}
-	d.log.Debugln("GetUpdateVideoListFromEmby - DebugInfo - movieFileFullPathList End")
-
-	return nil
-}
-
-func (d *Downloader) RefreshEmbySubList() error {
-
-	if d.embyHelper == nil {
-		return nil
-	}
-
-	bRefresh := false
-	defer func() {
-		if bRefresh == true {
-			d.log.Infoln("Refresh Emby Sub List Success")
-		} else {
-			d.log.Errorln("Refresh Emby Sub List Error")
+		if p := recover(); p != nil {
+			d.log.Errorln("Downloader.SupplierCheck() panic")
 		}
+		d.downloaderLock.Unlock()
+
+		d.log.Infoln("Download.SupplierCheck() End")
 	}()
-	d.log.Infoln("Refresh Emby Sub List Start...")
-	//------------------------------------------------------
-	// 是否取消执行
-	nowCancel := false
-	d.canceledLock.Lock()
-	nowCancel = d.canceled
-	d.canceledLock.Unlock()
-	if nowCancel == true {
-		d.log.Infoln("RefreshEmbySubList Canceled")
-		return nil
-	}
 
-	bRefresh, err := d.embyHelper.RefreshEmbySubList()
-	if err != nil {
-		return err
-	}
+	d.downloaderLock.Lock()
+	d.log.Infoln("Download.SupplierCheck() Start ...")
 
-	return nil
-}
+	// 创建一个 chan 用于任务的中断和超时
+	done := make(chan interface{}, 1)
+	// 接收内部任务的 panic
+	panicChan := make(chan interface{}, 1)
+	go func() {
+		if p := recover(); p != nil {
+			panicChan <- p
+		}
+		// 下载前的初始化
+		//d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
+		//preDownloadProcess := pre_download_process.NewPreDownloadProcess(d.log, d.settings)
+		//err := preDownloadProcess.Init().Check().Wait()
+		//if err != nil {
+		//	done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
+		//} else {
+		//	// 更新 SubSupplierHub 实例
+		//	d.downloaderLock.Lock()
+		//	d.subSupplierHub = preDownloadProcess.SubSupplierHub
+		//	d.downloaderLock.Unlock()
+		//
+		//	done <- nil
+		//}
 
-// DownloadSub4Movie 这里对接 Emby 的时候比较方便，只要更新 d.movieFileFullPathList 就行了，不像连续剧那么麻烦
-func (d *Downloader) DownloadSub4Movie() error {
-	defer func() {
-		// 所有的电影字幕下载完成，抉择完成，需要清理缓存目录
-		err := my_util.ClearRootTmpFolder()
+		subSupplierHub := subSupplier.NewSubSupplierHub(xunlei.NewSupplier(d.fileDownloader))
+		d.subSupplierHub = subSupplierHub
+		done <- nil
+	}()
+
+	select {
+	case err := <-done:
 		if err != nil {
-			d.log.Error("ClearRootTmpFolder", err)
+			d.log.Errorln(err)
 		}
-		d.log.Infoln("Download Movie Sub End...")
-	}()
-	var err error
-	d.log.Infoln("Download Movie Sub Started...")
-	//------------------------------------------------------
-	// 是否取消执行
-	nowCancel := false
-	d.canceledLock.Lock()
-	nowCancel = d.canceled
-	d.canceledLock.Unlock()
-	if nowCancel == true {
-		d.log.Infoln("DownloadSub4Movie Canceled")
-		return nil
+		break
+	case p := <-panicChan:
+		// 遇到内部的 panic，向外抛出
+		panic(p)
+	case <-d.ctx.Done():
+		{
+			d.log.Errorln("cancel SupplierCheck")
+			return
+		}
 	}
-	// -----------------------------------------------------
-	// 优先判断特殊的操作
-	if d.needForcedScanAndDownSub == true {
-		// 全扫描
-		d.movieFileFullPathList, err = my_util.SearchMatchedVideoFileFromDirs(d.settings.CommonSettings.MoviePaths)
-		if err != nil {
-			return err
+}
+
+func (d *Downloader) QueueDownloader() {
+
+	defer func() {
+		if p := recover(); p != nil {
+			d.log.Errorln("Downloader.QueueDownloader() panic")
 		}
-	} else {
-		// 是否是通过 emby_helper api 获取的列表
-		if d.embyHelper == nil {
-			// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
-			d.movieFileFullPathList, err = my_util.SearchMatchedVideoFileFromDirs(d.settings.CommonSettings.MoviePaths)
+		d.downloaderLock.Unlock()
+		d.log.Infoln("Download.QueueDownloader() End")
+	}()
+
+	d.downloaderLock.Lock()
+	d.log.Infoln("Download.QueueDownloader() Start ...")
+
+	var downloadCounter int64
+	downloadCounter = 0
+	// 从队列取数据出来，见《任务生命周期》
+	bok, oneJob, err := d.downloadQueue.GetOneJob()
+	if err != nil {
+		d.log.Errorln("d.downloadQueue.GetOneWaitingJob()", err)
+		return
+	}
+	if bok == false {
+		d.log.Infoln("Download Queue Is Empty, Skip This Time")
+		return
+	}
+	downloadCounter++
+	// 创建一个 chan 用于任务的中断和超时
+	done := make(chan interface{}, 1)
+	// 接收内部任务的 panic
+	panicChan := make(chan interface{}, 1)
+	go func() {
+		defer func() {
+			if p := recover(); p != nil {
+				panicChan <- p
+			}
+			// 没下载完毕一次，进行一次缓存和 Chrome 的清理
+			err = my_folder.ClearRootTmpFolder()
 			if err != nil {
-				return err
+				d.log.Error("ClearRootTmpFolder", err)
 			}
+			my_util.CloseChrome(d.log)
+		}()
+
+		if oneJob.VideoType == common.Movie {
+			// 电影
+			// 具体的下载逻辑 func()
+			done <- d.movieDlFunc(d.ctx, oneJob, downloadCounter)
+		} else if oneJob.VideoType == common.Series {
+			// 连续剧
+			// 具体的下载逻辑 func()
+			done <- d.seriesDlFunc(d.ctx, oneJob, downloadCounter)
 		} else {
-			// 进过 emby_helper api 的信息读取
-			d.log.Infoln("Movie Sub Dl From Emby API...")
-			if len(d.movieFileFullPathList) < 1 {
-				d.log.Infoln("Movie Sub Dl From Emby API no movie need Dl sub")
-				return nil
-			}
+			d.log.Errorln("oneJob.VideoType not support, oneJob.VideoType = ", oneJob.VideoType)
+			done <- nil
 		}
-	}
-	// -----------------------------------------------------
-	// 并发控制，设置为 movie 的处理函数
-	d.taskControl.SetCtxProcessFunc("MoviePool", d.movieDlFunc, common.OneMovieProcessTimeOut)
-	// -----------------------------------------------------
-	// 一个视频文件同时多个站点查询，阻塞完毕后，在进行下一个
-	for i, oneVideoFullPath := range d.movieFileFullPathList {
-
-		err = d.taskControl.Invoke(&task_control.TaskData{
-			Index: i,
-			Count: len(d.movieFileFullPathList),
-			DataEx: DownloadInputData{
-				OneVideoFullPath: oneVideoFullPath,
-			},
-		})
-		if err != nil {
-			d.log.Errorln("DownloadSub4Movie Invoke Index:", i, "Error", err)
-		}
-	}
-
-	d.taskControl.Hold()
-	// 可以得到执行结果的统计信息
-	successList, noExecuteList, errorList := d.taskControl.GetExecuteInfo()
-
-	d.log.Infoln("--------------------------------------")
-	d.log.Infoln("successList", len(successList))
-	for i, indexId := range successList {
-		d.log.Infoln(i, d.movieFileFullPathList[indexId])
-	}
-	d.log.Infoln("--------------------------------------")
-	d.log.Infoln("noExecuteList", len(noExecuteList))
-	for i, indexId := range noExecuteList {
-		d.log.Infoln(i, d.movieFileFullPathList[indexId])
-	}
-	d.log.Infoln("--------------------------------------")
-	d.log.Infoln("errorList", len(errorList))
-	for i, indexId := range errorList {
-		d.log.Infoln(i, d.movieFileFullPathList[indexId])
-	}
-	d.log.Infoln("--------------------------------------")
-
-	return nil
-}
-
-func (d *Downloader) DownloadSub4Series() error {
-	var err error
-	defer func() {
-		// 所有的连续剧字幕下载完成，抉择完成，需要清理缓存目录
-		err := my_util.ClearRootTmpFolder()
-		if err != nil {
-			d.log.Error("ClearRootTmpFolder", err)
-		}
-		d.log.Infoln("Download Series Sub End...")
-
-		my_util.CloseChrome()
-		d.log.Infoln("CloseChrome")
 	}()
-	d.log.Infoln("Download Series Sub Started...")
-	//------------------------------------------------------
-	// 是否取消执行
-	nowCancel := false
-	d.canceledLock.Lock()
-	nowCancel = d.canceled
-	d.canceledLock.Unlock()
-	if nowCancel == true {
-		d.log.Infoln("DownloadSub4Series Canceled")
-		return nil
-	}
-	// -----------------------------------------------------
-	// 并发控制，设置为 movie 的处理函数
-	d.taskControl.SetCtxProcessFunc("SeriesPool", d.seriesDlFunc, common.OneSeriesProcessTimeOut)
-	// -----------------------------------------------------
-	// 是否是通过 emby_helper api 获取的列表
-	// x://连续剧 -- 连续剧A、连续剧B、连续剧C 的名称列表
-	var seriesDirMap = treemap.NewWithStringComparator()
-	if d.embyHelper == nil {
-		// 不使用 Emby 的情况
-		// 遍历连续剧总目录下的第一层目录
-		seriesDirMap, err = seriesHelper.GetSeriesListFromDirs(d.settings.CommonSettings.SeriesPaths)
+
+	select {
+	case err := <-done:
+		// 跳出 select，可以外层继续，不会阻塞在这里
 		if err != nil {
-			return err
+			d.log.Errorln(err)
 		}
-
-		// 输出调试信息，有那些连续剧文件夹名称
-		seriesDirMap.Each(func(key interface{}, value interface{}) {
-
-			for i, s := range value.([]string) {
-				d.log.Debugln("embyHelper == nil GetSeriesList", i, s)
-			}
-		})
-	} else {
-		// 使用 Emby 的情况
-		// 这里给出的是连续剧的文件夹名称
-		d.log.Debugln("embyHelper seriesSubNeedDlMap Count:", len(d.seriesSubNeedDlMap))
-		for seriesFolderName, mixInfos := range d.seriesSubNeedDlMap {
-
-			if len(mixInfos) < 1 {
-				continue
-			}
-			nowPhRootPath := mixInfos[0].PhysicalRootPath
-			value, found := seriesDirMap.Get(nowPhRootPath)
-			if found == false {
-				seriesDirMap.Put(nowPhRootPath, []string{seriesFolderName})
-			} else {
-				value = append(value.([]string), seriesFolderName)
-				seriesDirMap.Put(nowPhRootPath, value)
-			}
-
-			d.log.Debugln("embyHelper seriesSubNeedDlMap:", seriesFolderName)
+		break
+	case p := <-panicChan:
+		// 遇到内部的 panic，向外抛出
+		panic(p)
+	case <-d.ctx.Done():
+		{
+			// 取消这个 context
+			d.log.Warningln("cancel Downloader.QueueDownloader()")
+			return
 		}
 	}
-
-	seriesCount := 0
-	seriesIndexNameMap := make(map[int]string)
-	seriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
-		for _, seriesName := range seriesNames.([]string) {
-
-			err = d.taskControl.Invoke(&task_control.TaskData{
-				Index: seriesCount,
-				Count: len(seriesNames.([]string)),
-				DataEx: DownloadInputData{
-					RootDirPath:   seriesRootPathName.(string),
-					OneSeriesPath: seriesName,
-				},
-			})
-			if err != nil {
-				d.log.Errorln("DownloadSub4Series", seriesRootPathName.(string), "Invoke Index:", seriesCount, "Error", err)
-			}
-
-			seriesIndexNameMap[seriesCount] = seriesName
-			seriesCount++
-		}
-	})
-
-	d.taskControl.Hold()
-	// 可以得到执行结果的统计信息
-	successList, noExecuteList, errorList := d.taskControl.GetExecuteInfo()
-
-	d.log.Infoln("--------------------------------------")
-	d.log.Infoln("successList", len(successList))
-	for i, indexId := range successList {
-		d.log.Infoln(i, seriesIndexNameMap[indexId])
-	}
-	d.log.Infoln("--------------------------------------")
-	d.log.Infoln("noExecuteList", len(noExecuteList))
-	for i, indexId := range noExecuteList {
-		d.log.Infoln(i, seriesIndexNameMap[indexId])
-	}
-	d.log.Infoln("--------------------------------------")
-	d.log.Infoln("errorList", len(errorList))
-	for i, indexId := range errorList {
-		d.log.Infoln(i, seriesIndexNameMap[indexId])
-	}
-	d.log.Infoln("--------------------------------------")
-
-	return nil
-}
-
-func (d *Downloader) RestoreFixTimelineBK() error {
-
-	defer d.log.Infoln("End Restore Fix Timeline BK")
-	d.log.Infoln("Start Restore Fix Timeline BK...")
-	//------------------------------------------------------
-	// 是否取消执行
-	nowCancel := false
-	d.canceledLock.Lock()
-	nowCancel = d.canceled
-	d.canceledLock.Unlock()
-	if nowCancel == true {
-		d.log.Infoln("RestoreFixTimelineBK Canceled")
-		return nil
-	}
-
-	_, err := subTimelineFixerPKG.Restore(d.settings.CommonSettings.MoviePaths, d.settings.CommonSettings.SeriesPaths)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (d *Downloader) Cancel() {
-	d.canceledLock.Lock()
-	d.canceled = true
-	d.canceledLock.Unlock()
-
-	d.taskControl.Release()
+	if d == nil {
+		return
+	}
+	d.cancel()
+	d.log.Infoln("Downloader.Cancel()")
 }
 
-func (d *Downloader) movieDlFunc(ctx context.Context, inData interface{}) error {
+func (d *Downloader) movieDlFunc(ctx context.Context, job taskQueue2.OneJob, downloadIndex int64) error {
 
-	taskData := inData.(*task_control.TaskData)
-	downloadInputData := taskData.DataEx.(DownloadInputData)
-	// 设置任务的状态
-	pkgcommon.SetSubScanJobStatusScanMovie(taskData.Index+1, taskData.Count, filepath.Base(downloadInputData.OneVideoFullPath))
-	// -----------------------------------------------------
+	nowSubSupplierHub := d.subSupplierHub
+	if nowSubSupplierHub.Suppliers == nil || len(nowSubSupplierHub.Suppliers) < 1 {
+		d.log.Infoln("Wait SupplierCheck Update *subSupplierHub, movieDlFunc Skip this time")
+		return nil
+	}
+
 	// 字幕都下载缓存好了，需要抉择存哪一个，优先选择中文双语的，然后到中文
-	organizeSubFiles, err := d.subSupplierHub.DownloadSub4Movie(downloadInputData.OneVideoFullPath, taskData.Index, d.needForcedScanAndDownSub)
+	organizeSubFiles, err := nowSubSupplierHub.DownloadSub4Movie(job.VideoFPath, downloadIndex)
 	if err != nil {
-		d.log.Errorln("subSupplierHub.DownloadSub4Movie", downloadInputData.OneVideoFullPath, err)
+		err = errors.New(fmt.Sprintf("subSupplierHub.DownloadSub4Movie: %v, %v", job.VideoFPath, err))
+		d.downloadQueue.AutoDetectUpdateJobStatus(job, err)
 		return err
 	}
-	// 返回的两个值都是 nil 的时候，就是无需下载字幕，那么同样不用输出额外的信息，因为之前会输出跳过的原因
-	if organizeSubFiles == nil {
+	// 返回的两个值都是 nil 的时候，就是没有下载到字幕
+	if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
+		d.log.Infoln(task_queue.ErrNotSubFound.Error(), filepath.Base(job.VideoFPath))
+		d.downloadQueue.AutoDetectUpdateJobStatus(job, task_queue.ErrNotSubFound)
 		return nil
 	}
-	// 去搜索了没有发现字幕
-	if len(organizeSubFiles) < 1 {
-		d.log.Infoln("no sub found", filepath.Base(downloadInputData.OneVideoFullPath))
-		return nil
-	}
-	d.oneVideoSelectBestSub(downloadInputData.OneVideoFullPath, organizeSubFiles)
-	// -----------------------------------------------------
 
+	err = d.oneVideoSelectBestSub(job.VideoFPath, organizeSubFiles)
+	if err != nil {
+		d.downloadQueue.AutoDetectUpdateJobStatus(job, err)
+		return err
+	}
+
+	d.downloadQueue.AutoDetectUpdateJobStatus(job, nil)
 	return nil
 }
 
-func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error {
+func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, downloadIndex int64) error {
 
-	var err error
-	taskData := inData.(*task_control.TaskData)
-	downloadInputData := taskData.DataEx.(DownloadInputData)
-	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
-	var seriesInfo *series.SeriesInfo
-	var organizeSubFiles map[string][]string
-
-	// 设置任务的状态
-	pkgcommon.SetSubScanJobStatusScanSeriesMain(taskData.Index+1, taskData.Count, downloadInputData.OneSeriesPath)
-
-	// 优先判断特殊的操作
-	if d.needForcedScanAndDownSub == true {
-		// 全盘扫描
-		seriesInfo, organizeSubFiles, err = d.subSupplierHub.DownloadSub4Series(downloadInputData.OneSeriesPath, taskData.Index, d.needForcedScanAndDownSub)
-		if err != nil {
-			d.log.Errorln("subSupplierHub.DownloadSub4Series", downloadInputData.OneSeriesPath, err)
-			return err
-		}
-	} else {
-		// 是否是通过 emby_helper api 获取的列表
-		if d.embyHelper == nil {
-			// 不适用 emby api
-			seriesInfo, organizeSubFiles, err = d.subSupplierHub.DownloadSub4Series(downloadInputData.OneSeriesPath, taskData.Index, d.needForcedScanAndDownSub)
-			if err != nil {
-				d.log.Errorln("subSupplierHub.DownloadSub4Series", downloadInputData.OneSeriesPath, err)
-				return err
-			}
-		} else {
-			// 先进行 emby_helper api 的操作，读取需要更新字幕的项目
-			seriesInfo, organizeSubFiles, err = d.subSupplierHub.DownloadSub4SeriesFromEmby(
-				filepath.Join(downloadInputData.RootDirPath, downloadInputData.OneSeriesPath),
-				d.seriesSubNeedDlMap[downloadInputData.OneSeriesPath], taskData.Index)
-			if err != nil {
-				d.log.Errorln("subSupplierHub.DownloadSub4Series", downloadInputData.OneSeriesPath, err)
-				return err
-			}
-		}
+	nowSubSupplierHub := d.subSupplierHub
+	if nowSubSupplierHub.Suppliers == nil || len(nowSubSupplierHub.Suppliers) < 1 {
+		d.log.Infoln("Wait SupplierCheck Update *subSupplierHub, movieDlFunc Skip this time")
+		return nil
 	}
+	var err error
+	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(job.SeriesRootDirPath, d.settings.AdvancedSettings.TaskQueue.ExpirationTime, false, d.settings.AdvancedSettings.ProxySettings)
+	if err != nil {
+		err = errors.New(fmt.Sprintf("seriesDlFunc.ReadSeriesInfoFromDir, Error: %v", err))
+		d.downloadQueue.AutoDetectUpdateJobStatus(job, err)
+		return err
+	}
+	// 设置只有一集需要下载
+	epsMap := make(map[int]int, 0)
+	epsMap[job.Season] = job.Episode
+	series_helper.SetTheSpecifiedEps2Download(seriesInfo, epsMap)
+	// 下载好的字幕文件
+	var organizeSubFiles map[string][]string
+	// 下载的接口是统一的
+	organizeSubFiles, err = nowSubSupplierHub.DownloadSub4Series(job.SeriesRootDirPath,
+		seriesInfo,
+		downloadIndex)
+	if err != nil {
+		err = errors.New(fmt.Sprintf("seriesDlFunc.DownloadSub4Series %v S%vE%v %v", filepath.Base(job.SeriesRootDirPath), job.Season, job.Episode, err))
+		d.downloadQueue.AutoDetectUpdateJobStatus(job, err)
+		return err
+	}
+	// 是否下载到字幕了
 	if organizeSubFiles == nil || len(organizeSubFiles) < 1 {
-		d.log.Infoln("no sub found", filepath.Base(downloadInputData.OneSeriesPath))
+		d.log.Infoln(task_queue.ErrNotSubFound.Error(), filepath.Base(job.VideoFPath), job.Season, job.Episode)
+		d.downloadQueue.AutoDetectUpdateJobStatus(job, task_queue.ErrNotSubFound)
 		return nil
 	}
 
+	var errSave2Local error
+	save2LocalSubCount := 0
 	// 只针对需要下载字幕的视频进行字幕的选择保存
 	subVideoCount := 0
 	for epsKey, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 
-		stage := make(chan interface{}, 1)
+		// 创建一个 chan 用于任务的中断和超时
+		done := make(chan interface{}, 1)
+		// 接收内部任务的 panic
+		panicChan := make(chan interface{}, 1)
 		go func() {
+			if p := recover(); p != nil {
+				panicChan <- p
+			}
 			// 匹配对应的 Eps 去处理
-			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, organizeSubFiles[epsKey])
-			stage <- 1
+			done <- d.oneVideoSelectBestSub(episodeInfo.FileFullPath, organizeSubFiles[epsKey])
 		}()
 
 		select {
+		case errInterface := <-done:
+			if errInterface != nil {
+				errSave2Local = errInterface.(error)
+				d.log.Errorln(errInterface.(error))
+			} else {
+				save2LocalSubCount++
+			}
+			break
+		case p := <-panicChan:
+			// 遇到内部的 panic，向外抛出
+			panic(p)
 		case <-ctx.Done():
 			{
-				return errors.New(fmt.Sprintf("cancel at NeedDlEpsKeyList.oneVideoSelectBestSub epsKey: %s", epsKey))
+				err = errors.New(fmt.Sprintf("cancel at NeedDlEpsKeyList.oneVideoSelectBestSub, %v S%dE%d", seriesInfo.Name, episodeInfo.Season, episodeInfo.Episode))
+				d.downloadQueue.AutoDetectUpdateJobStatus(job, err)
+				return err
 			}
-		case <-stage:
-			break
 		}
 
 		subVideoCount++
@@ -532,36 +333,58 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, inData interface{}) error
 	// 需要与有下载需求的季交叉
 	for _, episodeInfo := range seriesInfo.EpList {
 
-		stage := make(chan interface{}, 1)
-
+		// 创建一个 chan 用于任务的中断和超时
+		done := make(chan interface{}, 1)
+		// 接收内部任务的 panic
+		panicChan := make(chan interface{}, 1)
 		_, ok := seriesInfo.NeedDlSeasonDict[episodeInfo.Season]
 		if ok == false {
 			continue
 		}
 
 		go func() {
+			if p := recover(); p != nil {
+				panicChan <- p
+			}
 			// 匹配对应的 Eps 去处理
 			seasonEpsKey := my_util.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
-			d.oneVideoSelectBestSub(episodeInfo.FileFullPath, fullSeasonSubDict[seasonEpsKey])
-			stage <- 1
+			done <- d.oneVideoSelectBestSub(episodeInfo.FileFullPath, fullSeasonSubDict[seasonEpsKey])
 		}()
 
 		select {
+		case errInterface := <-done:
+			if errInterface != nil {
+				errSave2Local = errInterface.(error)
+				d.log.Errorln(errInterface.(error))
+			} else {
+				save2LocalSubCount++
+			}
+			break
+		case p := <-panicChan:
+			// 遇到内部的 panic，向外抛出
+			panic(p)
 		case <-ctx.Done():
 			{
-				return errors.New(fmt.Sprintf("cancel at EpList.oneVideoSelectBestSub episodeInfo.FileFullPath: %s", episodeInfo.FileFullPath))
+				err = errors.New(fmt.Sprintf("cancel at NeedDlEpsKeyList.oneVideoSelectBestSub, %v S%dE%d", seriesInfo.Name, episodeInfo.Season, episodeInfo.Episode))
+				d.downloadQueue.AutoDetectUpdateJobStatus(job, err)
+				return err
 			}
-		case <-stage:
-			break
 		}
 	}
 	// 是否清理全季的缓存字幕文件夹
 	if d.settings.AdvancedSettings.SaveFullSeasonTmpSubtitles == false {
 		err = sub_helper.DeleteOneSeasonSubCacheFolder(seriesInfo.DirPath)
 		if err != nil {
-			return err
+			d.log.Errorln("seriesDlFunc.DeleteOneSeasonSubCacheFolder", err)
 		}
 	}
 
+	if save2LocalSubCount < 1 {
+		// 下载的字幕都没有一个能够写入到本地的，那么就有问题了
+		d.downloadQueue.AutoDetectUpdateJobStatus(job, errSave2Local)
+		return errSave2Local
+	}
+	// 哪怕有一个写入到本地成功了，也无需对本次任务报错
+	d.downloadQueue.AutoDetectUpdateJobStatus(job, nil)
 	return nil
 }

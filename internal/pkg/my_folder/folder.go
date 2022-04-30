@@ -1,55 +1,15 @@
-package my_util
+package my_folder
 
 import (
+	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/get_access_time"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/sirupsen/logrus"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 	"time"
 )
-
-func init() {
-	err := Init()
-	if err != nil {
-		log_helper.GetLogger().Panicln("my_util.Init", err)
-	}
-}
-
-func Init() error {
-
-	var err error
-
-	global_value.ConfigRootDirFPath = GetConfigRootDirFPath()
-
-	global_value.DefDebugFolder, err = GetRootDebugFolder()
-	if err != nil {
-		log_helper.GetLogger().Panicln("GetRootDebugFolder", err)
-	}
-
-	global_value.DefTmpFolder, err = GetRootTmpFolder()
-	if err != nil {
-		log_helper.GetLogger().Panicln("GetRootTmpFolder", err)
-	}
-
-	global_value.DefRodTmpRootFolder, err = GetRodTmpRootFolder()
-	if err != nil {
-		log_helper.GetLogger().Panicln("GetRodTmpRootFolder", err)
-	}
-
-	global_value.DefSubFixCacheFolder, err = GetRootSubFixCacheFolder()
-	if err != nil {
-		log_helper.GetLogger().Panicln("GetRootTmpFolder", err)
-	}
-
-	global_value.AdblockTmpFolder, err = GetPluginFolderByName(Plugin_Adblock)
-	if err != nil {
-		log_helper.GetLogger().Panicln("GetPluginFolderByName", Plugin_Adblock, err)
-	}
-
-	return nil
-}
 
 // --------------------------------------------------------------
 // Debug
@@ -314,6 +274,61 @@ func GetSubFixCacheFolderByName(folderName string) (string, error) {
 }
 
 // --------------------------------------------------------------
+// Share Sub Cache
+// --------------------------------------------------------------
+
+// GetShareSubRootFolder 在程序的根目录新建，字幕共享的缓存根目录，下级还有具体是按发行的时间去划分的子集目录
+func GetShareSubRootFolder() (string, error) {
+
+	nowProcessRoot, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, ShareSubFileCache)
+	err = os.MkdirAll(nowProcessRoot, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	return nowProcessRoot, err
+}
+
+// GetShareFolderByYear 缓存的文件夹以发行的年为一个单位存储
+func GetShareFolderByYear(year int) (string, error) {
+	rootPath, err := GetShareSubRootFolder()
+	if err != nil {
+		return "", err
+	}
+	tmpFolderFullPath := filepath.Join(rootPath, fmt.Sprintf("%d", year))
+	err = os.MkdirAll(tmpFolderFullPath, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	return tmpFolderFullPath, nil
+}
+
+// ClearShareSubFolderByYear 清理指定的缓存文件夹
+func ClearShareSubFolderByYear(year int) error {
+
+	nowTmpFolder, err := GetShareFolderByYear(year)
+	if err != nil {
+		return err
+	}
+
+	return ClearFolder(nowTmpFolder)
+}
+
+// ClearShareSubFolderByYearAndName 清理指定的缓存文件夹
+func ClearShareSubFolderByYearAndName(year int, name string) error {
+
+	nowTmpFolder, err := GetShareFolderByYear(year)
+	if err != nil {
+		return err
+	}
+
+	return ClearFolder(filepath.Join(nowTmpFolder, name))
+}
+
+// --------------------------------------------------------------
 // Common
 // --------------------------------------------------------------
 
@@ -366,7 +381,7 @@ func GetConfigRootDirFPath() string {
 }
 
 // ClearIdleSubFixCacheFolder 清理闲置的字幕修正缓存文件夹
-func ClearIdleSubFixCacheFolder(rootSubFixCacheFolder string, outOfDate time.Duration) error {
+func ClearIdleSubFixCacheFolder(l *logrus.Logger, rootSubFixCacheFolder string, outOfDate time.Duration) error {
 
 	/*
 		从 GetRootSubFixCacheFolder 目录下，遍历第一级目录中的文件夹
@@ -424,7 +439,7 @@ func ClearIdleSubFixCacheFolder(rootSubFixCacheFolder string, outOfDate time.Dur
 	}
 	// 统一清理过期的文件夹
 	for _, s := range wait2DeleteFolder {
-		log_helper.GetLogger().Infoln("Try 2 clear SubFixCache Folder:", s)
+		l.Infoln("Try 2 clear SubFixCache Folder:", s)
 		err := os.RemoveAll(s)
 		if err != nil {
 			return err
@@ -434,14 +449,55 @@ func ClearIdleSubFixCacheFolder(rootSubFixCacheFolder string, outOfDate time.Dur
 	return nil
 }
 
+// CopyFile copies a single file from src to dst
+func CopyFile(src, dst string) error {
+	var err error
+	var srcFd *os.File
+	var dstFd *os.File
+	var srcInfo os.FileInfo
+
+	if srcFd, err = os.Open(src); err != nil {
+		return err
+	}
+	defer func() {
+		_ = srcFd.Close()
+	}()
+
+	if dstFd, err = os.Create(dst); err != nil {
+		return err
+	}
+	defer func() {
+		_ = dstFd.Close()
+	}()
+
+	if _, err = io.Copy(dstFd, srcFd); err != nil {
+		return err
+	}
+	if srcInfo, err = os.Stat(src); err != nil {
+		return err
+	}
+	return os.Chmod(dst, srcInfo.Mode())
+}
+
+func Time2SecondNumber(inTime time.Time) float64 {
+	outSecond := 0.0
+	outSecond += float64(inTime.Hour() * 60 * 60)
+	outSecond += float64(inTime.Minute() * 60)
+	outSecond += float64(inTime.Second())
+	outSecond += float64(inTime.Nanosecond()) / 1000 / 1000 / 1000
+
+	return outSecond
+}
+
 // 缓存文件的位置信息，都是在程序的根目录下的 cache 中
 const (
-	cacheRootFolderName = "cache"           // 缓存文件夹总名称
-	TmpFolder           = "tmp"             // 临时缓存的文件夹
-	RodCacheFolder      = "rod"             // rod 的缓存目录
-	PluginFolder        = "Plugin"          // 插件的目录
-	DebugFolder         = "CSF-DebugThings" // 调试相关的文件夹
-	SubFixCacheFolder   = "CSF-SubFixCache" // 字幕时间校正的缓存文件夹，一般可以不清理
+	cacheRootFolderName = "cache"             // 缓存文件夹总名称
+	TmpFolder           = "tmp"               // 临时缓存的文件夹
+	RodCacheFolder      = "rod"               // rod 的缓存目录
+	PluginFolder        = "Plugin"            // 插件的目录
+	DebugFolder         = "CSF-DebugThings"   // 调试相关的文件夹
+	SubFixCacheFolder   = "CSF-SubFixCache"   // 字幕时间校正的缓存文件夹，一般可以不清理
+	ShareSubFileCache   = "CSF-ShareSubCache" // 字幕共享的缓存目录，不建议删除
 )
 
 const (

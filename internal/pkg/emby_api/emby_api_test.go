@@ -1,13 +1,20 @@
 package emby_api
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"testing"
 )
+
+var ec = settings.EmbySettings{
+	AddressUrl:            "http://192.168.50.252:8096",
+	APIKey:                "1",
+	MaxRequestVideoNumber: 1000,
+}
 
 // TODO 暂不方便在其他环境进行单元测试
 func TestEmbyHelper_GetRecentlyItems(t *testing.T) {
 
-	//em := NewEmbyApi(config.GetConfig().EmbyConfig)
+	//em := NewEmbyApi(ec)
 	//items, err := em.GetRecentlyItems()
 	//if err != nil {
 	//	t.Fatal(err)
@@ -20,7 +27,7 @@ func TestEmbyHelper_GetRecentlyItems(t *testing.T) {
 
 // TODO 暂不方便在其他环境进行单元测试
 func TestEmbyHelper_GetItemsAncestors(t *testing.T) {
-	//em := NewEmbyApi(config.GetConfig().EmbyConfig)
+	//em := NewEmbyApi(ec)
 	//items, err := em.GetItemAncestors("96564")
 	//if err != nil {
 	//	t.Fatal(err)
@@ -35,11 +42,12 @@ func TestEmbyHelper_GetItemsAncestors(t *testing.T) {
 
 // TODO 暂不方便在其他环境进行单元测试
 func TestEmbyHelper_GetItemVideoInfoByUserId(t *testing.T) {
-	//em := NewEmbyApi(config.GetConfig().EmbyConfig)
+	//em := NewEmbyApi(ec)
 	//// 95813 -- 命运夜
 	//// 96564 -- The Bad Batch - S01E11
 	//// 108766 -- R&M - S05E06
 	//// 145499 -- R&M - S05E10
+	////videoInfo, err := em.GetItemVideoInfoByUserId("6a9aa3be30534e668e58640123890a7b", "145499")
 	//videoInfo, err := em.GetItemVideoInfoByUserId("c248ec6305374192bdf892d4b9739f80", "145499")
 	//if err != nil {
 	//	t.Fatal(err)
@@ -71,7 +79,7 @@ func TestEmbyHelper_UpdateVideoSubList(t *testing.T) {
 
 // TODO 暂不方便在其他环境进行单元测试
 func TestEmbyHelper_GetUserIdList(t *testing.T) {
-	//em := NewEmbyApi(config.GetConfig().EmbyConfig)
+	//em := NewEmbyApi(ec)
 	//userIds, err := em.GetUserIdList()
 	//if err != nil {
 	//	t.Fatal(err)
@@ -83,14 +91,14 @@ func TestEmbyHelper_GetUserIdList(t *testing.T) {
 
 // TODO 暂不方便在其他环境进行单元测试
 func TestEmbyHelper_GetItemVideoInfo(t *testing.T) {
-	//em := NewEmbyApi(config.GetConfig().EmbyConfig)
+	//em := NewEmbyApi(ec)
 	//// 95813 -- 命运夜
 	//// 96564 -- The Bad Batch - S01E11
 	//// R&M S05E10  2 org english, 5 简英 145499
 	//// 基地 S01E03 166840
 	//// 基地 S01E04 173354
 	//// 算牌人 166837
-	//videoInfo, err := em.GetItemVideoInfo("173354")
+	//videoInfo, err := em.GetItemVideoInfo("327198")
 	//if err != nil {
 	//	t.Fatal(err)
 	//}

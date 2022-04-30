@@ -29,3 +29,9 @@ export const validateEmbyPath = (val, extendData) =>
   });
 
 export const validateCronDuration = (val) => /^(-?\d+(ns|us|µs|ms|s|m|h))+$/.test(val) || '格式不正确';
+
+export const validateCronTime = (val) =>
+  // eslint-disable-next-line max-len
+  /(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\d+(ns|us|µs|ms|s|m|h))+)|((((\d+,)+\d+|(\d+(\/|-)\d+)|\d+|\*) ?){5,7})/.test(
+    val
+  ) || '格式不正确';

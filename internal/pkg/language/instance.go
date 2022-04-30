@@ -6,6 +6,6 @@ import (
 )
 
 var (
-	chDict   = sat.DefaultDict()
+	ChDict   = sat.DefaultDict()
 	detector = chardet.NewTextDetector()
 )

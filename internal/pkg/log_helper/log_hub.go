@@ -66,10 +66,6 @@ func (lh *LoggerHub) Fire(entry *logrus.Entry) error {
 	} else if entry.Message == OnceSubsScanEnd {
 		// “一次”扫描的结束标志位
 		lh.onceStart = false
-		if onceLoggerFile != nil {
-			_ = onceLoggerFile.Close()
-			onceLoggerFile = nil
-		}
 
 		// 注意这个函数的调用时机
 		cleanAndLoadOnceLogs()
@@ -168,13 +164,10 @@ func newOnceLogger() *logrus.Logger {
 		LogFormat:       "[%lvl%]: %time% - %msg%\n",
 	}
 	nowTime := time.Now()
-	pathRoot := filepath.Join(global_value.ConfigRootDirFPath, "Logs")
+	pathRoot := filepath.Join(global_value.ConfigRootDirFPath(), "Logs")
 	fileName := fmt.Sprintf(onceLogPrefix+"%v.log", nowTime.Unix())
 	fileAbsPath := filepath.Join(pathRoot, fileName)
-	if onceLoggerFile != nil {
-		_ = onceLoggerFile.Close()
-		onceLoggerFile = nil
-	}
+
 	// 注意这个函数的调用时机
 	cleanAndLoadOnceLogs()
 
@@ -193,17 +186,28 @@ func cleanAndLoadOnceLogs() {
 		onceLogsLock.Unlock()
 	}()
 
+	if onceLoggerFile != nil {
+		_ = onceLoggerFile.Close()
+		onceLoggerFile = nil
+	}
+
 	onceLogsLock.Lock()
 
 	onceLogs = make([]log_hub.OnceLog, 0)
 
-	pathRoot := filepath.Join(global_value.ConfigRootDirFPath, "Logs")
+	pathRoot := filepath.Join(global_value.ConfigRootDirFPath(), "Logs")
+
+	GetLogger().Infoln("ConfigRootDirFPath", pathRoot)
+
 	// 扫描当前日志存储目录下有多少个符合要求的 Once- 日志
 	// 确保有且仅有最近的 20 次扫描日志记录存在即可
 	matches, err := filepath.Glob(filepath.Join(pathRoot, onceLogPrefix+"*.log"))
 	if err != nil {
 		GetLogger().Panicln("cleanAndLoadOnceLogs.Glob", err)
 	}
+
+	GetLogger().Infoln("matches logs:", len(matches))
+
 	if len(matches) > onceLogMaxCount {
 		// 需要清理多余的
 		// 保存的文件名是 Once-unixTime.log 做为前提

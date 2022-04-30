@@ -19,7 +19,7 @@ func NewLogHelper(appName string, level logrus.Level, maxAge time.Duration, rota
 		TimestampFormat: "2006-01-02 15:04:05",
 		LogFormat:       "[%lvl%]: %time% - %msg%\n",
 	}
-	pathRoot := filepath.Join(global_value.ConfigRootDirFPath, "Logs")
+	pathRoot := filepath.Join(global_value.ConfigRootDirFPath(), "Logs")
 	fileAbsPath := filepath.Join(pathRoot, appName+".log")
 	// 下面配置日志每隔 X 分钟轮转一个新文件，保留最近 X 分钟的日志文件，多余的自动清理掉。
 	writer, _ := rotatelogs.New(
@@ -63,7 +63,7 @@ func logInit() {
 	var level logrus.Level
 	// 之前是读取配置文件，现在改为，读取当前目录下，是否有一个特殊的文件，有则启动 Debug 日志级别
 	// 那么怎么写入这个文件，就靠额外的逻辑控制了
-	if isFile(filepath.Join(global_value.ConfigRootDirFPath, DebugFileName)) == true {
+	if isFile(filepath.Join(global_value.ConfigRootDirFPath(), DebugFileName)) == true {
 		level = logrus.DebugLevel
 	} else {
 		level = logrus.InfoLevel
@@ -89,10 +89,10 @@ func isFile(filePath string) bool {
 
 // WriteDebugFile 写入开启 Debug 级别日志记录的特殊文件，注意这个最好是在主程序中调用，这样就跟主程序在一个目录下生成，log 去检测是否存在才有意义
 func WriteDebugFile() error {
-	if isFile(filepath.Join(global_value.ConfigRootDirFPath, DebugFileName)) == true {
+	if isFile(filepath.Join(global_value.ConfigRootDirFPath(), DebugFileName)) == true {
 		return nil
 	}
-	f, err := os.Create(filepath.Join(global_value.ConfigRootDirFPath, DebugFileName))
+	f, err := os.Create(filepath.Join(global_value.ConfigRootDirFPath(), DebugFileName))
 	defer func() {
 		_ = f.Close()
 	}()
@@ -105,10 +105,10 @@ func WriteDebugFile() error {
 // DeleteDebugFile 删除开启 Debug 级别日志记录的特殊文件
 func DeleteDebugFile() error {
 
-	if isFile(filepath.Join(global_value.ConfigRootDirFPath, DebugFileName)) == false {
+	if isFile(filepath.Join(global_value.ConfigRootDirFPath(), DebugFileName)) == false {
 		return nil
 	}
-	err := os.Remove(filepath.Join(global_value.ConfigRootDirFPath, DebugFileName))
+	err := os.Remove(filepath.Join(global_value.ConfigRootDirFPath(), DebugFileName))
 	if err != nil {
 		return err
 	}

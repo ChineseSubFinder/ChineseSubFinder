@@ -7,14 +7,10 @@ import (
 const HTMLTimeOut = 2 * 60 * time.Second // HttpClient 超时时间
 const OneMovieProcessTimeOut = 5 * 60    // 一部电影，最多的处理时间
 const OneSeriesProcessTimeOut = 30 * 60  // 一部连续剧，最多的处理时间
+const ScanPlayedSubTimeOut = 30 * 60     // 扫描已经播放的字幕进行缓存的时间
 const DownloadSubsPerSite = 1            // 默认，每个网站下载一个字幕，允许额外传参调整
 const EmbyApiGetItemsLimitMin = 50
 const EmbyApiGetItemsLimitMax = 50000
-
-const (
-	DownloadSubDuring3Months = "2160h"
-	DownloadSubDuring7Days   = "168h"
-)
 
 const (
 	SubSiteZiMuKu  = "zimuku"
@@ -28,6 +24,11 @@ const (
 	VideoExtMkv  = ".mkv"
 	VideoExtRmvb = ".rmvb"
 	VideoExtIso  = ".iso"
+	VideoExtM2ts = ".m2ts"
+)
+
+const (
+	FileBDMV = "id.bdmv" // 蓝光文件，CERTIFICATE 这个中的
 )
 
 const (

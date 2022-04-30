@@ -167,3 +167,14 @@ func TestGetImdbInfo4SeriesDir(t *testing.T) {
 		})
 	}
 }
+
+func TestIsFakeBDMVWorked(t *testing.T) {
+
+	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"movies", "失控玩家 (2021)"}, 4, false)
+
+	bok, dbmvFPath := IsFakeBDMVWorked(filepath.Join(rootDir, "失控玩家 (2021).mp4"))
+	if bok == false {
+		t.Fatal("IsFakeBDMVWorked error")
+	}
+	println(dbmvFPath)
+}

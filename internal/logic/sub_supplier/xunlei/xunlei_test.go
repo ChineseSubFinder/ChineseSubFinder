@@ -1,6 +1,7 @@
 package xunlei
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
@@ -27,7 +28,7 @@ func TestGetList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	xunlie := NewSupplier(*settings.NewSettings())
+	xunlie := NewSupplier(settings.NewSettings(), log_helper.GetLogger())
 	outList, err := xunlie.getSubListFromFile(gVideoFPath)
 	if err != nil {
 		t.Error(err)

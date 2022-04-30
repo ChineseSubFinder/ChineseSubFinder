@@ -78,7 +78,7 @@ type EmbyVideoInfo struct {
 			Profile                string  `json:"Profile,omitempty"`
 			Type                   string  `json:"Type"`
 			AspectRatio            string  `json:"AspectRatio,omitempty"`
-			Index                  int     `json:"OffsetIndex"`
+			Index                  int     `json:"Index"`
 			IsExternal             bool    `json:"IsExternal"`
 			IsTextSubtitleStream   bool    `json:"IsTextSubtitleStream"`
 			SupportsExternalStream bool    `json:"SupportsExternalStream"`
@@ -106,7 +106,7 @@ type EmbyVideoInfo struct {
 		Codec                  string `json:"Codec"`
 		Language               string `json:"Language"`
 		DisplayTitle           string `json:"DisplayTitle"`
-		Index                  int    `json:"OffsetIndex"`
+		Index                  int    `json:"Index"`
 		IsExternal             bool   `json:"IsExternal"`
 		IsTextSubtitleStream   bool   `json:"IsTextSubtitleStream"`
 		SupportsExternalStream bool   `json:"SupportsExternalStream"`
@@ -131,7 +131,13 @@ type EmbyVideoInfoByUserId struct {
 	PremiereDate  time.Time `json:"PremiereDate,omitempty"`
 	SortName      string    `json:"SortName,omitempty"`
 	Path          string    `json:"Path"`
-	MediaSources  []struct {
+	UserData      struct {
+		PlaybackPositionTicks int  `json:"PlaybackPositionTicks"`
+		PlayCount             int  `json:"PlayCount"`
+		IsFavorite            bool `json:"IsFavorite"`
+		Played                bool `json:"Played"`
+	} `json:"UserData"`
+	MediaSources []struct {
 		Path                       string `json:"Path"`
 		DefaultAudioStreamIndex    int    `json:"DefaultAudioStreamIndex,omitempty"`
 		DefaultSubtitleStreamIndex int    `json:"DefaultSubtitleStreamIndex,omitempty"`
@@ -154,9 +160,16 @@ type EmbyMixInfo struct {
 	VideoFolderName           string // 电影就是电影的文件夹名称，连续剧就是对应的剧集的 root 文件夹
 	VideoFileName             string // 视频文件名
 	PhysicalVideoFileFullPath string // 视频的物理路径（这里指的物理路径是相对于本程序而言，如果是用 docker 使用的话，那么就是映射容器内的路径，如果是用物理机器比如 Windows 使用的话，那么就是相对于物理机器的路径）
-	PhysicalRootPath          string // 视频在那个物理根目录中（这里指的物理路径是相对于本程序而言，如果是用 docker 使用的话，那么就是映射容器内的路径，如果是用物理机器比如 Windows 使用的话，那么就是相对于物理机器的路径）
+	PhysicalRootPath          string // 不是 Emby 扫描的情况，无需关注。视频在那个物理根目录中（这里指的物理路径是相对于本程序而言，如果是用 docker 使用的话，那么就是映射容器内的路径，如果是用物理机器比如 Windows 使用的话，那么就是相对于物理机器的路径）
+	PhysicalSeriesRootDir     string // 当前视频的连续剧文件夹根目录
 	Ancestors                 []EmbyItemsAncestors
 	VideoInfo                 EmbyVideoInfo
+}
+
+type UserPlayedItems struct {
+	UserName string
+	UserID   string
+	Items    []EmbyRecentlyItem
 }
 
 type Time time.Time

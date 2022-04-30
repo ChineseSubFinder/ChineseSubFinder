@@ -70,19 +70,30 @@ func GenerateShooterVideoFile(videoPartsRootPath string) (string, error) {
 	*/
 	for _, name := range partNames {
 
-		partF, err := os.Open(filepath.Join(videoPartsRootPath, name+ext))
-		if err != nil {
-			return "", err
+		onePart := func() error {
+			partF, err := os.Open(filepath.Join(videoPartsRootPath, name+ext))
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = partF.Close()
+			}()
+			partAll, err := io.ReadAll(partF)
+			if err != nil {
+				return err
+			}
+			int64Numb, err := strconv.ParseInt(name, 10, 64)
+			if err != nil {
+				return err
+			}
+			_, err = f.WriteAt(partAll, int64Numb)
+			if err != nil {
+				return err
+			}
+			return nil
 		}
-		partAll, err := io.ReadAll(partF)
-		if err != nil {
-			return "", err
-		}
-		int64Numb, err := strconv.ParseInt(name, 10, 64)
-		if err != nil {
-			return "", err
-		}
-		_, err = f.WriteAt(partAll, int64Numb)
+
+		err = onePart()
 		if err != nil {
 			return "", err
 		}
@@ -118,19 +129,91 @@ func GenerateXunleiVideoFile(videoPartsRootPath string) (string, error) {
 	*/
 	for _, name := range partNames {
 
-		partF, err := os.Open(filepath.Join(videoPartsRootPath, name+ext))
+		onePart := func() error {
+			partF, err := os.Open(filepath.Join(videoPartsRootPath, name+ext))
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = partF.Close()
+			}()
+			partAll, err := io.ReadAll(partF)
+			if err != nil {
+				return err
+			}
+			int64Numb, err := strconv.ParseInt(name, 10, 64)
+			if err != nil {
+				return err
+			}
+			_, err = f.WriteAt(partAll, int64Numb)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}
+
+		err = onePart()
 		if err != nil {
 			return "", err
 		}
-		partAll, err := io.ReadAll(partF)
-		if err != nil {
-			return "", err
+	}
+
+	return outVideoFPath, nil
+}
+
+// GenerateCSFVideoFile 这里为 CSF 的接口专门生成一个视频文件，瑞克和莫蒂 (2013)\Season 5\S05E09 .mkv
+func GenerateCSFVideoFile(videoPartsRootPath string) (string, error) {
+
+	const videoSize int64 = 640302895
+	const videoName = "S05E09.mkv"
+	const ext = ".videoPart"
+	partNames := []string{"4096", "160075723", "320151447", "480227171", "640294703"}
+
+	outVideoFPath := filepath.Join(videoPartsRootPath, videoName)
+
+	f, err := os.Create(outVideoFPath)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+
+	if err := f.Truncate(videoSize); err != nil {
+		return "", err
+	}
+
+	/*
+		一共有 5 个检测点
+	*/
+	for _, name := range partNames {
+
+		onePart := func() error {
+			partF, err := os.Open(filepath.Join(videoPartsRootPath, name+ext))
+			if err != nil {
+				return err
+			}
+			defer func() {
+				_ = partF.Close()
+			}()
+			partAll, err := io.ReadAll(partF)
+			if err != nil {
+				return err
+			}
+			int64Numb, err := strconv.ParseInt(name, 10, 64)
+			if err != nil {
+				return err
+			}
+			_, err = f.WriteAt(partAll, int64Numb)
+			if err != nil {
+				return err
+			}
+
+			return nil
 		}
-		int64Numb, err := strconv.ParseInt(name, 10, 64)
-		if err != nil {
-			return "", err
-		}
-		_, err = f.WriteAt(partAll, int64Numb)
+
+		err = onePart()
 		if err != nil {
 			return "", err
 		}
