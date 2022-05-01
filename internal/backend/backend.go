@@ -40,7 +40,9 @@ func StartBackEnd(fileDownloader *file_downloader.FileDownloader, httpPort int, 
 
 	hub := ws_helper.NewHub()
 	go hub.Run()
-
+	defer func() {
+		hub.Clear()
+	}()
 	engine.GET("/ws", func(context *gin.Context) {
 		ws_helper.ServeWs(fileDownloader.Log, hub, context.Writer, context.Request)
 	})

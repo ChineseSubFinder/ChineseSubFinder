@@ -84,6 +84,7 @@ func (v *VideoScanAndRefreshHelper) Start() error {
 
 func (v VideoScanAndRefreshHelper) Cancel() {
 	v.taskControl.Release()
+	v.taskControl.Reboot()
 }
 
 // ReadSpeFile 优先级最高。读取特殊文件，启用一些特殊的功能，比如 forced_scan_and_down_sub

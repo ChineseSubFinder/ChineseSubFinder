@@ -104,16 +104,14 @@ func (d *Downloader) SupplierCheck() {
 	// 接收内部任务的 panic
 	panicChan := make(chan interface{}, 1)
 
-	defer func() {
-		close(done)
-		close(panicChan)
-	}()
-
 	go func() {
 		defer func() {
 			if p := recover(); p != nil {
 				panicChan <- p
 			}
+
+			close(done)
+			close(panicChan)
 		}()
 		// 下载前的初始化
 		d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
@@ -212,16 +210,13 @@ func (d *Downloader) QueueDownloader() {
 	// 接收内部任务的 panic
 	panicChan := make(chan interface{}, 1)
 
-	defer func() {
-		close(done)
-		close(panicChan)
-	}()
-
 	go func() {
 		defer func() {
 			if p := recover(); p != nil {
 				panicChan <- p
 			}
+			close(done)
+			close(panicChan)
 			// 没下载完毕一次，进行一次缓存和 Chrome 的清理
 			err = my_folder.ClearRootTmpFolder()
 			if err != nil {
@@ -315,16 +310,6 @@ func (d *Downloader) movieDlFunc(ctx context.Context, job taskQueue2.OneJob, dow
 
 func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, downloadIndex int64) error {
 
-	// 创建一个 chan 用于任务的中断和超时
-	done := make(chan interface{}, 1)
-	// 接收内部任务的 panic
-	panicChan := make(chan interface{}, 1)
-
-	defer func() {
-		close(done)
-		close(panicChan)
-	}()
-
 	nowSubSupplierHub := d.subSupplierHub
 	if nowSubSupplierHub.Suppliers == nil || len(nowSubSupplierHub.Suppliers) < 1 {
 		d.log.Infoln("Wait SupplierCheck Update *subSupplierHub, movieDlFunc Skip this time")
@@ -370,11 +355,19 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	subVideoCount := 0
 	for epsKey, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 
+		// 创建一个 chan 用于任务的中断和超时
+		done := make(chan interface{}, 1)
+		// 接收内部任务的 panic
+		panicChan := make(chan interface{}, 1)
+
 		go func() {
 			defer func() {
 				if p := recover(); p != nil {
 					panicChan <- p
 				}
+
+				close(done)
+				close(panicChan)
 			}()
 			// 匹配对应的 Eps 去处理
 			done <- d.oneVideoSelectBestSub(episodeInfo.FileFullPath, organizeSubFiles[epsKey])
@@ -414,11 +407,17 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 			continue
 		}
 
+		// 创建一个 chan 用于任务的中断和超时
+		done := make(chan interface{}, 1)
+		// 接收内部任务的 panic
+		panicChan := make(chan interface{}, 1)
 		go func() {
 			defer func() {
 				if p := recover(); p != nil {
 					panicChan <- p
 				}
+				close(done)
+				close(panicChan)
 			}()
 			// 匹配对应的 Eps 去处理
 			seasonEpsKey := my_util.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)

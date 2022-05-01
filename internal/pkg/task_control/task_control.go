@@ -45,6 +45,7 @@ func NewTaskControl(size int, log *logrus.Logger) (*TaskControl, error) {
 		return nil, err
 	}
 	tc.wgBase = sync.WaitGroup{}
+
 	return &tc, nil
 }
 
@@ -127,17 +128,13 @@ func (tc *TaskControl) baseFuncHandler(inData interface{}) {
 
 	done := make(chan error, 1)
 	panicChan := make(chan interface{}, 1)
-
-	defer func() {
-		close(done)
-		close(panicChan)
-	}()
-
 	go func(ctx context.Context) {
 		defer func() {
 			if p := recover(); p != nil {
 				panicChan <- p
 			}
+			close(done)
+			close(panicChan)
 		}()
 
 		done <- tc.ctxFunc(ctx, inData)
@@ -205,6 +202,8 @@ func (tc *TaskControl) Release() {
 
 func (tc *TaskControl) Reboot() {
 
+	tc.log.Debugln("-------------------------------")
+	tc.log.Debugln("Reboot Start")
 	var release bool
 	tc.commonLock.Lock()
 	release = tc.released
@@ -230,6 +229,16 @@ func (tc *TaskControl) Reboot() {
 		tc.released = false
 		tc.commonLock.Unlock()
 	}
+
+	tc.log.Debugln("Reboot End")
+	tc.log.Debugln("-------------------------------")
+}
+
+func (tc *TaskControl) Close() {
+	tc.log.Debugln("-------------------------------")
+	tc.log.Debugln("Close Start")
+	tc.log.Debugln("Close End")
+	tc.log.Debugln("-------------------------------")
 }
 
 // GetExecuteInfo 获取 所有 Invoke 的执行情况，需要在 下一次 Invoke 拿走，否则会清空

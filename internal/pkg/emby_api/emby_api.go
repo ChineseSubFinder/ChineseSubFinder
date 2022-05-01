@@ -60,16 +60,14 @@ func (em EmbyApi) RefreshRecentlyVideoInfo() error {
 		done := make(chan error, 1)
 		panicChan := make(chan interface{}, 1)
 
-		defer func() {
-			close(done)
-			close(panicChan)
-		}()
-
 		go func() {
 			defer func() {
 				if p := recover(); p != nil {
 					panicChan <- p
 				}
+
+				close(done)
+				close(panicChan)
 			}()
 
 			done <- updateFunc(data.Id)

@@ -775,6 +775,8 @@ package sub_timeline_fixer
 //				if p := recover(); p != nil {
 //					panicChan <- p
 //				}
+//close(done)
+//close(panicChan)
 //			}()
 //
 //			done <- fixFunc(inData)
