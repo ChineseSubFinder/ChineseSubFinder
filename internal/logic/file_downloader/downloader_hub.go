@@ -16,12 +16,12 @@ import (
 type FileDownloader struct {
 	Settings    *settings.Settings
 	Log         *logrus.Logger
-	cacheCenter *cache_center.CacheCenter
+	CacheCenter *cache_center.CacheCenter
 }
 
 func NewFileDownloader(cacheCenter *cache_center.CacheCenter) *FileDownloader {
 	return &FileDownloader{Settings: cacheCenter.Settings, Log: cacheCenter.Log,
-		cacheCenter: cacheCenter,
+		CacheCenter: cacheCenter,
 	}
 }
 
@@ -32,7 +32,7 @@ func (f *FileDownloader) Get(supplierName string, topN int64, videoFileName stri
 
 	fileUID := fmt.Sprintf("%x", sha256.Sum256([]byte(fileDownloadUrl)))
 
-	found, subInfo, err := f.cacheCenter.GetDownloadFile(fileUID)
+	found, subInfo, err := f.CacheCenter.GetDownloadFile(fileUID)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (f *FileDownloader) Get(supplierName string, topN int64, videoFileName stri
 			return nil, err
 		}
 		// 下载成功需要统计到今天的次数中
-		_, err = f.cacheCenter.AddDailyDownloadCount(supplierName,
+		_, err = f.CacheCenter.AddDailyDownloadCount(supplierName,
 			my_util.GetPublicIP(f.Log, f.Settings.AdvancedSettings.TaskQueue, f.Settings.AdvancedSettings.ProxySettings))
 		if err != nil {
 			f.Log.Warningln(supplierName, "FileDownloader.Get.AddDailyDownloadCount", err)
@@ -57,7 +57,7 @@ func (f *FileDownloader) Get(supplierName string, topN int64, videoFileName stri
 		}
 		// 默认存入都是简体中文的语言类型，后续取出来的时候需要再次调用 SubParser 进行解析
 		inSubInfo := supplier.NewSubInfo(supplierName, topN, videoFileName, language.ChineseSimple, fileDownloadUrl, score, offset, ext, fileData)
-		err = f.cacheCenter.AddDownloadFile(inSubInfo)
+		err = f.CacheCenter.AddDownloadFile(inSubInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +74,7 @@ func (f *FileDownloader) Get(supplierName string, topN int64, videoFileName stri
 func (f *FileDownloader) GetEx(supplierName string, browser *rod.Browser, subDownloadPageUrl string, TopN int64, Season, Episode int, downFileFunc func(browser *rod.Browser, subDownloadPageUrl string, TopN int64, Season, Episode int) (*supplier.SubInfo, error)) (*supplier.SubInfo, error) {
 
 	fileUID := fmt.Sprintf("%x", sha256.Sum256([]byte(subDownloadPageUrl)))
-	found, subInfo, err := f.cacheCenter.GetDownloadFile(fileUID)
+	found, subInfo, err := f.CacheCenter.GetDownloadFile(fileUID)
 	if err != nil {
 		return nil, err
 	}
@@ -86,13 +86,13 @@ func (f *FileDownloader) GetEx(supplierName string, browser *rod.Browser, subDow
 			return nil, err
 		}
 		// 下载成功需要统计到今天的次数中
-		_, err = f.cacheCenter.AddDailyDownloadCount(supplierName,
+		_, err = f.CacheCenter.AddDailyDownloadCount(supplierName,
 			my_util.GetPublicIP(f.Log, f.Settings.AdvancedSettings.TaskQueue, f.Settings.AdvancedSettings.ProxySettings))
 		if err != nil {
 			f.Log.Warningln(supplierName, "FileDownloader.GetEx.AddDailyDownloadCount", err)
 		}
 		// 默认存入都是简体中文的语言类型，后续取出来的时候需要再次调用 SubParser 进行解析
-		err = f.cacheCenter.AddDownloadFile(subInfo)
+		err = f.CacheCenter.AddDownloadFile(subInfo)
 		if err != nil {
 			return nil, err
 		}

@@ -3,11 +3,11 @@ package cron_helper
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/scan_played_video_subinfo"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"

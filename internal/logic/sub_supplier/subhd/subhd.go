@@ -7,7 +7,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
 	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
@@ -93,7 +92,7 @@ func (s *Supplier) IsAlive() bool {
 func (s *Supplier) OverDailyDownloadLimit() bool {
 
 	// 需要查询今天的限额
-	count, err := task_queue.GetDailyDownloadCount(s.GetSupplierName(),
+	count, err := s.fileDownloader.CacheCenter.GetDailyDownloadCount(s.GetSupplierName(),
 		my_util.GetPublicIP(s.log, s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "GetDailyDownloadCount", err)
