@@ -57,6 +57,20 @@
 
 然后才能编译可执行程序部分
 
+> 如果是 Windows，那么可以从这里下载 [MinGW-w64 - for 32 and 64 bit Windows - Browse /Toolchains targetting Win64 at SourceForge.net](https://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/)
+>
+> - [x86_64-posix-seh](https://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/Personal Builds/mingw-builds/8.1.0/threads-posix/seh/x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z)
+>
+> 后面的 CGO 编译需要：
+>
+> 1、新建变量: PATH，变量值为：xx\mingw64\bin
+>
+> 2、新建变量：LIB，变量值为：xx\mingw64\lib
+>
+> 3、新建变量：INCLUDE，变量值为：xx\mingw64\include
+>
+> 使用 gcc -v 验证是否生效
+
 go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go 这个入口文件就好了。 :joy:
 
 编译代码如下：
