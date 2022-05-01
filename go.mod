@@ -20,7 +20,7 @@ require (
 	github.com/go-echarts/go-echarts/v2 v2.2.4
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/go-resty/resty/v2 v2.6.0
-	github.com/go-rod/rod v0.106.1
+	github.com/go-rod/rod v0.106.4
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.4.2
