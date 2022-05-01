@@ -3,8 +3,7 @@ package file_downloader
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/download_file_cache"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
@@ -15,14 +14,15 @@ import (
 )
 
 type FileDownloader struct {
-	Settings          *settings.Settings
-	Log               *logrus.Logger
-	downloadFileCache *download_file_cache.DownloadFileCache
+	Settings    *settings.Settings
+	Log         *logrus.Logger
+	cacheCenter *cache_center.CacheCenter
 }
 
-func NewFileDownloader(settings *settings.Settings, log *logrus.Logger) *FileDownloader {
-	return &FileDownloader{Settings: settings, Log: log,
-		downloadFileCache: download_file_cache.NewDownloadFileCache(settings)}
+func NewFileDownloader(cacheCenter *cache_center.CacheCenter) *FileDownloader {
+	return &FileDownloader{Settings: cacheCenter.Settings, Log: cacheCenter.Log,
+		cacheCenter: cacheCenter,
+	}
 }
 
 // Get supplierName 这个参数一定得是字幕源的名称，通过 s.GetSupplierName() 获取，否则后续的字幕源今日下载量将不能正确统计和判断
@@ -32,7 +32,7 @@ func (f *FileDownloader) Get(supplierName string, topN int64, videoFileName stri
 
 	fileUID := fmt.Sprintf("%x", sha256.Sum256([]byte(fileDownloadUrl)))
 
-	found, subInfo, err := f.downloadFileCache.Get(fileUID)
+	found, subInfo, err := f.cacheCenter.GetDownloadFile(fileUID)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (f *FileDownloader) Get(supplierName string, topN int64, videoFileName stri
 			return nil, err
 		}
 		// 下载成功需要统计到今天的次数中
-		_, err = task_queue.AddDailyDownloadCount(supplierName,
+		_, err = f.cacheCenter.AddDailyDownloadCount(supplierName,
 			my_util.GetPublicIP(f.Log, f.Settings.AdvancedSettings.TaskQueue, f.Settings.AdvancedSettings.ProxySettings))
 		if err != nil {
 			f.Log.Warningln(supplierName, "FileDownloader.Get.AddDailyDownloadCount", err)
@@ -57,7 +57,7 @@ func (f *FileDownloader) Get(supplierName string, topN int64, videoFileName stri
 		}
 		// 默认存入都是简体中文的语言类型，后续取出来的时候需要再次调用 SubParser 进行解析
 		inSubInfo := supplier.NewSubInfo(supplierName, topN, videoFileName, language.ChineseSimple, fileDownloadUrl, score, offset, ext, fileData)
-		err = f.downloadFileCache.Add(inSubInfo)
+		err = f.cacheCenter.AddDownloadFile(inSubInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +74,7 @@ func (f *FileDownloader) Get(supplierName string, topN int64, videoFileName stri
 func (f *FileDownloader) GetEx(supplierName string, browser *rod.Browser, subDownloadPageUrl string, TopN int64, Season, Episode int, downFileFunc func(browser *rod.Browser, subDownloadPageUrl string, TopN int64, Season, Episode int) (*supplier.SubInfo, error)) (*supplier.SubInfo, error) {
 
 	fileUID := fmt.Sprintf("%x", sha256.Sum256([]byte(subDownloadPageUrl)))
-	found, subInfo, err := f.downloadFileCache.Get(fileUID)
+	found, subInfo, err := f.cacheCenter.GetDownloadFile(fileUID)
 	if err != nil {
 		return nil, err
 	}
@@ -86,13 +86,13 @@ func (f *FileDownloader) GetEx(supplierName string, browser *rod.Browser, subDow
 			return nil, err
 		}
 		// 下载成功需要统计到今天的次数中
-		_, err = task_queue.AddDailyDownloadCount(supplierName,
+		_, err = f.cacheCenter.AddDailyDownloadCount(supplierName,
 			my_util.GetPublicIP(f.Log, f.Settings.AdvancedSettings.TaskQueue, f.Settings.AdvancedSettings.ProxySettings))
 		if err != nil {
 			f.Log.Warningln(supplierName, "FileDownloader.GetEx.AddDailyDownloadCount", err)
 		}
 		// 默认存入都是简体中文的语言类型，后续取出来的时候需要再次调用 SubParser 进行解析
-		err = f.downloadFileCache.Add(subInfo)
+		err = f.cacheCenter.AddDownloadFile(subInfo)
 		if err != nil {
 			return nil, err
 		}

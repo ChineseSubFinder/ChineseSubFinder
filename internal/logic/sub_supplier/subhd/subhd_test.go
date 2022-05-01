@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/something_static"
@@ -28,7 +29,7 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	movie1 := filepath.Join(rootDir, "zimuku", "movies", "消失爱人 (2016)", "消失爱人 (2016) 720p AAC.rmvb")
 
-	subhd := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger4Tester()))
+	subhd := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter(settings.NewSettings(), log_helper.GetLogger4Tester())))
 	outList, err := subhd.getSubListFromFile4Movie(movie1)
 	if err != nil {
 		t.Error(err)
@@ -65,7 +66,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger4Tester()))
+	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter(settings.NewSettings(), log_helper.GetLogger4Tester())))
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -87,7 +88,7 @@ func TestSupplier_getSubListFromKeyword4Movie(t *testing.T) {
 	//imdbID := "tt15299712" // 云南虫谷
 	//imdbID := "tt3626476" // Vacation Friends (2021)
 	getCode()
-	subhd := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger4Tester()))
+	subhd := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter(settings.NewSettings(), log_helper.GetLogger4Tester())))
 	subInfos, err := subhd.getSubListFromKeyword4Movie(imdbID)
 	if err != nil {
 		t.Fatal(err)

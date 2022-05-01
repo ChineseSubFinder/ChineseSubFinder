@@ -6,6 +6,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_job"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -91,7 +92,7 @@ func main() {
 		}
 	}
 	// ----------------------------------------------
-	fileDownloader := file_downloader.NewFileDownloader(settings.GetSettings(), loggerBase)
+	fileDownloader := file_downloader.NewFileDownloader(cache_center.NewCacheCenter(settings.GetSettings(), loggerBase))
 	cronHelper := cron_helper.NewCronHelper(fileDownloader)
 	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {
 		// 如果没有完成，那么就不开启
