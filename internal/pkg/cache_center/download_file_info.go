@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func (c *CacheCenter) AddDownloadFile(subInfo *supplier.SubInfo) error {
+func (c *CacheCenter) DownloadFileAdd(subInfo *supplier.SubInfo) error {
 	defer c.locker.Unlock()
 	c.locker.Lock()
 
@@ -55,7 +55,7 @@ func (c *CacheCenter) AddDownloadFile(subInfo *supplier.SubInfo) error {
 	return nil
 }
 
-func (c *CacheCenter) GetDownloadFile(fileUrlUID string) (bool, *supplier.SubInfo, error) {
+func (c *CacheCenter) DownloadFileGet(fileUrlUID string) (bool, *supplier.SubInfo, error) {
 	defer c.locker.Unlock()
 	c.locker.Lock()
 

@@ -5,9 +5,9 @@ import (
 	"time"
 )
 
-// GetDailyDownloadCount 根据字幕提供者的名称，获取今日下载计数的次数，仅仅统计次数，并不确认是那个视频的字幕下载
+// DailyDownloadCountGet 根据字幕提供者的名称，获取今日下载计数的次数，仅仅统计次数，并不确认是那个视频的字幕下载
 // whichDay nowTime.Format("2006-01-02")
-func (c *CacheCenter) GetDailyDownloadCount(supplierName string, publicIP string, whichDay ...string) (int, error) {
+func (c *CacheCenter) DailyDownloadCountGet(supplierName string, publicIP string, whichDay ...string) (int, error) {
 	defer c.locker.Unlock()
 	c.locker.Lock()
 
@@ -29,12 +29,12 @@ func (c *CacheCenter) GetDailyDownloadCount(supplierName string, publicIP string
 	return dailyDownloadInfos[0].Count, nil
 }
 
-// AddDailyDownloadCount 根据字幕提供者的名称，今日下载计数的次数+1，仅仅统计次数，并不确认是哪个视频的字幕下载
-func (c *CacheCenter) AddDailyDownloadCount(supplierName string, publicIP string, whichDay ...string) (int, error) {
+// DailyDownloadCountAdd 根据字幕提供者的名称，今日下载计数的次数+1，仅仅统计次数，并不确认是哪个视频的字幕下载
+func (c *CacheCenter) DailyDownloadCountAdd(supplierName string, publicIP string, whichDay ...string) (int, error) {
 	defer c.locker.Unlock()
 	c.locker.Lock()
 
-	dailyDownloadCount, err := c.GetDailyDownloadCount(supplierName, publicIP, whichDay...)
+	dailyDownloadCount, err := c.DailyDownloadCountGet(supplierName, publicIP, whichDay...)
 	if err != nil {
 		return 0, err
 	}

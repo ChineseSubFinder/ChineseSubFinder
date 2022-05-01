@@ -3,14 +3,13 @@ package task_queue
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	taskQueue2 "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
-	"github.com/dgraph-io/badger/v3"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/emirpasic/gods/sets/treeset"
 	"github.com/sirupsen/logrus"
@@ -21,18 +20,22 @@ import (
 )
 
 type TaskQueue struct {
-	queueName           string             // 队列的名称
-	settings            *settings.Settings // 设置
-	log                 *logrus.Logger     // 日志
-	taskPriorityMapList []*treemap.Map     // 这里有 0-10 个优先级划分的存储 List，每Add一个数据的时候需要切换到这个 List 中去 save
-	taskKeyMap          *treemap.Map       // 以每个任务的唯一 JobID 来存储每个 Job，这样可以快速查询
-	taskGroupBySeries   *treemap.Map       // 以每个任务的 SeriesRootPath 来存储每个任务，然后内层是一个 treeset，后续可以遍历删除即可
-	queueLock           sync.Mutex         // 公用这个锁
+	queueName           string                    // 队列的名称
+	settings            *settings.Settings        // 设置
+	log                 *logrus.Logger            // 日志
+	center              *cache_center.CacheCenter // 缓存中心
+	taskPriorityMapList []*treemap.Map            // 这里有 0-10 个优先级划分的存储 List，每Add一个数据的时候需要切换到这个 List 中去 save
+	taskKeyMap          *treemap.Map              // 以每个任务的唯一 JobID 来存储每个 Job，这样可以快速查询
+	taskGroupBySeries   *treemap.Map              // 以每个任务的 SeriesRootPath 来存储每个任务，然后内层是一个 treeset，后续可以遍历删除即可
+	queueLock           sync.Mutex                // 公用这个锁
 }
 
-func NewTaskQueue(queueName string, settings *settings.Settings, log *logrus.Logger) *TaskQueue {
+func NewTaskQueue(queueName string, center *cache_center.CacheCenter) *TaskQueue {
 
-	tq := &TaskQueue{queueName: queueName, settings: settings, log: log,
+	tq := &TaskQueue{queueName: queueName,
+		settings:            center.Settings,
+		log:                 center.Log,
+		center:              center,
 		taskPriorityMapList: make([]*treemap.Map, 0),
 		taskKeyMap:          treemap.NewWithStringComparator(),
 		taskGroupBySeries:   treemap.NewWithStringComparator(),
@@ -47,6 +50,10 @@ func NewTaskQueue(queueName string, settings *settings.Settings, log *logrus.Log
 	return tq
 }
 
+func (t *TaskQueue) Close() {
+	t.center.Close()
+}
+
 func (t *TaskQueue) QueueName() string {
 	return t.queueName
 }
@@ -56,20 +63,7 @@ func (t *TaskQueue) Clear() error {
 	defer t.queueLock.Unlock()
 	t.queueLock.Lock()
 
-	err := GetDb().Update(
-		func(tx *badger.Txn) error {
-			var err error
-
-			for i := 0; i <= taskPriorityCount; i++ {
-				key := []byte(MergeBucketAndKeyName(BucketNamePrefixVideoSubDownloadQueue,
-					fmt.Sprintf("%s_%d", t.queueName, i)))
-				// 因为已经查询了一次，确保一定存在，所以直接更新+1，TTL 多加 5s 确保今天过去，暂时去除 TTL uint32(restOfDaySecond.Seconds())+5
-				if err = tx.Delete(key); err != nil {
-					return err
-				}
-			}
-			return nil
-		})
+	err := t.center.TaskQueueClear()
 	if err != nil {
 		return err
 	}
@@ -354,39 +348,23 @@ func (t *TaskQueue) Del(jobId string) (bool, error) {
 
 func (t *TaskQueue) read() {
 
-	err := GetDb().View(
-		func(tx *badger.Txn) error {
-			var err error
-			for i := 0; i <= taskPriorityCount; i++ {
-
-				key := []byte(MergeBucketAndKeyName(BucketNamePrefixVideoSubDownloadQueue,
-					fmt.Sprintf("%s_%d", t.queueName, i)))
-				var item *badger.Item
-				item, err = tx.Get(key)
-				if err != nil {
-					if err == badger.ErrKeyNotFound {
-						continue
-					} else {
-						return err
-					}
-				}
-				valCopy, err := item.ValueCopy(nil)
-				if err != nil {
-					return err
-				}
-				err = t.taskPriorityMapList[i].FromJSON(valCopy)
-				if err != nil {
-					return err
-				}
-			}
-
-			return nil
-		})
+	taskQueueRead, err := t.center.TaskQueueRead()
 	if err != nil {
-		t.log.Panicln(err)
+		t.log.Errorln("read task queue TaskQueueRead error:", err)
+		return
 	}
-	// 上面的操作仅仅是把 OneJob 的 JSON 弄了出来，还需要转换为 OneJob 的结构体
-	for i := 0; i < taskPriorityCount; i++ {
+
+	for i := 0; i <= taskPriorityCount; i++ {
+
+		value, bok := taskQueueRead[i]
+		if bok == false {
+			continue
+		}
+		err = t.taskPriorityMapList[i].FromJSON(value)
+		if err != nil {
+			t.log.Errorln("read task queue FromJSON error:", err)
+		}
+		// 上面的操作仅仅是把 OneJob 的 JSON 弄了出来，还需要转换为 OneJob 的结构体
 		// JobID - OneJob
 		t.taskPriorityMapList[i].Each(func(key interface{}, value interface{}) {
 
@@ -401,9 +379,7 @@ func (t *TaskQueue) read() {
 			}
 			t.taskPriorityMapList[i].Put(key, nowOneJob)
 		})
-	}
-	// 需要把几个优先级的map中的key汇总
-	for i := 0; i < taskPriorityCount; i++ {
+		// 需要把几个优先级的map中的key汇总
 		// JobID - OneJob
 		t.taskPriorityMapList[i].Each(func(key interface{}, value interface{}) {
 			// JobID -- taskPriority
@@ -452,26 +428,12 @@ func (t *TaskQueue) afterRead() {
 // save 需要把改变的数据保持到 K/V 数据库中，这个没有锁，所以需要在 Sync 中使用，不对外开放
 func (t *TaskQueue) save(taskPriority int) error {
 
-	err := GetDb().Update(
-		func(tx *badger.Txn) error {
-			var err error
+	b, err := t.taskPriorityMapList[taskPriority].ToJSON()
+	if err != nil {
+		return err
+	}
 
-			key := []byte(MergeBucketAndKeyName(
-				BucketNamePrefixVideoSubDownloadQueue,
-				fmt.Sprintf("%s_%d", t.queueName, taskPriority)))
-
-			b, err := t.taskPriorityMapList[taskPriority].ToJSON()
-			if err != nil {
-				return err
-			}
-			e := badger.NewEntry(key, b)
-			err = tx.SetEntry(e)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		})
+	err = t.center.TaskQueueSave(taskPriority, b)
 	if err != nil {
 		return err
 	}
