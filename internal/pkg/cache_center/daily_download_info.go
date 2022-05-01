@@ -11,6 +11,11 @@ func (c *CacheCenter) DailyDownloadCountGet(supplierName string, publicIP string
 	defer c.locker.Unlock()
 	c.locker.Lock()
 
+	return c.dailyDownloadCountGet(supplierName, publicIP, whichDay...)
+}
+
+func (c *CacheCenter) dailyDownloadCountGet(supplierName string, publicIP string, whichDay ...string) (int, error) {
+
 	var dailyDownloadInfos []models.DailyDownloadInfo
 	whichDayStr := ""
 	if len(whichDay) > 0 {
@@ -34,7 +39,7 @@ func (c *CacheCenter) DailyDownloadCountAdd(supplierName string, publicIP string
 	defer c.locker.Unlock()
 	c.locker.Lock()
 
-	dailyDownloadCount, err := c.DailyDownloadCountGet(supplierName, publicIP, whichDay...)
+	dailyDownloadCount, err := c.dailyDownloadCountGet(supplierName, publicIP, whichDay...)
 	if err != nil {
 		return 0, err
 	}
