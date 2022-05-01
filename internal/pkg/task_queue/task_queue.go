@@ -30,9 +30,9 @@ type TaskQueue struct {
 	queueLock           sync.Mutex                // 公用这个锁
 }
 
-func NewTaskQueue(queueName string, center *cache_center.CacheCenter) *TaskQueue {
+func NewTaskQueue(center *cache_center.CacheCenter) *TaskQueue {
 
-	tq := &TaskQueue{queueName: queueName,
+	tq := &TaskQueue{queueName: center.GetName(),
 		settings:            center.Settings,
 		log:                 center.Log,
 		center:              center,

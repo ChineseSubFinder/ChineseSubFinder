@@ -92,7 +92,7 @@ func main() {
 		}
 	}
 	// ----------------------------------------------
-	fileDownloader := file_downloader.NewFileDownloader(cache_center.NewCacheCenter(settings.GetSettings(), loggerBase))
+	fileDownloader := file_downloader.NewFileDownloader(cache_center.NewCacheCenter("local_task_queue", settings.GetSettings(), loggerBase))
 	cronHelper := cron_helper.NewCronHelper(fileDownloader)
 	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {
 		// 如果没有完成，那么就不开启

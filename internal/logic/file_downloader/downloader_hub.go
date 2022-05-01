@@ -25,6 +25,10 @@ func NewFileDownloader(cacheCenter *cache_center.CacheCenter) *FileDownloader {
 	}
 }
 
+func (f *FileDownloader) GetName() string {
+	return f.CacheCenter.GetName()
+}
+
 // Get supplierName 这个参数一定得是字幕源的名称，通过 s.GetSupplierName() 获取，否则后续的字幕源今日下载量将不能正确统计和判断
 // xunlei、shooter 使用这个
 func (f *FileDownloader) Get(supplierName string, topN int64, videoFileName string,

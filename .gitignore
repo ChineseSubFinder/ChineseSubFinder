@@ -105,3 +105,5 @@ TestData/
 /internal/pkg/sub_formatter/opendebuglog
 /internal/logic/sub_supplier/zimuku/ChineseSubFinder-Cache.db
 /download_sub_cache
+/internal/pkg/task_queue/ChineseSubFinderSettings.json
+/internal/pkg/task_queue/cache/CSF-CacheCenter/task_queue/testQueue

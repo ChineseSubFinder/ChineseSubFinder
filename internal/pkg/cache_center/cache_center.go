@@ -21,6 +21,7 @@ type CacheCenter struct {
 	downloadFileSaveRootPath string
 	taskQueueSaveRootPath    string
 	dbFPath                  string
+	cacheName                string
 	db                       *gorm.DB
 	locker                   sync.Mutex
 }
@@ -35,22 +36,33 @@ func NewCacheCenter(cacheName string, Settings *settings.Settings, Log *logrus.L
 	if err != nil {
 		panic(err)
 	}
-	c.downloadFileSaveRootPath = filepath.Join(c.centerFolder, downloadFilesFolderName, cacheName)
+
 	c.taskQueueSaveRootPath = filepath.Join(c.centerFolder, taskQueueFolderName, cacheName)
+
+	c.downloadFileSaveRootPath = filepath.Join(c.centerFolder, downloadFilesFolderName, cacheName)
+
 	c.dbFPath = filepath.Join(c.centerFolder, cacheName+"_"+dbFileName)
+
 	c.db, err = gorm.Open(sqlite.Open(c.dbFPath), &gorm.Config{})
 	if err != nil {
 		panic(fmt.Sprintf("failed to connect database, %s", err.Error()))
 	}
 	// 迁移 schema
-	err = c.db.AutoMigrate(&models.DailyDownloadInfo{}, &models.DailyDownloadInfo{})
+	err = c.db.AutoMigrate(&models.DailyDownloadInfo{}, &models.TaskQueueInfo{}, &models.DownloadFileInfo{})
 	if err != nil {
 		panic(fmt.Sprintf("db AutoMigrate error, %s", err.Error()))
 	}
 	return &c
 }
 
+func (c *CacheCenter) GetName() string {
+	return c.cacheName
+}
+
 func (c *CacheCenter) Close() {
+	defer c.locker.Unlock()
+	c.locker.Lock()
+
 	sqlDB, err := c.db.DB()
 	if err != nil {
 		return
@@ -61,13 +73,13 @@ func (c *CacheCenter) Close() {
 	}
 }
 
-func DelDb(queueName string) {
+func DelDb(cacheName string) {
 
 	centerFolder, err := my_folder.GetRootCacheCenterFolder()
 	if err != nil {
 		return
 	}
-	dbFPath := filepath.Join(centerFolder, queueName+"_"+dbFileName)
+	dbFPath := filepath.Join(centerFolder, cacheName+"_"+dbFileName)
 	if my_util.IsFile(dbFPath) == true {
 		err = os.Remove(dbFPath)
 		if err != nil {
@@ -75,12 +87,13 @@ func DelDb(queueName string) {
 		}
 	}
 
-	downloadFileSaveRootPath := filepath.Join(centerFolder, downloadFilesFolderName, queueName)
-	taskQueueSaveRootPath := filepath.Join(centerFolder, taskQueueFolderName, queueName)
+	taskQueueSaveRootPath := filepath.Join(centerFolder, taskQueueFolderName, cacheName)
 	err = my_folder.ClearFolder(taskQueueSaveRootPath)
 	if err != nil {
 		return
 	}
+
+	downloadFileSaveRootPath := filepath.Join(centerFolder, downloadFilesFolderName, cacheName)
 	err = my_folder.ClearFolder(downloadFileSaveRootPath)
 	if err != nil {
 		return

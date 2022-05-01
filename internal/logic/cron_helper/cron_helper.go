@@ -40,7 +40,7 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 		log:            fileDownloader.Log,
 		settings:       fileDownloader.Settings,
 		// 实例化下载队列
-		downloadQueue: task_queue.NewTaskQueue("LocalSubDownloadQueue", fileDownloader.Settings, fileDownloader.Log),
+		downloadQueue: task_queue.NewTaskQueue(fileDownloader.CacheCenter),
 	}
 
 	var err error
