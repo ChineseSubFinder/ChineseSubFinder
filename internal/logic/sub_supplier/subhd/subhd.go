@@ -99,11 +99,14 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 		return true
 	}
 	if count > s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit {
+		// 超限了
 		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.AdvancedSettings.SuppliersSettings.SubHD.DailyDownloadLimit, "Now Is:", count)
 		return true
+	} else {
+		// 没有超限
+		s.log.Infoln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit, "Now Is:", count)
+		return false
 	}
-	// 没有超限
-	return false
 }
 
 func (s *Supplier) GetLogger() *logrus.Logger {
