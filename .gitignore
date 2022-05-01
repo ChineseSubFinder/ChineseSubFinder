@@ -107,3 +107,4 @@ TestData/
 /download_sub_cache
 /internal/pkg/task_queue/ChineseSubFinderSettings.json
 /internal/pkg/task_queue/cache/CSF-CacheCenter/task_queue/testQueue
+/internal/pkg/task_queue/cache/CSF-CacheCenter

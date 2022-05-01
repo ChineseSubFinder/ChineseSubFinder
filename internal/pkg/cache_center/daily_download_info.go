@@ -19,7 +19,7 @@ func (c *CacheCenter) DailyDownloadCountGet(supplierName string, publicIP string
 		nowTime := time.Now()
 		whichDayStr = nowTime.Format("2006-01-02")
 	}
-	c.db.Where("supplier_name = ? AND public_ip = ? AND  which_day = ", supplierName, publicIP, whichDayStr).Find(&dailyDownloadInfos)
+	c.db.Where("supplier_name = ? AND public_ip = ? AND  which_day = ?", supplierName, publicIP, whichDayStr).Find(&dailyDownloadInfos)
 
 	if len(dailyDownloadInfos) == 0 {
 		// 不存在
