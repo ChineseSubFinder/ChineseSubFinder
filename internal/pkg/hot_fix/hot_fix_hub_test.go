@@ -3,6 +3,7 @@ package hot_fix
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"path/filepath"
@@ -23,7 +24,7 @@ func TestHotFixProcess(t *testing.T) {
 	testMovieDir := filepath.Join(testDataPath, movieDir)
 	testSeriesDir := filepath.Join(testDataPath, seriesDir)
 	// 开始修复
-	err = HotFixProcess(types.HotFixParam{
+	err = HotFixProcess(log_helper.GetLogger4Tester(), types.HotFixParam{
 		MovieRootDirs:  []string{testMovieDir},
 		SeriesRootDirs: []string{testSeriesDir},
 	})
