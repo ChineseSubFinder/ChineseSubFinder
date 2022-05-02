@@ -11,10 +11,15 @@ func (c *CacheCenter) DailyDownloadCountGet(supplierName string, publicIP string
 	defer c.locker.Unlock()
 	c.locker.Lock()
 
-	return c.dailyDownloadCountGet(supplierName, publicIP, whichDay...)
+	dailyDownloadInfos := c.dailyDownloadCountGet(supplierName, publicIP, whichDay...)
+	if len(dailyDownloadInfos) == 0 {
+		return 0, nil
+	}
+
+	return dailyDownloadInfos[0].Count, nil
 }
 
-func (c *CacheCenter) dailyDownloadCountGet(supplierName string, publicIP string, whichDay ...string) (int, error) {
+func (c *CacheCenter) dailyDownloadCountGet(supplierName string, publicIP string, whichDay ...string) []models.DailyDownloadInfo {
 
 	var dailyDownloadInfos []models.DailyDownloadInfo
 	whichDayStr := ""
@@ -26,12 +31,7 @@ func (c *CacheCenter) dailyDownloadCountGet(supplierName string, publicIP string
 	}
 	c.db.Where("supplier_name = ? AND public_ip = ? AND  which_day = ?", supplierName, publicIP, whichDayStr).Find(&dailyDownloadInfos)
 
-	if len(dailyDownloadInfos) == 0 {
-		// 不存在
-		return 0, nil
-	}
-
-	return dailyDownloadInfos[0].Count, nil
+	return dailyDownloadInfos
 }
 
 // DailyDownloadCountAdd 根据字幕提供者的名称，今日下载计数的次数+1，仅仅统计次数，并不确认是哪个视频的字幕下载
@@ -39,10 +39,7 @@ func (c *CacheCenter) DailyDownloadCountAdd(supplierName string, publicIP string
 	defer c.locker.Unlock()
 	c.locker.Lock()
 
-	dailyDownloadCount, err := c.dailyDownloadCountGet(supplierName, publicIP, whichDay...)
-	if err != nil {
-		return 0, err
-	}
+	dailyDownloadCounts := c.dailyDownloadCountGet(supplierName, publicIP, whichDay...)
 
 	whichDayStr := ""
 	if len(whichDay) > 0 {
@@ -52,14 +49,20 @@ func (c *CacheCenter) DailyDownloadCountAdd(supplierName string, publicIP string
 		whichDayStr = nowTime.Format("2006-01-02")
 	}
 
-	dailyDownloadCount += 1
-	dd := models.DailyDownloadInfo{
-		SupplierName: supplierName,
-		PublicIP:     publicIP,
-		Count:        dailyDownloadCount,
-		WhichDay:     whichDayStr,
+	outCount := 0
+	if len(dailyDownloadCounts) == 0 {
+		dailyDownloadInfo := models.DailyDownloadInfo{
+			SupplierName: supplierName,
+			PublicIP:     publicIP,
+			WhichDay:     whichDayStr,
+			Count:        1,
+		}
+		outCount = 1
+		c.db.Create(&dailyDownloadInfo)
+	} else {
+		dailyDownloadCounts[0].Count += 1
+		outCount = dailyDownloadCounts[0].Count
+		c.db.Save(&dailyDownloadCounts[0])
 	}
-	c.db.Save(&dd)
-
-	return dailyDownloadCount, nil
+	return outCount, nil
 }
