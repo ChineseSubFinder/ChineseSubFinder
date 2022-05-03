@@ -43,11 +43,10 @@ func (cb ControllerBase) SettingsHandler(c *gin.Context) {
 			if err != nil {
 				return
 			}
-			if settings.GetSettings().AdvancedSettings.ProxySettings.UseProxy == false {
-				err = settings.GetSettings().AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
-				if err != nil {
-					return
-				}
+			// 不管如何，都进行一次代理服务器的关闭，然后开启由具体的 获取 ProxySettings GetLocalHttpProxyUrl 操作开启这个服务器
+			err = settings.GetSettings().AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
+			if err != nil {
+				return
 			}
 			c.JSON(http.StatusOK, backend.ReplyCommon{Message: "Settings Save Success"})
 		}
