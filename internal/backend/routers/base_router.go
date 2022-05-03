@@ -44,5 +44,9 @@ func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engi
 		GroupV1.POST("/daemon/start", cbV1.DaemonStartHandler)
 		GroupV1.POST("/daemon/stop", cbV1.DaemonStopHandler)
 		GroupV1.GET("/daemon/status", cbV1.DaemonStatusHandler)
+
+		GroupV1.GET("/jobs/list", cbV1.JobsListHandler)
+		GroupV1.POST("/jobs/change-job-status", cbV1.ChangeJobStatusHandler)
+		GroupV1.POST("/jobs/log", cbV1.JobLogHandler)
 	}
 }

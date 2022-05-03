@@ -25,7 +25,7 @@ type TaskQueue struct {
 	log                 *logrus.Logger            // 日志
 	center              *cache_center.CacheCenter // 缓存中心
 	taskPriorityMapList []*treemap.Map            // 这里有 0-10 个优先级划分的存储 List，每Add一个数据的时候需要切换到这个 List 中去 save
-	taskKeyMap          *treemap.Map              // 以每个任务的唯一 JobID 来存储每个 Job，这样可以快速查询
+	taskKeyMap          *treemap.Map              // 以每个任务的唯一 JobID 来存储每个 Job 的 优先级在哪里，这样可以快速查询
 	taskGroupBySeries   *treemap.Map              // 以每个任务的 SeriesRootPath 来存储每个任务，然后内层是一个 treeset，后续可以遍历删除即可
 	queueLock           sync.Mutex                // 公用这个锁
 }
@@ -243,58 +243,6 @@ func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue.OneJob, inErr er
 	}
 }
 
-func (t *TaskQueue) GetJobsByStatus(status task_queue.JobStatus) (bool, []task_queue.OneJob, error) {
-
-	defer t.queueLock.Unlock()
-	t.queueLock.Lock()
-
-	outOneJobs := make([]task_queue.OneJob, 0)
-	// 如果队列里面没有东西，则返回 false
-	if t.isEmpty() == true {
-		return false, nil, nil
-	}
-
-	for TaskPriority := 0; TaskPriority <= taskPriorityCount; TaskPriority++ {
-
-		t.taskPriorityMapList[TaskPriority].Each(func(key interface{}, value interface{}) {
-
-			tOneJob := task_queue.OneJob{}
-			tOneJob = value.(task_queue.OneJob)
-			if tOneJob.JobStatus == status {
-				// 找到加入列表
-				outOneJobs = append(outOneJobs, tOneJob)
-			}
-		})
-	}
-
-	return true, outOneJobs, nil
-}
-
-// GetJobsByPriorityAndStatus 根据任务优先级和状态获取任务列表
-func (t *TaskQueue) GetJobsByPriorityAndStatus(taskPriority int, status task_queue.JobStatus) (bool, []task_queue.OneJob, error) {
-
-	defer t.queueLock.Unlock()
-	t.queueLock.Lock()
-
-	outOneJobs := make([]task_queue.OneJob, 0)
-	// 如果队列里面没有东西，则返回 false
-	if t.isEmpty() == true {
-		return false, nil, nil
-	}
-
-	t.taskPriorityMapList[taskPriority].Each(func(key interface{}, value interface{}) {
-
-		tOneJob := task_queue.OneJob{}
-		tOneJob = value.(task_queue.OneJob)
-		if tOneJob.JobStatus == status {
-			// 找到加入列表
-			outOneJobs = append(outOneJobs, tOneJob)
-		}
-	})
-
-	return true, outOneJobs, nil
-}
-
 func (t *TaskQueue) del(jobId string) (bool, error) {
 	if t.isExist(jobId) == false {
 		return false, nil
@@ -467,6 +415,7 @@ const (
 	HighTaskPriorityLevel       = 3
 	DefaultTaskPriorityLevel    = 5
 	FirstRetryTaskPriorityLevel = 6
+	LowTaskPriorityLevel        = 7
 )
 
 var (

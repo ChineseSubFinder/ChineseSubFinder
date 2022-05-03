@@ -130,3 +130,101 @@ func (t *TaskQueue) GetOneDoneJob() (bool, task_queue.OneJob, error) {
 
 	return false, tOneJob, nil
 }
+
+func (t *TaskQueue) GetJobsByStatus(status task_queue.JobStatus) (bool, []task_queue.OneJob, error) {
+
+	defer t.queueLock.Unlock()
+	t.queueLock.Lock()
+
+	outOneJobs := make([]task_queue.OneJob, 0)
+	// 如果队列里面没有东西，则返回 false
+	if t.isEmpty() == true {
+		return false, nil, nil
+	}
+
+	for TaskPriority := 0; TaskPriority <= taskPriorityCount; TaskPriority++ {
+
+		t.taskPriorityMapList[TaskPriority].Each(func(key interface{}, value interface{}) {
+
+			tOneJob := task_queue.OneJob{}
+			tOneJob = value.(task_queue.OneJob)
+			if tOneJob.JobStatus == status {
+				// 找到加入列表
+				outOneJobs = append(outOneJobs, tOneJob)
+			}
+		})
+	}
+
+	return true, outOneJobs, nil
+}
+
+// GetJobsByPriorityAndStatus 根据任务优先级和状态获取任务列表
+func (t *TaskQueue) GetJobsByPriorityAndStatus(taskPriority int, status task_queue.JobStatus) (bool, []task_queue.OneJob, error) {
+
+	defer t.queueLock.Unlock()
+	t.queueLock.Lock()
+
+	outOneJobs := make([]task_queue.OneJob, 0)
+	// 如果队列里面没有东西，则返回 false
+	if t.isEmpty() == true {
+		return false, nil, nil
+	}
+
+	t.taskPriorityMapList[taskPriority].Each(func(key interface{}, value interface{}) {
+
+		tOneJob := task_queue.OneJob{}
+		tOneJob = value.(task_queue.OneJob)
+		if tOneJob.JobStatus == status {
+			// 找到加入列表
+			outOneJobs = append(outOneJobs, tOneJob)
+		}
+	})
+
+	return true, outOneJobs, nil
+}
+
+func (t *TaskQueue) GetAllJobs() (bool, []task_queue.OneJob, error) {
+
+	defer t.queueLock.Unlock()
+	t.queueLock.Lock()
+
+	outOneJobs := make([]task_queue.OneJob, 0)
+	// 如果队列里面没有东西，则返回 false
+	if t.isEmpty() == true {
+		return false, nil, nil
+	}
+
+	for TaskPriority := 0; TaskPriority <= taskPriorityCount; TaskPriority++ {
+
+		t.taskPriorityMapList[TaskPriority].Each(func(key interface{}, value interface{}) {
+
+			tOneJob := task_queue.OneJob{}
+			tOneJob = value.(task_queue.OneJob)
+			// 找到加入列表
+			outOneJobs = append(outOneJobs, tOneJob)
+		})
+	}
+
+	return true, outOneJobs, nil
+}
+
+func (t *TaskQueue) GetOneJobByID(jobId string) (bool, task_queue.OneJob) {
+
+	defer t.queueLock.Unlock()
+	t.queueLock.Lock()
+
+	outOneJob := task_queue.OneJob{}
+
+	taskPriority, bok := t.taskKeyMap.Get(jobId)
+	if bok == false {
+		return false, outOneJob
+	}
+	// 删除连续剧的 tree.Map 里面的 tree.Set 的元素
+	needDelJobObj, bok := t.taskPriorityMapList[taskPriority.(int)].Get(jobId)
+	if bok == false {
+		return false, outOneJob
+	}
+	outOneJob = needDelJobObj.(task_queue.OneJob)
+
+	return true, outOneJob
+}
