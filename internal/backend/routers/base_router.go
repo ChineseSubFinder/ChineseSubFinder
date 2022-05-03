@@ -13,6 +13,8 @@ func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engi
 
 	cbBase := base.NewControllerBase(fileDownloader)
 	cbV1 := v1.NewControllerBase(fileDownloader.Log, cronHelper)
+	// 静态文件服务器
+	cbV1.StaticFileSystemBackEnd.Start(fileDownloader.Settings.CommonSettings)
 	// 基础的路由
 	router.GET("/system-status", cbBase.SystemStatusHandler)
 

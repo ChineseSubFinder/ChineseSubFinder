@@ -48,6 +48,10 @@ func (cb ControllerBase) SettingsHandler(c *gin.Context) {
 			if err != nil {
 				return
 			}
+			// 重新设置本地的静态文件服务器
+			cb.StaticFileSystemBackEnd.Stop()
+			cb.StaticFileSystemBackEnd.Start(cb.cronHelper.Settings.CommonSettings)
+
 			c.JSON(http.StatusOK, backend.ReplyCommon{Message: "Settings Save Success"})
 		}
 	default:

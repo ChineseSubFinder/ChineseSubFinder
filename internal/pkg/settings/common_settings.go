@@ -7,6 +7,7 @@ type CommonSettings struct {
 	RunScanAtStartUp         bool     `json:"run_scan_at_start_up"`         // 完成引导设置后，下次运行程序就开始扫描
 	MoviePaths               []string `json:"movie_paths"`                  // 电影的目录
 	SeriesPaths              []string `json:"series_paths"`                 // 连续剧的目录
+	LocalStaticFilePort      string   `json:"local_static_file_port"`       // 本地静态文件的端口
 }
 
 func NewCommonSettings() *CommonSettings {
@@ -17,5 +18,6 @@ func NewCommonSettings() *CommonSettings {
 		RunScanAtStartUp:         true,
 		MoviePaths:               make([]string, 0),
 		SeriesPaths:              make([]string, 0),
+		LocalStaticFilePort:      "19037",
 	}
 }

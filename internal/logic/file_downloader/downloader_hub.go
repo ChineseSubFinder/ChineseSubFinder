@@ -20,9 +20,12 @@ type FileDownloader struct {
 }
 
 func NewFileDownloader(cacheCenter *cache_center.CacheCenter) *FileDownloader {
-	return &FileDownloader{Settings: cacheCenter.Settings, Log: cacheCenter.Log,
+
+	f := FileDownloader{Settings: cacheCenter.Settings,
+		Log:         cacheCenter.Log,
 		CacheCenter: cacheCenter,
 	}
+	return &f
 }
 
 func (f *FileDownloader) GetName() string {
