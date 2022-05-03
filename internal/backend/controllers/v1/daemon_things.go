@@ -7,11 +7,11 @@ import (
 	"net/http"
 )
 
-func (cb ControllerBase) JobStartHandler(c *gin.Context) {
+func (cb ControllerBase) DaemonStartHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
-		cb.ErrorProcess(c, "JobStartHandler", err)
+		cb.ErrorProcess(c, "DaemonStartHandler", err)
 	}()
 
 	if cb.cronHelper.CronHelperRunning() == false {
@@ -25,11 +25,11 @@ func (cb ControllerBase) JobStartHandler(c *gin.Context) {
 	})
 }
 
-func (cb ControllerBase) JobStopHandler(c *gin.Context) {
+func (cb ControllerBase) DaemonStopHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
-		cb.ErrorProcess(c, "JobStopHandler", err)
+		cb.ErrorProcess(c, "DaemonStopHandler", err)
 	}()
 
 	if cb.cronHelper.CronHelperRunning() == true {
@@ -43,11 +43,11 @@ func (cb ControllerBase) JobStopHandler(c *gin.Context) {
 	})
 }
 
-func (cb ControllerBase) JobStatusHandler(c *gin.Context) {
+func (cb ControllerBase) DaemonStatusHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
-		cb.ErrorProcess(c, "JobStatusHandler", err)
+		cb.ErrorProcess(c, "DaemonStatusHandler", err)
 	}()
 
 	c.JSON(http.StatusOK, backend.ReplyJobStatus{
