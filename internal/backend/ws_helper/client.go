@@ -3,11 +3,8 @@ package ws_helper
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend/ws"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/log_hub"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -34,10 +31,6 @@ const (
 	upGraderReadBufferSize = 5 * 1024
 
 	upGraderWriteBufferSize = 5 * 1024
-	// 字幕扫描任务执行状态
-	subScanJobStatusInterval = 5 * time.Second
-	// 字幕扫描运行中任务日志信息
-	runningLogInterval = 5 * time.Second
 )
 
 var upGrader = websocket.Upgrader{
@@ -165,14 +158,8 @@ func (c *Client) writePump() {
 
 	// 心跳计时器
 	pingTicker := time.NewTicker(pingPeriod)
-	// 字幕扫描任务状态计时器
-	subScanJobStatusTicker := time.NewTicker(subScanJobStatusInterval)
-	// 正在运行扫描器的日志
-	runningLogTicker := time.NewTicker(runningLogInterval)
 	defer func() {
 		pingTicker.Stop()
-		subScanJobStatusTicker.Stop()
-		runningLogTicker.Stop()
 		c.close()
 	}()
 
@@ -226,47 +213,6 @@ func (c *Client) writePump() {
 				c.log.Debugln("writePump.pingTicker.C.WriteMessage", err)
 				return
 			}
-		case <-subScanJobStatusTicker.C:
-			// 字幕扫描任务状态
-			if c.authed == false {
-				// 没有认证通过，就无需处理次定时器时间
-				continue
-			}
-			// 如果没有开启总任务，或者停止总任务了，那么这里获取到的应该是 nil，不应该继续往下
-			info := common.GetSubScanJobStatus()
-			if info == nil {
-				continue
-			}
-			// 统一丢到 send 里面得了
-			outLogsBytes, err := SubScanJobStatusReply(info)
-			if err != nil {
-				c.log.Debugln("writePump.SubScanJobStatusReply", err)
-				return
-			}
-			c.send <- outLogsBytes
-
-		case <-runningLogTicker.C:
-			// 正在运行扫描日志
-			if c.authed == false {
-				// 没有认证通过，就无需处理次定时器时间
-				continue
-			}
-			nowRunningLog := log_helper.GetOnceLog4Running()
-			if nowRunningLog == nil {
-				continue
-			}
-			// 找到日志，把当前已有的日志发送出去，然后记录发送到哪里了
-			// 这里需要考虑一次性的信息太多，超过发送的缓冲区，所以需要拆分发送
-			outLogsBytes, err := RunningLogReply(nowRunningLog, c.sendLogLineIndex)
-			if err != nil {
-				c.log.Debugln("writePump.RunningLogReply", err)
-				return
-			}
-			// 拆分到一条日志来发送
-			for _, logsByte := range outLogsBytes {
-				c.send <- logsByte
-				c.sendLogLineIndex += 1
-			}
 		}
 	}
 }
@@ -284,61 +230,6 @@ func AuthReply(inType ws.AuthMessage) ([]byte, error) {
 	}
 
 	outBytes, err = ws.NewBaseMessage(ws.CommonReply.String(), string(outData)).Bytes()
-	if err != nil {
-		return nil, err
-	}
-
-	return outBytes, nil
-}
-
-// RunningLogReply 发送的 Running Log 数据，iPreSendLines 之前俺发送到第几条数据，则不发发送过的
-func RunningLogReply(log *log_hub.OnceLog, iPreSendLines ...int) ([][]byte, error) {
-
-	if log == nil {
-		return nil, errors.New("RunningLogReply input log is nil")
-	}
-
-	var outLogBytes = make([][]byte, 0)
-	var err error
-	var preSendLines = 0
-	if len(iPreSendLines) > 0 {
-		preSendLines = iPreSendLines[0]
-		if preSendLines < 0 {
-			preSendLines = 0
-		}
-		log.LogLines = log.LogLines[preSendLines:]
-	}
-
-	logs := log_helper.GetSpiltOnceLog(log)
-	for _, onceLog := range logs {
-		var outData, outBytes []byte
-		outData, err = json.Marshal(onceLog)
-		if err != nil {
-			return nil, err
-		}
-
-		outBytes, err = ws.NewBaseMessage(ws.RunningLog.String(), string(outData)).Bytes()
-		if err != nil {
-			return nil, err
-		}
-
-		outLogBytes = append(outLogBytes, outBytes)
-	}
-
-	return outLogBytes, nil
-}
-
-// SubScanJobStatusReply 当前字幕扫描的进度信息
-func SubScanJobStatusReply(info *ws.SubDownloadJobInfo) ([]byte, error) {
-
-	var err error
-	var outData, outBytes []byte
-	outData, err = json.Marshal(info)
-	if err != nil {
-		return nil, err
-	}
-
-	outBytes, err = ws.NewBaseMessage(ws.SubDownloadJobsStatus.String(), string(outData)).Bytes()
 	if err != nil {
 		return nil, err
 	}

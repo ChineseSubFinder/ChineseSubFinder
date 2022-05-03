@@ -50,5 +50,8 @@ func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engi
 		GroupV1.GET("/jobs/list", cbV1.JobsListHandler)
 		GroupV1.POST("/jobs/change-job-status", cbV1.ChangeJobStatusHandler)
 		GroupV1.POST("/jobs/log", cbV1.JobLogHandler)
+
+		GroupV1.POST("/video/list/movies", cbV1.MovieListHandler)
+		GroupV1.POST("/video/list/series", cbV1.SeriesListHandler)
 	}
 }

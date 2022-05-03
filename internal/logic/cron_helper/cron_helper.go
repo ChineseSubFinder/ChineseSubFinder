@@ -3,7 +3,6 @@ package cron_helper
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/scan_played_video_subinfo"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
@@ -140,8 +139,6 @@ func (ch *CronHelper) Start(runImmediately bool) {
 
 		// 不会马上启动扫描，那么就需要设置当前的时间，且为 waiting
 		tttt := ch.c.Entry(ch.entryIDScanVideoProcess).Next.Format("2006-01-02 15:04:05")
-		common.SetSubScanJobStatusWaiting(tttt)
-
 		ch.log.Infoln("Next Sub Scan Will Process At:", tttt)
 	} else {
 		ch.log.Errorln("Can't get cron jobs, will not send SubScanJobStatus")
@@ -185,8 +182,6 @@ func (ch *CronHelper) Stop() {
 	ch.cronHelperRunning = false
 	ch.stopping = false
 	ch.cronLock.Unlock()
-
-	common.SetSubScanJobStatusNil()
 }
 
 func (ch *CronHelper) scanPlayedVideoSub() {
@@ -243,11 +238,11 @@ func (ch *CronHelper) scanVideoProcessAdd2DownloadQueue() {
 
 		// 下载完后，应该继续是等待
 		tttt := ch.c.Entry(ch.entryIDScanVideoProcess).Next.Format("2006-01-02 15:04:05")
-		common.SetSubScanJobStatusWaiting(tttt)
+		ch.log.Infoln("Next Sub Scan Will Process At:", tttt)
 	}()
 
 	// 扫描字幕任务开始，先是扫描阶段，那么是拿不到有多少视频需要扫描的数量的
-	common.SetSubScanJobStatusPreparing(time.Now().Format("2006-01-02 15:04:05"))
+	ch.log.Infoln("scanVideoProcessAdd2DownloadQueue Start:", time.Now().Format("2006-01-02 15:04:05"))
 	// ----------------------------------------------------------------------------------------
 	// ----------------------------------------------------------------------------------------
 	// 扫描有那些视频需要下载字幕，放入队列中，然后会有下载者去这个队列取出来进行下载

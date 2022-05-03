@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
-	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
@@ -230,9 +229,6 @@ func (s *Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier
 	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 
 		index++
-		pkgcommon.SetSubScanJobStatusScanSeriesSub(index, len(seriesInfo.NeedDlEpsKeyList),
-			fmt.Sprintf("%v - S%v-E%v", episodeInfo.Title, episodeInfo.Season, episodeInfo.Episode))
-
 		one, err := s.getSubListFromFile(episodeInfo.FileFullPath)
 		if err != nil {
 			s.log.Errorln(s.GetSupplierName(), "getSubListFromFile", episodeInfo.FileFullPath)
