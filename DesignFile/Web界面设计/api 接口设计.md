@@ -661,9 +661,9 @@
 
 
 
-#### 开始任务
+#### 开启守护程序
 
-`POST /v1/jobs/start`
+`POST /v1/daemon/start`
 
 请求参数：无
 
@@ -679,11 +679,11 @@
 
 
 
-#### 停止任务
+#### 停止守护程序
 
 停止正在运行的任务
 
-`POST /v1/jobs/stop`
+`POST /v1/daemon/stop`
 
 请求参数：无
 
@@ -699,9 +699,9 @@
 
 
 
-#### 查询任务的状态
+#### 查询守护程序的状态
 
-`GET /v1/jobs/start`
+`GET /v1/daemon/start`
 
 请求参数：无
 
@@ -720,6 +720,91 @@
 > * stopped，已经结束
 
 返回 HTTP 码 204
+
+
+
+#### 查询所有任务
+
+一次性获取所有的任务状态
+
+GET  /v1/jobs/list
+
+请求参数：无
+
+返回 HTTP 码 200：
+
+```json
+{
+	"all_jobs": [
+		OneJob,
+		OneJob,
+	]
+}
+```
+
+
+
+#### 更改任务的状态
+
+更改指定任务的状态
+
+POST  /v1/jobs/change-job-status
+
+请求参数：
+
+```json
+{
+	"id": "xxx",
+	"task_priority": "high" // high or middle or low priority
+}
+```
+
+返回 HTTP 码 200：
+
+```json
+{
+	Message: "job not found"
+}
+```
+
+```json
+{
+	Message: "update job status failed"
+}
+```
+
+```json
+{
+	Message: "ok"
+}
+```
+
+
+
+#### 获取任务的日志
+
+获取指定任务的日志
+
+POST  /v1/jobs/log
+
+请求参数：
+
+```json
+{
+	"id": "xxx",
+}
+```
+
+返回 HTTP 码 200：
+
+```json
+{
+	one_line: [
+        "123123",
+        "123123"
+    ]
+}
+```
 
 
 
