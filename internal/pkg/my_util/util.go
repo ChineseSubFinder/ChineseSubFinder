@@ -302,6 +302,12 @@ func SearchMatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 					l.Debugln("SearchMatchedVideoFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
 					continue
 				}
+				// 跳过预告片，见 #315
+				if strings.HasSuffix(strings.ReplaceAll(curFile.Name(), filepath.Ext(curFile.Name()), ""), "-trailer") == true {
+					l.Debugln("SearchMatchedVideoFile, Skip -trailer:", fullPath)
+					continue
+				}
+
 				fileFullPathList = append(fileFullPathList, fullPath)
 			}
 		}
@@ -420,6 +426,12 @@ func SearchTVNfo(l *logrus.Logger, dir string) ([]string, error) {
 					l.Debugln("SearchTVNfo file.Size() == 4096 && Prefix Name == ._*", fullPath)
 					continue
 				}
+				// 跳过预告片，见 #315
+				if strings.HasSuffix(strings.ReplaceAll(curFile.Name(), filepath.Ext(curFile.Name()), ""), "-trailer") == true {
+					l.Debugln("SearchTVNfo, Skip -trailer:", fullPath)
+					continue
+				}
+
 				fileFullPathList = append(fileFullPathList, fullPath)
 			}
 		}

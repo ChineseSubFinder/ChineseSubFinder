@@ -235,6 +235,12 @@ func SearchMatchedSubFileByDir(log *logrus.Logger, dir string) ([]string, error)
 				continue
 			}
 
+			// 跳过预告片，见 #315
+			if strings.HasSuffix(strings.ReplaceAll(curFile.Name(), filepath.Ext(curFile.Name()), ""), "-trailer") == true {
+				log.Debugln("SearchMatchedSubFileByDir, Skip -trailer:", fullPath)
+				continue
+			}
+
 			if sub_parser_hub.IsSubExtWanted(filepath.Ext(curFile.Name())) == true {
 				fileFullPathList = append(fileFullPathList, fullPath)
 			}

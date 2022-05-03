@@ -214,6 +214,13 @@ func SearchMatchedSubFile(log *logrus.Logger, dir string) ([]string, error) {
 					log.Debugln("SearchMatchedSubFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
 					continue
 				}
+
+				// 跳过预告片，见 #315
+				if strings.HasSuffix(strings.ReplaceAll(curFile.Name(), filepath.Ext(curFile.Name()), ""), "-trailer") == true {
+					log.Debugln("SearchMatchedSubFile, Skip -trailer:", fullPath)
+					continue
+				}
+
 				fileFullPathList = append(fileFullPathList, fullPath)
 			}
 		}

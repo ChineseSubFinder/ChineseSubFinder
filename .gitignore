@@ -76,6 +76,7 @@ TestData/
 
 /*.iml
 /ChineseSubFinder-Cache.db
+ChineseSubFinderSettings.json
 /cache
 /internal/pkg/hot_fix/ChineseSubFinder-Cache.db
 /internal/pkg/sub_formatter/ChineseSubFinder-Cache.db
@@ -89,7 +90,6 @@ TestData/
 /task_queue
 /internal/pkg/sub_file_hash/Logs
 /internal/logic/sub_supplier/xunlei/task_queue
-/internal/pkg/download_file_cache/ChineseSubFinderSettings.json
 /internal/pkg/download_file_cache/Logs
 /internal/pkg/download_file_cache/download_sub_cache
 /internal/logic/sub_supplier/subhd/download_sub_cache
@@ -105,9 +105,10 @@ TestData/
 /internal/pkg/sub_formatter/opendebuglog
 /internal/logic/sub_supplier/zimuku/ChineseSubFinder-Cache.db
 /download_sub_cache
-/internal/pkg/task_queue/ChineseSubFinderSettings.json
 /internal/pkg/task_queue/cache/CSF-CacheCenter/task_queue/testQueue
 /internal/pkg/task_queue/cache/CSF-CacheCenter
 /internal/pkg/cache_center/cache/CSF-CacheCenter/testFile_cache_center.db
 /internal/pkg/cache_center/cache/CSF-CacheCenter/download_files/testFile/2022-05-01
-/internal/pkg/cache_center/ChineseSubFinderSettings.json
+
+/internal/logic/task_queue/Logs
+/internal/logic/task_queue/task_queue
