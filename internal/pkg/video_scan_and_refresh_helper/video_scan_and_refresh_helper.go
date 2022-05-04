@@ -489,7 +489,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 
 		// 只需要从一集取信息即可
 		for _, mixInfo := range embyMixInfos {
-
+			// 在 GetRecentlyAddVideoListWithNoChineseSubtitle 的时候就进行了筛选，所以这里就直接加入队列了
 			// 放入队列
 			oneJob := TTaskqueue.NewOneJob(
 				common.Series, mixInfo.PhysicalVideoFileFullPath, task_queue.DefaultTaskPriorityLevel,
