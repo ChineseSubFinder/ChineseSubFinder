@@ -54,6 +54,10 @@ func (d *SubSupplierHub) DelSubSupplier(one ifaces.ISupplier) {
 // MovieNeedDlSub 电影是否符合要求需要下载字幕，比如
 func (d *SubSupplierHub) MovieNeedDlSub(videoFullPath string, forcedScanAndDownloadSub bool) bool {
 
+	if forcedScanAndDownloadSub == true {
+		return true
+	}
+
 	var err error
 	if d.settings.AdvancedSettings.ScanLogic.SkipChineseMovie == true {
 		var skip bool
