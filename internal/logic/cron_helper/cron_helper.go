@@ -18,7 +18,7 @@ type CronHelper struct {
 	stopping                      bool                                                     // 正在停止
 	cronHelperRunning             bool                                                     // 这个是定时器启动的状态，它为true，不代表核心函数在执行
 	scanPlayedVideoSubInfo        *scan_played_video_subinfo.ScanPlayedVideoSubInfo        // 扫描已经播放过的视频的字幕信息
-	fileDownloader                *file_downloader.FileDownloader                          // 文件下载器
+	FileDownloader                *file_downloader.FileDownloader                          // 文件下载器
 	DownloadQueue                 *task_queue.TaskQueue                                    // 需要下载的视频的队列
 	downloader                    *downloader.Downloader                                   // 下载者线程
 	videoScanAndRefreshHelper     *video_scan_and_refresh_helper.VideoScanAndRefreshHelper // 视频扫描和刷新的帮助类
@@ -35,7 +35,7 @@ type CronHelper struct {
 func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 
 	ch := CronHelper{
-		fileDownloader: fileDownloader,
+		FileDownloader: fileDownloader,
 		log:            fileDownloader.Log,
 		Settings:       fileDownloader.Settings,
 		// 实例化下载队列
@@ -50,7 +50,7 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 	}
 	// 字幕扫描器
 	ch.videoScanAndRefreshHelper = video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
-		ch.fileDownloader,
+		ch.FileDownloader,
 		ch.DownloadQueue)
 
 	return &ch
@@ -75,7 +75,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// 初始化下载者，里面的两个 func 需要使用定时器启动 SupplierCheck QueueDownloader
 	ch.downloader = downloader.NewDownloader(
 		sub_formatter.GetSubFormatter(ch.log, ch.Settings.AdvancedSettings.SubNameFormatter),
-		ch.fileDownloader, ch.DownloadQueue)
+		ch.FileDownloader, ch.DownloadQueue)
 	// ----------------------------------------------
 	// 判断扫描任务的时间间隔是否符合要求，不符合则重写默认值
 	_, err := cron.ParseStandard(ch.Settings.CommonSettings.ScanInterval)

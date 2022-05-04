@@ -22,8 +22,10 @@ func StartBackEnd(fileDownloader *file_downloader.FileDownloader, httpPort int, 
 	engine := gin.Default()
 	// 默认所有都通过
 	engine.Use(cors.Default())
-	routers.InitRouter(fileDownloader, engine, cronHelper)
-
+	v1Router := routers.InitRouter(fileDownloader, engine, cronHelper)
+	defer func() {
+		v1Router.Close()
+	}()
 	engine.GET("/", func(c *gin.Context) {
 		c.Header("content-type", "text/html;charset=utf-8")
 		c.String(http.StatusOK, string(dist.SpaIndexHtml))

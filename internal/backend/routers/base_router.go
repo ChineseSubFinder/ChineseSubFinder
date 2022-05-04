@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engine, cronHelper *cron_helper.CronHelper) {
+func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engine, cronHelper *cron_helper.CronHelper) *v1.ControllerBase {
 
 	cbBase := base.NewControllerBase(fileDownloader)
 	cbV1 := v1.NewControllerBase(fileDownloader.Log, cronHelper)
@@ -51,7 +51,11 @@ func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engi
 		GroupV1.POST("/jobs/change-job-status", cbV1.ChangeJobStatusHandler)
 		GroupV1.POST("/jobs/log", cbV1.JobLogHandler)
 
-		GroupV1.POST("/video/list/movies", cbV1.MovieListHandler)
-		GroupV1.POST("/video/list/series", cbV1.SeriesListHandler)
+		GroupV1.POST("/video/list/refresh", cbV1.RefreshVideoListHandler)
+		GroupV1.GET("/video/list/refresh", cbV1.RefreshVideoListStatusHandler)
+		GroupV1.GET("/video/list/movies", cbV1.MovieListHandler)
+		GroupV1.GET("/video/list/series", cbV1.SeriesListHandler)
 	}
+
+	return cbV1
 }
