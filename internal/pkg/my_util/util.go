@@ -12,8 +12,10 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sort_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	browser "github.com/allanpk716/fake-useragent"
+	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -27,7 +29,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -226,7 +227,7 @@ func VideoNameSearchKeywordMaker(l *logrus.Logger, title string, year string) st
 }
 
 // SearchMatchedVideoFileFromDirs 搜索符合后缀名的视频文件
-func SearchMatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) ([]string, error) {
+func SearchMatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) (*treemap.Map, error) {
 
 	defer func() {
 		l.Infoln("SearchMatchedVideoFileFromDirs End")
@@ -235,25 +236,35 @@ func SearchMatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) ([]string, 
 	l.Infoln(" --------------------------------------------------")
 	l.Infoln("SearchMatchedVideoFileFromDirs Start...")
 
-	var fileFullPathList = make([]string, 0)
+	var fileFullPathMap = treemap.NewWithStringComparator()
 	for _, dir := range dirs {
 
 		matchedVideoFile, err := SearchMatchedVideoFile(l, dir)
 		if err != nil {
 			return nil, err
 		}
-
-		fileFullPathList = append(fileFullPathList, matchedVideoFile...)
+		value, found := fileFullPathMap.Get(dir)
+		if found == false {
+			fileFullPathMap.Put(dir, matchedVideoFile)
+		} else {
+			value = append(value.([]string), matchedVideoFile...)
+			fileFullPathMap.Put(dir, value)
+		}
 	}
 
-	// 排序，从最新的到最早的
-	fileFullPathList = SortByModTime(fileFullPathList)
+	fileFullPathMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
 
-	for _, s := range fileFullPathList {
-		l.Debugln(s)
-	}
+		oneSeriesRootPathName := seriesRootPathName.(string)
+		fileFullPathList := seriesNames.([]string)
+		// 排序，从最新的到最早的
+		fileFullPathList = sort_things.SortByModTime(fileFullPathList)
+		for _, s := range fileFullPathList {
+			l.Debugln(s)
+		}
+		fileFullPathMap.Put(oneSeriesRootPathName, fileFullPathList)
+	})
 
-	return fileFullPathList, nil
+	return fileFullPathMap, nil
 }
 
 // SearchMatchedVideoFile 搜索符合后缀名的视频文件，现在也会把 BDMV 的文件搜索出来，但是这个并不是一个视频文件，需要在后续特殊处理
@@ -313,60 +324,6 @@ func SearchMatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 		}
 	}
 	return fileFullPathList, nil
-}
-
-func GetFileModTime(fileFPath string) time.Time {
-
-	if IsFile(fileFPath) == true {
-		// 存在
-		fi, err := os.Stat(fileFPath)
-		if err != nil {
-			return time.Time{}
-		}
-
-		return fi.ModTime()
-	} else {
-		// 不存在才需要考虑蓝光情况
-		bok, idBDMVFPath, _ := decode.IsFakeBDMVWorked(fileFPath)
-		if bok == false {
-			// 也不是蓝光
-			return time.Time{}
-		}
-		// 获取这个蓝光 ID BDMV 文件的时间
-		fInfo, err := os.Stat(idBDMVFPath)
-		if err != nil {
-			return time.Time{}
-		}
-		return fInfo.ModTime()
-	}
-}
-
-// SortByModTime 根据文件的 Mod Time 进行排序，递减
-func SortByModTime(fileList []string) []string {
-
-	byModTime := make(ByModTime, 0)
-	byModTime = append(byModTime, fileList...)
-	sort.Sort(sort.Reverse(byModTime))
-
-	return byModTime
-}
-
-type ByModTime []string
-
-func (fis ByModTime) Len() int {
-	return len(fis)
-}
-
-func (fis ByModTime) Swap(i, j int) {
-	fis[i], fis[j] = fis[j], fis[i]
-}
-
-func (fis ByModTime) Less(i, j int) bool {
-
-	aModTime := GetFileModTime(fis[i])
-	bModTime := GetFileModTime(fis[j])
-
-	return aModTime.Before(bModTime)
 }
 
 // FileNameIsBDMV 是否是 BDMV 蓝光目录，符合返回 true，以及 fakseVideoFPath

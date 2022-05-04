@@ -1,17 +1,21 @@
 package backend
 
 type ReplySeriesList struct {
-	Movies []MovieInfo `json:"movies"`
+	SeasonInfos []SeasonInfo `json:"season_infos"`
 }
 
 type SeasonInfo struct {
-	Name                     string `json:"name"`
-	Url                      string `json:"dir_root_url"`
-	MediaServerInsideVideoID string `json:"media_server_inside_video_id"`
+	Name          string         `json:"name"`
+	RootDirPath   string         `json:"root_dir_path"`
+	DirRootUrl    string         `json:"dir_root_url"`
+	OneVideoInfos []OneVideoInfo `json:"one_video_info"`
 }
 
-type EpsInfo struct {
+type OneVideoInfo struct {
 	Name                     string `json:"name"`
-	Url                      string `json:"dir_root_url"`
+	VideoFPath               string `json:"video_f_path"`
+	VideoUrl                 string `json:"video_url"`
+	Season                   int    `json:"season"`
+	Episode                  int    `json:"episode"`
 	MediaServerInsideVideoID string `json:"media_server_inside_video_id"`
 }

@@ -114,6 +114,8 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		ch.log.Panicln("CronHelper QueueDownloader, Cron entryID:", ch.entryIDScanPlayedVideoSubInfo, "Error:", err)
 	}
 
+	ch.downloader.SupplierCheck()
+
 	// 是否在定时器开启前先执行一次任务
 	if runImmediately == true {
 
@@ -122,8 +124,6 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		if ch.Settings.SpeedDevMode == false {
 			ch.scanVideoProcessAdd2DownloadQueue()
 		}
-
-		ch.downloader.SupplierCheck()
 
 		ch.log.Infoln("First Time scanVideoProcessAdd2DownloadQueue End")
 

@@ -16,6 +16,7 @@ import (
 	subTimelineFixerPKG "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_control"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_queue"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
@@ -24,6 +25,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -129,7 +131,7 @@ func (v *VideoScanAndRefreshHelper) ScanNormalMovieAndSeries() (*ScanVideoResult
 		// --------------------------------------------------
 		// 电影
 		// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
-		normalScanResult.MovieFileFullPathList, errMovie = my_util.SearchMatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
+		normalScanResult.MoviesDirMap, errMovie = my_util.SearchMatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
 		wg.Done()
 	}()
 	wg.Add(1)
@@ -231,6 +233,109 @@ func (v *VideoScanAndRefreshHelper) FilterMovieAndSeriesNeedDownload(scanVideoRe
 	return nil
 }
 
+func (v *VideoScanAndRefreshHelper) ScrabbleUpVideoList(scanVideoResult *ScanVideoResult, pathUrlMap map[string]string) ([]backend.MovieInfo, []backend.SeasonInfo) {
+
+	if scanVideoResult.Normal != nil && v.settings.EmbySettings.Enable == false {
+		return v.scrabbleUpVideoListNormal(scanVideoResult.Normal, pathUrlMap)
+	}
+
+	if scanVideoResult.Emby != nil && v.settings.EmbySettings.Enable == true {
+		return v.scrabbleUpVideoListEmby(scanVideoResult.Emby, pathUrlMap)
+	}
+
+	return nil, nil
+}
+
+func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScanVideoResult, pathUrlMap map[string]string) ([]backend.MovieInfo, []backend.SeasonInfo) {
+
+	movieInfos := make([]backend.MovieInfo, 0)
+	seasonInfos := make([]backend.SeasonInfo, 0)
+
+	if normal == nil {
+		return movieInfos, seasonInfos
+	}
+	// 电影
+	normal.MoviesDirMap.Each(func(movieDirRootPath interface{}, movieFPath interface{}) {
+
+		oneMovieDirRootPath := movieDirRootPath.(string)
+		for _, oneMovieFPath := range movieFPath.([]string) {
+
+			desUrl, found := pathUrlMap[oneMovieDirRootPath]
+			if found == false {
+				// 没有找到对应的 URL
+				continue
+			}
+			// 匹配上了前缀就替换这个，并记录
+			movieFUrl := strings.ReplaceAll(oneMovieFPath, oneMovieDirRootPath, desUrl)
+			oneMovieInfo := backend.MovieInfo{
+				Name:       filepath.Base(movieFUrl),
+				DirRootUrl: filepath.Dir(movieFUrl),
+				VideoFPath: oneMovieFPath,
+				VideoUrl:   movieFUrl,
+			}
+			movieInfos = append(movieInfos, oneMovieInfo)
+		}
+	})
+	// 连续剧
+	// seriesDirMap: dir <--> seriesList
+	normal.SeriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
+
+		oneSeriesRootPathName := seriesRootPathName.(string)
+		for _, oneSeriesRootDir := range seriesNames.([]string) {
+
+			desUrl, found := pathUrlMap[oneSeriesRootPathName]
+			if found == false {
+				// 没有找到对应的 URL
+				continue
+			}
+			bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(oneSeriesRootDir,
+				v.NeedForcedScanAndDownSub, false)
+			if err != nil {
+				v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub", err)
+				continue
+			}
+			if bNeedDlSub == false {
+				continue
+			}
+			seriesDirRootFUrl := strings.ReplaceAll(oneSeriesRootDir, oneSeriesRootPathName, desUrl)
+			oneSeasonInfo := backend.SeasonInfo{
+				Name:          filepath.Base(oneSeriesRootDir),
+				RootDirPath:   oneSeriesRootDir,
+				DirRootUrl:    seriesDirRootFUrl,
+				OneVideoInfos: make([]backend.OneVideoInfo, 0),
+			}
+			for _, epsInfo := range seriesInfo.EpList {
+
+				videoFUrl := strings.ReplaceAll(epsInfo.FileFullPath, oneSeriesRootPathName, desUrl)
+				oneVideoInfo := backend.OneVideoInfo{
+					Name:       epsInfo.Title,
+					VideoFPath: epsInfo.FileFullPath,
+					VideoUrl:   videoFUrl,
+					Season:     epsInfo.Season,
+					Episode:    epsInfo.Episode,
+				}
+				oneSeasonInfo.OneVideoInfos = append(oneSeasonInfo.OneVideoInfos, oneVideoInfo)
+			}
+
+			seasonInfos = append(seasonInfos, oneSeasonInfo)
+		}
+	})
+
+	return movieInfos, seasonInfos
+}
+
+func (v VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoResult, pathUrlMap map[string]string) ([]backend.MovieInfo, []backend.SeasonInfo) {
+
+	movieInfos := make([]backend.MovieInfo, 0)
+	seasonInfos := make([]backend.SeasonInfo, 0)
+
+	if emby == nil {
+		return movieInfos, seasonInfos
+	}
+
+	return movieInfos, seasonInfos
+}
+
 func (v *VideoScanAndRefreshHelper) refreshEmbySubList() error {
 
 	if v.embyHelper == nil {
@@ -294,19 +399,26 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 	// ------------------------------------------------------------------------------
 	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common.ScanPlayedSubTimeOut)
 	// ------------------------------------------------------------------------------
-	for i, oneMovieFPath := range scanVideoResult.Normal.MovieFileFullPathList {
-		err := v.taskControl.Invoke(&task_control.TaskData{
-			Index: i,
-			Count: len(scanVideoResult.Normal.MovieFileFullPathList),
-			DataEx: TaskInputData{
-				Index:     i,
-				InputPath: oneMovieFPath,
-			},
-		})
-		if err != nil {
-			return err
+	scanVideoResult.Normal.MoviesDirMap.Any(func(movieDirRootPath interface{}, movieFPath interface{}) bool {
+
+		//oneMovieDirRootPath := movieDirRootPath.(string)
+		for i, oneMovieFPath := range movieFPath.([]string) {
+			err := v.taskControl.Invoke(&task_control.TaskData{
+				Index: i,
+				Count: len(movieFPath.([]string)),
+				DataEx: TaskInputData{
+					Index:     i,
+					InputPath: oneMovieFPath,
+				},
+			})
+			if err != nil {
+				v.log.Errorln("updateLocalVideoCacheInfo.MoviesDirMap.Invoke", err)
+				return true
+			}
 		}
-	}
+
+		return false
+	})
 	v.taskControl.Hold()
 	// ------------------------------------------------------------------------------
 	seriesProcess := func(ctx context.Context, inData interface{}) error {
@@ -388,21 +500,27 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 	// ----------------------------------------
 	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common.ScanPlayedSubTimeOut)
 	// ----------------------------------------
-	for i, oneMovieFPath := range normal.MovieFileFullPathList {
-		// 放入队列
-		err := v.taskControl.Invoke(&task_control.TaskData{
-			Index: i,
-			Count: len(normal.MovieFileFullPathList),
-			DataEx: TaskInputData{
-				Index:     i,
-				InputPath: oneMovieFPath,
-			},
-		})
-		if err != nil {
-			v.log.Errorln(err)
-			return err
+	normal.MoviesDirMap.Any(func(movieDirRootPath interface{}, movieFPath interface{}) bool {
+
+		//oneMovieDirRootPath := movieDirRootPath.(string)
+		for i, oneMovieFPath := range movieFPath.([]string) {
+			// 放入队列
+			err := v.taskControl.Invoke(&task_control.TaskData{
+				Index: i,
+				Count: len(movieFPath.([]string)),
+				DataEx: TaskInputData{
+					Index:     i,
+					InputPath: oneMovieFPath,
+				},
+			})
+			if err != nil {
+				v.log.Errorln(err)
+				return true
+			}
 		}
-	}
+
+		return false
+	})
 	v.taskControl.Hold()
 	// ----------------------------------------
 	// Normal 过滤，连续剧
@@ -580,8 +698,8 @@ type ScanVideoResult struct {
 }
 
 type NormalScanVideoResult struct {
-	MovieFileFullPathList []string
-	SeriesDirMap          *treemap.Map
+	MoviesDirMap *treemap.Map
+	SeriesDirMap *treemap.Map
 }
 
 type EmbyScanVideoResult struct {

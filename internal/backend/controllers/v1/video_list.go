@@ -1,14 +1,11 @@
 package v1
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sort_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"path/filepath"
-	"strings"
 )
 
 func (cb *ControllerBase) RefreshVideoListStatusHandler(c *gin.Context) {
@@ -72,10 +69,6 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 		}
 
 		pathUrlMap := cb.StaticFileSystemBackEnd.GetPathUrlMap()
-		// 排序得到匹配上的路径，最长的那个
-		sortMoviePaths := sort_things.SortStringSliceByLength(cb.cronHelper.Settings.CommonSettings.MoviePaths)
-		sortSeriesPaths := sort_things.SortStringSliceByLength(cb.cronHelper.Settings.CommonSettings.SeriesPaths)
-
 		if cb.cronHelper.Settings.EmbySettings.Enable == true {
 			// Emby 情况
 			if scanVideoResult.Emby == nil {
@@ -87,34 +80,7 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 			if scanVideoResult.Normal == nil {
 				return
 			}
-			replaceIndexMap := make(map[int]int)
-			for _, orgPrePath := range sortMoviePaths {
-				for i, oneMovieFPath := range scanVideoResult.Normal.MovieFileFullPathList {
-
-					_, found := replaceIndexMap[i]
-					if found == true {
-						// 替换过了，跳过
-						continue
-					}
-					if strings.HasPrefix(oneMovieFPath, orgPrePath.Path) == true {
-
-						desUrl, found := pathUrlMap[orgPrePath.Path]
-						if found == false {
-							// 没有找到对应的 URL
-							continue
-						}
-						// 匹配上了前缀就替换这个，并记录
-						movieFUrl := strings.ReplaceAll(oneMovieFPath, orgPrePath.Path, desUrl)
-						oneMovieInfo := backend.MovieInfo{
-							Name:       filepath.Base(movieFUrl),
-							DirRootUrl: filepath.Dir(movieFUrl),
-							VideoUrl:   movieFUrl,
-						}
-						replaceIndexMap[i] = i
-						cb.MovieInfo = append(cb.MovieInfo, oneMovieInfo)
-					}
-				}
-			}
+			cb.MovieInfos, cb.SeasonInfos = cb.videoScanAndRefreshHelper.ScrabbleUpVideoList(scanVideoResult, pathUrlMap)
 		}
 
 		println("haha")
