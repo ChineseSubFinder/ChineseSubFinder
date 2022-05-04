@@ -12,16 +12,23 @@ import (
 )
 
 type StaticFileSystemBackEnd struct {
-	logger  *logrus.Logger
-	running bool
-	srv     *http.Server
-	locker  sync.Mutex
+	logger     *logrus.Logger
+	running    bool
+	srv        *http.Server
+	locker     sync.Mutex
+	pathUrlMap map[string]string
 }
 
 func NewStaticFileSystemBackEnd(logger *logrus.Logger) *StaticFileSystemBackEnd {
 	return &StaticFileSystemBackEnd{
-		logger: logger,
+		logger:     logger,
+		pathUrlMap: make(map[string]string),
 	}
+}
+
+// GetPathUrlMap x://电影 -- /movie_dir_0  or x://电视剧 -- /series_dir_0
+func (s *StaticFileSystemBackEnd) GetPathUrlMap() map[string]string {
+	return s.pathUrlMap
 }
 
 func (s *StaticFileSystemBackEnd) Start(commonSettings *settings.CommonSettings) {
@@ -39,11 +46,17 @@ func (s *StaticFileSystemBackEnd) Start(commonSettings *settings.CommonSettings)
 
 	// 添加电影的
 	for i, path := range commonSettings.MoviePaths {
-		router.StaticFS("/movie_dir_"+fmt.Sprintf("%d", i), http.Dir(path))
+
+		nowUrl := "/movie_dir_" + fmt.Sprintf("%d", i)
+		s.pathUrlMap[path] = nowUrl
+		router.StaticFS(nowUrl, http.Dir(path))
 	}
 	// 添加连续剧的
 	for i, path := range commonSettings.SeriesPaths {
-		router.StaticFS("/series_dir_"+fmt.Sprintf("%d", i), http.Dir(path))
+
+		nowUrl := "/series_dir_" + fmt.Sprintf("%d", i)
+		s.pathUrlMap[path] = nowUrl
+		router.StaticFS(nowUrl, http.Dir(path))
 	}
 	s.srv = &http.Server{
 		Addr:    ":" + commonSettings.LocalStaticFilePort,
@@ -59,13 +72,19 @@ func (s *StaticFileSystemBackEnd) Start(commonSettings *settings.CommonSettings)
 }
 
 func (s *StaticFileSystemBackEnd) Stop() {
-	defer s.locker.Unlock()
+	defer func() {
+		s.locker.Unlock()
+	}()
 	s.locker.Lock()
 
 	if s.running == false {
 		s.logger.Warningln("StaticFileSystemBackEnd is not running")
 		return
 	}
+
+	defer func() {
+		s.pathUrlMap = make(map[string]string)
+	}()
 
 	s.running = false
 

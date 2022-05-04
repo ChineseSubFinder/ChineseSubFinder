@@ -38,6 +38,11 @@ func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engi
 	// v1路由: /v1/xxx
 	GroupV1 := router.Group("/" + cbV1.GetVersion())
 	{
+		GroupV1.POST("/video/list/refresh", cbV1.RefreshVideoListHandler)
+		GroupV1.GET("/video/list/refresh", cbV1.RefreshVideoListStatusHandler)
+		GroupV1.GET("/video/list/movies", cbV1.MovieListHandler)
+		GroupV1.GET("/video/list/series", cbV1.SeriesListHandler)
+
 		GroupV1.Use(middle.CheckAuth())
 
 		GroupV1.GET("/settings", cbV1.SettingsHandler)
@@ -50,11 +55,6 @@ func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engi
 		GroupV1.GET("/jobs/list", cbV1.JobsListHandler)
 		GroupV1.POST("/jobs/change-job-status", cbV1.ChangeJobStatusHandler)
 		GroupV1.POST("/jobs/log", cbV1.JobLogHandler)
-
-		GroupV1.POST("/video/list/refresh", cbV1.RefreshVideoListHandler)
-		GroupV1.GET("/video/list/refresh", cbV1.RefreshVideoListStatusHandler)
-		GroupV1.GET("/video/list/movies", cbV1.MovieListHandler)
-		GroupV1.GET("/video/list/series", cbV1.SeriesListHandler)
 	}
 
 	return cbV1

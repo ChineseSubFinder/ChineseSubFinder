@@ -87,7 +87,7 @@ func (d *SubSupplierHub) MovieNeedDlSub(videoFullPath string, forcedScanAndDownl
 }
 
 // SeriesNeedDlSub 连续剧是否符合要求需要下载字幕
-func (d *SubSupplierHub) SeriesNeedDlSub(seriesRootPath string, forcedScanAndDownloadSub bool) (bool, *series.SeriesInfo, error) {
+func (d *SubSupplierHub) SeriesNeedDlSub(seriesRootPath string, forcedScanAndDownloadSub bool, need2AnalyzeSub bool) (bool, *series.SeriesInfo, error) {
 
 	if forcedScanAndDownloadSub == false {
 		if d.settings.AdvancedSettings.ScanLogic.SkipChineseSeries == true {
@@ -108,7 +108,7 @@ func (d *SubSupplierHub) SeriesNeedDlSub(seriesRootPath string, forcedScanAndDow
 	seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(d.log, seriesRootPath,
 		d.settings.AdvancedSettings.TaskQueue.ExpirationTime,
 		forcedScanAndDownloadSub,
-		false)
+		need2AnalyzeSub)
 	if err != nil {
 		return false, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesRootPath, err)
 	}

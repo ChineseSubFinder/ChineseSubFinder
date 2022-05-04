@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/path_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sort_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
@@ -17,7 +18,6 @@ import (
 	"golang.org/x/net/context"
 	"path"
 	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -309,7 +309,7 @@ func (em *EmbyHelper) findMappingPath(fileFPathWithEmby string, isMovieOrSeries 
 	}
 
 	// 排序得到匹配上的路径，最长的那个
-	pathSlices := sortStringSliceByLength(matchedEmbyPaths)
+	pathSlices := sort_things.SortStringSliceByLength(matchedEmbyPaths)
 	// 然后还需要从这个最长的路径，从 map 中找到对应的物理路径
 	// nowPhRootPath 这个路径是映射的根目录，如果里面再次嵌套 子文件夹 再到连续剧目录，则是个问题，会丢失子文件夹目录
 	nowPhRootPath := ""
@@ -513,7 +513,7 @@ func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMo
 		return false
 	}
 	// 排序得到匹配上的路径，最长的那个
-	pathSlices := sortStringSliceByLength(matchedEmbyPaths)
+	pathSlices := sort_things.SortStringSliceByLength(matchedEmbyPaths)
 	// 然后还需要从这个最长的路径，从 map 中找到对应的物理路径
 	// nowPhRootPath 这个路径是映射的根目录，如果里面再次嵌套 子文件夹 再到连续剧目录，则是个问题，会丢失子文件夹目录
 	nowPhRootPath := ""
@@ -981,26 +981,6 @@ type InputData struct {
 type OutData struct {
 	Info *emby.EmbyMixInfo
 	Err  error
-}
-
-type PathSlice struct {
-	Path string
-}
-type PathSlices []PathSlice
-
-func (a PathSlices) Len() int           { return len(a) }
-func (a PathSlices) Less(i, j int) bool { return len(a[i].Path) < len(a[j].Path) }
-func (a PathSlices) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-
-func sortStringSliceByLength(m []string) PathSlices {
-	p := make(PathSlices, len(m))
-	i := 0
-	for _, v := range m {
-		p[i] = PathSlice{v}
-		i++
-	}
-	sort.Sort(sort.Reverse(p))
-	return p
 }
 
 const (

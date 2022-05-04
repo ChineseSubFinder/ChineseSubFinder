@@ -19,8 +19,8 @@ type ControllerBase struct {
 	videoScanAndRefreshHelper           *video_scan_and_refresh_helper.VideoScanAndRefreshHelper
 	videoScanAndRefreshHelperIsRunning  bool
 	videoScanAndRefreshHelperLocker     lock.Lock
-	scanVideoResult                     *video_scan_and_refresh_helper.ScanVideoResult
 	videoScanAndRefreshHelperErrMessage string
+	MovieInfo                           []backend.MovieInfo
 }
 
 func NewControllerBase(log *logrus.Logger, cronHelper *cron_helper.CronHelper) *ControllerBase {
@@ -31,6 +31,7 @@ func NewControllerBase(log *logrus.Logger, cronHelper *cron_helper.CronHelper) *
 		// 这里因为不进行任务的添加，仅仅是扫描，所以 downloadQueue 可以为 nil
 		videoScanAndRefreshHelper:       video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(cronHelper.FileDownloader, nil),
 		videoScanAndRefreshHelperLocker: lock.NewLock(),
+		MovieInfo:                       make([]backend.MovieInfo, 0),
 	}
 }
 

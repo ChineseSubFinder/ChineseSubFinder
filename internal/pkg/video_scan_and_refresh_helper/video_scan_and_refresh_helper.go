@@ -20,6 +20,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/emirpasic/gods/maps/treemap"
+	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"path/filepath"
@@ -171,7 +172,15 @@ func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *Scan
 	if v.settings.EmbySettings.Enable == false {
 		v.embyHelper = nil
 	} else {
-		v.embyHelper = embyHelper.NewEmbyHelper(v.log, v.settings)
+
+		if v.NeedForcedScanAndDownSub == true {
+			// 如果是强制，那么就临时修改 Setting 的 Emby MaxRequestVideoNumber 参数为 1000000
+			tmpSetting := clone.Clone(v.settings).(*settings.Settings)
+			tmpSetting.EmbySettings.MaxRequestVideoNumber = 1000000
+			v.embyHelper = embyHelper.NewEmbyHelper(v.log, tmpSetting)
+		} else {
+			v.embyHelper = embyHelper.NewEmbyHelper(v.log, v.settings)
+		}
 	}
 	var err error
 
@@ -402,7 +411,8 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 		taskData := inData.(*task_control.TaskData)
 		seriesInputData := taskData.DataEx.(TaskInputData)
 		// 因为可能回去 Web 获取 IMDB 信息，所以这里的错误不返回
-		bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(seriesInputData.InputPath, v.NeedForcedScanAndDownSub)
+		bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(seriesInputData.InputPath,
+			v.NeedForcedScanAndDownSub, false)
 		if err != nil {
 			v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub", err)
 			return err

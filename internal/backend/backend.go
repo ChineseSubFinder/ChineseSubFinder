@@ -26,6 +26,7 @@ func StartBackEnd(fileDownloader *file_downloader.FileDownloader, httpPort int, 
 	defer func() {
 		v1Router.Close()
 	}()
+
 	engine.GET("/", func(c *gin.Context) {
 		c.Header("content-type", "text/html;charset=utf-8")
 		c.String(http.StatusOK, string(dist.SpaIndexHtml))
