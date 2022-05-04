@@ -60,12 +60,12 @@ func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle() ([]emby.Emb
 	// 输出调试信息
 	em.log.Debugln("-----------------")
 	em.log.Debugln("filterNoChineseSubVideoList found no chinese movie", len(noSubMovieList))
-	for index, info := range filterMovieList {
+	for index, info := range noSubMovieList {
 		em.log.Debugln(index, info.VideoFileName)
 	}
 	em.log.Debugln("-----------------")
 	em.log.Debugln("filterNoChineseSubVideoList found no chinese series", len(noSubSeriesList))
-	for index, info := range filterSeriesList {
+	for index, info := range noSubSeriesList {
 		em.log.Debugln(index, info.VideoFileName)
 	}
 	em.log.Debugln("-----------------")
