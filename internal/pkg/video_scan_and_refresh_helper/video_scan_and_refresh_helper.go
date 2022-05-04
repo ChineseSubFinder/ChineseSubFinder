@@ -30,7 +30,7 @@ type VideoScanAndRefreshHelper struct {
 	settings                 *settings.Settings              // 设置的实例
 	log                      *logrus.Logger                  // 日志实例
 	fileDownloader           *file_downloader.FileDownloader // 文件下载器
-	needForcedScanAndDownSub bool                            // 将会强制扫描所有的视频，下载字幕，替换已经存在的字幕，不进行时间段和已存在则跳过的判断。且不会进过 Emby API 的逻辑，智能进行强制去以本程序的方式去扫描。
+	NeedForcedScanAndDownSub bool                            // 将会强制扫描所有的视频，下载字幕，替换已经存在的字幕，不进行时间段和已存在则跳过的判断。且不会进过 Emby API 的逻辑，智能进行强制去以本程序的方式去扫描。
 	NeedRestoreFixTimeLineBK bool                            // 从 csf-bk 文件还原时间轴修复前的字幕文件
 	embyHelper               *embyHelper.EmbyHelper          // Emby 的实例
 	downloadQueue            *task_queue.TaskQueue           // 需要下载的视频的队列
@@ -95,7 +95,7 @@ func (v *VideoScanAndRefreshHelper) ReadSpeFile() error {
 	if err != nil {
 		return err
 	}
-	v.needForcedScanAndDownSub = needProcessForcedScanAndDownSub
+	v.NeedForcedScanAndDownSub = needProcessForcedScanAndDownSub
 	// 从 csf-bk 文件还原时间轴修复前的字幕文件
 	needProcessRestoreFixTimelineBK, err := restore_fix_timeline_bk.CheckSpeFile()
 	if err != nil {
@@ -118,7 +118,7 @@ func (v *VideoScanAndRefreshHelper) ScanNormalMovieAndSeries() (*ScanVideoResult
 	normalScanResult := NormalScanVideoResult{}
 	// 直接由本程序自己去扫描视频视频有哪些
 	// 全扫描
-	if v.needForcedScanAndDownSub == true {
+	if v.NeedForcedScanAndDownSub == true {
 		v.log.Infoln("Forced Scan And DownSub")
 	}
 	wg := sync.WaitGroup{}
@@ -360,7 +360,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 
 		taskData := inData.(*task_control.TaskData)
 		movieInputData := taskData.DataEx.(TaskInputData)
-		if v.subSupplierHub.MovieNeedDlSub(movieInputData.InputPath, v.needForcedScanAndDownSub) == false {
+		if v.subSupplierHub.MovieNeedDlSub(movieInputData.InputPath, v.NeedForcedScanAndDownSub) == false {
 			return nil
 		}
 		bok, err := v.downloadQueue.Add(*TTaskqueue.NewOneJob(
@@ -402,7 +402,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 		taskData := inData.(*task_control.TaskData)
 		seriesInputData := taskData.DataEx.(TaskInputData)
 		// 因为可能回去 Web 获取 IMDB 信息，所以这里的错误不返回
-		bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(seriesInputData.InputPath, v.needForcedScanAndDownSub)
+		bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(seriesInputData.InputPath, v.NeedForcedScanAndDownSub)
 		if err != nil {
 			v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub", err)
 			return err
@@ -465,7 +465,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 	// Emby 过滤，电影
 	for _, oneMovieMixInfo := range emby.MovieSubNeedDlEmbyMixInfoList {
 		// 放入队列
-		if v.subSupplierHub.MovieNeedDlSub(oneMovieMixInfo.PhysicalVideoFileFullPath, v.needForcedScanAndDownSub) == false {
+		if v.subSupplierHub.MovieNeedDlSub(oneMovieMixInfo.PhysicalVideoFileFullPath, v.NeedForcedScanAndDownSub) == false {
 			continue
 		}
 		bok, err := v.downloadQueue.Add(*TTaskqueue.NewOneJob(
@@ -532,7 +532,7 @@ func (v *VideoScanAndRefreshHelper) getUpdateVideoListFromEmby() ([]emby.EmbyMix
 	var err error
 	var movieList []emby.EmbyMixInfo
 	var seriesSubNeedDlMap map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录，连续剧文件夹名称 -- 每一集的 EmbyMixInfo List
-	movieList, seriesSubNeedDlMap, err = v.embyHelper.GetRecentlyAddVideoListWithNoChineseSubtitle(v.needForcedScanAndDownSub)
+	movieList, seriesSubNeedDlMap, err = v.embyHelper.GetRecentlyAddVideoListWithNoChineseSubtitle(v.NeedForcedScanAndDownSub)
 	if err != nil {
 		return nil, nil, err
 	}

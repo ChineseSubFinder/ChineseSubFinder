@@ -38,6 +38,7 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 			Status: "running"})
 		return
 	}
+	cb.videoScanAndRefreshHelper.NeedForcedScanAndDownSub = true
 	cb.videoScanAndRefreshHelperIsRunning = true
 	go func() {
 		defer func() {
@@ -64,6 +65,9 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 			cb.videoScanAndRefreshHelperErrMessage = err2.Error()
 			return
 		}
+		// 这里会把得到的 Normal 和 Emby 的结果都放入 cb.scanVideoResult
+		// 根据 用户的情况，选择行返回是 Emby Or Normal 的结果
+		// 并且如果是 Emby 那么会在页面上出现一个刷新字幕列表的按钮（这个需要 Emby 中video 的 ID）
 	}()
 
 	c.JSON(http.StatusOK, backend.ReplyRefreshVideoList{
