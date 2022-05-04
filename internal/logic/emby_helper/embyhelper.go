@@ -41,34 +41,52 @@ func NewEmbyHelper(_log *logrus.Logger, _settings *settings.Settings) *EmbyHelpe
 }
 
 // GetRecentlyAddVideoListWithNoChineseSubtitle 获取最近新添加的视频，且没有中文字幕的
-func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle() ([]emby.EmbyMixInfo, map[string][]emby.EmbyMixInfo, error) {
+func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle(needForcedScanAndDownSub ...bool) ([]emby.EmbyMixInfo, map[string][]emby.EmbyMixInfo, error) {
 
 	filterMovieList, filterSeriesList, err := em.GetRecentlyAddVideoList()
 	if err != nil {
 		return nil, nil, err
 	}
-	// 将没有字幕的找出来
-	noSubMovieList, err := em.filterNoChineseSubVideoList(filterMovieList)
-	if err != nil {
-		return nil, nil, err
+	var noSubMovieList, noSubSeriesList []emby.EmbyMixInfo
+	if len(needForcedScanAndDownSub) > 0 && needForcedScanAndDownSub[0] == true {
+		// 强制扫描，无需过滤
+		// 输出调试信息
+		em.log.Debugln("-----------------")
+		em.log.Debugln("GetRecentlyAddVideoList movie", len(filterMovieList))
+		for index, info := range filterMovieList {
+			em.log.Debugln(index, info.VideoFileName)
+		}
+		em.log.Debugln("-----------------")
+		em.log.Debugln("GetRecentlyAddVideoList series", len(filterSeriesList))
+		for index, info := range filterSeriesList {
+			em.log.Debugln(index, info.VideoFileName)
+		}
+		em.log.Debugln("-----------------")
+	} else {
+		// 将没有字幕的找出来
+		noSubMovieList, err = em.filterNoChineseSubVideoList(filterMovieList)
+		if err != nil {
+			return nil, nil, err
+		}
+		em.log.Debugln("-----------------")
+		noSubSeriesList, err = em.filterNoChineseSubVideoList(filterSeriesList)
+		if err != nil {
+			return nil, nil, err
+		}
+		// 输出调试信息
+		em.log.Debugln("-----------------")
+		em.log.Debugln("filterNoChineseSubVideoList found no chinese movie", len(noSubMovieList))
+		for index, info := range noSubMovieList {
+			em.log.Debugln(index, info.VideoFileName)
+		}
+		em.log.Debugln("-----------------")
+		em.log.Debugln("filterNoChineseSubVideoList found no chinese series", len(noSubSeriesList))
+		for index, info := range noSubSeriesList {
+			em.log.Debugln(index, info.VideoFileName)
+		}
+		em.log.Debugln("-----------------")
 	}
-	em.log.Debugln("-----------------")
-	noSubSeriesList, err := em.filterNoChineseSubVideoList(filterSeriesList)
-	if err != nil {
-		return nil, nil, err
-	}
-	// 输出调试信息
-	em.log.Debugln("-----------------")
-	em.log.Debugln("filterNoChineseSubVideoList found no chinese movie", len(noSubMovieList))
-	for index, info := range noSubMovieList {
-		em.log.Debugln(index, info.VideoFileName)
-	}
-	em.log.Debugln("-----------------")
-	em.log.Debugln("filterNoChineseSubVideoList found no chinese series", len(noSubSeriesList))
-	for index, info := range noSubSeriesList {
-		em.log.Debugln(index, info.VideoFileName)
-	}
-	em.log.Debugln("-----------------")
+
 	// 需要将连续剧零散的每一集，进行合并到一个连续剧下面，也就是这个连续剧有那些需要更新的
 	var seriesMap = make(map[string][]emby.EmbyMixInfo)
 	for _, info := range noSubSeriesList {
