@@ -532,7 +532,7 @@ func (v *VideoScanAndRefreshHelper) getUpdateVideoListFromEmby() ([]emby.EmbyMix
 	var err error
 	var movieList []emby.EmbyMixInfo
 	var seriesSubNeedDlMap map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录，连续剧文件夹名称 -- 每一集的 EmbyMixInfo List
-	movieList, seriesSubNeedDlMap, err = v.embyHelper.GetRecentlyAddVideoListWithNoChineseSubtitle()
+	movieList, seriesSubNeedDlMap, err = v.embyHelper.GetRecentlyAddVideoListWithNoChineseSubtitle(v.needForcedScanAndDownSub)
 	if err != nil {
 		return nil, nil, err
 	}
