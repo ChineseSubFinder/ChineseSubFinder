@@ -48,6 +48,8 @@ func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle(needForcedSca
 		return nil, nil, err
 	}
 	var noSubMovieList, noSubSeriesList []emby.EmbyMixInfo
+	var seriesMap = make(map[string][]emby.EmbyMixInfo)
+
 	if len(needForcedScanAndDownSub) > 0 && needForcedScanAndDownSub[0] == true {
 		// 强制扫描，无需过滤
 		// 输出调试信息
@@ -62,6 +64,16 @@ func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle(needForcedSca
 			em.log.Debugln(index, info.VideoFileName)
 		}
 		em.log.Debugln("-----------------")
+
+		// 需要将连续剧零散的每一集，进行合并到一个连续剧下面，也就是这个连续剧有那些需要更新的
+		for _, info := range filterSeriesList {
+			_, ok := seriesMap[info.VideoFolderName]
+			if ok == false {
+				// 不存在则新建初始化
+				seriesMap[info.VideoFolderName] = make([]emby.EmbyMixInfo, 0)
+			}
+			seriesMap[info.VideoFolderName] = append(seriesMap[info.VideoFolderName], info)
+		}
 	} else {
 		// 将没有字幕的找出来
 		noSubMovieList, err = em.filterNoChineseSubVideoList(filterMovieList)
@@ -85,17 +97,16 @@ func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle(needForcedSca
 			em.log.Debugln(index, info.VideoFileName)
 		}
 		em.log.Debugln("-----------------")
-	}
 
-	// 需要将连续剧零散的每一集，进行合并到一个连续剧下面，也就是这个连续剧有那些需要更新的
-	var seriesMap = make(map[string][]emby.EmbyMixInfo)
-	for _, info := range noSubSeriesList {
-		_, ok := seriesMap[info.VideoFolderName]
-		if ok == false {
-			// 不存在则新建初始化
-			seriesMap[info.VideoFolderName] = make([]emby.EmbyMixInfo, 0)
+		// 需要将连续剧零散的每一集，进行合并到一个连续剧下面，也就是这个连续剧有那些需要更新的
+		for _, info := range noSubSeriesList {
+			_, ok := seriesMap[info.VideoFolderName]
+			if ok == false {
+				// 不存在则新建初始化
+				seriesMap[info.VideoFolderName] = make([]emby.EmbyMixInfo, 0)
+			}
+			seriesMap[info.VideoFolderName] = append(seriesMap[info.VideoFolderName], info)
 		}
-		seriesMap[info.VideoFolderName] = append(seriesMap[info.VideoFolderName], info)
 	}
 
 	return noSubMovieList, seriesMap, nil
