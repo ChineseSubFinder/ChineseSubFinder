@@ -74,6 +74,9 @@ func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle(needForcedSca
 			}
 			seriesMap[info.VideoFolderName] = append(seriesMap[info.VideoFolderName], info)
 		}
+
+		return filterMovieList, seriesMap, nil
+
 	} else {
 		// 将没有字幕的找出来
 		noSubMovieList, err = em.filterNoChineseSubVideoList(filterMovieList)
@@ -107,9 +110,10 @@ func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle(needForcedSca
 			}
 			seriesMap[info.VideoFolderName] = append(seriesMap[info.VideoFolderName], info)
 		}
+
+		return noSubMovieList, seriesMap, nil
 	}
 
-	return noSubMovieList, seriesMap, nil
 }
 
 // GetRecentlyAddVideoList 获取最近新添加的视频
