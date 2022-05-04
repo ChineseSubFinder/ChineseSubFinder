@@ -89,16 +89,18 @@ func (d *SubSupplierHub) MovieNeedDlSub(videoFullPath string, forcedScanAndDownl
 // SeriesNeedDlSub 连续剧是否符合要求需要下载字幕
 func (d *SubSupplierHub) SeriesNeedDlSub(seriesRootPath string, forcedScanAndDownloadSub bool) (bool, *series.SeriesInfo, error) {
 
-	if d.settings.AdvancedSettings.ScanLogic.SkipChineseSeries == true {
-		var skip bool
-		var err error
-		// 跳过中文的电影，不是一定要跳过的
-		skip, _, err = seriesHelper.SkipChineseSeries(d.log, seriesRootPath, d.settings.AdvancedSettings.ProxySettings)
-		if err != nil {
-			d.log.Warnln("SkipChineseMovie", seriesRootPath, err)
-		}
-		if skip == true {
-			return false, nil, nil
+	if forcedScanAndDownloadSub == false {
+		if d.settings.AdvancedSettings.ScanLogic.SkipChineseSeries == true {
+			var skip bool
+			var err error
+			// 跳过中文的电影，不是一定要跳过的
+			skip, _, err = seriesHelper.SkipChineseSeries(d.log, seriesRootPath, d.settings.AdvancedSettings.ProxySettings)
+			if err != nil {
+				d.log.Warnln("SkipChineseMovie", seriesRootPath, err)
+			}
+			if skip == true {
+				return false, nil, nil
+			}
 		}
 	}
 
