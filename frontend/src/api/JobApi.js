@@ -1,10 +1,10 @@
 import BaseApi from './BaseApi';
 
 class JobApi extends BaseApi {
-  getStatus = () => this.http('/v1/jobs/status');
+  getStatus = () => this.http('/v1/daemon/status');
 
-  start = (data) => this.http('/v1/jobs/start', data, 'POST');
+  start = (data) => this.http('/v1/daemon/start', data, 'POST');
 
-  stop = (data) => this.http('/v1/jobs/stop', data, 'POST');
+  stop = (data) => this.http('/v1/daemon/stop', data, 'POST');
 }
 export default new JobApi();

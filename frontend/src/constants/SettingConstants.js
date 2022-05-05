@@ -38,3 +38,11 @@ export const DEFAULT_SUB_SOURCE_URL_MAP = {
   subhd: 'https://subhd.tv',
   zimuku: 'https://zimuku.org',
 };
+
+export const PROXY_TYPE_HTTP = 'http';
+export const PROXY_TYPE_SOCKS5 = 'socks5';
+
+export const PROXY_TYPE_NAME_MAP = {
+  [PROXY_TYPE_HTTP]: 'HTTP',
+  [PROXY_TYPE_SOCKS5]: 'SOCKS5',
+};
