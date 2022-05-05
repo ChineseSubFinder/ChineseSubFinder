@@ -7,25 +7,53 @@
           <q-item-label caption>支持HTTP代理</q-item-label>
         </q-item-section>
         <q-item-section avatar top>
-          <q-toggle v-model="form.proxy_settings.use_http_proxy" />
+          <q-toggle v-model="form.proxy_settings.use_proxy" />
         </q-item-section>
       </q-item>
 
-      <q-item v-if="form.proxy_settings.use_http_proxy" class="q-mt-md" dense>
+      <q-item v-if="form.proxy_settings.use_proxy" class="q-mt-md" dense>
         <q-item-section>
-          <q-input
-            v-model="form.proxy_settings.http_proxy_address"
-            standout
-            dense
-            label="代理服务器地址"
-            style="width: 400px"
-          >
-            <template v-slot:after>
-              <div style="width: 80px">
-                <proxy-check-btn :url="form.proxy_settings.http_proxy_address" />
-              </div>
-            </template>
-          </q-input>
+          <div class="row q-gutter-sm no-wrap">
+            <q-select
+              v-model="form.proxy_settings.use_which_proxy_protocol"
+              :options="Object.keys(PROXY_TYPE_NAME_MAP).map((e) => ({ label: PROXY_TYPE_NAME_MAP[e], value: e }))"
+              label="协议"
+              standout
+              dense
+              style="width: 100px"
+            />
+            <q-input v-model="form.proxy_settings.input_proxy_address" standout dense label="代理服务器" />
+            <q-input v-model="form.proxy_settings.input_proxy_port" standout dense label="代理端口" />
+            <q-input v-model="form.proxy_settings.local_http_proxy_server_port" standout dense label="本地端口" />
+          </div>
+
+          <div class="q-mt-sm row q-gutter-sm">
+            <q-checkbox v-model="form.proxy_settings.need_pwd" left-label label="账号认证" />
+            <q-input
+              :disable="!form.proxy_settings.need_pwd"
+              v-model="form.proxy_settings.input_proxy_username"
+              standout
+              dense
+              label="账号"
+            />
+            <q-input
+              :disable="!form.proxy_settings.need_pwd"
+              v-model="form.proxy_settings.input_proxy_password"
+              standout
+              dense
+              label="密码"
+            />
+          </div>
+
+          <div class="q-mt-sm">
+            <proxy-check-btn
+              :url="form.proxy_settings.http_proxy_address"
+              label="测试代理服务"
+              size="md"
+              icon="bolt"
+              color="primary"
+            />
+          </div>
         </q-item-section>
       </q-item>
 
@@ -89,6 +117,26 @@
         </q-item-section>
       </q-item>
 
+      <q-separator spaced inset></q-separator>
+
+      <q-item tag="label" v-ripple>
+        <q-item-section>
+          <q-item-label>跳过中文电影</q-item-label>
+        </q-item-section>
+        <q-item-section avatar>
+          <q-toggle v-model="form.scan_logic.skip_chinese_movie" />
+        </q-item-section>
+      </q-item>
+
+      <q-item tag="label" v-ripple>
+        <q-item-section>
+          <q-item-label>跳过中文连续剧</q-item-label>
+        </q-item-section>
+        <q-item-section avatar>
+          <q-toggle v-model="form.scan_logic.skip_chinese_series" />
+        </q-item-section>
+      </q-item>
+
       <q-item v-if="SUB_NAME_FORMAT_EMBY === form.sub_name_formatter" tag="label" v-ripple>
         <q-item-section>
           <q-item-label>保存多字幕</q-item-label>
@@ -123,6 +171,92 @@
               />
             </q-item-section>
           </q-item>
+        </q-item-section>
+      </q-item>
+
+      <q-separator spaced inset />
+
+      <q-item>
+        <q-item-section>
+          <q-item-label class="q-mb-sm">队列设置</q-item-label>
+          <q-input
+            class="col"
+            v-model.number="form.task_queue.max_retry_times"
+            label="最大重试次数"
+            shadow-text="单个任务失败后，最大重试次数，超过后会降一级"
+            standout
+            dense
+            :rules="[(val) => !!val || '不能为空']"
+          />
+          <q-input
+            class="col"
+            v-model.number="form.task_queue.one_job_time_out"
+            label="单个任务的超时时间（秒）"
+            standout
+            dense
+            suffix="秒"
+            :rules="[(val) => !!val || '不能为空']"
+          />
+          <q-input
+            class="col"
+            v-model.number="form.task_queue.interval"
+            label="任务的间隔（秒）"
+            standout
+            dense
+            suffix="秒"
+            :rules="[(val) => !!val || '不能为空']"
+          />
+          <q-input
+            class="col"
+            v-model.number="form.task_queue.expiration_time"
+            label="下载时效（天）"
+            standout
+            dense
+            suffix="天"
+            :rules="[(val) => !!val || '不能为空']"
+          />
+          <q-input
+            class="col"
+            v-model.number="form.task_queue.download_sub_during_x_days"
+            label="下载多少天之内的字幕"
+            standout
+            dense
+            suffix="天"
+            :rules="[(val) => !!val || '不能为空']"
+          />
+          <q-input
+            class="col"
+            v-model.number="form.task_queue.one_sub_download_interval"
+            label="单个任务失败后，重新下载的最小间隔（小时）"
+            standout
+            dense
+            suffix="小时"
+            :rules="[(val) => !!val || '不能为空']"
+          />
+        </q-item-section>
+      </q-item>
+
+      <q-separator spaced inset />
+
+      <q-item>
+        <q-item-section>
+          <q-item-label>下载缓存过期时间设置</q-item-label>
+        </q-item-section>
+        <q-item-section avatar>
+          <div class="row no-wrap q-gutter-xs">
+            <q-input class="col" standout dense v-model.number="form.download_file_cache.ttl"> </q-input>
+            <q-select
+              standout
+              dense
+              :options="[
+                { label: '小时', value: 'hour' },
+                { label: '秒', value: 'second' },
+              ]"
+              emit-value
+              map-options
+              v-model.number="form.download_file_cache.unit"
+            ></q-select>
+          </div>
         </q-item-section>
       </q-item>
 
@@ -177,7 +311,6 @@
         </q-item-section>
       </q-item>
     </q-list>
-    <q-separator class="q-mt-md" />
   </div>
 </template>
 
@@ -187,6 +320,7 @@ import {
   SUB_NAME_FORMAT_NORMAL,
   SUB_NAME_FORMAT_NAME_MAP,
   SUB_TYPE_PRIORITY_NAME_MAP,
+  PROXY_TYPE_NAME_MAP,
 } from 'src/constants/SettingConstants';
 import { formModel } from 'pages/settings/useSettings';
 import { toRefs } from '@vueuse/core';

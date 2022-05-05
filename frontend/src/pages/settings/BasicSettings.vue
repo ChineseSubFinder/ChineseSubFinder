@@ -20,6 +20,8 @@
                 dense
                 style="width: 200px"
                 :rules="[(val) => !!val || '不能为空']"
+                emit-value
+                map-options
                 :disable="form.interval_or_assign_or_custom !== 0"
                 @update:model-value="handleScanIntervalChange"
               />
@@ -40,6 +42,8 @@
                 :options="scanSpecTimeOptions"
                 standout
                 dense
+                emit-value
+                map-options
                 style="width: 200px"
                 :rules="[
                   (val) => !!val || !!val?.length || '不能为空',
@@ -213,32 +217,40 @@ if (form.value.interval_or_assign_or_custom === 0) {
   scanCronString2.value = form.value.scan_interval;
 }
 
-const scanIntervalOptions = ['4h', '5h', '6h', '7h', '8h', '9h', '10h'];
+const scanIntervalOptions = [
+  { label: '每4小时', value: '4h' },
+  { label: '每5小时', value: '5h' },
+  { label: '每6小时', value: '6h' },
+  { label: '每7小时', value: '7h' },
+  { label: '每8小时', value: '8h' },
+  { label: '每9小时', value: '9h' },
+  { label: '每10小时', value: '10h' },
+];
 const scanSpecTimeOptions = [
-  '0',
-  '1',
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8',
-  '9',
-  '10',
-  '11',
-  '12',
-  '13',
-  '14',
-  '15',
-  '16',
-  '17',
-  '18',
-  '19',
-  '20',
-  '21',
-  '22',
-  '23',
+  { label: '00:00', value: '0' },
+  { label: '01:00', value: '1' },
+  { label: '02:00', value: '2' },
+  { label: '03:00', value: '3' },
+  { label: '04:00', value: '4' },
+  { label: '05:00', value: '5' },
+  { label: '06:00', value: '6' },
+  { label: '07:00', value: '7' },
+  { label: '08:00', value: '8' },
+  { label: '09:00', value: '9' },
+  { label: '10:00', value: '10' },
+  { label: '11:00', value: '11' },
+  { label: '12:00', value: '12' },
+  { label: '13:00', value: '13' },
+  { label: '14:00', value: '14' },
+  { label: '15:00', value: '15' },
+  { label: '16:00', value: '16' },
+  { label: '17:00', value: '17' },
+  { label: '18:00', value: '18' },
+  { label: '19:00', value: '19' },
+  { label: '20:00', value: '20' },
+  { label: '21:00', value: '21' },
+  { label: '22:00', value: '22' },
+  { label: '23:00', value: '23' },
 ];
 
 const handleScanIntervalChange = () => {
