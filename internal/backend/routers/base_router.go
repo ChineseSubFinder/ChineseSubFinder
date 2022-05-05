@@ -39,9 +39,8 @@ func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engi
 	GroupV1 := router.Group("/" + cbV1.GetVersion())
 	{
 		GroupV1.POST("/video/list/refresh", cbV1.RefreshVideoListHandler)
-		GroupV1.GET("/video/list/refresh", cbV1.RefreshVideoListStatusHandler)
-		GroupV1.GET("/video/list/movies", cbV1.MovieListHandler)
-		GroupV1.GET("/video/list/series", cbV1.SeriesListHandler)
+		GroupV1.GET("/video/list/refresh-status", cbV1.RefreshVideoListStatusHandler)
+		GroupV1.GET("/video/list", cbV1.VideoListHandler)
 
 		GroupV1.Use(middle.CheckAuth())
 

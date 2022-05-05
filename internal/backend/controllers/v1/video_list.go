@@ -70,9 +70,6 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 
 		pathUrlMap := cb.StaticFileSystemBackEnd.GetPathUrlMap()
 		cb.MovieInfos, cb.SeasonInfos = cb.videoScanAndRefreshHelper.ScrabbleUpVideoList(scanVideoResult, pathUrlMap)
-		println("haha")
-		// 这里会把得到的 Normal 和 Emby 的结果都放入 cb.scanVideoResult
-		// 根据 用户的情况，选择行返回是 Emby Or Normal 的结果
 		// 并且如果是 Emby 那么会在页面上出现一个刷新字幕列表的按钮（这个需要 Emby 中video 的 ID）
 	}()
 
@@ -81,35 +78,11 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 	return
 }
 
-func (cb ControllerBase) MovieListHandler(c *gin.Context) {
+func (cb ControllerBase) VideoListHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
-		cb.ErrorProcess(c, "MovieListHandler", err)
-	}()
-
-	bok, allJobs, err := cb.cronHelper.DownloadQueue.GetAllJobs()
-	if err != nil {
-		return
-	}
-
-	if bok == false {
-		c.JSON(http.StatusOK, backend.ReplyAllJobs{
-			AllJobs: make([]task_queue.OneJob, 0),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, backend.ReplyAllJobs{
-		AllJobs: allJobs,
-	})
-}
-
-func (cb ControllerBase) SeriesListHandler(c *gin.Context) {
-	var err error
-	defer func() {
-		// 统一的异常处理
-		cb.ErrorProcess(c, "SeriesListHandler", err)
+		cb.ErrorProcess(c, "VideoListHandler", err)
 	}()
 
 	bok, allJobs, err := cb.cronHelper.DownloadQueue.GetAllJobs()

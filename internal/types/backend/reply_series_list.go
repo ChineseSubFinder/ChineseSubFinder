@@ -1,9 +1,5 @@
 package backend
 
-type ReplySeriesList struct {
-	SeasonInfos []SeasonInfo `json:"season_infos"`
-}
-
 type SeasonInfo struct {
 	Name          string         `json:"name"`
 	RootDirPath   string         `json:"root_dir_path"`
