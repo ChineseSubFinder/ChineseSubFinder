@@ -411,11 +411,12 @@ func (v VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoRe
 					// 匹配上了前缀就替换这个，并记录
 					epsFUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path, desUrl)
 					oneVideoInfo := backend.OneVideoInfo{
-						Name:       videoFileName,
-						VideoFPath: oneEpsMixInfo.PhysicalVideoFileFullPath,
-						VideoUrl:   epsFUrl,
-						Season:     infoFromFileName.Season,
-						Episode:    infoFromFileName.Episode,
+						Name:                     videoFileName,
+						VideoFPath:               oneEpsMixInfo.PhysicalVideoFileFullPath,
+						VideoUrl:                 epsFUrl,
+						Season:                   infoFromFileName.Season,
+						Episode:                  infoFromFileName.Episode,
+						MediaServerInsideVideoID: oneEpsMixInfo.VideoInfo.Id,
 					}
 					oneSeasonInfo.OneVideoInfos = append(oneSeasonInfo.OneVideoInfos, oneVideoInfo)
 					break
