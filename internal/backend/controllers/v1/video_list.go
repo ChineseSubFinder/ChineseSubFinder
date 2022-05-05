@@ -69,20 +69,7 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 		}
 
 		pathUrlMap := cb.StaticFileSystemBackEnd.GetPathUrlMap()
-		if cb.cronHelper.Settings.EmbySettings.Enable == true {
-			// Emby 情况
-			if scanVideoResult.Emby == nil {
-				return
-			}
-
-		} else {
-			// Normal 情况
-			if scanVideoResult.Normal == nil {
-				return
-			}
-			cb.MovieInfos, cb.SeasonInfos = cb.videoScanAndRefreshHelper.ScrabbleUpVideoList(scanVideoResult, pathUrlMap)
-		}
-
+		cb.MovieInfos, cb.SeasonInfos = cb.videoScanAndRefreshHelper.ScrabbleUpVideoList(scanVideoResult, pathUrlMap)
 		println("haha")
 		// 这里会把得到的 Normal 和 Emby 的结果都放入 cb.scanVideoResult
 		// 根据 用户的情况，选择行返回是 Emby Or Normal 的结果

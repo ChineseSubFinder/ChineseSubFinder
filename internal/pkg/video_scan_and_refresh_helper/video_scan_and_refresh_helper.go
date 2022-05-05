@@ -13,6 +13,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sort_things"
 	subTimelineFixerPKG "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_control"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_queue"
@@ -331,6 +332,90 @@ func (v VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoRe
 
 	if emby == nil {
 		return movieInfos, seasonInfos
+	}
+	// 排序得到匹配上的路径，最长的那个
+	sortMoviePaths := sort_things.SortStringSliceByLength(v.settings.CommonSettings.MoviePaths)
+	sortSeriesPaths := sort_things.SortStringSliceByLength(v.settings.CommonSettings.SeriesPaths)
+	// ----------------------------------------
+	// Emby 过滤，电影
+	for _, oneMovieMixInfo := range emby.MovieSubNeedDlEmbyMixInfoList {
+
+		if oneMovieMixInfo.PhysicalVideoFileFullPath == "" {
+			continue
+		}
+
+		// 首先需要找到对应的最长的视频媒体库路径，x://ABC  x://ABC/DEF
+		for _, oneMovieDirPath := range sortMoviePaths {
+
+			if strings.HasPrefix(oneMovieMixInfo.PhysicalVideoFileFullPath, oneMovieDirPath.Path) {
+				// 匹配上了
+				desUrl, found := pathUrlMap[oneMovieDirPath.Path]
+				if found == false {
+					// 没有找到对应的 URL
+					continue
+				}
+				// 匹配上了前缀就替换这个，并记录
+				movieFUrl := strings.ReplaceAll(oneMovieMixInfo.PhysicalVideoFileFullPath, oneMovieDirPath.Path, desUrl)
+				oneMovieInfo := backend.MovieInfo{
+					Name:                     filepath.Base(movieFUrl),
+					DirRootUrl:               filepath.Dir(movieFUrl),
+					VideoFPath:               oneMovieMixInfo.PhysicalVideoFileFullPath,
+					VideoUrl:                 movieFUrl,
+					MediaServerInsideVideoID: oneMovieMixInfo.VideoInfo.Id,
+				}
+				movieInfos = append(movieInfos, oneMovieInfo)
+				break
+			}
+		}
+	}
+	// ----------------------------------------
+	// Emby 过滤，连续剧
+	for seriesName, oneSeriesMixInfo := range emby.SeriesSubNeedDlEmbyMixInfoMap {
+
+		firstTime := true
+		var oneSeasonInfo backend.SeasonInfo
+		for _, oneEpsMixInfo := range oneSeriesMixInfo {
+
+			if oneEpsMixInfo.PhysicalVideoFileFullPath == "" {
+				continue
+			}
+
+			// 首先需要找到对应的最长的视频媒体库路径，x://ABC  x://ABC/DEF
+			for _, oneSeriesDirPath := range sortSeriesPaths {
+
+				if strings.HasPrefix(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path) {
+					// 匹配上了
+					desUrl, found := pathUrlMap[oneSeriesDirPath.Path]
+					if found == false {
+						// 没有找到对应的 URL
+						continue
+					}
+
+					dirRootUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalSeriesRootDir, oneSeriesDirPath.Path, desUrl)
+					if firstTime == true {
+						oneSeasonInfo = backend.SeasonInfo{
+							Name:          seriesName,
+							RootDirPath:   oneEpsMixInfo.PhysicalSeriesRootDir,
+							DirRootUrl:    dirRootUrl,
+							OneVideoInfos: make([]backend.OneVideoInfo, 0),
+						}
+						firstTime = false
+					}
+
+					// 匹配上了前缀就替换这个，并记录
+					epsFUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path, desUrl)
+					oneVideoInfo := backend.OneVideoInfo{
+						Name:       filepath.Base(oneEpsMixInfo.PhysicalVideoFileFullPath),
+						VideoFPath: oneEpsMixInfo.PhysicalVideoFileFullPath,
+						VideoUrl:   epsFUrl,
+						Season:     0,
+						Episode:    0,
+					}
+					oneSeasonInfo.OneVideoInfos = append(oneSeasonInfo.OneVideoInfos, oneVideoInfo)
+					break
+				}
+			}
+		}
 	}
 
 	return movieInfos, seasonInfos

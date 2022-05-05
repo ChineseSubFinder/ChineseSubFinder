@@ -647,7 +647,7 @@ func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries
 	}
 
 	// em.threads
-	p, err := ants.NewPoolWithFunc(1, func(inData interface{}) {
+	p, err := ants.NewPoolWithFunc(em.threads, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), em.timeOut)
