@@ -402,14 +402,20 @@ func (v VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoRe
 						firstTime = false
 					}
 
+					videoFileName := filepath.Base(oneEpsMixInfo.PhysicalVideoFileFullPath)
+					infoFromFileName, err := decode.GetVideoInfoFromFileName(videoFileName)
+					if err != nil {
+						v.log.Errorln("GetVideoInfoFromFileName", err)
+						break
+					}
 					// 匹配上了前缀就替换这个，并记录
 					epsFUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path, desUrl)
 					oneVideoInfo := backend.OneVideoInfo{
-						Name:       filepath.Base(oneEpsMixInfo.PhysicalVideoFileFullPath),
+						Name:       videoFileName,
 						VideoFPath: oneEpsMixInfo.PhysicalVideoFileFullPath,
 						VideoUrl:   epsFUrl,
-						Season:     0,
-						Episode:    0,
+						Season:     infoFromFileName.Season,
+						Episode:    infoFromFileName.Episode,
 					}
 					oneSeasonInfo.OneVideoInfos = append(oneSeasonInfo.OneVideoInfos, oneVideoInfo)
 					break
