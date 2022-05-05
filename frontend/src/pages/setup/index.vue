@@ -53,12 +53,12 @@ import AdminAccountForm from 'pages/setup/AdminAccountForm';
 import ScanFolderForm from 'pages/setup/ScanFolderForm';
 import { templateRef } from '@vueuse/core';
 import SelectMediaServerForm from 'pages/setup/SelectMediaServerForm';
-import {setupState, useSetup} from 'pages/setup/useSetup';
+import { setupState, useSetup } from 'pages/setup/useSetup';
 import EmbySetupForm from 'pages/setup/EmbySetupForm';
 import LoginBgArea from 'pages/access/login/LoginBgArea';
-import {deepCopy} from 'src/utils/CommonUtils';
-import {getInfo} from 'src/store/systemState';
-import {SUB_NAME_FORMAT_NORMAL} from 'src/constants/SettingConstants';
+import { deepCopy } from 'src/utils/CommonUtils';
+import { getInfo } from 'src/store/systemState';
+import { SUB_NAME_FORMAT_NORMAL } from 'src/constants/SettingConstants';
 
 useSetup();
 
@@ -99,7 +99,7 @@ const submit = async () => {
   }
   if (!isValid) return;
   submitting.value = true;
-  const formData = deepCopy(setupState.defaultSettings)
+  const formData = deepCopy(setupState.defaultSettings);
   formData.user_info = {
     username: setupState.form.username,
     password: setupState.form.password,
@@ -117,14 +117,15 @@ const submit = async () => {
       api_key: setupState.form.emby.apiKey,
       max_request_video_number: setupState.form.emby.limitCount,
       skip_watched: setupState.form.emby.skipWatched,
+      auto_or_manual: setupState.form.emby.autoOrManual,
       movie_paths_mapping: setupState.form.emby.movieFolderMap,
       series_paths_mapping: setupState.form.emby.seriesFolderMap,
-    }
+    };
   } else {
-    formData.advanced_settings.sub_name_formatter = SUB_NAME_FORMAT_NORMAL
+    formData.advanced_settings.sub_name_formatter = SUB_NAME_FORMAT_NORMAL;
   }
   const [, err] = await CommonApi.setup({
-    settings: formData
+    settings: formData,
   });
   submitting.value = false;
   if (err !== null) {
