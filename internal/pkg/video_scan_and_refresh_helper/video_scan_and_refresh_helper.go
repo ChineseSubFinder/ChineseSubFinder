@@ -631,6 +631,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 				break
 			}
 		}
+		v.taskControl.Hold()
 	}
 
 	return movieInfos, seasonInfos
