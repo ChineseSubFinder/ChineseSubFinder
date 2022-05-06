@@ -2,6 +2,7 @@ package sub_parser_hub
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/filter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	languageConst "github.com/allanpk716/ChineseSubFinder/internal/types/language"
@@ -74,20 +75,11 @@ func (p SubParserHub) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) 
 }
 
 // IsSubHasChinese 字幕文件是否包含中文
-func (p SubParserHub) IsSubHasChinese(fileFPath string) bool {
+func (p SubParserHub) IsSubHasChinese(fileInfo *subparser.FileInfo) bool {
 
 	// 增加判断已存在的字幕是否有中文
-	bFind, file, err := p.DetermineFileTypeFromFile(fileFPath)
-	if err != nil {
-		p.log.Errorln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, err)
-		return false
-	}
-	if bFind == false {
-		p.log.Warnln("IsSubHasChinese.DetermineFileTypeFromFile", fileFPath, "not support SubType")
-		return false
-	}
-	if language.HasChineseLang(file.Lang) == false {
-		p.log.Warnln("IsSubHasChinese.HasChineseLang", fileFPath, "not chinese sub, is ", file.Lang.String())
+	if language.HasChineseLang(fileInfo.Lang) == false {
+		p.log.Warnln("IsSubHasChinese.HasChineseLang", fileInfo.FileFullPath, "not chinese sub, is ", fileInfo.Lang.String())
 		return false
 	}
 
@@ -205,19 +197,7 @@ func SearchMatchedSubFile(log *logrus.Logger, dir string) ([]string, error) {
 			} else {
 
 				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
-				fi, err := curFile.Info()
-				if err != nil {
-					log.Debugln("SearchMatchedSubFile, file.Info:", fullPath, err)
-					continue
-				}
-				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
-					log.Debugln("SearchMatchedSubFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
-					continue
-				}
-
-				// 跳过预告片，见 #315
-				if strings.HasSuffix(strings.ReplaceAll(curFile.Name(), filepath.Ext(curFile.Name()), ""), "-trailer") == true {
-					log.Debugln("SearchMatchedSubFile, Skip -trailer:", fullPath)
+				if filter.SkipFileInfo(log, curFile) == true {
 					continue
 				}
 

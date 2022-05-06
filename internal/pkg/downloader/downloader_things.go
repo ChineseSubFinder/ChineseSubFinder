@@ -46,7 +46,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 	*/
 	// 不管是不是保存多个字幕，都要先扫描本地的字幕，进行 .Default .Forced 去除
 	// 这个视频的所有字幕，去除 .default .Forced 标记
-	err = sub_helper.SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath)
+	err = sub_helper.SearchVideoMatchSubFileAndRemoveExtMark(d.log, oneVideoFullPath)
 	if err != nil {
 		// 找个错误可以忍
 		d.log.Errorln("SearchVideoMatchSubFileAndRemoveExtMark,", oneVideoFullPath, err)

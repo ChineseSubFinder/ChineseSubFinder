@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/filter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sort_things"
@@ -302,20 +303,7 @@ func SearchMatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 					continue
 				}
 
-				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
-				fi, err := curFile.Info()
-				if err != nil {
-					l.Debugln("SearchMatchedVideoFile, file.Info:", fullPath, err)
-					continue
-				}
-
-				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
-					l.Debugln("SearchMatchedVideoFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
-					continue
-				}
-				// 跳过预告片，见 #315
-				if strings.HasSuffix(strings.ReplaceAll(curFile.Name(), filepath.Ext(curFile.Name()), ""), "-trailer") == true {
-					l.Debugln("SearchMatchedVideoFile, Skip -trailer:", fullPath)
+				if filter.SkipFileInfo(l, curFile) == true {
 					continue
 				}
 
@@ -373,22 +361,9 @@ func SearchTVNfo(l *logrus.Logger, dir string) ([]string, error) {
 				continue
 			} else {
 
-				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
-				fi, err := curFile.Info()
-				if err != nil {
-					l.Debugln("SearchTVNfo, file.Info:", fullPath, err)
+				if filter.SkipFileInfo(l, curFile) == true {
 					continue
 				}
-				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
-					l.Debugln("SearchTVNfo file.Size() == 4096 && Prefix Name == ._*", fullPath)
-					continue
-				}
-				// 跳过预告片，见 #315
-				if strings.HasSuffix(strings.ReplaceAll(curFile.Name(), filepath.Ext(curFile.Name()), ""), "-trailer") == true {
-					l.Debugln("SearchTVNfo, Skip -trailer:", fullPath)
-					continue
-				}
-
 				fileFullPathList = append(fileFullPathList, fullPath)
 			}
 		}

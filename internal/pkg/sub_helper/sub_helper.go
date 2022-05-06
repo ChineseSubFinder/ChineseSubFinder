@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/archive_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/filter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -222,22 +223,7 @@ func SearchMatchedSubFileByDir(log *logrus.Logger, dir string) ([]string, error)
 			}
 		} else {
 			// 这里就是文件了
-			info, err := curFile.Info()
-			if err != nil {
-				return nil, err
-			}
-			if info.Size() < 1000 {
-				continue
-			}
-
-			if info.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
-				log.Debugln("SearchMatchedSubFileByDir file.Size() == 4096 && Prefix Name == ._*", fullPath)
-				continue
-			}
-
-			// 跳过预告片，见 #315
-			if strings.HasSuffix(strings.ReplaceAll(curFile.Name(), filepath.Ext(curFile.Name()), ""), "-trailer") == true {
-				log.Debugln("SearchMatchedSubFileByDir, Skip -trailer:", fullPath)
+			if filter.SkipFileInfo(log, curFile) == true {
 				continue
 			}
 
@@ -250,7 +236,7 @@ func SearchMatchedSubFileByDir(log *logrus.Logger, dir string) ([]string, error)
 }
 
 // SearchMatchedSubFileByOneVideo 搜索这个视频当前目录下匹配的字幕
-func SearchMatchedSubFileByOneVideo(oneVideoFullPath string) ([]string, error) {
+func SearchMatchedSubFileByOneVideo(l *logrus.Logger, oneVideoFullPath string) ([]string, error) {
 	dir := filepath.Dir(oneVideoFullPath)
 	fileName := filepath.Base(oneVideoFullPath)
 	fileName = strings.ToLower(fileName)
@@ -268,13 +254,10 @@ func SearchMatchedSubFileByOneVideo(oneVideoFullPath string) ([]string, error) {
 			continue
 		}
 		// 这里就是文件了
-		info, err := curFile.Info()
-		if err != nil {
-			return nil, err
-		}
-		if info.Size() < 1000 {
+		if filter.SkipFileInfo(l, curFile) == true {
 			continue
 		}
+
 		// 判断的时候用小写的，后续重命名的时候用原有的名称
 		nowFileName := strings.ToLower(curFile.Name())
 		// 后缀名得对
@@ -282,7 +265,7 @@ func SearchMatchedSubFileByOneVideo(oneVideoFullPath string) ([]string, error) {
 			continue
 		}
 		// 字幕文件名应该包含 视频文件名（无后缀）
-		if strings.Contains(nowFileName, fileName) == false {
+		if strings.HasPrefix(nowFileName, fileName) == false {
 			continue
 		}
 
@@ -294,7 +277,7 @@ func SearchMatchedSubFileByOneVideo(oneVideoFullPath string) ([]string, error) {
 }
 
 // SearchVideoMatchSubFileAndRemoveExtMark 找到找个视频目录下相匹配的字幕，同时去除这些字幕中 .default 或者 .forced 的标记。注意这两个标记不应该同时出现，否则无法正确去除
-func SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath string) error {
+func SearchVideoMatchSubFileAndRemoveExtMark(l *logrus.Logger, oneVideoFullPath string) error {
 
 	dir := filepath.Dir(oneVideoFullPath)
 	fileName := filepath.Base(oneVideoFullPath)
@@ -310,11 +293,7 @@ func SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath string) error {
 			continue
 		} else {
 			// 这里就是文件了
-			info, err := curFile.Info()
-			if err != nil {
-				return err
-			}
-			if info.Size() < 1000 {
+			if filter.SkipFileInfo(l, curFile) == true {
 				continue
 			}
 			// 判断的时候用小写的，后续重命名的时候用原有的名称
@@ -324,11 +303,13 @@ func SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath string) error {
 				continue
 			}
 			// 字幕文件名应该包含 视频文件名（无后缀）
-			if strings.Contains(nowFileName, fileName) == false {
+			if strings.HasPrefix(nowFileName, fileName) == false {
 				continue
 			}
-			// 得包含 .default. 找个关键词
+
 			if strings.Contains(nowFileName, subparser.Sub_Ext_Mark_Default+".") == true {
+				// 得包含 .default. 找个关键词
+				// 去除 .default.
 				oldPath := dir + pathSep + curFile.Name()
 				newPath := dir + pathSep + strings.ReplaceAll(curFile.Name(), subparser.Sub_Ext_Mark_Default+".", ".")
 				err = os.Rename(oldPath, newPath)

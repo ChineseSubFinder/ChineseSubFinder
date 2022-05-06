@@ -46,10 +46,7 @@ func readSeriesInfo(log *logrus.Logger, seriesDir string, need2AnalyzeSub bool) 
 		return nil, nil, err
 	}
 	for _, subFile := range subFiles {
-		// 判断这个字幕是否包含中文
-		if subParserHub.IsSubHasChinese(subFile) == false {
-			continue
-		}
+
 		info, _, err := decode.GetVideoInfoFromFileFullPath(subFile)
 		if err != nil {
 			log.Errorln(err)
@@ -62,6 +59,10 @@ func readSeriesInfo(log *logrus.Logger, seriesDir string, need2AnalyzeSub bool) 
 		}
 		if bFind == false {
 			log.Warnln("DetermineFileTypeFromFile", subFile, "not support SubType")
+			continue
+		}
+		// 判断这个字幕是否包含中文
+		if subParserHub.IsSubHasChinese(subParserFileInfo) == false {
 			continue
 		}
 		epsKey := my_util.GetEpisodeKeyName(info.Season, info.Episode)

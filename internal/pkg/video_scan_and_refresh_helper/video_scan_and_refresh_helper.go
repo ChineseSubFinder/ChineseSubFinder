@@ -14,6 +14,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sort_things"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	subTimelineFixerPKG "github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_control"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_queue"
@@ -40,6 +41,8 @@ type VideoScanAndRefreshHelper struct {
 	downloadQueue            *task_queue.TaskQueue           // 需要下载的视频的队列
 	subSupplierHub           *subSupplier.SubSupplierHub     // 字幕提供源的集合，仅仅是 check 是否需要下载字幕是足够的，如果要下载则需要额外的初始化和检查
 	taskControl              *task_control.TaskControl       // 任务控制器
+
+	processLocker sync.Mutex
 }
 
 func NewVideoScanAndRefreshHelper(fileDownloader *file_downloader.FileDownloader, downloadQueue *task_queue.TaskQueue) *VideoScanAndRefreshHelper {
@@ -86,7 +89,7 @@ func (v *VideoScanAndRefreshHelper) Start() error {
 	return nil
 }
 
-func (v VideoScanAndRefreshHelper) Cancel() {
+func (v *VideoScanAndRefreshHelper) Cancel() {
 	v.taskControl.Release()
 	v.taskControl.Reboot()
 }
@@ -256,76 +259,168 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 		return movieInfos, seasonInfos
 	}
 	// 电影
-	normal.MoviesDirMap.Each(func(movieDirRootPath interface{}, movieFPath interface{}) {
+	movieProcess := func(ctx context.Context, inData interface{}) error {
+
+		scrabbleUpVideoMovieNormalInput := inData.(*ScrabbleUpVideoMovieNormalInput)
+		oneMovieDirRootPath := scrabbleUpVideoMovieNormalInput.OneMovieDirRootPath
+		oneMovieFPath := scrabbleUpVideoMovieNormalInput.OneMovieFPath
+
+		v.processLocker.Lock()
+		desUrl, found := pathUrlMap[oneMovieDirRootPath]
+		if found == false {
+			v.processLocker.Unlock()
+			// 没有找到对应的 URL
+			return nil
+		}
+		v.processLocker.Unlock()
+
+		// 匹配上了前缀就替换这个，并记录
+		movieFUrl := strings.ReplaceAll(oneMovieFPath, oneMovieDirRootPath, desUrl)
+		oneMovieInfo := backend.MovieInfo{
+			Name:         filepath.Base(movieFUrl),
+			DirRootUrl:   filepath.Dir(movieFUrl),
+			VideoFPath:   oneMovieFPath,
+			VideoUrl:     movieFUrl,
+			SubFPathList: make([]string, 0),
+		}
+		// 搜索字幕
+		matchedSubFileByOneVideo, err := sub_helper.SearchMatchedSubFileByOneVideo(v.log, oneMovieFPath)
+		if err != nil {
+			v.log.Errorln("SearchMatchedSubFileByOneVideo", err)
+		}
+		matchedSubFileByOneVideoUrl := make([]string, 0)
+		for _, oneSubFPath := range matchedSubFileByOneVideo {
+			oneSubFUrl := strings.ReplaceAll(oneSubFPath, oneMovieDirRootPath, desUrl)
+			matchedSubFileByOneVideoUrl = append(matchedSubFileByOneVideoUrl, oneSubFUrl)
+		}
+		oneMovieInfo.SubFPathList = append(oneMovieInfo.SubFPathList, matchedSubFileByOneVideoUrl...)
+
+		v.processLocker.Lock()
+		movieInfos = append(movieInfos, oneMovieInfo)
+		v.processLocker.Unlock()
+
+		return nil
+	}
+	// ----------------------------------------
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common.ScanPlayedSubTimeOut)
+	// ----------------------------------------
+	normal.MoviesDirMap.Any(func(movieDirRootPath interface{}, moviesFPath interface{}) bool {
 
 		oneMovieDirRootPath := movieDirRootPath.(string)
-		for _, oneMovieFPath := range movieFPath.([]string) {
+		for i, oneMovieFPath := range moviesFPath.([]string) {
 
-			desUrl, found := pathUrlMap[oneMovieDirRootPath]
-			if found == false {
-				// 没有找到对应的 URL
-				continue
+			// 放入队列
+			err := v.taskControl.Invoke(&task_control.TaskData{
+				Index: i,
+				Count: len(moviesFPath.([]string)),
+				DataEx: ScrabbleUpVideoMovieNormalInput{
+					OneMovieDirRootPath: oneMovieDirRootPath,
+					OneMovieFPath:       oneMovieFPath,
+				},
+			})
+			if err != nil {
+				v.log.Errorln(err)
+				return true
 			}
-			// 匹配上了前缀就替换这个，并记录
-			movieFUrl := strings.ReplaceAll(oneMovieFPath, oneMovieDirRootPath, desUrl)
-			oneMovieInfo := backend.MovieInfo{
-				Name:       filepath.Base(movieFUrl),
-				DirRootUrl: filepath.Dir(movieFUrl),
-				VideoFPath: oneMovieFPath,
-				VideoUrl:   movieFUrl,
-			}
-			movieInfos = append(movieInfos, oneMovieInfo)
 		}
+
+		return false
 	})
+	v.taskControl.Hold()
+	// ----------------------------------------
 	// 连续剧
 	// seriesDirMap: dir <--> seriesList
-	normal.SeriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
+	seriesProcess := func(ctx context.Context, inData interface{}) error {
+
+		scrabbleUpVideoSeriesNormalInput := inData.(*ScrabbleUpVideoSeriesNormalInput)
+		oneSeriesRootPathName := scrabbleUpVideoSeriesNormalInput.OneSeriesRootPathName
+		oneSeriesRootDir := scrabbleUpVideoSeriesNormalInput.OneSeriesRootDir
+
+		v.processLocker.Lock()
+		desUrl, found := pathUrlMap[oneSeriesRootPathName]
+		if found == false {
+			v.processLocker.Unlock()
+			// 没有找到对应的 URL
+			return nil
+		}
+		v.processLocker.Unlock()
+
+		bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(oneSeriesRootDir,
+			v.NeedForcedScanAndDownSub, false)
+		if err != nil {
+			v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub", err)
+			return err
+		}
+		if bNeedDlSub == false {
+			return nil
+		}
+		seriesDirRootFUrl := strings.ReplaceAll(oneSeriesRootDir, oneSeriesRootPathName, desUrl)
+		oneSeasonInfo := backend.SeasonInfo{
+			Name:          filepath.Base(oneSeriesRootDir),
+			RootDirPath:   oneSeriesRootDir,
+			DirRootUrl:    seriesDirRootFUrl,
+			OneVideoInfos: make([]backend.OneVideoInfo, 0),
+		}
+		for _, epsInfo := range seriesInfo.EpList {
+
+			videoFUrl := strings.ReplaceAll(epsInfo.FileFullPath, oneSeriesRootPathName, desUrl)
+			oneVideoInfo := backend.OneVideoInfo{
+				Name:         epsInfo.Title,
+				VideoFPath:   epsInfo.FileFullPath,
+				VideoUrl:     videoFUrl,
+				Season:       epsInfo.Season,
+				Episode:      epsInfo.Episode,
+				SubFPathList: make([]string, 0),
+			}
+			// 替换原始字幕的 FPath 为 Url 路径
+			matchedSubFileByOneVideoUrl := make([]string, 0)
+			for _, info := range epsInfo.SubAlreadyDownloadedList {
+
+				oneSubFUrl := strings.ReplaceAll(info.FileFullPath, oneSeriesRootPathName, desUrl)
+				matchedSubFileByOneVideoUrl = append(matchedSubFileByOneVideoUrl, oneSubFUrl)
+			}
+			oneVideoInfo.SubFPathList = append(oneVideoInfo.SubFPathList, matchedSubFileByOneVideoUrl...)
+
+			oneSeasonInfo.OneVideoInfos = append(oneSeasonInfo.OneVideoInfos, oneVideoInfo)
+		}
+
+		v.processLocker.Lock()
+		seasonInfos = append(seasonInfos, oneSeasonInfo)
+		v.processLocker.Unlock()
+
+		return nil
+	}
+	// ----------------------------------------
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", seriesProcess, common.ScanPlayedSubTimeOut)
+	// ----------------------------------------
+	normal.SeriesDirMap.Any(func(seriesRootPathName interface{}, seriesNames interface{}) bool {
 
 		oneSeriesRootPathName := seriesRootPathName.(string)
-		for _, oneSeriesRootDir := range seriesNames.([]string) {
-
-			desUrl, found := pathUrlMap[oneSeriesRootPathName]
-			if found == false {
-				// 没有找到对应的 URL
-				continue
-			}
-			bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(oneSeriesRootDir,
-				v.NeedForcedScanAndDownSub, false)
+		for i, oneSeriesRootDir := range seriesNames.([]string) {
+			// 放入队列
+			err := v.taskControl.Invoke(&task_control.TaskData{
+				Index: i,
+				Count: len(seriesNames.([]string)),
+				DataEx: ScrabbleUpVideoSeriesNormalInput{
+					OneSeriesRootDir:      oneSeriesRootDir,
+					OneSeriesRootPathName: oneSeriesRootPathName,
+				},
+			})
 			if err != nil {
-				v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub", err)
-				continue
+				v.log.Errorln(err)
+				return true
 			}
-			if bNeedDlSub == false {
-				continue
-			}
-			seriesDirRootFUrl := strings.ReplaceAll(oneSeriesRootDir, oneSeriesRootPathName, desUrl)
-			oneSeasonInfo := backend.SeasonInfo{
-				Name:          filepath.Base(oneSeriesRootDir),
-				RootDirPath:   oneSeriesRootDir,
-				DirRootUrl:    seriesDirRootFUrl,
-				OneVideoInfos: make([]backend.OneVideoInfo, 0),
-			}
-			for _, epsInfo := range seriesInfo.EpList {
-
-				videoFUrl := strings.ReplaceAll(epsInfo.FileFullPath, oneSeriesRootPathName, desUrl)
-				oneVideoInfo := backend.OneVideoInfo{
-					Name:       epsInfo.Title,
-					VideoFPath: epsInfo.FileFullPath,
-					VideoUrl:   videoFUrl,
-					Season:     epsInfo.Season,
-					Episode:    epsInfo.Episode,
-				}
-				oneSeasonInfo.OneVideoInfos = append(oneSeasonInfo.OneVideoInfos, oneVideoInfo)
-			}
-
-			seasonInfos = append(seasonInfos, oneSeasonInfo)
 		}
+
+		return false
 	})
+	v.taskControl.Hold()
+	// ----------------------------------------
 
 	return movieInfos, seasonInfos
 }
 
-func (v VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoResult, pathUrlMap map[string]string) ([]backend.MovieInfo, []backend.SeasonInfo) {
+func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoResult, pathUrlMap map[string]string) ([]backend.MovieInfo, []backend.SeasonInfo) {
 
 	movieInfos := make([]backend.MovieInfo, 0)
 	seasonInfos := make([]backend.SeasonInfo, 0)
@@ -338,22 +433,24 @@ func (v VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoRe
 	sortSeriesPaths := sort_things.SortStringSliceByLength(v.settings.CommonSettings.SeriesPaths)
 	// ----------------------------------------
 	// Emby 过滤，电影
-	for _, oneMovieMixInfo := range emby.MovieSubNeedDlEmbyMixInfoList {
 
-		if oneMovieMixInfo.PhysicalVideoFileFullPath == "" {
-			continue
-		}
+	movieProcess := func(ctx context.Context, inData interface{}) error {
 
+		scrabbleUpVideoMovieEmbyInput := inData.(ScrabbleUpVideoMovieEmbyInput)
+		oneMovieMixInfo := scrabbleUpVideoMovieEmbyInput.OneMovieMixInfo
 		// 首先需要找到对应的最长的视频媒体库路径，x://ABC  x://ABC/DEF
 		for _, oneMovieDirPath := range sortMoviePaths {
 
 			if strings.HasPrefix(oneMovieMixInfo.PhysicalVideoFileFullPath, oneMovieDirPath.Path) {
 				// 匹配上了
+				v.processLocker.Lock()
 				desUrl, found := pathUrlMap[oneMovieDirPath.Path]
 				if found == false {
+					v.processLocker.Unlock()
 					// 没有找到对应的 URL
-					continue
+					return nil
 				}
+				v.processLocker.Unlock()
 				// 匹配上了前缀就替换这个，并记录
 				movieFUrl := strings.ReplaceAll(oneMovieMixInfo.PhysicalVideoFileFullPath, oneMovieDirPath.Path, desUrl)
 				oneMovieInfo := backend.MovieInfo{
@@ -362,65 +459,176 @@ func (v VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoRe
 					VideoFPath:               oneMovieMixInfo.PhysicalVideoFileFullPath,
 					VideoUrl:                 movieFUrl,
 					MediaServerInsideVideoID: oneMovieMixInfo.VideoInfo.Id,
+					SubFPathList:             make([]string, 0),
 				}
+
+				// 搜索字幕
+				matchedSubFileByOneVideo, err := sub_helper.SearchMatchedSubFileByOneVideo(v.log, oneMovieMixInfo.PhysicalVideoFileFullPath)
+				if err != nil {
+					v.log.Errorln("SearchMatchedSubFileByOneVideo", err)
+				}
+				matchedSubFileByOneVideoUrl := make([]string, 0)
+				for _, oneSubFPath := range matchedSubFileByOneVideo {
+					oneSubFUrl := strings.ReplaceAll(oneSubFPath, oneMovieDirPath.Path, desUrl)
+					matchedSubFileByOneVideoUrl = append(matchedSubFileByOneVideoUrl, oneSubFUrl)
+				}
+				oneMovieInfo.SubFPathList = append(oneMovieInfo.SubFPathList, matchedSubFileByOneVideoUrl...)
+
+				v.processLocker.Lock()
 				movieInfos = append(movieInfos, oneMovieInfo)
+				v.processLocker.Unlock()
+
 				break
 			}
 		}
+
+		return nil
 	}
 	// ----------------------------------------
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common.ScanPlayedSubTimeOut)
+	// ----------------------------------------
+	for i, oneMovieMixInfo := range emby.MovieSubNeedDlEmbyMixInfoList {
+
+		if oneMovieMixInfo.PhysicalVideoFileFullPath == "" {
+			continue
+		}
+
+		// 放入队列
+		err := v.taskControl.Invoke(&task_control.TaskData{
+			Index: i,
+			Count: len(emby.MovieSubNeedDlEmbyMixInfoList),
+			DataEx: ScrabbleUpVideoMovieEmbyInput{
+				OneMovieMixInfo: oneMovieMixInfo,
+			},
+		})
+		if err != nil {
+			v.log.Errorln(err)
+			break
+		}
+	}
+	v.taskControl.Hold()
+	// ----------------------------------------
 	// Emby 过滤，连续剧
+	seriesProcess := func(ctx context.Context, inData interface{}) error {
+
+		scrabbleUpVideoSeriesEmbyInput := inData.(ScrabbleUpVideoSeriesEmbyInput)
+
+		oneSeasonInfo := scrabbleUpVideoSeriesEmbyInput.OneSeasonInfo
+		oneEpsMixInfo := scrabbleUpVideoSeriesEmbyInput.OneEpsMixInfo
+		// 首先需要找到对应的最长的视频媒体库路径，x://ABC  x://ABC/DEF
+		for _, oneSeriesDirPath := range sortSeriesPaths {
+
+			if strings.HasPrefix(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path) {
+				// 匹配上了
+				v.processLocker.Lock()
+				desUrl, found := pathUrlMap[oneSeriesDirPath.Path]
+				if found == false {
+					v.processLocker.Unlock()
+					// 没有找到对应的 URL
+					continue
+				}
+				v.processLocker.Unlock()
+
+				videoFileName := filepath.Base(oneEpsMixInfo.PhysicalVideoFileFullPath)
+				infoFromFileName, err := decode.GetVideoInfoFromFileName(videoFileName)
+				if err != nil {
+					v.log.Errorln("GetVideoInfoFromFileName", err)
+					break
+				}
+				// 匹配上了前缀就替换这个，并记录
+				epsFUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path, desUrl)
+				oneVideoInfo := backend.OneVideoInfo{
+					Name:                     videoFileName,
+					VideoFPath:               oneEpsMixInfo.PhysicalVideoFileFullPath,
+					VideoUrl:                 epsFUrl,
+					Season:                   infoFromFileName.Season,
+					Episode:                  infoFromFileName.Episode,
+					MediaServerInsideVideoID: oneEpsMixInfo.VideoInfo.Id,
+					SubFPathList:             make([]string, 0),
+				}
+
+				// 搜索字幕
+				matchedSubFileByOneVideo, err := sub_helper.SearchMatchedSubFileByOneVideo(v.log, oneEpsMixInfo.PhysicalVideoFileFullPath)
+				if err != nil {
+					v.log.Errorln("SearchMatchedSubFileByOneVideo", err)
+				}
+				matchedSubFileByOneVideoUrl := make([]string, 0)
+				for _, oneSubFPath := range matchedSubFileByOneVideo {
+					oneSubFUrl := strings.ReplaceAll(oneSubFPath, oneSeriesDirPath.Path, desUrl)
+					matchedSubFileByOneVideoUrl = append(matchedSubFileByOneVideoUrl, oneSubFUrl)
+				}
+				oneVideoInfo.SubFPathList = append(oneVideoInfo.SubFPathList, matchedSubFileByOneVideoUrl...)
+
+				v.processLocker.Lock()
+				oneSeasonInfo.OneVideoInfos = append(oneSeasonInfo.OneVideoInfos, oneVideoInfo)
+				v.processLocker.Unlock()
+
+				break
+			}
+		}
+		return nil
+	}
+	// ----------------------------------------
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", seriesProcess, common.ScanPlayedSubTimeOut)
+	// ----------------------------------------
 	for seriesName, oneSeriesMixInfo := range emby.SeriesSubNeedDlEmbyMixInfoMap {
 
-		firstTime := true
 		var oneSeasonInfo backend.SeasonInfo
+		// 需要先得到 oneSeasonInfo 的信息
 		for _, oneEpsMixInfo := range oneSeriesMixInfo {
 
 			if oneEpsMixInfo.PhysicalVideoFileFullPath == "" {
 				continue
 			}
-
 			// 首先需要找到对应的最长的视频媒体库路径，x://ABC  x://ABC/DEF
 			for _, oneSeriesDirPath := range sortSeriesPaths {
 
-				if strings.HasPrefix(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path) {
-					// 匹配上了
-					desUrl, found := pathUrlMap[oneSeriesDirPath.Path]
-					if found == false {
-						// 没有找到对应的 URL
-						continue
-					}
-
-					dirRootUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalSeriesRootDir, oneSeriesDirPath.Path, desUrl)
-					if firstTime == true {
-						oneSeasonInfo = backend.SeasonInfo{
-							Name:          seriesName,
-							RootDirPath:   oneEpsMixInfo.PhysicalSeriesRootDir,
-							DirRootUrl:    dirRootUrl,
-							OneVideoInfos: make([]backend.OneVideoInfo, 0),
-						}
-						firstTime = false
-					}
-
-					videoFileName := filepath.Base(oneEpsMixInfo.PhysicalVideoFileFullPath)
-					infoFromFileName, err := decode.GetVideoInfoFromFileName(videoFileName)
-					if err != nil {
-						v.log.Errorln("GetVideoInfoFromFileName", err)
-						break
-					}
-					// 匹配上了前缀就替换这个，并记录
-					epsFUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path, desUrl)
-					oneVideoInfo := backend.OneVideoInfo{
-						Name:                     videoFileName,
-						VideoFPath:               oneEpsMixInfo.PhysicalVideoFileFullPath,
-						VideoUrl:                 epsFUrl,
-						Season:                   infoFromFileName.Season,
-						Episode:                  infoFromFileName.Episode,
-						MediaServerInsideVideoID: oneEpsMixInfo.VideoInfo.Id,
-					}
-					oneSeasonInfo.OneVideoInfos = append(oneSeasonInfo.OneVideoInfos, oneVideoInfo)
-					break
+				// 匹配上了
+				desUrl, found := pathUrlMap[oneSeriesDirPath.Path]
+				if found == false {
+					// 没有找到对应的 URL
+					continue
 				}
+				dirRootUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalSeriesRootDir, oneSeriesDirPath.Path, desUrl)
+
+				oneSeasonInfo = backend.SeasonInfo{
+					Name:          seriesName,
+					RootDirPath:   oneEpsMixInfo.PhysicalSeriesRootDir,
+					DirRootUrl:    dirRootUrl,
+					OneVideoInfos: make([]backend.OneVideoInfo, 0),
+				}
+				break
+			}
+			if oneSeasonInfo.Name != "" {
+				// 这个结构初始化过了
+				break
+			}
+		}
+
+		if oneSeasonInfo.Name == "" {
+			// 说明找了一圈没有找到匹配的，那么后续的也没必要继续
+			continue
+		}
+
+		// 然后再开始处理每一集的信息
+		for i, oneEpsMixInfo := range oneSeriesMixInfo {
+
+			if oneEpsMixInfo.PhysicalVideoFileFullPath == "" {
+				continue
+			}
+
+			// 放入队列
+			err := v.taskControl.Invoke(&task_control.TaskData{
+				Index: i,
+				Count: len(oneSeriesMixInfo),
+				DataEx: ScrabbleUpVideoSeriesEmbyInput{
+					OneSeasonInfo: &oneSeasonInfo,
+					OneEpsMixInfo: oneEpsMixInfo,
+				},
+			})
+			if err != nil {
+				v.log.Errorln(err)
+				break
 			}
 		}
 	}
@@ -802,4 +1010,23 @@ type EmbyScanVideoResult struct {
 type TaskInputData struct {
 	Index     int
 	InputPath string
+}
+
+type ScrabbleUpVideoMovieNormalInput struct {
+	OneMovieDirRootPath string
+	OneMovieFPath       string
+}
+
+type ScrabbleUpVideoSeriesNormalInput struct {
+	OneSeriesRootDir      string
+	OneSeriesRootPathName string
+}
+
+type ScrabbleUpVideoMovieEmbyInput struct {
+	OneMovieMixInfo emby.EmbyMixInfo
+}
+
+type ScrabbleUpVideoSeriesEmbyInput struct {
+	OneSeasonInfo *backend.SeasonInfo
+	OneEpsMixInfo emby.EmbyMixInfo
 }

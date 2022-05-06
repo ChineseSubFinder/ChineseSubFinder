@@ -3,6 +3,7 @@ package sub_parser_hub
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
 	"testing"
@@ -30,12 +31,22 @@ func TestSubParserHubIsSubHasChinese(t *testing.T) {
 		{name: "8", args: args{filePath: filepath.Join(testRootDir, "苍穹浩瀚 - S02E06 - 范式转换.chinese(简英,xunlei).default.srt")}, want: true},
 	}
 
-	subParserHub := NewSubParserHub(ass.NewParser(), srt.NewParser())
+	test4Log := log_helper.GetLogger4Tester()
+	subParserHub := NewSubParserHub(test4Log, ass.NewParser(test4Log), srt.NewParser(test4Log))
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			if got := subParserHub.IsSubHasChinese(tt.args.filePath); got != tt.want {
+			bFind, subParserFileInfo, err := subParserHub.DetermineFileTypeFromFile(tt.args.filePath)
+			if err != nil {
+				t.Error("DetermineFileTypeFromFile", tt.args.filePath, err)
+				return
+			}
+			if bFind == false {
+				t.Error("DetermineFileTypeFromFile", tt.args.filePath, "not support SubType")
+				return
+			}
+			if got := subParserHub.IsSubHasChinese(subParserFileInfo); got != tt.want {
 				t.Errorf("IsSubHasChinese() = %v, want %v", got, tt.want)
 			}
 		})

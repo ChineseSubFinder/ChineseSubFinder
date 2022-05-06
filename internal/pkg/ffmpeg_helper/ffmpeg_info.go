@@ -181,7 +181,7 @@ func (f *FFMPEGInfo) isSubExported(nowCacheFolder string) bool {
 
 // GetExternalSubInfos 获取外置的字幕信息
 func (f *FFMPEGInfo) GetExternalSubInfos(subParserHub *sub_parser_hub.SubParserHub) error {
-	subFiles, err := sub_helper.SearchMatchedSubFileByOneVideo(f.VideoFullPath)
+	subFiles, err := sub_helper.SearchMatchedSubFileByOneVideo(f.log, f.VideoFullPath)
 	if err != nil {
 		return err
 	}
