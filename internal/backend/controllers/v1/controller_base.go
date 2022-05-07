@@ -25,7 +25,7 @@ type ControllerBase struct {
 }
 
 func NewControllerBase(log *logrus.Logger, cronHelper *cron_helper.CronHelper) *ControllerBase {
-	return &ControllerBase{
+	cb := &ControllerBase{
 		log:                     log,
 		cronHelper:              cronHelper,
 		StaticFileSystemBackEnd: base.NewStaticFileSystemBackEnd(log),
@@ -35,6 +35,13 @@ func NewControllerBase(log *logrus.Logger, cronHelper *cron_helper.CronHelper) *
 		MovieInfos:                      make([]backend.MovieInfo, 0),
 		SeasonInfos:                     make([]backend.SeasonInfo, 0),
 	}
+
+	err := cb.loadVideoListCache()
+	if err != nil {
+		cb.log.Errorln("loadVideoListCache", err)
+	}
+
+	return cb
 }
 
 func (cb *ControllerBase) Close() {

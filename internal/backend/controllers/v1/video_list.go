@@ -1,10 +1,14 @@
 package v1
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/strcut_json"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"path/filepath"
 )
 
 func (cb *ControllerBase) RefreshVideoListStatusHandler(c *gin.Context) {
@@ -75,7 +79,12 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 
 		cb.MovieInfos = append(cb.MovieInfos, MovieInfos...)
 		cb.SeasonInfos = append(cb.SeasonInfos, SeasonInfos...)
-		// 并且如果是 Emby 那么会在页面上出现一个刷新字幕列表的按钮（这个需要 Emby 中video 的 ID）
+		// 缓存到本地
+		err = cb.saveVideoListCache()
+		if err != nil {
+			cb.log.Errorln("saveVideoListCache", err)
+			return
+		}
 	}()
 
 	c.JSON(http.StatusOK, backend.ReplyRefreshVideoList{
@@ -94,4 +103,56 @@ func (cb *ControllerBase) VideoListHandler(c *gin.Context) {
 		MovieInfos:  cb.MovieInfos,
 		SeasonInfos: cb.SeasonInfos,
 	})
+}
+
+func (cb *ControllerBase) saveVideoListCache() error {
+
+	// 缓存下来
+	cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
+	if err != nil {
+		return err
+	}
+
+	movieInfosFileName := filepath.Join(cacheCenterFolder, "movie_infos.json")
+	seasonInfosFileName := filepath.Join(cacheCenterFolder, "season_infos.json")
+
+	err = strcut_json.ToFile(movieInfosFileName, cb.MovieInfos)
+	if err != nil {
+		return err
+	}
+
+	err = strcut_json.ToFile(seasonInfosFileName, cb.SeasonInfos)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cb *ControllerBase) loadVideoListCache() error {
+
+	// 缓存下来
+	cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
+	if err != nil {
+		return err
+	}
+
+	movieInfosFileName := filepath.Join(cacheCenterFolder, "movie_infos.json")
+	seasonInfosFileName := filepath.Join(cacheCenterFolder, "season_infos.json")
+
+	if my_util.IsFile(movieInfosFileName) == true {
+		err = strcut_json.ToStruct(movieInfosFileName, &cb.MovieInfos)
+		if err != nil {
+			return err
+		}
+	}
+
+	if my_util.IsFile(seasonInfosFileName) == true {
+		err = strcut_json.ToStruct(seasonInfosFileName, &cb.SeasonInfos)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
