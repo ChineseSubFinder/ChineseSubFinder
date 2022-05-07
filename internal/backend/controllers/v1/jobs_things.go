@@ -128,11 +128,10 @@ func (cb ControllerBase) JobLogHandler(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, ReplyJobLog)
+		return
 	} else {
 		// 不存在
 		c.JSON(http.StatusOK, backend.ReplyCommon{Message: "job log not found"})
 		return
 	}
-
-	c.JSON(http.StatusOK, backend.ReplyCommon{Message: "ok"})
 }
