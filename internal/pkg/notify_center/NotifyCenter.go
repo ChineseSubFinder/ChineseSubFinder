@@ -3,6 +3,7 @@ package notify_center
 import (
 	"github.com/go-resty/resty/v2"
 	"github.com/sirupsen/logrus"
+	"net/http"
 	"net/url"
 	"sync"
 )
@@ -33,7 +34,11 @@ func (n *NotifyCenter) Send() {
 	if n == nil || n.webhookUrl == "" {
 		return
 	}
-	client := resty.New()
+	client := resty.New().SetTransport(&http.Transport{
+		DisableKeepAlives:   true,
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 100,
+	})
 	for s, s2 := range n.infos {
 		_, err := client.R().Get(n.webhookUrl + s + "/" + url.QueryEscape(s2))
 		if err != nil {

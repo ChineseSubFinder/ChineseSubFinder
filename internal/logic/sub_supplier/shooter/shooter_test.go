@@ -28,7 +28,7 @@ func TestNewSupplier(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shooter := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter(settings.NewSettings(), log_helper.GetLogger4Tester())))
+	shooter := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	outList, err := shooter.getSubListFromFile(gVideoFPath)
 	if err != nil {
 		t.Error(err)

@@ -50,7 +50,11 @@ func NewHttpClient(_proxySettings ...*settings.ProxySettings) (*resty.Client, er
 	// 随机的 Browser
 	UserAgent = browser.Random()
 	// ------------------------------------------------
-	httpClient := resty.New()
+	httpClient := resty.New().SetTransport(&http.Transport{
+		DisableKeepAlives:   true,
+		MaxIdleConns:        1000,
+		MaxIdleConnsPerHost: 1000,
+	})
 	httpClient.SetTimeout(common.HTMLTimeOut)
 	httpClient.SetRetryCount(2)
 	// ------------------------------------------------
