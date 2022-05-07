@@ -4,14 +4,8 @@ const routes = [
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
-    redirect: { name: 'jobs' },
+    redirect: { name: 'overview' },
     children: [
-      // {
-      //   name: 'home',
-      //   path: '/home',
-      //   component: () => import('pages/index.vue'),
-      //   meta: { title: '首页', icon: 'home' },
-      // },
       // {
       //   name: 'library',
       //   path: 'library',
@@ -19,10 +13,16 @@ const routes = [
       //   meta: { title: '库', icon: 'video_library' },
       // },
       {
+        name: 'overview',
+        path: 'overview',
+        component: () => import('pages/overview/index.vue'),
+        meta: { title: '总览', icon: 'home' },
+      },
+      {
         name: 'jobs',
         path: 'jobs',
         component: () => import('pages/jobs/index.vue'),
-        meta: { title: '任务', icon: 'cloud_queue' },
+        meta: { title: '下载队列', icon: 'assignment' },
       },
       {
         name: 'logs',

@@ -28,7 +28,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { isScanMovie, isScanSeries } from 'pages/jobs/useJob';
+import { isScanMovie, isScanSeries } from 'pages/overview/useJob';
 
 const props = defineProps({
   title: String,

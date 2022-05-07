@@ -46,10 +46,10 @@
 
 <script setup>
 import { computed } from 'vue';
-import JobProgressCard from 'pages/jobs/JobProgressCard';
+import JobProgressCard from 'pages/overview/JobProgressCard';
 import dayjs from 'dayjs';
 import TimeCounter from 'components/TimeCounter';
-import { subJobsDetail, isWaiting, isPreparing, isScanMovie, isScanSeries } from 'pages/jobs/useJob';
+import { subJobsDetail, isWaiting, isPreparing, isScanMovie, isScanSeries } from 'pages/overview/useJob';
 
 const startTimestamp = computed(() => dayjs(subJobsDetail.value.started_time).unix());
 
