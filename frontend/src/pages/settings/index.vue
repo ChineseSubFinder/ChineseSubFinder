@@ -6,11 +6,9 @@
       </template>
       任务进程运行中，不能更改配置
       <template v-slot:action>
-        <q-btn color="white" label="去任务页面停止" flat @click="$router.push('/jobs')"/>
+        <q-btn color="white" label="去总览页面停止" flat @click="$router.push('/overview')" />
       </template>
-      <span>
-      </span>
-
+      <span> </span>
     </q-banner>
     <q-card v-if="isSettingsLoaded" flat>
       <q-tabs
@@ -59,9 +57,9 @@
           </q-tab-panel>
         </q-tab-panels>
 
-        <q-separator/>
+        <q-separator />
 
-        <form-submit-area/>
+        <form-submit-area />
       </q-form>
     </q-card>
   </q-page>
@@ -73,7 +71,7 @@ import BasicSettings from 'pages/settings/BasicSettings';
 import AdvancedSettings from 'pages/settings/AdvancedSettings';
 import EmbySettings from 'pages/settings/EmbySettings';
 import DevelopmentSettings from 'pages/settings/DevelopmentSettings';
-import {settingsState, submitAll, useSettings} from 'pages/settings/useSettings';
+import { settingsState, submitAll, useSettings } from 'pages/settings/useSettings';
 import { isJobRunning } from 'src/store/systemState';
 import ExperimentSettings from 'pages/settings/ExperimentSettings';
 import FormSubmitArea from 'pages/settings/FormSubmitArea';

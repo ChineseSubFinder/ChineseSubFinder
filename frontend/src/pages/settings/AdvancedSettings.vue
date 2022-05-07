@@ -20,6 +20,8 @@
               label="协议"
               standout
               dense
+              emit-value
+              map-options
               style="width: 100px"
             />
             <q-input v-model="form.proxy_settings.input_proxy_address" standout dense label="代理服务器" />
@@ -47,7 +49,7 @@
 
           <div class="q-mt-sm">
             <proxy-check-btn
-              :url="form.proxy_settings.http_proxy_address"
+              :settings="form.proxy_settings"
               label="测试代理服务"
               size="md"
               icon="bolt"
@@ -191,7 +193,7 @@
           <q-input
             class="col"
             v-model.number="form.task_queue.one_job_time_out"
-            label="单个任务的超时时间（秒）"
+            label="任务的超时时间"
             standout
             dense
             suffix="秒"
@@ -200,7 +202,8 @@
           <q-input
             class="col"
             v-model.number="form.task_queue.interval"
-            label="任务的间隔（秒）"
+            label="下载任务之间的间隔时间"
+            shadow-text="防止频率太高触发防爬检测"
             standout
             dense
             suffix="秒"
@@ -210,6 +213,7 @@
             class="col"
             v-model.number="form.task_queue.expiration_time"
             label="下载时效（天）"
+            shadow-text="视频创建时间在此时间内，才下载，否则标记为失败"
             standout
             dense
             suffix="天"
@@ -218,7 +222,8 @@
           <q-input
             class="col"
             v-model.number="form.task_queue.download_sub_during_x_days"
-            label="下载多少天之内的字幕"
+            label="有内置字幕的视频下载时效"
+            shadow-text="如果创建了 x 天，且有内置的中文字幕，那么也不进行下载了"
             standout
             dense
             suffix="天"
@@ -231,6 +236,15 @@
             standout
             dense
             suffix="小时"
+            :rules="[(val) => !!val || '不能为空']"
+          />
+          <q-input
+            class="col"
+            v-model="form.task_queue.check_pulic_ip_target_site"
+            label="检查公网IP的目标网站"
+            shadow-text="目标网站必须直接返回ip字符串，不需要额外解析。多个站点用 ;（英文分号） 分割"
+            standout
+            dense
             :rules="[(val) => !!val || '不能为空']"
           />
         </q-item-section>

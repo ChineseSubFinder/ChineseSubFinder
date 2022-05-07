@@ -16,40 +16,19 @@
         </div>
       </header>
     </q-card>
-
-    <template v-if="subJobsDetail && isJobRunning">
-      <q-separator class="q-my-md" />
-
-      <job-detail-panel />
-
-      <q-separator class="q-my-md" />
-
-      <job-r-t-log-panel />
-    </template>
-
-    <div v-else-if="isJobRunning" class="q-mt-lg row items-center">
-      <q-spinner-facebook color="primary" size="2em" />
-      <div class="text-primary q-ml-sm">正在获取任务执行情况...</div>
-    </div>
   </q-page>
 </template>
 
 <script setup>
 import { getJobsStatus, isJobRunning, systemState } from 'src/store/systemState';
 import { useQuasar } from 'quasar';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import JobApi from 'src/api/JobApi';
 import { SystemMessage } from 'src/utils/Message';
-import JobRTLogPanel from 'pages/overview/JobRTLogPanel';
-import { subJobsDetail, useJob } from 'pages/overview/useJob';
-import JobDetailPanel from 'pages/overview/JobDetailPanel';
-import { wsManager } from 'src/composables/useWebSocketApi';
 
 const $q = useQuasar();
 
 const submitting = ref(false);
-
-useJob();
 
 const startJobs = () => {
   $q.dialog({
@@ -87,10 +66,5 @@ const stopJobs = () => {
 
 onMounted(() => {
   getJobsStatus();
-});
-
-onBeforeUnmount(() => {
-  wsManager.close();
-  wsManager.ws = null;
 });
 </script>

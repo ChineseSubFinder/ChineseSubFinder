@@ -25,12 +25,6 @@ const routes = [
         meta: { title: '下载队列', icon: 'assignment' },
       },
       {
-        name: 'logs',
-        path: 'logs',
-        component: () => import('pages/logs/index.vue'),
-        meta: { title: '日志', icon: 'receipt_long' },
-      },
-      {
         name: 'settings',
         path: 'settings',
         component: () => import('pages/settings/index.vue'),

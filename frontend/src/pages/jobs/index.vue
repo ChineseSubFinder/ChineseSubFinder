@@ -50,6 +50,7 @@
               <q-input v-model="form.search" outlined label="输入关键字搜索" dense></q-input>
             </div>
           </div>
+
           <div class="q-mt-sm q-gutter-xs">
             <q-btn
               :disable="selected.length === 0"
@@ -67,7 +68,6 @@
               color="primary"
               @click="batchUpdatePriority('low')"
             />
-            <q-btn :disable="selected.length === 0" size="sm" label="删除" color="negative" @click="batchDeleteJobs" />
           </div>
         </div>
       </template>
@@ -154,23 +154,31 @@ const filteredData = computed(() => {
         return false;
       }
     }
+
     if (status !== null && item.job_status !== status) {
       return false;
     }
+
     if (videoType !== null && item.video_type !== videoType) {
       return false;
     }
+
+    const betweenOfNumber = (num, min, max) => num >= min && num <= max;
     if (priority !== null && item.task_priority !== priority) {
-      if (priority === 'high' && item.task_priority > 3) {
+      // 1-3为高
+      if (priority === 'high' && !betweenOfNumber(item.task_priority, 1, 3)) {
         return false;
       }
-      if (priority === 'low' && item.task_priority < 7) {
+      // 7-10为低
+      if (priority === 'low' && !betweenOfNumber(item.task_priority, 7, 10)) {
         return false;
       }
-      if (priority === 'middle' && (item.task_priority >= 7 || item.task_priority <= 3)) {
+      // 4-6为中
+      if (priority === 'middle' && !betweenOfNumber(item.task_priority, 4, 6)) {
         return false;
       }
     }
+
     return true;
   });
 });
@@ -208,25 +216,6 @@ const batchUpdatePriority = async (priority) => {
       SystemMessage.error(`${errorCount}个任务修改优先级失败！`);
     } else {
       SystemMessage.success('成功修改优先级');
-    }
-  });
-};
-
-const batchDeleteJobs = async () => {
-  $q.dialog({
-    title: '操作确认',
-    message: `确认删除选中任务？`,
-    cancel: true,
-    persistent: true,
-    focus: 'none',
-  }).onOk(async () => {
-    const selectedIds = selected.value.map((item) => item.id);
-    const results = await Promise.allSettled(selectedIds.map((id) => JobApi.delete(id)));
-    const errorCount = results.filter(({ value: [, err] }) => err !== null).length;
-    if (errorCount > 0) {
-      SystemMessage.error(`${errorCount}个任务删除失败！`);
-    } else {
-      SystemMessage.success('删除成功');
     }
   });
 };

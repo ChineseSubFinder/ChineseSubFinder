@@ -36,7 +36,7 @@ const getJobLog = async () => {
   if (err != null) {
     SystemMessage.error(err.message);
   } else {
-    logLines.value = res.data?.one_line;
+    logLines.value = res?.one_line;
   }
 };
 

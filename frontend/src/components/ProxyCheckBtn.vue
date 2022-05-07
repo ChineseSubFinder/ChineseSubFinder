@@ -31,7 +31,7 @@ import { ref, defineProps } from 'vue';
 import CommonApi from 'src/api/CommonApi';
 
 const props = defineProps({
-  url: String,
+  settings: Object,
 });
 
 const show = ref(false);
@@ -41,9 +41,7 @@ const checkList = ref([]);
 
 const checkProxy = async () => {
   checking.value = true;
-  const [res] = await CommonApi.checkProxy({
-    http_proxy_address: props.url,
-  });
+  const [res] = await CommonApi.checkProxy(props.settings);
   checking.value = false;
   checkList.value = res?.sub_site_status || [];
   show.value = true;
