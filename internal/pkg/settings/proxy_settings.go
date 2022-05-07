@@ -38,6 +38,13 @@ func NewProxySettings(useProxy bool, useWhichProxyProtocol string,
 	return &set
 }
 
+func (p *ProxySettings) CopyOne() *ProxySettings {
+	return NewProxySettings(
+		p.UseProxy, p.UseWhichProxyProtocol, p.LocalHttpProxyServerPort,
+		p.InputProxyAddress, p.InputProxyPort,
+		p.InputProxyUsername, p.InputProxyPassword)
+}
+
 func (p *ProxySettings) GetLocalHttpProxyUrl() string {
 	defer p.locker.Unlock()
 	p.locker.Lock()
