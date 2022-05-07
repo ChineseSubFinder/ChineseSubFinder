@@ -266,7 +266,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 	movieProcess := func(ctx context.Context, inData interface{}) error {
 
 		taskData := inData.(*task_control.TaskData)
-		scrabbleUpVideoMovieNormalInput := taskData.DataEx.(*ScrabbleUpVideoMovieNormalInput)
+		scrabbleUpVideoMovieNormalInput := taskData.DataEx.(ScrabbleUpVideoMovieNormalInput)
 		oneMovieDirRootPath := scrabbleUpVideoMovieNormalInput.OneMovieDirRootPath
 		oneMovieFPath := scrabbleUpVideoMovieNormalInput.OneMovieFPath
 
@@ -338,7 +338,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 	seriesProcess := func(ctx context.Context, inData interface{}) error {
 
 		taskData := inData.(*task_control.TaskData)
-		scrabbleUpVideoSeriesNormalInput := taskData.DataEx.(*ScrabbleUpVideoSeriesNormalInput)
+		scrabbleUpVideoSeriesNormalInput := taskData.DataEx.(ScrabbleUpVideoSeriesNormalInput)
 		oneSeriesRootPathName := scrabbleUpVideoSeriesNormalInput.OneSeriesRootPathName
 		oneSeriesRootDir := scrabbleUpVideoSeriesNormalInput.OneSeriesRootDir
 

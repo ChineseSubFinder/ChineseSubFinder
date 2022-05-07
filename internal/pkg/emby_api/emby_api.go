@@ -32,6 +32,7 @@ func NewEmbyApi(log *logrus.Logger, embyConfig *settings.EmbySettings) *EmbyApi 
 	em.timeOut = 5 * 60 * time.Second
 	// 见 https://github.com/allanpk716/ChineseSubFinder/issues/140
 	em.client = resty.New().SetTransport(&http.Transport{
+		DisableKeepAlives:   true,
 		MaxIdleConns:        100,
 		MaxIdleConnsPerHost: 100,
 	}).RemoveProxy().SetTimeout(em.timeOut)
