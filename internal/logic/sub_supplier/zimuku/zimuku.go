@@ -350,9 +350,6 @@ func (s *Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, Al
 			value[0].Season = epsInfo.Season
 			value[0].Episode = epsInfo.Episode
 			subInfoNeedDownload = append(subInfoNeedDownload, value[0])
-		} else {
-			s.log.Infoln(s.GetSupplierName(), "Not Find Sub can be download",
-				epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 		}
 	}
 	// 全季的字幕列表，也拼进去，后面进行下载
@@ -414,13 +411,13 @@ func (s *Supplier) whichSubInfoNeedDownload(browser *rod.Browser, subInfos SubIn
 
 		s.log.Debugln(s.GetSupplierName(), "GetEx:", i, subInfo.SubDownloadPageUrl)
 
-		subInfo, err := s.fileDownloader.GetEx(s.GetSupplierName(), browser, subInfo.SubDownloadPageUrl, int64(i), subInfo.Season, subInfo.Episode, s.DownFile)
+		getSubInfo, err := s.fileDownloader.GetEx(s.GetSupplierName(), browser, subInfo.SubDownloadPageUrl, int64(i), subInfo.Season, subInfo.Episode, s.DownFile)
 		if err != nil {
-			s.log.Errorln(s.GetSupplierName(), "GetEx", subInfo.Name, err)
+			s.log.Errorln(s.GetSupplierName(), "GetEx", "GetEx", subInfo.Name, subInfo.Season, subInfo.Episode, err)
 			continue
 		}
 
-		outSubInfoList = append(outSubInfoList, *subInfo)
+		outSubInfoList = append(outSubInfoList, *getSubInfo)
 	}
 
 	for i, info := range outSubInfoList {

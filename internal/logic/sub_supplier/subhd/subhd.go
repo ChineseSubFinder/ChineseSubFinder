@@ -177,7 +177,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 
 		subInfo, err := s.fileDownloader.GetEx(s.GetSupplierName(), browser, item.Url, int64(i), item.Season, item.Episode, s.DownFile)
 		if err != nil {
-			s.log.Errorln(s.GetSupplierName(), "GetEx", subInfo.Name, err)
+			s.log.Errorln(s.GetSupplierName(), "GetEx", item.Title, item.Season, item.Episode, err)
 			continue
 		}
 
@@ -266,7 +266,7 @@ func (s *Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubIn
 
 		subInfo, err := s.fileDownloader.GetEx(s.GetSupplierName(), browser, item.Url, int64(i), 0, 0, s.DownFile)
 		if err != nil {
-			s.log.Errorln(s.GetSupplierName(), "GetEx", subInfo.Name, err)
+			s.log.Errorln(s.GetSupplierName(), "GetEx", item.Title, item.Season, item.Episode, err)
 			continue
 		}
 
@@ -317,8 +317,6 @@ func (s *Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, al
 			value[0].Season = epsInfo.Season
 			value[0].Episode = epsInfo.Episode
 			subInfoNeedDownload = append(subInfoNeedDownload, value[0])
-		} else {
-			s.log.Infoln("SubHD Not Find Sub can be download", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 		}
 	}
 	// 全季的字幕列表，也拼进去，后面进行下载
@@ -532,10 +530,8 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDown
 		if err != nil {
 			return
 		}
-		// 移除广告
-		page.MustEval(`testgssdqw = function () { if (document.getElementById("tbkp")) {document.getElementById("tbkp").remove()}; }`)
-		page.MustEval(`testgssdqw()`)
 		// 点击“验证获取下载地址”
+		s.log.Debugln("click '验证获取下载地址'")
 		clickCodeBtn := doc.Find(btnClickCodeBtn)
 		if len(clickCodeBtn.Nodes) < 1 {
 			return
@@ -543,29 +539,41 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDown
 		element := page.MustElement(btnClickCodeBtn)
 		BtnCodeText := element.MustText()
 		if strings.Contains(BtnCodeText, "验证") == true {
+			s.log.Debugln("find '验证' 关键词")
 			// 那么需要填写验证码
 			element.MustClick()
 			time.Sleep(time.Second * 2)
 			// 填写“验证码”
-			page.MustEval(`$("#gzhcode").attr("value","` + common2.SubhdCode + `");`)
+			s.log.Debugln("填写验证码")
+			el := page.MustElement("#gzhcode")
+			common2.SubhdCode = "951275"
+			el.MustInput(common2.SubhdCode)
+			//page.MustEval(`$("#gzhcode").attr("value","` + common2.SubhdCode + `");`)
 			// 是否有“完成验证”按钮
+			s.log.Debugln("查找是否有交验证码按钮1")
 			downBtn := doc.Find(btnCommitCode)
 			if len(downBtn.Nodes) < 1 {
 				return
 			}
+			s.log.Debugln("查找是否有交验证码按钮2")
 			element = page.MustElement(btnCommitCode)
 			benCommit := element.MustText()
 			if strings.Contains(benCommit, "验证") == false {
 				s.log.Errorln("btn not found 完整验证")
 				return
 			}
+			s.log.Debugln("点击提交验证码")
 			element.MustClick()
 			time.Sleep(time.Second * 2)
 
+			s.log.Debugln("点击下载按钮")
 			// 点击下载按钮
 			page.MustElement(btnClickCodeBtn).MustClick()
+
+			time.Sleep(time.Second * 2)
 		} else if strings.Contains(BtnCodeText, "下载") == true {
 
+			s.log.Debugln("点击下载按钮")
 			// 直接可以下载
 			element.MustClick()
 			time.Sleep(time.Second * 2)
@@ -610,14 +618,21 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDown
 }
 
 func (s *Supplier) passWaterWall(page *rod.Page) {
+
+	const (
+		waterIFrame = "#tcaptcha_iframe"
+		dragBtn     = "#tcaptcha_drag_button"
+		slideBg     = "#slideBg"
+	)
+
 	//等待驗證碼窗體載入
-	page.MustElement("#tcaptcha_iframe").MustWaitLoad()
+	page.MustElement(waterIFrame).MustWaitLoad()
 	//進入到iframe
-	iframe := page.MustElement("#tcaptcha_iframe").MustFrame()
+	iframe := page.MustElement(waterIFrame).MustFrame()
 	//等待拖動條加載, 延遲500秒檢測變化, 以確認加載完畢
-	iframe.MustElement("#tcaptcha_drag_button").MustWaitStable()
+	iframe.MustElement(dragBtn).MustWaitStable()
 	//等待缺口圖像載入
-	slideBgEl := iframe.MustElement("#slideBg").MustWaitLoad()
+	slideBgEl := iframe.MustElement(slideBg).MustWaitLoad()
 	slideBgEl = slideBgEl.MustWaitStable()
 	//取得帶缺口圖像
 	shadowbg := slideBgEl.MustResource()
@@ -625,12 +640,14 @@ func (s *Supplier) passWaterWall(page *rod.Page) {
 	src := slideBgEl.MustProperty("src")
 	fullbg, _, err := my_util.DownFile(s.log, strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
 	if err != nil {
-		panic(err)
+		s.log.Errorln("passWaterWall.DownFile", err)
+		return
 	}
 	//取得img展示的真實尺寸
 	shape, err := slideBgEl.Shape()
 	if err != nil {
-		panic(err)
+		s.log.Errorln("passWaterWall.Shape", err)
+		return
 	}
 	bgbox := shape.Box()
 	height, width := uint(math.Round(bgbox.Height)), uint(math.Round(bgbox.Width))
