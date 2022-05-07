@@ -6,6 +6,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/strcut_json"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
+	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"path/filepath"
@@ -97,6 +99,43 @@ func (cb *ControllerBase) VideoListHandler(c *gin.Context) {
 	defer func() {
 		// 统一的异常处理
 		cb.ErrorProcess(c, "VideoListHandler", err)
+	}()
+
+	videoListAdd := backend.ReqVideoListAdd{}
+	err = c.ShouldBindJSON(&videoListAdd)
+	if err != nil {
+		return
+	}
+
+	videoType := common.Movie
+	if videoListAdd.VideoType == 1 {
+		videoType = common.Series
+	}
+
+	bok, err := cb.cronHelper.DownloadQueue.Add(*TTaskqueue.NewOneJob(
+		videoType, videoListAdd.PhysicalVideoFileFullPath, videoListAdd.TaskPriorityLevel,
+		videoListAdd.MediaServerInsideVideoID,
+	))
+	if err != nil {
+		return
+	}
+	if bok == false {
+		c.JSON(http.StatusOK, backend.ReplyCommon{
+			Message: "job is already in queue",
+		})
+	} else {
+		c.JSON(http.StatusOK, backend.ReplyCommon{
+			Message: "ok",
+		})
+	}
+
+}
+
+func (cb *ControllerBase) VideoListAddHandler(c *gin.Context) {
+	var err error
+	defer func() {
+		// 统一的异常处理
+		cb.ErrorProcess(c, "VideoListAddHandler", err)
 	}()
 
 	c.JSON(http.StatusOK, backend.ReplyVideoList{
