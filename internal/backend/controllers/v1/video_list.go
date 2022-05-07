@@ -3,7 +3,6 @@ package v1
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -69,7 +68,13 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 		}
 
 		pathUrlMap := cb.StaticFileSystemBackEnd.GetPathUrlMap()
-		cb.MovieInfos, cb.SeasonInfos = cb.videoScanAndRefreshHelper.ScrabbleUpVideoList(scanVideoResult, pathUrlMap)
+
+		cb.MovieInfos = make([]backend.MovieInfo, 0)
+		cb.SeasonInfos = make([]backend.SeasonInfo, 0)
+		MovieInfos, SeasonInfos := cb.videoScanAndRefreshHelper.ScrabbleUpVideoList(scanVideoResult, pathUrlMap)
+
+		cb.MovieInfos = append(cb.MovieInfos, MovieInfos...)
+		cb.SeasonInfos = append(cb.SeasonInfos, SeasonInfos...)
 		// 并且如果是 Emby 那么会在页面上出现一个刷新字幕列表的按钮（这个需要 Emby 中video 的 ID）
 	}()
 
@@ -78,26 +83,15 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 	return
 }
 
-func (cb ControllerBase) VideoListHandler(c *gin.Context) {
+func (cb *ControllerBase) VideoListHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
 		cb.ErrorProcess(c, "VideoListHandler", err)
 	}()
 
-	bok, allJobs, err := cb.cronHelper.DownloadQueue.GetAllJobs()
-	if err != nil {
-		return
-	}
-
-	if bok == false {
-		c.JSON(http.StatusOK, backend.ReplyAllJobs{
-			AllJobs: make([]task_queue.OneJob, 0),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, backend.ReplyAllJobs{
-		AllJobs: allJobs,
+	c.JSON(http.StatusOK, backend.ReplyVideoList{
+		MovieInfos:  cb.MovieInfos,
+		SeasonInfos: cb.SeasonInfos,
 	})
 }

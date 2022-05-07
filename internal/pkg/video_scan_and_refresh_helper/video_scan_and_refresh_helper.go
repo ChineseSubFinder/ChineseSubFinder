@@ -239,6 +239,10 @@ func (v *VideoScanAndRefreshHelper) FilterMovieAndSeriesNeedDownload(scanVideoRe
 
 func (v *VideoScanAndRefreshHelper) ScrabbleUpVideoList(scanVideoResult *ScanVideoResult, pathUrlMap map[string]string) ([]backend.MovieInfo, []backend.SeasonInfo) {
 
+	defer func() {
+		scanVideoResult = nil
+	}()
+
 	if scanVideoResult.Normal != nil && v.settings.EmbySettings.Enable == false {
 		return v.scrabbleUpVideoListNormal(scanVideoResult.Normal, pathUrlMap)
 	}
@@ -261,7 +265,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 	// 电影
 	movieProcess := func(ctx context.Context, inData interface{}) error {
 
-		scrabbleUpVideoMovieNormalInput := inData.(*ScrabbleUpVideoMovieNormalInput)
+		taskData := inData.(*task_control.TaskData)
+		scrabbleUpVideoMovieNormalInput := taskData.DataEx.(*ScrabbleUpVideoMovieNormalInput)
 		oneMovieDirRootPath := scrabbleUpVideoMovieNormalInput.OneMovieDirRootPath
 		oneMovieFPath := scrabbleUpVideoMovieNormalInput.OneMovieFPath
 
@@ -332,7 +337,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 	// seriesDirMap: dir <--> seriesList
 	seriesProcess := func(ctx context.Context, inData interface{}) error {
 
-		scrabbleUpVideoSeriesNormalInput := inData.(*ScrabbleUpVideoSeriesNormalInput)
+		taskData := inData.(*task_control.TaskData)
+		scrabbleUpVideoSeriesNormalInput := taskData.DataEx.(*ScrabbleUpVideoSeriesNormalInput)
 		oneSeriesRootPathName := scrabbleUpVideoSeriesNormalInput.OneSeriesRootPathName
 		oneSeriesRootDir := scrabbleUpVideoSeriesNormalInput.OneSeriesRootDir
 
@@ -436,7 +442,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 
 	movieProcess := func(ctx context.Context, inData interface{}) error {
 
-		scrabbleUpVideoMovieEmbyInput := inData.(ScrabbleUpVideoMovieEmbyInput)
+		taskData := inData.(*task_control.TaskData)
+		scrabbleUpVideoMovieEmbyInput := taskData.DataEx.(ScrabbleUpVideoMovieEmbyInput)
 		oneMovieMixInfo := scrabbleUpVideoMovieEmbyInput.OneMovieMixInfo
 		// 首先需要找到对应的最长的视频媒体库路径，x://ABC  x://ABC/DEF
 		for _, oneMovieDirPath := range sortMoviePaths {
@@ -511,7 +518,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 	// Emby 过滤，连续剧
 	seriesProcess := func(ctx context.Context, inData interface{}) error {
 
-		scrabbleUpVideoSeriesEmbyInput := inData.(ScrabbleUpVideoSeriesEmbyInput)
+		taskData := inData.(*task_control.TaskData)
+		scrabbleUpVideoSeriesEmbyInput := taskData.DataEx.(ScrabbleUpVideoSeriesEmbyInput)
 
 		oneSeasonInfo := scrabbleUpVideoSeriesEmbyInput.OneSeasonInfo
 		oneEpsMixInfo := scrabbleUpVideoSeriesEmbyInput.OneEpsMixInfo
@@ -632,6 +640,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 			}
 		}
 		v.taskControl.Hold()
+
+		seasonInfos = append(seasonInfos, oneSeasonInfo)
 	}
 
 	return movieInfos, seasonInfos
