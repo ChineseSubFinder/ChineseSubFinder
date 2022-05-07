@@ -352,7 +352,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 		v.processLocker.Unlock()
 
 		bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(oneSeriesRootDir,
-			v.NeedForcedScanAndDownSub, false)
+			v.NeedForcedScanAndDownSub, true)
 		if err != nil {
 			v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub", err)
 			return err
