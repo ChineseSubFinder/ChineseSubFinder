@@ -16,7 +16,7 @@ func (t *TaskQueue) BeforeGetOneJob() {
 			nowOneJob := value.(task_queue.OneJob)
 			if nowOneJob.JobStatus == task_queue.Done &&
 				// 默认是 90day, A.After(B) : A > B == true
-				nowOneJob.UpdateTime.AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.ExpirationTime).After(time.Now()) == false {
+				(time.Time)(nowOneJob.UpdateTime).AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.ExpirationTime).After(time.Now()) == false {
 				// 找到就删除
 				bok, err := t.del(nowOneJob.Id)
 				if err != nil {
@@ -72,7 +72,7 @@ func (t *TaskQueue) GetOneWaitingJob() (bool, task_queue.OneJob, error) {
 				// 优先级 <= 3 也可以提前取出
 				TaskPriority <= HighTaskPriorityLevel ||
 				// 默认是 12h, A.After(B) : A > B == true
-				tOneJob.UpdateTime.AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.OneSubDownloadInterval).After(time.Now()) == false && tOneJob.DownloadTimes > 0) {
+				(time.Time)(tOneJob.UpdateTime).AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.OneSubDownloadInterval).After(time.Now()) == false && tOneJob.DownloadTimes > 0) {
 				// 找到就返回
 				found = true
 				return true
@@ -112,9 +112,9 @@ func (t *TaskQueue) GetOneDoneJob() (bool, task_queue.OneJob, error) {
 			// 见《任务队列设计》--以优先级顺序取出描述
 			if tOneJob.JobStatus == task_queue.Done &&
 				// 要在 三个月内
-				tOneJob.CreatedTime.AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.ExpirationTime).After(time.Now()) == true &&
+				(time.Time)(tOneJob.CreatedTime).AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.ExpirationTime).After(time.Now()) == true &&
 				// 已经下载过的视频，要间隔 12 小时再次下载
-				tOneJob.UpdateTime.AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.OneSubDownloadInterval).After(time.Now()) == false {
+				(time.Time)(tOneJob.UpdateTime).AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.OneSubDownloadInterval).After(time.Now()) == false {
 				// 找到就返回
 				found = true
 				return true

@@ -8,6 +8,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	taskQueue2 "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/emirpasic/gods/maps/treemap"
@@ -152,7 +153,7 @@ func (t *TaskQueue) update(oneJob task_queue.OneJob) (bool, error) {
 		return false, nil
 	}
 	// 自动更新时间
-	oneJob.UpdateTime = time.Now()
+	oneJob.UpdateTime = (emby.Time)(time.Now())
 
 	// 这里需要判断是否有优先级的 Update，如果有就需要把之前缓存的表给更新
 	// 然后再插入到新的表中
@@ -205,7 +206,7 @@ func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue.OneJob, inErr er
 		oneJob.DownloadTimes += 1
 	} else {
 		// 超过了时间限制，默认是 90 天, A.Before(B) : A < B == true
-		if oneJob.AddedTime.AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.ExpirationTime).Before(time.Now()) == true {
+		if (time.Time)(oneJob.AddedTime).AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.ExpirationTime).Before(time.Now()) == true {
 			// 超过 90 天了
 			oneJob.JobStatus = taskQueue2.Failed
 		} else {
