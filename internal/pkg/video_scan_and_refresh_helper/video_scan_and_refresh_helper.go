@@ -352,7 +352,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 		v.processLocker.Unlock()
 
 		bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(oneSeriesRootDir,
-			v.NeedForcedScanAndDownSub, true)
+			v.NeedForcedScanAndDownSub, false)
 		if err != nil {
 			v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub", err)
 			return err
@@ -378,15 +378,18 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 				Episode:      epsInfo.Episode,
 				SubFPathList: make([]string, 0),
 			}
-			// 替换原始字幕的 FPath 为 Url 路径
-			matchedSubFileByOneVideoUrl := make([]string, 0)
-			for _, info := range epsInfo.SubAlreadyDownloadedList {
 
-				oneSubFUrl := strings.ReplaceAll(info.FileFullPath, oneSeriesRootPathName, desUrl)
+			// 搜索字幕
+			matchedSubFileByOneVideo, err := sub_helper.SearchMatchedSubFileByOneVideo(v.log, epsInfo.FileFullPath)
+			if err != nil {
+				v.log.Errorln("SearchMatchedSubFileByOneVideo", err)
+			}
+			matchedSubFileByOneVideoUrl := make([]string, 0)
+			for _, oneSubFPath := range matchedSubFileByOneVideo {
+				oneSubFUrl := strings.ReplaceAll(oneSubFPath, oneSeriesRootPathName, desUrl)
 				matchedSubFileByOneVideoUrl = append(matchedSubFileByOneVideoUrl, oneSubFUrl)
 			}
 			oneVideoInfo.SubFPathList = append(oneVideoInfo.SubFPathList, matchedSubFileByOneVideoUrl...)
-
 			oneSeasonInfo.OneVideoInfos = append(oneSeasonInfo.OneVideoInfos, oneVideoInfo)
 		}
 
