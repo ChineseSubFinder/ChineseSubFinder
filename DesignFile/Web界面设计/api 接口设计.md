@@ -415,8 +415,6 @@
 }
 ```
 
-
-
 ### 修改密码
 
 `POST /change-pwd`
@@ -805,6 +803,207 @@ POST  /v1/jobs/log
     ]
 }
 ```
+
+
+
+#### 获取视频列表刷新任务的状态
+
+![视频列表刷新任务执行流程](pics/视频列表刷新任务执行流程.png)
+
+获取视频列表刷新任务的状态
+
+GET  /video/list/refresh-status
+
+请求参数：
+
+返回 HTTP 码 200：
+
+```json
+{
+    "status": "stopped", // running or stopped
+    "err_message": ""
+}
+```
+
+
+
+#### 开启视频列表刷新任务
+
+POST   /video/list/refresh
+
+请求参数：
+
+返回 HTTP 码 200：
+
+```json
+{
+    "status": "running", // 只可能是 running，且会再内部进行唯一任务运行逻辑确认
+    "err_message": ""
+}
+```
+
+#### 获取已经缓存的视频列表
+
+为了让前端直接能够获取到视频的资源，后端开启了对应的静态文件服务器。后端会在默认的 127.0.0.1:19037 上开启静态服务器 
+
+由于存在 Windows 上获取 Linux 系统资源信息的问题，所以返回的路径可能会有 "\\\" "/" 混用的情况，需要前端进行处理，如果是 Linux 获取 Linux 的资源不存在此问题。
+
+下面举例一些字段的意义：
+
+1. 下面两个也是等价的，只不过一个是本程序读取到的物理路径，一个是静态服务器提供的相对地址
+
+```json
+        "root_dir_path": "X:\\连续剧\\Halo",
+            "dir_root_url": "/series_dir_0\\Halo",
+```
+
+2. 这里返回的时候没有把视频的封面信息传递过来，但是默认情况下，直接在 dir_root_url 后面，拼接**“poster.jpg”**即可，可能有大小写问题需要注意，一般是小写。（理论上是 jpg ，不排除可能存在 png or bmp ，这个梗不确定，暂时观察是 jpg）
+
+GET   /video/list
+
+请求参数：
+
+返回 HTTP 码 200：
+
+```json
+{
+    "movie_infos": [
+        {
+            "name": "失控玩家 (2021).mp4",
+            "dir_root_url": "\\movie_dir_0\\失控玩家 (2021)",
+            "video_f_path": "X:\\电影\\失控玩家 (2021)\\失控玩家 (2021).mp4",
+            "video_url": "/movie_dir_0\\失控玩家 (2021)\\失控玩家 (2021).mp4",
+            "media_server_inside_video_id": "",
+            "sub_f_path_list": []
+        },
+        {
+            "name": "Spider-Man No Way Home (2021) Bluray-1080p.mkv",
+            "dir_root_url": "\\movie_dir_0\\Spider-Man No Way Home (2021)",
+            "video_f_path": "X:\\电影\\Spider-Man No Way Home (2021)\\Spider-Man No Way Home (2021) Bluray-1080p.mkv",
+            "video_url": "/movie_dir_0\\Spider-Man No Way Home (2021)\\Spider-Man No Way Home (2021) Bluray-1080p.mkv",
+            "media_server_inside_video_id": "",
+            "sub_f_path_list": [
+                "/movie_dir_0\\Spider-Man No Way Home (2021)\\Spider-Man No Way Home (2021) Bluray-1080p.chinese(简英,shooter).default.ass",
+                "/movie_dir_0\\Spider-Man No Way Home (2021)\\Spider-Man No Way Home (2021) Bluray-1080p.chinese(简英,subhd).ass",
+                "/movie_dir_0\\Spider-Man No Way Home (2021)\\Spider-Man No Way Home (2021) Bluray-1080p.chinese(简英,zimuku).ass"
+            ]
+        },
+ ]
+    "season_infos": [
+    
+    {
+            "name": "Halo",
+            "root_dir_path": "X:\\连续剧\\Halo",
+            "dir_root_url": "/series_dir_0\\Halo",
+            "one_video_info": [
+                {
+                    "name": "Halo ",
+                    "video_f_path": "X:\\连续剧\\Halo\\Season 1\\Halo - S01E07 - Inheritance WEBDL-1080p.mkv",
+                    "video_url": "/series_dir_0\\Halo\\Season 1\\Halo - S01E07 - Inheritance WEBDL-1080p.mkv",
+                    "season": 1,
+                    "episode": 7,
+                    "sub_f_path_list": [
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E07 - Inheritance WEBDL-1080p.chinese(简英,shooter).default.srt",
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E07 - Inheritance WEBDL-1080p.chinese(简英,zimuku).ass"
+                    ],
+                    "media_server_inside_video_id": ""
+                },
+                {
+                    "name": "Halo ",
+                    "video_f_path": "X:\\连续剧\\Halo\\Season 1\\Halo - S01E01 - Contact WEBDL-1080p.mkv",
+                    "video_url": "/series_dir_0\\Halo\\Season 1\\Halo - S01E01 - Contact WEBDL-1080p.mkv",
+                    "season": 1,
+                    "episode": 1,
+                    "sub_f_path_list": [
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E01 - Contact WEBDL-1080p.chinese(简,shooter).default.srt",
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E01 - Contact WEBDL-1080p.chinese(简,zimuku).srt",
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E01 - Contact WEBDL-1080p.chinese(简英,subhd).ass"
+                    ],
+                    "media_server_inside_video_id": ""
+                },
+                {
+                    "name": "Halo ",
+                    "video_f_path": "X:\\连续剧\\Halo\\Season 1\\Halo - S01E02 - Unbound WEBDL-1080p.mkv",
+                    "video_url": "/series_dir_0\\Halo\\Season 1\\Halo - S01E02 - Unbound WEBDL-1080p.mkv",
+                    "season": 1,
+                    "episode": 2,
+                    "sub_f_path_list": [
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E02 - Unbound WEBDL-1080p.chinese(简英,shooter).ass",
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E02 - Unbound WEBDL-1080p.chinese(简英,subhd).ass",
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E02 - Unbound WEBDL-1080p.chinese(简英,zimuku).default.ass"
+                    ],
+                    "media_server_inside_video_id": ""
+                },
+                {
+                    "name": "Halo ",
+                    "video_f_path": "X:\\连续剧\\Halo\\Season 1\\Halo - S01E03 - Emergence WEBDL-1080p.mkv",
+                    "video_url": "/series_dir_0\\Halo\\Season 1\\Halo - S01E03 - Emergence WEBDL-1080p.mkv",
+                    "season": 1,
+                    "episode": 3,
+                    "sub_f_path_list": [
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E03 - Emergence WEBDL-1080p.chinese(简英,shooter).default.ass",
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E03 - Emergence WEBDL-1080p.chinese(简英,shooter).srt",
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E03 - Emergence WEBDL-1080p.chinese(简英,subhd).ass",
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E03 - Emergence WEBDL-1080p.chinese(简英,zimuku).ass"
+                    ],
+                    "media_server_inside_video_id": ""
+                },
+                {
+                    "name": "Halo ",
+                    "video_f_path": "X:\\连续剧\\Halo\\Season 1\\Halo - S01E04 - Homecoming WEBDL-1080p.mkv",
+                    "video_url": "/series_dir_0\\Halo\\Season 1\\Halo - S01E04 - Homecoming WEBDL-1080p.mkv",
+                    "season": 1,
+                    "episode": 4,
+                    "sub_f_path_list": [
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E04 - Homecoming WEBDL-1080p.chinese(简英,subhd).default.ass",
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E04 - Homecoming WEBDL-1080p.chinese(简英,zimuku).ass"
+                    ],
+                    "media_server_inside_video_id": ""
+                },
+                {
+                    "name": "Halo ",
+                    "video_f_path": "X:\\连续剧\\Halo\\Season 1\\Halo - S01E05 - Reckoning WEBDL-1080p.mkv",
+                    "video_url": "/series_dir_0\\Halo\\Season 1\\Halo - S01E05 - Reckoning WEBDL-1080p.mkv",
+                    "season": 1,
+                    "episode": 5,
+                    "sub_f_path_list": [
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E05 - Reckoning WEBDL-1080p.chinese(简英,subhd).ass",
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E05 - Reckoning WEBDL-1080p.chinese(简英,xunlei).ass",
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E05 - Reckoning WEBDL-1080p.chinese(简英,zimuku).default.ass"
+                    ],
+                    "media_server_inside_video_id": ""
+                },
+                {
+                    "name": "Halo ",
+                    "video_f_path": "X:\\连续剧\\Halo\\Season 1\\Halo - S01E06 - Solace WEBDL-1080p.mkv",
+                    "video_url": "/series_dir_0\\Halo\\Season 1\\Halo - S01E06 - Solace WEBDL-1080p.mkv",
+                    "season": 1,
+                    "episode": 6,
+                    "sub_f_path_list": [
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E06 - Solace WEBDL-1080p.chinese(简英,subhd).ass",
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E06 - Solace WEBDL-1080p.chinese(简英,xunlei).default.ssa",
+                        "/series_dir_0\\Halo\\Season 1\\Halo - S01E06 - Solace WEBDL-1080p.chinese(简英,zimuku).ass"
+                    ],
+                    "media_server_inside_video_id": ""
+                }
+            ]
+        },
+    
+    ]
+}
+```
+
+#### 在视频列表中，选中一个视频进行字幕下载
+
+这里需要区分是电影还是连续剧的一集，也不是及时下载，仅仅是插入下载队列的前面而已。一次只能一个视频。
+
+
+
+
+
+#### 在视频列表中，选中一个视频进行媒体服务器字幕的刷新
+
+预留接口，因为后续可能进行字幕的编辑（增、删、改、查），那么为了让媒体服务器快速能够加载这个视频的字幕，需要一个手动触发的接口。
 
 
 
