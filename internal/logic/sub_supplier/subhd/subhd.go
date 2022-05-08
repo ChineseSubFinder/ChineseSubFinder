@@ -547,7 +547,6 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDown
 			// 填写“验证码”
 			s.log.Debugln("填写验证码")
 			el := page.MustElement("#gzhcode")
-			common2.SubhdCode = "951275"
 			el.MustInput(common2.SubhdCode)
 			//page.MustEval(`$("#gzhcode").attr("value","` + common2.SubhdCode + `");`)
 			// 是否有“完成验证”按钮

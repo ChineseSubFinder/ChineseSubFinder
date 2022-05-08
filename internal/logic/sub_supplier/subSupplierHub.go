@@ -145,7 +145,8 @@ func (d *SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int64) ([
 
 	// 下载所有字幕
 	subInfos := movieHelper.OneMovieDlSubInAllSite(d.log, d.Suppliers, videoFullPath, index)
-	if subInfos == nil {
+	if subInfos == nil || len(subInfos) < 1 {
+		d.log.Warningln("OneMovieDlSubInAllSite.subInfos == 0, No Sub Downloaded.")
 		return nil, nil
 	}
 	// 整理字幕，比如解压什么的
@@ -231,6 +232,11 @@ func (d *SubSupplierHub) dlSubFromSeriesInfo(seriesDirPath string, index int64, 
 	subInfos := seriesHelper.DownloadSubtitleInAllSiteByOneSeries(d.log, d.Suppliers, seriesInfo, index)
 	// 整理字幕，比如解压什么的
 	// 每一集 SxEx - 对应解压整理后的字幕列表
+
+	if len(subInfos) < 1 {
+		d.log.Warningln("DownloadSubtitleInAllSiteByOneSeries.subInfos == 0, No Sub Downloaded.")
+	}
+
 	organizeSubFiles, err := sub_helper.OrganizeDlSubFiles(d.log, filepath.Base(seriesDirPath), subInfos)
 	if err != nil {
 		return nil, errors.Newf("OrganizeDlSubFiles %v %v", seriesDirPath, err)
