@@ -16,7 +16,6 @@ import (
 type EmbyApi struct {
 	log        *logrus.Logger
 	embyConfig *settings.EmbySettings
-	threads    int
 	timeOut    time.Duration
 	client     *resty.Client
 }
@@ -28,7 +27,6 @@ func NewEmbyApi(log *logrus.Logger, embyConfig *settings.EmbySettings) *EmbyApi 
 	// 检查是否超过范围
 	em.embyConfig.Check()
 	// 强制设置
-	em.threads = 6
 	em.timeOut = 5 * 60 * time.Second
 	// 见 https://github.com/allanpk716/ChineseSubFinder/issues/140
 	em.client = resty.New().SetTransport(&http.Transport{
@@ -40,7 +38,7 @@ func NewEmbyApi(log *logrus.Logger, embyConfig *settings.EmbySettings) *EmbyApi 
 }
 
 // RefreshRecentlyVideoInfo 字幕下载完毕一次，就可以触发一次这个。并发 6 线程去刷新
-func (em EmbyApi) RefreshRecentlyVideoInfo() error {
+func (em *EmbyApi) RefreshRecentlyVideoInfo() error {
 	items, err := em.GetRecentlyItems()
 	if err != nil {
 		return err
@@ -52,7 +50,7 @@ func (em EmbyApi) RefreshRecentlyVideoInfo() error {
 		tmpId := i.(string)
 		return em.UpdateVideoSubList(tmpId)
 	}
-	p, err := ants.NewPoolWithFunc(em.threads, func(inData interface{}) {
+	p, err := ants.NewPoolWithFunc(em.embyConfig.Threads, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), em.timeOut)

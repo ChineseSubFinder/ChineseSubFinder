@@ -13,6 +13,7 @@ type EmbySettings struct {
 	MoviePathsMapping     map[string]string `json:"movie_paths_mapping"`      // 电影目录的映射，一旦 common setting 的目录修改，需要提示用户确认映射
 	SeriesPathsMapping    map[string]string `json:"series_paths_mapping"`     // 连续剧目录的映射，一旦 common setting 的目录修改，需要提示用户确认映射
 	AutoOrManual          bool              `json:"auto_or_manual"`           // 自动或手动模式，自动 IMDB ID 匹配，还是使用手动目录
+	Threads               int               `json:"threads"`                  // 同时扫描的并发数
 }
 
 func NewEmbySettings() *EmbySettings {
@@ -20,13 +21,18 @@ func NewEmbySettings() *EmbySettings {
 		MaxRequestVideoNumber: 500,
 		MoviePathsMapping:     make(map[string]string, 0),
 		SeriesPathsMapping:    make(map[string]string, 0),
+		Threads:               4,
 	}
 }
 
-func (e EmbySettings) Check() {
+func (e *EmbySettings) Check() {
 	if e.MaxRequestVideoNumber < common.EmbyApiGetItemsLimitMin ||
 		e.MaxRequestVideoNumber > common.EmbyApiGetItemsLimitMax {
 
 		e.MaxRequestVideoNumber = common.EmbyApiGetItemsLimitMin
+	}
+
+	if e.Threads < 1 || e.Threads > 6 {
+		e.Threads = 6
 	}
 }

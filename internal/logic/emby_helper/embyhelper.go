@@ -28,7 +28,6 @@ type EmbyHelper struct {
 	embyApi  *embyHelper.EmbyApi
 	log      *logrus.Logger
 	settings *settings.Settings
-	threads  int
 	timeOut  time.Duration
 	listLock sync.Mutex
 }
@@ -36,7 +35,6 @@ type EmbyHelper struct {
 func NewEmbyHelper(_log *logrus.Logger, _settings *settings.Settings) *EmbyHelper {
 	em := EmbyHelper{log: _log, settings: _settings}
 	em.embyApi = embyHelper.NewEmbyApi(_log, _settings.EmbySettings)
-	em.threads = 6
 	em.timeOut = 60 * time.Second
 	return &em
 }
@@ -654,7 +652,7 @@ func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries
 	}
 
 	// em.threads
-	p, err := ants.NewPoolWithFunc(em.threads, func(inData interface{}) {
+	p, err := ants.NewPoolWithFunc(em.settings.EmbySettings.Threads, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), em.timeOut)

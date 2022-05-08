@@ -52,7 +52,7 @@ func NewVideoScanAndRefreshHelper(fileDownloader *file_downloader.FileDownloader
 		)}
 
 	var err error
-	v.taskControl, err = task_control.NewTaskControl(4, v.log)
+	v.taskControl, err = task_control.NewTaskControl(fileDownloader.Settings.CommonSettings.Threads, v.log)
 	if err != nil {
 		fileDownloader.Log.Panicln(err)
 	}
