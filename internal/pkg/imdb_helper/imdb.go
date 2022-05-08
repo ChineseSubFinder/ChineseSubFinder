@@ -1,7 +1,6 @@
 package imdb_helper
 
 import (
-	"errors"
 	"fmt"
 	"github.com/StalkR/imdb"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
@@ -10,6 +9,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
@@ -42,7 +42,7 @@ func GetVideoInfoFromIMDBWeb(imdbInfo types.VideoIMDBInfo, _proxySettings ...*se
 	return t, nil
 }
 
-// GetVideoIMDBInfoFromLocal 从本地获取 IMDB 信息
+// GetVideoIMDBInfoFromLocal 从本地获取 IMDB 信息，注意，如果需要跳过，那么返回 Error == common.SkipCreateInDB
 func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, skipCreate ...bool) (*models.IMDBInfo, error) {
 
 	/*
@@ -70,7 +70,8 @@ func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoIMDBInfo,
 	if len(imdbInfos) <= 0 {
 
 		if len(skipCreate) > 0 && skipCreate[0] == true {
-			return nil, errors.New(fmt.Sprintf("skip insert, imdbInfo.ImdbId = %v", imdbInfo.ImdbId))
+			log.Debugln(fmt.Sprintf("skip insert, imdbInfo.ImdbId = %v", imdbInfo.ImdbId))
+			return nil, common.SkipCreateInDB
 		}
 
 		// 没有找到，新增，存储本地，但是信息肯定是不完整的，需要在判断是否是中文的时候再次去外网获取补全信息

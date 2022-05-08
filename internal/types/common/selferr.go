@@ -1,6 +1,9 @@
 package common
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	NoMetadataFile         = errors.New("no metadata file, movie.xml or *.nfo")
@@ -24,4 +27,5 @@ var (
 
 var (
 	AllSiteDownloadSubNotFound = errors.New("all site download sub not found")
+	SkipCreateInDB             = fmt.Errorf("skip create in db")
 )

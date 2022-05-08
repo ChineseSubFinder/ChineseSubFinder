@@ -1,6 +1,7 @@
 package emby_helper
 
 import (
+	"errors"
 	"fmt"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
@@ -408,6 +409,12 @@ func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyM
 	// 获取 IMDB 信息
 	localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(em.log, types.VideoIMDBInfo{ImdbId: mixInfo.IMDBId}, true)
 	if err != nil {
+
+		if errors.Is(err, common2.SkipCreateInDB) == true {
+			em.log.Debugln("autoFindMappingPathWithMixInfoByIMDBId.GetVideoIMDBInfoFromLocal", err)
+			return false
+		}
+
 		em.log.Errorln("autoFindMappingPathWithMixInfoByIMDBId.GetVideoIMDBInfoFromLocal", err)
 		return false
 	}
