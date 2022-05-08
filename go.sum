@@ -201,8 +201,6 @@ github.com/go-playground/validator/v10 v10.10.0 h1:I7mrTYv78z8k8VXa/qJlOlEXn/nBh
 github.com/go-playground/validator/v10 v10.10.0/go.mod h1:74x4gJWsvQexRdW8Pn3dXSGrTK4nAUsbPlLADvpJkos=
 github.com/go-resty/resty/v2 v2.6.0 h1:joIR5PNLM2EFqqESUjCMGXrWmXNHEU9CEiK813oKYS4=
 github.com/go-resty/resty/v2 v2.6.0/go.mod h1:PwvJS6hvaPkjtjNg9ph+VrSD92bi5Zq73w/BIH7cC3Q=
-github.com/go-rod/rod v0.106.4 h1:7goXgaVzbAWyO8EBxIjCXv+o6viIWMEBhWUfAg2h3Ew=
-github.com/go-rod/rod v0.106.4/go.mod h1:Q+T5M7AREns3ZrOV89XnnHN2TMSvzKNCpqbUS58+VMk=
 github.com/go-rod/rod v0.106.5 h1:HQOxmOb/xjZ+QnnK4D8t+3+CWFreKSuqid/65zH4poA=
 github.com/go-rod/rod v0.106.5/go.mod h1:N/ZJik0+EYXNpW/74q0V1H7K3/UTfwHV/tRxY0CY/Vw=
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
@@ -591,8 +589,6 @@ github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8/go.mod h1:HUYIGzjTL3rfEspMx
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/ysmood/goob v0.4.0 h1:HsxXhyLBeGzWXnqVKtmT9qM7EuVs/XOgkX7T6r1o1AQ=
 github.com/ysmood/goob v0.4.0/go.mod h1:u6yx7ZhS4Exf2MwciFr6nIM8knHQIE22lFpWHnfql18=
-github.com/ysmood/got v0.28.1 h1:hl/tniuYxrZ1eA3WU2Wj4h+Zmc7ZF11LxXvD/bGxIwY=
-github.com/ysmood/got v0.28.1/go.mod h1:pE1l4LOwOBhQg6A/8IAatkGp7uZjnalzrZolnlhhMgY=
 github.com/ysmood/got v0.28.2 h1:2dtVOneu4YGDk9skgzq8aqW9vZ1ssBla+ddqrE91bNs=
 github.com/ysmood/got v0.28.2/go.mod h1:pE1l4LOwOBhQg6A/8IAatkGp7uZjnalzrZolnlhhMgY=
 github.com/ysmood/gotrace v0.6.0 h1:SyI1d4jclswLhg7SWTL6os3L1WOKeNn/ZtzVQF8QmdY=

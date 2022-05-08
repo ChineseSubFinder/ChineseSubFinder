@@ -112,3 +112,6 @@ ChineseSubFinderSettings.json
 
 /internal/logic/task_queue/Logs
 /internal/logic/task_queue/task_queue
+/internal/logic/sub_supplier/subhd/*.db
+/internal/pkg/pass_water_wall/.rod
+/internal/pkg/pass_water_wall/cache

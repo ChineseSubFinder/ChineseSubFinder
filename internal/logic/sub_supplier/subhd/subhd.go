@@ -20,6 +20,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/proto"
 	"github.com/nfnt/resize"
 	"github.com/sirupsen/logrus"
 	"image/jpeg"
@@ -629,10 +630,13 @@ func (s *Supplier) passWaterWall(page *rod.Page) {
 	page.MustElement(waterIFrame).MustWaitLoad()
 	//進入到iframe
 	iframe := page.MustElement(waterIFrame).MustFrame()
+	// see iframe bug, see  https://github.com/go-rod/rod/issues/548
+	p := page.Browser().MustPageFromTargetID(proto.TargetTargetID(iframe.FrameID))
+
 	//等待拖動條加載, 延遲500秒檢測變化, 以確認加載完畢
-	iframe.MustElement(dragBtn).MustWaitStable()
+	p.MustElement(dragBtn).MustWaitStable()
 	//等待缺口圖像載入
-	slideBgEl := iframe.MustElement(slideBg).MustWaitLoad()
+	slideBgEl := p.MustElement(slideBg).MustWaitLoad()
 	slideBgEl = slideBgEl.MustWaitStable()
 	//取得帶缺口圖像
 	shadowbg := slideBgEl.MustResource()
@@ -693,9 +697,9 @@ search:
 		}
 	}
 	//獲取拖動按鈕形狀
-	dragBtnBox := iframe.MustElement("#tcaptcha_drag_thumb").MustShape().Box()
+	dragBtnBox := p.MustElement("#tcaptcha_drag_thumb").MustShape().Box()
 	//启用滑鼠功能
-	mouse := page.Mouse
+	mouse := p.Mouse
 	//模擬滑鼠移動至拖動按鈕處, 右移3的原因: 拖動按鈕比滑塊圖大3個像素
 	mouse.MustMove(dragBtnBox.X+3, dragBtnBox.Y+(dragBtnBox.Height/2))
 	//按下滑鼠左鍵
