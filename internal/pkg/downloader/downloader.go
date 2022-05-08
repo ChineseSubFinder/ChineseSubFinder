@@ -162,12 +162,12 @@ func (d *Downloader) QueueDownloader() {
 		}
 
 		d.downloaderLock.Unlock()
-		d.log.Infoln("Download.QueueDownloader() End")
+		d.log.Debugln("Download.QueueDownloader() End")
 	}()
 
-	d.log.Infoln("Download.QueueDownloader() Try Start ...")
+	d.log.Debugln("Download.QueueDownloader() Try Start ...")
 	d.downloaderLock.Lock()
-	d.log.Infoln("Download.QueueDownloader() Start ...")
+	d.log.Debugln("Download.QueueDownloader() Start ...")
 
 	var downloadCounter int64
 	downloadCounter = 0
@@ -180,7 +180,7 @@ func (d *Downloader) QueueDownloader() {
 		return
 	}
 	if bok == false {
-		d.log.Infoln("Download Queue Is Empty, Skip This Time")
+		d.log.Debugln("Download Queue Is Empty, Skip This Time")
 		return
 	}
 	// 取出来后，需要标记为正在下载
