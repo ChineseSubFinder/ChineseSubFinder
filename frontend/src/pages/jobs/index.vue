@@ -79,7 +79,7 @@
               background: JOB_STATUS_COLOR_MAP[row.job_status],
               color: 'white',
               borderRadius: '3px',
-              padding: '1px 3px',
+              padding: '2px 4px',
               fontSize: '12px',
             }"
             >{{ JOB_STATUS_MAP[row.job_status] }}</span
@@ -165,8 +165,8 @@ const filteredData = computed(() => {
 
     const betweenOfNumber = (num, min, max) => num >= min && num <= max;
     if (priority !== null && item.task_priority !== priority) {
-      // 1-3为高
-      if (priority === 'high' && !betweenOfNumber(item.task_priority, 1, 3)) {
+      // 0-3为高
+      if (priority === 'high' && !betweenOfNumber(item.task_priority, 0, 3)) {
         return false;
       }
       // 7-10为低
@@ -192,7 +192,7 @@ const priorityOptions = [
   { label: '全部', value: null },
   { label: '低（7-10）', value: 'low' },
   { label: '中（4-6）', value: 'middle' },
-  { label: '高（1-3）', value: 'high' },
+  { label: '高（0-3）', value: 'high' },
 ];
 
 const batchUpdatePriority = async (priority) => {

@@ -245,7 +245,6 @@
             shadow-text="目标网站必须直接返回ip字符串，不需要额外解析。多个站点用 ;（英文分号） 分割"
             standout
             dense
-            :rules="[(val) => !!val || '不能为空']"
           />
         </q-item-section>
       </q-item>
@@ -279,7 +278,7 @@
       <q-item>
         <q-item-section class="items-start" top>
           <q-item-label>自定义视频扩展名</q-item-label>
-          <q-item-label caption>原生支持mp4、mkv、rmvb、iso、m2ts</q-item-label>
+          <q-item-label caption>原生支持mp4、mkv、rmvb、iso</q-item-label>
           <template v-for="(item, i) in form.custom_video_exts" :key="i">
             <div class="row items-center q-gutter-x-md" :class="{ 'q-mt-md': i === 0 }">
               <q-input
