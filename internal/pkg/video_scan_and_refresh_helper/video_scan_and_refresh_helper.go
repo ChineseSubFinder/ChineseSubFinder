@@ -90,6 +90,9 @@ func (v *VideoScanAndRefreshHelper) Start() error {
 }
 
 func (v *VideoScanAndRefreshHelper) Cancel() {
+	defer func() {
+		v.log.Infoln("VideoScanAndRefreshHelper.Cancel()")
+	}()
 	v.taskControl.Release()
 	v.taskControl.Reboot()
 }

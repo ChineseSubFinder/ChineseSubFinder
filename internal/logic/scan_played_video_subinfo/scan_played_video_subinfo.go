@@ -87,6 +87,11 @@ func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings)
 }
 
 func (s *ScanPlayedVideoSubInfo) Cancel() {
+
+	defer func() {
+		s.log.Infoln("ScanPlayedVideoSubInfo.Cancel()")
+	}()
+
 	s.canceledLock.Lock()
 	s.canceled = true
 	s.canceledLock.Unlock()
