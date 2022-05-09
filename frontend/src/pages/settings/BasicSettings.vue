@@ -86,6 +86,21 @@
 
       <q-separator spaced inset></q-separator>
 
+      <q-item>
+        <q-item-section>
+          <q-item-label>设备性能选择</q-item-label>
+        </q-item-section>
+        <q-item-section avatar>
+          <div class="row">
+            <q-radio v-model="form.threads" :val="1" label="弱鸡（1线程）" />
+            <q-radio v-model="form.threads" :val="3" label="一般（3线程）" />
+            <q-radio v-model="form.threads" :val="6" label="超猛（6线程）" />
+          </div>
+        </q-item-section>
+      </q-item>
+
+      <q-separator spaced inset></q-separator>
+
       <!--        <q-item>-->
       <!--          <q-item-section>-->
       <!--            <q-item-label>并发数</q-item-label>-->
@@ -201,7 +216,7 @@
 import { formModel } from 'pages/settings/useSettings';
 import { validateCronTime, validateRemotePath } from 'src/utils/QuasarValidators';
 import { toRefs } from '@vueuse/core';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const { common_settings: form } = toRefs(formModel);
 
@@ -264,4 +279,12 @@ const handleScanSpecTimeChange = () => {
 const handleScanCustomChange = () => {
   formModel.common_settings.scan_interval = `${scanCronString2.value}`;
 };
+
+// 同步更新emby的线程设置
+watch(
+  () => formModel.common_settings.threads,
+  (val) => {
+    formModel.emby_settings.threads = val;
+  }
+);
 </script>
