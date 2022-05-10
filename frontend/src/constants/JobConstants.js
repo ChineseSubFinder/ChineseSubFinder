@@ -1,14 +1,14 @@
 export const JOB_STATUS_PENDING = 0;
 export const JOB_STATUS_IN_PROGRESS = 1;
-export const JOB_STATUS_COMPLETED = 2;
-export const JOB_STATUS_FAILED = 3;
+export const JOB_STATUS_FAILED = 2;
+export const JOB_STATUS_COMPLETED = 3;
 export const JOB_STATUS_DOWNLOADING = 4;
 
 export const JOB_STATUS_MAP = {
   [JOB_STATUS_PENDING]: '等待运行',
   [JOB_STATUS_IN_PROGRESS]: '处理中',
-  [JOB_STATUS_COMPLETED]: '已完成',
   [JOB_STATUS_FAILED]: '失败',
+  [JOB_STATUS_COMPLETED]: '已完成',
   [JOB_STATUS_DOWNLOADING]: '下载中',
 };
 
