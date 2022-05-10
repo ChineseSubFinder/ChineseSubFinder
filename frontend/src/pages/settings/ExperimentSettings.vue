@@ -1,7 +1,7 @@
 <template>
   <div>
     <q-list style="max-width: 600px" dense>
-      <q-item v-ripple>
+      <q-item>
         <q-item-section>
           <q-item-label>自动转换字幕文件编码</q-item-label>
           <q-item-label caption>自动转换到目标编码，如果不是特殊情况，不建议开启，仅对新下载字幕生效</q-item-label>
