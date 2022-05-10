@@ -311,9 +311,6 @@ func process(name string, timeTester TimeTester) ([]int, []int, []int, error) {
 func waitTimes(ctx context.Context, inData interface{}) error {
 
 	phase0 := make(chan interface{}, 1)
-	defer func() {
-		close(phase0)
-	}()
 	index := inData.(*TaskData)
 
 	dataEx := index.DataEx.(DataEx)
@@ -323,6 +320,9 @@ func waitTimes(ctx context.Context, inData interface{}) error {
 	}
 
 	go func() {
+		defer func() {
+			close(phase0)
+		}()
 		fmt.Println("Index:", index.Index, "Start 0")
 		if dataEx.IndexOverThanAddMoreTime == 0 {
 			time.Sleep(time.Duration(dataEx.OneJobWaitTime) * time.Second)
