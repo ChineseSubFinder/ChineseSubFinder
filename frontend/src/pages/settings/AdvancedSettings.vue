@@ -246,6 +246,11 @@
             standout
             dense
           />
+          <div class="text-warning">
+            * 默认内置几个检查ip的网站，默认站点失效后才需要手动设置。内置站点列表：
+            https://myip.biturl.top/;https://ip4.seeip.org/;https://ipecho.net/plain;https://api-ipv4.ip.sb/ip;
+            https://api.ipify.org/;http://myexternalip.com/raw
+          </div>
         </q-item-section>
       </q-item>
 
