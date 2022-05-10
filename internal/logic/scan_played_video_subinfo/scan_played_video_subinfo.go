@@ -97,7 +97,6 @@ func (s *ScanPlayedVideoSubInfo) Cancel() {
 	s.canceledLock.Unlock()
 
 	s.taskControl.Release()
-	s.taskControl.Reboot()
 }
 
 func (s *ScanPlayedVideoSubInfo) GetPlayedItemsSubtitle() (bool, error) {

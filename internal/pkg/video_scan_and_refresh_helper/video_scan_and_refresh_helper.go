@@ -41,6 +41,8 @@ type VideoScanAndRefreshHelper struct {
 	downloadQueue            *task_queue.TaskQueue           // 需要下载的视频的队列
 	subSupplierHub           *subSupplier.SubSupplierHub     // 字幕提供源的集合，仅仅是 check 是否需要下载字幕是足够的，如果要下载则需要额外的初始化和检查
 	taskControl              *task_control.TaskControl       // 任务控制器
+	running                  bool                            // 是否正在运行
+	locker                   sync.Mutex
 
 	processLocker sync.Mutex
 }
@@ -61,7 +63,21 @@ func NewVideoScanAndRefreshHelper(fileDownloader *file_downloader.FileDownloader
 
 func (v *VideoScanAndRefreshHelper) Start() error {
 
+	v.locker.Lock()
+	if v.running == true {
+		v.locker.Unlock()
+		v.log.Infoln("VideoScanAndRefreshHelper is already running")
+		return nil
+	}
+	v.running = true
+	v.locker.Unlock()
+
 	defer func() {
+
+		v.locker.Lock()
+		v.running = false
+		v.locker.Unlock()
+
 		v.log.Infoln("Video Scan End")
 		v.log.Infoln("------------------------------------")
 	}()
@@ -90,11 +106,20 @@ func (v *VideoScanAndRefreshHelper) Start() error {
 }
 
 func (v *VideoScanAndRefreshHelper) Cancel() {
+
+	v.locker.Lock()
+	if v.running == false {
+		v.locker.Unlock()
+		v.log.Infoln("VideoScanAndRefreshHelper is not running")
+		return
+	}
+	v.locker.Unlock()
+
 	defer func() {
 		v.log.Infoln("VideoScanAndRefreshHelper.Cancel()")
 	}()
+
 	v.taskControl.Release()
-	v.taskControl.Reboot()
 }
 
 // ReadSpeFile 优先级最高。读取特殊文件，启用一些特殊的功能，比如 forced_scan_and_down_sub
