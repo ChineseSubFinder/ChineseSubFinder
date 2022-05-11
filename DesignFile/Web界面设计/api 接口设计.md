@@ -754,7 +754,7 @@ POST  /v1/jobs/change-job-status
 {
 	"id": "xxx",
 	"task_priority": "high", // high or middle or low priority
-    "JobStatus": 0 // 允许设置 Waiting(0) or Ignore(5)
+    "job_status": 0 // 允许设置 Waiting(0) or Ignore(5)
 }
 ```
 
