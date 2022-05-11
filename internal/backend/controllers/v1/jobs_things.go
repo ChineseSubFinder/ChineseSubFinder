@@ -75,7 +75,12 @@ func (cb ControllerBase) ChangeJobStatusHandler(c *gin.Context) {
 		// low
 		nowOneJob.TaskPriority = task_queue2.LowTaskPriorityLevel
 	}
-	nowOneJob.JobStatus = task_queue.Waiting
+	// 默认只能把任务改变为这两种状态
+	if desJobStatus.JobStatus == task_queue.Waiting || desJobStatus.JobStatus == task_queue.Ignore {
+		nowOneJob.JobStatus = desJobStatus.JobStatus
+	} else {
+		nowOneJob.JobStatus = task_queue.Waiting
+	}
 
 	bok, err = cb.cronHelper.DownloadQueue.Update(nowOneJob)
 	if err != nil {
