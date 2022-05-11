@@ -1009,7 +1009,31 @@ GET   /video/list
 
 这里需要区分是电影还是连续剧的一集，也不是及时下载，仅仅是插入下载队列的前面而已。一次只能一个视频。
 
+POST   /video/list/add
 
+请求参数：
+
+返回 HTTP 码 200：
+
+```json
+{
+    "video_type": 0, // 0 是 movie or 1 是 series
+    "physical_video_file_full_path": "xxx" // 这里传递的时候需要从 `video/list` 中的 `video_f_path` 来获取本程序中的物理路径
+    "task_priority_level": 3, // 一般的队列等级是5，如果想要快，那么可以先默认这里填写3，这样就可以插队
+    "media_server_inside_video_id": "xxxx" //媒体服务器内部视频ID  `video/list` 中 获取到的 media_server_inside_video_id，可以用于自动 Emby 字幕列表刷新用
+}
+```
+
+#### 
+
+```go
+type ReqVideoListAdd struct {
+	VideoType                 int    `json:"video_type"`                    // 0 是 movie or 1 是 series
+	PhysicalVideoFileFullPath string `json:"physical_video_file_full_path"` // 视频的物理路径
+	TaskPriorityLevel         int    `json:"task_priority_level"`           // 任务优先级
+	MediaServerInsideVideoID  string `json:"media_server_inside_video_id"`  // 媒体服务器内部视频ID 
+}
+```
 
 
 
