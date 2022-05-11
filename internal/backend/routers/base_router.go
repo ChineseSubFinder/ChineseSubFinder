@@ -54,7 +54,7 @@ func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engi
 		GroupV1.POST("/video/list/refresh", cbV1.RefreshVideoListHandler)
 		GroupV1.GET("/video/list/refresh-status", cbV1.RefreshVideoListStatusHandler)
 		GroupV1.GET("/video/list", cbV1.VideoListHandler)
-		GroupV1.POST("/video/list/add", cbV1.VideoListHandler)
+		GroupV1.POST("/video/list/add", cbV1.VideoListAddHandler)
 	}
 
 	return cbV1

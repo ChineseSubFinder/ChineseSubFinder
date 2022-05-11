@@ -94,11 +94,11 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 	return
 }
 
-func (cb *ControllerBase) VideoListHandler(c *gin.Context) {
+func (cb *ControllerBase) VideoListAddHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
-		cb.ErrorProcess(c, "VideoListHandler", err)
+		cb.ErrorProcess(c, "VideoListAddHandler", err)
 	}()
 
 	videoListAdd := backend.ReqVideoListAdd{}
@@ -131,11 +131,11 @@ func (cb *ControllerBase) VideoListHandler(c *gin.Context) {
 
 }
 
-func (cb *ControllerBase) VideoListAddHandler(c *gin.Context) {
+func (cb *ControllerBase) VideoListHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
-		cb.ErrorProcess(c, "VideoListAddHandler", err)
+		cb.ErrorProcess(c, "VideoListHandler", err)
 	}()
 
 	c.JSON(http.StatusOK, backend.ReplyVideoList{
