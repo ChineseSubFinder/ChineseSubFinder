@@ -56,17 +56,26 @@
               :disable="selected.length === 0"
               size="sm"
               icon="expand_less"
-              label="提升优先级"
+              label="升级"
               color="primary"
               @click="batchUpdatePriority('high')"
             />
+
             <q-btn
               :disable="selected.length === 0"
               size="sm"
               icon="expand_more"
-              label="降低优先级"
+              label="降级"
               color="primary"
               @click="batchUpdatePriority('low')"
+            />
+
+            <q-btn
+              :disable="selected.length === 0"
+              size="sm"
+              label="修改状态"
+              color="primary"
+              @click="batchUpdateStatus"
             />
           </div>
         </div>
@@ -102,7 +111,13 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import JobApi from 'src/api/JobApi';
 import { SystemMessage } from 'src/utils/Message';
 import { VIDEO_TYPE_NAME_MAP } from 'src/constants/SettingConstants';
-import { JOB_STATUS_COLOR_MAP, JOB_STATUS_MAP, JOB_STATUS_OPTIONS } from 'src/constants/JobConstants';
+import {
+  JOB_STATUS_COLOR_MAP,
+  JOB_STATUS_IGNORE,
+  JOB_STATUS_MAP,
+  JOB_STATUS_OPTIONS,
+  JOB_STATUS_PENDING,
+} from 'src/constants/JobConstants';
 import { useQuasar } from 'quasar';
 import JobLogBtnDialog from 'pages/jobs/JobLogBtnDialog';
 import JobDetailBtnDialog from 'pages/jobs/JobDetailBtnDialog';
@@ -138,6 +153,34 @@ const form = reactive({
   videoType: null,
   priority: null,
 });
+
+const JOB_PRIORITY_NUM2STR_MAP = {
+  0: '高',
+  1: '高',
+  2: '高',
+  3: '高',
+  4: '中',
+  5: '中',
+  6: '中',
+  7: '低',
+  8: '低',
+  9: '低',
+  10: '低',
+};
+
+const getData = async () => {
+  const [res, err] = await JobApi.getList();
+  if (err !== null) {
+    SystemMessage.error(err.message);
+  } else {
+    data.value = res.all_jobs;
+  }
+};
+
+const refresh = () => {
+  selected.value = [];
+  getData();
+};
 
 const filteredData = computed(() => {
   const { search, status, videoType, priority } = form;
@@ -203,10 +246,9 @@ const batchUpdatePriority = async (priority) => {
     persistent: true,
     focus: 'none',
   }).onOk(async () => {
-    const selectedIds = selected.value.map((item) => item.id);
     const results = await Promise.allSettled(
-      selectedIds.map((id) =>
-        JobApi.update(id, {
+      selected.value.map((item) =>
+        JobApi.update(item.id, {
           task_priority: priority,
         })
       )
@@ -217,16 +259,42 @@ const batchUpdatePriority = async (priority) => {
     } else {
       SystemMessage.success('成功修改优先级');
     }
+
+    refresh();
   });
 };
 
-const getData = async () => {
-  const [res, err] = await JobApi.getList();
-  if (err !== null) {
-    SystemMessage.error(err.message);
-  } else {
-    data.value = res.all_jobs;
-  }
+const batchUpdateStatus = async () => {
+  $q.dialog({
+    title: '修改状态',
+    message: '需要变更成哪个状态？',
+    options: {
+      type: 'radio',
+      items: [
+        { label: JOB_STATUS_MAP[JOB_STATUS_PENDING], value: JOB_STATUS_PENDING },
+        { label: JOB_STATUS_MAP[JOB_STATUS_IGNORE], value: JOB_STATUS_IGNORE },
+      ],
+    },
+    cancel: true,
+    persistent: true,
+  }).onOk(async (val) => {
+    const results = await Promise.allSettled(
+      selected.value.map((item) =>
+        JobApi.update(item.id, {
+          job_status: val,
+          task_priority: JOB_PRIORITY_NUM2STR_MAP[item.task_priority],
+        })
+      )
+    );
+    const errorCount = results.filter(({ value: [, err] }) => err !== null).length;
+    if (errorCount > 0) {
+      SystemMessage.error(`${errorCount}个任务修改状态失败！`);
+    } else {
+      SystemMessage.success('成功修改任务状态');
+    }
+
+    refresh();
+  });
 };
 
 onMounted(() => {
