@@ -352,7 +352,7 @@ func (t *TaskQueue) read() {
 }
 
 func (t *TaskQueue) afterRead() {
-	// 将 downloading 的任务重置为 failed
+	// 将 downloading 的任务重置为 waiting
 	for TaskPriority := 0; TaskPriority <= taskPriorityCount; TaskPriority++ {
 		t.taskPriorityMapList[TaskPriority].Each(func(key interface{}, value interface{}) {
 
