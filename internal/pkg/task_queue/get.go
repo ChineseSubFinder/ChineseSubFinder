@@ -14,9 +14,9 @@ func (t *TaskQueue) BeforeGetOneJob() {
 		t.taskPriorityMapList[TaskPriority].Each(func(key interface{}, value interface{}) {
 
 			nowOneJob := value.(task_queue.OneJob)
-			if nowOneJob.JobStatus == task_queue.Done &&
-				// 默认是 90day, A.After(B) : A > B == true
-				(time.Time)(nowOneJob.UpdateTime).AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.ExpirationTime).After(time.Now()) == false {
+			if //nowOneJob.JobStatus == task_queue.Done &&
+			// 默认是 90day, A.After(B) : A > B == true
+			(time.Time)(nowOneJob.UpdateTime).AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.ExpirationTime).After(time.Now()) == false {
 				// 找到就删除
 				bok, err := t.del(nowOneJob.Id)
 				if err != nil {
