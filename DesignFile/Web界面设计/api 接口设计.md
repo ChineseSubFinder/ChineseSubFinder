@@ -753,8 +753,20 @@ POST  /v1/jobs/change-job-status
 ```json
 {
 	"id": "xxx",
-	"task_priority": "high" // high or middle or low priority
+	"task_priority": "high", // high or middle or low priority
+    "JobStatus": 0 // 允许设置 Waiting(0) or Ignore(5)
 }
+```
+
+```go
+const (
+	Waiting     JobStatus = iota // 0任务正在等待处理
+	Committed                    // 1任务已经提交，这个可能是提交给服务器，然后等待查询下载 Local 的本地任务不会使用这个标注位
+	Failed                       // 2任务失败了，在允许的范围内依然会允许重试
+	Done                         // 3任务完成
+	Downloading                  // 4任务正在下载
+	Ignore                       // 5任务被忽略，会存在于任务列表，但是不下载
+)
 ```
 
 返回 HTTP 码 200：
