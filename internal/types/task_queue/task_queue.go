@@ -54,7 +54,7 @@ func NewOneJob(videoType common.VideoType, videoFPath string, taskPriority int, 
 	ob.VideoName = filepath.Base(videoFPath)
 	// -------------------------------------------------
 	// 使用本程序的 hash 的算法，得到视频的唯一 ID
-	ob.Feature, _ = sub_file_hash.Calculate(videoFPath)
+	ob.Feature = sha256String
 	// -------------------------------------------------
 	ob.JobStatus = Waiting
 	nTime := time.Now()
