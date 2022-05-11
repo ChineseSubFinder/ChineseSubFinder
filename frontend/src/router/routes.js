@@ -6,17 +6,31 @@ const routes = [
     component: () => import('layouts/MainLayout.vue'),
     redirect: { name: 'overview' },
     children: [
-      // {
-      //   name: 'library',
-      //   path: 'library',
-      //   component: () => import('pages/library/index.vue'),
-      //   meta: { title: '库', icon: 'video_library' },
-      // },
       {
         name: 'overview',
         path: 'overview',
         component: () => import('pages/overview/index.vue'),
         meta: { title: '总览', icon: 'home' },
+      },
+      {
+        name: 'library',
+        path: 'library',
+        component: RouterPlaceholder,
+        meta: { title: '库', icon: 'video_library' },
+        children: [
+          {
+            name: 'library.movie.list',
+            path: 'library/movies',
+            component: () => import('pages/library/movies/index.vue'),
+            meta: { title: '电影', icon: 'movie' },
+          },
+          {
+            name: 'library.tv.list',
+            path: 'library/tvs',
+            component: () => import('pages/library/tvs/index.vue'),
+            meta: { title: '连续剧', icon: 'live_tv' },
+          },
+        ],
       },
       {
         name: 'jobs',

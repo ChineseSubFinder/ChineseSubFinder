@@ -4,6 +4,7 @@
       v-if="menuInfo.children && menuInfo.children.length"
       expand-separator
       :label="menuInfo.meta.title"
+      :icon="menuInfo.meta.icon"
       :default-opened="defaultOpened"
     >
       <menu-item class="q-pl-md" v-for="subMenu in menuInfo.children" :menu-info="subMenu" :key="subMenu.name" />
