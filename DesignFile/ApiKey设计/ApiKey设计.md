@@ -124,6 +124,8 @@ POST   /change-job-status
 ```json
 {
 	"id": "xxx", // 任务的 ID
+    "task_priority": "high" // 任务的优先级，high or middle or low priority
+    "job_status": 0, // 任务的状态 允许设置 Waiting(0) or Ignore(5)
 }
 ```
 
@@ -142,14 +144,12 @@ const (
 
 ```json
 {
-    job_id: "xxx",
-	message: "job not found"
+	message: "update job status failed"
 }
 ```
 
 ```json
 {
-    job_id: "xxx",
 	message: "ok"
 }
 ```
