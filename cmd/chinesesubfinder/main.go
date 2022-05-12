@@ -7,6 +7,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_job"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/cache_center"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -80,6 +81,13 @@ func main() {
 		loggerBase.Infoln("Reload Log Settings, level = Info")
 	}
 
+	// ------------------------------------------------------------------------
+	// 设置接口的 API TOKEN
+	if settings.GetSettings().ExperimentalFunction.ApiKeySettings.Enabled == true {
+		common.SetApiToken(settings.GetSettings().ExperimentalFunction.ApiKeySettings.Key)
+	} else {
+		common.SetApiToken("")
+	}
 	// 是否开启开发模式，跳过某些流程
 	//settings.GetSettings().SpeedDevMode = true
 	// ------------------------------------------------------------------------

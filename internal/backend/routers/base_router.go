@@ -57,5 +57,16 @@ func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engi
 		GroupV1.POST("/video/list/add", cbV1.VideoListAddHandler)
 	}
 
+	GroupAPIV1 := router.Group("/api/v1")
+	{
+		GroupAPIV1.Use(middle.CheckApiAuth())
+
+		GroupAPIV1.POST("/add-job", cbV1.AddJobHandler)
+		GroupAPIV1.GET("/job-status", cbV1.GetJobStatusHandler)
+		GroupAPIV1.POST("/change-job-status", cbV1.ChangeJobStatusHandler)
+		GroupAPIV1.POST("/add-video-played-info", cbV1.AddVideoPlayedInfoHandler)
+		GroupAPIV1.DELETE("/del-video-played-info", cbV1.DelVideoPlayedInfoHandler)
+	}
+
 	return cbV1
 }

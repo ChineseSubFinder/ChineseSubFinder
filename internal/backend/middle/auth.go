@@ -27,3 +27,23 @@ func CheckAuth() gin.HandlerFunc {
 		context.Next()
 	}
 }
+
+func CheckApiAuth() gin.HandlerFunc {
+
+	return func(context *gin.Context) {
+		authHeader := context.Request.Header.Get("Authorization")
+		if len(authHeader) <= 1 {
+			context.JSON(http.StatusUnauthorized, backend.ReplyCheckAuth{Message: "Request Header Authorization Error"})
+			context.Abort()
+			return
+		}
+		nowAccessToken := strings.Fields(authHeader)[1]
+		if nowAccessToken == "" || nowAccessToken != common.GetApiToken() {
+			context.JSON(http.StatusUnauthorized, backend.ReplyCheckAuth{Message: "AccessToken Error"})
+			context.Abort()
+			return
+		}
+		// 向下传递消息
+		context.Next()
+	}
+}
