@@ -1,7 +1,13 @@
 <template>
   <q-card flat square>
     <div class="area-cover q-mb-sm relative-position">
-      <q-img src="https://via.placeholder.com/500" class="content-width bg-grey-2" height="230px" no-spinner />
+      <q-img
+        :src="getUrl(data.dir_root_url) + '/poster.jpg'"
+        class="content-width bg-grey-2"
+        no-spinner
+        style="width: 160px; height: 200px"
+        fit="cover"
+      />
       <q-btn
         class="btn-download absolute-bottom-right"
         color="primary"
@@ -25,7 +31,7 @@
                 <q-item-section side>{{ index + 1 }}.</q-item-section>
 
                 <q-item-section class="overflow-hidden ellipsis" :title="item.split(/\/|\\/).pop()">
-                  <a class="text-primary" href="" target="_blank">{{ item.split(/\/|\\/).pop() }}</a>
+                  <a class="text-primary" :href="getUrl(item)" target="_blank">{{ item.split(/\/|\\/).pop() }}</a>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -41,6 +47,8 @@
 import { computed } from 'vue';
 import LibraryApi from 'src/api/LibraryApi';
 import { SystemMessage } from 'src/utils/Message';
+import { VIDEO_TYPE_MOVIE } from 'src/constants/SettingConstants';
+import config from 'src/config';
 
 const props = defineProps({
   data: Object,
@@ -49,13 +57,21 @@ const props = defineProps({
 const hasSubtitle = computed(() => props.data.sub_f_path_list.length > 0);
 
 const downloadSubtitle = async () => {
-  const [, err] = await LibraryApi.downloadSubtitle(props.data.id);
+  const [, err] = await LibraryApi.downloadSubtitle({
+    video_type: VIDEO_TYPE_MOVIE,
+    physical_video_file_full_path: props.data.video_f_path,
+    task_priority_level: 3, // 一般的队列等级是5，如果想要快，那么可以先默认这里填写3，这样就可以插队
+    // 媒体服务器内部视频ID  `video/list` 中 获取到的 media_server_inside_video_id，可以用于自动 Emby 字幕列表刷新用
+    media_server_inside_video_id: props.data.media_server_inside_video_id,
+  });
   if (err !== null) {
     SystemMessage.error(err.message);
   } else {
     SystemMessage.success('已加入下载队列');
   }
 };
+
+const getUrl = (path) => config.BACKEND_STATIC_URL + path.split(/\/|\\/).join('/');
 </script>
 
 <style lang="scss" scoped>

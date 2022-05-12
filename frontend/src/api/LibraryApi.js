@@ -7,6 +7,6 @@ class LibraryApi extends BaseApi {
 
   getList = () => this.http('/v1/video/list');
 
-  downloadSubtitle = (videoId) => this.http(`/v1/video/subtitle/download`, { id: videoId }, 'POST');
+  downloadSubtitle = (data) => this.http(`/v1/video/list/add`, data, 'POST');
 }
 export default new LibraryApi();
