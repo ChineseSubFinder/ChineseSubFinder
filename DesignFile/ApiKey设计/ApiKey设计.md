@@ -158,7 +158,9 @@ const (
 
 反馈某个视频已经观看，且使用的是那个字幕。如果这个视频文件已经标记过一次，再次触发这个接口会尝试更新 sub name 字段。
 
-POST   /video-played-info
+POST   /add-video-played-info
+
+请求参数：
 
 ```json
 {
@@ -186,6 +188,36 @@ POST   /video-played-info
 	message: "sub file not found"
 }
 ```
+
+### 删除反馈视频已经观看标记
+
+删除反馈视频已经观看标记
+
+DELETE   /del-video-played-info
+
+请求参数：
+
+```json
+{
+    "physical_video_file_full_path": "xxx" // 这里传递的时候，是本程序中视频文件的物理路径
+}
+```
+
+返回 HTTP 码 200：
+
+```json
+{
+	message: "ok"
+}
+```
+
+```json
+{
+	message: "physical video file not found"
+}
+```
+
+
 
 ## 通用错误码
 
