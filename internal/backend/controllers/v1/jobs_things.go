@@ -56,7 +56,7 @@ func (cb ControllerBase) ChangeJobStatusHandler(c *gin.Context) {
 
 	bok, nowOneJob := cb.cronHelper.DownloadQueue.GetOneJobByID(desJobStatus.Id)
 	if bok == false {
-		err = errors.New("")
+		err = errors.New("GetOneJobByID failed, id=" + desJobStatus.Id)
 		return
 	}
 
