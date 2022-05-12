@@ -2,7 +2,6 @@ package v1
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -55,11 +54,6 @@ func (cb ControllerBase) ChangeJobStatusHandler(c *gin.Context) {
 	}
 
 	bok, nowOneJob := cb.cronHelper.DownloadQueue.GetOneJobByID(desJobStatus.Id)
-	if bok == false {
-		err = errors.New("GetOneJobByID failed, id=" + desJobStatus.Id)
-		return
-	}
-
 	if bok == false {
 		c.JSON(http.StatusOK, backend.ReplyCommon{Message: "job not found"})
 		return
