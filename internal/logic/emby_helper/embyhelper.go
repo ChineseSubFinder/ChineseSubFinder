@@ -168,6 +168,36 @@ func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby.EmbyMixInfo, []emby.Emby
 	return filterMovieList, filterSeriesList, nil
 }
 
+// GetVideoIDPlayedMap 获取已经播放过的视频的ID
+func (em *EmbyHelper) GetVideoIDPlayedMap() map[string]bool {
+
+	videoIDPlayedMap := make(map[string]bool)
+	// 获取有那些用户
+	var userIds emby.EmbyUsers
+	userIds, err := em.embyApi.GetUserIdList()
+	if err != nil {
+		em.log.Errorln("IsVideoIDPlayed - GetUserIdList error:", err)
+		return videoIDPlayedMap
+	}
+	// 所有用户观看过的视频有那些
+	for _, item := range userIds.Items {
+		tmpRecItems, err := em.embyApi.GetRecentItemsByUserID(item.Id)
+		if err != nil {
+			em.log.Errorln("IsVideoIDPlayed - GetRecentItemsByUserID, UserID:", item.Id, "error:", err)
+			return videoIDPlayedMap
+		}
+		// 相同的视频项目，需要判断是否已经看过了
+		// 项目是否相同可以通过 Id 判断
+		for _, recentlyItem := range tmpRecItems.Items {
+			if recentlyItem.UserData.Played == true {
+				videoIDPlayedMap[recentlyItem.Id] = true
+			}
+		}
+	}
+
+	return videoIDPlayedMap
+}
+
 // GetPlayedItemsSubtitle 所有用户标记播放过的视频，返回 电影、连续剧, 视频全路径 -- 对应字幕全路径（经过转换的）
 func (em *EmbyHelper) GetPlayedItemsSubtitle() (map[string]string, map[string]string, error) {
 

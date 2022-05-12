@@ -256,6 +256,10 @@ func (v *VideoScanAndRefreshHelper) FilterMovieAndSeriesNeedDownload(scanVideoRe
 	}
 
 	if scanVideoResult.Emby != nil && v.settings.EmbySettings.Enable == true {
+
+		// 先获取缓存的 Emby 视频信息，有那些已经在这次扫描的时候播放过了
+
+		// 然后才是过滤有哪些需要下载的
 		err := v.filterMovieAndSeriesNeedDownloadEmby(scanVideoResult.Emby)
 		if err != nil {
 			return err
@@ -931,6 +935,11 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 }
 
 func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *EmbyScanVideoResult) error {
+
+	playedVideoIdMap := make(map[string]bool)
+	if v.settings.EmbySettings.SkipWatched == true {
+		playedVideoIdMap = v.embyHelper.GetVideoIDPlayedMap()
+	}
 	// ----------------------------------------
 	// Emby 过滤，电影
 	for _, oneMovieMixInfo := range emby.MovieSubNeedDlEmbyMixInfoList {
@@ -938,16 +947,33 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 		if v.subSupplierHub.MovieNeedDlSub(oneMovieMixInfo.PhysicalVideoFileFullPath, v.NeedForcedScanAndDownSub) == false {
 			continue
 		}
-		bok, err := v.downloadQueue.Add(*TTaskqueue.NewOneJob(
+		nowOneJob := TTaskqueue.NewOneJob(
 			common.Movie, oneMovieMixInfo.PhysicalVideoFileFullPath, task_queue.DefaultTaskPriorityLevel,
 			oneMovieMixInfo.VideoInfo.Id,
-		))
+		)
+		bok, err := v.downloadQueue.Add(*nowOneJob)
 		if err != nil {
 			v.log.Errorln("filterMovieAndSeriesNeedDownloadEmby.Movie.NewOneJob", err)
 			continue
 		}
 		if bok == false {
+
 			v.log.Warningln(common.Movie.String(), oneMovieMixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
+			// 如果任务存在了，需要判断这个任务的视频已经被看过了，如果是，那么就需要标记 Skip
+			_, bok = playedVideoIdMap[oneMovieMixInfo.VideoInfo.Id]
+			if bok == true {
+				// 找到了,那么就是看过了
+				nowOneJob.JobStatus = TTaskqueue.Ignore
+				bok, err = v.downloadQueue.Update(*nowOneJob)
+				if err != nil {
+					v.log.Errorln("filterMovieAndSeriesNeedDownloadEmby.Movie.Update", err)
+					continue
+				}
+				if bok == false {
+					v.log.Warningln(common.Movie.String(), oneMovieMixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
+					continue
+				}
+			}
 		}
 	}
 	// Emby 过滤，连续剧
@@ -981,7 +1007,23 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 				continue
 			}
 			if bok == false {
+
 				v.log.Warningln(common.Series.String(), mixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
+				// 如果任务存在了，需要判断这个任务的视频已经被看过了，如果是，那么就需要标记 Skip
+				_, bok = playedVideoIdMap[mixInfo.VideoInfo.Id]
+				if bok == true {
+					// 找到了,那么就是看过了
+					oneJob.JobStatus = TTaskqueue.Ignore
+					bok, err = v.downloadQueue.Update(*oneJob)
+					if err != nil {
+						v.log.Errorln("filterMovieAndSeriesNeedDownloadEmby.Series.Update", err)
+						continue
+					}
+					if bok == false {
+						v.log.Warningln(common.Series.String(), mixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
+						continue
+					}
+				}
 			}
 		}
 	}
