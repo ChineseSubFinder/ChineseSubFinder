@@ -71,14 +71,12 @@ POST        /add-job
 
 获取指定任务的状态
 
-GET        /job-status
+GET   /job-status
 
 请求参数：
 
 ```json
-{
-	"job_id": "xxx", // 任务的 ID
-}
+?job_id=xxx // 任务的 ID
 ```
 
 ```go
