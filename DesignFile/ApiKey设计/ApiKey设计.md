@@ -16,6 +16,8 @@
 
 ## V1 接口
 
+完整的推送接口需要加上前缀 "/v1"，举例 `/v1/api/add-job`
+
 ### 新增一个任务
 
 新增一个视频的字幕下载任务
@@ -54,7 +56,6 @@ POST        /api/add-job
 
 ```json
 {
-    job_id: "xxx",
 	message: "physical video file not found"
 }
 ```
