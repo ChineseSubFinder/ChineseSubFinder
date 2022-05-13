@@ -1,14 +1,19 @@
 package rod_helper
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 	"testing"
 )
 
 func TestNewBrowser(t *testing.T) {
+
+	bPath, bok := launcher.LookPath()
+	println(bok, bPath)
 	desURL := "https://www.wikipedia.org/"
 	httpProxyURL := ""
-	browser, err := NewBrowser(httpProxyURL, true)
+	browser, err := NewBrowser(log_helper.GetLogger4Tester(), "", httpProxyURL, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,5 +51,5 @@ func TestNewBrowserFromDocker(t *testing.T) {
 }
 
 func TestClear(t *testing.T) {
-	Clear()
+	Clear(log_helper.GetLogger4Tester())
 }

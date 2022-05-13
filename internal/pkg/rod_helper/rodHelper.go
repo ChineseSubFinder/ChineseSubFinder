@@ -23,7 +23,16 @@ import (
 func NewBrowserEx(log *logrus.Logger, loadAdblock bool, _settings *settings.Settings, preLoadUrl ...string) (*rod.Browser, error) {
 
 	if _settings.ExperimentalFunction.RemoteChromeSettings.Enable == false {
-		return NewBrowser(log, _settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(), loadAdblock, preLoadUrl...)
+
+		localChromeFPath := ""
+		if _settings.ExperimentalFunction.LocalChromeSettings.Enabled == true {
+			localChromeFPath = _settings.ExperimentalFunction.LocalChromeSettings.LocalChromeExeFPath
+		}
+		return NewBrowser(log,
+			_settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
+			localChromeFPath,
+			loadAdblock,
+			preLoadUrl...)
 	} else {
 		return NewBrowserFromDocker(_settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
 			_settings.ExperimentalFunction.RemoteChromeSettings.RemoteDockerURL,
@@ -33,7 +42,7 @@ func NewBrowserEx(log *logrus.Logger, loadAdblock bool, _settings *settings.Sett
 	}
 }
 
-func NewBrowser(log *logrus.Logger, httpProxyURL string, loadAdblock bool, preLoadUrl ...string) (*rod.Browser, error) {
+func NewBrowser(log *logrus.Logger, localChromeFPath, httpProxyURL string, loadAdblock bool, preLoadUrl ...string) (*rod.Browser, error) {
 
 	var err error
 
@@ -48,27 +57,59 @@ func NewBrowser(log *logrus.Logger, httpProxyURL string, loadAdblock bool, preLo
 	// 随机的 rod 子文件夹名称
 	nowUserData := filepath.Join(global_value.DefRodTmpRootFolder(), my_util.RandStringBytesMaskImprSrcSB(20))
 	var browser *rod.Browser
-	err = rod.Try(func() {
-		purl := ""
-		if loadAdblock == true {
-			purl = launcher.New().
-				Delete("disable-extensions").
-				Set("load-extension", adblockSavePath).
-				Proxy(httpProxyURL).
-				Headless(false). // 插件模式需要设置这个
-				UserDataDir(nowUserData).
-				//XVFB("--server-num=5", "--server-args=-screen 0 1600x900x16").
-				//XVFB("-ac :99", "-screen 0 1280x1024x16").
-				MustLaunch()
-		} else {
-			purl = launcher.New().
-				Proxy(httpProxyURL).
-				UserDataDir(nowUserData).
-				MustLaunch()
-		}
 
-		browser = rod.New().ControlURL(purl).MustConnect()
-	})
+	if localChromeFPath != "" {
+		// 如果有指定的 chrome 路径，则使用指定的 chrome 路径
+		if my_util.IsFile(localChromeFPath) == false {
+			log.Errorln(errors.New("localChromeFPath is not a file"))
+			panic(errors.New("localChromeFPath is not a file"))
+		}
+		err = rod.Try(func() {
+			purl := ""
+			if loadAdblock == true {
+				purl = launcher.New().Bin(localChromeFPath).
+					Delete("disable-extensions").
+					Set("load-extension", adblockSavePath).
+					Proxy(httpProxyURL).
+					Headless(false). // 插件模式需要设置这个
+					UserDataDir(nowUserData).
+					//XVFB("--server-num=5", "--server-args=-screen 0 1600x900x16").
+					//XVFB("-ac :99", "-screen 0 1280x1024x16").
+					MustLaunch()
+			} else {
+				purl = launcher.New().Bin(localChromeFPath).
+					Proxy(httpProxyURL).
+					UserDataDir(nowUserData).
+					MustLaunch()
+			}
+
+			browser = rod.New().ControlURL(purl).MustConnect()
+		})
+	} else {
+		// 如果没有指定 chrome 的路径，则使用 rod 自行下载的 chrome
+		err = rod.Try(func() {
+			purl := ""
+			if loadAdblock == true {
+				purl = launcher.New().
+					Delete("disable-extensions").
+					Set("load-extension", adblockSavePath).
+					Proxy(httpProxyURL).
+					Headless(false). // 插件模式需要设置这个
+					UserDataDir(nowUserData).
+					//XVFB("--server-num=5", "--server-args=-screen 0 1600x900x16").
+					//XVFB("-ac :99", "-screen 0 1280x1024x16").
+					MustLaunch()
+			} else {
+				purl = launcher.New().
+					Proxy(httpProxyURL).
+					UserDataDir(nowUserData).
+					MustLaunch()
+			}
+
+			browser = rod.New().ControlURL(purl).MustConnect()
+		})
+	}
+
 	if err != nil {
 		return nil, err
 	}

@@ -17,7 +17,7 @@ func GetCode(log *logrus.Logger, codeUrl string) (string, error) {
 	}()
 
 	log.Infoln("Start Get Code...")
-	browser, err := rod_helper.NewBrowser(log, "", false)
+	browser, err := rod_helper.NewBrowser(log, "", "", false)
 	if err != nil {
 		return "", err
 	}

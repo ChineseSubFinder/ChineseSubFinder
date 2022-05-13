@@ -15,7 +15,7 @@ import (
 
 func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 
-	browser, err := rod_helper.NewBrowser(log_helper.GetLogger4Tester(), "", true, settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowser(log_helper.GetLogger4Tester(), "", "", true, settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 
 func TestSupplier_GetSubListFromFile(t *testing.T) {
 
-	browser, err := rod_helper.NewBrowser(log_helper.GetLogger4Tester(), "", true, settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserEx(log_helper.GetLogger4Tester(), true, settings.NewSettings(), settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +113,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 
 func TestSupplier_getSubListFromKeyword(t *testing.T) {
 
-	browser, err := rod_helper.NewBrowser(log_helper.GetLogger4Tester(), "", true, settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserEx(log_helper.GetLogger4Tester(), true, settings.NewSettings(), settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		t.Fatal(err)
 	}

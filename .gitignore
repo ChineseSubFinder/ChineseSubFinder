@@ -115,3 +115,4 @@ ChineseSubFinderSettings.json
 /internal/logic/sub_supplier/subhd/*.db
 /internal/pkg/pass_water_wall/.rod
 /internal/pkg/pass_water_wall/cache
+/internal/pkg/rod_helper/cache/
