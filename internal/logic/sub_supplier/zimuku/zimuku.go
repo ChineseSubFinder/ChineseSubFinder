@@ -330,6 +330,7 @@ func (s *Supplier) getSubListFromMovie(browser *rod.Browser, fileFPath string) (
 	return subInfoList, nil
 }
 
+// getSubListFromKeyword 目前是给电影使用的，搜索返回的字幕列表可能很多，需要挑选一下，比如 Top 1 下来就好了
 func (s *Supplier) getSubListFromKeyword(browser *rod.Browser, keyword string) ([]supplier.SubInfo, error) {
 
 	var outSubInfoList []supplier.SubInfo
@@ -347,6 +348,9 @@ func (s *Supplier) getSubListFromKeyword(browser *rod.Browser, keyword string) (
 	// 第三级界面，单个字幕详情
 	// 找到最大的优先级的字幕下载
 	sort.Sort(SortByPriority{subResult.SubInfos})
+
+	// 强制把找到的列表缩少到 Top 5
+	subResult.SubInfos = subResult.SubInfos[:5]
 
 	s.log.Debugln(s.GetSupplierName(), "getSubListFromKeyword -> step1 -> subResult.Title:", subResult.Title)
 	s.log.Debugln(s.GetSupplierName(), "getSubListFromKeyword -> step1 -> subResult.OtherName:", subResult.OtherName)
@@ -436,6 +440,7 @@ func (s *Supplier) whichSubInfoNeedDownload(browser *rod.Browser, subInfos SubIn
 			tmpSubInfo = append(tmpSubInfo, subInfo)
 		}
 	}
+
 	// 看字幕够不够
 	if len(tmpSubInfo) < s.topic {
 		for _, subInfo := range subInfos {
@@ -450,6 +455,20 @@ func (s *Supplier) whichSubInfoNeedDownload(browser *rod.Browser, subInfos SubIn
 	}
 
 	s.log.Debugln(s.GetSupplierName(), "step2 -> tmpSubInfo.Count", len(tmpSubInfo))
+	for i, info := range tmpSubInfo {
+
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.Name:", i, info.Name)
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.DownloadUrl:", i, info.DownloadUrl)
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.DetailUrl:", i, info.DetailUrl)
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.DownloadTimes:", i, info.DownloadTimes)
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.SubDownloadPageUrl:", i, info.SubDownloadPageUrl)
+	}
+
+	// 看字幕是不是太多了，超出 topic 的限制了
+	if len(tmpSubInfo) > s.topic {
+		tmpSubInfo = tmpSubInfo[:s.topic]
+	}
+	s.log.Debugln(s.GetSupplierName(), "step2 -> tmpSubInfo.Count with topic limit", len(tmpSubInfo))
 	for i, info := range tmpSubInfo {
 
 		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.Name:", i, info.Name)
