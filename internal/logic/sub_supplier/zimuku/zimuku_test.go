@@ -25,7 +25,7 @@ func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 
 	//imdbId1 := "tt3228774"
 	videoName := "黑白魔女库伊拉"
-	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter(settings.NewSettings(), log_helper.GetLogger4Tester())))
+	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	outList, err := s.getSubListFromKeyword(browser, videoName)
 	if err != nil {
 		t.Error(err)
@@ -55,7 +55,7 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	movie1 := filepath.Join(rootDir, "zimuku", "movies", "The Devil All the Time (2020)", "The Devil All the Time (2020) WEBDL-1080p.mkv")
-	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter(settings.NewSettings(), log_helper.GetLogger4Tester())))
+	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	outList, err := s.getSubListFromMovie(browser, movie1)
 	if err != nil {
 		t.Error(err)
@@ -75,7 +75,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 
 	// 可以指定几集去调试
 	epsMap := make(map[int][]int, 0)
-	epsMap[4] = []int{5}
+	epsMap[4] = []int{1}
 	//epsMap[1] = []int{1, 2, 3}
 
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
@@ -91,7 +91,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter(settings.NewSettings(), log_helper.GetLogger4Tester())))
+	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -129,7 +129,7 @@ func TestSupplier_getSubListFromKeyword(t *testing.T) {
 	//imdbID := "tt15299712" // 云南虫谷
 	//imdbID := "tt3626476"  // Vacation Friends (2021)
 	imdbID := "tt11192306" // Superman.and.Lois
-	zimuku := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter(settings.NewSettings(), log_helper.GetLogger4Tester())))
+	zimuku := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	subInfos, err := zimuku.getSubListFromKeyword(browser, imdbID)
 	if err != nil {
 		t.Fatal(err)
@@ -154,7 +154,7 @@ func TestSupplier_step3(t *testing.T) {
 
 func TestSupplier_CheckAlive(t *testing.T) {
 
-	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter(settings.NewSettings(), log_helper.GetLogger4Tester())))
+	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	alive, _ := s.CheckAlive()
 	if alive == false {
 		t.Fatal("CheckAlive == false")

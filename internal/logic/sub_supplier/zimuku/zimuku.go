@@ -162,26 +162,79 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 	// 比如，其实可以搜索剧集名称，应该可以得到多个季的列表，然后分析再继续
 	// 现在粗暴点，直接一季搜索一次，跟电影的搜索一样，在首个影片就停止，然后继续往下
 	AllSeasonSubResult := SubResult{}
-	for value := range seriesInfo.SeasonDict {
-		// 第一级界面，找到影片的详情界面
-		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
-		s.log.Debugln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword)
-		filmDetailPageUrl, err := s.step0(browser, keyword)
+	for value := range seriesInfo.NeedDlSeasonDict {
+
+		/*
+			经过网友的测试反馈，每一季 zimuku 是支持这一季的第一集的 IMDB ID 可以搜索到这一季的信息 #253
+			1. 那么在搜索某一集的时候，需要根据这一集去找这一季的第一集，然后读取它的 IMDB ID 信息，然后优先用于搜索这一季的信息
+			2. 如果是搜索季，就直接推算到达季文件夹的位置，搜索所有文件找到第一集，获取它的 IMDB ID
+			是不是有点绕···
+		*/
+		findSeasonFirstEpsIMDBId := ""
+		videoList, err := my_util.SearchMatchedVideoFile(s.log, seriesInfo.DirPath)
 		if err != nil {
-			s.log.Errorln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword, err)
-			// 如果只是搜索不到，则继续换关键词
-			if err != common2.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
-				s.log.Errorln(s.GetSupplierName(), "ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound", keyword, err)
+			s.log.Errorln("GetSubListFromFile4Series.SearchMatchedVideoFile, Season:", value, "Error:", err)
+			continue
+		}
+		for _, oneVideoFPath := range videoList {
+			oneVideoInfo, err := decode.GetVideoInfoFromFileName(filepath.Base(oneVideoFPath))
+			if err != nil {
+				s.log.Errorln("GetVideoInfoFromFileName", oneVideoInfo, err)
 				continue
 			}
-			keyword = seriesInfo.Name
+			if oneVideoInfo.Season == value && oneVideoInfo.Episode == 1 {
+				// 这一季的第一集
+				episodeInfo, err := decode.GetImdbInfo4OneSeriesEpisode(oneVideoFPath)
+				if err != nil {
+					s.log.Errorln("GetImdbInfo4OneSeriesEpisode", oneVideoFPath, err)
+					break
+				}
+				findSeasonFirstEpsIMDBId = episodeInfo.ImdbId
+				break
+			}
+		}
+
+		filmDetailPageUrl := ""
+		if findSeasonFirstEpsIMDBId != "" {
+			// 第一级界面，找到影片的详情界面
+			// 使用上面得到的这一季第一集的 IMDB ID 进行搜索这一季的信息
+			keyword := findSeasonFirstEpsIMDBId
 			s.log.Debugln(s.GetSupplierName(), "step 0", "1 times", "keyword:", keyword)
 			filmDetailPageUrl, err = s.step0(browser, keyword)
 			if err != nil {
-				s.log.Errorln(s.GetSupplierName(), "1 times", "keyword:", keyword, err)
-				continue
+				s.log.Errorln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword, err)
+				// 如果只是搜索不到，则继续换关键词
+				if err != common2.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
+					s.log.Errorln(s.GetSupplierName(), "ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound", keyword, err)
+					continue
+				}
 			}
 		}
+		// 如果上面找到了，那么 filmDetailPageUrl 就应该不为空，如果没有找到就是空
+		if filmDetailPageUrl == "" {
+			// 第一级界面，找到影片的详情界面
+			keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
+			s.log.Debugln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword)
+			filmDetailPageUrl, err = s.step0(browser, keyword)
+			if err != nil {
+				s.log.Errorln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword, err)
+				// 如果只是搜索不到，则继续换关键词
+				if err != common2.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
+					s.log.Errorln(s.GetSupplierName(), "ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound", keyword, err)
+					continue
+				}
+
+				// 直接更换为这个剧目的 Name 的搜索，不带季度关键词信息
+				keyword = seriesInfo.Name
+				s.log.Debugln(s.GetSupplierName(), "step 0", "1 times", "keyword:", keyword)
+				filmDetailPageUrl, err = s.step0(browser, keyword)
+				if err != nil {
+					s.log.Errorln(s.GetSupplierName(), "1 times", "keyword:", keyword, err)
+					continue
+				}
+			}
+		}
+
 		// 第二级界面，有多少个字幕
 		s.log.Debugln(s.GetSupplierName(), "step 1", filmDetailPageUrl)
 		subResult, err := s.step1(browser, filmDetailPageUrl)

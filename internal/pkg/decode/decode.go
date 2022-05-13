@@ -82,6 +82,10 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo,
 		imdbInfo.ReleaseDate = t.Text()
 		break
 	}
+	for _, t := range doc.FindElements("./" + rootKey + "/aired") {
+		imdbInfo.ReleaseDate = t.Text()
+		break
+	}
 	//---------------------------------------------------------------------
 	for _, t := range doc.FindElements("./" + rootKey + "/premiered") {
 		imdbInfo.ReleaseDate = t.Text()
@@ -140,7 +144,7 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	if movieNameNfoFPath != "" {
 		imdbInfo, err = getImdbAndYearNfo(movieNameNfoFPath, "movie")
 		if err != nil {
-			return types.VideoIMDBInfo{}, err
+			return imdbInfo, err
 		}
 		return imdbInfo, nil
 	}
@@ -195,7 +199,7 @@ func GetImdbInfo4SeriesDir(seriesDir string) (types.VideoIMDBInfo, error) {
 	}
 	imdbInfo, err = getImdbAndYearNfo(nfoFilePath, "tvshow")
 	if err != nil {
-		return types.VideoIMDBInfo{}, err
+		return imdbInfo, err
 	}
 	return imdbInfo, nil
 }
@@ -232,13 +236,13 @@ func GetSeriesSeasonImdbInfoFromEpisode(oneEpFPath string) (types.VideoIMDBInfo,
 		var imdbInfo types.VideoIMDBInfo
 		imdbInfo, err = getImdbAndYearNfo(nfoFilePath, "tvshow")
 		if err != nil {
-			return types.VideoIMDBInfo{}, err
+			return imdbInfo, err
 		}
 		return imdbInfo, nil
 	}
 }
 
-// GetImdbInfo4OneSeriesEpisode 获取这一集的 IMDB info
+// GetImdbInfo4OneSeriesEpisode 获取这一集的 IMDB info，可能会因为没有获取到 IMDB ID 而返回 common.CanNotFindIMDBID 错误，但是 imdbInfo 其他信息是可用的
 func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoIMDBInfo, error) {
 
 	// 从这一集的视频文件全路径去推算对应的 nfo 文件是否存在
@@ -248,29 +252,13 @@ func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoIMDBInfo, error
 	EpNfoFileName = strings.ReplaceAll(EpNfoFileName, filepath.Ext(oneEpFPath), suffixNameNfo)
 	// 全路径
 	EpNfoFPath := filepath.Join(EPdir, EpNfoFileName)
-	//
-	imdbInfo := types.VideoIMDBInfo{}
-	doc := etree.NewDocument()
-	doc.ReadSettings.Permissive = true
-	// 这里会遇到一个梗，下面的关键词，可能是小写、大写、首字母大写
-	// 读取文件转换为全部的小写，然后在解析 xml ？ etree 在转换为小写后，某些类型的文件的内容会崩溃···
-	// 所以这里很傻的方式解决
-	err := doc.ReadFromFile(EpNfoFPath)
+
+	imdbInfo, err := getImdbAndYearNfo(EpNfoFPath, "episodedetails")
 	if err != nil {
 		return imdbInfo, err
 	}
-	for _, t := range doc.FindElements("./episodedetails/aired") {
-		imdbInfo.ReleaseDate = t.Text()
-		break
-	}
-	for _, t := range doc.FindElements("./episodedetails/premiered") {
-		imdbInfo.ReleaseDate = t.Text()
-		break
-	}
-	if imdbInfo.ReleaseDate != "" {
-		return imdbInfo, nil
-	}
-	return imdbInfo, common2.CanNotFindEpAiredTime
+
+	return imdbInfo, nil
 }
 
 // GetVideoInfoFromFileName 从文件名推断文件信息

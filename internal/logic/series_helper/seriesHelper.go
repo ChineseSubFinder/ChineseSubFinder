@@ -1,6 +1,7 @@
 package series_helper
 
 import (
+	"errors"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
@@ -393,9 +394,12 @@ func getEpsInfoAndSubDic(log *logrus.Logger,
 
 	episodeInfo, err := decode.GetImdbInfo4OneSeriesEpisode(videoFile)
 	if err != nil {
-		log.Errorln("model.GetImdbInfo4OneSeriesEpisode", videoFile, err)
-		return
+		if errors.Is(err, common.CanNotFindIMDBID) == false {
+			log.Errorln("model.GetImdbInfo4OneSeriesEpisode", videoFile, err)
+			return
+		}
 	}
+
 	epsKey := my_util.GetEpisodeKeyName(info.Season, info.Episode)
 	_, ok := EpisodeDict[epsKey]
 	if ok == false {
