@@ -24,12 +24,20 @@
         map-options
         style="width: 200px"
       />
+
+      <q-input v-model="filterForm.search" outlined dense label="输入关键字搜索">
+        <template #append>
+          <q-icon name="search" />
+        </template>
+      </q-input>
     </div>
 
     <q-separator class="q-my-md" />
 
     <div v-if="movies.length" class="row q-gutter-x-md q-gutter-y-lg">
-      <list-item-movie v-for="item in filteredMovies" :data="item" :key="item.name" />
+      <q-intersection v-for="item in filteredMovies" :key="item.name" style="width: 160px; height: 280px">
+        <list-item-movie :data="item" />
+      </q-intersection>
     </div>
     <div v-else class="q-my-md text-grey">当前没有可用视频，点击"更新缓存"按钮可重建缓存</div>
   </q-page>
@@ -42,17 +50,25 @@ import ListItemMovie from './ListItemMovie';
 
 const filterForm = reactive({
   hasSubtitle: null,
+  search: '',
 });
 
 const { movies, refreshLibrary, refreshCacheLoading } = useLibrary();
 
 const filteredMovies = computed(() => {
-  if (filterForm.hasSubtitle === null) {
-    return movies.value;
-  }
+  let res = movies.value;
+
   if (filterForm.hasSubtitle === true) {
-    return movies.value.filter((item) => item.sub_f_path_list.length > 0);
+    res = movies.value.filter((item) => item.sub_f_path_list.length > 0);
   }
-  return movies.value.filter((item) => item.sub_f_path_list.length === 0);
+  if (filterForm.hasSubtitle === false) {
+    res = movies.value.filter((item) => item.sub_f_path_list.length === 0);
+  }
+
+  if (filterForm.search !== '') {
+    res = res.filter((item) => item.name.toLowerCase().includes(filterForm.search.toLowerCase()));
+  }
+
+  return res;
 });
 </script>
