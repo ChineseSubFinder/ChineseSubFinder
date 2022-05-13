@@ -74,6 +74,9 @@ func (t *TaskQueue) GetOneWaitingJob() (bool, task_queue.OneJob, error) {
 				// 默认是 12h, A.After(B) : A > B == true
 				(time.Time)(tOneJob.UpdateTime).Add(time.Duration(t.settings.AdvancedSettings.TaskQueue.OneSubDownloadInterval)*time.Hour).After(time.Now()) == false && tOneJob.DownloadTimes > 0) {
 				// 找到就返回
+				t.log.Debugln("tOneJob.UpdateTime", (time.Time)(tOneJob.UpdateTime).String())
+				t.log.Debugln("tOneJob.UpdateTime", (time.Time)(tOneJob.UpdateTime).Add(time.Duration(t.settings.AdvancedSettings.TaskQueue.OneSubDownloadInterval)*time.Hour).String())
+				t.log.Debugln("tOneJob.UpdateTime is ", (time.Time)(tOneJob.UpdateTime).Add(time.Duration(t.settings.AdvancedSettings.TaskQueue.OneSubDownloadInterval)*time.Hour).After(time.Now()))
 				found = true
 				return true
 			}

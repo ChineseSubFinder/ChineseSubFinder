@@ -231,7 +231,10 @@ func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue.OneJob, inErr er
 		oneJob.ErrorInfo = inErr.Error()
 		oneJob.DownloadTimes += 1
 	}
-
+	// 只要是进入完成标记流程的任务，如果优先级还是很高，那么就需要重置到默认优先级上
+	if oneJob.TaskPriority < DefaultTaskPriorityLevel {
+		oneJob.TaskPriority = DefaultTaskPriorityLevel
+	}
 	// 这里不要用错了，要用无锁的，不然会阻塞
 	bok, err := t.update(oneJob)
 	if err != nil {
