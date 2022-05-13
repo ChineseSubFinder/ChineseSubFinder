@@ -83,6 +83,7 @@ export const getExportSettings = (includeSensitive = false) => {
     delete data.common_settings.threads;
     delete data.emby_settings.api_key;
     delete data.emby_settings.address_url;
+    delete data.experimental_function.api_key_settings;
   }
   return data;
 };

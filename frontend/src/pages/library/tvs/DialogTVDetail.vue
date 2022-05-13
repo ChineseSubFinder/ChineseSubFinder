@@ -4,14 +4,14 @@
   </span>
 
   <q-dialog v-model="visible">
-    <q-card style="width: 400px">
+    <q-card style="width: 600px">
       <q-card-section>
         <div class="text-h6">{{ data.name }} 剧集列表</div>
       </q-card-section>
 
       <q-separator />
 
-      <q-card-section>
+      <q-card-section style="max-height: 40vh; overflow: auto">
         <q-list dense>
           <q-item v-for="item in sortedVideos" :key="item.name">
             <q-item-section>第 {{ item.season }} 季 {{ pandStart2(item.episode) }} 集</q-item-section>
