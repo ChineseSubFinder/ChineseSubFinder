@@ -68,10 +68,13 @@ import LibraryApi from 'src/api/LibraryApi';
 import { SystemMessage } from 'src/utils/Message';
 import { VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
 import config from 'src/config';
+import { useQuasar } from 'quasar';
 
 const props = defineProps({
   data: Object,
 });
+
+const $q = useQuasar();
 
 // 按季度、剧集排序
 const sortedVideos = computed(() =>
@@ -104,17 +107,32 @@ const visible = ref(false);
 const getUrl = (path) => config.BACKEND_STATIC_URL + path.split(/\/|\\/).join('/');
 
 const downloadSubtitle = async (item) => {
-  const [, err] = await LibraryApi.downloadSubtitle({
-    video_type: VIDEO_TYPE_TV,
-    physical_video_file_full_path: item.video_f_path,
-    task_priority_level: 3, // 一般的队列等级是5，如果想要快，那么可以先默认这里填写3，这样就可以插队
-    // 媒体服务器内部视频ID  `video/list` 中 获取到的 media_server_inside_video_id，可以用于自动 Emby 字幕列表刷新用
-    media_server_inside_video_id: item.media_server_inside_video_id,
+  $q.dialog({
+    title: '添加到下载队列',
+    message: '选择下载任务的类型：',
+    options: {
+      model: 3,
+      type: 'radio',
+      items: [
+        { label: '正常任务', value: 3 },
+        { label: '一次性任务（下载后删除任务）', value: 0 },
+      ],
+    },
+    cancel: true,
+    persistent: true,
+  }).onOk(async (val) => {
+    const [, err] = await LibraryApi.downloadSubtitle({
+      video_type: VIDEO_TYPE_TV,
+      physical_video_file_full_path: item.video_f_path,
+      task_priority_level: val, // 一般的队列等级是5，如果想要快，那么可以先默认这里填写3，这样就可以插队
+      // 媒体服务器内部视频ID  `video/list` 中 获取到的 media_server_inside_video_id，可以用于自动 Emby 字幕列表刷新用
+      media_server_inside_video_id: item.media_server_inside_video_id,
+    });
+    if (err !== null) {
+      SystemMessage.error(err.message);
+    } else {
+      SystemMessage.success('已加入下载队列');
+    }
   });
-  if (err !== null) {
-    SystemMessage.error(err.message);
-  } else {
-    SystemMessage.success('已加入下载队列');
-  }
 };
 </script>
