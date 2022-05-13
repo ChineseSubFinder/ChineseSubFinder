@@ -10,6 +10,12 @@
 
 > 再次强调，一定要先削刮好了，再调用 API 添加任务哈，不然效果肯定不好
 
+## 如何设置 API KEY
+
+本程序的目录下（Windows 的当前程序目录，Linux 是 config 中），修改 `ChineseSubFinderSettings.json` 文件，新增新棉的内容，`api_key_settings`
+
+![image-20220513135351263](ApiKey设计.assets/image-20220513135351263.png)
+
 ## 接口认证方式
 
 接口认证通过HTTP头`Authorization: Bearer <token>`传递，token 或者交 API KEY 请在 Web 界面设置，或者你也可以去直接修改配置文件中对应的字段。
