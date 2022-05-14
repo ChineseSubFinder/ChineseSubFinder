@@ -200,6 +200,12 @@ func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue.OneJob, inErr er
 	oneJob = t.checkPriority(oneJob)
 
 	if inErr == nil {
+
+		// 如果任务的优先级是 0，那么这个任务就认为是一次性任务，下载完毕不管如何都会设置为 ignore
+		if oneJob.TaskPriority == 0 {
+			oneJob.JobStatus = task_queue.Ignore
+		}
+
 		// 没有错误就是完成
 		oneJob.TaskPriority = DefaultTaskPriorityLevel
 		oneJob.JobStatus = taskQueue2.Done
@@ -227,10 +233,16 @@ func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue.OneJob, inErr er
 			// 强制为 waiting
 			oneJob.JobStatus = taskQueue2.Waiting
 		}
+
+		// 如果任务的优先级是 0，那么这个任务就认为是一次性任务，下载完毕不管如何都会设置为 ignore
+		if oneJob.TaskPriority == 0 {
+			oneJob.JobStatus = task_queue.Ignore
+		}
 		// 传入的错误需要放进来
 		oneJob.ErrorInfo = inErr.Error()
 		oneJob.DownloadTimes += 1
 	}
+
 	// 只要是进入完成标记流程的任务，如果优先级还是很高，那么就需要重置到默认优先级上
 	if oneJob.TaskPriority < DefaultTaskPriorityLevel {
 		oneJob.TaskPriority = DefaultTaskPriorityLevel
