@@ -190,7 +190,8 @@ func (d *Downloader) QueueDownloader() {
 		return
 	}
 
-	if isPlayed == true {
+	// 如果已经播放过 且 这个任务的优先级 > 3 ，不是很急的那种，说明是可以设置忽略继续下载的
+	if isPlayed == true && oneJob.TaskPriority > task_queue.HighTaskPriorityLevel {
 		// 播放过了，那么就标记 ignore
 		oneJob.JobStatus = taskQueue2.Ignore
 		bok, err = d.downloadQueue.Update(oneJob)

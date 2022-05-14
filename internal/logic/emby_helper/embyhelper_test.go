@@ -1,18 +1,13 @@
 package emby_helper
 
 import (
-	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"github.com/sirupsen/logrus"
-	"sync"
 	"testing"
-	"time"
 )
 
 var ec = settings.EmbySettings{
-	AddressUrl:            "http://192.168.50.252:xxx",
-	APIKey:                "xxx",
+	AddressUrl:            "http://192.168.50.252:8096",
+	APIKey:                "xxxxx",
 	MaxRequestVideoNumber: 100,
 	MoviePathsMapping: map[string]string{
 		"X:\\电影": "/mnt/share1/电影",
@@ -102,17 +97,21 @@ func TestEmbyHelper_GetPlayedItemsSubtitle(t *testing.T) {
 	//}
 }
 
-func TestEmbyHelper_GetRecentlyAddVideoList1(t *testing.T) {
-
-}
-
 func TestEmbyHelper_IsVideoPlayed(t *testing.T) {
 
-	em := NewEmbyHelper(log_helper.GetLogger4Tester(), *ec)
-	moviePhyFPathMap, seriesPhyFPathMap, err := em.GetPlayedItemsSubtitle()
-	if err != nil {
-		t.Fatal(err)
-	}
-	played, err := ec.IsVideoPlayed(tt.args.videoID)
-
+	////// 95813 -- 命运夜
+	////// 96564 -- The Bad Batch - S01E11
+	////// 108766 -- R&M - S05E06
+	////// 145499 -- R&M - S05E10
+	//tmpSettings := settings.NewSettings()
+	//tmpSettings.EmbySettings = &ec
+	//em := NewEmbyHelper(log_helper.GetLogger4Tester(), tmpSettings)
+	//played, err := em.IsVideoPlayed("145499")
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//
+	//if played == false {
+	//	t.Fatal("need played")
+	//}
 }
