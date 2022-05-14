@@ -12,7 +12,7 @@
 
 ## 如何设置 API KEY
 
-本程序的目录下（Windows 的当前程序目录，Linux 是 config 中），修改 `ChineseSubFinderSettings.json` 文件，新增新棉的内容，`api_key_settings`
+本程序的目录下（Windows 的当前程序目录，Linux 是 config 中），修改 `ChineseSubFinderSettings.json` 文件，新增内容，`api_key_settings`
 
 ![image-20220513135351263](ApiKey设计.assets/image-20220513135351263.png)
 
@@ -45,8 +45,8 @@ POST        /add-job
 ```json
 {
     "video_type": 0, // 0 是 movie or 1 是 series，别传错哈，不然会触发不对的下载逻辑
-    "physical_video_file_full_path": "xxx" // 这里传递的时候，是本程序中视频文件的物理路径
-    "task_priority_level": 3, // 一般的队列等级是5，如果想要快，那么可以先默认这里填写3，这样就可以插队。如果是 0 ，那么就是一次性的任务！
+    "physical_video_file_full_path": "xxx", // 这里传递的时候，是本程序中视频文件的物理路径
+    "task_priority_level": 3, // 一般的队列等级是5，如果想要快，那么可以先默认这里填写3，这样就可以插队。如果是 0 ，那么就是一次性的任务(下载完一次就会删除)！
     "media_server_inside_video_id": "xxxx" //媒体服务器内部视频ID，可以用于自动 Emby 字幕列表刷新用，如果你是其他的媒体服务器，就别传，留空，我还没实现其他媒体服务器的接口
 }
 ```
@@ -130,7 +130,7 @@ POST   /change-job-status
 ```json
 {
 	"id": "xxx", // 任务的 ID
-    "task_priority": "high" // 任务的优先级，high or middle or low priority
+    "task_priority": "high", // 任务的优先级，high or middle or low priority
     "job_status": 0, // 任务的状态 允许设置 Waiting(0) or Ignore(5)
 }
 ```
@@ -170,7 +170,7 @@ POST   /add-video-played-info
 
 ```json
 {
-    "physical_video_file_full_path": "xxx" // 这里传递的时候，是本程序中视频文件的物理路径
+    "physical_video_file_full_path": "xxx", // 这里传递的时候，是本程序中视频文件的物理路径
     "sub_name": "绝命毒师 S04E03.srt" // 这里传递的是这个字幕的名称，不要传递全路径
 }
 ```
