@@ -1,16 +1,12 @@
 package v1
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/strcut_json"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"path/filepath"
 )
 
 func (cb *ControllerBase) RefreshVideoListStatusHandler(c *gin.Context) {
@@ -75,18 +71,10 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 
 		pathUrlMap := cb.StaticFileSystemBackEnd.GetPathUrlMap()
 
-		cb.MovieInfos = make([]backend.MovieInfo, 0)
-		cb.SeasonInfos = make([]backend.SeasonInfo, 0)
 		MovieInfos, SeasonInfos := cb.videoScanAndRefreshHelper.ScrabbleUpVideoList(scanVideoResult, pathUrlMap)
 
-		cb.MovieInfos = append(cb.MovieInfos, MovieInfos...)
-		cb.SeasonInfos = append(cb.SeasonInfos, SeasonInfos...)
-		// 缓存到本地
-		err = cb.saveVideoListCache()
-		if err != nil {
-			cb.log.Errorln("saveVideoListCache", err)
-			return
-		}
+		// 缓存视频列表
+		cb.cronHelper.SetMovieAndSeasonInfo(MovieInfos, SeasonInfos)
 	}()
 
 	c.JSON(http.StatusOK, backend.ReplyRefreshVideoList{
@@ -138,60 +126,10 @@ func (cb *ControllerBase) VideoListHandler(c *gin.Context) {
 		cb.ErrorProcess(c, "VideoListHandler", err)
 	}()
 
+	outMovieInfos, outSeasonInfo := cb.cronHelper.GetMovieInfoAndSeasonInfo()
+
 	c.JSON(http.StatusOK, backend.ReplyVideoList{
-		MovieInfos:  cb.MovieInfos,
-		SeasonInfos: cb.SeasonInfos,
+		MovieInfos:  outMovieInfos,
+		SeasonInfos: outSeasonInfo,
 	})
-}
-
-func (cb *ControllerBase) saveVideoListCache() error {
-
-	// 缓存下来
-	cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
-	if err != nil {
-		return err
-	}
-
-	movieInfosFileName := filepath.Join(cacheCenterFolder, "movie_infos.json")
-	seasonInfosFileName := filepath.Join(cacheCenterFolder, "season_infos.json")
-
-	err = strcut_json.ToFile(movieInfosFileName, cb.MovieInfos)
-	if err != nil {
-		return err
-	}
-
-	err = strcut_json.ToFile(seasonInfosFileName, cb.SeasonInfos)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (cb *ControllerBase) loadVideoListCache() error {
-
-	// 缓存下来
-	cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
-	if err != nil {
-		return err
-	}
-
-	movieInfosFileName := filepath.Join(cacheCenterFolder, "movie_infos.json")
-	seasonInfosFileName := filepath.Join(cacheCenterFolder, "season_infos.json")
-
-	if my_util.IsFile(movieInfosFileName) == true {
-		err = strcut_json.ToStruct(movieInfosFileName, &cb.MovieInfos)
-		if err != nil {
-			return err
-		}
-	}
-
-	if my_util.IsFile(seasonInfosFileName) == true {
-		err = strcut_json.ToStruct(seasonInfosFileName, &cb.SeasonInfos)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

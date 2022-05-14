@@ -30,6 +30,10 @@ type CronHelper struct {
 	entryIDSupplierCheck          cron.EntryID
 	entryIDQueueDownloader        cron.EntryID
 	entryIDScanPlayedVideoSubInfo cron.EntryID
+
+	cacheLocker   sync.Mutex
+	movieInfoMap  map[string]MovieInfo  // 给 Web 界面使用的，Key: VideoFPath
+	seasonInfoMap map[string]SeasonInfo // 给 Web 界面使用的,Key: RootDirPath
 }
 
 func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
@@ -40,6 +44,9 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 		Settings:       fileDownloader.Settings,
 		// 实例化下载队列
 		DownloadQueue: task_queue.NewTaskQueue(fileDownloader.CacheCenter),
+
+		movieInfoMap:  make(map[string]MovieInfo),
+		seasonInfoMap: make(map[string]SeasonInfo),
 	}
 
 	var err error
@@ -60,6 +67,11 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 	ch.downloader = downloader.NewDownloader(
 		sub_formatter.GetSubFormatter(ch.log, ch.Settings.AdvancedSettings.SubNameFormatter),
 		ch.FileDownloader, ch.DownloadQueue)
+
+	err = ch.loadVideoListCache()
+	if err != nil {
+		fileDownloader.Log.Errorln("loadVideoListCache error:", err)
+	}
 
 	return &ch
 }
