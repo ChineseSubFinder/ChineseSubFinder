@@ -37,7 +37,6 @@ jobs:
       - name: Build dockerfile
         uses: docker/build-push-action@v2
         with:
-          context: .
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
