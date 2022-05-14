@@ -10,7 +10,7 @@ const OneSeriesProcessTimeOut = 30 * 60             // 一部连续剧，最多�
 const ScanPlayedSubTimeOut = 60 * 60                // 扫描已经播放的字幕进行缓存的时间
 const DownloadSubsPerSite = 1                       // 默认，每个网站下载一个字幕，允许额外传参调整
 const EmbyApiGetItemsLimitMin = 50
-const EmbyApiGetItemsLimitMax = 50000
+const EmbyApiGetItemsLimitMax = 1000000
 
 const (
 	SubSiteZiMuKu  = "zimuku"

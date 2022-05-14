@@ -209,9 +209,9 @@ func (v *VideoScanAndRefreshHelper) ScanNormalMovieAndSeries() (*ScanVideoResult
 func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *ScanVideoResult) error {
 
 	defer func() {
-		v.log.Infoln("ScanNormalMovieAndSeries End")
+		v.log.Infoln("ScanEmbyMovieAndSeries End")
 	}()
-	v.log.Infoln("ScanNormalMovieAndSeries Start...")
+	v.log.Infoln("ScanEmbyMovieAndSeries Start...")
 
 	if v.settings.EmbySettings.Enable == false {
 		v.embyHelper = nil
@@ -223,7 +223,7 @@ func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *Scan
 			v.log.Infoln("Forced Scan And DownSub, tmpSetting.EmbySettings.MaxRequestVideoNumber = 1000000")
 			// 如果是强制，那么就临时修改 Setting 的 Emby MaxRequestVideoNumber 参数为 1000000
 			tmpSetting := clone.Clone(v.settings).(*settings.Settings)
-			tmpSetting.EmbySettings.MaxRequestVideoNumber = 1000000
+			tmpSetting.EmbySettings.MaxRequestVideoNumber = common.EmbyApiGetItemsLimitMax
 			v.embyHelper = embyHelper.NewEmbyHelper(v.log, tmpSetting)
 		} else {
 			v.log.Infoln("Not Forced Scan And DownSub")
