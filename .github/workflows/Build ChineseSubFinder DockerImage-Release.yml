@@ -17,7 +17,7 @@ jobs:
         id: set-version
         run: |
           echo "::set-output name=version::${GITHUB_REF:10}"
-          echo "ReleaseTag=${GITHUB_REF:10}" 
+          echo "ReleaseTag=${GITHUB_REF:10}"
 
       # Docker Image 构建环境
       - name: Set up QEMU
@@ -27,7 +27,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1 
+        uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -36,6 +36,7 @@ jobs:
       - name: Build dockerfile
         uses: docker/build-push-action@v2
         with:
+          context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm/v7,linux/arm64
           push: true
@@ -44,5 +45,3 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:latest
           build-args: |
             VERSION=${{ steps.set-version.outputs.version }}
-
-
