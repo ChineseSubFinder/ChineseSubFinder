@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
+	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	markSystem "github.com/allanpk716/ChineseSubFinder/internal/logic/mark_system"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_download_process"
@@ -11,7 +12,6 @@ import (
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -41,7 +41,7 @@ type Downloader struct {
 	subTimelineFixerHelperEx *sub_timeline_fixer.SubTimelineFixerHelperEx // 字幕时间轴校正
 	downloaderLock           sync.Mutex                                   // 取消执行 task control 的 Lock
 	downloadQueue            *task_queue.TaskQueue                        // 需要下载的视频的队列
-	embyApi                  *emby_api.EmbyApi                            // 用于下载完毕字幕的刷新
+	embyHelper               *embyHelper.EmbyHelper                       // Emby 的实例
 }
 
 func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_downloader.FileDownloader, downloadQueue *task_queue.TaskQueue) *Downloader {
@@ -78,7 +78,7 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	downloader.ctx, downloader.cancel = context.WithCancel(context.Background())
 	// 用于字幕下载后的刷新
 	if downloader.settings.EmbySettings.Enable == true {
-		downloader.embyApi = emby_api.NewEmbyApi(downloader.log, downloader.settings.EmbySettings)
+		downloader.embyHelper = embyHelper.NewEmbyHelper(downloader.log, downloader.settings)
 	}
 
 	return &downloader
@@ -183,6 +183,29 @@ func (d *Downloader) QueueDownloader() {
 		d.log.Debugln("Download Queue Is Empty, Skip This Time")
 		return
 	}
+	// 在拿出来后，如果是有内部媒体服务器媒体 ID 的，那么就去查询是否已经观看过了
+	isPlayed, err := d.embyHelper.IsVideoPlayed(oneJob.MediaServerInsideVideoID)
+	if err != nil {
+		d.log.Errorln("d.embyHelper.IsVideoPlayed()", oneJob.VideoFPath, err)
+		return
+	}
+
+	if isPlayed == true {
+		// 播放过了，那么就标记 ignore
+		oneJob.JobStatus = taskQueue2.Ignore
+		bok, err = d.downloadQueue.Update(oneJob)
+		if err != nil {
+			d.log.Errorln("d.downloadQueue.Update()", err)
+			return
+		}
+		if bok == false {
+			d.log.Errorln("d.downloadQueue.Update() Failed")
+			return
+		}
+		d.log.Infoln("Is Played, Ignore This Job")
+		return
+	}
+
 	// 取出来后，需要标记为正在下载
 	oneJob.JobStatus = taskQueue2.Downloading
 	bok, err = d.downloadQueue.Update(oneJob)
@@ -297,8 +320,8 @@ func (d *Downloader) movieDlFunc(ctx context.Context, job taskQueue2.OneJob, dow
 	d.downloadQueue.AutoDetectUpdateJobStatus(job, nil)
 
 	// TODO 刷新字幕，这里是 Emby 的，如果是其他的，需要再对接对应的媒体服务器
-	if d.settings.EmbySettings.Enable == true && d.embyApi != nil && job.MediaServerInsideVideoID != "" {
-		err = d.embyApi.UpdateVideoSubList(job.MediaServerInsideVideoID)
+	if d.settings.EmbySettings.Enable == true && d.embyHelper != nil && job.MediaServerInsideVideoID != "" {
+		err = d.embyHelper.EmbyApi.UpdateVideoSubList(job.MediaServerInsideVideoID)
 		if err != nil {
 			d.log.Errorln("UpdateVideoSubList", job.VideoFPath, job.MediaServerInsideVideoID, "Error:", err)
 			return err
@@ -467,8 +490,8 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	// 哪怕有一个写入到本地成功了，也无需对本次任务报错
 	d.downloadQueue.AutoDetectUpdateJobStatus(job, nil)
 	// TODO 刷新字幕，这里是 Emby 的，如果是其他的，需要再对接对应的媒体服务器
-	if d.settings.EmbySettings.Enable == true && d.embyApi != nil && job.MediaServerInsideVideoID != "" {
-		err = d.embyApi.UpdateVideoSubList(job.MediaServerInsideVideoID)
+	if d.settings.EmbySettings.Enable == true && d.embyHelper != nil && job.MediaServerInsideVideoID != "" {
+		err = d.embyHelper.EmbyApi.UpdateVideoSubList(job.MediaServerInsideVideoID)
 		if err != nil {
 			d.log.Errorln("UpdateVideoSubList", job.SeriesRootDirPath, job.MediaServerInsideVideoID, job.Season, job.Episode, "Error:", err)
 			return err

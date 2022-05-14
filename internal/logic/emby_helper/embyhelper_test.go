@@ -1,21 +1,25 @@
 package emby_helper
 
 import (
+	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"reflect"
+	"github.com/sirupsen/logrus"
+	"sync"
 	"testing"
+	"time"
 )
 
 var ec = settings.EmbySettings{
-	//AddressUrl:            "http://192.168.50.252:xxx",
-	//APIKey:                "xxx",
-	//MaxRequestVideoNumber: 100,
-	//MoviePathsMapping: map[string]string{
-	//	"X:\\电影": "/mnt/share1/电影",
-	//},
-	//SeriesPathsMapping: map[string]string{
-	//	"X:\\连续剧": "/mnt/share1/连续剧",
-	//},
+	AddressUrl:            "http://192.168.50.252:xxx",
+	APIKey:                "xxx",
+	MaxRequestVideoNumber: 100,
+	MoviePathsMapping: map[string]string{
+		"X:\\电影": "/mnt/share1/电影",
+	},
+	SeriesPathsMapping: map[string]string{
+		"X:\\连续剧": "/mnt/share1/连续剧",
+	},
 }
 
 // TODO 暂不方便在其他环境进行单元测试
@@ -68,39 +72,6 @@ func TestEmbyHelper_GetInternalEngSubAndExSub(t *testing.T) {
 	//println(internalEngSub[0].FileName, exCh_EngSub[0].FileName)
 }
 
-func Test_sortStringSliceByLength(t *testing.T) {
-	type args struct {
-		m []string
-	}
-	tests := []struct {
-		name string
-		args args
-		want PathSlices
-	}{
-		{
-			name: "00",
-			args: args{
-				[]string{"/aa/bb/cc", "/aa", "/aa/bb"},
-			},
-			want: []PathSlice{{
-				Path: "/aa/bb/cc",
-			}, {
-				Path: "/aa/bb",
-			}, {
-				Path: "/aa",
-			},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := sortStringSliceByLength(tt.args.m); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("sortStringSliceByLength() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 // TODO 暂不方便在其他环境进行单元测试
 func TestEmbyHelper_GetPlayedItemsSubtitle(t *testing.T) {
 
@@ -132,5 +103,16 @@ func TestEmbyHelper_GetPlayedItemsSubtitle(t *testing.T) {
 }
 
 func TestEmbyHelper_GetRecentlyAddVideoList1(t *testing.T) {
+
+}
+
+func TestEmbyHelper_IsVideoPlayed(t *testing.T) {
+
+	em := NewEmbyHelper(log_helper.GetLogger4Tester(), *ec)
+	moviePhyFPathMap, seriesPhyFPathMap, err := em.GetPlayedItemsSubtitle()
+	if err != nil {
+		t.Fatal(err)
+	}
+	played, err := ec.IsVideoPlayed(tt.args.videoID)
 
 }

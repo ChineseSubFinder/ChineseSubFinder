@@ -8,7 +8,7 @@ import (
 var ec = settings.EmbySettings{
 	Enable:                true,
 	AddressUrl:            "http://192.168.50.252:8096",
-	APIKey:                "123",
+	APIKey:                "asdasda",
 	MaxRequestVideoNumber: 100,
 }
 
@@ -51,8 +51,27 @@ func TestEmbyHelper_GetItemsAncestors(t *testing.T) {
 }
 
 // TODO 暂不方便在其他环境进行单元测试
+func TestEmbyHelper_GetItemVideoInfo(t *testing.T) {
+	//em := NewEmbyApi(log_helper.GetLogger4Tester(), &ec)
+	//// 95813 -- 命运夜
+	//// 96564 -- The Bad Batch - S01E11
+	//// R&M S05E10  2 org english, 5 简英 145499
+	//// R&M 15430
+	//// 基地 S01E03 166840
+	//// 基地 S01E04 173354
+	//// 算牌人 166837
+	//// 327198
+	//videoInfo, err := em.GetItemVideoInfo("15430")
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//
+	//println(videoInfo.Name, videoInfo.Path, videoInfo.MediaSources[0].Id)
+}
+
+// TODO 暂不方便在其他环境进行单元测试
 func TestEmbyHelper_GetItemVideoInfoByUserId(t *testing.T) {
-	//em := NewEmbyApi(&ec)
+	//em := NewEmbyApi(log_helper.GetLogger4Tester(), &ec)
 	//// 95813 -- 命运夜
 	//// 96564 -- The Bad Batch - S01E11
 	//// 108766 -- R&M - S05E06
@@ -97,25 +116,6 @@ func TestEmbyHelper_GetUserIdList(t *testing.T) {
 	//for i, item := range userIds.Items {
 	//	t.Logf("\n\n%d  %s  %s", i, item.Name, item.Id)
 	//}
-}
-
-// TODO 暂不方便在其他环境进行单元测试
-func TestEmbyHelper_GetItemVideoInfo(t *testing.T) {
-	//em := NewEmbyApi(&ec)
-	//// 95813 -- 命运夜
-	//// 96564 -- The Bad Batch - S01E11
-	//// R&M S05E10  2 org english, 5 简英 145499
-	//// R&M 15430
-	//// 基地 S01E03 166840
-	//// 基地 S01E04 173354
-	//// 算牌人 166837
-	//// 327198
-	//videoInfo, err := em.GetItemVideoInfo("15430")
-	//if err != nil {
-	//	t.Fatal(err)
-	//}
-	//
-	//println(videoInfo.Name, videoInfo.Path, videoInfo.MediaSources[0].Id)
 }
 
 // TODO 暂不方便在其他环境进行单元测试

@@ -25,7 +25,7 @@ import (
 )
 
 type EmbyHelper struct {
-	embyApi  *embyHelper.EmbyApi
+	EmbyApi  *embyHelper.EmbyApi
 	log      *logrus.Logger
 	settings *settings.Settings
 	timeOut  time.Duration
@@ -34,7 +34,7 @@ type EmbyHelper struct {
 
 func NewEmbyHelper(_log *logrus.Logger, _settings *settings.Settings) *EmbyHelper {
 	em := EmbyHelper{log: _log, settings: _settings}
-	em.embyApi = embyHelper.NewEmbyApi(_log, _settings.EmbySettings)
+	em.EmbyApi = embyHelper.NewEmbyApi(_log, _settings.EmbySettings)
 	em.timeOut = 60 * time.Second
 	return &em
 }
@@ -118,7 +118,7 @@ func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle(needForcedSca
 // GetRecentlyAddVideoList 获取最近新添加的视频
 func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby.EmbyMixInfo, []emby.EmbyMixInfo, error) {
 	// 获取最近的影片列表
-	items, err := em.embyApi.GetRecentlyItems()
+	items, err := em.EmbyApi.GetRecentlyItems()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -174,14 +174,14 @@ func (em *EmbyHelper) GetVideoIDPlayedMap() map[string]bool {
 	videoIDPlayedMap := make(map[string]bool)
 	// 获取有那些用户
 	var userIds emby.EmbyUsers
-	userIds, err := em.embyApi.GetUserIdList()
+	userIds, err := em.EmbyApi.GetUserIdList()
 	if err != nil {
 		em.log.Errorln("IsVideoIDPlayed - GetUserIdList error:", err)
 		return videoIDPlayedMap
 	}
 	// 所有用户观看过的视频有那些
 	for _, item := range userIds.Items {
-		tmpRecItems, err := em.embyApi.GetRecentItemsByUserID(item.Id)
+		tmpRecItems, err := em.EmbyApi.GetRecentItemsByUserID(item.Id)
 		if err != nil {
 			em.log.Errorln("IsVideoIDPlayed - GetRecentItemsByUserID, UserID:", item.Id, "error:", err)
 			return videoIDPlayedMap
@@ -205,13 +205,13 @@ func (em *EmbyHelper) GetPlayedItemsSubtitle() (map[string]string, map[string]st
 	var userPlayedItemsList = make([]emby.UserPlayedItems, 0)
 	// 获取有那些用户
 	var userIds emby.EmbyUsers
-	userIds, err := em.embyApi.GetUserIdList()
+	userIds, err := em.EmbyApi.GetUserIdList()
 	if err != nil {
 		return nil, nil, err
 	}
 	// 所有用户观看过的视频有那些，需要分用户统计出来
 	for _, item := range userIds.Items {
-		tmpRecItems, err := em.embyApi.GetRecentItemsByUserID(item.Id)
+		tmpRecItems, err := em.EmbyApi.GetRecentItemsByUserID(item.Id)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -240,12 +240,12 @@ func (em *EmbyHelper) GetPlayedItemsSubtitle() (map[string]string, map[string]st
 
 		for _, item := range playedItems.Items {
 
-			videoInfoByUserId, err := em.embyApi.GetItemVideoInfoByUserId(playedItems.UserID, item.Id)
+			videoInfoByUserId, err := em.EmbyApi.GetItemVideoInfoByUserId(playedItems.UserID, item.Id)
 			if err != nil {
 				return nil, nil, err
 			}
 
-			videoInfo, err := em.embyApi.GetItemVideoInfo(item.Id)
+			videoInfo, err := em.EmbyApi.GetItemVideoInfo(item.Id)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -300,14 +300,36 @@ func (em *EmbyHelper) GetPlayedItemsSubtitle() (map[string]string, map[string]st
 
 // RefreshEmbySubList 字幕下载完毕一次，就可以触发一次这个。并发 6 线程去刷新
 func (em *EmbyHelper) RefreshEmbySubList() (bool, error) {
-	if em.embyApi == nil {
+	if em.EmbyApi == nil {
 		return false, nil
 	}
-	err := em.embyApi.RefreshRecentlyVideoInfo()
+	err := em.EmbyApi.RefreshRecentlyVideoInfo()
 	if err != nil {
 		return false, err
 	}
 	return true, nil
+}
+
+func (em *EmbyHelper) IsVideoPlayed(videoID string) (bool, error) {
+
+	// 获取有那些用户
+	var userIds emby.EmbyUsers
+	userIds, err := em.EmbyApi.GetUserIdList()
+	if err != nil {
+		return false, err
+	}
+	// 所有用户观看过的视频有那些，需要分用户统计出来
+	for _, item := range userIds.Items {
+		videoInfo, err := em.EmbyApi.GetItemVideoInfoByUserId(item.Id, videoID)
+		if err != nil {
+			return false, err
+		}
+		if videoInfo.UserData.Played == true {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // findMappingPath 从 Emby 内置路径匹配到物理路径，返回，需要替换的前缀，以及替换到的前缀
@@ -372,12 +394,12 @@ func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*e
 
 	if isMovieOrSeries == true {
 		// 电影的情况
-		info, err := em.embyApi.GetItemVideoInfo(videoID)
+		info, err := em.EmbyApi.GetItemVideoInfo(videoID)
 		if err != nil {
 			return nil, err
 		}
 
-		ancs, err := em.embyApi.GetItemAncestors(videoID)
+		ancs, err := em.EmbyApi.GetItemAncestors(videoID)
 		if err != nil {
 			return nil, err
 		}
@@ -387,7 +409,7 @@ func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*e
 		return &mixInfo, nil
 	} else {
 		// 连续剧的情况，需要从一集对算到 series 目录，得到内部 series 的 ID，然后再得到 IMDB ID
-		ancs, err := em.embyApi.GetItemAncestors(videoID)
+		ancs, err := em.EmbyApi.GetItemAncestors(videoID)
 		if err != nil {
 			return nil, err
 		}
@@ -405,17 +427,17 @@ func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*e
 			return nil, nil
 		}
 		// 这里的目标是从 Emby 获取 IMDB ID
-		info, err := em.embyApi.GetItemVideoInfo(ancs[ancestorIndex].ID)
+		info, err := em.EmbyApi.GetItemVideoInfo(ancs[ancestorIndex].ID)
 		if err != nil {
 			return nil, err
 		}
 		nowSeriesIMDBID := info.ProviderIds.Imdb
 		// 然后还是要跟电影一样的使用 Video ID 去获取 Ancestors 和 VideoInfo，而上面一步获取的是这个 Series 的 ID
-		info, err = em.embyApi.GetItemVideoInfo(videoID)
+		info, err = em.EmbyApi.GetItemVideoInfo(videoID)
 		if err != nil {
 			return nil, err
 		}
-		ancs, err = em.embyApi.GetItemAncestors(videoID)
+		ancs, err = em.EmbyApi.GetItemAncestors(videoID)
 		if err != nil {
 			return nil, err
 		}
@@ -823,12 +845,12 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (bool, []emby.SubInfo, []emby.SubInfo, error) {
 
 	// 先刷新以下这个资源，避免找到的字幕不存在了
-	err := em.embyApi.UpdateVideoSubList(videoId)
+	err := em.EmbyApi.UpdateVideoSubList(videoId)
 	if err != nil {
 		return false, nil, nil, err
 	}
 	// 获取这个资源的信息
-	videoInfo, err := em.embyApi.GetItemVideoInfo(videoId)
+	videoInfo, err := em.EmbyApi.GetItemVideoInfo(videoId)
 	if err != nil {
 		return false, nil, nil, err
 	}
@@ -900,7 +922,7 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 		var tmpSubContentLenList = make([]int, 0)
 		for _, index := range insideEngSUbIndexList {
 			// TODO 这里默认是去 Emby 去拿字幕，但是其实可以缓存在视频文件同级的目录下，这样后续就无需多次下载了，毕竟每次下载都需要读取完整的视频
-			subFileData, err := em.embyApi.GetSubFileData(videoId, mediaSourcesId, fmt.Sprintf("%d", index), common2.SubExtSRT)
+			subFileData, err := em.EmbyApi.GetSubFileData(videoId, mediaSourcesId, fmt.Sprintf("%d", index), common2.SubExtSRT)
 			if err != nil {
 				return false, nil, nil, err
 			}
@@ -920,7 +942,7 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 		if i == 1 {
 			tmpExt = common2.SubExtASS
 		}
-		subFileData, err := em.embyApi.GetSubFileData(videoId, mediaSourcesId, fmt.Sprintf("%d", InsideEngSubIndex), tmpExt)
+		subFileData, err := em.EmbyApi.GetSubFileData(videoId, mediaSourcesId, fmt.Sprintf("%d", InsideEngSubIndex), tmpExt)
 		if err != nil {
 			return false, nil, nil, err
 		}
@@ -930,7 +952,7 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 	}
 	// 再下载外置的
 	for i, subInfo := range exSubList {
-		subFileData, err := em.embyApi.GetSubFileData(videoId, mediaSourcesId, fmt.Sprintf("%d", subInfo.EmbyStreamIndex), subInfo.Ext)
+		subFileData, err := em.EmbyApi.GetSubFileData(videoId, mediaSourcesId, fmt.Sprintf("%d", subInfo.EmbyStreamIndex), subInfo.Ext)
 		if err != nil {
 			return false, nil, nil, err
 		}
@@ -944,7 +966,7 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 func (em *EmbyHelper) CheckPath(pathType string) ([]string, error) {
 
 	// 获取最近的影片列表
-	items, err := em.embyApi.GetRecentlyItems()
+	items, err := em.EmbyApi.GetRecentlyItems()
 	if err != nil {
 		return nil, err
 	}
