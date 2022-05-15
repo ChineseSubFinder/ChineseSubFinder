@@ -89,7 +89,7 @@ func main() {
 		common.SetApiToken("")
 	}
 	// 是否开启开发模式，跳过某些流程
-	settings.GetSettings().SpeedDevMode = true
+	//settings.GetSettings().SpeedDevMode = true
 	// ------------------------------------------------------------------------
 	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
 	if settings.GetSettings().SpeedDevMode == false {
