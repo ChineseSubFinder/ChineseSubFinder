@@ -10,7 +10,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_download_process"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
@@ -130,7 +130,7 @@ func (d *Downloader) SupplierCheck() {
 
 		if d.settings.SpeedDevMode == true {
 			// 这里是调试使用的，指定了只用一个字幕源
-			subSupplierHub := subSupplier.NewSubSupplierHub(zimuku.NewSupplier(d.fileDownloader))
+			subSupplierHub := subSupplier.NewSubSupplierHub(shooter.NewSupplier(d.fileDownloader))
 			d.subSupplierHub = subSupplierHub
 		} else {
 
@@ -283,7 +283,7 @@ func (d *Downloader) QueueDownloader() {
 		}
 		// 刷新视频的缓存结构
 		d.UpdateInfo(oneJob)
-		
+
 		break
 	case p := <-panicChan:
 		// 遇到内部的 panic，向外抛出

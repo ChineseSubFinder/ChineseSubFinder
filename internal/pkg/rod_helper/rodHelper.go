@@ -16,6 +16,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -267,6 +268,13 @@ func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration,
 		time.Sleep(my_util.RandomSecondDuration(2, 5))
 	} else {
 		time.Sleep(my_util.RandomSecondDuration(2, 5))
+	}
+
+	if strings.Contains(strings.ToLower(pageString), "<title>403 forbidden</title>") == true {
+		if page != nil {
+			page.Close()
+		}
+		return "", nil, errors.New("403 forbidden")
 	}
 
 	return pageString, page, nil
