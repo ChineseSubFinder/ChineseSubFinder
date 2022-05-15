@@ -42,6 +42,10 @@ type Downloader struct {
 	downloaderLock           sync.Mutex                                   // 取消执行 task control 的 Lock
 	downloadQueue            *task_queue.TaskQueue                        // 需要下载的视频的队列
 	embyHelper               *embyHelper.EmbyHelper                       // Emby 的实例
+
+	cacheLocker   sync.Mutex
+	movieInfoMap  map[string]MovieInfo  // 给 Web 界面使用的，Key: VideoFPath
+	seasonInfoMap map[string]SeasonInfo // 给 Web 界面使用的,Key: RootDirPath
 }
 
 func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_downloader.FileDownloader, downloadQueue *task_queue.TaskQueue) *Downloader {
@@ -79,6 +83,14 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	// 用于字幕下载后的刷新
 	if downloader.settings.EmbySettings.Enable == true {
 		downloader.embyHelper = embyHelper.NewEmbyHelper(downloader.log, downloader.settings)
+	}
+
+	downloader.movieInfoMap = make(map[string]MovieInfo)
+	downloader.seasonInfoMap = make(map[string]SeasonInfo)
+
+	err := downloader.loadVideoListCache()
+	if err != nil {
+		downloader.log.Errorln("loadVideoListCache error:", err)
 	}
 
 	return &downloader

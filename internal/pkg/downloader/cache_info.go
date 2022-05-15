@@ -1,4 +1,4 @@
-package cron_helper
+package downloader
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
@@ -8,21 +8,21 @@ import (
 	"path/filepath"
 )
 
-func (ch *CronHelper) SetMovieAndSeasonInfo(movieInfos []backend.MovieInfo, seasonInfos []backend.SeasonInfo) {
-	ch.cacheLocker.Lock()
-	defer ch.cacheLocker.Unlock()
+func (d *Downloader) SetMovieAndSeasonInfo(movieInfos []backend.MovieInfo, seasonInfos []backend.SeasonInfo) {
+	d.cacheLocker.Lock()
+	defer d.cacheLocker.Unlock()
 
-	ch.setMovieAndSeasonInfo(movieInfos, seasonInfos)
+	d.setMovieAndSeasonInfo(movieInfos, seasonInfos)
 }
 
-func (ch *CronHelper) GetMovieInfoAndSeasonInfo() ([]backend.MovieInfo, []backend.SeasonInfo) {
+func (d *Downloader) GetMovieInfoAndSeasonInfo() ([]backend.MovieInfo, []backend.SeasonInfo) {
 	// 需要把本实例中的缓存 map 转换到 Web 传递的结构体中
-	ch.cacheLocker.Lock()
-	defer ch.cacheLocker.Unlock()
+	d.cacheLocker.Lock()
+	defer d.cacheLocker.Unlock()
 
 	outMovieInfos := make([]backend.MovieInfo, 0)
 	outSeasonInfo := make([]backend.SeasonInfo, 0)
-	for _, movieInfo := range ch.movieInfoMap {
+	for _, movieInfo := range d.movieInfoMap {
 
 		nowMovieInfo := backend.MovieInfo{
 			Name:                     movieInfo.Name,
@@ -36,7 +36,7 @@ func (ch *CronHelper) GetMovieInfoAndSeasonInfo() ([]backend.MovieInfo, []backen
 		outMovieInfos = append(outMovieInfos, nowMovieInfo)
 	}
 
-	for _, seasonInfo := range ch.seasonInfoMap {
+	for _, seasonInfo := range d.seasonInfoMap {
 
 		nowSeasonInfo := backend.SeasonInfo{
 			Name:          seasonInfo.Name,
@@ -67,12 +67,12 @@ func (ch *CronHelper) GetMovieInfoAndSeasonInfo() ([]backend.MovieInfo, []backen
 	return outMovieInfos, outSeasonInfo
 }
 
-func (ch *CronHelper) setMovieAndSeasonInfo(movieInfos []backend.MovieInfo, seasonInfos []backend.SeasonInfo, skip ...bool) {
+func (d *Downloader) setMovieAndSeasonInfo(movieInfos []backend.MovieInfo, seasonInfos []backend.SeasonInfo, skip ...bool) {
 	// 需要把 Web 传递的结构体 转换到 本实例中的缓存 map
 
 	// 清空
-	ch.movieInfoMap = make(map[string]MovieInfo)
-	ch.seasonInfoMap = make(map[string]SeasonInfo)
+	d.movieInfoMap = make(map[string]MovieInfo)
+	d.seasonInfoMap = make(map[string]SeasonInfo)
 
 	for _, movieInfo := range movieInfos {
 
@@ -85,7 +85,7 @@ func (ch *CronHelper) setMovieAndSeasonInfo(movieInfos []backend.MovieInfo, seas
 			SubFPathList:             make([]string, 0),
 		}
 		nowMovieInfo.SubFPathList = append(nowMovieInfo.SubFPathList, movieInfo.SubFPathList...)
-		ch.movieInfoMap[movieInfo.VideoFPath] = nowMovieInfo
+		d.movieInfoMap[movieInfo.VideoFPath] = nowMovieInfo
 	}
 
 	for _, seasonInfo := range seasonInfos {
@@ -113,21 +113,21 @@ func (ch *CronHelper) setMovieAndSeasonInfo(movieInfos []backend.MovieInfo, seas
 			nowSeasonInfo.OneVideoInfoMap[oneVideoInfo.VideoFPath] = nowOneVideoInfo
 		}
 
-		ch.seasonInfoMap[seasonInfo.RootDirPath] = nowSeasonInfo
+		d.seasonInfoMap[seasonInfo.RootDirPath] = nowSeasonInfo
 	}
 
 	if len(skip) > 0 && skip[0] == true {
 
 	} else {
-		err := ch.saveVideoListCache(movieInfos, seasonInfos)
+		err := d.saveVideoListCache(movieInfos, seasonInfos)
 		if err != nil {
-			ch.log.Errorln("saveVideoListCache err:", err)
+			d.log.Errorln("saveVideoListCache err:", err)
 			return
 		}
 	}
 }
 
-func (ch *CronHelper) saveVideoListCache(movieInfos []backend.MovieInfo, seasonInfos []backend.SeasonInfo) error {
+func (d *Downloader) saveVideoListCache(movieInfos []backend.MovieInfo, seasonInfos []backend.SeasonInfo) error {
 
 	// 缓存下来
 	cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
@@ -151,7 +151,7 @@ func (ch *CronHelper) saveVideoListCache(movieInfos []backend.MovieInfo, seasonI
 	return nil
 }
 
-func (ch *CronHelper) loadVideoListCache() error {
+func (d *Downloader) loadVideoListCache() error {
 
 	// 缓存下来
 	cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
@@ -179,7 +179,7 @@ func (ch *CronHelper) loadVideoListCache() error {
 		}
 	}
 
-	ch.setMovieAndSeasonInfo(movieInfos, seasonInfos, true)
+	d.setMovieAndSeasonInfo(movieInfos, seasonInfos, true)
 
 	return nil
 }

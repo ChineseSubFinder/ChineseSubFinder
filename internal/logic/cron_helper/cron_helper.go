@@ -20,7 +20,7 @@ type CronHelper struct {
 	scanPlayedVideoSubInfo        *scan_played_video_subinfo.ScanPlayedVideoSubInfo        // 扫描已经播放过的视频的字幕信息
 	FileDownloader                *file_downloader.FileDownloader                          // 文件下载器
 	DownloadQueue                 *task_queue.TaskQueue                                    // 需要下载的视频的队列
-	downloader                    *downloader.Downloader                                   // 下载者线程
+	Downloader                    *downloader.Downloader                                   // 下载者线程
 	videoScanAndRefreshHelper     *video_scan_and_refresh_helper.VideoScanAndRefreshHelper // 视频扫描和刷新的帮助类
 	cronLock                      sync.Mutex                                               // 锁
 	c                             *cron.Cron                                               // 定时器实例
@@ -30,10 +30,6 @@ type CronHelper struct {
 	entryIDSupplierCheck          cron.EntryID
 	entryIDQueueDownloader        cron.EntryID
 	entryIDScanPlayedVideoSubInfo cron.EntryID
-
-	cacheLocker   sync.Mutex
-	movieInfoMap  map[string]MovieInfo  // 给 Web 界面使用的，Key: VideoFPath
-	seasonInfoMap map[string]SeasonInfo // 给 Web 界面使用的,Key: RootDirPath
 }
 
 func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
@@ -44,9 +40,6 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 		Settings:       fileDownloader.Settings,
 		// 实例化下载队列
 		DownloadQueue: task_queue.NewTaskQueue(fileDownloader.CacheCenter),
-
-		movieInfoMap:  make(map[string]MovieInfo),
-		seasonInfoMap: make(map[string]SeasonInfo),
 	}
 
 	var err error
@@ -64,14 +57,9 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 
 	// ----------------------------------------------
 	// 初始化下载者，里面的两个 func 需要使用定时器启动 SupplierCheck QueueDownloader
-	ch.downloader = downloader.NewDownloader(
+	ch.Downloader = downloader.NewDownloader(
 		sub_formatter.GetSubFormatter(ch.log, ch.Settings.AdvancedSettings.SubNameFormatter),
 		ch.FileDownloader, ch.DownloadQueue)
-
-	err = ch.loadVideoListCache()
-	if err != nil {
-		fileDownloader.Log.Errorln("loadVideoListCache error:", err)
-	}
 
 	return &ch
 }
@@ -113,13 +101,13 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	if err != nil {
 		ch.log.Panicln("CronHelper scanVideoProcessAdd2DownloadQueue, Cron entryID:", ch.entryIDScanVideoProcess, "Error:", err)
 	}
-	// 这个可以由 ch.downloader.Cancel() 取消执行
-	ch.entryIDSupplierCheck, err = ch.c.AddFunc("@every 1h", ch.downloader.SupplierCheck)
+	// 这个可以由 ch.Downloader.Cancel() 取消执行
+	ch.entryIDSupplierCheck, err = ch.c.AddFunc("@every 1h", ch.Downloader.SupplierCheck)
 	if err != nil {
 		ch.log.Panicln("CronHelper SupplierCheck, Cron entryID:", ch.entryIDSupplierCheck, "Error:", err)
 	}
-	// 这个可以由 ch.downloader.Cancel() 取消执行
-	ch.entryIDQueueDownloader, err = ch.c.AddFunc("@every 15s", ch.downloader.QueueDownloader)
+	// 这个可以由 ch.Downloader.Cancel() 取消执行
+	ch.entryIDQueueDownloader, err = ch.c.AddFunc("@every 15s", ch.Downloader.QueueDownloader)
 	if err != nil {
 		ch.log.Panicln("CronHelper QueueDownloader, Cron entryID:", ch.entryIDQueueDownloader, "Error:", err)
 	}
@@ -133,7 +121,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	ch.cronLock.Lock()
 	if ch.cronHelperRunning == true && ch.stopping == false {
 		ch.cronLock.Unlock()
-		ch.downloader.SupplierCheck()
+		ch.Downloader.SupplierCheck()
 	} else {
 		ch.cronLock.Unlock()
 	}
@@ -205,7 +193,7 @@ func (ch *CronHelper) Stop() {
 	ch.cronLock.Unlock()
 
 	ch.videoScanAndRefreshHelper.Cancel()
-	ch.downloader.Cancel()
+	ch.Downloader.Cancel()
 	ch.scanPlayedVideoSubInfo.Cancel()
 	// Stop stops the cron scheduler if it is running; otherwise it does nothing.
 	// A context is returned so the caller can wait for running jobs to complete.
