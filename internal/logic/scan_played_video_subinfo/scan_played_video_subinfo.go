@@ -316,8 +316,9 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	var ok bool
 	// 先把 IMDB 信息查询查来，不管是从数据库还是网络（查询出来也得写入到数据库）
 	s.cacheImdbInfoCacheLocker.Lock()
-	if imdbInfo, ok = imdbInfoCache[imdbInfo4Video.ImdbId]; ok == false {
-		s.cacheImdbInfoCacheLocker.Unlock()
+	imdbInfo, ok = imdbInfoCache[imdbInfo4Video.ImdbId]
+	s.cacheImdbInfoCacheLocker.Unlock()
+	if ok == false {
 		// 不存在，那么就去查询和新建缓存
 		imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(s.log, imdbInfo4Video)
 		if err != nil {
