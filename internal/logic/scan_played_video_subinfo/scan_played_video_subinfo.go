@@ -27,6 +27,7 @@ import (
 	"golang.org/x/net/context"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -49,6 +50,7 @@ type ScanPlayedVideoSubInfo struct {
 
 	shareRootDir string
 
+	imdbInfoCache            map[string]*models.IMDBInfo
 	cacheImdbInfoCacheLocker sync.Mutex
 }
 
@@ -84,6 +86,8 @@ func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings)
 		return nil, err
 	}
 	scanPlayedVideoSubInfo.shareRootDir = shareRootDir
+	// 初始化缓存
+	scanPlayedVideoSubInfo.imdbInfoCache = make(map[string]*models.IMDBInfo)
 
 	return &scanPlayedVideoSubInfo, nil
 }
@@ -186,6 +190,8 @@ func (s *ScanPlayedVideoSubInfo) Clear() {
 
 func (s *ScanPlayedVideoSubInfo) Scan() error {
 
+	// 清空缓存
+	s.imdbInfoCache = make(map[string]*models.IMDBInfo)
 	// -----------------------------------------------------
 	// 并发控制
 	s.taskControl.SetCtxProcessFunc("ScanSubPlayedPool", s.scan, common.ScanPlayedSubTimeOut)
@@ -217,6 +223,60 @@ func (s *ScanPlayedVideoSubInfo) Scan() error {
 
 	s.taskControl.Hold()
 
+	// 下面需要把给出外部的 HTTP API 提交的视频和字幕信息(ThirdPartSetVideoPlayedInfo)进行判断，存入数据库
+	shareRootDir, err := my_folder.GetShareSubRootFolder()
+	if err != nil {
+		return err
+	}
+
+	var videoPlayedInfos []models.ThirdPartSetVideoPlayedInfo
+	dao.GetDb().Find(&videoPlayedInfos)
+
+	for i, thirdPartSetVideoPlayedInfo := range videoPlayedInfos {
+		// 先要判断这个是 Movie 还是 Series
+		// 因为设计这个 API 的时候为了简化提交的参数，也假定传入的可能不是正确的分类（电影or连续剧）
+		// 所以只能比较傻的，低效率的匹配映射的目录来做到识别是哪个分类的
+
+		bFoundMovie := false
+		bFoundSeries := false
+		for _, moviePath := range s.settings.CommonSettings.MoviePaths {
+			// 先判断类型是否是 Movie
+			if strings.HasPrefix(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, moviePath) == true {
+				bFoundMovie = true
+				break
+			}
+		}
+		if bFoundMovie == false {
+			for _, seriesPath := range s.settings.CommonSettings.SeriesPaths {
+				// 判断是否是 Series
+				if strings.HasPrefix(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, seriesPath) == true {
+					bFoundSeries = true
+					break
+				}
+			}
+		}
+
+		if bFoundMovie == false && bFoundSeries == false {
+			// 说明提交的这个视频文件无法匹配电影或者连续剧的目录前缀
+			s.log.Warningln("Not matched Movie and Series Prefix Path", thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath)
+			continue
+		}
+
+		IsMovie := false
+		videoTypes := common.Movie
+		if bFoundMovie == true {
+			videoTypes = common.Movie
+			IsMovie = true
+		}
+		if bFoundSeries == true {
+			videoTypes = common.Series
+			IsMovie = false
+		}
+
+		tmpSubFPath := filepath.Join(filepath.Dir(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath), thirdPartSetVideoPlayedInfo.SubName)
+		s.dealOneVideo(i, thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, tmpSubFPath, videoTypes.String(), shareRootDir, IsMovie, s.imdbInfoCache)
+	}
+
 	return nil
 }
 
@@ -245,7 +305,6 @@ func (s *ScanPlayedVideoSubInfo) scan(ctx context.Context, inData interface{}) e
 		return err
 	}
 
-	imdbInfoCache := make(map[string]*models.IMDBInfo)
 	index := 0
 	for videoFPath, orgSubFPath := range scanInputData.Videos {
 
@@ -255,7 +314,7 @@ func (s *ScanPlayedVideoSubInfo) scan(ctx context.Context, inData interface{}) e
 			defer func() {
 				close(stage)
 			}()
-			s.dealOneVideo(index, videoFPath, orgSubFPath, videoTypes, shareRootDir, scanInputData.IsMovie, imdbInfoCache)
+			s.dealOneVideo(index, videoFPath, orgSubFPath, videoTypes, shareRootDir, scanInputData.IsMovie, s.imdbInfoCache)
 			stage <- 1
 		}()
 
