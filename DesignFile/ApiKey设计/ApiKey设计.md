@@ -12,6 +12,8 @@
 
 ## 如何设置 API KEY
 
+现在已经支持在 Web 界面设置啦，如果没找到或者有问题，也可以用下面的方式设置。
+
 本程序的目录下（Windows 的当前程序目录，Linux 是 config 中），修改 `ChineseSubFinderSettings.json` 文件，新增内容，`api_key_settings`
 
 ![image-20220513135351263](ApiKey设计.assets/image-20220513135351263.png)
