@@ -115,7 +115,7 @@ const downloadSubtitle = async (item) => {
       type: 'radio',
       items: [
         { label: '正常任务', value: 3 },
-        { label: '一次性任务（下载后删除任务）', value: 0 },
+        { label: '一次性任务（下载后设置这个任务的状态为"忽略"）', value: 0 },
       ],
     },
     cancel: true,
