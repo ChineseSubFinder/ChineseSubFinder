@@ -17,6 +17,7 @@ const (
 	SubSiteSubHd   = "subhd"
 	SubSiteShooter = "shooter"
 	SubSiteXunLei  = "xunlei"
+	SubSiteAssrt   = "assrt"
 )
 
 const (

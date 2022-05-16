@@ -16,6 +16,7 @@ type Settings struct {
 	configFPath           string
 	UserInfo              *UserInfo              `json:"user_info"`
 	CommonSettings        *CommonSettings        `json:"common_settings"`
+	SubtitleSources       *SubtitleSources       `json:"subtitle_sources"`
 	AdvancedSettings      *AdvancedSettings      `json:"advanced_settings"`
 	EmbySettings          *EmbySettings          `json:"emby_settings"`
 	DeveloperSettings     *DeveloperSettings     `json:"developer_settings"`
@@ -75,6 +76,7 @@ func NewSettings() *Settings {
 		configFPath:           nowConfigFPath,
 		UserInfo:              &UserInfo{},
 		CommonSettings:        NewCommonSettings(),
+		SubtitleSources:       NewSubtitleSources(),
 		AdvancedSettings:      NewAdvancedSettings(),
 		EmbySettings:          NewEmbySettings(),
 		DeveloperSettings:     NewDeveloperSettings(),

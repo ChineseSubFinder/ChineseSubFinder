@@ -66,6 +66,7 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	// TODO 这里写固定了抉择字幕的顺序
 	sitesSequence = append(sitesSequence, common.SubSiteZiMuKu)
 	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
+	sitesSequence = append(sitesSequence, common.SubSiteAssrt)
 	sitesSequence = append(sitesSequence, common.SubSiteShooter)
 	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
 	downloader.mk = markSystem.NewMarkingSystem(downloader.log, sitesSequence, downloader.settings.AdvancedSettings.SubTypePriority)

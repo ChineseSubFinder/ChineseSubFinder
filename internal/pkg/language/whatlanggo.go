@@ -6,6 +6,19 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 )
 
+func IsChs(inputString string) bool {
+
+	info := whatlanggo.DetectWithOptions(inputString, GetLangOptions())
+	// 是否是中文（简体、繁体）
+	if info.Lang == whatlanggo.Cmn {
+		// 判断是简体还是繁体
+		if ChDict.IsChs(inputString, 0.9) == true {
+			return true
+		}
+	}
+	return false
+}
+
 // GetLangOptions 语言识别的 Options Whitelist
 func GetLangOptions() whatlanggo.Options {
 	return whatlanggo.Options{

@@ -47,3 +47,8 @@ func (s *SubInfo) GetUID() string {
 		return s.fileUrlSha256
 	}
 }
+
+// SetFileUrlSha256 为了 ASSRT 这种下载连接是临时情况所准备的
+func (s *SubInfo) SetFileUrlSha256(fileUrlSha256 string) {
+	s.fileUrlSha256 = fileUrlSha256
+}
