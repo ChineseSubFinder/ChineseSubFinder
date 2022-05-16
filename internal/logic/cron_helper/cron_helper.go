@@ -144,7 +144,8 @@ func (ch *CronHelper) Start(runImmediately bool) {
 			ch.log.Infoln("CronHelper is stopping, not start scanVideoProcessAdd2DownloadQueue")
 			return
 		}
-
+	} else {
+		ch.log.Infoln("RunAtStartup: false, so will not Run At Startup")
 	}
 	// ----------------------------------------------
 	// 如果不是立即执行，那么就等待定时器开启
@@ -163,7 +164,6 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		} else {
 			ch.log.Errorln("Can't get cron jobs, will not send SubScanJobStatus")
 		}
-		ch.log.Infoln("RunAtStartup: false, so will not Run At Startup")
 		//----------------------------------------------
 	} else {
 		ch.cronLock.Unlock()

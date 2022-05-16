@@ -103,6 +103,7 @@ func (d *Downloader) SupplierCheck() {
 	defer func() {
 		if p := recover(); p != nil {
 			d.log.Errorln("Downloader.SupplierCheck() panic")
+			my_util.PrintPanicStack(d.log)
 		}
 		d.downloaderLock.Unlock()
 
@@ -172,6 +173,7 @@ func (d *Downloader) QueueDownloader() {
 	defer func() {
 		if p := recover(); p != nil {
 			d.log.Errorln("Downloader.QueueDownloader() panic")
+			my_util.PrintPanicStack(d.log)
 		}
 
 		d.downloaderLock.Unlock()

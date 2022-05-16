@@ -847,6 +847,12 @@ func BytesToInt(b []byte) (int, error) {
 	return int(x), nil
 }
 
+func PrintPanicStack(log *logrus.Logger) {
+	var buf [4096]byte
+	n := runtime.Stack(buf[:], false)
+	log.Errorln(fmt.Sprintf("%s", buf[:n]))
+}
+
 var (
 	_wantedExtMap    = make(map[string]string) // 人工确认的需要监控的视频后缀名
 	_defExtMap       = make(map[string]string) // 内置支持的视频后缀名列表
