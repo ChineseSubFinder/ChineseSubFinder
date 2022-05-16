@@ -145,31 +145,32 @@ func (ch *CronHelper) Start(runImmediately bool) {
 			return
 		}
 
-	} else {
-		// 如果不是立即执行，那么就等待定时器开启
-		ch.cronLock.Lock()
-		if ch.cronHelperRunning == true && ch.stopping == false {
-			ch.cronLock.Unlock()
-			//----------------------------------------------
-			ch.log.Infoln("CronHelper Start...")
-			ch.c.Start()
-			//----------------------------------------------
-			// 只有定时任务 start 之后才能拿到信息
-			if len(ch.c.Entries()) > 0 {
-				// 不会马上启动扫描，那么就需要设置当前的时间，且为 waiting
-				tttt := ch.c.Entry(ch.entryIDScanVideoProcess).Next.Format("2006-01-02 15:04:05")
-				ch.log.Infoln("Next Sub Scan Will Process At:", tttt)
-			} else {
-				ch.log.Errorln("Can't get cron jobs, will not send SubScanJobStatus")
-			}
-			ch.log.Infoln("RunAtStartup: false, so will not Run At Startup")
-			//----------------------------------------------
-		} else {
-			ch.cronLock.Unlock()
-			ch.log.Infoln("CronHelper is stopping, not start CronHelper")
-		}
-		//----------------------------------------------
 	}
+	// ----------------------------------------------
+	// 如果不是立即执行，那么就等待定时器开启
+	ch.cronLock.Lock()
+	if ch.cronHelperRunning == true && ch.stopping == false {
+		ch.cronLock.Unlock()
+		//----------------------------------------------
+		ch.log.Infoln("CronHelper Start...")
+		ch.c.Start()
+		//----------------------------------------------
+		// 只有定时任务 start 之后才能拿到信息
+		if len(ch.c.Entries()) > 0 {
+			// 不会马上启动扫描，那么就需要设置当前的时间，且为 waiting
+			tttt := ch.c.Entry(ch.entryIDScanVideoProcess).Next.Format("2006-01-02 15:04:05")
+			ch.log.Infoln("Next Sub Scan Will Process At:", tttt)
+		} else {
+			ch.log.Errorln("Can't get cron jobs, will not send SubScanJobStatus")
+		}
+		ch.log.Infoln("RunAtStartup: false, so will not Run At Startup")
+		//----------------------------------------------
+	} else {
+		ch.cronLock.Unlock()
+		ch.log.Infoln("CronHelper is stopping, not start CronHelper")
+	}
+	//----------------------------------------------
+
 }
 
 // Stop 会阻塞等待任务完成
@@ -260,12 +261,6 @@ func (ch *CronHelper) CronRunningStatusString() string {
 
 // scanVideoProcessAdd2DownloadQueue 定时执行的视频扫描任务，提交给任务队列，然后由额外的下载者线程去取队列中的任务下载
 func (ch *CronHelper) scanVideoProcessAdd2DownloadQueue() {
-
-	defer func() {
-		// 下载完后，应该继续是等待
-		tttt := ch.c.Entry(ch.entryIDScanVideoProcess).Next.Format("2006-01-02 15:04:05")
-		ch.log.Infoln("Next Sub Scan Will Process At:", tttt)
-	}()
 
 	// 扫描字幕任务开始，先是扫描阶段，那么是拿不到有多少视频需要扫描的数量的
 	ch.log.Infoln("scanVideoProcessAdd2DownloadQueue Start:", time.Now().Format("2006-01-02 15:04:05"))
