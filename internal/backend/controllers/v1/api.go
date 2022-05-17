@@ -25,15 +25,18 @@ func (cb *ControllerBase) AddJobHandler(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	// 这里视频文件得要存在
-	if my_util.IsFile(videoListAdd.PhysicalVideoFileFullPath) == false {
 
-		c.JSON(http.StatusOK, backend.ReplyJobThings{
-			Message: "physical video file not found",
-		})
-		return
+	if videoListAdd.IsBluray == false {
+		// 非蓝光的才需要检测这个文件存在
+		// 这里视频文件得要存在
+		if my_util.IsFile(videoListAdd.PhysicalVideoFileFullPath) == false {
+
+			c.JSON(http.StatusOK, backend.ReplyJobThings{
+				Message: "physical video file not found",
+			})
+			return
+		}
 	}
-
 	videoType := common.Movie
 	if videoListAdd.VideoType == 1 {
 		videoType = common.Series
