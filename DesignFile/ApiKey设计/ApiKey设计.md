@@ -50,8 +50,40 @@ POST        /add-job
     "physical_video_file_full_path": "xxx", // 这里传递的时候，是本程序中视频文件的物理路径
     "task_priority_level": 3, // 一般的队列等级是5，如果想要快，那么可以先默认这里填写3，这样就可以插队。如果是 0 ，那么就是一次性的任务(下载完一次就会标记 Ignore ）！
     "media_server_inside_video_id": "xxxx" //媒体服务器内部视频ID，可以用于自动 Emby 字幕列表刷新用，如果你是其他的媒体服务器，就别传，留空，我还没实现其他媒体服务器的接口
+    "is_bluray": true // 确认这个是蓝光视频，目前只支持电影传递 true，其他的没有测试过。
 }
 ```
+
+
+
+> 如果你打算传递一个**蓝光电影**到下载的任务队列中，那么你需要特别处理一下你提交的视频 `physical_video_file_full_path` 的值
+>
+> 我这里举个例子，请举一反三：
+>
+> ![image-20220517155116363](ApiKey设计.assets/image-20220517155116363.png)
+>
+> 我有一部电影是蓝光的：`X:\电影\失控玩家 (2021)`
+>
+> 那么我提交时候的 json 是这样的
+>
+> ```json
+> {
+> 	"video_type": 0,
+> 	"physical_video_file_full_path": "X:\电影\失控玩家 (2021)\失控玩家 (2021).mp4",
+> 	"task_priority_level": 0,
+> 	"media_server_inside_video_id": "",
+> 	"is_bluray": true
+> }
+> ```
+>
+> 说一下重点：
+>
+> * 上面的`physical_video_file_full_path`是特殊的，是需要你伪造的一个不存在的 **mp4** 视频
+> * 一定得伪造是 `*.mp4` 的文件
+> * 名称需要与你的电影的目录一致
+> * 然后 `is_bluray` 必须填写 true
+>
+> 剩下的就交给本程序处理即可。
 
 返回 HTTP 码 200：
 
