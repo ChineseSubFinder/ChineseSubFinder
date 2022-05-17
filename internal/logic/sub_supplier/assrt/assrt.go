@@ -215,7 +215,7 @@ func (s *Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier
 		index++
 		one, err := s.getSubListFromFile(episodeInfo.FileFullPath, false)
 		if err != nil {
-			s.log.Errorln(s.GetSupplierName(), "getSubListFromFile", episodeInfo.FileFullPath)
+			s.log.Errorln(s.GetSupplierName(), "getSubListFromFile", episodeInfo.FileFullPath, err)
 			continue
 		}
 		if one == nil {
