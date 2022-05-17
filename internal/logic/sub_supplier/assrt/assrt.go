@@ -6,7 +6,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -15,7 +14,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/sirupsen/logrus"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -268,17 +266,17 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", keyword, err.Error())
 			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("keyword: %s, resp: %s, error: %s", keyword, resp.String(), err.Error()))
 
-			cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
-			if err != nil {
-				s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
-			}
-			desJsonInfo := filepath.Join(cacheCenterFolder, "assrt_search_error_getSubByKeyWord.json")
-			// 写字符串到文件种
-			file, _ := os.Create(desJsonInfo)
-			defer func() {
-				_ = file.Close()
-			}()
-			file.WriteString(resp.String())
+			//cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
+			//if err != nil {
+			//	s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
+			//}
+			//desJsonInfo := filepath.Join(cacheCenterFolder, "assrt_search_error_getSubByKeyWord.json")
+			//// 写字符串到文件种
+			//file, _ := os.Create(desJsonInfo)
+			//defer func() {
+			//	_ = file.Close()
+			//}()
+			//file.WriteString(resp.String())
 		}
 		return searchSubResult, err
 	}
@@ -310,17 +308,17 @@ func (s *Supplier) getSubDetail(subID int) (OneSubDetail, error) {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", subID, err.Error())
 			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("subID: %d, resp: %s, error: %s", subID, resp.String(), err.Error()))
 
-			cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
-			if err != nil {
-				s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
-			}
-			desJsonInfo := filepath.Join(cacheCenterFolder, "assrt_search_error_getSubDetail.json")
-			// 写字符串到文件种
-			file, _ := os.Create(desJsonInfo)
-			defer func() {
-				_ = file.Close()
-			}()
-			file.WriteString(resp.String())
+			//cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
+			//if err != nil {
+			//	s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
+			//}
+			//desJsonInfo := filepath.Join(cacheCenterFolder, "assrt_search_error_getSubDetail.json")
+			//// 写字符串到文件种
+			//file, _ := os.Create(desJsonInfo)
+			//defer func() {
+			//	_ = file.Close()
+			//}()
+			//file.WriteString(resp.String())
 		}
 		return subDetail, err
 	}
@@ -358,78 +356,78 @@ type SearchSubResult struct {
 		Action string `json:"action"`
 		Subs   []struct {
 			Lang struct {
-				Desc     string `json:"desc"`
+				Desc     string `json:"desc,omitempty"`
 				Langlist struct {
-					Langcht bool `json:"langcht"`
-					Langdou bool `json:"langdou"`
-					Langeng bool `json:"langeng"`
-					Langchs bool `json:"langchs"`
-				} `json:"langlist"`
-			} `json:"lang"`
-			Id          int    `json:"id"`
-			VoteScore   int    `json:"vote_score"`
-			Videoname   string `json:"videoname"`
-			ReleaseSite string `json:"release_site"`
-			Revision    int    `json:"revision"`
-			Subtype     string `json:"subtype"`
-			NativeName  string `json:"native_name"`
-			UploadTime  string `json:"upload_time"`
-		} `json:"subs"`
-		Result  string `json:"result"`
-		Keyword string `json:"keyword"`
-	} `json:"sub"`
-	Status int `json:"status"`
+					Langcht bool `json:"langcht,omitempty"`
+					Langdou bool `json:"langdou,omitempty"`
+					Langeng bool `json:"langeng,omitempty"`
+					Langchs bool `json:"langchs,omitempty"`
+				} `json:"langlist,omitempty"`
+			} `json:"lang,omitempty"`
+			Id          int    `json:"id,omitempty"`
+			VoteScore   int    `json:"vote_score,omitempty"`
+			Videoname   string `json:"videoname,omitempty"`
+			ReleaseSite string `json:"release_site,omitempty"`
+			Revision    int    `json:"revision,omitempty"`
+			Subtype     string `json:"subtype,omitempty"`
+			NativeName  string `json:"native_name,omitempty"`
+			UploadTime  string `json:"upload_time,omitempty"`
+		} `json:"subs,omitempty"`
+		Result  string `json:"result,omitempty"`
+		Keyword string `json:"keyword,omitempty"`
+	} `json:"sub,omitempty"`
+	Status int `json:"status,omitempty"`
 }
 
 type OneSubDetail struct {
 	Sub struct {
 		Action string `json:"action"`
 		Subs   []struct {
-			DownCount int `json:"down_count"`
-			ViewCount int `json:"view_count"`
+			DownCount int `json:"down_count,omitempty"`
+			ViewCount int `json:"view_count,omitempty"`
 			Lang      struct {
-				Desc     string `json:"desc"`
+				Desc     string `json:"desc,omitempty"`
 				Langlist struct {
-					Langcht bool `json:"langcht"`
-					Langdou bool `json:"langdou"`
-					Langeng bool `json:"langeng"`
-					Langchs bool `json:"langchs"`
-				} `json:"langlist"`
-			} `json:"lang"`
-			Size       int    `json:"size"`
-			Title      string `json:"title"`
-			Videoname  string `json:"videoname"`
-			Revision   int    `json:"revision"`
-			NativeName string `json:"native_name"`
-			UploadTime string `json:"upload_time"`
+					Langcht bool `json:"langcht,omitempty"`
+					Langdou bool `json:"langdou,omitempty"`
+					Langeng bool `json:"langeng,omitempty"`
+					Langchs bool `json:"langchs,omitempty"`
+				} `json:"langlist,omitempty"`
+			} `json:"lang,omitempty"`
+			Size       int    `json:"size,omitempty"`
+			Title      string `json:"title,omitempty"`
+			Videoname  string `json:"videoname,omitempty"`
+			Revision   int    `json:"revision,omitempty"`
+			NativeName string `json:"native_name,omitempty"`
+			UploadTime string `json:"upload_time,omitempty"`
 			Producer   struct {
-				Producer string `json:"producer"`
-				Verifier string `json:"verifier"`
-				Uploader string `json:"uploader"`
-				Source   string `json:"source"`
-			} `json:"producer"`
-			Subtype     string `json:"subtype"`
-			VoteScore   int    `json:"vote_score"`
-			ReleaseSite string `json:"release_site"`
+				Producer string `json:"producer,omitempty"`
+				Verifier string `json:"verifier,omitempty"`
+				Uploader string `json:"uploader,omitempty"`
+				Source   string `json:"source,omitempty"`
+			} `json:"producer,omitempty"`
+			Subtype     string `json:"subtype,omitempty"`
+			VoteScore   int    `json:"vote_score,omitempty"`
+			ReleaseSite string `json:"release_site,omitempty"`
 			Filelist    []struct {
-				S   string `json:"s"`
-				F   string `json:"f"`
-				Url string `json:"url"`
-			} `json:"filelist"`
-			Id       int    `json:"id"`
-			Filename string `json:"filename"`
-			Url      string `json:"url"`
-		} `json:"subs"`
-		Result string `json:"result"`
-	} `json:"sub"`
-	Status int `json:"status"`
+				S   string `json:"s,omitempty"`
+				F   string `json:"f,omitempty"`
+				Url string `json:"url,omitempty"`
+			} `json:"filelist,omitempty"`
+			Id       int    `json:"id,omitempty"`
+			Filename string `json:"filename,omitempty"`
+			Url      string `json:"url,omitempty"`
+		} `json:"subs,omitempty"`
+		Result string `json:"result,omitempty"`
+	} `json:"sub,omitempty"`
+	Status int `json:"status,omitempty"`
 }
 
 type UserInfo struct {
 	User struct {
-		Action string `json:"action"`
-		Result string `json:"result"`
-		Quota  int    `json:"quota"`
-	} `json:"user"`
-	Status int `json:"status"`
+		Action string `json:"action,omitempty"`
+		Result string `json:"result,omitempty"`
+		Quota  int    `json:"quota,omitempty"`
+	} `json:"user,omitempty"`
+	Status int `json:"status,omitempty"`
 }
