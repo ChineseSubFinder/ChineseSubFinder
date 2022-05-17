@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/assrt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
@@ -92,6 +93,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	// 构建每个字幕站点下载者的实例
 	p.SubSupplierHub = subSupplier.NewSubSupplierHub(
 		//zimuku.NewSupplier(p.fileDownloader),
+		assrt.NewSupplier(p.fileDownloader),
 		xunlei.NewSupplier(p.fileDownloader),
 		shooter.NewSupplier(p.fileDownloader),
 	)

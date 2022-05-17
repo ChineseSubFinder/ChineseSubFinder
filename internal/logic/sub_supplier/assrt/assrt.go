@@ -90,14 +90,44 @@ func (s *Supplier) GetSupplierName() string {
 }
 
 func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
+
+	outSubInfos := make([]supplier.SubInfo, 0)
+	if s.settings.SubtitleSources.AssrtSettings.Enabled == false {
+		return outSubInfos, nil
+	}
+
+	if s.settings.SubtitleSources.AssrtSettings.Token == "" {
+		return nil, errors.New("Token is empty")
+	}
+
 	return s.getSubListFromFile(filePath, true)
 }
 
 func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+
+	outSubInfos := make([]supplier.SubInfo, 0)
+	if s.settings.SubtitleSources.AssrtSettings.Enabled == false {
+		return outSubInfos, nil
+	}
+
+	if s.settings.SubtitleSources.AssrtSettings.Token == "" {
+		return nil, errors.New("Token is empty")
+	}
+
 	return s.downloadSub4Series(seriesInfo)
 }
 
 func (s *Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
+
+	outSubInfos := make([]supplier.SubInfo, 0)
+	if s.settings.SubtitleSources.AssrtSettings.Enabled == false {
+		return outSubInfos, nil
+	}
+
+	if s.settings.SubtitleSources.AssrtSettings.Token == "" {
+		return nil, errors.New("Token is empty")
+	}
+
 	return s.downloadSub4Series(seriesInfo)
 }
 

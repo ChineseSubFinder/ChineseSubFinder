@@ -2,6 +2,7 @@ package base
 
 import (
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/assrt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
@@ -39,6 +40,7 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 		// 这里无需传递下载字幕的缓存实例
 		//zimuku.NewSupplier(cb.fileDownloader),
 		xunlei.NewSupplier(cb.fileDownloader),
+		assrt.NewSupplier(cb.fileDownloader),
 		shooter.NewSupplier(cb.fileDownloader),
 		subhd.NewSupplier(cb.fileDownloader),
 	)
