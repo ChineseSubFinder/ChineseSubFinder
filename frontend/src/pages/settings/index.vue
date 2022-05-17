@@ -18,10 +18,11 @@
         indicator-color="primary"
         align="justify"
         narrow-indicator
-        style="max-width: 500px"
+        style="max-width: 700px"
       >
         <q-tab name="basic" label="基础配置" />
         <q-tab name="advanced" label="进阶配置" />
+        <q-tab name="subSource" label="字幕源设置" />
         <q-tab name="emby" label="Emby配置" />
         <q-tab name="development" label="开发人员配置" />
         <q-tab name="experiment" label="实验室" />
@@ -42,6 +43,10 @@
 
           <q-tab-panel name="advanced">
             <advanced-settings />
+          </q-tab-panel>
+
+          <q-tab-panel name="subSource">
+            <sub-source-settings />
           </q-tab-panel>
 
           <q-tab-panel name="emby">
@@ -75,6 +80,7 @@ import { settingsState, submitAll, useSettings } from 'pages/settings/useSetting
 import { isJobRunning } from 'src/store/systemState';
 import ExperimentSettings from 'pages/settings/ExperimentSettings';
 import FormSubmitArea from 'pages/settings/FormSubmitArea';
+import SubSourceSettings from 'pages/settings/SubSourceSettings';
 
 const tab = ref('basic');
 
