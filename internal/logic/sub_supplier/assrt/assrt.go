@@ -6,6 +6,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -14,6 +15,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/sirupsen/logrus"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -265,6 +267,18 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 		if resp != nil {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", keyword, err.Error())
 			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("keyword: %s, resp: %s, error: %s", keyword, resp.String(), err.Error()))
+
+			cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
+			if err != nil {
+				s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
+			}
+			desJsonInfo := filepath.Join(cacheCenterFolder, "assrt_search_error_getSubByKeyWord.json")
+			// 写字符串到文件种
+			file, _ := os.Create(desJsonInfo)
+			defer func() {
+				_ = file.Close()
+			}()
+			file.WriteString(resp.String())
 		}
 		return searchSubResult, err
 	}
@@ -295,6 +309,18 @@ func (s *Supplier) getSubDetail(subID int) (OneSubDetail, error) {
 		if resp != nil {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", subID, err.Error())
 			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("subID: %d, resp: %s, error: %s", subID, resp.String(), err.Error()))
+
+			cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
+			if err != nil {
+				s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
+			}
+			desJsonInfo := filepath.Join(cacheCenterFolder, "assrt_search_error_getSubDetail.json")
+			// 写字符串到文件种
+			file, _ := os.Create(desJsonInfo)
+			defer func() {
+				_ = file.Close()
+			}()
+			file.WriteString(resp.String())
 		}
 		return subDetail, err
 	}
