@@ -93,10 +93,14 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	// 构建每个字幕站点下载者的实例
 	p.SubSupplierHub = subSupplier.NewSubSupplierHub(
 		//zimuku.NewSupplier(p.fileDownloader),
-		assrt.NewSupplier(p.fileDownloader),
 		xunlei.NewSupplier(p.fileDownloader),
 		shooter.NewSupplier(p.fileDownloader),
 	)
+	if p.settings.SubtitleSources.AssrtSettings.Enabled == true &&
+		p.settings.SubtitleSources.AssrtSettings.Token != "" {
+		// 如果开启了 ASSRt 字幕源，则需要新增
+		p.SubSupplierHub.AddSubSupplier(assrt.NewSupplier(p.fileDownloader))
+	}
 	if common2.SubhdCode != "" {
 		// 如果找到 code 了，那么就可以继续用这个实例
 		p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.fileDownloader))
