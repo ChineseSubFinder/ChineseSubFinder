@@ -2,7 +2,6 @@ package decode
 
 import (
 	"errors"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/beevik/etree"
@@ -83,6 +82,10 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo,
 		imdbInfo.ReleaseDate = t.Text()
 		break
 	}
+	for _, t := range doc.FindElements("./" + rootKey + "/aired") {
+		imdbInfo.ReleaseDate = t.Text()
+		break
+	}
 	//---------------------------------------------------------------------
 	for _, t := range doc.FindElements("./" + rootKey + "/premiered") {
 		imdbInfo.ReleaseDate = t.Text()
@@ -94,7 +97,7 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo,
 	return imdbInfo, common2.CanNotFindIMDBID
 }
 
-// GetImdbInfo4Movie 从电影视频文件获取 IMDB info
+// GetImdbInfo4Movie 从电影视频文件获取 IMDB info，只能确定拿到 IMDB ID 是靠谱的
 func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	imdbInfo := types.VideoIMDBInfo{}
 	// movie 当前的目录
@@ -120,11 +123,11 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 		if upperName == MetadataMovieXml {
 			// 找 movie.xml
 			movieXmlFPath = filepath.Join(dirPth, fi.Name())
-			break
+
 		} else if upperName == movieNfoFileName {
 			// movieName.nfo 文件
 			movieNameNfoFPath = filepath.Join(dirPth, fi.Name())
-			break
+
 		} else {
 			// 找 *.nfo，很可能是 movie.nfo
 			ok := strings.HasSuffix(fi.Name(), suffixNameNfo)
@@ -141,7 +144,7 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	if movieNameNfoFPath != "" {
 		imdbInfo, err = getImdbAndYearNfo(movieNameNfoFPath, "movie")
 		if err != nil {
-			return types.VideoIMDBInfo{}, err
+			return imdbInfo, err
 		}
 		return imdbInfo, nil
 	}
@@ -149,7 +152,6 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	if movieXmlFPath != "" {
 		imdbInfo, err = getImdbAndYearMovieXml(movieXmlFPath)
 		if err != nil {
-			log_helper.GetLogger().Errorln("getImdbAndYearMovieXml error, move on:", err)
 		} else {
 			return imdbInfo, nil
 		}
@@ -197,7 +199,7 @@ func GetImdbInfo4SeriesDir(seriesDir string) (types.VideoIMDBInfo, error) {
 	}
 	imdbInfo, err = getImdbAndYearNfo(nfoFilePath, "tvshow")
 	if err != nil {
-		return types.VideoIMDBInfo{}, err
+		return imdbInfo, err
 	}
 	return imdbInfo, nil
 }
@@ -234,13 +236,13 @@ func GetSeriesSeasonImdbInfoFromEpisode(oneEpFPath string) (types.VideoIMDBInfo,
 		var imdbInfo types.VideoIMDBInfo
 		imdbInfo, err = getImdbAndYearNfo(nfoFilePath, "tvshow")
 		if err != nil {
-			return types.VideoIMDBInfo{}, err
+			return imdbInfo, err
 		}
 		return imdbInfo, nil
 	}
 }
 
-// GetImdbInfo4OneSeriesEpisode 获取这一集的 IMDB info
+// GetImdbInfo4OneSeriesEpisode 获取这一集的 IMDB info，可能会因为没有获取到 IMDB ID 而返回 common.CanNotFindIMDBID 错误，但是 imdbInfo 其他信息是可用的
 func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoIMDBInfo, error) {
 
 	// 从这一集的视频文件全路径去推算对应的 nfo 文件是否存在
@@ -250,29 +252,13 @@ func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoIMDBInfo, error
 	EpNfoFileName = strings.ReplaceAll(EpNfoFileName, filepath.Ext(oneEpFPath), suffixNameNfo)
 	// 全路径
 	EpNfoFPath := filepath.Join(EPdir, EpNfoFileName)
-	//
-	imdbInfo := types.VideoIMDBInfo{}
-	doc := etree.NewDocument()
-	doc.ReadSettings.Permissive = true
-	// 这里会遇到一个梗，下面的关键词，可能是小写、大写、首字母大写
-	// 读取文件转换为全部的小写，然后在解析 xml ？ etree 在转换为小写后，某些类型的文件的内容会崩溃···
-	// 所以这里很傻的方式解决
-	err := doc.ReadFromFile(EpNfoFPath)
+
+	imdbInfo, err := getImdbAndYearNfo(EpNfoFPath, "episodedetails")
 	if err != nil {
 		return imdbInfo, err
 	}
-	for _, t := range doc.FindElements("./episodedetails/aired") {
-		imdbInfo.ReleaseDate = t.Text()
-		break
-	}
-	for _, t := range doc.FindElements("./episodedetails/premiered") {
-		imdbInfo.ReleaseDate = t.Text()
-		break
-	}
-	if imdbInfo.ReleaseDate != "" {
-		return imdbInfo, nil
-	}
-	return imdbInfo, common2.CanNotFindEpAiredTime
+
+	return imdbInfo, nil
 }
 
 // GetVideoInfoFromFileName 从文件名推断文件信息
@@ -335,7 +321,7 @@ func GetVideoInfoFromFileFullPath(videoFileFullPath string) (*PTN.TorrentInfo, t
 		// 因为在前面扫描视频的时候，发现特殊的蓝光结构会伪造一个不存在的 xx.mp4 的视频文件过来，这里就需要额外检测一次
 		bok, idBDMVFPath, _ := IsFakeBDMVWorked(videoFileFullPath)
 		if bok == false {
-			return nil, time.Time{}, err
+			return nil, time.Time{}, errors.New("GetVideoInfoFromFileFullPath.IsFakeBDMVWorked == false")
 		}
 
 		// 获取这个蓝光 ID BDMV 文件的时间

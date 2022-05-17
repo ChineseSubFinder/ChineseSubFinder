@@ -5,14 +5,18 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/filter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sort_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	browser "github.com/allanpk716/fake-useragent"
+	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -32,74 +36,124 @@ import (
 )
 
 // NewHttpClient 新建一个 resty 的对象
-func NewHttpClient(_proxySettings ...*settings.ProxySettings) *resty.Client {
+func NewHttpClient(_proxySettings ...*settings.ProxySettings) (*resty.Client, error) {
 	//const defUserAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"
 	//const defUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41"
 
 	var proxySettings *settings.ProxySettings
-	var HttpProxy, UserAgent, Referer string
+	var UserAgent, Referer string
 
 	if len(_proxySettings) > 0 {
 		proxySettings = _proxySettings[0]
 	}
-	if proxySettings.UseHttpProxy == true && len(proxySettings.HttpProxyAddress) > 0 {
-		HttpProxy = proxySettings.HttpProxyAddress
-	}
+	// ------------------------------------------------
 	// 随机的 Browser
 	UserAgent = browser.Random()
-
-	httpClient := resty.New()
+	// ------------------------------------------------
+	httpClient := resty.New().SetTransport(&http.Transport{
+		DisableKeepAlives:   true,
+		MaxIdleConns:        1000,
+		MaxIdleConnsPerHost: 1000,
+	})
 	httpClient.SetTimeout(common.HTMLTimeOut)
 	httpClient.SetRetryCount(2)
-	if HttpProxy != "" {
-		httpClient.SetProxy(HttpProxy)
-	} else {
-		httpClient.RemoveProxy()
+	// ------------------------------------------------
+	// 设置 Referer
+	if len(_proxySettings) > 0 {
+		if len(proxySettings.Referer) > 0 {
+			Referer = proxySettings.Referer
+		}
+		if len(Referer) > 0 {
+			httpClient.SetHeader("Referer", Referer)
+		}
 	}
-
-	if len(proxySettings.Referer) > 0 {
-		Referer = proxySettings.Referer
-	}
-
+	// ------------------------------------------------
+	// 设置 Header
 	httpClient.SetHeaders(map[string]string{
 		"Content-Type": "application/json",
 		"User-Agent":   UserAgent,
 	})
-
-	if len(Referer) > 0 {
-		httpClient.SetHeader("Referer", Referer)
+	// ------------------------------------------------
+	// 不要求安全链接
+	httpClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+	// ------------------------------------------------
+	if len(_proxySettings) == 0 ||
+		(proxySettings != nil && proxySettings.UseProxy == false) {
+		// 无需设置代理
+		return httpClient, nil
+	}
+	// ------------------------------------------------
+	// http 代理
+	HttpProxyAddress := proxySettings.GetLocalHttpProxyUrl()
+	if HttpProxyAddress != "" {
+		httpClient.SetProxy(HttpProxyAddress)
+	} else {
+		httpClient.RemoveProxy()
 	}
 
-	return httpClient
+	return httpClient, nil
 }
 
-func GetPublicIP(queue *settings.TaskQueue, _proxySettings ...*settings.ProxySettings) string {
+func getPublicIP(inputSite string, _proxySettings ...*settings.ProxySettings) string {
 
 	var client *resty.Client
-	if len(_proxySettings) > 0 {
-		client = NewHttpClient(_proxySettings[0])
-	} else {
-		client = NewHttpClient()
+	client, err := NewHttpClient(_proxySettings...)
+	if err != nil {
+		return ""
 	}
-
-	targetSite := "http://myexternalip.com/raw"
-	if queue.CheckPublicIPTargetSite != "" {
-		targetSite = queue.CheckPublicIPTargetSite
-	}
-	response, err := client.R().Get(targetSite)
+	response, err := client.R().Get(inputSite)
 	if err != nil {
 		return ""
 	}
 	return response.String()
 }
 
+func GetPublicIP(log *logrus.Logger, queue *settings.TaskQueue, _proxySettings ...*settings.ProxySettings) string {
+
+	defPublicIPSites := []string{
+		"https://myip.biturl.top/",
+		"https://ip4.seeip.org/",
+		"https://ipecho.net/plain",
+		"https://api-ipv4.ip.sb/ip",
+		"https://api.ipify.org/",
+		"http://myexternalip.com/raw",
+	}
+
+	customPublicIPSites := make([]string, 0)
+	if queue.CheckPublicIPTargetSite != "" {
+		// 自定义了公网IP查询网站
+		tSites := strings.Split(queue.CheckPublicIPTargetSite, ";")
+		if tSites != nil && len(tSites) > 0 {
+			customPublicIPSites = append(customPublicIPSites, tSites...)
+		}
+	} else {
+		customPublicIPSites = append(customPublicIPSites, defPublicIPSites...)
+	}
+
+	for i, publicIPSite := range customPublicIPSites {
+		log.Debugln("[GetPublicIP]", i, publicIPSite)
+		publicIP := getPublicIP(publicIPSite, _proxySettings...)
+
+		matcheds := regex_things.ReMatchIP.FindAllString(publicIP, -1)
+
+		if publicIP != "" || matcheds == nil || len(matcheds) == 0 {
+			log.Infoln("[GetPublicIP]", publicIP)
+			return publicIP
+		}
+	}
+
+	return ""
+}
+
 // DownFile 从指定的 url 下载文件
 func DownFile(l *logrus.Logger, urlStr string, _proxySettings ...*settings.ProxySettings) ([]byte, string, error) {
-	var proxySettings *settings.ProxySettings
-	if len(_proxySettings) > 0 {
-		proxySettings = _proxySettings[0]
+
+	var err error
+	var httpClient *resty.Client
+	httpClient, err = NewHttpClient(_proxySettings...)
+	if err != nil {
+		return nil, "", err
 	}
-	httpClient := NewHttpClient(proxySettings)
 	resp, err := httpClient.R().Get(urlStr)
 	if err != nil {
 		return nil, "", err
@@ -117,7 +171,14 @@ func DownFile(l *logrus.Logger, urlStr string, _proxySettings ...*settings.Proxy
 func GetFileName(l *logrus.Logger, resp *http.Response) string {
 	contentDisposition := resp.Header.Get("Content-Disposition")
 	if len(contentDisposition) == 0 {
-		return ""
+		m := regexp.MustCompile(`^(.*/)?(?:$|(.+?)(?:(\.[^.]*$)|$))`).FindStringSubmatch(resp.Request.URL.String())
+
+		if m == nil || len(m) < 4 {
+			l.Warningln("GetFileName.regexp.MustCompile.FindStringSubmatch", resp.Request.URL.String())
+			return ""
+		}
+
+		return m[2] + m[3]
 	}
 	re := regexp.MustCompile(`filename=["]*([^"]+)["]*`)
 	matched := re.FindStringSubmatch(contentDisposition)
@@ -171,29 +232,44 @@ func VideoNameSearchKeywordMaker(l *logrus.Logger, title string, year string) st
 }
 
 // SearchMatchedVideoFileFromDirs 搜索符合后缀名的视频文件
-func SearchMatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) ([]string, error) {
+func SearchMatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) (*treemap.Map, error) {
 
 	defer func() {
-		l.Debugln("SearchMatchedVideoFileFromDirs End ----------------")
+		l.Infoln("SearchMatchedVideoFileFromDirs End")
+		l.Infoln(" --------------------------------------------------")
 	}()
-	l.Debugln("SearchMatchedVideoFileFromDirs Start ----------------")
+	l.Infoln(" --------------------------------------------------")
+	l.Infoln("SearchMatchedVideoFileFromDirs Start...")
 
-	var fileFullPathList = make([]string, 0)
+	var fileFullPathMap = treemap.NewWithStringComparator()
 	for _, dir := range dirs {
 
 		matchedVideoFile, err := SearchMatchedVideoFile(l, dir)
 		if err != nil {
 			return nil, err
 		}
-
-		fileFullPathList = append(fileFullPathList, matchedVideoFile...)
+		value, found := fileFullPathMap.Get(dir)
+		if found == false {
+			fileFullPathMap.Put(dir, matchedVideoFile)
+		} else {
+			value = append(value.([]string), matchedVideoFile...)
+			fileFullPathMap.Put(dir, value)
+		}
 	}
 
-	for _, s := range fileFullPathList {
-		l.Debugln(s)
-	}
+	fileFullPathMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
 
-	return fileFullPathList, nil
+		oneSeriesRootPathName := seriesRootPathName.(string)
+		fileFullPathList := seriesNames.([]string)
+		// 排序，从最新的到最早的
+		fileFullPathList = sort_things.SortByModTime(fileFullPathList)
+		for _, s := range fileFullPathList {
+			l.Debugln(s)
+		}
+		fileFullPathMap.Put(oneSeriesRootPathName, fileFullPathList)
+	})
+
+	return fileFullPathMap, nil
 }
 
 // SearchMatchedVideoFile 搜索符合后缀名的视频文件，现在也会把 BDMV 的文件搜索出来，但是这个并不是一个视频文件，需要在后续特殊处理
@@ -231,16 +307,10 @@ func SearchMatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 					continue
 				}
 
-				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
-				fi, err := curFile.Info()
-				if err != nil {
-					l.Debugln("SearchMatchedVideoFile, file.Info:", fullPath, err)
+				if filter.SkipFileInfo(l, curFile) == true {
 					continue
 				}
-				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
-					l.Debugln("SearchMatchedVideoFile file.Size() == 4096 && Prefix Name == ._*", fullPath)
-					continue
-				}
+
 				fileFullPathList = append(fileFullPathList, fullPath)
 			}
 		}
@@ -295,14 +365,7 @@ func SearchTVNfo(l *logrus.Logger, dir string) ([]string, error) {
 				continue
 			} else {
 
-				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
-				fi, err := curFile.Info()
-				if err != nil {
-					l.Debugln("SearchTVNfo, file.Info:", fullPath, err)
-					continue
-				}
-				if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
-					l.Debugln("SearchTVNfo file.Size() == 4096 && Prefix Name == ._*", fullPath)
+				if filter.SkipFileInfo(l, curFile) == true {
 					continue
 				}
 				fileFullPathList = append(fileFullPathList, fullPath)
@@ -407,6 +470,12 @@ func CopyDir(src string, dst string) error {
 
 // CloseChrome 强行结束没有关闭的 Chrome 进程
 func CloseChrome(l *logrus.Logger) {
+
+	defer func() {
+		l.Infoln("CloseChrome End")
+	}()
+
+	l.Infoln("CloseChrome Start...")
 
 	cmdString := ""
 	var command *exec.Cmd

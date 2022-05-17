@@ -3,9 +3,11 @@ package zimuku
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
 	"testing"
@@ -13,7 +15,7 @@ import (
 
 func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 
-	browser, err := rod_helper.NewBrowser("", true, settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowser(log_helper.GetLogger4Tester(), "", "", true, settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,7 +25,7 @@ func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 
 	//imdbId1 := "tt3228774"
 	videoName := "黑白魔女库伊拉"
-	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	outList, err := s.getSubListFromKeyword(browser, videoName)
 	if err != nil {
 		t.Error(err)
@@ -36,7 +38,7 @@ func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 
 func TestSupplier_GetSubListFromFile(t *testing.T) {
 
-	browser, err := rod_helper.NewBrowser("", true, settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserEx(log_helper.GetLogger4Tester(), true, settings.NewSettings(), settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +55,7 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	movie1 := filepath.Join(rootDir, "zimuku", "movies", "The Devil All the Time (2020)", "The Devil All the Time (2020) WEBDL-1080p.mkv")
-	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	outList, err := s.getSubListFromMovie(browser, movie1)
 	if err != nil {
 		t.Error(err)
@@ -71,21 +73,25 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	//ser := "X:\\连续剧\\Money.Heist"
 	//ser := "X:\\连续剧\\黄石 (2018)"
 
+	// 可以指定几集去调试
+	epsMap := make(map[int][]int, 0)
+	epsMap[4] = []int{1}
+	//epsMap[1] = []int{1, 2, 3}
+
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(ser, 90, false)
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(log_helper.GetLogger4Tester(),
+		ser,
+		90,
+		false,
+		false,
+		epsMap)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// 可以指定几集去调试
-	//epsMap := make(map[int]int, 0)
-	//epsMap[4] = 5
-	//epsMap[1] = 4
-	//series_helper2.SetTheSpecifiedEps2Download(seriesInfo, epsMap)
-
-	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -94,11 +100,20 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	for i, sublist := range outList {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, len(sublist.Data))
 	}
+
+	organizeSubFiles, err := sub_helper.OrganizeDlSubFiles(log_helper.GetLogger4Tester(), filepath.Base(seriesInfo.DirPath), outList)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for s2, strings := range organizeSubFiles {
+		println(s2, strings)
+	}
 }
 
 func TestSupplier_getSubListFromKeyword(t *testing.T) {
 
-	browser, err := rod_helper.NewBrowser("", true, settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserEx(log_helper.GetLogger4Tester(), true, settings.NewSettings(), settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +129,7 @@ func TestSupplier_getSubListFromKeyword(t *testing.T) {
 	//imdbID := "tt15299712" // 云南虫谷
 	//imdbID := "tt3626476"  // Vacation Friends (2021)
 	imdbID := "tt11192306" // Superman.and.Lois
-	zimuku := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	zimuku := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	subInfos, err := zimuku.getSubListFromKeyword(browser, imdbID)
 	if err != nil {
 		t.Fatal(err)
@@ -128,7 +143,7 @@ func TestSupplier_step3(t *testing.T) {
 	// 调试用，不作为单元测试的一个考核，因为可能不可控
 	//dlUrl := "https://zmk.pw/dld/162150.html"
 	//s := Supplier{}
-	//fileName, datas, err := s.step3(dlUrl)
+	//fileName, datas, err := s.DownFile(dlUrl)
 	//if err != nil {
 	//	t.Fatal(err)
 	//}
@@ -139,7 +154,7 @@ func TestSupplier_step3(t *testing.T) {
 
 func TestSupplier_CheckAlive(t *testing.T) {
 
-	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	alive, _ := s.CheckAlive()
 	if alive == false {
 		t.Fatal("CheckAlive == false")

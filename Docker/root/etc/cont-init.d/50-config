@@ -7,7 +7,7 @@ chown -R abc:abc \
     /root \
     /config
     
-if [ "${PERMS}"=true ]
+if [ "${PERMS}" = true ]
 then
   chown -R abc:abc /media
 fi

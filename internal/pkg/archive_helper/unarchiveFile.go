@@ -11,9 +11,73 @@ import (
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"io"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 )
+
+// UnArchiveFileEx 发现打包的字幕内部还有一层压缩包···所以···
+func UnArchiveFileEx(fileFullPath, desRootPath string) error {
+
+	// 先进行一次解压
+	err := UnArchiveFile(fileFullPath, desRootPath)
+	if err != nil {
+		return err
+	}
+	// --------------------------------------------------
+	doUnzipFun := func() error {
+		// 判断一次
+		needUnzipFileFPaths := make([]string, 0)
+		err = filepath.Walk(desRootPath, func(path string, info fs.FileInfo, err error) error {
+
+			if info.IsDir() == true {
+				return nil
+			}
+			nowExt := filepath.Ext(path)
+			// 然后对于解压的内容再次进行判断
+			if nowExt != ".zip" && nowExt != ".tar" && nowExt != ".rar" && nowExt != ".7z" {
+				return nil
+			} else {
+				needUnzipFileFPaths = append(needUnzipFileFPaths, path)
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		// 如果有压缩包，那么就继续解压，然后删除压缩包
+		for _, needUnzipFileFPath := range needUnzipFileFPaths {
+			err = UnArchiveFile(needUnzipFileFPath, desRootPath)
+			if err != nil {
+				return err
+			}
+			err = os.Remove(needUnzipFileFPath)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+	// 第二次解压
+	err = doUnzipFun()
+	if err != nil {
+		return err
+	}
+	// 第三次解压
+	err = doUnzipFun()
+	if err != nil {
+		return err
+	}
+	// 第四次解压
+	err = doUnzipFun()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 // UnArchiveFile 7z 以外的都能搞定中文编码的问题，但是 7z 有梗，需要单独的库去解析，且编码是解决不了的，以后他们搞定了再测试
 // 所以效果就是，7z 外的压缩包文件解压ok，字幕可以正常从名称解析出是简体还是繁体，但是7z就没办法了，一定乱码

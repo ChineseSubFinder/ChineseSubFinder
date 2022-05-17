@@ -2,20 +2,19 @@ package emby_helper
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"reflect"
 	"testing"
 )
 
 var ec = settings.EmbySettings{
-	//AddressUrl:            "http://192.168.50.252:xxx",
-	//APIKey:                "xxx",
-	//MaxRequestVideoNumber: 100,
-	//MoviePathsMapping: map[string]string{
-	//	"X:\\电影": "/mnt/share1/电影",
-	//},
-	//SeriesPathsMapping: map[string]string{
-	//	"X:\\连续剧": "/mnt/share1/连续剧",
-	//},
+	AddressUrl:            "http://192.168.50.252:8096",
+	APIKey:                "xxxxx",
+	MaxRequestVideoNumber: 100,
+	MoviePathsMapping: map[string]string{
+		"X:\\电影": "/mnt/share1/电影",
+	},
+	SeriesPathsMapping: map[string]string{
+		"X:\\连续剧": "/mnt/share1/连续剧",
+	},
 }
 
 // TODO 暂不方便在其他环境进行单元测试
@@ -43,7 +42,7 @@ func TestEmbyHelper_GetRecentlyAddVideoList(t *testing.T) {
 func TestEmbyHelper_RefreshEmbySubList(t *testing.T) {
 	//config := config.GetConfig()
 	//em := NewEmbyHelper(config.EmbyConfig)
-	//bok, err := em.RefreshEmbySubList()
+	//bok, err := em.refreshEmbySubList()
 	//if err != nil {
 	//	t.Fatal(err)
 	//}
@@ -66,39 +65,6 @@ func TestEmbyHelper_GetInternalEngSubAndExSub(t *testing.T) {
 	//}
 	//
 	//println(internalEngSub[0].FileName, exCh_EngSub[0].FileName)
-}
-
-func Test_sortStringSliceByLength(t *testing.T) {
-	type args struct {
-		m []string
-	}
-	tests := []struct {
-		name string
-		args args
-		want PathSlices
-	}{
-		{
-			name: "00",
-			args: args{
-				[]string{"/aa/bb/cc", "/aa", "/aa/bb"},
-			},
-			want: []PathSlice{{
-				Path: "/aa/bb/cc",
-			}, {
-				Path: "/aa/bb",
-			}, {
-				Path: "/aa",
-			},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := sortStringSliceByLength(tt.args.m); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("sortStringSliceByLength() = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }
 
 // TODO 暂不方便在其他环境进行单元测试
@@ -131,6 +97,21 @@ func TestEmbyHelper_GetPlayedItemsSubtitle(t *testing.T) {
 	//}
 }
 
-func TestEmbyHelper_GetRecentlyAddVideoList1(t *testing.T) {
+func TestEmbyHelper_IsVideoPlayed(t *testing.T) {
 
+	////// 95813 -- 命运夜
+	////// 96564 -- The Bad Batch - S01E11
+	////// 108766 -- R&M - S05E06
+	////// 145499 -- R&M - S05E10
+	//tmpSettings := settings.NewSettings()
+	//tmpSettings.EmbySettings = &ec
+	//em := NewEmbyHelper(log_helper.GetLogger4Tester(), tmpSettings)
+	//played, err := em.IsVideoPlayed("145499")
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//
+	//if played == false {
+	//	t.Fatal("need played")
+	//}
 }

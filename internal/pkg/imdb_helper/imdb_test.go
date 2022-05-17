@@ -1,7 +1,8 @@
 package imdb_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"testing"
 )
 
@@ -11,8 +12,9 @@ func TestGetVideoInfoFromIMDB(t *testing.T) {
 	//imdbID := "tt2990738" 	// 恐怖直播
 	//imdbID := "tt3032476" 	// 风骚律师
 	//imdbID := "tt6468322" 	// 纸钞屋
-	imdbID := "tt15299712" // 云南虫谷
-	imdbInfo, err := GetVideoInfoFromIMDBWeb(imdbID)
+	//imdbID := "tt15299712" // 云南虫谷
+	imdbID := "tt6856242" // The King`s Man
+	imdbInfo, err := getVideoInfoFromIMDBWeb(types.VideoIMDBInfo{ImdbId: imdbID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,8 +23,7 @@ func TestGetVideoInfoFromIMDB(t *testing.T) {
 
 func TestIsChineseVideo(t *testing.T) {
 	type args struct {
-		imdbID    string
-		_reqParam []settings.ProxySettings
+		imdbID string
 	}
 	tests := []struct {
 		name    string
@@ -45,7 +46,7 @@ func TestIsChineseVideo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, _, err := IsChineseVideo(tt.args.imdbID, tt.args._reqParam...)
+			got, _, err := IsChineseVideo(log_helper.GetLogger4Tester(), types.VideoIMDBInfo{ImdbId: tt.args.imdbID})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("IsChineseVideo() error = %v, wantErr %v", err, tt.wantErr)
 				return

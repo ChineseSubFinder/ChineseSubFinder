@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/something_static"
@@ -28,7 +29,7 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	movie1 := filepath.Join(rootDir, "zimuku", "movies", "消失爱人 (2016)", "消失爱人 (2016) 720p AAC.rmvb")
 
-	subhd := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	subhd := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	outList, err := subhd.getSubListFromFile4Movie(movie1)
 	if err != nil {
 		t.Error(err)
@@ -58,19 +59,22 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	//ser := "X:\\连续剧\\Money.Heist"
 	//ser := "X:\\连续剧\\黑钱胜地 (2017)"
 	getCode()
+	// 可以指定几集去调试
+	epsMap := make(map[int][]int, 0)
+	epsMap[4] = []int{1}
+	//epsMap[1] = []int{1, 2, 3}
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(ser, 90, false)
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(log_helper.GetLogger4Tester(), ser, 90, false, false, epsMap)
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)
 	if err != nil {
 		t.Fatal(err)
 	}
-	println(outList)
 	for i, sublist := range outList {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, len(sublist.Data))
 	}
@@ -87,7 +91,7 @@ func TestSupplier_getSubListFromKeyword4Movie(t *testing.T) {
 	//imdbID := "tt15299712" // 云南虫谷
 	//imdbID := "tt3626476" // Vacation Friends (2021)
 	getCode()
-	subhd := NewSupplier(file_downloader.NewFileDownloader(settings.NewSettings(), log_helper.GetLogger()))
+	subhd := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
 	subInfos, err := subhd.getSubListFromKeyword4Movie(imdbID)
 	if err != nil {
 		t.Fatal(err)
@@ -101,7 +105,7 @@ func getCode() {
 
 	nowTT := time.Now()
 	nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
-	updateTimeString, code, err := something_static.GetCodeFromWeb(log_helper.GetLogger(), nowTimeFileNamePrix)
+	updateTimeString, code, err := something_static.GetCodeFromWeb(log_helper.GetLogger4Tester(), nowTimeFileNamePrix)
 	if err != nil {
 		commonValue.SubhdCode = ""
 	} else {

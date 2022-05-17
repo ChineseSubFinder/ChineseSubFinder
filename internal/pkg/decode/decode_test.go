@@ -172,9 +172,37 @@ func TestIsFakeBDMVWorked(t *testing.T) {
 
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"movies", "失控玩家 (2021)"}, 4, false)
 
-	bok, dbmvFPath := IsFakeBDMVWorked(filepath.Join(rootDir, "失控玩家 (2021).mp4"))
+	bok, dbmvFPath, _ := IsFakeBDMVWorked(filepath.Join(rootDir, "失控玩家 (2021).mp4"))
 	if bok == false {
 		t.Fatal("IsFakeBDMVWorked error")
 	}
 	println(dbmvFPath)
+}
+
+func TestGetImdbInfo4Movie(t *testing.T) {
+	//type args struct {
+	//	movieFileFullPath string
+	//}
+	//tests := []struct {
+	//	name    string
+	//	args    args
+	//	want    types.VideoIMDBInfo
+	//	wantErr bool
+	//}{
+	//	{name: "00", args: args{
+	//		movieFileFullPath: "X:\\电影\\Death on the Nile (2022)\\Death on the Nile (2022) Bluray-1080p.mkv",
+	//	}},
+	//}
+	//for _, tt := range tests {
+	//	t.Run(tt.name, func(t *testing.T) {
+	//		got, err := GetImdbInfo4Movie(tt.args.movieFileFullPath)
+	//		if (err != nil) != tt.wantErr {
+	//			t.Errorf("GetImdbInfo4Movie() error = %v, wantErr %v", err, tt.wantErr)
+	//			return
+	//		}
+	//		if !reflect.DeepEqual(got, tt.want) {
+	//			t.Errorf("GetImdbInfo4Movie() got = %v, want %v", got, tt.want)
+	//		}
+	//	})
+	//}
 }

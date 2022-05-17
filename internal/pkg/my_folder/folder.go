@@ -259,6 +259,21 @@ func GetRootSubFixCacheFolder() (string, error) {
 	return nowProcessRoot, err
 }
 
+// GetRootCacheCenterFolder 下载缓存、队列缓存、下载次数缓存的文件夹
+func GetRootCacheCenterFolder() (string, error) {
+
+	nowProcessRoot, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, CacheCenterFloder)
+	err = os.MkdirAll(nowProcessRoot, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	return nowProcessRoot, err
+}
+
 // GetSubFixCacheFolderByName 获取缓存的文件夹，没有则新建
 func GetSubFixCacheFolderByName(folderName string) (string, error) {
 	rootPath, err := GetRootSubFixCacheFolder()
@@ -498,6 +513,7 @@ const (
 	DebugFolder         = "CSF-DebugThings"   // 调试相关的文件夹
 	SubFixCacheFolder   = "CSF-SubFixCache"   // 字幕时间校正的缓存文件夹，一般可以不清理
 	ShareSubFileCache   = "CSF-ShareSubCache" // 字幕共享的缓存目录，不建议删除
+	CacheCenterFloder   = "CSF-CacheCenter"   // 下载缓存、队列缓存、下载次数缓存的文件夹
 )
 
 const (

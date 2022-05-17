@@ -1,15 +1,15 @@
 package sub_timeline_fixer
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 // Restore 从备份还原自动校正的字幕文件
-func Restore(movieDirs, seriesDirs []string) (int, error) {
+func Restore(log *logrus.Logger, movieDirs, seriesDirs []string) (int, error) {
 
 	var BackUpSubMoviesFilePathList = make([]string, 0)
 	var BackUpSubSeriesFilePathList = make([]string, 0)
@@ -51,7 +51,7 @@ func Restore(movieDirs, seriesDirs []string) (int, error) {
 				return 0, err
 			}
 			restoreCount++
-			log_helper.GetLogger().Infoln("Restore", index, fixedFileName)
+			log.Infoln("Restore", index, fixedFileName)
 		}
 	}
 

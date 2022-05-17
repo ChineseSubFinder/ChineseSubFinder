@@ -28,11 +28,13 @@ package sub_timeline_fixer
 //)
 //
 //type SubTimelineFixer struct {
+//  log *logrus.Logger
 //	FixerConfig sub_timeline_fiexer.SubTimelineFixerConfig
 //}
 //
-//func NewSubTimelineFixer(fixerConfig sub_timeline_fiexer.SubTimelineFixerConfig) *SubTimelineFixer {
+//func NewSubTimelineFixer(log *logrus.Logger, fixerConfig sub_timeline_fiexer.SubTimelineFixerConfig) *SubTimelineFixer {
 //	return &SubTimelineFixer{
+//		log: log,
 //		FixerConfig: fixerConfig,
 //	}
 //}
@@ -431,13 +433,13 @@ package sub_timeline_fixer
 //
 //		debugInfos = append(debugInfos, tmpContent)
 //
-//		log_helper.GetLogger().Infoln(tmpContent)
+//		s.log.Infoln(tmpContent)
 //	} else {
 //		tmpContent := infoSrc.Name + fmt.Sprintf(" Sequence match %d dialogues,", s.FixerConfig.V1_MaxCompareDialogue) + fmt.Sprintf(" %f%% ", perMatch*100)
 //
 //		debugInfos = append(debugInfos, tmpContent)
 //
-//		log_helper.GetLogger().Infoln(tmpContent)
+//		s.log.Infoln(tmpContent)
 //	}
 //
 //	// 输出调试的匹配时间轴信息的列表
@@ -521,13 +523,13 @@ package sub_timeline_fixer
 //	// 这里的是 matchedInfos 是顺序的
 //	for index, matchInfo := range matchedInfos {
 //
-//		log_helper.GetLogger().Infoln(index, "------------------------------------")
+//		s.log.Infoln(index, "------------------------------------")
 //		outCorrelationFixResult := s.calcMeanAndSDV2(matchInfo.StartDiffTimeListEx, matchInfo.StartDiffTimeList)
-//		log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner Old Mean: %v SD: %f Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
-//		log_helper.GetLogger().Infoln(fmt.Sprintf("FFTAligner New Mean: %v SD: %f Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
+//		s.log.Infoln(fmt.Sprintf("FFTAligner Old Mean: %v SD: %f Per: %v", outCorrelationFixResult.OldMean, outCorrelationFixResult.OldSD, outCorrelationFixResult.Per))
+//		s.log.Infoln(fmt.Sprintf("FFTAligner New Mean: %v SD: %f Per: %v", outCorrelationFixResult.NewMean, outCorrelationFixResult.NewSD, outCorrelationFixResult.Per))
 //
 //		value, indexMax := matchInfo.StartDiffTimeMap.Max()
-//		log_helper.GetLogger().Infoln("FFTAligner Max score:", fmt.Sprintf("%v", value.(float64)), "Time:", fmt.Sprintf("%v", matchInfo.StartDiffTimeList[indexMax.(int)]))
+//		s.log.Infoln("FFTAligner Max score:", fmt.Sprintf("%v", value.(float64)), "Time:", fmt.Sprintf("%v", matchInfo.StartDiffTimeList[indexMax.(int)]))
 //
 //		outCorrelationFixResult.StartVADIndex = index * perPartLen
 //		outCorrelationFixResult.EndVADIndex = index*perPartLen + perPartLen
@@ -741,8 +743,8 @@ package sub_timeline_fixer
 //		}
 //		// 时间差值
 //		TimeDiffStartCorrelation := nowBaseStartTime - nowSrcStartTime
-//		log_helper.GetLogger().Debugln("------------")
-//		log_helper.GetLogger().Debugln("OffsetTime:", fmt.Sprintf("%v", TimeDiffStartCorrelation),
+//		s.log.Debugln("------------")
+//		s.log.Debugln("OffsetTime:", fmt.Sprintf("%v", TimeDiffStartCorrelation),
 //			"offsetIndex:", offsetIndex,
 //			"score:", fmt.Sprintf("%v", score))
 //
@@ -773,6 +775,8 @@ package sub_timeline_fixer
 //				if p := recover(); p != nil {
 //					panicChan <- p
 //				}
+//close(done)
+//close(panicChan)
 //			}()
 //
 //			done <- fixFunc(inData)
@@ -781,14 +785,14 @@ package sub_timeline_fixer
 //		select {
 //		case err := <-done:
 //			if err != nil {
-//				log_helper.GetLogger().Errorln("GetOffsetTimeV2.NewPoolWithFunc done with Error", err.Error())
+//				s.log.Errorln("GetOffsetTimeV2.NewPoolWithFunc done with Error", err.Error())
 //			}
 //			return
 //		case p := <-panicChan:
-//			log_helper.GetLogger().Errorln("GetOffsetTimeV2.NewPoolWithFunc got panic", p)
+//			s.log.Errorln("GetOffsetTimeV2.NewPoolWithFunc got panic", p)
 //			return
 //		case <-ctx.Done():
-//			log_helper.GetLogger().Errorln("GetOffsetTimeV2.NewPoolWithFunc got time out", ctx.Err())
+//			s.log.Errorln("GetOffsetTimeV2.NewPoolWithFunc got time out", ctx.Err())
 //			return
 //		}
 //	})
@@ -811,7 +815,7 @@ package sub_timeline_fixer
 //		}
 //
 //		if err != nil {
-//			log_helper.GetLogger().Errorln("GetOffsetTimeV2 ants.Invoke", err)
+//			s.log.Errorln("GetOffsetTimeV2 ants.Invoke", err)
 //		}
 //
 //		i += windowInfo.OneStep

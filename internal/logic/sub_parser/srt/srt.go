@@ -2,10 +2,10 @@ package srt
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -13,10 +13,11 @@ import (
 )
 
 type Parser struct {
+	log *logrus.Logger
 }
 
-func NewParser() *Parser {
-	return &Parser{}
+func NewParser(log *logrus.Logger) *Parser {
+	return &Parser{log: log}
 }
 
 func (p Parser) GetParserName() string {
@@ -31,7 +32,7 @@ func (p Parser) GetParserName() string {
 func (p Parser) DetermineFileTypeFromFile(filePath string) (bool, *subparser.FileInfo, error) {
 	nowExt := filepath.Ext(filePath)
 
-	log_helper.GetLogger().Debugln("DetermineFileTypeFromFile", p.GetParserName(), filePath)
+	p.log.Debugln("DetermineFileTypeFromFile", p.GetParserName(), filePath)
 
 	fBytes, err := os.ReadFile(filePath)
 	if err != nil {
@@ -55,7 +56,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 
 	orgDialogues := p.parseContent(inBytes)
 	if len(orgDialogues) <= 0 {
-		log_helper.GetLogger().Debugln("DetermineFileTypeFromBytes can't found DialoguesFilter, Skip")
+		p.log.Debugln("DetermineFileTypeFromBytes can't found DialoguesFilter, Skip")
 		return false, nil, nil
 	}
 	subFileInfo.Dialogues = orgDialogues

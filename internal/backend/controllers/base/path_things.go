@@ -33,7 +33,7 @@ func (cb ControllerBase) CheckPathHandler(c *gin.Context) {
 	}
 }
 
-func (cb ControllerBase) CheckEmbyPathHandler(c *gin.Context) {
+func (cb *ControllerBase) CheckEmbyPathHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
@@ -63,7 +63,7 @@ func (cb ControllerBase) CheckEmbyPathHandler(c *gin.Context) {
 		emSettings.SeriesPathsMapping[reqCheckPath.CFSMediaPath] = reqCheckPath.EmbyMediaPath
 	}
 
-	emHelper := emby_helper.NewEmbyHelper(&settings.Settings{EmbySettings: &emSettings})
+	emHelper := emby_helper.NewEmbyHelper(cb.fileDownloader.Log, &settings.Settings{EmbySettings: &emSettings})
 
 	outList, err := emHelper.CheckPath(reqCheckPath.PathType)
 	if err != nil {

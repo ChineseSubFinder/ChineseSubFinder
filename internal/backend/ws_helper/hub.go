@@ -50,3 +50,9 @@ func (h *Hub) Run() {
 		}
 	}
 }
+
+func (h *Hub) Clear() {
+	// close channel
+	close(h.broadcast)
+	close(h.register)
+}

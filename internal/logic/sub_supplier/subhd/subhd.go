@@ -2,12 +2,11 @@ package subhd
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
-	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -21,6 +20,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/proto"
 	"github.com/nfnt/resize"
 	"github.com/sirupsen/logrus"
 	"image/jpeg"
@@ -68,7 +68,8 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 
 func (s *Supplier) CheckAlive() (bool, int64) {
 
-	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, s.settings.AdvancedSettings.ProxySettings.HttpProxyAddress)
+	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl,
+		s.settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl())
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
 		s.isAlive = false
@@ -91,18 +92,21 @@ func (s *Supplier) IsAlive() bool {
 func (s *Supplier) OverDailyDownloadLimit() bool {
 
 	// 需要查询今天的限额
-	count, err := task_queue.GetDailyDownloadCount(s.GetSupplierName(),
-		my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
+	count, err := s.fileDownloader.CacheCenter.DailyDownloadCountGet(s.GetSupplierName(),
+		my_util.GetPublicIP(s.log, s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
 	if err != nil {
-		s.log.Errorln(s.GetSupplierName(), "GetDailyDownloadCount", err)
+		s.log.Errorln(s.GetSupplierName(), "DailyDownloadCountGet", err)
 		return true
 	}
 	if count > s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit {
+		// 超限了
 		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.AdvancedSettings.SuppliersSettings.SubHD.DailyDownloadLimit, "Now Is:", count)
 		return true
+	} else {
+		// 没有超限
+		s.log.Infoln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit, "Now Is:", count)
+		return false
 	}
-	// 没有超限
-	return false
 }
 
 func (s *Supplier) GetLogger() *logrus.Logger {
@@ -125,7 +129,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(true, s.settings)
+	browser, err := rod_helper.NewBrowserEx(s.log, true, s.settings)
 	if err != nil {
 		return nil, err
 	}
@@ -172,28 +176,13 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 	// 下载字幕
 	for i, item := range subInfoNeedDownload {
 
-		pkgcommon.SetSubScanJobStatusScanSeriesSub(i+1, len(seriesInfo.NeedDlEpsKeyList),
-			fmt.Sprintf("%v - S%v-E%v", item.Title, item.Season, item.Episode))
-
-		bok, hdContent, err := s.step2Ex(browser, item.Url)
+		subInfo, err := s.fileDownloader.GetEx(s.GetSupplierName(), browser, item.Url, int64(i), item.Season, item.Episode, s.DownFile)
 		if err != nil {
-			s.log.Errorln("subhd step2Ex", err)
+			s.log.Errorln(s.GetSupplierName(), "GetEx", item.Title, item.Season, item.Episode, err)
 			continue
 		}
-		if bok == false {
-			s.log.Errorln("subhd step2Ex return false")
-			continue
-		}
-		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(),
-			int64(i),
-			hdContent.Filename,
-			language.ChineseSimple,
-			my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, item.Url),
-			0,
-			0, hdContent.Ext, hdContent.Data)
-		oneSubInfo.Season = item.Season
-		oneSubInfo.Episode = item.Episode
-		subInfos = append(subInfos, *oneSubInfo)
+
+		subInfos = append(subInfos, *subInfo)
 	}
 
 	return subInfos, nil
@@ -253,7 +242,7 @@ func (s *Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubIn
 
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(true, s.settings)
+	browser, err := rod_helper.NewBrowserEx(s.log, true, s.settings)
 	if err != nil {
 		return nil, err
 	}
@@ -275,22 +264,14 @@ func (s *Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubIn
 	}
 
 	for i, item := range subList {
-		bok, hdContent, err := s.step2Ex(browser, item.Url)
-		time.Sleep(time.Second)
+
+		subInfo, err := s.fileDownloader.GetEx(s.GetSupplierName(), browser, item.Url, int64(i), 0, 0, s.DownFile)
 		if err != nil {
-			s.log.Errorln("subhd step2Ex", err)
+			s.log.Errorln(s.GetSupplierName(), "GetEx", item.Title, item.Season, item.Episode, err)
 			continue
 		}
-		if bok == false {
-			s.log.Errorln("subhd step2Ex return false")
-			continue
-		}
-		subInfos = append(subInfos, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), hdContent.Filename, language.ChineseSimple,
-			my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, item.Url),
-			0,
-			0,
-			hdContent.Ext,
-			hdContent.Data))
+
+		subInfos = append(subInfos, *subInfo)
 	}
 
 	return subInfos, nil
@@ -337,8 +318,6 @@ func (s *Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, al
 			value[0].Season = epsInfo.Season
 			value[0].Episode = epsInfo.Episode
 			subInfoNeedDownload = append(subInfoNeedDownload, value[0])
-		} else {
-			s.log.Infoln("SubHD Not Find Sub can be download", epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 		}
 	}
 	// 全季的字幕列表，也拼进去，后面进行下载
@@ -489,19 +468,19 @@ func (s *Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSe
 	return lists, nil
 }
 
-// step2Ex 下载字幕 过防水墙
-func (s *Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (bool, *HdContent, error) {
+// DownFile 下载字幕 过防水墙
+func (s *Supplier) DownFile(browser *rod.Browser, subDownloadPageUrl string, TopN int64, Season, Episode int) (*supplier.SubInfo, error) {
 	var err error
 	defer func() {
 		if err != nil {
-			notify_center.Notify.Add("subhd_step2Ex", err.Error())
+			notify_center.Notify.Add("subhd_DownFile", err.Error())
 		}
 	}()
-	subDownloadPageUrl = my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, subDownloadPageUrl)
+	subDownloadPageFullUrl := my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, subDownloadPageUrl)
 
-	_, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageUrl, s.tt)
+	_, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageFullUrl, s.tt)
 	if err != nil {
-		return false, nil, err
+		return nil, err
 	}
 	defer func() {
 		_ = page.Close()
@@ -509,18 +488,19 @@ func (s *Supplier) step2Ex(browser *rod.Browser, subDownloadPageUrl string) (boo
 
 	// 需要先判断是否先要输入验证码，然后才到下载界面
 	// 下载字幕
-	bok, content, err := s.downloadSubFile(browser, page)
+	subInfo, err := s.downloadSubFile(browser, page, subDownloadPageUrl)
 	if err != nil {
-		return false, nil, err
-	}
-	if bok == false {
-		return false, nil, nil
+		return nil, err
 	}
 
-	return true, content, nil
+	subInfo.TopN = TopN
+	subInfo.Season = Season
+	subInfo.Episode = Episode
+
+	return subInfo, nil
 }
 
-func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, *HdContent, error) {
+func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDownloadPageUrl string) (*supplier.SubInfo, error) {
 
 	var err error
 	var doc *goquery.Document
@@ -529,9 +509,14 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, 
 	fileByte := []byte{0}
 	err = rod.Try(func() {
 		tmpDir := filepath.Join(global_value.DefTmpFolder(), "downloads")
-		wait := browser.WaitDownload(tmpDir)
+		wait := browser.Timeout(30 * time.Second).WaitDownload(tmpDir)
 		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()
+
+			if info == nil {
+				return nil, "", errors.New("download sub timeout")
+			}
+
 			downloadPath := filepath.Join(tmpDir, info.GUID)
 			defer func() { _ = os.Remove(downloadPath) }()
 			b, err := os.ReadFile(downloadPath)
@@ -546,10 +531,8 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, 
 		if err != nil {
 			return
 		}
-		// 移除广告
-		page.MustEval(`testgssdqw = function () { if (document.getElementById("tbkp")) {document.getElementById("tbkp").remove()}; }`)
-		page.MustEval(`testgssdqw()`)
 		// 点击“验证获取下载地址”
+		s.log.Debugln("click '验证获取下载地址'")
 		clickCodeBtn := doc.Find(btnClickCodeBtn)
 		if len(clickCodeBtn.Nodes) < 1 {
 			return
@@ -557,29 +540,40 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, 
 		element := page.MustElement(btnClickCodeBtn)
 		BtnCodeText := element.MustText()
 		if strings.Contains(BtnCodeText, "验证") == true {
+			s.log.Debugln("find '验证' 关键词")
 			// 那么需要填写验证码
 			element.MustClick()
 			time.Sleep(time.Second * 2)
 			// 填写“验证码”
-			page.MustEval(`$("#gzhcode").attr("value","` + common2.SubhdCode + `");`)
+			s.log.Debugln("填写验证码")
+			el := page.MustElement("#gzhcode")
+			el.MustInput(common2.SubhdCode)
+			//page.MustEval(`$("#gzhcode").attr("value","` + common2.SubhdCode + `");`)
 			// 是否有“完成验证”按钮
+			s.log.Debugln("查找是否有交验证码按钮1")
 			downBtn := doc.Find(btnCommitCode)
 			if len(downBtn.Nodes) < 1 {
 				return
 			}
+			s.log.Debugln("查找是否有交验证码按钮2")
 			element = page.MustElement(btnCommitCode)
 			benCommit := element.MustText()
 			if strings.Contains(benCommit, "验证") == false {
 				s.log.Errorln("btn not found 完整验证")
 				return
 			}
+			s.log.Debugln("点击提交验证码")
 			element.MustClick()
 			time.Sleep(time.Second * 2)
 
+			s.log.Debugln("点击下载按钮")
 			// 点击下载按钮
 			page.MustElement(btnClickCodeBtn).MustClick()
+
+			time.Sleep(time.Second * 2)
 		} else if strings.Contains(BtnCodeText, "下载") == true {
 
+			s.log.Debugln("点击下载按钮")
 			// 直接可以下载
 			element.MustClick()
 			time.Sleep(time.Second * 2)
@@ -605,7 +599,6 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, 
 		if hasWaterWall == true {
 			s.passWaterWall(page)
 		}
-		time.Sleep(time.Second * 2)
 		fileByte, fileName, err = getDownloadFile()
 		if err != nil {
 			return
@@ -613,36 +606,36 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page) (bool, 
 		downloadSuccess = true
 	})
 	if err != nil {
-		return false, nil, err
+		return nil, err
 	}
-	var hdContent HdContent
-	hdContent.Filename = fileName
-	hdContent.Ext = filepath.Ext(fileName)
-	hdContent.Data = fileByte
 
+	inSubInfo := supplier.NewSubInfo(s.GetSupplierName(), 1, fileName, language.ChineseSimple, subDownloadPageUrl, 0, 0, filepath.Ext(fileName), fileByte)
 	if downloadSuccess == false {
-		return false, &hdContent, common2.SubHDStep2ExCannotFindDownloadBtn
+		return nil, common2.SubHDStep2ExCannotFindDownloadBtn
 	}
 
-	// 下载成功需要统计到今天的次数中
-	_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName(),
-		my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
-	if err != nil {
-		s.log.Warningln(s.GetSupplierName(), "getSubListFromFile.AddDailyDownloadCount", err)
-	}
-
-	return downloadSuccess, &hdContent, nil
+	return inSubInfo, nil
 }
 
 func (s *Supplier) passWaterWall(page *rod.Page) {
+
+	const (
+		waterIFrame = "#tcaptcha_iframe"
+		dragBtn     = "#tcaptcha_drag_button"
+		slideBg     = "#slideBg"
+	)
+
 	//等待驗證碼窗體載入
-	page.MustElement("#tcaptcha_iframe").MustWaitLoad()
+	page.MustElement(waterIFrame).MustWaitLoad()
 	//進入到iframe
-	iframe := page.MustElement("#tcaptcha_iframe").MustFrame()
+	iframe := page.MustElement(waterIFrame).MustFrame()
+	// see iframe bug, see  https://github.com/go-rod/rod/issues/548
+	p := page.Browser().MustPageFromTargetID(proto.TargetTargetID(iframe.FrameID))
+
 	//等待拖動條加載, 延遲500秒檢測變化, 以確認加載完畢
-	iframe.MustElement("#tcaptcha_drag_button").MustWaitStable()
+	p.MustElement(dragBtn).MustWaitStable()
 	//等待缺口圖像載入
-	slideBgEl := iframe.MustElement("#slideBg").MustWaitLoad()
+	slideBgEl := p.MustElement(slideBg).MustWaitLoad()
 	slideBgEl = slideBgEl.MustWaitStable()
 	//取得帶缺口圖像
 	shadowbg := slideBgEl.MustResource()
@@ -650,12 +643,14 @@ func (s *Supplier) passWaterWall(page *rod.Page) {
 	src := slideBgEl.MustProperty("src")
 	fullbg, _, err := my_util.DownFile(s.log, strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
 	if err != nil {
-		panic(err)
+		s.log.Errorln("passWaterWall.DownFile", err)
+		return
 	}
 	//取得img展示的真實尺寸
 	shape, err := slideBgEl.Shape()
 	if err != nil {
-		panic(err)
+		s.log.Errorln("passWaterWall.Shape", err)
+		return
 	}
 	bgbox := shape.Box()
 	height, width := uint(math.Round(bgbox.Height)), uint(math.Round(bgbox.Width))
@@ -701,9 +696,9 @@ search:
 		}
 	}
 	//獲取拖動按鈕形狀
-	dragBtnBox := iframe.MustElement("#tcaptcha_drag_thumb").MustShape().Box()
+	dragBtnBox := p.MustElement("#tcaptcha_drag_thumb").MustShape().Box()
 	//启用滑鼠功能
-	mouse := page.Mouse
+	mouse := p.Mouse
 	//模擬滑鼠移動至拖動按鈕處, 右移3的原因: 拖動按鈕比滑塊圖大3個像素
 	mouse.MustMove(dragBtnBox.X+3, dragBtnBox.Y+(dragBtnBox.Height/2))
 	//按下滑鼠左鍵
@@ -735,11 +730,11 @@ type HdListItem struct {
 	Episode    int    // 第几集，默认-1
 }
 
-type HdContent struct {
-	Filename string `json:"filename"`
-	Ext      string `json:"ext"`
-	Data     []byte `json:"data"`
-}
+//type HdContent struct {
+//	Filename string `json:"filename"`
+//	Ext      string `json:"ext"`
+//	Data     []byte `json:"data"`
+//}
 
 const TCode = "#TencentCaptcha"
 const btnClickCodeBtn = "button.btn-danger"

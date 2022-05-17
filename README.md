@@ -2,10 +2,6 @@
 
 本项目的初衷仅仅是想自动化搞定**限定条件**下 **中文** 字幕下载。
 
-> v0.20.x 开始，大范围重构，新增 Web 设置界面，支持多媒体路径，见 [v0.20 教程](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.20教程)（不兼容之前版本的 config.yaml 配置！）
->
-> v0.22 开始，使用了较多的 chrome 操作，资源占用升高很多，个人测试环境是，群晖 918+ 8G。
->
 > 正在实现共享字幕功能，前期欢迎讨论，也会在初版出来的时候需要有人参与内测。见：
 >
 > [大版本规划，以及新功能“共享字幕”功能的简介和讨论](https://github.com/allanpk716/ChineseSubFinder/issues/277)
@@ -25,14 +21,13 @@
 
 有两个文档可以参考：
 
-- [v0.20 教程](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.20教程)（不兼容之前版本的 config.yaml 配置！）
-- [v0.21.x 优化细节](https://github.com/allanpk716/ChineseSubFinder/issues/240)
+- [v0.26 教程、更新说明](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.26教程)
+- [对外的 http api](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/ApiKey%E8%AE%BE%E8%AE%A1)
 - [Docker ChineseSubFinder--中文字幕自动下载 | sleele 的博客 - 第三方教程](https://sleele.com/2021/06/25/docker-chinesesubfinder-中文字幕自动下载/)
 
 高阶设置：
 
 - [字幕时间轴校正 V2](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3V2.md)，有待更新 v0.20.x 对应的设置
-- [强制扫描所有的视频文件下载字幕](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/强制扫描所有的视频文件下载字幕.md)
 
 建议了解的文档：
 
@@ -57,6 +52,20 @@
 
 然后才能编译可执行程序部分
 
+> 如果是 Windows，那么可以从这里下载 [MinGW-w64 - for 32 and 64 bit Windows - Browse /Toolchains targetting Win64 at SourceForge.net](https://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/)
+>
+> - [x86_64-posix-seh](https://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/Personal Builds/mingw-builds/8.1.0/threads-posix/seh/x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z)
+>
+> 后面的 CGO 编译需要：
+>
+> 1、新建变量: PATH，变量值为：xx\mingw64\bin
+>
+> 2、新建变量：LIB，变量值为：xx\mingw64\lib
+>
+> 3、新建变量：INCLUDE，变量值为：xx\mingw64\include
+>
+> 使用 gcc -v 验证是否生效
+
 go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go 这个入口文件就好了。 :joy:
 
 编译代码如下：
@@ -78,6 +87,9 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 
 ## 版本
 
+- v0.26.x 大范围重构，详细教程和更新说明见，[v0.26 教程、更新说明](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.26教程) -- 2022 年 5 月 13 日
+- v0.25.x 调整细节，支持 cron 定时、指定时间、自定义 cron 规则，触发下载任务 -- 2022 年 4 月 6 日
+- v0.24.x 调整细节，“实验室”添加远程 Chrome 设置 -- 2022 年 4 月 2 日
 - v0.23.x 调整细节，“实验室”新增，简繁转换功能 -- 2022 年 4 月 1 日
 - v0.22.x 调整细节，[v0.22.x 优化细节](https://github.com/allanpk716/ChineseSubFinder/issues/266) -- 2022 年 3 月 29 日
 - v0.21.x 调整细节，[v0.21.x 优化细节](https://github.com/allanpk716/ChineseSubFinder/issues/240) -- 2022 年 2 月 6 日

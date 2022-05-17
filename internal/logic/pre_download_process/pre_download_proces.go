@@ -8,7 +8,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/zimuku"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
@@ -24,18 +23,20 @@ type PreDownloadProcess struct {
 	stageName string
 	gError    error
 
-	sets           *settings.Settings
+	settings       *settings.Settings
 	log            *logrus.Logger
 	fileDownloader *file_downloader.FileDownloader
 	SubSupplierHub *subSupplier.SubSupplierHub
 }
 
-func NewPreDownloadProcess(_log *logrus.Logger, _sets *settings.Settings, fileDownloader *file_downloader.FileDownloader) *PreDownloadProcess {
-	return &PreDownloadProcess{
-		log:            _log,
-		sets:           _sets,
-		fileDownloader: fileDownloader,
+func NewPreDownloadProcess(_fileDownloader *file_downloader.FileDownloader) *PreDownloadProcess {
+
+	preDownloadProcess := PreDownloadProcess{
+		fileDownloader: _fileDownloader,
+		log:            _fileDownloader.Log,
+		settings:       _fileDownloader.Settings,
 	}
+	return &preDownloadProcess
 }
 
 func (p *PreDownloadProcess) Init() *PreDownloadProcess {
@@ -52,7 +53,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 
 	// ------------------------------------------------------------------------
 	// 初始化通知缓存模块
-	notify_center.Notify = notify_center.NewNotifyCenter(p.sets.DeveloperSettings.BarkServerAddress)
+	notify_center.Notify = notify_center.NewNotifyCenter(p.log, p.settings.DeveloperSettings.BarkServerAddress)
 	// 清理通知中心
 	notify_center.Notify.Clear()
 	// ------------------------------------------------------------------------
@@ -90,15 +91,13 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	// ------------------------------------------------------------------------
 	// 构建每个字幕站点下载者的实例
 	p.SubSupplierHub = subSupplier.NewSubSupplierHub(
-		p.sets,
-		p.log,
-		zimuku.NewSupplier(p.sets, p.log, p.fileDownloader),
-		xunlei.NewSupplier(p.sets, p.log, p.fileDownloader),
-		shooter.NewSupplier(p.sets, p.log, p.fileDownloader),
+		//zimuku.NewSupplier(p.fileDownloader),
+		xunlei.NewSupplier(p.fileDownloader),
+		shooter.NewSupplier(p.fileDownloader),
 	)
 	if common2.SubhdCode != "" {
 		// 如果找到 code 了，那么就可以继续用这个实例
-		p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.sets, p.log, p.fileDownloader))
+		p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.fileDownloader))
 	}
 	// ------------------------------------------------------------------------
 	// 清理自定义的 rod 缓存目录
@@ -126,7 +125,7 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 	p.log.Infoln("PreDownloadProcess.Check() Start...")
 	// ------------------------------------------------------------------------
 	// 是否启用代理
-	if p.sets.AdvancedSettings.ProxySettings.UseHttpProxy == false {
+	if p.settings.AdvancedSettings.ProxySettings.UseProxy == false {
 
 		p.log.Infoln("UseHttpProxy = false")
 		// 如果不使用代理，那么默认需要检测 baidu 的连通性，不通过也继续
@@ -138,9 +137,9 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 		}
 	} else {
 
-		p.log.Infoln("UseHttpProxy:", p.sets.AdvancedSettings.ProxySettings.HttpProxyAddress)
+		p.log.Infoln("UseHttpProxy By:", p.settings.AdvancedSettings.ProxySettings.UseWhichProxyProtocol)
 		// 如果使用了代理，那么默认需要检测 google 的连通性，不通过也继续
-		proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.GoogleUrl, p.sets.AdvancedSettings.ProxySettings.HttpProxyAddress)
+		proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.GoogleUrl, p.settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl())
 		if err != nil {
 			p.log.Errorln(errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.GoogleUrl + ", " + err.Error()))
 		} else {
@@ -152,20 +151,20 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 	p.SubSupplierHub.CheckSubSiteStatus()
 	// ------------------------------------------------------------------------
 	// 判断文件夹是否存在
-	if len(p.sets.CommonSettings.MoviePaths) < 1 {
+	if len(p.settings.CommonSettings.MoviePaths) < 1 {
 		p.log.Warningln("MoviePaths not set, len == 0")
 	}
-	if len(p.sets.CommonSettings.SeriesPaths) < 1 {
+	if len(p.settings.CommonSettings.SeriesPaths) < 1 {
 		p.log.Warningln("SeriesPaths not set, len == 0")
 	}
-	for i, path := range p.sets.CommonSettings.MoviePaths {
+	for i, path := range p.settings.CommonSettings.MoviePaths {
 		if my_util.IsDir(path) == false {
 			p.log.Errorln("MovieFolder not found Index", i, "--", path)
 		} else {
 			p.log.Infoln("MovieFolder Index", i, "--", path)
 		}
 	}
-	for i, path := range p.sets.CommonSettings.SeriesPaths {
+	for i, path := range p.settings.CommonSettings.SeriesPaths {
 		if my_util.IsDir(path) == false {
 			p.log.Errorln("SeriesPaths not found Index", i, "--", path)
 		} else {

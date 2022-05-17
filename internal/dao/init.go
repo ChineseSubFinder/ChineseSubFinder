@@ -4,10 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
-	gModels "github.com/allanpk716/ChineseSubModels/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
@@ -21,8 +19,7 @@ func GetDb() *gorm.DB {
 		once.Do(func() {
 			err := InitDb()
 			if err != nil {
-				log_helper.GetLogger().Errorln("dao.InitDb()", err)
-				log_helper.GetLogger().Panicln(err)
+				panic(err)
 			}
 		})
 	}
@@ -69,7 +66,8 @@ func InitDb() error {
 	}
 	// 迁移 schema
 	err = db.AutoMigrate(&models.HotFix{}, &models.SubFormatRec{},
-		&gModels.IMDBInfo{}, &gModels.VideoSubInfo{})
+		&models.IMDBInfo{}, &models.VideoSubInfo{},
+		&models.ThirdPartSetVideoPlayedInfo{})
 	if err != nil {
 		return errors.New(fmt.Sprintf("db AutoMigrate error, %s", err.Error()))
 	}

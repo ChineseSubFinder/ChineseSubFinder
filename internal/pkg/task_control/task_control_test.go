@@ -3,6 +3,7 @@ package task_control
 import (
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -266,7 +267,7 @@ func process(name string, timeTester TimeTester) ([]int, []int, []int, error) {
 
 	once := sync.Once{}
 
-	tc, err := NewTaskControl(timeTester.ConcurrentCount, log_helper.NewLogHelper(name, logrus.DebugLevel, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour))
+	tc, err := NewTaskControl(timeTester.ConcurrentCount, log_helper.NewLogHelper(name, global_value.ConfigRootDirFPath(), logrus.DebugLevel, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour))
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -319,6 +320,9 @@ func waitTimes(ctx context.Context, inData interface{}) error {
 	}
 
 	go func() {
+		defer func() {
+			close(phase0)
+		}()
 		fmt.Println("Index:", index.Index, "Start 0")
 		if dataEx.IndexOverThanAddMoreTime == 0 {
 			time.Sleep(time.Duration(dataEx.OneJobWaitTime) * time.Second)

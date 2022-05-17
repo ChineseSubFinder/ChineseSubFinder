@@ -41,5 +41,9 @@ var RegOneSeasonSubFolderNameMatch = regexp.MustCompile(`(?m)^Sub_S\dE0`)
 
 const regStringMathLogOneLine = `(?m)^(\[)(.*)(\])\: (\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}) - (.+)`
 
+const regMatchIP = `(?m)((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d))).){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))`
+
+var ReMatchIP = regexp.MustCompile(regMatchIP)
+
 // 匹配目前日志记录的格式的一行
 var ReMathLogOneLine = regexp.MustCompile(regStringMathLogOneLine)

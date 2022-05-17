@@ -31,7 +31,7 @@ func TestDownloader_DownloadSub4Movie(t *testing.T) {
 	//if err != nil {
 	//	t.Fatal(err)
 	//}
-	////err = dl.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
+	////err = dl.getUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
 	////if err != nil {
 	////	t.Fatal(err)
 	////}
@@ -70,7 +70,7 @@ func TestDownloader_DownloadSub4Series(t *testing.T) {
 	//if err != nil {
 	//	t.Fatal(err)
 	//}
-	////err = dl.GetUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
+	////err = dl.getUpdateVideoListFromEmby(config.MovieFolder, config.SeriesFolder)
 	////if err != nil {
 	////	t.Fatal(err)
 	////}
@@ -104,7 +104,7 @@ func TestDownloader_GetUpdateVideoListFromEmby(t *testing.T) {
 	//if err != nil {
 	//	t.Fatal(err)
 	//}
-	//err = dl.GetUpdateVideoListFromEmby()
+	//err = dl.getUpdateVideoListFromEmby()
 	//if err != nil {
 	//	t.Fatal(err)
 	//}

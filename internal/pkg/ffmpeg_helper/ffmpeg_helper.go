@@ -7,11 +7,11 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
+	"github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"os"
 	"os/exec"
@@ -21,12 +21,14 @@ import (
 )
 
 type FFMPEGHelper struct {
+	log          *logrus.Logger
 	SubParserHub *sub_parser_hub.SubParserHub // 字幕内容的解析器
 }
 
-func NewFFMPEGHelper() *FFMPEGHelper {
+func NewFFMPEGHelper(log *logrus.Logger) *FFMPEGHelper {
 	return &FFMPEGHelper{
-		SubParserHub: sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
+		log:          log,
+		SubParserHub: sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log)),
 	}
 }
 
@@ -80,7 +82,7 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType Export
 		if bok == false && ffMPEGInfo != nil {
 			err := os.RemoveAll(nowCacheFolderPath)
 			if err != nil {
-				log_helper.GetLogger().Errorln("GetFFMPEGInfo - RemoveAll", err.Error())
+				f.log.Errorln("GetFFMPEGInfo - RemoveAll", err.Error())
 				return
 			}
 		}
@@ -129,14 +131,14 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType Export
 				return true, ffMPEGInfo, nil
 			}
 		} else {
-			log_helper.GetLogger().Errorln("GetFFMPEGInfo.getAudioAndSubExportArgs Not Support ExportType")
+			f.log.Errorln("GetFFMPEGInfo.getAudioAndSubExportArgs Not Support ExportType")
 			return false, nil, nil
 		}
 		// 上面的操作为了就是确保后续的导出不会出问题
 		// 执行导出，音频和内置的字幕
 		execErrorString, err := f.exportAudioAndSubtitles(exportAudioArgs, exportSubArgs, exportType)
 		if err != nil {
-			log_helper.GetLogger().Errorln("exportAudioAndSubtitles", execErrorString)
+			f.log.Errorln("exportAudioAndSubtitles", execErrorString)
 			bok = false
 			return bok, nil, err
 		}
@@ -266,8 +268,8 @@ func (f *FFMPEGHelper) parseJsonString2GetFFProbeInfo(videoFileFullPath, inputFF
 		return false, nil, nil
 	}
 
-	ffmpegInfoFlitter := NewFFMPEGInfo(videoFileFullPath)
-	ffmpegInfoFull := NewFFMPEGInfo(videoFileFullPath)
+	ffmpegInfoFlitter := NewFFMPEGInfo(f.log, videoFileFullPath)
+	ffmpegInfoFull := NewFFMPEGInfo(f.log, videoFileFullPath)
 
 	// 进行字幕和音频的缓存，优先当然是导出 中、英、日、韩 相关的字幕和音频
 	// 但是如果都没得这些的时候，那么也需要导出至少一个字幕或者音频，用于字幕的校正
@@ -495,7 +497,7 @@ func (f *FFMPEGHelper) getAudioAndSubExportArgs(videoFileFullPath string, ffmpeg
 
 	nowCacheFolderPath, err := ffmpegInfo.GetCacheFolderFPath()
 	if err != nil {
-		log_helper.GetLogger().Errorln("getAudioAndSubExportArgs", videoFileFullPath, err.Error())
+		f.log.Errorln("getAudioAndSubExportArgs", videoFileFullPath, err.Error())
 		return nil, nil
 	}
 

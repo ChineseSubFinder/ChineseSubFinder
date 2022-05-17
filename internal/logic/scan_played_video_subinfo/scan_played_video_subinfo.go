@@ -8,10 +8,10 @@ import (
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -22,11 +22,12 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_control"
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubModels/models"
+	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -48,30 +49,35 @@ type ScanPlayedVideoSubInfo struct {
 	subFormatter ifaces.ISubFormatter
 
 	shareRootDir string
+
+	imdbInfoCache            map[string]*models.IMDBInfo
+	cacheImdbInfoCacheLocker sync.Mutex
 }
 
-func NewScanPlayedVideoSubInfo(_settings *settings.Settings) (*ScanPlayedVideoSubInfo, error) {
+func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings) (*ScanPlayedVideoSubInfo, error) {
 	var err error
 	var scanPlayedVideoSubInfo ScanPlayedVideoSubInfo
-	scanPlayedVideoSubInfo.log = log_helper.GetLogger()
+	scanPlayedVideoSubInfo.log = log
 	// 参入设置信息
 	// 最大获取的视频数目设置到 100W
-	_settings.EmbySettings.MaxRequestVideoNumber = 1000000
-	scanPlayedVideoSubInfo.settings = _settings
+	scanPlayedVideoSubInfo.settings = clone.Clone(_settings).(*settings.Settings)
+	scanPlayedVideoSubInfo.settings.EmbySettings.MaxRequestVideoNumber = 1000000
 	// 检测是否某些参数超出范围
 	scanPlayedVideoSubInfo.settings.Check()
 	// 初始化 Emby API 接口
-	if scanPlayedVideoSubInfo.settings.EmbySettings.Enable == true && scanPlayedVideoSubInfo.settings.EmbySettings.AddressUrl != "" && scanPlayedVideoSubInfo.settings.EmbySettings.APIKey != "" {
-		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(scanPlayedVideoSubInfo.settings)
+	if scanPlayedVideoSubInfo.settings.EmbySettings.Enable == true && scanPlayedVideoSubInfo.settings.EmbySettings.AddressUrl != "" &&
+		scanPlayedVideoSubInfo.settings.EmbySettings.APIKey != "" {
+
+		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(log, scanPlayedVideoSubInfo.settings)
 	}
 
 	// 初始化任务控制
-	scanPlayedVideoSubInfo.taskControl, err = task_control.NewTaskControl(scanPlayedVideoSubInfo.settings.CommonSettings.Threads, log_helper.GetLogger())
+	scanPlayedVideoSubInfo.taskControl, err = task_control.NewTaskControl(scanPlayedVideoSubInfo.settings.CommonSettings.Threads, log)
 	if err != nil {
 		return nil, err
 	}
 	// 字幕解析器
-	scanPlayedVideoSubInfo.subParserHub = sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())
+	scanPlayedVideoSubInfo.subParserHub = sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log))
 	// 字幕命名格式解析器
 	scanPlayedVideoSubInfo.subFormatter = emby.NewFormatter()
 	// 缓存目录的根目录
@@ -80,11 +86,18 @@ func NewScanPlayedVideoSubInfo(_settings *settings.Settings) (*ScanPlayedVideoSu
 		return nil, err
 	}
 	scanPlayedVideoSubInfo.shareRootDir = shareRootDir
+	// 初始化缓存
+	scanPlayedVideoSubInfo.imdbInfoCache = make(map[string]*models.IMDBInfo)
 
 	return &scanPlayedVideoSubInfo, nil
 }
 
 func (s *ScanPlayedVideoSubInfo) Cancel() {
+
+	defer func() {
+		s.log.Infoln("ScanPlayedVideoSubInfo.Cancel()")
+	}()
+
 	s.canceledLock.Lock()
 	s.canceled = true
 	s.canceledLock.Unlock()
@@ -149,7 +162,7 @@ func (s *ScanPlayedVideoSubInfo) Clear() {
 		}
 	}
 	// 搜索缓存文件夹所有的字幕出来，对比上面的 map 进行比较
-	subFiles, err := sub_parser_hub.SearchMatchedSubFile(s.shareRootDir)
+	subFiles, err := sub_parser_hub.SearchMatchedSubFile(s.log, s.shareRootDir)
 	if err != nil {
 		return
 	}
@@ -177,6 +190,8 @@ func (s *ScanPlayedVideoSubInfo) Clear() {
 
 func (s *ScanPlayedVideoSubInfo) Scan() error {
 
+	// 清空缓存
+	s.imdbInfoCache = make(map[string]*models.IMDBInfo)
 	// -----------------------------------------------------
 	// 并发控制
 	s.taskControl.SetCtxProcessFunc("ScanSubPlayedPool", s.scan, common.ScanPlayedSubTimeOut)
@@ -208,6 +223,60 @@ func (s *ScanPlayedVideoSubInfo) Scan() error {
 
 	s.taskControl.Hold()
 
+	// 下面需要把给出外部的 HTTP API 提交的视频和字幕信息(ThirdPartSetVideoPlayedInfo)进行判断，存入数据库
+	shareRootDir, err := my_folder.GetShareSubRootFolder()
+	if err != nil {
+		return err
+	}
+
+	var videoPlayedInfos []models.ThirdPartSetVideoPlayedInfo
+	dao.GetDb().Find(&videoPlayedInfos)
+
+	for i, thirdPartSetVideoPlayedInfo := range videoPlayedInfos {
+		// 先要判断这个是 Movie 还是 Series
+		// 因为设计这个 API 的时候为了简化提交的参数，也假定传入的可能不是正确的分类（电影or连续剧）
+		// 所以只能比较傻的，低效率的匹配映射的目录来做到识别是哪个分类的
+
+		bFoundMovie := false
+		bFoundSeries := false
+		for _, moviePath := range s.settings.CommonSettings.MoviePaths {
+			// 先判断类型是否是 Movie
+			if strings.HasPrefix(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, moviePath) == true {
+				bFoundMovie = true
+				break
+			}
+		}
+		if bFoundMovie == false {
+			for _, seriesPath := range s.settings.CommonSettings.SeriesPaths {
+				// 判断是否是 Series
+				if strings.HasPrefix(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, seriesPath) == true {
+					bFoundSeries = true
+					break
+				}
+			}
+		}
+
+		if bFoundMovie == false && bFoundSeries == false {
+			// 说明提交的这个视频文件无法匹配电影或者连续剧的目录前缀
+			s.log.Warningln("Not matched Movie and Series Prefix Path", thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath)
+			continue
+		}
+
+		IsMovie := false
+		videoTypes := common.Movie
+		if bFoundMovie == true {
+			videoTypes = common.Movie
+			IsMovie = true
+		}
+		if bFoundSeries == true {
+			videoTypes = common.Series
+			IsMovie = false
+		}
+
+		tmpSubFPath := filepath.Join(filepath.Dir(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath), thirdPartSetVideoPlayedInfo.SubName)
+		s.dealOneVideo(i, thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, tmpSubFPath, videoTypes.String(), shareRootDir, IsMovie, s.imdbInfoCache)
+	}
+
 	return nil
 }
 
@@ -236,14 +305,16 @@ func (s *ScanPlayedVideoSubInfo) scan(ctx context.Context, inData interface{}) e
 		return err
 	}
 
-	imdbInfoCache := make(map[string]*models.IMDBInfo)
 	index := 0
 	for videoFPath, orgSubFPath := range scanInputData.Videos {
 
 		index++
 		stage := make(chan interface{}, 1)
 		go func() {
-			s.dealOneVideo(index, videoFPath, orgSubFPath, videoTypes, shareRootDir, scanInputData.IsMovie, imdbInfoCache)
+			defer func() {
+				close(stage)
+			}()
+			s.dealOneVideo(index, videoFPath, orgSubFPath, videoTypes, shareRootDir, scanInputData.IsMovie, s.imdbInfoCache)
 			stage <- 1
 		}()
 
@@ -268,7 +339,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	if my_util.IsFile(orgSubFPath) == false {
 
-		log_helper.GetLogger().Errorln("Skip", orgSubFPath, "not exist")
+		s.log.Errorln("Skip", orgSubFPath, "not exist")
 		return
 	}
 
@@ -303,14 +374,34 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	var imdbInfo *models.IMDBInfo
 	var ok bool
 	// 先把 IMDB 信息查询查来，不管是从数据库还是网络（查询出来也得写入到数据库）
-	if imdbInfo, ok = imdbInfoCache[imdbInfo4Video.ImdbId]; ok == false {
+	s.cacheImdbInfoCacheLocker.Lock()
+	imdbInfo, ok = imdbInfoCache[imdbInfo4Video.ImdbId]
+	s.cacheImdbInfoCacheLocker.Unlock()
+	if ok == false {
 		// 不存在，那么就去查询和新建缓存
-		imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(imdbInfo4Video.ImdbId, s.settings.AdvancedSettings.ProxySettings)
+		imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(s.log, imdbInfo4Video)
 		if err != nil {
 			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoIMDBInfoFromLocal", videoFPath, err)
 			return
 		}
+		if len(imdbInfo.Description) <= 0 {
+			// 需要去外网获去补全信息，然后更新本地的信息
+			t, err := imdb_helper.GetVideoInfoFromIMDBWeb(imdbInfo4Video, s.settings.AdvancedSettings.ProxySettings)
+			if err != nil {
+				s.log.Errorln("dealOneVideo.GetVideoInfoFromIMDBWeb,", imdbInfo4Video.Title, err)
+				return
+			}
+			imdbInfo.Year = t.Year
+			imdbInfo.AKA = t.AKA
+			imdbInfo.Description = t.Description
+			imdbInfo.Languages = t.Languages
+
+			dao.GetDb().Save(imdbInfo)
+		}
+
+		s.cacheImdbInfoCacheLocker.Lock()
 		imdbInfoCache[imdbInfo4Video.ImdbId] = imdbInfo
+		s.cacheImdbInfoCacheLocker.Unlock()
 	}
 
 	s.log.Debugln(3)
@@ -337,7 +428,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	// 新增插入
 	// 把现有的字幕 copy 到缓存目录中
-	bok, subCacheFPath := sub_share_center.CopySub2Cache(orgSubFPath, imdbInfo.IMDBID, imdbInfo.Year)
+	bok, subCacheFPath := sub_share_center.CopySub2Cache(s.log, orgSubFPath, imdbInfo.IMDBID, imdbInfo.Year)
 	if bok == false {
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".CopySub2Cache", orgSubFPath, err)
 		return

@@ -35,3 +35,31 @@ func testUnArchive(t *testing.T, testRootDir string, missionName string) {
 
 const subASS = "oslo.2021.1080p.web.h264-naisu.繁体&英文.ass"
 const subSRT = "oslo.2021.1080p.web.h264-naisu.繁体&英文.srt"
+
+func TestUnArchiveFileEx(t *testing.T) {
+
+	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"zips"}, 4, true)
+
+	type args struct {
+		fileFullPath string
+		desRootPath  string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "[zimuku]_0_Inside No 9_S7E1.zip", args: args{
+				fileFullPath: filepath.Join(testRootDir, "[zimuku]_0_Inside No 9_S7E1.zip"),
+				desRootPath:  filepath.Join(testRootDir, "[zimuku]_0_Inside No 9_S7E1"),
+			}, wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := UnArchiveFileEx(tt.args.fileFullPath, tt.args.desRootPath); (err != nil) != tt.wantErr {
+				t.Errorf("UnArchiveFileEx() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

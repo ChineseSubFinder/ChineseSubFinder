@@ -16,6 +16,7 @@ export const setupState = reactive({
       apiKey: '',
       limitCount: 3000,
       skipWatched: true,
+      autoOrManual: false,
       movieFolderMap: {},
       seriesFolderMap: {},
     },

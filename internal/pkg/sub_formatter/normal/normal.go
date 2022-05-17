@@ -9,17 +9,19 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	languageConst "github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"github.com/sirupsen/logrus"
 	"path/filepath"
 	"regexp"
 	"strings"
 )
 
 type Formatter struct {
+	log       *logrus.Logger
 	subParser *sub_parser_hub.SubParserHub
 }
 
-func NewFormatter() *Formatter {
-	return &Formatter{subParser: sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())}
+func NewFormatter(log *logrus.Logger) *Formatter {
+	return &Formatter{log: log, subParser: sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log))}
 }
 
 // GetFormatterName 当前的 Formatter 是那个

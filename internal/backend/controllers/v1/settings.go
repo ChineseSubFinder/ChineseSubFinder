@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
@@ -43,6 +44,23 @@ func (cb ControllerBase) SettingsHandler(c *gin.Context) {
 			if err != nil {
 				return
 			}
+			// ----------------------------------------
+			// 设置接口的 API TOKEN
+			if settings.GetSettings().ExperimentalFunction.ApiKeySettings.Enabled == true {
+				common.SetApiToken(settings.GetSettings().ExperimentalFunction.ApiKeySettings.Key)
+			} else {
+				common.SetApiToken("")
+			}
+			// ----------------------------------------
+			// 不管如何，都进行一次代理服务器的关闭，然后开启由具体的 获取 ProxySettings GetLocalHttpProxyUrl 操作开启这个服务器
+			err = settings.GetSettings().AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
+			if err != nil {
+				return
+			}
+			// 重新设置本地的静态文件服务器
+			cb.StaticFileSystemBackEnd.Stop()
+			cb.StaticFileSystemBackEnd.Start(cb.cronHelper.Settings.CommonSettings)
+
 			c.JSON(http.StatusOK, backend.ReplyCommon{Message: "Settings Save Success"})
 		}
 	default:

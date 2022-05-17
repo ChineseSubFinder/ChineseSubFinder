@@ -3,7 +3,6 @@ package mark_system
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
@@ -18,11 +17,11 @@ type MarkingSystem struct {
 	subParserHub    *sub_parser_hub.SubParserHub
 }
 
-func NewMarkingSystem(subSiteSequence []string, subTypePriority int) *MarkingSystem {
+func NewMarkingSystem(log *logrus.Logger, subSiteSequence []string, subTypePriority int) *MarkingSystem {
 	mk := MarkingSystem{subSiteSequence: subSiteSequence,
-		log:             log_helper.GetLogger(),
+		log:             log,
 		SubTypePriority: subTypePriority,
-		subParserHub:    sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser())}
+		subParserHub:    sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log))}
 	return &mk
 }
 

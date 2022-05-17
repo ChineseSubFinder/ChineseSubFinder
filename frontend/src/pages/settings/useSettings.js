@@ -79,9 +79,11 @@ export const getExportSettings = (includeSensitive = false) => {
   const data = deepCopy(settingsState.data);
   if (!includeSensitive) {
     delete data.user_info;
+    delete data.advanced_settings.proxy_settings;
     delete data.common_settings.threads;
     delete data.emby_settings.api_key;
     delete data.emby_settings.address_url;
+    delete data.experimental_function.api_key_settings;
   }
   return data;
 };

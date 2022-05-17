@@ -5,6 +5,8 @@ type ExperimentalFunction struct {
 	AutoChangeSubEncode  AutoChangeSubEncode  `json:"auto_change_sub_encode"`
 	ChsChtChanger        ChsChtChanger        `json:"chs_cht_changer"`
 	RemoteChromeSettings RemoteChromeSettings `json:"remote_chrome_settings"`
+	ApiKeySettings       ApiKeySettings       `json:"api_key_settings"`
+	LocalChromeSettings  LocalChromeSettings  `json:"local_chrome_settings"`
 }
 
 func NewExperimentalFunction() *ExperimentalFunction {

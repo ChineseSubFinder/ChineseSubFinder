@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/archive_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/filter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
@@ -14,6 +14,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
+	"github.com/sirupsen/logrus"
 	"math"
 	"os"
 	"path/filepath"
@@ -23,7 +24,7 @@ import (
 )
 
 // OrganizeDlSubFiles 需要从汇总来是网站字幕中，解压对应的压缩包中的字幕出来
-func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[string][]string, error) {
+func OrganizeDlSubFiles(log *logrus.Logger, tmpFolderName string, subInfos []supplier.SubInfo) (map[string][]string, error) {
 
 	// 缓存列表，整理后的字幕列表
 	// SxEx - []string 字幕的路径
@@ -41,10 +42,10 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 	// 基于以上两点，写了一堆啰嗦的逻辑···
 	for i := range subInfos {
 		// 先存下来，保存是时候需要前缀，前缀就是从那个网站下载来的
-		nowFileSaveFullPath := filepath.Join(tmpFolderFullPath, GetFrontNameAndOrgName(&subInfos[i]))
+		nowFileSaveFullPath := filepath.Join(tmpFolderFullPath, GetFrontNameAndOrgName(log, &subInfos[i]))
 		err = my_util.WriteFile(nowFileSaveFullPath, subInfos[i].Data)
 		if err != nil {
-			log_helper.GetLogger().Errorln("getFrontNameAndOrgName - WriteFile", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
+			log.Errorln("getFrontNameAndOrgName - WriteFile", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
 			continue
 		}
 		nowExt := strings.ToLower(subInfos[i].Ext)
@@ -57,7 +58,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 		if nowExt != ".zip" && nowExt != ".tar" && nowExt != ".rar" && nowExt != ".7z" {
 			// 是否是受支持的字幕类型
 			if sub_parser_hub.IsSubExtWanted(nowExt) == false {
-				log_helper.GetLogger().Debugln("OrganizeDlSubFiles -> IsSubExtWanted == false", "Name:", subInfos[i].Name, "FileUrl:", subInfos[i].FileUrl)
+				log.Debugln("OrganizeDlSubFiles -> IsSubExtWanted == false", "Name:", subInfos[i].Name, "FileUrl:", subInfos[i].FileUrl)
 				continue
 			}
 			// 加入缓存列表
@@ -70,16 +71,16 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 			if err != nil {
 				return nil, err
 			}
-			err = archive_helper.UnArchiveFile(nowFileSaveFullPath, unzipTmpFolder)
+			err = archive_helper.UnArchiveFileEx(nowFileSaveFullPath, unzipTmpFolder)
 			// 解压完成后，遍历受支持的字幕列表，加入缓存列表
 			if err != nil {
-				log_helper.GetLogger().Errorln("archiver.UnArchive", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
+				log.Errorln("archiver.UnArchive", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
 				continue
 			}
 			// 搜索这个目录下的所有符合字幕格式的文件
-			subFileFullPaths, err := SearchMatchedSubFileByDir(unzipTmpFolder)
+			subFileFullPaths, err := SearchMatchedSubFileByDir(log, unzipTmpFolder)
 			if err != nil {
-				log_helper.GetLogger().Errorln("searchMatchedSubFile", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
+				log.Errorln("searchMatchedSubFile", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
 				continue
 			}
 			// 这里需要给这些下载到的文件进行改名，加是从那个网站来的前缀，后续好查找
@@ -89,7 +90,7 @@ func OrganizeDlSubFiles(tmpFolderName string, subInfos []supplier.SubInfo) (map[
 				// 改名
 				err = os.Rename(fileFullPath, newSubNameFullPath)
 				if err != nil {
-					log_helper.GetLogger().Errorln("os.Rename", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
+					log.Errorln("os.Rename", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
 					continue
 				}
 				// 加入缓存列表
@@ -178,12 +179,12 @@ func SelectChineseBestSubtitle(subs []subparser.FileInfo, subTypePriority int) *
 }
 
 // GetFrontNameAndOrgName 返回的名称包含，那个网站下载的，这个网站中排名第几，文件名
-func GetFrontNameAndOrgName(info *supplier.SubInfo) string {
+func GetFrontNameAndOrgName(log *logrus.Logger, info *supplier.SubInfo) string {
 
 	infoName := ""
 	fileName, err := decode.GetVideoInfoFromFileName(info.Name)
 	if err != nil {
-		log_helper.GetLogger().Warnln("", err)
+		log.Warnln("", err)
 		infoName = info.Name
 	} else {
 		infoName = fileName.Title + "_S" + strconv.Itoa(fileName.Season) + "E" + strconv.Itoa(fileName.Episode) + filepath.Ext(info.Name)
@@ -199,7 +200,7 @@ func AddFrontName(info supplier.SubInfo, orgName string) string {
 }
 
 // SearchMatchedSubFileByDir 搜索符合后缀名的视频文件，排除 Sub_SxE0 这样的文件夹中的文件
-func SearchMatchedSubFileByDir(dir string) ([]string, error) {
+func SearchMatchedSubFileByDir(log *logrus.Logger, dir string) ([]string, error) {
 	// 这里有个梗，会出现 __MACOSX 这类文件夹，那么里面会有一样的文件，需要用文件大小排除一下，至少大于 1 kb 吧
 	var fileFullPathList = make([]string, 0)
 	pathSep := string(os.PathSeparator)
@@ -216,22 +217,13 @@ func SearchMatchedSubFileByDir(dir string) ([]string, error) {
 				continue
 			}
 			// 内层的错误就无视了
-			oneList, _ := SearchMatchedSubFileByDir(fullPath)
+			oneList, _ := SearchMatchedSubFileByDir(log, fullPath)
 			if oneList != nil {
 				fileFullPathList = append(fileFullPathList, oneList...)
 			}
 		} else {
 			// 这里就是文件了
-			info, err := curFile.Info()
-			if err != nil {
-				return nil, err
-			}
-			if info.Size() < 1000 {
-				continue
-			}
-
-			if info.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {
-				log_helper.GetLogger().Debugln("SearchMatchedSubFileByDir file.Size() == 4096 && Prefix Name == ._*", fullPath)
+			if filter.SkipFileInfo(log, curFile) == true {
 				continue
 			}
 
@@ -244,7 +236,7 @@ func SearchMatchedSubFileByDir(dir string) ([]string, error) {
 }
 
 // SearchMatchedSubFileByOneVideo 搜索这个视频当前目录下匹配的字幕
-func SearchMatchedSubFileByOneVideo(oneVideoFullPath string) ([]string, error) {
+func SearchMatchedSubFileByOneVideo(l *logrus.Logger, oneVideoFullPath string) ([]string, error) {
 	dir := filepath.Dir(oneVideoFullPath)
 	fileName := filepath.Base(oneVideoFullPath)
 	fileName = strings.ToLower(fileName)
@@ -262,13 +254,10 @@ func SearchMatchedSubFileByOneVideo(oneVideoFullPath string) ([]string, error) {
 			continue
 		}
 		// 这里就是文件了
-		info, err := curFile.Info()
-		if err != nil {
-			return nil, err
-		}
-		if info.Size() < 1000 {
+		if filter.SkipFileInfo(l, curFile) == true {
 			continue
 		}
+
 		// 判断的时候用小写的，后续重命名的时候用原有的名称
 		nowFileName := strings.ToLower(curFile.Name())
 		// 后缀名得对
@@ -276,7 +265,7 @@ func SearchMatchedSubFileByOneVideo(oneVideoFullPath string) ([]string, error) {
 			continue
 		}
 		// 字幕文件名应该包含 视频文件名（无后缀）
-		if strings.Contains(nowFileName, fileName) == false {
+		if strings.HasPrefix(nowFileName, fileName) == false {
 			continue
 		}
 
@@ -288,7 +277,7 @@ func SearchMatchedSubFileByOneVideo(oneVideoFullPath string) ([]string, error) {
 }
 
 // SearchVideoMatchSubFileAndRemoveExtMark 找到找个视频目录下相匹配的字幕，同时去除这些字幕中 .default 或者 .forced 的标记。注意这两个标记不应该同时出现，否则无法正确去除
-func SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath string) error {
+func SearchVideoMatchSubFileAndRemoveExtMark(l *logrus.Logger, oneVideoFullPath string) error {
 
 	dir := filepath.Dir(oneVideoFullPath)
 	fileName := filepath.Base(oneVideoFullPath)
@@ -304,11 +293,7 @@ func SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath string) error {
 			continue
 		} else {
 			// 这里就是文件了
-			info, err := curFile.Info()
-			if err != nil {
-				return err
-			}
-			if info.Size() < 1000 {
+			if filter.SkipFileInfo(l, curFile) == true {
 				continue
 			}
 			// 判断的时候用小写的，后续重命名的时候用原有的名称
@@ -318,11 +303,13 @@ func SearchVideoMatchSubFileAndRemoveExtMark(oneVideoFullPath string) error {
 				continue
 			}
 			// 字幕文件名应该包含 视频文件名（无后缀）
-			if strings.Contains(nowFileName, fileName) == false {
+			if strings.HasPrefix(nowFileName, fileName) == false {
 				continue
 			}
-			// 得包含 .default. 找个关键词
+
 			if strings.Contains(nowFileName, subparser.Sub_Ext_Mark_Default+".") == true {
+				// 得包含 .default. 找个关键词
+				// 去除 .default.
 				oldPath := dir + pathSep + curFile.Name()
 				newPath := dir + pathSep + strings.ReplaceAll(curFile.Name(), subparser.Sub_Ext_Mark_Default+".", ".")
 				err = os.Rename(oldPath, newPath)

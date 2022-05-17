@@ -3,6 +3,7 @@ package pass_water_wall
 import (
 	"bytes"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
 	"github.com/nfnt/resize"
@@ -16,7 +17,7 @@ import (
 func SimulationTest() {
 	// 具体的应用见 subhd 的解析器
 	// 感谢 https://www.bigs3.com/article/gorod-crack-slider-captcha/
-	browser, err := rod_helper.NewBrowser("", false)
+	browser, err := rod_helper.NewBrowser(log_helper.GetLogger4Tester(), "", "", false)
 	if err != nil {
 		println(err.Error())
 		return
@@ -49,7 +50,7 @@ func SimulationTest() {
 	shadowbg := iframe.MustElement("#slideBg").MustResource()
 	//取得原始圖像
 	src := iframe.MustElement("#slideBg").MustProperty("src")
-	fullbg, fileName, err := my_util.DownFile(strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
+	fullbg, fileName, err := my_util.DownFile(log_helper.GetLogger4Tester(), strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
 	if err != nil {
 		return
 	}

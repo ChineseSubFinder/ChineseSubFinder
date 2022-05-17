@@ -5,21 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
-	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/sirupsen/logrus"
 	"math"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -130,29 +126,19 @@ func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, erro
 		return nil, common2.ShooterFileHashIsEmpty
 	}
 
-	fileName := filepath.Base(filePath)
-	jsonList, err = s.getSubInfos(hash, fileName, qLan)
+	videoFileName := filepath.Base(filePath)
+	jsonList, err = s.getSubInfos(hash, videoFileName, qLan)
 	if err != nil {
 		return nil, err
 	}
 
 	for i, shooter := range jsonList {
 		for _, file := range shooter.Files {
-			subExt := file.Ext
-			if strings.Contains(file.Ext, ".") == false {
-				subExt = "." + subExt
-			}
 
-			subInfo, err := s.fileDownloader.Get(s.GetSupplierName(), int64(i), fileName, language.ChineseSimple, file.Link, 0, shooter.Delay)
+			subInfo, err := s.fileDownloader.Get(s.GetSupplierName(), int64(i), videoFileName, file.Link, 0, shooter.Delay)
 			if err != nil {
-				s.log.Error(err)
+				s.log.Error("FileDownloader.Get", err)
 				continue
-			}
-			// 下载成功需要统计到今天的次数中
-			_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName(),
-				my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
-			if err != nil {
-				s.log.Warningln(s.GetSupplierName(), "getSubListFromFile.AddDailyDownloadCount", err)
 			}
 
 			outSubInfoList = append(outSubInfoList, *subInfo)
@@ -171,7 +157,10 @@ func (s *Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShoote
 
 	var jsonList []SublistShooter
 
-	httpClient := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	if err != nil {
+		return nil, err
+	}
 	resp, err := httpClient.R().
 		SetFormData(map[string]string{
 			"filehash": fileHash,
@@ -240,9 +229,6 @@ func (s *Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier
 	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 
 		index++
-		pkgcommon.SetSubScanJobStatusScanSeriesSub(index, len(seriesInfo.NeedDlEpsKeyList),
-			fmt.Sprintf("%v - S%v-E%v", episodeInfo.Title, episodeInfo.Season, episodeInfo.Episode))
-
 		one, err := s.getSubListFromFile(episodeInfo.FileFullPath)
 		if err != nil {
 			s.log.Errorln(s.GetSupplierName(), "getSubListFromFile", episodeInfo.FileFullPath)

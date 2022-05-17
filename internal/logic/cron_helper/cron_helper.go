@@ -2,12 +2,11 @@ package cron_helper
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/scan_played_video_subinfo"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
@@ -16,29 +15,51 @@ import (
 )
 
 type CronHelper struct {
-	stopping                bool // 正在停止
-	cronHelperRunning       bool // 这个是定时器启动的状态，它为true，不代表核心函数在执行
-	fileDownloader          *file_downloader.FileDownloader
-	downloadQueue           *task_queue.TaskQueue  // 需要下载的视频的队列
-	downloader              *downloader.Downloader // 下载者线程
-	cronLock                sync.Mutex             // 锁
-	c                       *cron.Cron             // 定时器实例
-	sets                    *settings.Settings     // 设置实例
-	log                     *logrus.Logger         // 日志实例
-	entryIDScanVideoProcess cron.EntryID
-	entryIDSupplierCheck    cron.EntryID
-	entryIDQueueDownloader  cron.EntryID
+	stopping                      bool                                                     // 正在停止
+	cronHelperRunning             bool                                                     // 这个是定时器启动的状态，它为true，不代表核心函数在执行
+	scanPlayedVideoSubInfo        *scan_played_video_subinfo.ScanPlayedVideoSubInfo        // 扫描已经播放过的视频的字幕信息
+	FileDownloader                *file_downloader.FileDownloader                          // 文件下载器
+	DownloadQueue                 *task_queue.TaskQueue                                    // 需要下载的视频的队列
+	Downloader                    *downloader.Downloader                                   // 下载者线程
+	videoScanAndRefreshHelper     *video_scan_and_refresh_helper.VideoScanAndRefreshHelper // 视频扫描和刷新的帮助类
+	cronLock                      sync.Mutex                                               // 锁
+	c                             *cron.Cron                                               // 定时器实例
+	Settings                      *settings.Settings                                       // 设置实例
+	log                           *logrus.Logger                                           // 日志实例
+	entryIDScanVideoProcess       cron.EntryID
+	entryIDSupplierCheck          cron.EntryID
+	entryIDQueueDownloader        cron.EntryID
+	entryIDScanPlayedVideoSubInfo cron.EntryID
 }
 
 func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 
 	ch := CronHelper{
-		fileDownloader: fileDownloader,
+		FileDownloader: fileDownloader,
 		log:            fileDownloader.Log,
-		sets:           fileDownloader.Settings,
+		Settings:       fileDownloader.Settings,
 		// 实例化下载队列
-		downloadQueue: task_queue.NewTaskQueue("LocalSubDownloadQueue", fileDownloader.Settings, fileDownloader.Log),
+		DownloadQueue: task_queue.NewTaskQueue(fileDownloader.CacheCenter),
 	}
+
+	var err error
+	// ----------------------------------------------
+	// 扫描已播放
+	ch.scanPlayedVideoSubInfo, err = scan_played_video_subinfo.NewScanPlayedVideoSubInfo(ch.log, ch.Settings)
+	if err != nil {
+		ch.log.Panicln(err)
+	}
+	// ----------------------------------------------
+	// 字幕扫描器
+	ch.videoScanAndRefreshHelper = video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
+		ch.FileDownloader,
+		ch.DownloadQueue)
+
+	// ----------------------------------------------
+	// 初始化下载者，里面的两个 func 需要使用定时器启动 SupplierCheck QueueDownloader
+	ch.Downloader = downloader.NewDownloader(
+		sub_formatter.GetSubFormatter(ch.log, ch.Settings.AdvancedSettings.SubNameFormatter),
+		ch.FileDownloader, ch.DownloadQueue)
 
 	return &ch
 }
@@ -59,17 +80,12 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	ch.stopping = false
 	ch.cronLock.Unlock()
 	// ----------------------------------------------
-	// 初始化下载者，里面的两个 func 需要使用定时器启动 SupplierCheck QueueDownloader
-	ch.downloader = downloader.NewDownloader(
-		sub_formatter.GetSubFormatter(ch.sets.AdvancedSettings.SubNameFormatter),
-		ch.fileDownloader, ch.downloadQueue)
-	// ----------------------------------------------
 	// 判断扫描任务的时间间隔是否符合要求，不符合则重写默认值
-	_, err := cron.ParseStandard(ch.sets.CommonSettings.ScanInterval)
+	_, err := cron.ParseStandard(ch.Settings.CommonSettings.ScanInterval)
 	if err != nil {
 		ch.log.Warningln("CommonSettings.ScanInterval format error, after v0.25.x , need reset this at WebUI")
 		// 如果解析错误了，就需要重新赋值默认值过来，然后保存
-		nowSettings := ch.sets
+		nowSettings := ch.Settings
 		nowSettings.CommonSettings.ScanInterval = settings.NewCommonSettings().ScanInterval
 		err = settings.SetFullNewSettings(nowSettings)
 		if err != nil {
@@ -80,48 +96,81 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// ----------------------------------------------
 	ch.c = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// 定时器
-	ch.entryIDScanVideoProcess, err = ch.c.AddFunc(ch.sets.CommonSettings.ScanInterval, ch.scanVideoProcessAdd2DownloadQueue)
+	// 这个暂时无法被取消执行
+	ch.entryIDScanVideoProcess, err = ch.c.AddFunc(ch.Settings.CommonSettings.ScanInterval, ch.scanVideoProcessAdd2DownloadQueue)
 	if err != nil {
 		ch.log.Panicln("CronHelper scanVideoProcessAdd2DownloadQueue, Cron entryID:", ch.entryIDScanVideoProcess, "Error:", err)
 	}
-	ch.entryIDSupplierCheck, err = ch.c.AddFunc("@every 1h", ch.downloader.SupplierCheck)
+	// 这个可以由 ch.Downloader.Cancel() 取消执行
+	ch.entryIDSupplierCheck, err = ch.c.AddFunc("@every 1h", ch.Downloader.SupplierCheck)
 	if err != nil {
 		ch.log.Panicln("CronHelper SupplierCheck, Cron entryID:", ch.entryIDSupplierCheck, "Error:", err)
 	}
-	ch.entryIDQueueDownloader, err = ch.c.AddFunc("@every 15s", ch.downloader.QueueDownloader)
+	// 这个可以由 ch.Downloader.Cancel() 取消执行
+	ch.entryIDQueueDownloader, err = ch.c.AddFunc("@every 15s", ch.Downloader.QueueDownloader)
 	if err != nil {
 		ch.log.Panicln("CronHelper QueueDownloader, Cron entryID:", ch.entryIDQueueDownloader, "Error:", err)
 	}
-
-	// 是否在定时器开启前先执行一次任务
+	// 这个可以由 ch.scanPlayedVideoSubInfo.Cancel() 取消执行
+	ch.entryIDScanPlayedVideoSubInfo, err = ch.c.AddFunc("@every 24h", ch.scanPlayedVideoSub)
+	if err != nil {
+		ch.log.Panicln("CronHelper QueueDownloader, Cron entryID:", ch.entryIDScanPlayedVideoSubInfo, "Error:", err)
+	}
+	// ----------------------------------------------
+	// 启动一次字幕源有效性检测
+	ch.cronLock.Lock()
+	if ch.cronHelperRunning == true && ch.stopping == false {
+		ch.cronLock.Unlock()
+		ch.Downloader.SupplierCheck()
+	} else {
+		ch.cronLock.Unlock()
+	}
+	// ----------------------------------------------
 	if runImmediately == true {
+		// 是否在定时器开启前先执行一次视频扫描任务
+		ch.cronLock.Lock()
+		if ch.cronHelperRunning == true && ch.stopping == false {
+			ch.cronLock.Unlock()
+			//----------------------------------------------
+			// 没有停止，那么继续扫描
+			ch.log.Infoln("First Time scanVideoProcessAdd2DownloadQueue Start")
+			if ch.Settings.SpeedDevMode == false {
+				ch.scanVideoProcessAdd2DownloadQueue()
+			}
+			ch.log.Infoln("First Time scanVideoProcessAdd2DownloadQueue End")
+			//----------------------------------------------
+		} else {
+			ch.cronLock.Unlock()
+			ch.log.Infoln("CronHelper is stopping, not start scanVideoProcessAdd2DownloadQueue")
+			return
+		}
 
-		ch.log.Infoln("First Time scanVideoProcessAdd2DownloadQueue Start")
-
-		ch.scanVideoProcessAdd2DownloadQueue()
-
-		ch.downloader.SupplierCheck()
-
-		ch.log.Infoln("First Time scanVideoProcessAdd2DownloadQueue End")
-
-	} else {
+	}
+	// ----------------------------------------------
+	// 如果不是立即执行，那么就等待定时器开启
+	ch.cronLock.Lock()
+	if ch.cronHelperRunning == true && ch.stopping == false {
+		ch.cronLock.Unlock()
+		//----------------------------------------------
+		ch.log.Infoln("CronHelper Start...")
+		ch.c.Start()
+		//----------------------------------------------
+		// 只有定时任务 start 之后才能拿到信息
+		if len(ch.c.Entries()) > 0 {
+			// 不会马上启动扫描，那么就需要设置当前的时间，且为 waiting
+			tttt := ch.c.Entry(ch.entryIDScanVideoProcess).Next.Format("2006-01-02 15:04:05")
+			ch.log.Infoln("Next Sub Scan Will Process At:", tttt)
+		} else {
+			ch.log.Errorln("Can't get cron jobs, will not send SubScanJobStatus")
+		}
 		ch.log.Infoln("RunAtStartup: false, so will not Run At Startup")
-	}
-
-	ch.log.Infoln("CronHelper Start...")
-	ch.c.Start()
-
-	// 只有定时任务 start 之后才能拿到信息
-	if len(ch.c.Entries()) > 0 {
-
-		// 不会马上启动扫描，那么就需要设置当前的时间，且为 waiting
-		tttt := ch.c.Entry(ch.entryIDScanVideoProcess).Next.Format("2006-01-02 15:04:05")
-		common.SetSubScanJobStatusWaiting(tttt)
-
-		ch.log.Infoln("Next Sub Scan Will Process At:", tttt)
+		//----------------------------------------------
 	} else {
-		ch.log.Errorln("Can't get cron jobs, will not send SubScanJobStatus")
+		ch.cronLock.Unlock()
+		ch.log.Infoln("CronHelper is stopping, not start CronHelper")
 	}
+	//----------------------------------------------
+
 }
 
 // Stop 会阻塞等待任务完成
@@ -144,7 +193,9 @@ func (ch *CronHelper) Stop() {
 	ch.stopping = true
 	ch.cronLock.Unlock()
 
-	ch.downloader.Cancel()
+	ch.videoScanAndRefreshHelper.Cancel()
+	ch.Downloader.Cancel()
+	ch.scanPlayedVideoSubInfo.Cancel()
 	// Stop stops the cron scheduler if it is running; otherwise it does nothing.
 	// A context is returned so the caller can wait for running jobs to complete.
 	nowContext := ch.c.Stop()
@@ -152,7 +203,7 @@ func (ch *CronHelper) Stop() {
 	case <-time.After(5 * time.Minute):
 		ch.log.Warningln("Wait over 5 min, CronHelper is timeout")
 	case <-nowContext.Done():
-		ch.log.Infoln("CronHelper.Stop() Done.")
+		ch.log.Infoln("CronHelper.Stop() context<-Done.")
 	}
 
 	ch.cronLock.Lock()
@@ -160,7 +211,22 @@ func (ch *CronHelper) Stop() {
 	ch.stopping = false
 	ch.cronLock.Unlock()
 
-	common.SetSubScanJobStatusNil()
+	ch.log.Infoln("CronHelper.Stop() Done.")
+}
+
+func (ch *CronHelper) scanPlayedVideoSub() {
+
+	bok, err := ch.scanPlayedVideoSubInfo.GetPlayedItemsSubtitle()
+	if err != nil {
+		ch.log.Errorln(err)
+	}
+	if bok == true {
+		ch.scanPlayedVideoSubInfo.Clear()
+		err = ch.scanPlayedVideoSubInfo.Scan()
+		if err != nil {
+			ch.log.Errorln(err)
+		}
+	}
 }
 
 func (ch *CronHelper) CronHelperRunning() bool {
@@ -196,57 +262,14 @@ func (ch *CronHelper) CronRunningStatusString() string {
 // scanVideoProcessAdd2DownloadQueue 定时执行的视频扫描任务，提交给任务队列，然后由额外的下载者线程去取队列中的任务下载
 func (ch *CronHelper) scanVideoProcessAdd2DownloadQueue() {
 
-	defer func() {
-		ch.cronLock.Lock()
-		ch.cronLock.Unlock()
-
-		ch.log.Infoln(log_helper.OnceSubsScanEnd)
-
-		// 下载完后，应该继续是等待
-		tttt := ch.c.Entry(ch.entryIDScanVideoProcess).Next.Format("2006-01-02 15:04:05")
-		common.SetSubScanJobStatusWaiting(tttt)
-	}()
-
-	// ------------------------------------------------------------------------
-	// 如果是 Debug 模式，那么就需要写入特殊文件
-	if ch.sets.AdvancedSettings.DebugMode == true {
-		err := log_helper.WriteDebugFile()
-		if err != nil {
-			ch.log.Errorln("log_helper.WriteDebugFile " + err.Error())
-		}
-		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Debug")
-	} else {
-		err := log_helper.DeleteDebugFile()
-		if err != nil {
-			ch.log.Errorln("log_helper.DeleteDebugFile " + err.Error())
-		}
-		log_helper.GetLogger(true).Infoln("Reload Log Settings, level = Info")
-	}
-	// ------------------------------------------------------------------------
-	// 开始标记，这个是单次扫描的开始
-	ch.log.Infoln(log_helper.OnceSubsScanStart)
-
 	// 扫描字幕任务开始，先是扫描阶段，那么是拿不到有多少视频需要扫描的数量的
-	common.SetSubScanJobStatusPreparing(time.Now().Format("2006-01-02 15:04:05"))
+	ch.log.Infoln("scanVideoProcessAdd2DownloadQueue Start:", time.Now().Format("2006-01-02 15:04:05"))
 	// ----------------------------------------------------------------------------------------
 	// ----------------------------------------------------------------------------------------
 	// 扫描有那些视频需要下载字幕，放入队列中，然后会有下载者去这个队列取出来进行下载
-	videoScanAndRefreshHelper := video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
-		ch.sets,
-		ch.log,
-		ch.downloadQueue)
-
-	ch.log.Infoln("Video Scan Started...")
-	// 先进行扫描
-	scanResult, err := videoScanAndRefreshHelper.ScanMovieAndSeriesWait2DownloadSub()
+	err := ch.videoScanAndRefreshHelper.Start()
 	if err != nil {
-		ch.log.Errorln("ScanMovieAndSeriesWait2DownloadSub", err)
-		return
-	}
-	// 过滤出需要下载的视频有那些，并放入队列中
-	err = videoScanAndRefreshHelper.FilterMovieAndSeriesNeedDownload(scanResult)
-	if err != nil {
-		ch.log.Errorln("FilterMovieAndSeriesNeedDownload", err)
+		ch.log.Errorln(err)
 		return
 	}
 }

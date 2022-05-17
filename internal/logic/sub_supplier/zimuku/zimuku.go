@@ -1,12 +1,11 @@
 package zimuku
 
 import (
+	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
-	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
@@ -61,19 +60,14 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 		sup.tt = common2.OneMovieProcessTimeOut
 	}
 	// 判断是否启用代理
-	if sup.settings.AdvancedSettings.ProxySettings.UseHttpProxy == true {
-		sup.httpProxyAddress = sup.settings.AdvancedSettings.ProxySettings.HttpProxyAddress
-	} else {
-		sup.httpProxyAddress = ""
-	}
-
+	sup.httpProxyAddress = sup.settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl()
 	return &sup
 }
 
 func (s *Supplier) CheckAlive() (bool, int64) {
 
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(true, s.settings, s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserEx(s.log, true, s.settings, s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		return false, 0
 	}
@@ -99,18 +93,21 @@ func (s *Supplier) IsAlive() bool {
 func (s *Supplier) OverDailyDownloadLimit() bool {
 
 	// 需要查询今天的限额
-	count, err := task_queue.GetDailyDownloadCount(s.GetSupplierName(),
-		my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
+	count, err := s.fileDownloader.CacheCenter.DailyDownloadCountGet(s.GetSupplierName(),
+		my_util.GetPublicIP(s.log, s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
 	if err != nil {
-		s.log.Errorln(s.GetSupplierName(), "GetDailyDownloadCount", err)
+		s.log.Errorln(s.GetSupplierName(), "DailyDownloadCountGet", err)
 		return true
 	}
 	if count > s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit {
+		// 超限了
 		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit, "Now Is:", count)
 		return true
+	} else {
+		// 没有超限
+		s.log.Infoln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit, "Now Is:", count)
+		return false
 	}
-	// 没有超限
-	return false
 }
 
 func (s *Supplier) GetLogger() *logrus.Logger {
@@ -128,7 +125,7 @@ func (s *Supplier) GetSupplierName() string {
 func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(true, s.settings, s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserEx(s.log, true, s.settings, s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +146,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 
 	var err error
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(true, s.settings, s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserEx(s.log, true, s.settings, s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -165,26 +162,79 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 	// 比如，其实可以搜索剧集名称，应该可以得到多个季的列表，然后分析再继续
 	// 现在粗暴点，直接一季搜索一次，跟电影的搜索一样，在首个影片就停止，然后继续往下
 	AllSeasonSubResult := SubResult{}
-	for value := range seriesInfo.SeasonDict {
-		// 第一级界面，找到影片的详情界面
-		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
-		s.log.Debugln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword)
-		filmDetailPageUrl, err := s.step0(browser, keyword)
+	for value := range seriesInfo.NeedDlSeasonDict {
+
+		/*
+			经过网友的测试反馈，每一季 zimuku 是支持这一季的第一集的 IMDB ID 可以搜索到这一季的信息 #253
+			1. 那么在搜索某一集的时候，需要根据这一集去找这一季的第一集，然后读取它的 IMDB ID 信息，然后优先用于搜索这一季的信息
+			2. 如果是搜索季，就直接推算到达季文件夹的位置，搜索所有文件找到第一集，获取它的 IMDB ID
+			是不是有点绕···
+		*/
+		findSeasonFirstEpsIMDBId := ""
+		videoList, err := my_util.SearchMatchedVideoFile(s.log, seriesInfo.DirPath)
 		if err != nil {
-			s.log.Errorln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword, err)
-			// 如果只是搜索不到，则继续换关键词
-			if err != common2.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
-				s.log.Errorln(s.GetSupplierName(), "ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound", keyword, err)
+			s.log.Errorln("GetSubListFromFile4Series.SearchMatchedVideoFile, Season:", value, "Error:", err)
+			continue
+		}
+		for _, oneVideoFPath := range videoList {
+			oneVideoInfo, err := decode.GetVideoInfoFromFileName(filepath.Base(oneVideoFPath))
+			if err != nil {
+				s.log.Errorln("GetVideoInfoFromFileName", oneVideoInfo, err)
 				continue
 			}
-			keyword = seriesInfo.Name
+			if oneVideoInfo.Season == value && oneVideoInfo.Episode == 1 {
+				// 这一季的第一集
+				episodeInfo, err := decode.GetImdbInfo4OneSeriesEpisode(oneVideoFPath)
+				if err != nil {
+					s.log.Errorln("GetImdbInfo4OneSeriesEpisode", oneVideoFPath, err)
+					break
+				}
+				findSeasonFirstEpsIMDBId = episodeInfo.ImdbId
+				break
+			}
+		}
+
+		filmDetailPageUrl := ""
+		if findSeasonFirstEpsIMDBId != "" {
+			// 第一级界面，找到影片的详情界面
+			// 使用上面得到的这一季第一集的 IMDB ID 进行搜索这一季的信息
+			keyword := findSeasonFirstEpsIMDBId
 			s.log.Debugln(s.GetSupplierName(), "step 0", "1 times", "keyword:", keyword)
 			filmDetailPageUrl, err = s.step0(browser, keyword)
 			if err != nil {
-				s.log.Errorln(s.GetSupplierName(), "1 times", "keyword:", keyword, err)
-				continue
+				s.log.Errorln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword, err)
+				// 如果只是搜索不到，则继续换关键词
+				if err != common2.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
+					s.log.Errorln(s.GetSupplierName(), "ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound", keyword, err)
+					continue
+				}
 			}
 		}
+		// 如果上面找到了，那么 filmDetailPageUrl 就应该不为空，如果没有找到就是空
+		if filmDetailPageUrl == "" {
+			// 第一级界面，找到影片的详情界面
+			keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
+			s.log.Debugln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword)
+			filmDetailPageUrl, err = s.step0(browser, keyword)
+			if err != nil {
+				s.log.Errorln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword, err)
+				// 如果只是搜索不到，则继续换关键词
+				if err != common2.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
+					s.log.Errorln(s.GetSupplierName(), "ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound", keyword, err)
+					continue
+				}
+
+				// 直接更换为这个剧目的 Name 的搜索，不带季度关键词信息
+				keyword = seriesInfo.Name
+				s.log.Debugln(s.GetSupplierName(), "step 0", "1 times", "keyword:", keyword)
+				filmDetailPageUrl, err = s.step0(browser, keyword)
+				if err != nil {
+					s.log.Errorln(s.GetSupplierName(), "1 times", "keyword:", keyword, err)
+					continue
+				}
+			}
+		}
+
 		// 第二级界面，有多少个字幕
 		s.log.Debugln(s.GetSupplierName(), "step 1", filmDetailPageUrl)
 		subResult, err := s.step1(browser, filmDetailPageUrl)
@@ -280,6 +330,7 @@ func (s *Supplier) getSubListFromMovie(browser *rod.Browser, fileFPath string) (
 	return subInfoList, nil
 }
 
+// getSubListFromKeyword 目前是给电影使用的，搜索返回的字幕列表可能很多，需要挑选一下，比如 Top 1 下来就好了
 func (s *Supplier) getSubListFromKeyword(browser *rod.Browser, keyword string) ([]supplier.SubInfo, error) {
 
 	var outSubInfoList []supplier.SubInfo
@@ -297,6 +348,9 @@ func (s *Supplier) getSubListFromKeyword(browser *rod.Browser, keyword string) (
 	// 第三级界面，单个字幕详情
 	// 找到最大的优先级的字幕下载
 	sort.Sort(SortByPriority{subResult.SubInfos})
+
+	// 强制把找到的列表缩少到 Top 5
+	subResult.SubInfos = subResult.SubInfos[:5]
 
 	s.log.Debugln(s.GetSupplierName(), "getSubListFromKeyword -> step1 -> subResult.Title:", subResult.Title)
 	s.log.Debugln(s.GetSupplierName(), "getSubListFromKeyword -> step1 -> subResult.OtherName:", subResult.OtherName)
@@ -353,9 +407,6 @@ func (s *Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, Al
 			value[0].Season = epsInfo.Season
 			value[0].Episode = epsInfo.Episode
 			subInfoNeedDownload = append(subInfoNeedDownload, value[0])
-		} else {
-			s.log.Infoln(s.GetSupplierName(), "Not Find Sub can be download",
-				epsInfo.Title, epsInfo.Season, epsInfo.Episode)
 		}
 	}
 	// 全季的字幕列表，也拼进去，后面进行下载
@@ -371,9 +422,6 @@ func (s *Supplier) whichSubInfoNeedDownload(browser *rod.Browser, subInfos SubIn
 
 	var outSubInfoList = make([]supplier.SubInfo, 0)
 	for i := range subInfos {
-
-		pkgcommon.SetSubScanJobStatusScanSeriesSub(i+1, len(subInfos),
-			fmt.Sprintf("%v - S%v-E%v", subInfos[i].Name, subInfos[i].Season, subInfos[i].Episode))
 
 		err = s.step2(browser, &subInfos[i])
 		if err != nil {
@@ -392,6 +440,7 @@ func (s *Supplier) whichSubInfoNeedDownload(browser *rod.Browser, subInfos SubIn
 			tmpSubInfo = append(tmpSubInfo, subInfo)
 		}
 	}
+
 	// 看字幕够不够
 	if len(tmpSubInfo) < s.topic {
 		for _, subInfo := range subInfos {
@@ -415,27 +464,36 @@ func (s *Supplier) whichSubInfoNeedDownload(browser *rod.Browser, subInfos SubIn
 		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.SubDownloadPageUrl:", i, info.SubDownloadPageUrl)
 	}
 
+	// 看字幕是不是太多了，超出 topic 的限制了
+	if len(tmpSubInfo) > s.topic {
+		tmpSubInfo = tmpSubInfo[:s.topic]
+	}
+	s.log.Debugln(s.GetSupplierName(), "step2 -> tmpSubInfo.Count with topic limit", len(tmpSubInfo))
+	for i, info := range tmpSubInfo {
+
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.Name:", i, info.Name)
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.DownloadUrl:", i, info.DownloadUrl)
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.DetailUrl:", i, info.DetailUrl)
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.DownloadTimes:", i, info.DownloadTimes)
+		s.log.Debugln(s.GetSupplierName(), "ChineseSubs -> tmpSubInfo.SubDownloadPageUrl:", i, info.SubDownloadPageUrl)
+	}
+
 	// 第四级界面，具体字幕下载
 	for i, subInfo := range tmpSubInfo {
-		s.log.Debugln(s.GetSupplierName(), "step3 -> subInfo.SubDownloadPageUrl:", i, subInfo.SubDownloadPageUrl)
-		fileName, data, err := s.step3(browser, subInfo.SubDownloadPageUrl)
+
+		s.log.Debugln(s.GetSupplierName(), "GetEx:", i, subInfo.SubDownloadPageUrl)
+
+		getSubInfo, err := s.fileDownloader.GetEx(s.GetSupplierName(), browser, subInfo.SubDownloadPageUrl, int64(i), subInfo.Season, subInfo.Episode, s.DownFile)
 		if err != nil {
-			s.log.Error(s.GetSupplierName(), "step 3", err)
+			s.log.Errorln(s.GetSupplierName(), "GetEx", "GetEx", subInfo.Name, subInfo.Season, subInfo.Episode, err)
 			continue
 		}
-		// 默认都是包含中文字幕的，然后具体使用的时候再进行区分
 
-		oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), int64(i), fileName, language2.ChineseSimple,
-			my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, subInfo.SubDownloadPageUrl), 0,
-			0, filepath.Ext(fileName), data)
-
-		oneSubInfo.Season = subInfo.Season
-		oneSubInfo.Episode = subInfo.Episode
-		outSubInfoList = append(outSubInfoList, *oneSubInfo)
+		outSubInfoList = append(outSubInfoList, *getSubInfo)
 	}
 
 	for i, info := range outSubInfoList {
-		s.log.Debugln(s.GetSupplierName(), "step3 -> Downloaded File Info", i, "FileName:", info.Name, "FileUrl:", info.FileUrl)
+		s.log.Debugln(s.GetSupplierName(), "DownFile -> Downloaded File Info", i, "FileName:", info.Name, "FileUrl:", info.FileUrl)
 	}
 
 	// 返回前，需要把每一个 Eps 的 Season Episode 信息填充到每个 SubInfo 中
@@ -606,18 +664,18 @@ func (s *Supplier) step2(browser *rod.Browser, subInfo *SubInfo) error {
 	return nil
 }
 
-// step3 第三级界面，具体字幕下载 ZiMuKuDownloadUrlStep3NotFound ZiMuKuDownloadUrlStep3AllFailed
-func (s *Supplier) step3(browser *rod.Browser, subDownloadPageUrl string) (string, []byte, error) {
+// DownFile 第三级界面，具体字幕下载 ZiMuKuDownloadUrlStep3NotFound ZiMuKuDownloadUrlDownFileFailed
+func (s *Supplier) DownFile(browser *rod.Browser, subDownloadPageUrl string, TopN int64, Season, Episode int) (*supplier.SubInfo, error) {
 	var err error
 	defer func() {
 		if err != nil {
-			notify_center.Notify.Add("zimuku_step3", err.Error())
+			notify_center.Notify.Add("zimuku_DownFile", err.Error())
 		}
 	}()
-	subDownloadPageUrl = my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, subDownloadPageUrl)
-	result, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageUrl, s.tt)
+	subDownloadPageFullUrl := my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, subDownloadPageUrl)
+	result, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageFullUrl, s.tt)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 	defer func() {
 		_ = page.Close()
@@ -625,8 +683,8 @@ func (s *Supplier) step3(browser *rod.Browser, subDownloadPageUrl string) (strin
 	re := regexp.MustCompile(`<li><a\s+rel="nofollow"\s+href="([^"]*/download/[^"]+)"`)
 	matched := re.FindAllStringSubmatch(result, -1)
 	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
-		s.log.Debugln("Step3,sub download url not found", subDownloadPageUrl)
-		return "", nil, common2.ZiMuKuDownloadUrlStep3NotFound
+		s.log.Debugln("Step3,sub download url not found", subDownloadPageFullUrl)
+		return nil, common2.ZiMuKuDownloadUrlStep3NotFound
 	}
 
 	fileName := ""
@@ -634,9 +692,12 @@ func (s *Supplier) step3(browser *rod.Browser, subDownloadPageUrl string) (strin
 	downloadSuccess := false
 	err = rod.Try(func() {
 		tmpDir := filepath.Join(global_value.DefTmpFolder(), "downloads")
-		wait := browser.Timeout(10 * time.Second).WaitDownload(tmpDir)
+		wait := browser.Timeout(30 * time.Second).WaitDownload(tmpDir)
 		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()
+			if info == nil {
+				return nil, "", errors.New("download sub timeout")
+			}
 			downloadPath := filepath.Join(tmpDir, info.GUID)
 			defer func() { _ = os.Remove(downloadPath) }()
 			b, err := os.ReadFile(downloadPath)
@@ -649,7 +710,6 @@ func (s *Supplier) step3(browser *rod.Browser, subDownloadPageUrl string) (strin
 		element := page.MustElement(btnClickDownload)
 		// 直接可以下载
 		element.MustClick()
-		time.Sleep(time.Second * 2)
 		fileByte, fileName, err = getDownloadFile()
 		if err != nil {
 			return
@@ -658,23 +718,23 @@ func (s *Supplier) step3(browser *rod.Browser, subDownloadPageUrl string) (strin
 		downloadSuccess = true
 	})
 	if err != nil {
-		s.log.Errorln("ZiMuKu step3 DownloadFile", err)
-		return "", nil, err
+		s.log.Errorln("ZiMuKu DownFile DownloadFile", err)
+		return nil, err
 	}
 	if downloadSuccess == true {
 		s.log.Debugln("Step3,DownFile, FileName:", fileName, "DataLen:", len(fileByte))
 
-		// 下载成功需要统计到今天的次数中
-		_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName(),
-			my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
-		if err != nil {
-			s.log.Warningln(s.GetSupplierName(), "getSubListFromFile.AddDailyDownloadCount", err)
-		}
+		inSubInfo := supplier.NewSubInfo(s.GetSupplierName(), 1, fileName, language2.ChineseSimple,
+			subDownloadPageUrl, 0, 0, filepath.Ext(fileName), fileByte)
 
-		return fileName, fileByte, nil
+		inSubInfo.TopN = TopN
+		inSubInfo.Season = Season
+		inSubInfo.Episode = Episode
+
+		return inSubInfo, nil
 	} else {
-		s.log.Debugln("Step3,sub download url not found", subDownloadPageUrl)
-		return "", nil, common2.ZiMuKuDownloadUrlStep3AllFailed
+		s.log.Debugln("Step3,sub download url not found", subDownloadPageFullUrl)
+		return nil, common2.ZiMuKuDownloadUrlDownFileFailed
 	}
 }
 

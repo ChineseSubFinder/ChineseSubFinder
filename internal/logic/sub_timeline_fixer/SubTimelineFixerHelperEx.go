@@ -5,7 +5,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/ffmpeg_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
@@ -14,11 +13,13 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/emirpasic/gods/utils"
+	"github.com/sirupsen/logrus"
 	"math"
 	"os"
 )
 
 type SubTimelineFixerHelperEx struct {
+	log                 *logrus.Logger
 	ffmpegHelper        *ffmpeg_helper.FFMPEGHelper
 	subParserHub        *sub_parser_hub.SubParserHub
 	timelineFixPipeLine *sub_timeline_fixer.Pipeline
@@ -26,13 +27,14 @@ type SubTimelineFixerHelperEx struct {
 	needDownloadFFMPeg  bool
 }
 
-func NewSubTimelineFixerHelperEx(fixerConfig settings.TimelineFixerSettings) *SubTimelineFixerHelperEx {
+func NewSubTimelineFixerHelperEx(log *logrus.Logger, fixerConfig settings.TimelineFixerSettings) *SubTimelineFixerHelperEx {
 
 	fixerConfig.Check()
 
 	return &SubTimelineFixerHelperEx{
-		ffmpegHelper:        ffmpeg_helper.NewFFMPEGHelper(),
-		subParserHub:        sub_parser_hub.NewSubParserHub(ass.NewParser(), srt.NewParser()),
+		log:                 log,
+		ffmpegHelper:        ffmpeg_helper.NewFFMPEGHelper(log),
+		subParserHub:        sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log)),
 		timelineFixPipeLine: sub_timeline_fixer.NewPipeline(fixerConfig.MaxOffsetTime),
 		fixerConfig:         fixerConfig,
 		needDownloadFFMPeg:  false,
@@ -44,18 +46,18 @@ func (s *SubTimelineFixerHelperEx) Check() bool {
 	version, err := s.ffmpegHelper.Version()
 	if err != nil {
 		s.needDownloadFFMPeg = false
-		log_helper.GetLogger().Errorln("Need Install ffmpeg and ffprobe !")
+		s.log.Errorln("Need Install ffmpeg and ffprobe !")
 		return false
 	}
 	s.needDownloadFFMPeg = true
-	log_helper.GetLogger().Infoln(version)
+	s.log.Infoln(version)
 	return true
 }
 
 func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string) error {
 
 	if s.needDownloadFFMPeg == false {
-		log_helper.GetLogger().Errorln("Need Install ffmpeg and ffprobe, Can't Do TimeLine Fix")
+		s.log.Errorln("Need Install ffmpeg and ffprobe, Can't Do TimeLine Fix")
 		return nil
 	}
 
@@ -104,7 +106,7 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 
 		// 使用音频进行时间轴的校正
 		if len(ffmpegInfo.AudioInfoList) <= 0 {
-			log_helper.GetLogger().Warnln("Can`t find audio info, skip time fix --", videoFileFullPath)
+			s.log.Warnln("Can`t find audio info, skip time fix --", videoFileFullPath)
 			return nil
 		}
 		bProcess, infoSrc, pipeResultMax, err = s.processByAudio(ffmpegInfo.AudioInfoList[0].FullPath, srcSubFPath)
@@ -134,15 +136,15 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 
 	// 开始调整字幕时间轴
 	if bProcess == false || math.Abs(pipeResultMax.GetOffsetTime()) < s.fixerConfig.MinOffset {
-		log_helper.GetLogger().Infoln("Skip TimeLine Fix -- OffsetTime:", pipeResultMax.GetOffsetTime(), srcSubFPath)
+		s.log.Infoln("Skip TimeLine Fix -- OffsetTime:", pipeResultMax.GetOffsetTime(), srcSubFPath)
 		return nil
 	}
 	err = s.changeTimeLineAndSave(infoSrc, pipeResultMax, srcSubFPath)
 	if err != nil {
 		return err
 	}
-	log_helper.GetLogger().Infoln("Fix Offset:", pipeResultMax.GetOffsetTime(), srcSubFPath)
-	log_helper.GetLogger().Infoln("BackUp Org SubFile:", pipeResultMax.GetOffsetTime(), srcSubFPath+sub_timeline_fixer.BackUpExt)
+	s.log.Infoln("Fix Offset:", pipeResultMax.GetOffsetTime(), srcSubFPath)
+	s.log.Infoln("BackUp Org SubFile:", pipeResultMax.GetOffsetTime(), srcSubFPath+sub_timeline_fixer.BackUpExt)
 
 	return nil
 }
@@ -154,7 +156,7 @@ func (s SubTimelineFixerHelperEx) processBySub(baseSubFileFPath, srcSubFileFPath
 		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
 	if bFind == false {
-		log_helper.GetLogger().Warnln("processBySub.DetermineFileTypeFromFile sub not match --", baseSubFileFPath)
+		s.log.Warnln("processBySub.DetermineFileTypeFromFile sub not match --", baseSubFileFPath)
 		return false, nil, sub_timeline_fixer.PipeResult{}, nil
 	}
 	bFind, infoSrc, err := s.subParserHub.DetermineFileTypeFromFile(srcSubFileFPath)
@@ -162,7 +164,7 @@ func (s SubTimelineFixerHelperEx) processBySub(baseSubFileFPath, srcSubFileFPath
 		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
 	if bFind == false {
-		log_helper.GetLogger().Warnln("processBySub.DetermineFileTypeFromFile sub not match --", srcSubFileFPath)
+		s.log.Warnln("processBySub.DetermineFileTypeFromFile sub not match --", srcSubFileFPath)
 		return false, nil, sub_timeline_fixer.PipeResult{}, nil
 	}
 	// ---------------------------------------------------------------------------------------
@@ -190,7 +192,7 @@ func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileF
 		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
 	if bFind == false {
-		log_helper.GetLogger().Warnln("processByAudio.DetermineFileTypeFromFile sub not match --", srcSubFileFPath)
+		s.log.Warnln("processByAudio.DetermineFileTypeFromFile sub not match --", srcSubFileFPath)
 		return false, nil, sub_timeline_fixer.PipeResult{}, nil
 	}
 	// ---------------------------------------------------------------------------------------

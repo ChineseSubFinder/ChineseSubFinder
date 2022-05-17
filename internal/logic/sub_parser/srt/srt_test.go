@@ -2,6 +2,7 @@ package srt
 
 import (
 	lan "github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"os"
@@ -64,7 +65,7 @@ func TestParser_DetermineFileType(t *testing.T) {
 
 				t.Fatal(err)
 			}
-			dialogueCount := NewParser().parseContent(inBytes)
+			dialogueCount := NewParser(log_helper.GetLogger4Tester()).parseContent(inBytes)
 			if len(dialogueCount) != tt.wantDialogueLen || len(got.Dialogues) != tt.wantDialogueLen {
 				t.Fatal("parse content dialogue error")
 			}

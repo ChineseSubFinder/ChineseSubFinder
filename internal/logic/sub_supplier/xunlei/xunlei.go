@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/task_queue"
-	pkgcommon "github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -163,28 +161,20 @@ func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, erro
 			}
 		}
 	}
+
+	videoFileName := filepath.Base(filePath)
 	// 再开始下载字幕
 	for i, v := range tmpXunLeiSubListChinese {
-		tmpLang := language.LangConverter4Sub_Supplier(v.Language)
-		data, filename, err := my_util.DownFile(s.log, v.Surl)
+
+		// 解析 xunlei 列表中的这个字幕类型转换到内部的字幕类型
+		//tmpLang := language.LangConverter4Sub_Supplier(v.Language)
+		subInfo, err := s.fileDownloader.Get(s.GetSupplierName(), int64(i), videoFileName, v.Surl, v.Svote, v.Roffset)
 		if err != nil {
-			s.log.Errorln("xunlei pkg.DownFile:", err)
+			s.log.Error("FileDownloader.Get", err)
 			continue
 		}
-		// 下载成功需要统计到今天的次数中
-		_, err = task_queue.AddDailyDownloadCount(s.GetSupplierName(),
-			my_util.GetPublicIP(s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
-		if err != nil {
-			s.log.Warningln(s.GetSupplierName(), "getSubListFromFile.AddDailyDownloadCount", err)
-		}
-		ext := ""
-		if filename == "" {
-			ext = filepath.Ext(v.Surl)
-		} else {
-			ext = filepath.Ext(filename)
-		}
 
-		outSubList = append(outSubList, *supplier.NewSubInfo(s.GetSupplierName(), int64(i), v.Sname, tmpLang, v.Surl, v.Svote, v.Roffset, ext, data))
+		outSubList = append(outSubList, *subInfo)
 	}
 
 	return outSubList, nil
@@ -193,7 +183,10 @@ func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, erro
 func (s *Supplier) getSubInfos(filePath, cid string) (SublistSliceXunLei, error) {
 	var jsonList SublistSliceXunLei
 
-	httpClient := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	if err != nil {
+		return jsonList, err
+	}
 	resp, err := httpClient.R().
 		SetResult(&jsonList).
 		Get(fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.Xunlei.RootUrl, cid))
@@ -254,9 +247,6 @@ func (s *Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier
 	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 
 		index++
-		pkgcommon.SetSubScanJobStatusScanSeriesSub(index, len(seriesInfo.NeedDlEpsKeyList),
-			fmt.Sprintf("%v - S%v-E%v", episodeInfo.Title, episodeInfo.Season, episodeInfo.Episode))
-
 		one, err := s.getSubListFromFile(episodeInfo.FileFullPath)
 		if err != nil {
 			s.log.Errorln(s.GetSupplierName(), "getSubListFromFile", episodeInfo.Season, episodeInfo.Episode,
