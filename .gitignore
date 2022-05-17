@@ -116,3 +116,5 @@ ChineseSubFinderSettings.json
 /internal/pkg/pass_water_wall/.rod
 /internal/pkg/pass_water_wall/cache
 /internal/pkg/rod_helper/cache/
+/internal/logic/sub_supplier/assrt/cache/
+/**/ChineseSubFinder-Cache.db

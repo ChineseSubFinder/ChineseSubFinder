@@ -20,11 +20,12 @@ import (
 )
 
 type Supplier struct {
-	settings       *settings.Settings
-	log            *logrus.Logger
-	fileDownloader *file_downloader.FileDownloader
-	topic          int
-	isAlive        bool
+	settings          *settings.Settings
+	log               *logrus.Logger
+	fileDownloader    *file_downloader.FileDownloader
+	topic             int
+	isAlive           bool
+	theSearchInterval time.Duration
 }
 
 func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
@@ -39,6 +40,8 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
 		sup.topic = sup.settings.AdvancedSettings.Topic
 	}
+
+	sup.theSearchInterval = 20 * time.Second
 
 	return &sup
 }
@@ -66,12 +69,6 @@ func (s *Supplier) CheckAlive() (bool, int64) {
 }
 
 func (s *Supplier) IsAlive() bool {
-
-	if s.settings.SubtitleSources.AssrtSettings.Token == "" {
-		s.log.Debugln(s.GetSupplierName(), "IsAlive", "Token is empty")
-		return false
-	}
-
 	return s.isAlive
 }
 
@@ -173,11 +170,6 @@ func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool) ([]suppli
 		if len(outSubInfoList) >= s.topic {
 			return outSubInfoList, nil
 		}
-
-		if index >= 1 {
-			// 因为每分钟只有 5 次的限额
-			time.Sleep(20 * time.Second)
-		}
 	}
 
 	return outSubInfoList, nil
@@ -215,6 +207,10 @@ func (s *Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier
 
 func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 
+	defer func() {
+		time.Sleep(s.theSearchInterval)
+	}()
+
 	var searchSubResult SearchSubResult
 
 	tt := url.QueryEscape(keyword)
@@ -243,6 +239,11 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 }
 
 func (s *Supplier) getSubDetail(subID int) (OneSubDetail, error) {
+
+	defer func() {
+		time.Sleep(s.theSearchInterval)
+	}()
+
 	var subDetail OneSubDetail
 
 	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
