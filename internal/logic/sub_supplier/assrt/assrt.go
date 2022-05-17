@@ -1,11 +1,13 @@
 package assrt
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -14,8 +16,10 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/sirupsen/logrus"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -256,7 +260,6 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 	}
 	resp, err := httpClient.R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
-		SetResult(&searchSubResult).
 		Get(s.settings.AdvancedSettings.SuppliersSettings.Assrt.RootUrl +
 			"/sub/search?q=" + tt +
 			"&cnt=15&pos=0" +
@@ -266,18 +269,48 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", keyword, err.Error())
 			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("keyword: %s, resp: %s, error: %s", keyword, resp.String(), err.Error()))
 
-			//cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
-			//if err != nil {
-			//	s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
-			//}
-			//desJsonInfo := filepath.Join(cacheCenterFolder, "assrt_search_error_getSubByKeyWord.json")
-			//// 写字符串到文件种
-			//file, _ := os.Create(desJsonInfo)
-			//defer func() {
-			//	_ = file.Close()
-			//}()
-			//file.WriteString(resp.String())
+			// 输出调试文件
+			cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
+			if err != nil {
+				s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
+			}
+			desJsonInfo := filepath.Join(cacheCenterFolder, strings.ReplaceAll(keyword, " ", "")+"--assrt_search_error_getSubByKeyWord.json")
+			// 写字符串到文件种
+			file, _ := os.Create(desJsonInfo)
+			defer func() {
+				_ = file.Close()
+			}()
+			file.WriteString(resp.String())
 		}
+
+		/*
+			这里有个梗， Sub 有值的时候是一个列表，但是如果为空的时候，又是一个空的结构体
+			所以出现两个结构体需要去尝试解析
+			SearchSubResultEmpty
+			SearchSubResult
+			比如这个情况：
+			jsonString := "{\"sub\":{\"action\":\"search\",\"subs\":{},\"result\":\"succeed\",\"keyword\":\"追杀夏娃 S04E07\"},\"status\":0}"
+		*/
+
+		err = json.Unmarshal([]byte(resp.String()), &searchSubResult)
+		if err != nil {
+
+			// 再此尝试解析空列表
+			var searchSubResultEmpty SearchSubResultEmpty
+			err = json.Unmarshal([]byte(resp.String()), &searchSubResultEmpty)
+			if err != nil {
+				s.log.Errorln(s.GetSupplierName(), "json.Unmarshal", err)
+				return searchSubResult, err
+			}
+			// 赋值过去
+			searchSubResult.Sub.Action = searchSubResultEmpty.Sub.Action
+			searchSubResult.Sub.Result = searchSubResultEmpty.Sub.Result
+			searchSubResult.Sub.Keyword = searchSubResultEmpty.Sub.Keyword
+			searchSubResult.Status = searchSubResultEmpty.Status
+
+			return searchSubResult, err
+		}
+
 		return searchSubResult, err
 	}
 
@@ -308,17 +341,18 @@ func (s *Supplier) getSubDetail(subID int) (OneSubDetail, error) {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", subID, err.Error())
 			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("subID: %d, resp: %s, error: %s", subID, resp.String(), err.Error()))
 
-			//cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
-			//if err != nil {
-			//	s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
-			//}
-			//desJsonInfo := filepath.Join(cacheCenterFolder, "assrt_search_error_getSubDetail.json")
-			//// 写字符串到文件种
-			//file, _ := os.Create(desJsonInfo)
-			//defer func() {
-			//	_ = file.Close()
-			//}()
-			//file.WriteString(resp.String())
+			// 输出调试文件
+			cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
+			if err != nil {
+				s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
+			}
+			desJsonInfo := filepath.Join(cacheCenterFolder, strconv.Itoa(subID)+"--assrt_search_error_getSubDetail.json")
+			// 写字符串到文件种
+			file, _ := os.Create(desJsonInfo)
+			defer func() {
+				_ = file.Close()
+			}()
+			file.WriteString(resp.String())
 		}
 		return subDetail, err
 	}
@@ -349,6 +383,17 @@ func (s *Supplier) getUserInfo() (UserInfo, error) {
 	}
 
 	return userInfo, nil
+}
+
+type SearchSubResultEmpty struct {
+	Sub struct {
+		Action string `json:"action"`
+		Subs   struct {
+		} `json:"subs"`
+		Result  string `json:"result"`
+		Keyword string `json:"keyword"`
+	} `json:"sub"`
+	Status int `json:"status"`
 }
 
 type SearchSubResult struct {
