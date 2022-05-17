@@ -76,10 +76,11 @@ func writeFile(saveFileFPath, enString, nowTime string) error {
 }
 
 func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string) (string, string, error) {
-	const baseCodeFileUrl = "https://cdn.jsdelivr.net/gh/"
+	//const baseCodeFileUrl = "https://raw.githubusercontents.com/"
+	const baseCodeFileUrl = "https://raw.staticdn.net/"
 	const whichProject = "allanpk716/SomeThingsStatic/"
 
-	desUrl := baseCodeFileUrl + whichProject + nowTimeFileNamePrix + common.StaticFileName00
+	desUrl := baseCodeFileUrl + whichProject + "master/" + nowTimeFileNamePrix + common.StaticFileName00
 
 	fileBytes, _, err := my_util.DownFile(l, desUrl)
 	if err != nil {
