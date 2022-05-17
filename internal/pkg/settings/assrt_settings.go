@@ -1,5 +1,6 @@
 package settings
 
 type AssrtSettings struct {
-	Token string `json:"token"`
+	Enabled bool   `json:"enabled"`
+	Token   string `json:"token"`
 }

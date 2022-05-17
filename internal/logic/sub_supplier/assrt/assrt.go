@@ -3,15 +3,12 @@ package assrt
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
@@ -47,18 +44,25 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 }
 
 func (s *Supplier) CheckAlive() (bool, int64) {
-	//// 计算当前时间
-	//startT := time.Now()
-	//_, err := s.getSubInfos(checkFileHash, checkFileName, qLan)
-	//if err != nil {
-	//	s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
-	//	s.isAlive = false
-	//	return false, 0
-	//}
-	//// 计算耗时
-	//s.isAlive = true
-	//return true, time.Since(startT).Milliseconds()
-	return false, 0
+
+	// 如果没有设置这个 API 接口，那么就任务是不可用的
+	if s.settings.SubtitleSources.AssrtSettings.Token == "" {
+		s.isAlive = false
+		return false, 0
+	}
+
+	// 计算当前时间
+	startT := time.Now()
+	userInfo, err := s.getUserInfo()
+	if err != nil {
+		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
+		s.isAlive = false
+		return false, 0
+	}
+	s.log.Infoln(s.GetSupplierName(), "CheckAlive", "UserInfo.Status:", userInfo.Status, "UserInfo.Quota:", userInfo.User.Quota)
+	// 计算耗时
+	s.isAlive = true
+	return true, time.Since(startT).Milliseconds()
 }
 
 func (s *Supplier) IsAlive() bool {
@@ -110,57 +114,24 @@ func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool) ([]suppli
 
 	outSubInfoList := make([]supplier.SubInfo, 0)
 
-	var err error
-	var imdbInfo4Video types.VideoIMDBInfo
-	if isMovie == true {
-		imdbInfo4Video, err = decode.GetImdbInfo4Movie(videoFPath)
-	} else {
-		imdbInfo4Video, err = decode.GetSeriesSeasonImdbInfoFromEpisode(videoFPath)
-	}
+	imdbInfo, err := imdb_helper.GetIMDBInfo(s.log, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
-		// 如果找不到当前电影的 IMDB Info 本地文件，那么就跳过
-		s.log.Warningln("getSubListFromFile", videoFPath, err)
+		s.log.Errorln(s.GetSupplierName(), videoFPath, "GetIMDBInfo", err)
 		return nil, err
 	}
 
-	imdbInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(s.log, imdbInfo4Video)
-	if err != nil {
-		s.log.Warningln("GetVideoIMDBInfoFromLocal", videoFPath, err)
-		return nil, err
-	}
-	if len(imdbInfo.Description) <= 0 {
-		// 需要去外网获去补全信息，然后更新本地的信息
-		t, err := imdb_helper.GetVideoInfoFromIMDBWeb(imdbInfo4Video, s.settings.AdvancedSettings.ProxySettings)
-		if err != nil {
-			s.log.Errorln("GetVideoInfoFromIMDBWeb,", imdbInfo4Video.Title, err)
-			return nil, err
-		}
-		imdbInfo.Year = t.Year
-		imdbInfo.AKA = t.AKA
-		imdbInfo.Description = t.Description
-		imdbInfo.Languages = t.Languages
-
-		dao.GetDb().Save(imdbInfo)
-	}
 	// 需要找到中文名称去搜索
-	keyWord := ""
-	for _, akaWord := range imdbInfo.AKA {
-		if language.IsChs(akaWord) == true {
-			keyWord = akaWord
-			break
-		}
-	}
+	keyWord := imdbInfo.GetChineseNameFromAKA()
 	if keyWord == "" {
 		return nil, errors.New("No Chinese name")
 	}
-
 	if isMovie == false {
 		// 连续剧需要额外补充 S01E01 这样的信息
 		infoFromFileName, err := decode.GetVideoInfoFromFileName(videoFPath)
 		if err != nil {
 			return nil, err
 		}
-		keyWord += my_util.GetEpisodeKeyName(infoFromFileName.Season, infoFromFileName.Episode)
+		keyWord += " " + my_util.GetEpisodeKeyName(infoFromFileName.Season, infoFromFileName.Episode, true)
 	}
 
 	var searchSubResult SearchSubResult
@@ -254,15 +225,12 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 		return searchSubResult, err
 	}
 	resp, err := httpClient.R().
-		//SetQueryParams(map[string]string{
-		//	"token": s.settings.SubtitleSources.AssrtSettings.Token,
-		//	"q":     url.QueryEscape(keyword),
-		//	"cnt":   "15",
-		//	"pos":   "0",
-		//}).
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetResult(&searchSubResult).
-		Get(s.settings.AdvancedSettings.SuppliersSettings.Assrt.RootUrl + "/sub/search?q=" + tt + "&cnt=15&pos=0" + "&token=" + s.settings.SubtitleSources.AssrtSettings.Token)
+		Get(s.settings.AdvancedSettings.SuppliersSettings.Assrt.RootUrl +
+			"/sub/search?q=" + tt +
+			"&cnt=15&pos=0" +
+			"&token=" + s.settings.SubtitleSources.AssrtSettings.Token)
 	if err != nil {
 		if resp != nil {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", keyword, err.Error())
@@ -297,6 +265,31 @@ func (s *Supplier) getSubDetail(subID int) (OneSubDetail, error) {
 	}
 
 	return subDetail, nil
+}
+
+func (s *Supplier) getUserInfo() (UserInfo, error) {
+
+	var userInfo UserInfo
+
+	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	if err != nil {
+		return userInfo, err
+	}
+	resp, err := httpClient.R().
+		SetQueryParams(map[string]string{
+			"token": s.settings.SubtitleSources.AssrtSettings.Token,
+		}).
+		SetResult(&userInfo).
+		Get(s.settings.AdvancedSettings.SuppliersSettings.Assrt.RootUrl + "/user/quota")
+	if err != nil {
+		if resp != nil {
+			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", err.Error())
+			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("resp: %s, error: %s", resp.String(), err.Error()))
+		}
+		return userInfo, err
+	}
+
+	return userInfo, nil
 }
 
 type SearchSubResult struct {
@@ -368,5 +361,14 @@ type OneSubDetail struct {
 		} `json:"subs"`
 		Result string `json:"result"`
 	} `json:"sub"`
+	Status int `json:"status"`
+}
+
+type UserInfo struct {
+	User struct {
+		Action string `json:"action"`
+		Result string `json:"result"`
+		Quota  int    `json:"quota"`
+	} `json:"user"`
 	Status int `json:"status"`
 }

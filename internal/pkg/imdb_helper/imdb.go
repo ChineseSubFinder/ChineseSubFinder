@@ -5,6 +5,7 @@ import (
 	"github.com/StalkR/imdb"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
@@ -138,4 +139,42 @@ func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, _proxySett
 	default:
 		return false, localIMDBInfo, nil
 	}
+}
+
+// GetIMDBInfo 先从本地拿缓存，如果没有就从 Web 获取
+func GetIMDBInfo(log *logrus.Logger, videoFPath string, isMovie bool, _proxySettings ...*settings.ProxySettings) (*models.IMDBInfo, error) {
+
+	var err error
+	var imdbInfo4Video types.VideoIMDBInfo
+	if isMovie == true {
+		imdbInfo4Video, err = decode.GetImdbInfo4Movie(videoFPath)
+	} else {
+		imdbInfo4Video, err = decode.GetSeriesSeasonImdbInfoFromEpisode(videoFPath)
+	}
+	if err != nil {
+		// 如果找不到当前电影的 IMDB Info 本地文件，那么就跳过
+		log.Warningln("getSubListFromFile", videoFPath, err)
+		return nil, err
+	}
+	imdbInfo, err := GetVideoIMDBInfoFromLocal(log, imdbInfo4Video)
+	if err != nil {
+		log.Warningln("GetVideoIMDBInfoFromLocal", videoFPath, err)
+		return nil, err
+	}
+	if len(imdbInfo.Description) <= 0 {
+		// 需要去外网获去补全信息，然后更新本地的信息
+		t, err := GetVideoInfoFromIMDBWeb(imdbInfo4Video, _proxySettings...)
+		if err != nil {
+			log.Errorln("GetVideoInfoFromIMDBWeb,", imdbInfo4Video.Title, err)
+			return nil, err
+		}
+		imdbInfo.Year = t.Year
+		imdbInfo.AKA = t.AKA
+		imdbInfo.Description = t.Description
+		imdbInfo.Languages = t.Languages
+
+		dao.GetDb().Save(imdbInfo)
+	}
+
+	return imdbInfo, nil
 }
