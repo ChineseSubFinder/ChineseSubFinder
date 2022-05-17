@@ -115,58 +115,59 @@ func (d *Downloader) SupplierCheck() {
 	d.downloaderLock.Lock()
 	d.log.Infoln("Download.SupplierCheck() Start ...")
 
-	// 创建一个 chan 用于任务的中断和超时
-	done := make(chan interface{}, 1)
-	// 接收内部任务的 panic
-	panicChan := make(chan interface{}, 1)
+	//// 创建一个 chan 用于任务的中断和超时
+	//done := make(chan interface{}, 1)
+	//// 接收内部任务的 panic
+	//panicChan := make(chan interface{}, 1)
+	//
+	//go func() {
+	//	defer func() {
+	//		if p := recover(); p != nil {
+	//			panicChan <- p
+	//		}
+	//
+	//		close(done)
+	//		close(panicChan)
+	//	}()
+	// 下载前的初始化
+	d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
 
-	go func() {
-		defer func() {
-			if p := recover(); p != nil {
-				panicChan <- p
-			}
+	if d.settings.SpeedDevMode == true {
+		// 这里是调试使用的，指定了只用一个字幕源
+		subSupplierHub := subSupplier.NewSubSupplierHub(shooter.NewSupplier(d.fileDownloader))
+		d.subSupplierHub = subSupplierHub
+	} else {
 
-			close(done)
-			close(panicChan)
-		}()
-		// 下载前的初始化
-		d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
-
-		if d.settings.SpeedDevMode == true {
-			// 这里是调试使用的，指定了只用一个字幕源
-			subSupplierHub := subSupplier.NewSubSupplierHub(shooter.NewSupplier(d.fileDownloader))
-			d.subSupplierHub = subSupplierHub
-		} else {
-
-			preDownloadProcess := pre_download_process.NewPreDownloadProcess(d.fileDownloader)
-			err := preDownloadProcess.Init().Check().Wait()
-			if err != nil {
-				done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
-			} else {
-				// 更新 SubSupplierHub 实例
-				d.subSupplierHub = preDownloadProcess.SubSupplierHub
-				done <- nil
-			}
-		}
-
-		done <- nil
-	}()
-
-	select {
-	case err := <-done:
+		preDownloadProcess := pre_download_process.NewPreDownloadProcess(d.fileDownloader)
+		err := preDownloadProcess.Init().Check().Wait()
 		if err != nil {
-			d.log.Errorln(err)
-		}
-		break
-	case p := <-panicChan:
-		// 遇到内部的 panic，向外抛出
-		panic(p)
-	case <-d.ctx.Done():
-		{
-			d.log.Errorln("cancel SupplierCheck")
-			return
+			//done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
+			d.log.Errorln(errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err)))
+		} else {
+			// 更新 SubSupplierHub 实例
+			d.subSupplierHub = preDownloadProcess.SubSupplierHub
+			//done <- nil
 		}
 	}
+
+	//	done <- nil
+	//}()
+	//
+	//select {
+	//case err := <-done:
+	//	if err != nil {
+	//		d.log.Errorln(err)
+	//	}
+	//	break
+	//case p := <-panicChan:
+	//	// 遇到内部的 panic，向外抛出
+	//	panic(p)
+	//case <-d.ctx.Done():
+	//	{
+	//		d.log.Errorln("cancel SupplierCheck")
+	//		return
+	//	}
+	//}
 }
 
 // QueueDownloader 从字幕队列中取一个视频的字幕下载任务出来，并且开始下载

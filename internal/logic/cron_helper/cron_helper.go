@@ -60,6 +60,11 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 	ch.Downloader = downloader.NewDownloader(
 		sub_formatter.GetSubFormatter(ch.log, ch.Settings.AdvancedSettings.SubNameFormatter),
 		ch.FileDownloader, ch.DownloadQueue)
+	// 强制进行一次字幕源有效性检查
+
+	if ch.Settings.SpeedDevMode == false {
+		ch.Downloader.SupplierCheck()
+	}
 
 	return &ch
 }
@@ -115,15 +120,6 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	ch.entryIDScanPlayedVideoSubInfo, err = ch.c.AddFunc("@every 24h", ch.scanPlayedVideoSub)
 	if err != nil {
 		ch.log.Panicln("CronHelper QueueDownloader, Cron entryID:", ch.entryIDScanPlayedVideoSubInfo, "Error:", err)
-	}
-	// ----------------------------------------------
-	// 启动一次字幕源有效性检测
-	ch.cronLock.Lock()
-	if ch.cronHelperRunning == true && ch.stopping == false {
-		ch.cronLock.Unlock()
-		ch.Downloader.SupplierCheck()
-	} else {
-		ch.cronLock.Unlock()
 	}
 	// ----------------------------------------------
 	if runImmediately == true {
