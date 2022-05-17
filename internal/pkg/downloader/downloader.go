@@ -3,6 +3,7 @@ package downloader
 import (
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
@@ -12,6 +13,7 @@ import (
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
+	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -198,13 +200,24 @@ func (d *Downloader) QueueDownloader() {
 		d.log.Debugln("Download Queue Is Empty, Skip This Time")
 		return
 	}
-	// 在拿出来后，如果是有内部媒体服务器媒体 ID 的，那么就去查询是否已经观看过了
-	isPlayed, err := d.embyHelper.IsVideoPlayed(oneJob.MediaServerInsideVideoID)
-	if err != nil {
-		d.log.Errorln("d.embyHelper.IsVideoPlayed()", oneJob.VideoFPath, err)
-		return
+	// --------------------------------------------------
+	// 判断是否看过
+	isPlayed := false
+	if d.embyHelper != nil {
+		// 在拿出来后，如果是有内部媒体服务器媒体 ID 的，那么就去查询是否已经观看过了
+		isPlayed, err = d.embyHelper.IsVideoPlayed(oneJob.MediaServerInsideVideoID)
+		if err != nil {
+			d.log.Errorln("d.embyHelper.IsVideoPlayed()", oneJob.VideoFPath, err)
+			return
+		}
 	}
-
+	// 不管如何，只要是发现数据库中有 HTTP API 提交的信息，就认为是看过
+	var videoPlayedInfos []models.ThirdPartSetVideoPlayedInfo
+	dao.GetDb().Where("physical_video_file_full_path = ?", oneJob.VideoFPath).Find(&videoPlayedInfos)
+	if len(videoPlayedInfos) > 0 {
+		isPlayed = true
+	}
+	// --------------------------------------------------
 	// 如果已经播放过 且 这个任务的优先级 > 3 ，不是很急的那种，说明是可以设置忽略继续下载的
 	if isPlayed == true && oneJob.TaskPriority > task_queue.HighTaskPriorityLevel {
 		// 播放过了，那么就标记 ignore
