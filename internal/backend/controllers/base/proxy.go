@@ -54,6 +54,10 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 
 	defer func() {
 		// 还原
+		err = cb.fileDownloader.Settings.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
+		if err != nil {
+			return
+		}
 		cb.fileDownloader.Settings.AdvancedSettings.ProxySettings = bkProxySettings
 	}()
 
