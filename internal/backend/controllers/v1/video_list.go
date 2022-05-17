@@ -1,6 +1,9 @@
 package v1
 
 import (
+	"errors"
+	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
@@ -100,10 +103,27 @@ func (cb *ControllerBase) VideoListAddHandler(c *gin.Context) {
 		videoType = common.Series
 	}
 
-	bok, err := cb.cronHelper.DownloadQueue.Add(*TTaskqueue.NewOneJob(
+	oneJob := TTaskqueue.NewOneJob(
 		videoType, videoListAdd.PhysicalVideoFileFullPath, videoListAdd.TaskPriorityLevel,
 		videoListAdd.MediaServerInsideVideoID,
-	))
+	)
+
+	torrentInfo, err := decode.GetVideoInfoFromFileName(videoListAdd.PhysicalVideoFileFullPath)
+	if err != nil {
+		return
+	}
+
+	seriesInfoDirPath := decode.GetSeriesDirRootFPath(videoListAdd.PhysicalVideoFileFullPath)
+	if seriesInfoDirPath == "" {
+		err = errors.New(fmt.Sprintf("decode.GetSeriesDirRootFPath == Empty, %s", videoListAdd.PhysicalVideoFileFullPath))
+		return
+	}
+
+	oneJob.Season = torrentInfo.Season
+	oneJob.Episode = torrentInfo.Episode
+	oneJob.SeriesRootDirPath = seriesInfoDirPath
+
+	bok, err := cb.cronHelper.DownloadQueue.Add(*oneJob)
 	if err != nil {
 		return
 	}

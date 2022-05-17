@@ -21,7 +21,8 @@ func TestSupplier_getSubListFromFile(t *testing.T) {
 	//videoFPath := "X:\\电影\\失控玩家 (2021)\\失控玩家 (2021).mp4"
 	//isMovie := true
 	defInstance()
-	videoFPath := "X:\\连续剧\\风骚律师 (2015)\\Season 6\\Better Call Saul - S06E05 - Black and Blue WEBDL-1080p.mkv"
+	videoFPath := "X:\\连续剧\\杀死伊芙 (2018)\\Season 4\\Killing Eve - S04E08 - Hello, Losers WEBDL-1080p.mkv"
+	//videoFPath := "X:\\连续剧\\风骚律师 (2015)\\Season 6\\Better Call Saul - S06E05 - Black and Blue WEBDL-1080p.mkv"
 	isMovie := false
 
 	got, err := assrtInstance.getSubListFromFile(videoFPath, isMovie)

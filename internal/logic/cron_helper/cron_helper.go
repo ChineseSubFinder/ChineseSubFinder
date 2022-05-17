@@ -60,11 +60,9 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 	ch.Downloader = downloader.NewDownloader(
 		sub_formatter.GetSubFormatter(ch.log, ch.Settings.AdvancedSettings.SubNameFormatter),
 		ch.FileDownloader, ch.DownloadQueue)
-	// 强制进行一次字幕源有效性检查
 
-	if ch.Settings.SpeedDevMode == false {
-		ch.Downloader.SupplierCheck()
-	}
+	// 强制进行一次字幕源有效性检查
+	ch.Downloader.SupplierCheck()
 
 	return &ch
 }

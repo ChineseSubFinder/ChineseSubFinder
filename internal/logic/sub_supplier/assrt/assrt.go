@@ -170,6 +170,11 @@ func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool) ([]suppli
 
 	videoFileName := filepath.Base(videoFPath)
 
+	if searchSubResult.Sub.Subs == nil || len(searchSubResult.Sub.Subs) == 0 {
+		s.log.Infoln(s.GetSupplierName(), videoFileName, "No subtitle found")
+		return outSubInfoList, nil
+	}
+
 	for index, subInfo := range searchSubResult.Sub.Subs {
 
 		// 获取具体的下载地址
@@ -243,9 +248,8 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 
 	var searchSubResult SearchSubResult
 
+	s.log.Infoln("Search KeyWord:", keyword)
 	tt := url.QueryEscape(keyword)
-	println(tt)
-
 	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		return searchSubResult, err
