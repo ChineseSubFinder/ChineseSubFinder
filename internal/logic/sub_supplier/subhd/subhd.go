@@ -4,6 +4,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"image/jpeg"
+	"math"
+	"net/url"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
@@ -23,14 +32,6 @@ import (
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/nfnt/resize"
 	"github.com/sirupsen/logrus"
-	"image/jpeg"
-	"math"
-	"net/url"
-	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
-	"time"
 )
 
 type Supplier struct {
@@ -240,6 +241,7 @@ func (s *Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo
 
 func (s *Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInfo, error) {
 
+	s.log.Infoln("Search Keyword:", keyword)
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
 	browser, err := rod_helper.NewBrowserEx(s.log, true, s.settings)
