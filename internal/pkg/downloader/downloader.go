@@ -14,6 +14,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/assrt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -375,6 +376,24 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	// 设置只有一集需要下载
 	epsMap := make(map[int][]int, 0)
 	epsMap[job.Season] = []int{job.Episode}
+
+	if job.SeriesRootDirPath == "" {
+		// 连续剧的时候需要额外提交信息
+		torrentInfo, err := decode.GetVideoInfoFromFileName(job.VideoFPath)
+		if err != nil {
+			return err
+		}
+		seriesInfoDirPath := decode.GetSeriesDirRootFPath(job.VideoFPath)
+		if seriesInfoDirPath == "" {
+			err = errors.New(fmt.Sprintf("decode.GetSeriesDirRootFPath == Empty, %s", job.VideoFPath))
+			return err
+		}
+
+		job.Season = torrentInfo.Season
+		job.Episode = torrentInfo.Episode
+		job.SeriesRootDirPath = seriesInfoDirPath
+	}
+
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
 	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(
 		d.log, job.SeriesRootDirPath,
