@@ -129,17 +129,24 @@ func (cb *ControllerBase) VideoListAddHandler(c *gin.Context) {
 		return
 	}
 	if bok == false {
-		c.JSON(http.StatusOK, backend.ReplyJobThings{
-			JobID:   oneJob.Id,
-			Message: "job is already in queue",
-		})
-	} else {
-		c.JSON(http.StatusOK, backend.ReplyJobThings{
-			JobID:   oneJob.Id,
-			Message: "ok",
-		})
+		// 任务已经存在
+		bok, err = cb.cronHelper.DownloadQueue.Update(*oneJob)
+		if err != nil {
+			return
+		}
+		if bok == false {
+			c.JSON(http.StatusOK, backend.ReplyJobThings{
+				JobID:   oneJob.Id,
+				Message: "update job status failed",
+			})
+			return
+		}
 	}
 
+	c.JSON(http.StatusOK, backend.ReplyJobThings{
+		JobID:   oneJob.Id,
+		Message: "ok",
+	})
 }
 
 func (cb *ControllerBase) VideoListHandler(c *gin.Context) {
