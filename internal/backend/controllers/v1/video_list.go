@@ -3,13 +3,14 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func (cb *ControllerBase) RefreshVideoListStatusHandler(c *gin.Context) {
@@ -128,11 +129,13 @@ func (cb *ControllerBase) VideoListAddHandler(c *gin.Context) {
 		return
 	}
 	if bok == false {
-		c.JSON(http.StatusOK, backend.ReplyCommon{
+		c.JSON(http.StatusOK, backend.ReplyJobThings{
+			JobID:   oneJob.Id,
 			Message: "job is already in queue",
 		})
 	} else {
-		c.JSON(http.StatusOK, backend.ReplyCommon{
+		c.JSON(http.StatusOK, backend.ReplyJobThings{
+			JobID:   oneJob.Id,
 			Message: "ok",
 		})
 	}
