@@ -6,10 +6,6 @@
 >
 > [大版本规划，以及新功能“共享字幕”功能的简介和讨论](https://github.com/allanpk716/ChineseSubFinder/issues/277)
 
-## 功能
-
-本程序有什么功能见: [功能](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/功能.md)
-
 ## 前置要求
 
 如果想顺利的用起来，还是对电影、连续剧的目录有一定的要求的。见文档:
