@@ -87,6 +87,7 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 
 ## 版本
 
+- v0.27.x 新增，assrt 字幕源，取消 zimuku 支持 -- 2022 年 5 月 19 日
 - v0.26.x 大范围重构，详细教程和更新说明见，[v0.26 教程、更新说明](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.26教程) -- 2022 年 5 月 13 日
 - v0.25.x 调整细节，支持 cron 定时、指定时间、自定义 cron 规则，触发下载任务 -- 2022 年 4 月 6 日
 - v0.24.x 调整细节，“实验室”添加远程 Chrome 设置 -- 2022 年 4 月 2 日
