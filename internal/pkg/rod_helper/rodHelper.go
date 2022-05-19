@@ -31,8 +31,8 @@ func NewBrowserEx(log *logrus.Logger, loadAdblock bool, _settings *settings.Sett
 			localChromeFPath = _settings.ExperimentalFunction.LocalChromeSettings.LocalChromeExeFPath
 		}
 		return NewBrowser(log,
-			_settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
 			localChromeFPath,
+			_settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
 			loadAdblock,
 			preLoadUrl...)
 	} else {
