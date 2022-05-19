@@ -142,6 +142,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 	for value := range seriesInfo.NeedDlSeasonDict {
 		// 第一级界面，找到影片的详情界面
 		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
+		s.log.Infoln("Search Keyword:", keyword)
 		detailPageUrl, err := s.step0(browser, keyword)
 		if err != nil {
 			s.log.Errorln("subhd step0", keyword)
@@ -152,6 +153,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 			s.log.Warning("subhd first search keyword", keyword, "not found")
 			keyword = seriesInfo.Name
 			s.log.Warning("subhd Retry", keyword)
+			s.log.Infoln("Search Keyword:", keyword)
 			detailPageUrl, err = s.step0(browser, keyword)
 			if err != nil {
 				s.log.Errorln("subhd step0", keyword)
