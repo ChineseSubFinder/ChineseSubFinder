@@ -3,6 +3,9 @@ package downloader
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"sync"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
@@ -26,8 +29,6 @@ import (
 	taskQueue2 "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	"path/filepath"
-	"sync"
 )
 
 // Downloader 实例化一次用一次，不要反复的使用，很多临时标志位需要清理。
@@ -377,7 +378,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	epsMap := make(map[int][]int, 0)
 	epsMap[job.Season] = []int{job.Episode}
 
-	if job.SeriesRootDirPath == "" {
+	if job.VideoType == common.Series && job.SeriesRootDirPath == "" {
 		// 连续剧的时候需要额外提交信息
 		torrentInfo, err := decode.GetVideoInfoFromFileName(job.VideoFPath)
 		if err != nil {

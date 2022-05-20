@@ -109,20 +109,21 @@ func (cb *ControllerBase) VideoListAddHandler(c *gin.Context) {
 		videoListAdd.MediaServerInsideVideoID,
 	)
 
-	torrentInfo, err := decode.GetVideoInfoFromFileName(videoListAdd.PhysicalVideoFileFullPath)
-	if err != nil {
-		return
+	if videoType == common.Series {
+		// 如果是连续剧，需要额外的读取这一个剧集的信息
+		torrentInfo, err := decode.GetVideoInfoFromFileName(videoListAdd.PhysicalVideoFileFullPath)
+		if err != nil {
+			return
+		}
+		seriesInfoDirPath := decode.GetSeriesDirRootFPath(videoListAdd.PhysicalVideoFileFullPath)
+		if seriesInfoDirPath == "" {
+			err = errors.New(fmt.Sprintf("decode.GetSeriesDirRootFPath == Empty, %s", videoListAdd.PhysicalVideoFileFullPath))
+			return
+		}
+		oneJob.Season = torrentInfo.Season
+		oneJob.Episode = torrentInfo.Episode
+		oneJob.SeriesRootDirPath = seriesInfoDirPath
 	}
-
-	seriesInfoDirPath := decode.GetSeriesDirRootFPath(videoListAdd.PhysicalVideoFileFullPath)
-	if seriesInfoDirPath == "" {
-		err = errors.New(fmt.Sprintf("decode.GetSeriesDirRootFPath == Empty, %s", videoListAdd.PhysicalVideoFileFullPath))
-		return
-	}
-
-	oneJob.Season = torrentInfo.Season
-	oneJob.Episode = torrentInfo.Episode
-	oneJob.SeriesRootDirPath = seriesInfoDirPath
 
 	bok, err := cb.cronHelper.DownloadQueue.Add(*oneJob)
 	if err != nil {
