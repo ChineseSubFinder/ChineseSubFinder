@@ -14,6 +14,20 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+
+/**
+字幕时间轴修复命令行
+使用方法：
+go run main.go -vp ${videoPath} -sp ${subtitlePath}
+${videPath} -> 视频文件路径，需要指定对应的视频文件
+${subtitlePath} -> 字幕文件路径，需要指定对应的字幕文件
+
+逻辑:
+1. 执行 SubTimelineFixerHelperEx 检查 - 确认已经安装了ffmpeg 和 ffprobe
+2. 执行 SubTimelineFixerHelperEx 的 process操作
+
+ */
+
 var loggerBase *logrus.Logger
 
 func newLog() *logrus.Logger {
