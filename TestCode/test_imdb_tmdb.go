@@ -9,7 +9,7 @@ import (
 )
 
 func imdb2tmdb() {
-	tmdbClient, err := tmdb.Init("d871daae18cd1194b8a04c41e4b7dd14")
+	tmdbClient, err := tmdb.Init("xxx")
 
 	if err != nil {
 		fmt.Println(err)
@@ -22,7 +22,7 @@ func imdb2tmdb() {
 
 	const keanuReevesID = "tt6264654"
 
-	proxySettings := settings.NewProxySettings(false, "http",
+	proxySettings := settings.NewProxySettings(true, "http",
 		"19037",
 		"192.168.50.252", "5269",
 		"", "",
