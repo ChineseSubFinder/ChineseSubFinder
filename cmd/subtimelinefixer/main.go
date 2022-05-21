@@ -26,6 +26,8 @@ ${subtitlePath} -> 字幕文件路径，需要指定对应的字幕文件
 1. 执行 SubTimelineFixerHelperEx 检查 - 确认已经安装了ffmpeg 和 ffprobe
 2. 执行 SubTimelineFixerHelperEx 的 process操作
 
+编译：
+通过`go build -o fixer`编译出可直接执行的文件。
  */
 
 var loggerBase *logrus.Logger
