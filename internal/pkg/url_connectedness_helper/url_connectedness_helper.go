@@ -1,6 +1,7 @@
 package url_connectedness_helper
 
 import (
+	"crypto/tls"
 	"errors"
 	"net/http"
 	"net/url"
@@ -32,8 +33,11 @@ func UrlConnectednessTest(testUrl, proxyAddr string) (bool, int64, error) {
 		// 设置网络传输
 		netTransport := &http.Transport{
 			Proxy:                 http.ProxyURL(proxy),
-			MaxIdleConnsPerHost:   10,
+			MaxIdleConnsPerHost:   1000,
 			ResponseHeaderTimeout: time.Second * time.Duration(testUrlTimeOut),
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
 		}
 		// 创建连接客户端
 		httpClient = http.Client{

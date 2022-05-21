@@ -61,6 +61,9 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 		sub_formatter.GetSubFormatter(ch.log, ch.Settings.AdvancedSettings.SubNameFormatter),
 		ch.FileDownloader, ch.DownloadQueue)
 
+	// 强制进行一次字幕源有效性检查
+	ch.Downloader.SupplierCheck()
+
 	return &ch
 }
 
@@ -117,15 +120,6 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		ch.log.Panicln("CronHelper QueueDownloader, Cron entryID:", ch.entryIDScanPlayedVideoSubInfo, "Error:", err)
 	}
 	// ----------------------------------------------
-	// 启动一次字幕源有效性检测
-	ch.cronLock.Lock()
-	if ch.cronHelperRunning == true && ch.stopping == false {
-		ch.cronLock.Unlock()
-		ch.Downloader.SupplierCheck()
-	} else {
-		ch.cronLock.Unlock()
-	}
-	// ----------------------------------------------
 	if runImmediately == true {
 		// 是否在定时器开启前先执行一次视频扫描任务
 		ch.cronLock.Lock()
@@ -144,7 +138,8 @@ func (ch *CronHelper) Start(runImmediately bool) {
 			ch.log.Infoln("CronHelper is stopping, not start scanVideoProcessAdd2DownloadQueue")
 			return
 		}
-
+	} else {
+		ch.log.Infoln("RunAtStartup: false, so will not Run At Startup")
 	}
 	// ----------------------------------------------
 	// 如果不是立即执行，那么就等待定时器开启
@@ -163,7 +158,6 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		} else {
 			ch.log.Errorln("Can't get cron jobs, will not send SubScanJobStatus")
 		}
-		ch.log.Infoln("RunAtStartup: false, so will not Run At Startup")
 		//----------------------------------------------
 	} else {
 		ch.cronLock.Unlock()

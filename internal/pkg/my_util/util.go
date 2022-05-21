@@ -400,8 +400,13 @@ func IsWantedVideoExtDef(fileName string) bool {
 	return bFound
 }
 
-func GetEpisodeKeyName(season, eps int) string {
-	return "S" + strconv.Itoa(season) + "E" + strconv.Itoa(eps)
+func GetEpisodeKeyName(season, eps int, zerofill ...bool) string {
+
+	if len(zerofill) < 1 || zerofill[0] == false {
+		return "S" + strconv.Itoa(season) + "E" + strconv.Itoa(eps)
+	} else {
+		return fmt.Sprintf("S%02dE%02d", season, eps)
+	}
 }
 
 // CopyFile copies a single file from src to dst
@@ -845,6 +850,12 @@ func BytesToInt(b []byte) (int, error) {
 	}
 
 	return int(x), nil
+}
+
+func PrintPanicStack(log *logrus.Logger) {
+	var buf [4096]byte
+	n := runtime.Stack(buf[:], false)
+	log.Errorln(fmt.Sprintf("%s", buf[:n]))
 }
 
 var (

@@ -3,6 +3,10 @@ package downloader
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"sync"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
@@ -10,8 +14,10 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_download_process"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/assrt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
+	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -23,8 +29,6 @@ import (
 	taskQueue2 "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	"path/filepath"
-	"sync"
 )
 
 // Downloader 实例化一次用一次，不要反复的使用，很多临时标志位需要清理。
@@ -66,6 +70,7 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	// TODO 这里写固定了抉择字幕的顺序
 	sitesSequence = append(sitesSequence, common.SubSiteZiMuKu)
 	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
+	sitesSequence = append(sitesSequence, common.SubSiteAssrt)
 	sitesSequence = append(sitesSequence, common.SubSiteShooter)
 	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
 	downloader.mk = markSystem.NewMarkingSystem(downloader.log, sitesSequence, downloader.settings.AdvancedSettings.SubTypePriority)
@@ -102,6 +107,7 @@ func (d *Downloader) SupplierCheck() {
 	defer func() {
 		if p := recover(); p != nil {
 			d.log.Errorln("Downloader.SupplierCheck() panic")
+			my_util.PrintPanicStack(d.log)
 		}
 		d.downloaderLock.Unlock()
 
@@ -111,58 +117,59 @@ func (d *Downloader) SupplierCheck() {
 	d.downloaderLock.Lock()
 	d.log.Infoln("Download.SupplierCheck() Start ...")
 
-	// 创建一个 chan 用于任务的中断和超时
-	done := make(chan interface{}, 1)
-	// 接收内部任务的 panic
-	panicChan := make(chan interface{}, 1)
+	//// 创建一个 chan 用于任务的中断和超时
+	//done := make(chan interface{}, 1)
+	//// 接收内部任务的 panic
+	//panicChan := make(chan interface{}, 1)
+	//
+	//go func() {
+	//	defer func() {
+	//		if p := recover(); p != nil {
+	//			panicChan <- p
+	//		}
+	//
+	//		close(done)
+	//		close(panicChan)
+	//	}()
+	// 下载前的初始化
+	d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
 
-	go func() {
-		defer func() {
-			if p := recover(); p != nil {
-				panicChan <- p
-			}
+	if d.settings.SpeedDevMode == true {
+		// 这里是调试使用的，指定了只用一个字幕源
+		subSupplierHub := subSupplier.NewSubSupplierHub(assrt.NewSupplier(d.fileDownloader))
+		d.subSupplierHub = subSupplierHub
+	} else {
 
-			close(done)
-			close(panicChan)
-		}()
-		// 下载前的初始化
-		d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
-
-		if d.settings.SpeedDevMode == true {
-			// 这里是调试使用的，指定了只用一个字幕源
-			subSupplierHub := subSupplier.NewSubSupplierHub(shooter.NewSupplier(d.fileDownloader))
-			d.subSupplierHub = subSupplierHub
-		} else {
-
-			preDownloadProcess := pre_download_process.NewPreDownloadProcess(d.fileDownloader)
-			err := preDownloadProcess.Init().Check().Wait()
-			if err != nil {
-				done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
-			} else {
-				// 更新 SubSupplierHub 实例
-				d.subSupplierHub = preDownloadProcess.SubSupplierHub
-				done <- nil
-			}
-		}
-
-		done <- nil
-	}()
-
-	select {
-	case err := <-done:
+		preDownloadProcess := pre_download_process.NewPreDownloadProcess(d.fileDownloader)
+		err := preDownloadProcess.Init().Check().Wait()
 		if err != nil {
-			d.log.Errorln(err)
-		}
-		break
-	case p := <-panicChan:
-		// 遇到内部的 panic，向外抛出
-		panic(p)
-	case <-d.ctx.Done():
-		{
-			d.log.Errorln("cancel SupplierCheck")
-			return
+			//done <- errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err))
+			d.log.Errorln(errors.New(fmt.Sprintf("NewPreDownloadProcess Error: %v", err)))
+		} else {
+			// 更新 SubSupplierHub 实例
+			d.subSupplierHub = preDownloadProcess.SubSupplierHub
+			//done <- nil
 		}
 	}
+
+	//	done <- nil
+	//}()
+	//
+	//select {
+	//case err := <-done:
+	//	if err != nil {
+	//		d.log.Errorln(err)
+	//	}
+	//	break
+	//case p := <-panicChan:
+	//	// 遇到内部的 panic，向外抛出
+	//	panic(p)
+	//case <-d.ctx.Done():
+	//	{
+	//		d.log.Errorln("cancel SupplierCheck")
+	//		return
+	//	}
+	//}
 }
 
 // QueueDownloader 从字幕队列中取一个视频的字幕下载任务出来，并且开始下载
@@ -171,6 +178,7 @@ func (d *Downloader) QueueDownloader() {
 	defer func() {
 		if p := recover(); p != nil {
 			d.log.Errorln("Downloader.QueueDownloader() panic")
+			my_util.PrintPanicStack(d.log)
 		}
 
 		d.downloaderLock.Unlock()
@@ -195,13 +203,24 @@ func (d *Downloader) QueueDownloader() {
 		d.log.Debugln("Download Queue Is Empty, Skip This Time")
 		return
 	}
-	// 在拿出来后，如果是有内部媒体服务器媒体 ID 的，那么就去查询是否已经观看过了
-	isPlayed, err := d.embyHelper.IsVideoPlayed(oneJob.MediaServerInsideVideoID)
-	if err != nil {
-		d.log.Errorln("d.embyHelper.IsVideoPlayed()", oneJob.VideoFPath, err)
-		return
+	// --------------------------------------------------
+	// 判断是否看过
+	isPlayed := false
+	if d.embyHelper != nil {
+		// 在拿出来后，如果是有内部媒体服务器媒体 ID 的，那么就去查询是否已经观看过了
+		isPlayed, err = d.embyHelper.IsVideoPlayed(oneJob.MediaServerInsideVideoID)
+		if err != nil {
+			d.log.Errorln("d.embyHelper.IsVideoPlayed()", oneJob.VideoFPath, err)
+			return
+		}
 	}
-
+	// 不管如何，只要是发现数据库中有 HTTP API 提交的信息，就认为是看过
+	var videoPlayedInfos []models.ThirdPartSetVideoPlayedInfo
+	dao.GetDb().Where("physical_video_file_full_path = ?", oneJob.VideoFPath).Find(&videoPlayedInfos)
+	if len(videoPlayedInfos) > 0 {
+		isPlayed = true
+	}
+	// --------------------------------------------------
 	// 如果已经播放过 且 这个任务的优先级 > 3 ，不是很急的那种，说明是可以设置忽略继续下载的
 	if isPlayed == true && oneJob.TaskPriority > task_queue.HighTaskPriorityLevel {
 		// 播放过了，那么就标记 ignore
@@ -350,7 +369,7 @@ func (d *Downloader) movieDlFunc(ctx context.Context, job taskQueue2.OneJob, dow
 func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, downloadIndex int64) error {
 
 	nowSubSupplierHub := d.subSupplierHub
-	if nowSubSupplierHub.Suppliers == nil || len(nowSubSupplierHub.Suppliers) < 1 {
+	if nowSubSupplierHub == nil || nowSubSupplierHub.Suppliers == nil || len(nowSubSupplierHub.Suppliers) < 1 {
 		d.log.Infoln("Wait SupplierCheck Update *subSupplierHub, movieDlFunc Skip this time")
 		return nil
 	}
@@ -358,6 +377,24 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	// 设置只有一集需要下载
 	epsMap := make(map[int][]int, 0)
 	epsMap[job.Season] = []int{job.Episode}
+
+	if job.VideoType == common.Series && job.SeriesRootDirPath == "" {
+		// 连续剧的时候需要额外提交信息
+		torrentInfo, err := decode.GetVideoInfoFromFileName(job.VideoFPath)
+		if err != nil {
+			return err
+		}
+		seriesInfoDirPath := decode.GetSeriesDirRootFPath(job.VideoFPath)
+		if seriesInfoDirPath == "" {
+			err = errors.New(fmt.Sprintf("decode.GetSeriesDirRootFPath == Empty, %s", job.VideoFPath))
+			return err
+		}
+
+		job.Season = torrentInfo.Season
+		job.Episode = torrentInfo.Episode
+		job.SeriesRootDirPath = seriesInfoDirPath
+	}
+
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
 	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(
 		d.log, job.SeriesRootDirPath,

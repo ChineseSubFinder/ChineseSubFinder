@@ -279,6 +279,18 @@ func GetVideoInfoFromFileName(fileName string) (*PTN.TorrentInfo, error) {
 	return parse, nil
 }
 
+// GetSeriesDirRootFPath 从一集的绝对路径推断这个连续剧的根目录绝对路径
+func GetSeriesDirRootFPath(oneEpFPath string) string {
+
+	oneSeasonDirFPath := filepath.Dir(oneEpFPath)
+	oneSeriesDirFPath := filepath.Dir(oneSeasonDirFPath)
+	if IsFile(filepath.Join(oneSeriesDirFPath, MetadateTVNfo)) == true {
+		return oneSeriesDirFPath
+	} else {
+		return ""
+	}
+}
+
 //GetVideoInfoFromFileFullPath 从全文件路径推断文件信息
 func GetVideoInfoFromFileFullPath(videoFileFullPath string) (*PTN.TorrentInfo, time.Time, error) {
 

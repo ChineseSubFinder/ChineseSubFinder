@@ -76,6 +76,8 @@ func (l *LocalHttpProxyServer) Start(settings []string, localHttpProxyServerPort
 			if err := l.srv.ListenAndServe(); err != http.ErrServerClosed {
 				panic(fmt.Sprintln("ListenAndServe() http proxy:", err))
 			}
+
+			println("http proxy closed")
 		}()
 
 		l.isRunning = true
@@ -125,6 +127,8 @@ func (l *LocalHttpProxyServer) Start(settings []string, localHttpProxyServerPort
 			if err := l.srv.ListenAndServe(); err != http.ErrServerClosed {
 				panic(fmt.Sprintln("ListenAndServe() socks5 proxy:", err))
 			}
+
+			println("socks5 proxy closed")
 		}()
 
 		l.isRunning = true

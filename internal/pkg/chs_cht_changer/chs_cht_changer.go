@@ -1,7 +1,7 @@
 package chs_cht_changer
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
+	"github.com/longbridgeapp/opencc"
 	"os"
 )
 
@@ -17,11 +17,26 @@ func Process(srcSubFileFPath string, desChineseLanguageType int) error {
 	orgString := string(fBytes)
 	outString := ""
 	if desChineseLanguageType == 0 {
-		// 简体
-		outString = language.ChDict.Read(orgString)
+		t2s, err := opencc.New("t2s")
+		if err != nil {
+			return err
+		}
+		// 繁体转简体
+		outString, err = t2s.Convert(orgString)
+		if err != nil {
+			return err
+		}
 	} else {
 		// 繁体
-		outString = language.ChDict.ReadReverse(orgString)
+		s2t, err := opencc.New("s2t")
+		if err != nil {
+			return err
+		}
+		// 简体转繁体
+		outString, err = s2t.Convert(orgString)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = os.WriteFile(srcSubFileFPath, []byte(outString), os.ModePerm)

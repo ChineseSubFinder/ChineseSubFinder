@@ -1,5 +1,10 @@
 package models
 
+import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
+	"github.com/longbridgeapp/opencc"
+)
+
 type IMDBInfo struct {
 	IMDBID        string         `gorm:"primaryKey" json:"imdb_id"  binding:"required"`                   // IMDB ID
 	Name          string         `json:"name" binding:"required"`                                         // 视频名称
@@ -14,4 +19,44 @@ type IMDBInfo struct {
 
 func NewIMDBInfo(IMDBID string, name string, year int, description string, languages StringList, AKA StringList) *IMDBInfo {
 	return &IMDBInfo{IMDBID: IMDBID, Name: name, Year: year, Description: description, Languages: languages, AKA: AKA, VideoSubInfos: make([]VideoSubInfo, 0)}
+}
+
+func (i *IMDBInfo) GetChineseNameFromAKA() string {
+
+	if len(i.AKA) == 0 {
+		return ""
+	}
+	chsName := ""
+	chtName := ""
+	for _, akaWord := range i.AKA {
+		// 0 不是简体和繁体，1 是简体，2 是繁体
+		if language.WhichChineseType(akaWord) == 1 {
+			chsName = akaWord
+			break
+		} else if language.WhichChineseType(akaWord) == 2 {
+			chtName = akaWord
+			break
+		}
+	}
+	// 如果简体找到了，那么就返回
+	if chsName != "" {
+		return chsName
+	}
+	// 如果繁体找到了，那么进行一次简体转换
+	if chtName != "" {
+
+		t2s, err := opencc.New("t2s")
+		if err != nil {
+			return ""
+		}
+		// 繁体转简体
+		newChs, err := t2s.Convert(chtName)
+		if err != nil {
+			return ""
+		}
+
+		return newChs
+	}
+
+	return ""
 }

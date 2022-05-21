@@ -333,6 +333,7 @@ func (s *Supplier) getSubListFromMovie(browser *rod.Browser, fileFPath string) (
 // getSubListFromKeyword 目前是给电影使用的，搜索返回的字幕列表可能很多，需要挑选一下，比如 Top 1 下来就好了
 func (s *Supplier) getSubListFromKeyword(browser *rod.Browser, keyword string) ([]supplier.SubInfo, error) {
 
+	s.log.Infoln("Search Keyword:", keyword)
 	var outSubInfoList []supplier.SubInfo
 	// 第一级界面，找到影片的详情界面
 	filmDetailPageUrl, err := s.step0(browser, keyword)

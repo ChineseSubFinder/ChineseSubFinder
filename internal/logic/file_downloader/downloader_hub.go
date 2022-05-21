@@ -35,9 +35,15 @@ func (f *FileDownloader) GetName() string {
 // Get supplierName 这个参数一定得是字幕源的名称，通过 s.GetSupplierName() 获取，否则后续的字幕源今日下载量将不能正确统计和判断
 // xunlei、shooter 使用这个
 func (f *FileDownloader) Get(supplierName string, topN int64, videoFileName string,
-	fileDownloadUrl string, score int64, offset int64) (*supplier.SubInfo, error) {
+	fileDownloadUrl string, score int64, offset int64, cacheString ...string) (*supplier.SubInfo, error) {
 
-	fileUID := fmt.Sprintf("%x", sha256.Sum256([]byte(fileDownloadUrl)))
+	var fileUID string
+
+	if len(cacheString) < 1 {
+		fileUID = fmt.Sprintf("%x", sha256.Sum256([]byte(fileDownloadUrl)))
+	} else {
+		fileUID = cacheString[0]
+	}
 
 	found, subInfo, err := f.CacheCenter.DownloadFileGet(fileUID)
 	if err != nil {
@@ -64,6 +70,12 @@ func (f *FileDownloader) Get(supplierName string, topN int64, videoFileName stri
 		}
 		// 默认存入都是简体中文的语言类型，后续取出来的时候需要再次调用 SubParser 进行解析
 		inSubInfo := supplier.NewSubInfo(supplierName, topN, videoFileName, language.ChineseSimple, fileDownloadUrl, score, offset, ext, fileData)
+
+		if len(cacheString) > 0 {
+			// 专门为 ASSRT 这种下载连接是临时情况而定制的
+			inSubInfo.SetFileUrlSha256(fileUID)
+		}
+
 		err = f.CacheCenter.DownloadFileAdd(inSubInfo)
 		if err != nil {
 			return nil, err

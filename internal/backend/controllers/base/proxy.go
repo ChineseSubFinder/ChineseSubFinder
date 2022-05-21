@@ -2,6 +2,7 @@ package base
 
 import (
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/assrt"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
@@ -43,10 +44,20 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 		subhd.NewSupplier(cb.fileDownloader),
 	)
 
+	if cb.fileDownloader.Settings.SubtitleSources.AssrtSettings.Enabled == true &&
+		cb.fileDownloader.Settings.SubtitleSources.AssrtSettings.Token != "" {
+		// 如果开启了 ASSRt 字幕源，则需要测试 ASSRt 的代理
+		subSupplierHub.AddSubSupplier(assrt.NewSupplier(cb.fileDownloader))
+	}
+
 	outStatus := subSupplierHub.CheckSubSiteStatus()
 
 	defer func() {
 		// 还原
+		err = cb.fileDownloader.Settings.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
+		if err != nil {
+			return
+		}
 		cb.fileDownloader.Settings.AdvancedSettings.ProxySettings = bkProxySettings
 	}()
 

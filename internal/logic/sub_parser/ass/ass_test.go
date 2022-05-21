@@ -1,6 +1,7 @@
 package ass
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"path/filepath"
@@ -37,6 +38,7 @@ func TestParser_DetermineFileTypeFromFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := Parser{}
+			p.log = log_helper.GetLogger4Tester()
 			bFind, got, err := p.DetermineFileTypeFromFile(tt.args.filePath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DetermineFileTypeFromFile() error = %v, wantErr %v", err, tt.wantErr)

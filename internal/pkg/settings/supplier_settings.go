@@ -9,6 +9,7 @@ type SuppliersSettings struct {
 	Shooter *OneSupplierSettings `json:"shooter"`
 	SubHD   *OneSupplierSettings `json:"subhd"`
 	Zimuku  *OneSupplierSettings `json:"zimuku"`
+	Assrt   *OneSupplierSettings `json:"assrt"`
 }
 
 func NewSuppliersSettings() *SuppliersSettings {
@@ -17,6 +18,7 @@ func NewSuppliersSettings() *SuppliersSettings {
 		Shooter: NewOneSupplierSettings(common2.SubSiteShooter, common2.SubShooterRootUrlDef, -1),
 		SubHD:   NewOneSupplierSettings(common2.SubSiteSubHd, common2.SubSubHDRootUrlDef, 20),
 		Zimuku:  NewOneSupplierSettings(common2.SubSiteZiMuKu, common2.SubZiMuKuRootUrlDef, 20),
+		Assrt:   NewOneSupplierSettings(common2.SubSiteAssrt, common2.SubAssrtRootUrlDef, -1),
 	}
 }
 

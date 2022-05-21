@@ -9,4 +9,6 @@ const (
 
 	SubSubHDRootUrlDef = "https://subhd.tv"
 	SubSubHDSearchUrl  = "/search/%s"
+
+	SubAssrtRootUrlDef = "https://api.assrt.net/v1"
 )

@@ -32,6 +32,14 @@ func TestProcess(t *testing.T) {
 			srcSubFileFPath:        filepath.Join(rootDir, "机动战士Z高达Ⅲ：星辰的鼓动是爱 (2006) 1080p TrueHD.chinese(繁).ass"),
 			desChineseLanguageType: 0,
 		}, wantErr: false},
+		{name: "3", args: args{
+			srcSubFileFPath:        filepath.Join(rootDir, "Better Call Saul - S06E04 - Hit and Run WEBDL-1080p.chinese(简,shooter).srt"),
+			desChineseLanguageType: 1,
+		}, wantErr: false},
+		{name: "4", args: args{
+			srcSubFileFPath:        filepath.Join(rootDir, "Better Call Saul - S06E04 - Hit and Run WEBDL-1080p.chinese(简英,shooter).ass"),
+			desChineseLanguageType: 1,
+		}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

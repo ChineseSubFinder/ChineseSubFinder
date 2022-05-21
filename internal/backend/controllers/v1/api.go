@@ -1,8 +1,11 @@
 package v1
 
 import (
+	"errors"
+	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
@@ -25,15 +28,18 @@ func (cb *ControllerBase) AddJobHandler(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	// 这里视频文件得要存在
-	if my_util.IsFile(videoListAdd.PhysicalVideoFileFullPath) == false {
 
-		c.JSON(http.StatusOK, backend.ReplyJobThings{
-			Message: "physical video file not found",
-		})
-		return
+	if videoListAdd.IsBluray == false {
+		// 非蓝光的才需要检测这个文件存在
+		// 这里视频文件得要存在
+		if my_util.IsFile(videoListAdd.PhysicalVideoFileFullPath) == false {
+
+			c.JSON(http.StatusOK, backend.ReplyJobThings{
+				Message: "physical video file not found",
+			})
+			return
+		}
 	}
-
 	videoType := common.Movie
 	if videoListAdd.VideoType == 1 {
 		videoType = common.Series
@@ -42,6 +48,23 @@ func (cb *ControllerBase) AddJobHandler(c *gin.Context) {
 		videoType, videoListAdd.PhysicalVideoFileFullPath, videoListAdd.TaskPriorityLevel,
 		videoListAdd.MediaServerInsideVideoID,
 	)
+
+	if videoListAdd.VideoType == 1 {
+		// 连续剧的时候需要额外提交信息
+		torrentInfo, err := decode.GetVideoInfoFromFileName(videoListAdd.PhysicalVideoFileFullPath)
+		if err != nil {
+			return
+		}
+		seriesInfoDirPath := decode.GetSeriesDirRootFPath(videoListAdd.PhysicalVideoFileFullPath)
+		if seriesInfoDirPath == "" {
+			err = errors.New(fmt.Sprintf("decode.GetSeriesDirRootFPath == Empty, %s", videoListAdd.PhysicalVideoFileFullPath))
+			return
+		}
+		nowJob.Season = torrentInfo.Season
+		nowJob.Episode = torrentInfo.Episode
+		nowJob.SeriesRootDirPath = seriesInfoDirPath
+	}
+
 	bok, err := cb.cronHelper.DownloadQueue.Add(*nowJob)
 	if err != nil {
 		return
