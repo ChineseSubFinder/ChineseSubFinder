@@ -326,6 +326,10 @@ func (s *Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, al
 	}
 	// 全季的字幕列表，也拼进去，后面进行下载
 	for _, infos := range oneSeasonSubDict {
+
+		if len(infos) < 1 {
+			continue
+		}
 		subInfoNeedDownload = append(subInfoNeedDownload, infos[0])
 	}
 

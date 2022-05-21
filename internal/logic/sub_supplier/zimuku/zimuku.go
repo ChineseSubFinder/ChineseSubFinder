@@ -3,6 +3,14 @@ package zimuku
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+	"time"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
@@ -20,13 +28,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod"
 	"github.com/sirupsen/logrus"
-	"net/url"
-	"os"
-	"path/filepath"
-	"regexp"
-	"sort"
-	"strings"
-	"time"
 )
 
 type Supplier struct {
@@ -412,6 +413,9 @@ func (s *Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, Al
 	}
 	// 全季的字幕列表，也拼进去，后面进行下载
 	for _, infos := range oneSeasonSubDict {
+		if len(infos) < 1 {
+			continue
+		}
 		subInfoNeedDownload = append(subInfoNeedDownload, infos[0])
 	}
 

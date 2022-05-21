@@ -2,6 +2,9 @@ package imdb_helper
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/StalkR/imdb"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
@@ -12,8 +15,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/sirupsen/logrus"
-	"strconv"
-	"strings"
 )
 
 // GetVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
@@ -128,6 +129,11 @@ func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, _proxySett
 
 		log.Debugln("IsChineseVideo", 4)
 	}
+
+	if len(localIMDBInfo.Languages) < 1 {
+		return false, localIMDBInfo, nil
+	}
+
 	firstLangLowCase := strings.ToLower(localIMDBInfo.Languages[0])
 
 	log.Debugln("IsChineseVideo", 5)

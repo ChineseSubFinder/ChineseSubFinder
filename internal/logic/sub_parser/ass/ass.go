@@ -1,14 +1,15 @@
 package ass
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/sirupsen/logrus"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 type Parser struct {
@@ -158,6 +159,11 @@ func (p Parser) oneLineSubDialogueParser1(matched [][]string, mapByValue StyleNa
 	var usefullyDialogueCount = 0
 	// 先读取一次字幕文件
 	for _, oneLine := range matched {
+
+		if len(oneLine) < 1 {
+			continue
+		}
+
 		// 排除特效内容，只统计有意义的对话部分
 		if strings.Contains(oneLine[0], mapByValue[0].Name) == false {
 			continue
