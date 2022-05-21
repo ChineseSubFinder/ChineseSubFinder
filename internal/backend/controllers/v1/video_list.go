@@ -3,13 +3,14 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func (cb *ControllerBase) RefreshVideoListStatusHandler(c *gin.Context) {
@@ -108,35 +109,45 @@ func (cb *ControllerBase) VideoListAddHandler(c *gin.Context) {
 		videoListAdd.MediaServerInsideVideoID,
 	)
 
-	torrentInfo, err := decode.GetVideoInfoFromFileName(videoListAdd.PhysicalVideoFileFullPath)
-	if err != nil {
-		return
+	if videoType == common.Series {
+		// 如果是连续剧，需要额外的读取这一个剧集的信息
+		torrentInfo, err := decode.GetVideoInfoFromFileName(videoListAdd.PhysicalVideoFileFullPath)
+		if err != nil {
+			return
+		}
+		seriesInfoDirPath := decode.GetSeriesDirRootFPath(videoListAdd.PhysicalVideoFileFullPath)
+		if seriesInfoDirPath == "" {
+			err = errors.New(fmt.Sprintf("decode.GetSeriesDirRootFPath == Empty, %s", videoListAdd.PhysicalVideoFileFullPath))
+			return
+		}
+		oneJob.Season = torrentInfo.Season
+		oneJob.Episode = torrentInfo.Episode
+		oneJob.SeriesRootDirPath = seriesInfoDirPath
 	}
-
-	seriesInfoDirPath := decode.GetSeriesDirRootFPath(videoListAdd.PhysicalVideoFileFullPath)
-	if seriesInfoDirPath == "" {
-		err = errors.New(fmt.Sprintf("decode.GetSeriesDirRootFPath == Empty, %s", videoListAdd.PhysicalVideoFileFullPath))
-		return
-	}
-
-	oneJob.Season = torrentInfo.Season
-	oneJob.Episode = torrentInfo.Episode
-	oneJob.SeriesRootDirPath = seriesInfoDirPath
 
 	bok, err := cb.cronHelper.DownloadQueue.Add(*oneJob)
 	if err != nil {
 		return
 	}
 	if bok == false {
-		c.JSON(http.StatusOK, backend.ReplyCommon{
-			Message: "job is already in queue",
-		})
-	} else {
-		c.JSON(http.StatusOK, backend.ReplyCommon{
-			Message: "ok",
-		})
+		// 任务已经存在
+		bok, err = cb.cronHelper.DownloadQueue.Update(*oneJob)
+		if err != nil {
+			return
+		}
+		if bok == false {
+			c.JSON(http.StatusOK, backend.ReplyJobThings{
+				JobID:   oneJob.Id,
+				Message: "update job status failed",
+			})
+			return
+		}
 	}
 
+	c.JSON(http.StatusOK, backend.ReplyJobThings{
+		JobID:   oneJob.Id,
+		Message: "ok",
+	})
 }
 
 func (cb *ControllerBase) VideoListHandler(c *gin.Context) {

@@ -4,6 +4,12 @@ import (
 	"context"
 	_ "embed"
 	"errors"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -14,11 +20,6 @@ import (
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/mholt/archiver/v3"
 	"github.com/sirupsen/logrus"
-	"os"
-	"path/filepath"
-	"strings"
-	"sync"
-	"time"
 )
 
 func NewBrowserEx(log *logrus.Logger, loadAdblock bool, _settings *settings.Settings, preLoadUrl ...string) (*rod.Browser, error) {
@@ -30,8 +31,8 @@ func NewBrowserEx(log *logrus.Logger, loadAdblock bool, _settings *settings.Sett
 			localChromeFPath = _settings.ExperimentalFunction.LocalChromeSettings.LocalChromeExeFPath
 		}
 		return NewBrowser(log,
-			_settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
 			localChromeFPath,
+			_settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
 			loadAdblock,
 			preLoadUrl...)
 	} else {
@@ -62,8 +63,8 @@ func NewBrowser(log *logrus.Logger, localChromeFPath, httpProxyURL string, loadA
 	if localChromeFPath != "" {
 		// 如果有指定的 chrome 路径，则使用指定的 chrome 路径
 		if my_util.IsFile(localChromeFPath) == false {
-			log.Errorln(errors.New("localChromeFPath is not a file"))
-			panic(errors.New("localChromeFPath is not a file"))
+			log.Errorln(errors.New("localChromeFPath is not a file, localChromePath:" + localChromeFPath))
+			panic(errors.New("localChromeFPath is not a file, localChromePath:" + localChromeFPath))
 		}
 		err = rod.Try(func() {
 			purl := ""

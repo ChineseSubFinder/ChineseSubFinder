@@ -4,6 +4,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"image/jpeg"
+	"math"
+	"net/url"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
@@ -23,14 +32,6 @@ import (
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/nfnt/resize"
 	"github.com/sirupsen/logrus"
-	"image/jpeg"
-	"math"
-	"net/url"
-	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
-	"time"
 )
 
 type Supplier struct {
@@ -141,6 +142,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 	for value := range seriesInfo.NeedDlSeasonDict {
 		// 第一级界面，找到影片的详情界面
 		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
+		s.log.Infoln("Search Keyword:", keyword)
 		detailPageUrl, err := s.step0(browser, keyword)
 		if err != nil {
 			s.log.Errorln("subhd step0", keyword)
@@ -151,6 +153,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 			s.log.Warning("subhd first search keyword", keyword, "not found")
 			keyword = seriesInfo.Name
 			s.log.Warning("subhd Retry", keyword)
+			s.log.Infoln("Search Keyword:", keyword)
 			detailPageUrl, err = s.step0(browser, keyword)
 			if err != nil {
 				s.log.Errorln("subhd step0", keyword)
@@ -240,6 +243,7 @@ func (s *Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo
 
 func (s *Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubInfo, error) {
 
+	s.log.Infoln("Search Keyword:", keyword)
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
 	browser, err := rod_helper.NewBrowserEx(s.log, true, s.settings)
