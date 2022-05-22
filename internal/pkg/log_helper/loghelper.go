@@ -88,6 +88,7 @@ const (
 	LogNameChineseSubFinder = "ChineseSubFinder"
 	LogNameGetCAPTCHA       = "GetCAPTCHA"
 	LogNameBackEnd          = "BackEnd"
+	LogNameCliSubTimelineFixer = "SubTimelineFixer"
 )
 
 var (
