@@ -38,7 +38,7 @@ FROM lsiobase/ubuntu:bionic
 ENV TZ=Asia/Shanghai PERMS=true \
     PUID=1026 PGID=100
 
-RUN ln -s /root/.cache/rod/chromium-856583/chrome-linux/chrome /usr/bin/chrome && \
+RUN # ln -s /root/.cache/rod/chromium-856583/chrome-linux/chrome /usr/bin/chrome && \
     # sed -i "s@http://archive.ubuntu.com@http://mirrors.aliyun.com@g" /etc/apt/sources.list && rm -Rf /var/lib/apt/lists/* && \
     apt-get update && \
     apt-get install --no-install-recommends -y \
