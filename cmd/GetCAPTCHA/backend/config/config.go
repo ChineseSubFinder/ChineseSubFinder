@@ -13,6 +13,17 @@ type Config struct {
 	GitProjectUrl                 string
 	DesURL                        string
 	WhenSubSupplierInvalidWebHook string
+	PostUrl                       string
+	AuthToken                     string
+
+	UseProxy                 bool   // 是否使用代理
+	UseWhichProxyProtocol    string // 是使用 socks5 还是 http 代理
+	LocalHttpProxyServerPort string // 本地代理服务器端口
+	InputProxyAddress        string // 输入的代理地址
+	InputProxyPort           string // 输入的代理端口
+	NeedPWD                  bool   // 是否使用用户名密码
+	InputProxyUsername       string // 输入的代理用户名
+	InputProxyPassword       string // 输入的代理密码
 }
 
 // GetConfig 统一获取配置的接口
