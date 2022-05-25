@@ -1,19 +1,29 @@
 package assrt
 
 import (
+	"testing"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"testing"
 )
 
 var assrtInstance *Supplier
 
 func defInstance() {
 	nowSettings := settings.NewSettings()
-	nowSettings.SubtitleSources.AssrtSettings.Token = "xxxx"
-	assrtInstance = NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", nowSettings, log_helper.GetLogger4Tester())))
+	nowSettings.SubtitleSources.AssrtSettings.Token = "nzKgRKtK11UjwdfVQ9k0LoF8gNSJY7jr"
+
+	authKey := random_auth_key.AuthKey{
+		BaseKey:  "9oDdLMZRAo",
+		AESKey16: "H6HxGF99Twm4aefq",
+		AESIv16:  "PGC4xC6TP3wtERnc",
+	}
+
+	assrtInstance = NewSupplier(file_downloader.NewFileDownloader(
+		cache_center.NewCacheCenter("test", nowSettings, log_helper.GetLogger4Tester()), authKey))
 }
 
 func TestSupplier_getSubListFromFile(t *testing.T) {

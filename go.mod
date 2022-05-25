@@ -20,7 +20,7 @@ require (
 	github.com/go-echarts/go-echarts/v2 v2.2.4
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/go-resty/resty/v2 v2.6.0
-	github.com/go-rod/rod v0.106.5
+	github.com/go-rod/rod v0.106.8
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.4.2
@@ -125,6 +125,7 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/ugorji/go/codec v1.2.6 // indirect
 	github.com/urfave/cli/v2 v2.6.0 // indirect
+	github.com/wumansgy/goEncrypt v1.0.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/ysmood/goob v0.4.0 // indirect

@@ -14,6 +14,7 @@ type IMDBInfo struct {
 	AKA           StringList     `gorm:"type:varchar(255);not null" json:"AKA"  binding:"required"`       // 又名 xx xxx
 	RootDirPath   string         `json:"root_dir_path"`                                                   // 这个电影或者连续剧（不是季的文件夹，而是这个连续剧的目录）路径
 	IsMovie       bool           `json:"is_movie"`                                                        // 不是电影就是连续剧
+	TmdbId        string         `gorm:"type:varchar(20)"`                                                // TMDB ID 也是 MediaInfo 的主键
 	VideoSubInfos []VideoSubInfo `gorm:"foreignKey:IMDBInfoID"`                                           // 视频对应的字幕，外键约束
 }
 

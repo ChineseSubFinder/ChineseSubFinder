@@ -211,6 +211,8 @@ github.com/go-resty/resty/v2 v2.6.0 h1:joIR5PNLM2EFqqESUjCMGXrWmXNHEU9CEiK813oKY
 github.com/go-resty/resty/v2 v2.6.0/go.mod h1:PwvJS6hvaPkjtjNg9ph+VrSD92bi5Zq73w/BIH7cC3Q=
 github.com/go-rod/rod v0.106.5 h1:HQOxmOb/xjZ+QnnK4D8t+3+CWFreKSuqid/65zH4poA=
 github.com/go-rod/rod v0.106.5/go.mod h1:N/ZJik0+EYXNpW/74q0V1H7K3/UTfwHV/tRxY0CY/Vw=
+github.com/go-rod/rod v0.106.8 h1:pVMVz0jMtLVyx8FhJEEA6l+EY9Iw/nJTDYT/he4+UJc=
+github.com/go-rod/rod v0.106.8/go.mod h1:xkZOchuKqTOkMOBkrzb7uJpbKZRab1haPCWDvuZkS2U=
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/gogo/googleapis v1.1.0/go.mod h1:gf4bu3Q80BeJ6H1S1vYPm8/ELATdvryBaNFGgqEef3s=
@@ -599,6 +601,8 @@ github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijb
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/urfave/cli/v2 v2.6.0 h1:yj2Drkflh8X/zUrkWlWlUjZYHyWN7WMmpVxyxXIUyv8=
 github.com/urfave/cli/v2 v2.6.0/go.mod h1:oDzoM7pVwz6wHn5ogWgFUU1s4VJayeQS+aEZDqXIEJs=
+github.com/wumansgy/goEncrypt v1.0.0 h1:ef7vfz2ezOtyHMIjDt8b+v5RhrVtQL1TO6qDhA6Hb2U=
+github.com/wumansgy/goEncrypt v1.0.0/go.mod h1:d0Tq90dl4xqZEiphQ7dAVEPxcefmY2hSiATq3BfgsVY=
 github.com/xanzy/ssh-agent v0.3.0 h1:wUMzuKtKilRgBAD1sUb8gOwwRr2FGoBVumcjoOACClI=
 github.com/xanzy/ssh-agent v0.3.0/go.mod h1:3s9xbODqPuuhK9JV1R321M/FlMZSBvE5aY6eAcqrDh0=
 github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 h1:nIPpBwaJSVYIxUFsDv3M8ofmx9yWTog9BfvIu0q41lo=
@@ -608,6 +612,8 @@ github.com/ysmood/goob v0.4.0 h1:HsxXhyLBeGzWXnqVKtmT9qM7EuVs/XOgkX7T6r1o1AQ=
 github.com/ysmood/goob v0.4.0/go.mod h1:u6yx7ZhS4Exf2MwciFr6nIM8knHQIE22lFpWHnfql18=
 github.com/ysmood/got v0.28.2 h1:2dtVOneu4YGDk9skgzq8aqW9vZ1ssBla+ddqrE91bNs=
 github.com/ysmood/got v0.28.2/go.mod h1:pE1l4LOwOBhQg6A/8IAatkGp7uZjnalzrZolnlhhMgY=
+github.com/ysmood/got v0.29.1 h1:7TNTm3Bw5kdBGXFp04qnZ9DqlZ1XS1z1JdeobeJY6Mo=
+github.com/ysmood/got v0.29.1/go.mod h1:pE1l4LOwOBhQg6A/8IAatkGp7uZjnalzrZolnlhhMgY=
 github.com/ysmood/gotrace v0.6.0 h1:SyI1d4jclswLhg7SWTL6os3L1WOKeNn/ZtzVQF8QmdY=
 github.com/ysmood/gotrace v0.6.0/go.mod h1:TzhIG7nHDry5//eYZDYcTzuJLYQIkykJzCRIo4/dzQM=
 github.com/ysmood/gson v0.7.1 h1:zKL2MTGtynxdBdlZjyGsvEOZ7dkxaY5TH6QhAbTgz0Q=

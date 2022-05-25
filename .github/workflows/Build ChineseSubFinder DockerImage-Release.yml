@@ -34,7 +34,7 @@ jobs:
 
       # Build and push
       - name: Build dockerfile
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm/v7,linux/arm64
@@ -44,3 +44,7 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:latest
           build-args: |
             VERSION=${{ steps.set-version.outputs.version }}
+          secrets: |
+            "BASEKEY=${{ secrets.BASEKEY }}"
+            "AESKEY16=${{ secrets.AESKEY16 }}"
+            "AESIV16=${{ secrets.AESIV16 }}"

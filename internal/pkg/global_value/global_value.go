@@ -22,6 +22,33 @@ func ExtEnCode() string {
 	return _extEnCode
 }
 
+// SetBaseKey ---------------------------------------------
+func SetBaseKey(baseKey string) {
+	_baseKey = baseKey
+}
+
+func BaseKey() string {
+	return _baseKey
+}
+
+// SetAESKey16 ---------------------------------------------
+func SetAESKey16(aESKey16 string) {
+	_aESKey16 = aESKey16
+}
+
+func AESKey16() string {
+	return _aESKey16
+}
+
+// SetAESIv16 ---------------------------------------------
+func SetAESIv16(aESIv16 string) {
+	_aESIv16 = aESIv16
+}
+
+func AESIv16() string {
+	return _aESIv16
+}
+
 // ConfigRootDirFPath ---------------------------------------------
 func ConfigRootDirFPath() string {
 
@@ -96,6 +123,9 @@ func AdblockTmpFolder() string {
 var (
 	_appVersion           = "" // 程序的版本号
 	_extEnCode            = "" // 扩展加密部分
+	_baseKey              = "" // 基础的密钥，密钥会基于这个基础的密钥生成
+	_aESKey16             = "" // AES密钥
+	_aESIv16              = "" // 初始化向量
 	_configRootDirFPath   = ""
 	_defDebugFolder       = ""
 	_defTmpFolder         = ""

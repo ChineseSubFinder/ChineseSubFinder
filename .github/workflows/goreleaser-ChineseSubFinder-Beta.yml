@@ -43,3 +43,6 @@ jobs:
           args: release -f .goreleaser-ChineseSubFinder.yml --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN  }}
+          BASEKEY: ${{ secrets.BASEKEY }}
+          AESKEY16: ${{ secrets.AESKEY16 }}
+          AESIV16: ${{ secrets.AESIV16 }}

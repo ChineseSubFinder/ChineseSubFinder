@@ -2,6 +2,7 @@ package something_static
 
 import (
 	b64 "encoding/base64"
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -103,6 +104,10 @@ func getCodeFromWeb(l *logrus.Logger, desUrl string) (string, string, error) {
 	fileBytes, _, err := my_util.DownFile(l, desUrl)
 	if err != nil {
 		return "", "", err
+	}
+
+	if len(fileBytes) < 24 {
+		return "", "", errors.New("fileBytes len < 24")
 	}
 
 	timeB64String := fileBytes[len(fileBytes)-16:]
