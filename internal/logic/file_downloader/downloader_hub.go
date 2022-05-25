@@ -3,27 +3,33 @@ package file_downloader
 import (
 	"crypto/sha256"
 	"fmt"
+	"path/filepath"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/subtitle_best_api"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/go-rod/rod"
 	"github.com/sirupsen/logrus"
-	"path/filepath"
 )
 
 type FileDownloader struct {
-	Settings    *settings.Settings
-	Log         *logrus.Logger
-	CacheCenter *cache_center.CacheCenter
+	Settings        *settings.Settings
+	Log             *logrus.Logger
+	CacheCenter     *cache_center.CacheCenter
+	SubtitleBestApi *subtitle_best_api.SubtitleBestApi
 }
 
-func NewFileDownloader(cacheCenter *cache_center.CacheCenter) *FileDownloader {
+func NewFileDownloader(cacheCenter *cache_center.CacheCenter, authKey random_auth_key.AuthKey) *FileDownloader {
 
 	f := FileDownloader{Settings: cacheCenter.Settings,
-		Log:         cacheCenter.Log,
-		CacheCenter: cacheCenter,
+		Log:             cacheCenter.Log,
+		CacheCenter:     cacheCenter,
+		SubtitleBestApi: subtitle_best_api.NewSubtitleBestApi(authKey),
 	}
 	return &f
 }

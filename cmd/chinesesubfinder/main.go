@@ -2,6 +2,15 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
@@ -13,12 +22,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/sirupsen/logrus"
-	"net/http"
-	_ "net/http/pprof"
-	"os"
-	"path/filepath"
-	"strconv"
-	"time"
 )
 
 func newLog() *logrus.Logger {
@@ -100,7 +103,13 @@ func main() {
 		}
 	}
 	// ----------------------------------------------
-	fileDownloader := file_downloader.NewFileDownloader(cache_center.NewCacheCenter("local_task_queue", settings.GetSettings(), loggerBase))
+	fileDownloader := file_downloader.NewFileDownloader(
+		cache_center.NewCacheCenter("local_task_queue", settings.GetSettings(), loggerBase),
+		random_auth_key.AuthKey{
+			BaseKey:  BaseKey,
+			AESKey16: AESKey16,
+			AESIv16:  AESIv16,
+		})
 	cronHelper := cron_helper.NewCronHelper(fileDownloader)
 	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {
 		// 如果没有完成，那么就不开启
@@ -149,6 +158,12 @@ var AppVersion = "unknow"
 
 // go build -ldflags="-X main.AppVersion=aabb -X main.ExtEnCode=ccdd" .
 var ExtEnCode = "abcdefg1234567890"
+
+var (
+	BaseKey  = "0123456789123456789" // 基础的密钥，密钥会基于这个基础的密钥生成
+	AESKey16 = "1234567890123456"    // AES密钥
+	AESIv16  = "1234567890123456"    // 初始化向量
+)
 
 const (
 	defPort    = 19035

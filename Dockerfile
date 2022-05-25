@@ -14,6 +14,9 @@ RUN npm run build && ls -al dist/spa
 
 FROM golang:1.17-buster AS builder
 ARG VERSION=0.0.10
+ARG BaseKey=0123456789123456789
+ARG AESKey16=1234567890123456
+ARG AESIv16=1234567890123456
 LABEL stage=gobuilder
 
 # 开始编译
@@ -30,7 +33,7 @@ COPY --from=frontBuilder /usr/src/app/dist/spa /homelab/buildspace/frontend/dist
 
 # 执行编译，-o 指定保存位置和程序编译名称
 RUN cd ./cmd/chinesesubfinder \
-    && go build -ldflags="-s -w --extldflags '-static -fpic' -X main.AppVersion=${VERSION}" -o /app/chinesesubfinder
+    && go build -ldflags="-s -w --extldflags '-static -fpic' -X main.AppVersion=${VERSION} -X main.BaseKey=${BaseKey} -X main.AESKey16=${AESKey16} -X main.AESIv16=${AESIv16}" -o /app/chinesesubfinder
 
 # 运行时环境
 FROM lsiobase/ubuntu:bionic

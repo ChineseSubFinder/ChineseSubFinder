@@ -4,9 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/models"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/mix_media_info"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
@@ -15,12 +25,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/sirupsen/logrus"
-	"net/url"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type Supplier struct {
@@ -144,41 +148,38 @@ func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool) ([]suppli
 	s.log.Debugln(s.GetSupplierName(), videoFPath, "Start...")
 
 	outSubInfoList := make([]supplier.SubInfo, 0)
-
-	imdbInfo, err := imdb_helper.GetIMDBInfo(s.log, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
+	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.log, s.fileDownloader.SubtitleBestApi, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
-		s.log.Errorln(s.GetSupplierName(), videoFPath, "GetIMDBInfo", err)
+		s.log.Errorln(s.GetSupplierName(), videoFPath, "GetMixMediaInfo", err)
 		return nil, err
 	}
-
-	// 需要找到中文名称去搜索
-	keyWord := imdbInfo.GetChineseNameFromAKA()
-	if keyWord == "" {
-		return nil, errors.New("No Chinese name")
+	// 需要找到中文名称去搜索，找不到就是用英文名称，还找不到就是 OriginalTitle
+	found, searchSubResult, err := s.getSubInfoEx(mediaInfo, videoFPath, isMovie, "cn")
+	if err != nil {
+		s.log.Errorln(s.GetSupplierName(), videoFPath, "GetSubInfoEx", err)
+		return nil, err
 	}
-	if isMovie == false {
-		// 连续剧需要额外补充 S01E01 这样的信息
-		infoFromFileName, err := decode.GetVideoInfoFromFileName(videoFPath)
+	if found == false {
+		// 没有找到中文名称，就用英文名称去搜索
+		found, searchSubResult, err = s.getSubInfoEx(mediaInfo, videoFPath, isMovie, "en")
 		if err != nil {
+			s.log.Errorln(s.GetSupplierName(), videoFPath, "GetSubInfoEx", err)
 			return nil, err
 		}
-		keyWord += " " + my_util.GetEpisodeKeyName(infoFromFileName.Season, infoFromFileName.Episode, true)
-	}
-
-	var searchSubResult SearchSubResult
-	searchSubResult, err = s.getSubByKeyWord(keyWord)
-	if err != nil {
-		s.log.Errorln("getSubByKeyWord", err)
-		return nil, err
+		if found == false {
+			// 没有找到英文名称，就用原名称去搜索
+			found, searchSubResult, err = s.getSubInfoEx(mediaInfo, videoFPath, isMovie, "org")
+			if err != nil {
+				s.log.Errorln(s.GetSupplierName(), videoFPath, "GetSubInfoEx", err)
+				return nil, err
+			}
+			if found == false {
+				return nil, nil
+			}
+		}
 	}
 
 	videoFileName := filepath.Base(videoFPath)
-
-	if searchSubResult.Sub.Subs == nil || len(searchSubResult.Sub.Subs) == 0 {
-		s.log.Infoln(s.GetSupplierName(), videoFileName, "No subtitle found")
-		return outSubInfoList, nil
-	}
-
 	for index, subInfo := range searchSubResult.Sub.Subs {
 
 		// 获取具体的下载地址
@@ -212,6 +213,66 @@ func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool) ([]suppli
 	}
 
 	return outSubInfoList, nil
+}
+
+// keyWordSelect keyWordType cn, 中文， en，英文，org，原始名称
+func (s *Supplier) keyWordSelect(mediaInfo *models.MediaInfo, videoFPath string, isMovie bool, keyWordType string) (string, error) {
+
+	keyWord := ""
+
+	if keyWordType == "cn" {
+		keyWord = mediaInfo.TitleCn
+		if keyWord == "" {
+			return "", errors.New("TitleCn is empty")
+		}
+	} else if keyWordType == "en" {
+		keyWord = mediaInfo.TitleEn
+		if keyWord == "" {
+			return "", errors.New("TitleEn is empty")
+		}
+	} else if keyWordType == "org" {
+		keyWord = mediaInfo.OriginalTitle
+		if keyWord == "" {
+			return "", errors.New("OriginalTitle is empty")
+		}
+	} else {
+		return "", errors.New("keyWordType is not cn, en, org")
+	}
+
+	if isMovie == false {
+		// 连续剧需要额外补充 S01E01 这样的信息
+		infoFromFileName, err := decode.GetVideoInfoFromFileName(videoFPath)
+		if err != nil {
+			return "", err
+		}
+		keyWord += " " + my_util.GetEpisodeKeyName(infoFromFileName.Season, infoFromFileName.Episode, true)
+	}
+
+	return keyWord, nil
+}
+
+func (s *Supplier) getSubInfoEx(mediaInfo *models.MediaInfo, videoFPath string, isMovie bool, keyWordType string) (bool, SearchSubResult, error) {
+
+	var searchSubResult SearchSubResult
+	var err error
+	keyWord, err := s.keyWordSelect(mediaInfo, videoFPath, isMovie, keyWordType)
+	if err != nil {
+		s.log.Errorln(s.GetSupplierName(), videoFPath, "keyWordSelect", err)
+		return false, searchSubResult, err
+	}
+	searchSubResult, err = s.getSubByKeyWord(keyWord)
+	if err != nil {
+		s.log.Errorln("getSubByKeyWord", err)
+		return false, searchSubResult, err
+	}
+
+	videoFileName := filepath.Base(videoFPath)
+	if searchSubResult.Sub.Subs == nil || len(searchSubResult.Sub.Subs) == 0 {
+		s.log.Infoln(s.GetSupplierName(), videoFileName, "No subtitle found", "KeyWord:", keyWord)
+		return false, searchSubResult, nil
+	} else {
+		return true, searchSubResult, nil
+	}
 }
 
 func (s *Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
@@ -259,7 +320,8 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 		return searchSubResult, err
 	}
 	resp, err := httpClient.R().
-		SetHeader("Content-Type", "application/x-www-form-urlencoded").
+		SetResult(&searchSubResult).
+		//SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		Get(s.settings.AdvancedSettings.SuppliersSettings.Assrt.RootUrl +
 			"/sub/search?q=" + tt +
 			"&cnt=15&pos=0" +
@@ -269,20 +331,21 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", keyword, err.Error())
 			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("keyword: %s, resp: %s, error: %s", keyword, resp.String(), err.Error()))
 
-			// 输出调试文件
-			cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
-			if err != nil {
-				s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
+			if s.settings.AdvancedSettings.DebugMode == true {
+				// 输出调试文件
+				cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
+				if err != nil {
+					s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
+				}
+				desJsonInfo := filepath.Join(cacheCenterFolder, strings.ReplaceAll(keyword, " ", "")+"--assrt_search_error_getSubByKeyWord.json")
+				// 写字符串到文件种
+				file, _ := os.Create(desJsonInfo)
+				defer func() {
+					_ = file.Close()
+				}()
+				file.WriteString(resp.String())
 			}
-			desJsonInfo := filepath.Join(cacheCenterFolder, strings.ReplaceAll(keyword, " ", "")+"--assrt_search_error_getSubByKeyWord.json")
-			// 写字符串到文件种
-			file, _ := os.Create(desJsonInfo)
-			defer func() {
-				_ = file.Close()
-			}()
-			file.WriteString(resp.String())
 		}
-
 		/*
 			这里有个梗， Sub 有值的时候是一个列表，但是如果为空的时候，又是一个空的结构体
 			所以出现两个结构体需要去尝试解析
@@ -291,10 +354,8 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 			比如这个情况：
 			jsonString := "{\"sub\":{\"action\":\"search\",\"subs\":{},\"result\":\"succeed\",\"keyword\":\"追杀夏娃 S04E07\"},\"status\":0}"
 		*/
-
 		err = json.Unmarshal([]byte(resp.String()), &searchSubResult)
 		if err != nil {
-
 			// 再此尝试解析空列表
 			var searchSubResultEmpty SearchSubResultEmpty
 			err = json.Unmarshal([]byte(resp.String()), &searchSubResultEmpty)

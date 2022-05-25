@@ -3,14 +3,15 @@ package dao
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"sync"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"os"
-	"path/filepath"
-	"sync"
 )
 
 // GetDb 获取数据库实例
@@ -67,7 +68,8 @@ func InitDb() error {
 	// 迁移 schema
 	err = db.AutoMigrate(&models.HotFix{}, &models.SubFormatRec{},
 		&models.IMDBInfo{}, &models.VideoSubInfo{},
-		&models.ThirdPartSetVideoPlayedInfo{})
+		&models.ThirdPartSetVideoPlayedInfo{},
+		&models.MediaInfo{})
 	if err != nil {
 		return errors.New(fmt.Sprintf("db AutoMigrate error, %s", err.Error()))
 	}
