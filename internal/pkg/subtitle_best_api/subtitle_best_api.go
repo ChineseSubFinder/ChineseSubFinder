@@ -2,6 +2,7 @@ package subtitle_best_api
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
@@ -23,6 +24,12 @@ func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string, _proxySetti
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
+	}
+	if len(s.authKey.AESKey16) != 16 {
+		return nil, errors.New(fmt.Sprintf("AESKey16 is not set, %s", s.authKey.AESKey16))
+	}
+	if len(s.authKey.AESIv16) != 16 {
+		return nil, errors.New(fmt.Sprintf("AESIv16 is not set, %s", s.authKey.AESIv16))
 	}
 
 	const postUrl = "https://api.subtitle.best/v1/media-info"
