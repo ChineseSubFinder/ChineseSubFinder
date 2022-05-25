@@ -32,7 +32,7 @@ COPY --from=frontBuilder /usr/src/app/dist/spa /homelab/buildspace/frontend/dist
 # 执行编译，-o 指定保存位置和程序编译名称
 RUN --mount=type=secret,id=basekey \
       --mount=type=secret,id=aeskey16 \
-      --mount=type=secret,id=aesiv16 && \
+      --mount=type=secret,id=aesiv16 \
     export BASEKEY=$(cat /run/secrets/basekey) && \
       export AESKEY16=$(cat /run/secrets/aeskey16) && \
       export AESIV16=$(cat /run/secrets/aesiv16) && \
