@@ -51,6 +51,12 @@ func init() {
 
 	global_value.SetExtEnCode(ExtEnCode)
 
+	global_value.SetBaseKey(BaseKey)
+
+	global_value.SetAESKey16(AESKey16)
+
+	global_value.SetAESIv16(AESIv16)
+
 	if my_util.OSCheck() == false {
 		loggerBase.Panicln(`You should search runtime.GOOS in the project, Implement unimplemented function`)
 	}
@@ -106,10 +112,12 @@ func main() {
 	fileDownloader := file_downloader.NewFileDownloader(
 		cache_center.NewCacheCenter("local_task_queue", settings.GetSettings(), loggerBase),
 		random_auth_key.AuthKey{
-			BaseKey:  BaseKey,
-			AESKey16: AESKey16,
-			AESIv16:  AESIv16,
+			BaseKey:  global_value.BaseKey(),
+			AESKey16: global_value.AESKey16(),
+			AESIv16:  global_value.AESIv16(),
 		})
+	fileDownloader.Log.Infoln("TestKey:", global_value.BaseKey(), global_value.AESKey16(), global_value.AESIv16())
+	// ----------------------------------------------
 	cronHelper := cron_helper.NewCronHelper(fileDownloader)
 	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {
 		// 如果没有完成，那么就不开启
