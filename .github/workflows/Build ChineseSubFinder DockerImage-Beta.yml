@@ -44,6 +44,6 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:${{ steps.set-version.outputs.version }}
           build-args: |
             VERSION=${{ steps.set-version.outputs.version }}
-            BaseKey=${{ secrets.BaseKey }}
-            AESKey16=${{ secrets.AESKey16 }}
-            AESIv16=${{ secrets.AESIv16 }}
+            BASEKEY=${{ secrets.BASEKEY }}
+            AESKEY16=${{ secrets.AESKEY16 }}
+            AESIV16=${{ secrets.AESIV16 }}
