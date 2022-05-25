@@ -19,7 +19,7 @@ builds:
       - amd64
     main: ./cmd/chinesesubfinder/main.go
     ldflags:
-      - -s -w --extldflags "-static -fpic" -X main.AppVersion=v{{.Version}} -X main.BaseKey={.Env.BaseKey} -X main.AESKey16={.Env.AESKey16} -X main.AESIv16={.Env.AESIv16}
+      - -s -w --extldflags "-static -fpic" -X main.AppVersion=v{{.Version}} -X main.BaseKey={{.Env.BaseKey}} -X main.AESKey16={{.Env.AESKey16}} -X main.AESIv16={{.Env.AESIv16}}
 
   - id: windows-build
     env:
@@ -32,7 +32,7 @@ builds:
       - amd64
     main: ./cmd/chinesesubfinder/main.go
     ldflags:
-      - -s -w --extldflags "-static -fpic" -X main.AppVersion=v{{.Version}} -X main.BaseKey={.Env.BaseKey} -X main.AESKey16={.Env.AESKey16} -X main.AESIv16={.Env.AESIv16}
+      - -s -w --extldflags "-static -fpic" -X main.AppVersion=v{{.Version}} -X main.BaseKey={{.Env.BaseKey}} -X main.AESKey16={{.Env.AESKey16}} -X main.AESIv16={{.Env.AESIv16}}
 
 archives:
   - id: archive
