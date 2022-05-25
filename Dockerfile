@@ -30,13 +30,12 @@ COPY --from=frontBuilder /usr/src/app/dist/spa /homelab/buildspace/frontend/dist
 
 
 # 执行编译，-o 指定保存位置和程序编译名称
-RUN --mount=type=secret,id=basekey \
-      --mount=type=secret,id=aeskey16 \
-      --mount=type=secret,id=aesiv16 \
-    export BASEKEY=$(cat /run/secrets/basekey) && \
-      export AESKEY16=$(cat /run/secrets/aeskey16) && \
-      export AESIV16=$(cat /run/secrets/aesiv16) && \
-    echo $BASEKEY $AESKEY16 $AESIV16  && \
+RUN --mount=type=secret,id=BASEKEY \
+      --mount=type=secret,id=AESKEY16 \
+      --mount=type=secret,id=AESIV16 \
+    export BASEKEY=$(cat /run/secrets/BASEKEY) && \
+      export AESKEY16=$(cat /run/secrets/AESKEY16) && \
+      export AESIV16=$(cat /run/secrets/AESIV16) && \
     cd ./cmd/chinesesubfinder && \
     go build -ldflags="-s -w --extldflags '-static -fpic' -X main.AppVersion=${VERSION} -X main.BaseKey=$BASEKEY -X main.AESKey16=$AESKEY16 -X main.AESIv16=$AESIV16" -o /app/chinesesubfinder
 
