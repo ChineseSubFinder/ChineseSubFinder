@@ -31,6 +31,8 @@ COPY . .
 # 把前端编译好的文件 copy 过来
 COPY --from=frontBuilder /usr/src/app/dist/spa /homelab/buildspace/frontend/dist/spa
 
+RUN echo ${BASEKEY}  ${AESKEY16} ${AESIV16}
+
 # 执行编译，-o 指定保存位置和程序编译名称
 RUN cd ./cmd/chinesesubfinder \
     && go build -ldflags="-s -w --extldflags '-static -fpic' -X main.AppVersion=${VERSION} -X main.BaseKey=${BASEKEY} -X main.AESKey16=${AESKEY16} -X main.AESIv16=${AESIV16}" -o /app/chinesesubfinder
