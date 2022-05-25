@@ -116,7 +116,6 @@ func main() {
 			AESKey16: global_value.AESKey16(),
 			AESIv16:  global_value.AESIv16(),
 		})
-	fileDownloader.Log.Infoln("TestKey:", global_value.BaseKey(), global_value.AESKey16(), global_value.AESIv16())
 	// ----------------------------------------------
 	cronHelper := cron_helper.NewCronHelper(fileDownloader)
 	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {

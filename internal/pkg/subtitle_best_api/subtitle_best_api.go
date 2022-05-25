@@ -14,9 +14,10 @@ type SubtitleBestApi struct {
 	randomAuthKey *random_auth_key.RandomAuthKey
 }
 
-func NewSubtitleBestApi(authKey random_auth_key.AuthKey) *SubtitleBestApi {
+func NewSubtitleBestApi(inAuthKey random_auth_key.AuthKey) *SubtitleBestApi {
 	return &SubtitleBestApi{
-		randomAuthKey: random_auth_key.NewRandomAuthKey(5, authKey),
+		randomAuthKey: random_auth_key.NewRandomAuthKey(5, inAuthKey),
+		authKey:       inAuthKey,
 	}
 }
 
