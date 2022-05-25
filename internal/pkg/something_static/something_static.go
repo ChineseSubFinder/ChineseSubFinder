@@ -2,11 +2,12 @@ package something_static
 
 import (
 	b64 "encoding/base64"
+	"os"
+	"path/filepath"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/sirupsen/logrus"
-	"os"
-	"path/filepath"
 )
 
 func WriteFile(CloneProjectDesSaveDir, enString, nowTime, nowTimeFileNamePrix string) (bool, error) {
@@ -76,11 +77,28 @@ func writeFile(saveFileFPath, enString, nowTime string) error {
 }
 
 func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string) (string, string, error) {
+
+	// 默认的位置
 	//const baseCodeFileUrl = "https://raw.githubusercontents.com/"
 	const baseCodeFileUrl = "https://raw.staticdn.net/"
 	const whichProject = "allanpk716/SomeThingsStatic/"
-
 	desUrl := baseCodeFileUrl + whichProject + "master/" + nowTimeFileNamePrix + common.StaticFileName00
+	// 备用的位置
+	const backupCodeFileUrl = "https://get-static.subtitle.best/"
+	desUrlBackup := backupCodeFileUrl + nowTimeFileNamePrix + common.StaticFileName00
+
+	updateTimeString, code, err := getCodeFromWeb(l, desUrl)
+	if err != nil {
+		updateTimeString, code, err = getCodeFromWeb(l, desUrlBackup)
+		if err != nil {
+			return "", "", err
+		}
+	}
+
+	return updateTimeString, code, nil
+}
+
+func getCodeFromWeb(l *logrus.Logger, desUrl string) (string, string, error) {
 
 	fileBytes, _, err := my_util.DownFile(l, desUrl)
 	if err != nil {
