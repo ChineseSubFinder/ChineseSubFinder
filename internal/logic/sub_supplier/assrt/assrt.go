@@ -251,9 +251,9 @@ func (s *Supplier) keyWordSelect(mediaInfo *models.MediaInfo, videoFPath string,
 	return keyWord, nil
 }
 
-func (s *Supplier) getSubInfoEx(mediaInfo *models.MediaInfo, videoFPath string, isMovie bool, keyWordType string) (bool, SearchSubResult, error) {
+func (s *Supplier) getSubInfoEx(mediaInfo *models.MediaInfo, videoFPath string, isMovie bool, keyWordType string) (bool, *SearchSubResult, error) {
 
-	var searchSubResult SearchSubResult
+	var searchSubResult *SearchSubResult
 	var err error
 	keyWord, err := s.keyWordSelect(mediaInfo, videoFPath, isMovie, keyWordType)
 	if err != nil {
