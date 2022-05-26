@@ -91,6 +91,11 @@ func main() {
 	if settings.GetSettings().SpeedDevMode == true {
 
 		loggerBase.Infoln("Speed Dev Mode is On")
+	} else {
+		loggerBase.Infoln("Speed Dev Mode is Off")
+	}
+	if settings.GetSettings().AdvancedSettings.DebugMode == true {
+		// 如果是 DebugMode 那么开启性能监控
 		go func() {
 			// 开启pprof，监听请求
 			ip := "0.0.0.0:8080"
@@ -98,8 +103,6 @@ func main() {
 				fmt.Printf("start pprof failed on %s\n", ip)
 			}
 		}()
-	} else {
-		loggerBase.Infoln("Speed Dev Mode is Off")
 	}
 	// ------------------------------------------------------------------------
 	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
