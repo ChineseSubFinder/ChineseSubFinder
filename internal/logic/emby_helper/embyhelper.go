@@ -3,6 +3,12 @@ package emby_helper
 import (
 	"errors"
 	"fmt"
+	"path"
+	"path/filepath"
+	"strings"
+	"sync"
+	"time"
+
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/emby_api"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -17,11 +23,6 @@ import (
 	"github.com/panjf2000/ants/v2"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	"path"
-	"path/filepath"
-	"strings"
-	"sync"
-	"time"
 )
 
 type EmbyHelper struct {
@@ -231,6 +232,9 @@ func (em *EmbyHelper) GetPlayedItemsSubtitle() (map[string]string, map[string]st
 
 		userPlayedItemsList = append(userPlayedItemsList, oneUserPlayedItems)
 	}
+
+	var EpisodeIdList = make([]string, 0)
+	var MovieIdList = make([]string, 0)
 	// 把这些用户看过的视频根据 userID 和 videoID 进行查询，使用的是第几个字幕
 	// 这里需要区分是 Movie 还是 Series，这样后续的路径映射才能够生效
 	// 视频 emby 路径 - 字幕 emby 路径
@@ -263,36 +267,55 @@ func (em *EmbyHelper) GetPlayedItemsSubtitle() (map[string]string, map[string]st
 			}
 			// 将这个字幕的 Emby 内部路径保存下来，后续还需要进行一次路径转换才能使用，转换到本程序的路径上
 			if item.Type == videoTypeEpisode {
+				EpisodeIdList = append(EpisodeIdList, item.Id)
 				seriesEmbyFPathMap[videoInfo.Path] = videoInfo.MediaStreams[videoInfoByUserId.GetDefaultSubIndex()].Path
 			} else if item.Type == videoTypeMovie {
+				MovieIdList = append(MovieIdList, item.Id)
 				movieEmbyFPathMap[videoInfo.Path] = videoInfo.MediaStreams[videoInfoByUserId.GetDefaultSubIndex()].Path
 			}
 		}
 	}
+	// 路径转换
+	phyMovieList, err := em.getMoreVideoInfoList(MovieIdList, true)
+	if err != nil {
+		return nil, nil, err
+	}
+	phySeriesList, err := em.getMoreVideoInfoList(EpisodeIdList, false)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// 转换 Emby 内部路径到本程序识别的视频目录上
+	// phyVideoFPath -- phySubFPath
 	moviePhyFPathMap := make(map[string]string)
 	seriesPhyFPathMap := make(map[string]string)
 	// movie
-	for key, value := range movieEmbyFPathMap {
-		bok, prefixOldPath, prefixNewPath := em.findMappingPath(key, true)
+	for _, mixInfo := range phyMovieList {
+		movieEmbyFPath := mixInfo.VideoInfo.Path
+		// 得到字幕的 emby 内部绝对路径
+		subEmbyFPath, bok := movieEmbyFPathMap[movieEmbyFPath]
 		if bok == false {
-			em.log.Warningln("GetPlayedItemsSubtitle.findMappingPath miss matched,", key)
+			// 没找到
 			continue
 		}
-		phyVideoPath := strings.ReplaceAll(key, prefixOldPath, prefixNewPath)
-		phySubPath := strings.ReplaceAll(value, prefixOldPath, prefixNewPath)
-		moviePhyFPathMap[phyVideoPath] = phySubPath
+		movieDirFPath := filepath.Dir(mixInfo.PhysicalVideoFileFullPath)
+		subFileName := filepath.Base(subEmbyFPath)
+		nowPhySubFPath := filepath.Join(movieDirFPath, subFileName)
+		moviePhyFPathMap[mixInfo.PhysicalVideoFileFullPath] = nowPhySubFPath
 	}
 	// series
-	for key, value := range seriesEmbyFPathMap {
-		bok, prefixOldPath, prefixNewPath := em.findMappingPath(key, false)
+	for _, mixInfo := range phySeriesList {
+		epsEmbyFPath := mixInfo.VideoInfo.Path
+		// 得到字幕的 emby 内部绝对路径
+		subEmbyFPath, bok := seriesEmbyFPathMap[epsEmbyFPath]
 		if bok == false {
-			em.log.Warningln("GetPlayedItemsSubtitle.findMappingPath miss matched,", key)
+			// 没找到
 			continue
 		}
-		phyVideoPath := strings.ReplaceAll(key, prefixOldPath, prefixNewPath)
-		phySubPath := strings.ReplaceAll(value, prefixOldPath, prefixNewPath)
-		seriesPhyFPathMap[phyVideoPath] = phySubPath
+		epsDirFPath := filepath.Dir(mixInfo.PhysicalVideoFileFullPath)
+		subFileName := filepath.Base(subEmbyFPath)
+		nowPhySubFPath := filepath.Join(epsDirFPath, subFileName)
+		seriesPhyFPathMap[mixInfo.PhysicalVideoFileFullPath] = nowPhySubFPath
 	}
 
 	return moviePhyFPathMap, seriesPhyFPathMap, nil

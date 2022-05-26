@@ -1,6 +1,9 @@
 package cron_helper
 
 import (
+	"sync"
+	"time"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/scan_played_video_subinfo"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/downloader"
@@ -10,8 +13,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
-	"sync"
-	"time"
 )
 
 type CronHelper struct {
@@ -45,7 +46,7 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 	var err error
 	// ----------------------------------------------
 	// 扫描已播放
-	ch.scanPlayedVideoSubInfo, err = scan_played_video_subinfo.NewScanPlayedVideoSubInfo(ch.log, ch.Settings)
+	ch.scanPlayedVideoSubInfo, err = scan_played_video_subinfo.NewScanPlayedVideoSubInfo(ch.log, ch.Settings, fileDownloader)
 	if err != nil {
 		ch.log.Panicln(err)
 	}
@@ -98,6 +99,13 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	}
 	// ----------------------------------------------
 	ch.c = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
+	{
+		// 测试部分定时器代码，提前运行
+		if ch.Settings.SpeedDevMode == true {
+			ch.scanPlayedVideoSub()
+		}
+	}
+
 	// 定时器
 	// 这个暂时无法被取消执行
 	ch.entryIDScanVideoProcess, err = ch.c.AddFunc(ch.Settings.CommonSettings.ScanInterval, ch.scanVideoProcessAdd2DownloadQueue)

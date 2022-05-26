@@ -34,7 +34,7 @@ func GetMixMediaInfo(log *logrus.Logger,
 	if imdbInfo.TmdbId == "" {
 		// 需要去 web 查询
 		source = "imdb"
-		return getMediaInfoAndSave(log, SubtitleBestApi, imdbInfo, imdbInfo.IMDBID, source, videoType)
+		return GetMediaInfoAndSave(log, SubtitleBestApi, imdbInfo, imdbInfo.IMDBID, source, videoType)
 	} else {
 		// 已经存在，从本地拿去信息
 		// 首先从数据库中查找是否存在这个 IMDB 信息，如果不存在再使用 Web 查找，且写入数据库
@@ -48,7 +48,7 @@ func GetMixMediaInfo(log *logrus.Logger,
 		} else {
 			// 没有找到本地缓存的 TMDB ID 信息，需要去 web 查询
 			source = "imdb"
-			return getMediaInfoAndSave(log, SubtitleBestApi, imdbInfo, imdbInfo.IMDBID, source, videoType)
+			return GetMediaInfoAndSave(log, SubtitleBestApi, imdbInfo, imdbInfo.IMDBID, source, videoType)
 		}
 	}
 }
@@ -100,7 +100,8 @@ func getMediaInfoEx(log *logrus.Logger, SubtitleBestApi *subtitle_best_api.Subti
 	return mediaInfo, nil
 }
 
-func getMediaInfoAndSave(log *logrus.Logger, SubtitleBestApi *subtitle_best_api.SubtitleBestApi, imdbInfo *models.IMDBInfo, id, source, videoType string) (*models.MediaInfo, error) {
+// GetMediaInfoAndSave 通过 IMDB ID 查询媒体信息，并保存到数据库，IMDB 和 MediaInfo 都会进行保存
+func GetMediaInfoAndSave(log *logrus.Logger, SubtitleBestApi *subtitle_best_api.SubtitleBestApi, imdbInfo *models.IMDBInfo, id, source, videoType string) (*models.MediaInfo, error) {
 
 	mediaInfo, err := getMediaInfoEx(log, SubtitleBestApi, id, source, videoType)
 	if err != nil {

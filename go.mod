@@ -69,8 +69,11 @@ require (
 
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
+	github.com/cyruzin/golang-tmdb v1.4.3
 	github.com/elazarl/goproxy v0.0.0-20220417044921-416226498f94
 	github.com/longbridgeapp/opencc v0.1.7
+	github.com/urfave/cli/v2 v2.6.0
+	github.com/wumansgy/goEncrypt v1.0.0
 )
 
 require (
@@ -85,7 +88,6 @@ require (
 	github.com/bodgit/windows v1.0.0 // indirect
 	github.com/connesc/cipherio v0.2.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
-	github.com/cyruzin/golang-tmdb v1.4.3 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
@@ -124,8 +126,6 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/ugorji/go/codec v1.2.6 // indirect
-	github.com/urfave/cli/v2 v2.6.0 // indirect
-	github.com/wumansgy/goEncrypt v1.0.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/ysmood/goob v0.4.0 // indirect

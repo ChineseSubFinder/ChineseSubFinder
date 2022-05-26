@@ -50,11 +50,8 @@ func init() {
 	global_value.SetAppVersion(AppVersion)
 
 	global_value.SetExtEnCode(ExtEnCode)
-
 	global_value.SetBaseKey(BaseKey)
-
 	global_value.SetAESKey16(AESKey16)
-
 	global_value.SetAESIv16(AESIv16)
 
 	if my_util.OSCheck() == false {
@@ -63,14 +60,6 @@ func init() {
 }
 
 func main() {
-
-	go func() {
-		// 开启pprof，监听请求
-		ip := "0.0.0.0:8080"
-		if err := http.ListenAndServe(ip, nil); err != nil {
-			fmt.Printf("start pprof failed on %s\n", ip)
-		}
-	}()
 
 	// ------------------------------------------------------------------------
 	// 如果是 Debug 模式，那么就需要写入特殊文件
@@ -98,7 +87,20 @@ func main() {
 		common.SetApiToken("")
 	}
 	// 是否开启开发模式，跳过某些流程
-	//settings.GetSettings().SpeedDevMode = true
+	settings.GetSettings().SpeedDevMode = true
+	if settings.GetSettings().SpeedDevMode == true {
+
+		loggerBase.Infoln("Speed Dev Mode is On")
+		go func() {
+			// 开启pprof，监听请求
+			ip := "0.0.0.0:8080"
+			if err := http.ListenAndServe(ip, nil); err != nil {
+				fmt.Printf("start pprof failed on %s\n", ip)
+			}
+		}()
+	} else {
+		loggerBase.Infoln("Speed Dev Mode is Off")
+	}
 	// ------------------------------------------------------------------------
 	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
 	if settings.GetSettings().SpeedDevMode == false {

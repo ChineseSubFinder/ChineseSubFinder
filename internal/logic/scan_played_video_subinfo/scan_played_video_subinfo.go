@@ -3,6 +3,15 @@ package scan_played_video_subinfo
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/mix_media_info"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
@@ -25,15 +34,12 @@ import (
 	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	"os"
-	"path/filepath"
-	"strings"
-	"sync"
 )
 
 type ScanPlayedVideoSubInfo struct {
-	settings *settings.Settings
-	log      *logrus.Logger
+	settings       *settings.Settings
+	log            *logrus.Logger
+	fileDownloader *file_downloader.FileDownloader
 
 	embyHelper *embyHelper.EmbyHelper
 
@@ -54,10 +60,12 @@ type ScanPlayedVideoSubInfo struct {
 	cacheImdbInfoCacheLocker sync.Mutex
 }
 
-func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings) (*ScanPlayedVideoSubInfo, error) {
+func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings, fileDownloader *file_downloader.FileDownloader) (*ScanPlayedVideoSubInfo, error) {
 	var err error
 	var scanPlayedVideoSubInfo ScanPlayedVideoSubInfo
 	scanPlayedVideoSubInfo.log = log
+	// 下载实例
+	scanPlayedVideoSubInfo.fileDownloader = fileDownloader
 	// 参入设置信息
 	// 最大获取的视频数目设置到 100W
 	scanPlayedVideoSubInfo.settings = clone.Clone(_settings).(*settings.Settings)
@@ -403,8 +411,28 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 		imdbInfoCache[imdbInfo4Video.ImdbId] = imdbInfo
 		s.cacheImdbInfoCacheLocker.Unlock()
 	}
-
 	s.log.Debugln(3)
+
+	// 这里需要判断是否已经获取了 TMDB Info，如果没有则需要去获取
+	if imdbInfo.TmdbId == "" {
+
+		s.log.Debugln("3-2")
+		videoType := "movie"
+		if imdbInfo.IsMovie == false {
+			videoType = "series"
+		}
+		_, err = mix_media_info.GetMediaInfoAndSave(
+			s.log,
+			s.fileDownloader.SubtitleBestApi,
+			imdbInfo,
+			imdbInfo.IMDBID, "imdb", videoType)
+		if err != nil {
+			s.log.Errorln("dealOneVideo.GetMediaInfoAndSave,", imdbInfo.Name, err)
+			return
+		}
+	}
+
+	s.log.Debugln("3-2")
 
 	// 当前扫描到的找个字幕的 sha256 是否已经存在与缓存中了
 	tmpSHA256String, err := my_util.GetFileSHA256String(orgSubFPath)
