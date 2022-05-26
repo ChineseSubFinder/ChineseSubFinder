@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
@@ -48,11 +49,12 @@ func init() {
 	loggerBase.Infoln("ChineseSubFinder Version:", AppVersion)
 
 	global_value.SetAppVersion(AppVersion)
-
 	global_value.SetExtEnCode(ExtEnCode)
-	global_value.SetBaseKey(BaseKey)
-	global_value.SetAESKey16(AESKey16)
-	global_value.SetAESIv16(AESIv16)
+	if readCustomAuthFile() == false {
+		global_value.SetBaseKey(BaseKey)
+		global_value.SetAESKey16(AESKey16)
+		global_value.SetAESIv16(AESIv16)
+	}
 
 	if my_util.OSCheck() == false {
 		loggerBase.Panicln(`You should search runtime.GOOS in the project, Implement unimplemented function`)
@@ -87,7 +89,8 @@ func main() {
 		common.SetApiToken("")
 	}
 	// 是否开启开发模式，跳过某些流程
-	settings.GetSettings().SpeedDevMode = true
+	//settings.GetSettings().SpeedDevMode = true
+
 	if settings.GetSettings().SpeedDevMode == true {
 
 		loggerBase.Infoln("Speed Dev Mode is On")
@@ -163,6 +166,32 @@ func readCustomPortFile() int {
 	}
 }
 
+func readCustomAuthFile() bool {
+	if my_util.IsFile(customAuth) == false {
+		return false
+	} else {
+		bytes, err := os.ReadFile(customAuth)
+		if err != nil {
+			loggerBase.Errorln("ReadFile CustomAuth Error", err)
+			return false
+		}
+
+		nowContent := string(bytes)
+		authStings := strings.Split(nowContent, "@@@@")
+		if len(authStings) != 3 {
+			loggerBase.Errorln("ReadFile CustomAuth Error", err)
+			return false
+		}
+
+		global_value.SetBaseKey(authStings[0])
+		global_value.SetAESKey16(authStings[1])
+		global_value.SetAESIv16(authStings[2])
+
+		loggerBase.Infoln("Use CustomAuth")
+		return true
+	}
+}
+
 /*
 	使用 git tag 来做版本描述，然后在编译的时候传入版本号信息到这个变量上
 */
@@ -180,6 +209,7 @@ var (
 const (
 	defPort    = 19035
 	customPort = "CustomPort"
+	customAuth = "CustomAuth"
 )
 
 var loggerBase *logrus.Logger
