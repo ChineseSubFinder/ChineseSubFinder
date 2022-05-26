@@ -305,7 +305,7 @@ func (s *Supplier) downloadSub4Series(seriesInfo *series.SeriesInfo) ([]supplier
 	return allSupplierSubInfo, nil
 }
 
-func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
+func (s *Supplier) getSubByKeyWord(keyword string) (*SearchSubResult, error) {
 
 	defer func() {
 		time.Sleep(s.theSearchInterval)
@@ -317,8 +317,9 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 	tt := url.QueryEscape(keyword)
 	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
-		return searchSubResult, err
+		return nil, err
 	}
+	var errKnow error
 	resp, err := httpClient.R().
 		SetResult(&searchSubResult).
 		//SetHeader("Content-Type", "application/x-www-form-urlencoded").
@@ -327,10 +328,10 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 			"&cnt=15&pos=0" +
 			"&token=" + s.settings.SubtitleSources.AssrtSettings.Token)
 	if err != nil {
+		// 缓存原始的 Error
+		errKnow = err
 		if resp != nil {
-			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", keyword, err.Error())
-			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("keyword: %s, resp: %s, error: %s", keyword, resp.String(), err.Error()))
-
+			// 不急着输出 Error 先，因为可能是已知的故障，就是结构体不匹配
 			if s.settings.AdvancedSettings.DebugMode == true {
 				// 输出调试文件
 				cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
@@ -360,8 +361,11 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 			var searchSubResultEmpty SearchSubResultEmpty
 			err = json.Unmarshal([]byte(resp.String()), &searchSubResultEmpty)
 			if err != nil {
+				// 如果还是解析错误，那么就要把现在的错误和上面的错误仪器返回出去
+				s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", keyword, errKnow.Error())
 				s.log.Errorln(s.GetSupplierName(), "json.Unmarshal", err)
-				return searchSubResult, err
+				notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("keyword: %s, resp: %s, error: %s", keyword, resp.String(), errKnow.Error()))
+				return nil, err
 			}
 			// 赋值过去
 			searchSubResult.Sub.Action = searchSubResultEmpty.Sub.Action
@@ -369,13 +373,13 @@ func (s *Supplier) getSubByKeyWord(keyword string) (SearchSubResult, error) {
 			searchSubResult.Sub.Keyword = searchSubResultEmpty.Sub.Keyword
 			searchSubResult.Status = searchSubResultEmpty.Status
 
-			return searchSubResult, err
+			return &searchSubResult, nil
 		}
 
-		return searchSubResult, err
+		return &searchSubResult, err
 	}
 
-	return searchSubResult, nil
+	return &searchSubResult, nil
 }
 
 func (s *Supplier) getSubDetail(subID int) (OneSubDetail, error) {
