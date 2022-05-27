@@ -120,3 +120,4 @@ ChineseSubFinderSettings.json
 /**/ChineseSubFinder-Cache.db
 /CustomAuth
 /internal/logic/sub_supplier/assrt/CustomAuth
+/internal/logic/sub_supplier/subhd/CustomAuth

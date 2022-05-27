@@ -2,18 +2,33 @@ package subhd
 
 import (
 	"fmt"
+	"path/filepath"
+	"testing"
+	"time"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/cache_center"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/something_static"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	commonValue "github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"path/filepath"
-	"testing"
-	"time"
 )
+
+var authKey random_auth_key.AuthKey
+
+func defInstance() {
+	my_util.ReadCustomAuthFile(log_helper.GetLogger4Tester())
+	authKey = random_auth_key.AuthKey{
+		BaseKey:  global_value.BaseKey(),
+		AESKey16: global_value.AESKey16(),
+		AESIv16:  global_value.AESIv16(),
+	}
+}
 
 // 无需关注这个测试用例，这个方案暂时弃用
 func TestSupplier_GetSubListFromFile(t *testing.T) {
@@ -26,10 +41,11 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 	//movie1 := "X:\\电影\\消失爱人 (2016)\\消失爱人 (2016) 720p AAC.rmvb"
 	//movie1 := "X:\\电影\\机动战士Z高达：星之继承者 (2005)\\机动战士Z高达：星之继承者 (2005) 1080p TrueHD.mkv"
 	getCode()
+	defInstance()
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	movie1 := filepath.Join(rootDir, "zimuku", "movies", "消失爱人 (2016)", "消失爱人 (2016) 720p AAC.rmvb")
 
-	subhd := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
+	subhd := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester()), authKey))
 	outList, err := subhd.getSubListFromFile4Movie(movie1)
 	if err != nil {
 		t.Error(err)
@@ -59,6 +75,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	//ser := "X:\\连续剧\\Money.Heist"
 	//ser := "X:\\连续剧\\黑钱胜地 (2017)"
 	getCode()
+	defInstance()
 	// 可以指定几集去调试
 	epsMap := make(map[int][]int, 0)
 	epsMap[4] = []int{1}
@@ -70,7 +87,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
+	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester()), authKey))
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -91,7 +108,8 @@ func TestSupplier_getSubListFromKeyword4Movie(t *testing.T) {
 	//imdbID := "tt15299712" // 云南虫谷
 	//imdbID := "tt3626476" // Vacation Friends (2021)
 	getCode()
-	subhd := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester())))
+	defInstance()
+	subhd := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester()), authKey))
 	subInfos, err := subhd.getSubListFromKeyword4Movie(imdbID)
 	if err != nil {
 		t.Fatal(err)

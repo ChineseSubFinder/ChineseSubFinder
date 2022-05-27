@@ -15,7 +15,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/mix_media_info"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/notify_center"
@@ -214,47 +213,11 @@ func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool) ([]suppli
 	return outSubInfoList, nil
 }
 
-// keyWordSelect keyWordType cn, 中文， en，英文，org，原始名称
-func (s *Supplier) keyWordSelect(mediaInfo *models.MediaInfo, videoFPath string, isMovie bool, keyWordType string) (string, error) {
-
-	keyWord := ""
-
-	if keyWordType == "cn" {
-		keyWord = mediaInfo.TitleCn
-		if keyWord == "" {
-			return "", errors.New("TitleCn is empty")
-		}
-	} else if keyWordType == "en" {
-		keyWord = mediaInfo.TitleEn
-		if keyWord == "" {
-			return "", errors.New("TitleEn is empty")
-		}
-	} else if keyWordType == "org" {
-		keyWord = mediaInfo.OriginalTitle
-		if keyWord == "" {
-			return "", errors.New("OriginalTitle is empty")
-		}
-	} else {
-		return "", errors.New("keyWordType is not cn, en, org")
-	}
-
-	if isMovie == false {
-		// 连续剧需要额外补充 S01E01 这样的信息
-		infoFromFileName, err := decode.GetVideoInfoFromFileName(videoFPath)
-		if err != nil {
-			return "", err
-		}
-		keyWord += " " + my_util.GetEpisodeKeyName(infoFromFileName.Season, infoFromFileName.Episode, true)
-	}
-
-	return keyWord, nil
-}
-
 func (s *Supplier) getSubInfoEx(mediaInfo *models.MediaInfo, videoFPath string, isMovie bool, keyWordType string) (bool, *SearchSubResult, error) {
 
 	var searchSubResult *SearchSubResult
 	var err error
-	keyWord, err := s.keyWordSelect(mediaInfo, videoFPath, isMovie, keyWordType)
+	keyWord, err := mix_media_info.KeyWordSelect(mediaInfo, videoFPath, isMovie, keyWordType)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), videoFPath, "keyWordSelect", err)
 		return false, searchSubResult, err
