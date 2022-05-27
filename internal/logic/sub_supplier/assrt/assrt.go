@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
@@ -321,62 +320,40 @@ func (s *Supplier) getSubByKeyWord(keyword string) (*SearchSubResult, error) {
 	}
 	var errKnow error
 	resp, err := httpClient.R().
-		SetResult(&searchSubResult).
-		//SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		Get(s.settings.AdvancedSettings.SuppliersSettings.Assrt.RootUrl +
 			"/sub/search?q=" + tt +
 			"&cnt=15&pos=0" +
 			"&token=" + s.settings.SubtitleSources.AssrtSettings.Token)
 	if err != nil {
-		// 缓存原始的 Error
-		errKnow = err
-		if resp != nil {
-			// 不急着输出 Error 先，因为可能是已知的故障，就是结构体不匹配
-			if s.settings.AdvancedSettings.DebugMode == true {
-				// 输出调试文件
-				cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
-				if err != nil {
-					s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
-				}
-				desJsonInfo := filepath.Join(cacheCenterFolder, strings.ReplaceAll(keyword, " ", "")+"--assrt_search_error_getSubByKeyWord.json")
-				// 写字符串到文件种
-				file, _ := os.Create(desJsonInfo)
-				defer func() {
-					_ = file.Close()
-				}()
-				file.WriteString(resp.String())
-			}
-		}
-		/*
-			这里有个梗， Sub 有值的时候是一个列表，但是如果为空的时候，又是一个空的结构体
-			所以出现两个结构体需要去尝试解析
-			SearchSubResultEmpty
-			SearchSubResult
-			比如这个情况：
-			jsonString := "{\"sub\":{\"action\":\"search\",\"subs\":{},\"result\":\"succeed\",\"keyword\":\"追杀夏娃 S04E07\"},\"status\":0}"
-		*/
-		err = json.Unmarshal([]byte(resp.String()), &searchSubResult)
+		return nil, err
+	}
+	/*
+		这里有个梗， Sub 有值的时候是一个列表，但是如果为空的时候，又是一个空的结构体
+		所以出现两个结构体需要去尝试解析
+		SearchSubResultEmpty
+		SearchSubResult
+		比如这个情况：
+		jsonString := "{\"sub\":{\"action\":\"search\",\"subs\":{},\"result\":\"succeed\",\"keyword\":\"追杀夏娃 S04E07\"},\"status\":0}"
+	*/
+	err = json.Unmarshal([]byte(resp.String()), &searchSubResult)
+	if err != nil {
+		// 再此尝试解析空列表
+		var searchSubResultEmpty SearchSubResultEmpty
+		err = json.Unmarshal([]byte(resp.String()), &searchSubResultEmpty)
 		if err != nil {
-			// 再此尝试解析空列表
-			var searchSubResultEmpty SearchSubResultEmpty
-			err = json.Unmarshal([]byte(resp.String()), &searchSubResultEmpty)
-			if err != nil {
-				// 如果还是解析错误，那么就要把现在的错误和上面的错误仪器返回出去
-				s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", keyword, errKnow.Error())
-				s.log.Errorln(s.GetSupplierName(), "json.Unmarshal", err)
-				notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("keyword: %s, resp: %s, error: %s", keyword, resp.String(), errKnow.Error()))
-				return nil, err
-			}
-			// 赋值过去
-			searchSubResult.Sub.Action = searchSubResultEmpty.Sub.Action
-			searchSubResult.Sub.Result = searchSubResultEmpty.Sub.Result
-			searchSubResult.Sub.Keyword = searchSubResultEmpty.Sub.Keyword
-			searchSubResult.Status = searchSubResultEmpty.Status
-
-			return &searchSubResult, nil
+			// 如果还是解析错误，那么就要把现在的错误和上面的错误仪器返回出去
+			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", keyword, errKnow.Error())
+			s.log.Errorln(s.GetSupplierName(), "json.Unmarshal", err)
+			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("keyword: %s, resp: %s, error: %s", keyword, resp.String(), errKnow.Error()))
+			return nil, err
 		}
+		// 赋值过去
+		searchSubResult.Sub.Action = searchSubResultEmpty.Sub.Action
+		searchSubResult.Sub.Result = searchSubResultEmpty.Sub.Result
+		searchSubResult.Sub.Keyword = searchSubResultEmpty.Sub.Keyword
+		searchSubResult.Status = searchSubResultEmpty.Status
 
-		return &searchSubResult, err
+		return &searchSubResult, nil
 	}
 
 	return &searchSubResult, nil

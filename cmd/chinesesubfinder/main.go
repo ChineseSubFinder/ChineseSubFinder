@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
@@ -50,7 +47,7 @@ func init() {
 
 	global_value.SetAppVersion(AppVersion)
 	global_value.SetExtEnCode(ExtEnCode)
-	if readCustomAuthFile() == false {
+	if my_util.ReadCustomAuthFile(loggerBase) == false {
 		global_value.SetBaseKey(BaseKey)
 		global_value.SetAESKey16(AESKey16)
 		global_value.SetAESIv16(AESIv16)
@@ -137,59 +134,10 @@ func main() {
 		}()
 	}
 
-	nowPort := readCustomPortFile()
+	nowPort := my_util.ReadCustomPortFile(loggerBase)
 	loggerBase.Infoln(fmt.Sprintf("WebUI will listen at 0.0.0.0:%d", nowPort))
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
 	backend.StartBackEnd(fileDownloader, nowPort, cronHelper)
-}
-
-func readCustomPortFile() int {
-	if my_util.IsFile(customPort) == false {
-		return defPort
-	} else {
-		bytes, err := os.ReadFile(customPort)
-		if err != nil {
-			loggerBase.Errorln("ReadFile CustomPort Error", err)
-			loggerBase.Infoln("Use DefPort", defPort)
-			return defPort
-		}
-
-		atoi, err := strconv.Atoi(string(bytes))
-		if err != nil {
-			loggerBase.Errorln("Atoi CustomPort Error", err)
-			loggerBase.Infoln("Use DefPort", defPort)
-			return defPort
-		}
-
-		loggerBase.Infoln("Use CustomPort", atoi)
-		return atoi
-	}
-}
-
-func readCustomAuthFile() bool {
-	if my_util.IsFile(customAuth) == false {
-		return false
-	} else {
-		bytes, err := os.ReadFile(customAuth)
-		if err != nil {
-			loggerBase.Errorln("ReadFile CustomAuth Error", err)
-			return false
-		}
-
-		nowContent := string(bytes)
-		authStings := strings.Split(nowContent, "@@@@")
-		if len(authStings) != 3 {
-			loggerBase.Errorln("ReadFile CustomAuth Error", err)
-			return false
-		}
-
-		global_value.SetBaseKey(authStings[0])
-		global_value.SetAESKey16(authStings[1])
-		global_value.SetAESIv16(authStings[2])
-
-		loggerBase.Infoln("Use CustomAuth")
-		return true
-	}
 }
 
 /*
@@ -204,12 +152,6 @@ var (
 	BaseKey  = "0123456789123456789" // 基础的密钥，密钥会基于这个基础的密钥生成
 	AESKey16 = "1234567890123456"    // AES密钥
 	AESIv16  = "1234567890123456"    // 初始化向量
-)
-
-const (
-	defPort    = 19035
-	customPort = "CustomPort"
-	customAuth = "CustomAuth"
 )
 
 var loggerBase *logrus.Logger
