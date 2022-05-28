@@ -30,9 +30,12 @@ func (p Parser) GetParserName() string {
 	需要额外的处理逻辑，比如不用报错，而是跳过后续的逻辑
 */
 func (p Parser) DetermineFileTypeFromFile(filePath string) (bool, *subparser.FileInfo, error) {
+
 	nowExt := filepath.Ext(filePath)
 
-	p.log.Debugln("DetermineFileTypeFromFile", p.GetParserName(), filePath)
+	if p.log != nil {
+		p.log.Debugln("DetermineFileTypeFromFile", p.GetParserName(), filePath)
+	}
 
 	fBytes, err := os.ReadFile(filePath)
 	if err != nil {
@@ -56,7 +59,9 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 
 	orgDialogues := p.parseContent(inBytes)
 	if len(orgDialogues) <= 0 {
-		p.log.Debugln("DetermineFileTypeFromBytes can't found DialoguesFilter, Skip")
+		if p.log != nil {
+			p.log.Debugln("DetermineFileTypeFromBytes can't found DialoguesFilter, Skip")
+		}
 		return false, nil, nil
 	}
 	subFileInfo.Dialogues = orgDialogues

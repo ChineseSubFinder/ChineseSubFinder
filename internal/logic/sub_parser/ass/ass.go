@@ -32,7 +32,9 @@ func (p Parser) GetParserName() string {
 func (p Parser) DetermineFileTypeFromFile(filePath string) (bool, *subparser.FileInfo, error) {
 	nowExt := filepath.Ext(filePath)
 
-	p.log.Debugln("DetermineFileTypeFromFile", p.GetParserName(), filePath)
+	if p.log != nil {
+		p.log.Debugln("DetermineFileTypeFromFile", p.GetParserName(), filePath)
+	}
 
 	fBytes, err := os.ReadFile(filePath)
 	if err != nil {
@@ -53,7 +55,9 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	// 找到 start end text
 	matched := regex_things.ReMatchDialogueASS.FindAllStringSubmatch(allString, -1)
 	if matched == nil || len(matched) < 1 {
-		p.log.Debugln("DetermineFileTypeFromBytes can't found DialoguesFilter, Skip")
+		if p.log != nil {
+			p.log.Debugln("DetermineFileTypeFromBytes can't found DialoguesFilter, Skip")
+		}
 		return false, nil, nil
 	}
 	subFileInfo := subparser.FileInfo{}

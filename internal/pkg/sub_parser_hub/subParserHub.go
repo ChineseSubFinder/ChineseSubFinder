@@ -79,7 +79,9 @@ func (p SubParserHub) IsSubHasChinese(fileInfo *subparser.FileInfo) bool {
 
 	// 增加判断已存在的字幕是否有中文
 	if language.HasChineseLang(fileInfo.Lang) == false {
-		p.log.Warnln("IsSubHasChinese.HasChineseLang", fileInfo.FileFullPath, "not chinese sub, is ", fileInfo.Lang.String())
+		if p.log != nil {
+			p.log.Warnln("IsSubHasChinese.HasChineseLang", fileInfo.FileFullPath, "not chinese sub, is ", fileInfo.Lang.String())
+		}
 		return false
 	}
 
