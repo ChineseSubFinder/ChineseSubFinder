@@ -50,6 +50,20 @@
 
       <q-separator spaced inset></q-separator>
 
+      <q-item tag="label" v-ripple>
+        <q-item-section>
+          <q-item-label>共享字幕</q-item-label>
+          <q-item-label caption
+          >上传字幕能够让本程序变得更加好用，发扬共享精神，一起来共享字幕吧！</q-item-label
+          >
+        </q-item-section>
+        <q-item-section avatar top>
+          <q-toggle v-model="form.share_sub_settings.share_sub_enabled" />
+        </q-item-section>
+      </q-item>
+
+      <q-separator spaced inset></q-separator>
+
       <q-item>
         <q-item-section>
           <q-item-label>远程Chrome</q-item-label>
@@ -212,8 +226,11 @@ import {
   DESC_ENCODE_TYPE_NAME_MAP,
   DESC_ENCODE_TYPE_UTF8,
 } from 'src/constants/SettingConstants';
-import { computed } from 'vue';
+import {computed, watch} from 'vue';
 import CopyToClipboardBtn from 'components/CopyToClipboardBtn';
+import {useQuasar} from 'quasar';
+
+const $q = useQuasar();
 
 const { experimental_function: form } = toRefs(formModel);
 
@@ -236,4 +253,41 @@ const generateApiKey = () => {
   const uuid = generateUuid();
   formModel.experimental_function.api_key_settings.key = uuid;
 };
+
+watch(() => formModel.experimental_function.share_sub_settings.share_sub_enabled, (val) => {
+  if (val) {
+    $q.dialog({
+      title: '共享字幕说明',
+      style: 'width: 600px',
+      message: `<b>开启“共享字幕”功能后：</b>
+<ul>
+  <li>本程序会收集、上传 Emby 中已经观看的视频对应的字幕（如果你没有开启 Emby 那么就不会收集这个部分的字幕）
+  <li>如果你使用了本程序提供的 Http API 提交了已经观看的视频和字幕信息，本程序也会收集这个部分
+  <li>如果上述两点你都没有符合条件，那么“共享字幕”功能暂时是不会收集你本地的其他字幕的（因为没有视频对应关系，收集的意义不大）
+  <li>如果有任何疑问欢迎去看本程序的上传字幕部分的代码
+</ul>
+
+<b>字幕的去向、用途：</b>
+<ul>
+  <li>字幕上传后，评估通过的字幕会存储在共享服务器中
+  <li>后续本程序自身提供的字幕搜索会有两种形式：
+    <ul style="padding-left: 20px;">
+      <li>a. 类似 xunlei、shooter 的接口，通过计算视频文件唯一 ID （这个ID的算法在本程序内，暂时没有整理出来）去查询
+      <li>b. 支持 IMDB、TMDB ID （注意，这个ID是电影或者是连续剧的 ID，不是一集的 ID），加上 SxxExx 这样的信息去查询
+    </ul>
+   PS： 暂时不会支持关键词查询，除非后续有特殊情况出现
+  </li>
+</ul>
+`,
+      persistent: true,
+      html: true,
+      ok: '共享',
+      cancel: '不共享',
+    }).onOk(() => {
+      // 共享字幕
+    }).onCancel(() => {
+      formModel.experimental_function.share_sub_settings.share_sub_enabled = false;
+    })
+  }
+})
 </script>
