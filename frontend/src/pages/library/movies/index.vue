@@ -1,12 +1,7 @@
 <template>
   <q-page class="q-pa-lg">
     <div class="row q-gutter-md">
-      <q-btn label="更新缓存" color="primary" icon="cached" @click="refreshLibrary" :loading="refreshCacheLoading">
-        <template v-slot:loading>
-          <q-spinner-hourglass class="on-left" />
-          更新缓存中...
-        </template>
-      </q-btn>
+      <btn-dialog-library-refresh/>
 
       <q-space />
 
@@ -46,6 +41,7 @@
 <script setup>
 import { useLibrary } from 'pages/library/useLibrary';
 import { computed, reactive } from 'vue';
+import BtnDialogLibraryRefresh from 'pages/library/BtnDialogLibraryRefresh';
 import ListItemMovie from './ListItemMovie';
 
 const filterForm = reactive({
@@ -53,7 +49,7 @@ const filterForm = reactive({
   search: '',
 });
 
-const { movies, refreshLibrary, refreshCacheLoading } = useLibrary();
+const { movies } = useLibrary();
 
 const filteredMovies = computed(() => {
   let res = movies.value;

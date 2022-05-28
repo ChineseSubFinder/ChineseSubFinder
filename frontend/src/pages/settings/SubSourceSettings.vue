@@ -1,7 +1,7 @@
 <template>
   <div>
     <q-list style="max-width: 600px" dense>
-      <q-item>
+      <q-item tag="label">
         <q-item-section>
           <q-item-label>Assrt（https://assrt.net/api/doc）</q-item-label>
           <q-item-label caption>
