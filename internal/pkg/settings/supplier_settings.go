@@ -10,6 +10,7 @@ type SuppliersSettings struct {
 	SubHD   *OneSupplierSettings `json:"subhd"`
 	Zimuku  *OneSupplierSettings `json:"zimuku"`
 	Assrt   *OneSupplierSettings `json:"assrt"`
+	A4k     *OneSupplierSettings `json:"a4k"`
 }
 
 func NewSuppliersSettings() *SuppliersSettings {
@@ -19,6 +20,7 @@ func NewSuppliersSettings() *SuppliersSettings {
 		SubHD:   NewOneSupplierSettings(common2.SubSiteSubHd, common2.SubSubHDRootUrlDef, 20),
 		Zimuku:  NewOneSupplierSettings(common2.SubSiteZiMuKu, common2.SubZiMuKuRootUrlDef, 20),
 		Assrt:   NewOneSupplierSettings(common2.SubSiteAssrt, common2.SubAssrtRootUrlDef, -1),
+		A4k:     NewOneSupplierSettings(common2.SubSiteA4K, common2.SubA4kRootUrlDef, -1),
 	}
 }
 
