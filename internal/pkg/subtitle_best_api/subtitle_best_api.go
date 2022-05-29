@@ -39,7 +39,7 @@ func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string, _proxySetti
 		return nil, errors.New(fmt.Sprintf("AESIv16 is not set, %s", s.authKey.AESIv16))
 	}
 
-	const postUrl = webUrlBase + "/v1/media-info"
+	postUrl := webUrlBase + "/v1/media-info"
 	httpClient, err := my_util.NewHttpClient(_proxySettings...)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string, _proxySetti
 // AskFroUpload 在使用这个接口前，需要从 IMDB ID 获取到 TMDB ID
 func (s *SubtitleBestApi) AskFroUpload(subSha256 string, _proxySettings ...*settings.ProxySettings) (*AskForUploadReply, error) {
 
-	const postUrl = webUrlBase + "/v1/media-info"
+	postUrl := webUrlBase + "/v1/ask-for-upload"
 	httpClient, err := my_util.NewHttpClient(_proxySettings...)
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func (s *SubtitleBestApi) AskFroUpload(subSha256 string, _proxySettings ...*sett
 // year 这个也是从之前的接口拿到, 2019  or  2022
 func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRootDirPath string, tmdbId, year string, _proxySettings ...*settings.ProxySettings) (*UploadSubReply, error) {
 
-	const postUrl = webUrlBase + "/v1/upload-sub"
+	postUrl := webUrlBase + "/v1/upload-sub"
 	httpClient, err := my_util.NewHttpClient(_proxySettings...)
 	if err != nil {
 		return nil, err
@@ -161,4 +161,5 @@ func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRo
 
 const (
 	webUrlBase = "https://api.subtitle.best"
+	//webUrlBase = "http://127.0.0.1:8889"
 )

@@ -376,7 +376,6 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".ComputeFileHash", videoFPath, err)
 		return
 	}
-
 	s.log.Debugln(2)
 
 	var imdbInfo *models.IMDBInfo
@@ -492,6 +491,14 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	saveSHA256String, err := my_util.GetFileSHA256String(subCacheFPath)
 	if err != nil {
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "GetFileSHA256String", videoFPath, err)
+		return
+	}
+	// 这个字幕文件是否已经存在了
+	var videoSubInfos []models.VideoSubInfo
+	dao.GetDb().Where("sha256 = ?", saveSHA256String).Find(&videoSubInfos)
+	if len(videoSubInfos) > 0 {
+		// 存在，跳过
+		s.log.Infoln("ScanPlayedVideoSubInfo.Scan", videoTypes, "SHA256 Exist == true, Skip", orgSubFPath)
 		return
 	}
 

@@ -7,6 +7,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/mix_media_info"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
+	"github.com/jinzhu/now"
+	"strconv"
 	"sync"
 	"time"
 
@@ -109,8 +111,8 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	{
 		// 测试部分定时器代码，提前运行
 		if ch.Settings.SpeedDevMode == true {
-			ch.scanPlayedVideoSub()
 
+			//ch.scanPlayedVideoSub()
 			ch.uploadPlayedVideoSub()
 		}
 	}
@@ -329,6 +331,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 		if waitTime <= 0 {
 			waitTime = 5
 		}
+		ch.log.Infoln("will wait", waitTime, "s")
 		var sleepCounter int64
 		sleepCounter = 0
 		normalStatus := false
@@ -336,6 +339,9 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 			if sleepCounter > waitTime {
 				normalStatus = true
 				break
+			}
+			if sleepCounter%30 == 0 {
+				ch.log.Infoln("wait 2 upload sub")
 			}
 			time.Sleep(1 * time.Second)
 			sleepCounter++
@@ -351,7 +357,14 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 			ch.log.Errorln("GetShareSubRootFolder error:", err.Error())
 			return
 		}
-		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, "", ch.Settings.AdvancedSettings.ProxySettings)
+
+		releaseTime, err := now.Parse(finalQueryIMDBInfo.Year)
+		if err != nil {
+			ch.log.Errorln("now.Parse error:", err.Error())
+			return
+		}
+
+		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()), ch.Settings.AdvancedSettings.ProxySettings)
 		if err != nil {
 			ch.log.Errorln("UploadSub error:", err.Error())
 			return
