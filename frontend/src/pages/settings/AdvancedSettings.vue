@@ -154,21 +154,21 @@
       <q-item>
         <q-item-section>
           <q-item-label class="q-mb-sm">字幕源设置</q-item-label>
-          <q-item v-for="item in ['xunlei', 'shooter', 'subhd', 'zimuku']" :key="item" clickable>
+          <q-item v-for="item in form.suppliers_settings" :key="item" clickable>
             <q-item-section avatar class="text-bold" style="width: 120px">
-              {{ form.suppliers_settings[item].name }}
+              {{ item.name }}
             </q-item-section>
             <q-item-section class="text-grey-8">
               <q-item-label :lines="1">
-                {{ form.suppliers_settings[item].root_url }}
+                {{ item.root_url }}
               </q-item-label>
               <q-item-label style="font-size: 90%">
-                每日下载次数限制：{{ form.suppliers_settings[item].daily_download_limit }}
+                每日下载次数限制：{{ item.daily_download_limit }}
               </q-item-label>
             </q-item-section>
             <q-item-section side>
               <edit-sub-source-btn-dialog
-                :data="form.suppliers_settings[item]"
+                :data="item"
                 @update="(data) => handleSubSourceUpdate(item, data)"
               />
             </q-item-section>

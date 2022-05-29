@@ -278,6 +278,7 @@ watch(() => formModel.experimental_function.share_sub_settings.share_sub_enabled
    PS： 暂时不会支持关键词查询，除非后续有特殊情况出现
   </li>
 </ul>
+<div style="color: red;">* 开启共享后，需要重启本程序或者docker容器才能生效</div>
 `,
       persistent: true,
       html: true,
