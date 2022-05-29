@@ -83,6 +83,7 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 
 ## 版本
 
+- v0.29.x 新增，“共享字幕”，详细见 WebUI “实验室页面”对应设置 -- 2022 年 5 月 29 日
 - v0.28.x 优化，assrt 查询逻辑，对接 TMDB 中文信息查询 -- 2022 年 5 月 27 日
 - v0.27.x 新增，assrt 字幕源，取消 zimuku 支持 -- 2022 年 5 月 19 日
 - v0.26.x 大范围重构，详细教程和更新说明见，[v0.26 教程、更新说明](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.26教程) -- 2022 年 5 月 13 日
