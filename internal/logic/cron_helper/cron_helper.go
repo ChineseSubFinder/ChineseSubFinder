@@ -1,9 +1,12 @@
 package cron_helper
 
 import (
+	"errors"
 	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/mix_media_info"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"sync"
 	"time"
 
@@ -255,6 +258,45 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 		ch.log.Debugln("No notUploadedVideoSubInfos")
 		return
 	}
+
+	var imdbInfos []models.IMDBInfo
+	dao.GetDb().Where("imdb_id = ?", notUploadedVideoSubInfos[0].IMDBInfoID).Find(&imdbInfos)
+	if len(imdbInfos) < 1 {
+		// 如果没有找到，那么就没有办法推断出 IMDB ID 的相关信息和 TMDB ID 信息，要来何用，删除即可
+		ch.log.Infoln("No imdbInfos, will delete this VideoSubInfo,", notUploadedVideoSubInfos[0].SubName)
+		dao.GetDb().Delete(&notUploadedVideoSubInfos[0])
+		return
+	}
+	videoType := ""
+	if imdbInfos[0].IsMovie == true {
+		videoType = "movie"
+	} else {
+		videoType = "series"
+	}
+	var err error
+	var finalQueryIMDBInfo *models.MediaInfo
+	if imdbInfos[0].TmdbId == "" {
+
+		// 需要先对这个字幕的 IMDB ID 转 TMDB ID 信息进行查询，得到 TMDB ID 和 Year (2019 2022)
+		finalQueryIMDBInfo, err = mix_media_info.GetMediaInfoAndSave(ch.log, ch.FileDownloader.SubtitleBestApi, &imdbInfos[0], imdbInfos[0].IMDBID, "imdb", videoType)
+		if err != nil {
+			ch.log.Errorln(errors.New("GetMediaInfoAndSave error:" + err.Error()))
+			return
+		}
+	} else {
+
+		var mediaInfos []models.MediaInfo
+		dao.GetDb().Where("tmdb_id = ?", imdbInfos[0].TmdbId).Find(&mediaInfos)
+		if len(mediaInfos) < 1 {
+			finalQueryIMDBInfo, err = mix_media_info.GetMediaInfoAndSave(ch.log, ch.FileDownloader.SubtitleBestApi, &imdbInfos[0], imdbInfos[0].IMDBID, "imdb", videoType)
+			if err != nil {
+				ch.log.Errorln(errors.New("GetMediaInfoAndSave error:" + err.Error()))
+				return
+			}
+		} else {
+			finalQueryIMDBInfo = &mediaInfos[0]
+		}
+	}
 	// 问询这个字幕是否上传过了，如果没有就需要进入上传的队列
 	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(notUploadedVideoSubInfos[0].SHA256)
 	if err != nil {
@@ -302,6 +344,26 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 			return
 		}
 		// 发送字幕
+		shareRootDir, err := my_folder.GetShareSubRootFolder()
+		if err != nil {
+			ch.log.Errorln("GetShareSubRootFolder error:", err.Error())
+			return
+		}
+		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, "", ch.Settings.AdvancedSettings.ProxySettings)
+		if err != nil {
+			ch.log.Errorln("UploadSub error:", err.Error())
+			return
+		}
+		if uploadSubReply.Status == 1 {
+			// 成功，其他情况就等待 Ask for Upload
+			notUploadedVideoSubInfos[0].IsSend = true
+			dao.GetDb().Save(&notUploadedVideoSubInfos[0])
+			ch.log.Infoln("Subtitle has been uploaded, so will not upload again")
+			return
+		} else {
+			ch.log.Warningln("UploadSub Message:", uploadSubReply.Message)
+			return
+		}
 
 	} else {
 		// 不是预期的返回值，需要报警

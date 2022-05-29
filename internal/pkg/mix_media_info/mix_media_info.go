@@ -103,7 +103,7 @@ func getMediaInfoEx(log *logrus.Logger, SubtitleBestApi *subtitle_best_api.Subti
 	return mediaInfo, nil
 }
 
-// GetMediaInfoAndSave 通过 IMDB ID 查询媒体信息，并保存到数据库，IMDB 和 MediaInfo 都会进行保存
+// GetMediaInfoAndSave 通过 IMDB ID 查询媒体信息，并保存到数据库，IMDB 和 MediaInfo 都会进行保存 // source，options=imdb|tmdb  videoType，options=movie|series
 func GetMediaInfoAndSave(log *logrus.Logger, SubtitleBestApi *subtitle_best_api.SubtitleBestApi, imdbInfo *models.IMDBInfo, id, source, videoType string) (*models.MediaInfo, error) {
 
 	mediaInfo, err := getMediaInfoEx(log, SubtitleBestApi, id, source, videoType)
