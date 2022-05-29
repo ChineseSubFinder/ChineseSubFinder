@@ -141,7 +141,11 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// 字幕的上传逻辑
 	if ch.Settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
 
-		ch.entryIDUploadPlayedVideoSub, err = ch.c.AddFunc("@every 5m", ch.uploadPlayedVideoSub)
+		intervalNowTask := "@every 5m"
+		if ch.Settings.SpeedDevMode == true {
+			intervalNowTask = "@every 10s"
+		}
+		ch.entryIDUploadPlayedVideoSub, err = ch.c.AddFunc(intervalNowTask, ch.uploadPlayedVideoSub)
 		if err != nil {
 			ch.log.Panicln("CronHelper QueueDownloader, uploadPlayedVideoSub Cron entryID:", ch.entryIDUploadPlayedVideoSub, "Error:", err)
 		}
@@ -331,7 +335,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 		if waitTime <= 0 {
 			waitTime = 5
 		}
-		ch.log.Infoln("will wait", waitTime, "s")
+		ch.log.Infoln("will wait", waitTime, "s 2 upload sub 2 server")
 		var sleepCounter int64
 		sleepCounter = 0
 		normalStatus := false
@@ -373,7 +377,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 			// 成功，其他情况就等待 Ask for Upload
 			notUploadedVideoSubInfos[0].IsSend = true
 			dao.GetDb().Save(&notUploadedVideoSubInfos[0])
-			ch.log.Infoln("Subtitle has been uploaded, so will not upload again")
+			ch.log.Infoln("Add subtitle in upload queue")
 			return
 		} else {
 			ch.log.Warningln("UploadSub Message:", uploadSubReply.Message)

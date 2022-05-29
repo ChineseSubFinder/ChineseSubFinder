@@ -87,9 +87,7 @@ func main() {
 	}
 	// 是否开启开发模式，跳过某些流程
 	//settings.GetSettings().SpeedDevMode = true
-
 	if settings.GetSettings().SpeedDevMode == true {
-
 		loggerBase.Infoln("Speed Dev Mode is On")
 	} else {
 		loggerBase.Infoln("Speed Dev Mode is Off")
