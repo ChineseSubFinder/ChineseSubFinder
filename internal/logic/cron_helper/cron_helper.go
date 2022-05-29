@@ -141,7 +141,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// 字幕的上传逻辑
 	if ch.Settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
 
-		intervalNowTask := "@every 5m"
+		intervalNowTask := "@every 1m"
 		if ch.Settings.SpeedDevMode == true {
 			intervalNowTask = "@every 10s"
 		}
