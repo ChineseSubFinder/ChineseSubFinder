@@ -1,6 +1,9 @@
 package cron_helper
 
 import (
+	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/dao"
+	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"sync"
 	"time"
 
@@ -31,6 +34,7 @@ type CronHelper struct {
 	entryIDSupplierCheck          cron.EntryID
 	entryIDQueueDownloader        cron.EntryID
 	entryIDScanPlayedVideoSubInfo cron.EntryID
+	entryIDUploadPlayedVideoSub   cron.EntryID
 }
 
 func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
@@ -110,23 +114,32 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// 这个暂时无法被取消执行
 	ch.entryIDScanVideoProcess, err = ch.c.AddFunc(ch.Settings.CommonSettings.ScanInterval, ch.scanVideoProcessAdd2DownloadQueue)
 	if err != nil {
-		ch.log.Panicln("CronHelper scanVideoProcessAdd2DownloadQueue, Cron entryID:", ch.entryIDScanVideoProcess, "Error:", err)
+		ch.log.Panicln("CronHelper scanVideoProcessAdd2DownloadQueue, scanVideoProcessAdd2DownloadQueue Cron entryID:", ch.entryIDScanVideoProcess, "Error:", err)
 	}
 	// 这个可以由 ch.Downloader.Cancel() 取消执行
 	ch.entryIDSupplierCheck, err = ch.c.AddFunc("@every 1h", ch.Downloader.SupplierCheck)
 	if err != nil {
-		ch.log.Panicln("CronHelper SupplierCheck, Cron entryID:", ch.entryIDSupplierCheck, "Error:", err)
+		ch.log.Panicln("CronHelper SupplierCheck, SupplierCheck Cron entryID:", ch.entryIDSupplierCheck, "Error:", err)
 	}
 	// 这个可以由 ch.Downloader.Cancel() 取消执行
 	ch.entryIDQueueDownloader, err = ch.c.AddFunc("@every 15s", ch.Downloader.QueueDownloader)
 	if err != nil {
-		ch.log.Panicln("CronHelper QueueDownloader, Cron entryID:", ch.entryIDQueueDownloader, "Error:", err)
+		ch.log.Panicln("CronHelper QueueDownloader, QueueDownloader Cron entryID:", ch.entryIDQueueDownloader, "Error:", err)
 	}
 	// 这个可以由 ch.scanPlayedVideoSubInfo.Cancel() 取消执行
 	ch.entryIDScanPlayedVideoSubInfo, err = ch.c.AddFunc("@every 24h", ch.scanPlayedVideoSub)
 	if err != nil {
-		ch.log.Panicln("CronHelper QueueDownloader, Cron entryID:", ch.entryIDScanPlayedVideoSubInfo, "Error:", err)
+		ch.log.Panicln("CronHelper QueueDownloader, scanPlayedVideoSub Cron entryID:", ch.entryIDScanPlayedVideoSubInfo, "Error:", err)
 	}
+	// 字幕的上传逻辑
+	if ch.Settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
+
+		ch.entryIDUploadPlayedVideoSub, err = ch.c.AddFunc("@every 5m", ch.uploadPlayedVideoSub)
+		if err != nil {
+			ch.log.Panicln("CronHelper QueueDownloader, uploadPlayedVideoSub Cron entryID:", ch.entryIDUploadPlayedVideoSub, "Error:", err)
+		}
+	}
+
 	// ----------------------------------------------
 	if runImmediately == true {
 		// 是否在定时器开启前先执行一次视频扫描任务
@@ -228,6 +241,72 @@ func (ch *CronHelper) scanPlayedVideoSub() {
 		if err != nil {
 			ch.log.Errorln(err)
 		}
+	}
+}
+
+// uploadPlayedVideoSub  上传字幕的定时器
+func (ch *CronHelper) uploadPlayedVideoSub() {
+
+	// 找出没有上传过的字幕列表
+	var notUploadedVideoSubInfos []models.VideoSubInfo
+	dao.GetDb().Where("is_send = ?", false).Limit(1).Find(&notUploadedVideoSubInfos)
+
+	if len(notUploadedVideoSubInfos) < 1 {
+		ch.log.Debugln("No notUploadedVideoSubInfos")
+		return
+	}
+	// 问询这个字幕是否上传过了，如果没有就需要进入上传的队列
+	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(notUploadedVideoSubInfos[0].SHA256)
+	if err != nil {
+		ch.log.Errorln(fmt.Errorf("AskFroUpload err: %v", err))
+		return
+	}
+	if askForUploadReply.Status == 3 {
+		// 上传过了，直接标记本地的 is_send 字段为 true
+		notUploadedVideoSubInfos[0].IsSend = true
+		dao.GetDb().Save(&notUploadedVideoSubInfos[0])
+		ch.log.Infoln("Subtitle has been uploaded, so will not upload again")
+		return
+	} else if askForUploadReply.Status == 4 {
+		// 上传队列满了，等待下次定时器触发
+		ch.log.Infoln("Subtitle upload queue is full, will try ask upload again")
+		return
+	} else if askForUploadReply.Status == 2 {
+		// 这个上传任务已经在队列中了，也许有其他人也需要上传这个字幕，或者本机排队的时候故障了，重启也可能遇到这个故障
+		ch.log.Infoln("Subtitle is int the queue")
+		return
+	} else if askForUploadReply.Status == 1 {
+		// 正确放入了队列，然后需要按规划的时间进行上传操作
+		// 这里可能需要执行耗时操作来等待到安排的时间点进行字幕的上传，不能直接长时间的 Sleep 操作
+		// 每次 Sleep 1s 然后就判断一次定时器是否还允许允许，如果不运行了，那么也就需要退出循环
+
+		// 得到目标时间与当前时间的差值，单位是s
+		waitTime := askForUploadReply.ScheduledUnixTime - time.Now().Unix()
+		if waitTime <= 0 {
+			waitTime = 5
+		}
+		var sleepCounter int64
+		sleepCounter = 0
+		normalStatus := false
+		for ch.cronHelperRunning == true {
+			if sleepCounter > waitTime {
+				normalStatus = true
+				break
+			}
+			time.Sleep(1 * time.Second)
+			sleepCounter++
+		}
+		if normalStatus == false || ch.cronHelperRunning == false {
+			// 说明不是正常跳出来的，是结束定时器来执行的
+			ch.log.Infoln("uploadPlayedVideoSub early termination")
+			return
+		}
+		// 发送字幕
+
+	} else {
+		// 不是预期的返回值，需要报警
+		ch.log.Errorln(fmt.Errorf("AskFroUpload Not the expected return value, Status: %d, Message: %v", askForUploadReply.Status, askForUploadReply.Message))
+		return
 	}
 }
 
