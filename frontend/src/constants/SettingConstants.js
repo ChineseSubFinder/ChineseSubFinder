@@ -37,6 +37,8 @@ export const DEFAULT_SUB_SOURCE_URL_MAP = {
   shooter: 'https://www.shooter.cn/api/subapi.php',
   subhd: 'https://subhd.tv',
   zimuku: 'https://zimuku.org',
+  assrt: 'https://api.assrt.net/v1',
+  a4k: 'https://www.a4k.net'
 };
 
 export const PROXY_TYPE_HTTP = 'http';
