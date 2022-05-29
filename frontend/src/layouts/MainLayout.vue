@@ -57,6 +57,8 @@
 
     <q-page-container>
       <router-view />
+
+      <notice-dialog/>
     </q-page-container>
   </q-layout>
 </template>
@@ -72,6 +74,7 @@ import { LocalStorage } from 'quasar';
 import AccessApi from 'src/api/AccessApi';
 import BugReportItem from 'layouts/BugReportItem';
 import VersionUpdateItem from 'components/VersionUpdateItem';
+import NoticeDialog from 'components/NoticeDialog';
 
 const router = useRouter();
 
