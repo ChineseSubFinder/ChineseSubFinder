@@ -6,6 +6,8 @@
 >
 > [大版本规划，以及新功能“共享字幕”功能的简介和讨论](https://github.com/allanpk716/ChineseSubFinder/issues/277)
 
+> docker 如果拉取 latest 标签，可能在国内无法真正拉取到最新镜像，请手动指定具体的一个版本，比如: chinesesubfinder:v0.29.0
+
 ## 前置要求
 
 如果想顺利的用起来，还是对电影、连续剧的目录有一定的要求的。见文档:
