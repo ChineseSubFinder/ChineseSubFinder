@@ -18,6 +18,7 @@ func HotFixProcess(log *logrus.Logger, param types.HotFixParam) error {
 	hotfixCases := []ifaces.IHotFix{
 		NewHotFix001(log, param.MovieRootDirs, param.SeriesRootDirs),
 		NewHotFix002(log),
+		NewHotFix003(log),
 	}
 	// -----------------------------------------------------------------------
 	// 找现在有多少个 hotfix 执行过了
@@ -59,6 +60,9 @@ func HotFixProcess(log *logrus.Logger, param types.HotFixParam) error {
 			break
 		case "002":
 			log.Infoln("Hotfix 002, process == ", processResult.(bool))
+			break
+		case "003":
+			log.Infoln("Hotfix 003, process == ", processResult.(bool))
 			break
 		default:
 			continue

@@ -1,6 +1,7 @@
 package hot_fix
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
@@ -8,7 +9,7 @@ import (
 )
 
 func TestHotFix001_GetKey(t *testing.T) {
-	hf001 := NewHotFix001([]string{""}, []string{""})
+	hf001 := NewHotFix001(log_helper.GetLogger4Tester(), []string{""}, []string{""})
 	if hf001.GetKey() != "001" {
 		t.Fatal("GetKey() != 001")
 	}
@@ -23,7 +24,7 @@ func TestHotFix001_Process(t *testing.T) {
 	testMovieDir := filepath.Join(testDataPath, movieDir)
 	testSeriesDir := filepath.Join(testDataPath, seriesDir)
 	// 开始修复
-	hf001 := NewHotFix001([]string{testMovieDir}, []string{testSeriesDir})
+	hf001 := NewHotFix001(log_helper.GetLogger4Tester(), []string{testMovieDir}, []string{testSeriesDir})
 	outData, err := hf001.Process()
 	outStruct := outData.(OutStruct001)
 	if err != nil {

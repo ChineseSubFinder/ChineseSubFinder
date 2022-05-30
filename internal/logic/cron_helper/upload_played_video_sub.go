@@ -72,7 +72,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 		ch.log.Errorln("GetShareSubRootFolder error:", err.Error())
 		return
 	}
-	bok, _, err := ch.scanPlayedVideoSubInfo.SubParserHub.DetermineFileTypeFromFile(filepath.Join(shareRootDir, notUploadedVideoSubInfos[0].SubName))
+	bok, _, err := ch.scanPlayedVideoSubInfo.SubParserHub.DetermineFileTypeFromFile(filepath.Join(shareRootDir, notUploadedVideoSubInfos[0].StoreRPath))
 	if err != nil {
 		notUploadedVideoSubInfos[0].IsSend = true
 		dao.GetDb().Save(&notUploadedVideoSubInfos[0])

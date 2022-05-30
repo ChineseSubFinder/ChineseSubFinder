@@ -135,7 +135,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 
 		intervalNowTask := "@every 1m"
 		if ch.Settings.SpeedDevMode == true {
-			intervalNowTask = "@every 10s"
+			intervalNowTask = "@every 1s"
 		}
 		ch.entryIDUploadPlayedVideoSub, err = ch.c.AddFunc(intervalNowTask, ch.uploadPlayedVideoSub)
 		if err != nil {
