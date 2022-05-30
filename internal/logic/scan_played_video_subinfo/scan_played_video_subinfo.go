@@ -47,7 +47,7 @@ type ScanPlayedVideoSubInfo struct {
 	canceled     bool
 	canceledLock sync.Mutex
 
-	subParserHub *sub_parser_hub.SubParserHub
+	SubParserHub *sub_parser_hub.SubParserHub
 
 	movieSubMap  map[string]string
 	seriesSubMap map[string]string
@@ -85,7 +85,7 @@ func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings,
 		return nil, err
 	}
 	// 字幕解析器
-	scanPlayedVideoSubInfo.subParserHub = sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log))
+	scanPlayedVideoSubInfo.SubParserHub = sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log))
 	// 字幕命名格式解析器
 	scanPlayedVideoSubInfo.subFormatter = emby.NewFormatter()
 	// 缓存目录的根目录
@@ -464,7 +464,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	s.log.Debugln(6)
 
 	// 不存在，插入，建立关系
-	bok, fileInfo, err := s.subParserHub.DetermineFileTypeFromFile(subCacheFPath)
+	bok, fileInfo, err := s.SubParserHub.DetermineFileTypeFromFile(subCacheFPath)
 	if err != nil {
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".DetermineFileTypeFromFile", imdbInfo4Video.ImdbId, err)
 		return
