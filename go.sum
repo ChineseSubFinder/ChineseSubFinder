@@ -55,8 +55,8 @@ github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRF
 github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/allanpk716/fake-useragent v0.2.1 h1:5EurHovAMGNwMZNbZ2cFOH8HsLdHwopnnKWCsV3PtNI=
 github.com/allanpk716/fake-useragent v0.2.1/go.mod h1:U3tmrxBYvSPeQKQ/9x59CXJPkHbU4x4eXw3ji5TDhPk=
-github.com/allanpk716/go-parse-torrent-name v0.0.0-20220212145434-430ea25cbba7 h1:5AYgeYsVjtDPG5sUS77lyeEPiRMduIKstLjkBLiVPRc=
-github.com/allanpk716/go-parse-torrent-name v0.0.0-20220212145434-430ea25cbba7/go.mod h1:H66QhXPJpUSdWschhL6u//v3ge96/qMnQ9mWp3efbxA=
+github.com/allanpk716/go-parse-torrent-name v0.0.1 h1:Eje8FZTq8qSpFiRMNa2cwfgQqlL+yMT+0hwMdRb7YK8=
+github.com/allanpk716/go-parse-torrent-name v0.0.1/go.mod h1:H66QhXPJpUSdWschhL6u//v3ge96/qMnQ9mWp3efbxA=
 github.com/allanpk716/opencc v0.1.8 h1:9jQN/nbav5S7wxeekOr5Zl/LrITcQgJuk7MuhN7bOdU=
 github.com/allanpk716/opencc v0.1.8/go.mod h1:jRuKtq8eLA+cZUu75XgMvkB/hFSXJbZDmij0v29lNaY=
 github.com/allanpk716/sat v0.0.0-20210622112535-2e00ce54a80b h1:vxXQuRgTH0D6aacl7Jyk4Kz8N4wbVTFn7M7Ib+/IFq4=
