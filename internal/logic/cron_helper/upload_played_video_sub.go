@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
@@ -84,7 +85,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 		ch.log.Errorln("DetermineFileTypeFromFile upload sub == false, not match any SubType, mark is send")
 		return
 	}
-	
+
 	// 问询这个字幕是否上传过了，如果没有就需要进入上传的队列
 	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(notUploadedVideoSubInfos[0].SHA256)
 	if err != nil {
@@ -152,8 +153,21 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 			// 成功，其他情况就等待 Ask for Upload
 			notUploadedVideoSubInfos[0].IsSend = true
 			dao.GetDb().Save(&notUploadedVideoSubInfos[0])
-			ch.log.Infoln("Add subtitle in upload queue")
+			ch.log.Infoln("subtitle is uploaded")
 			return
+		} else if uploadSubReply.Status == 0 {
+
+			// 发送失败，然后需要判断具体的错误，有一些需要直接标记已发送，跳过
+			if strings.Contains(uploadSubReply.Message, "sub file sha256 not match") == true ||
+				strings.Contains(uploadSubReply.Message, "determine sub file type error") == true ||
+				strings.Contains(uploadSubReply.Message, "determine sub file type not match") == true ||
+				strings.Contains(uploadSubReply.Message, "sub file has no chinese") == true {
+				notUploadedVideoSubInfos[0].IsSend = true
+				dao.GetDb().Save(&notUploadedVideoSubInfos[0])
+				ch.log.Infoln("subtitle upload error,", uploadSubReply.Message, "will not upload again")
+				return
+			}
+
 		} else {
 			ch.log.Warningln("UploadSub Message:", uploadSubReply.Message)
 			return

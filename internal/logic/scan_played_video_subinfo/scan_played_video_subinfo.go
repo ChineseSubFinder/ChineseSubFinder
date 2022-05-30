@@ -504,6 +504,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	s.log.Debugln(9)
 
+	// 如果不存在，那么就标记这个字幕是未发送
 	oneVideoSubInfo := models.NewVideoSubInfo(
 		fileHash,
 		filepath.Base(subCacheFPath),
@@ -515,6 +516,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 		extraSubPreName,
 		saveSHA256String,
 	)
+	oneVideoSubInfo.IsSend = false
 
 	if isMovie == false {
 		// 连续剧的时候，如果可能应该获取是 第几季  第几集
