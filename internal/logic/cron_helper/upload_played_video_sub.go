@@ -86,6 +86,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 		return
 	}
 
+	ch.log.Infoln("AskFroUpload", notUploadedVideoSubInfos[0].SubName)
 	// 问询这个字幕是否上传过了，如果没有就需要进入上传的队列
 	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(notUploadedVideoSubInfos[0].SHA256)
 	if err != nil {
@@ -143,7 +144,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 			ch.log.Errorln("now.Parse error:", err.Error())
 			return
 		}
-
+		ch.log.Infoln("UploadSub", notUploadedVideoSubInfos[0].SubName)
 		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()), ch.Settings.AdvancedSettings.ProxySettings)
 		if err != nil {
 			ch.log.Errorln("UploadSub error:", err.Error())
@@ -166,8 +167,9 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 				dao.GetDb().Save(&notUploadedVideoSubInfos[0])
 				ch.log.Infoln("subtitle upload error,", uploadSubReply.Message, "will not upload again")
 				return
+			} else {
+				ch.log.Errorln("subtitle upload error,", uploadSubReply.Message)
 			}
-
 		} else {
 			ch.log.Warningln("UploadSub Message:", uploadSubReply.Message)
 			return
