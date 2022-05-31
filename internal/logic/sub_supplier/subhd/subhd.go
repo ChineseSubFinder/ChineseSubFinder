@@ -139,11 +139,34 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 	defer func() {
 		_ = browser.Close()
 	}()
+
+	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.log, s.fileDownloader.SubtitleBestApi,
+		seriesInfo.EpList[0].FileFullPath, false,
+		s.settings.AdvancedSettings.ProxySettings)
+	if err != nil {
+		s.log.Errorln(s.GetSupplierName(), seriesInfo.EpList[0].FileFullPath, "GetMixMediaInfo", err)
+		return nil, err
+	}
+	// 优先中文查询
+	keyWord, err := mix_media_info.KeyWordSelect(mediaInfo, seriesInfo.EpList[0].FileFullPath, true, "cn")
+	if err != nil {
+		s.log.Errorln(s.GetSupplierName(), seriesInfo.EpList[0].FileFullPath, "keyWordSelect", err)
+		return nil, err
+	}
+	if keyWord == "" {
+		// 更换英文译名
+		keyWord, err = mix_media_info.KeyWordSelect(mediaInfo, seriesInfo.EpList[0].FileFullPath, true, "en")
+		if err != nil {
+			s.log.Errorln(s.GetSupplierName(), seriesInfo.EpList[0].FileFullPath, "keyWordSelect", err)
+			return nil, err
+		}
+	}
 	var subInfos = make([]supplier.SubInfo, 0)
 	var subList = make([]HdListItem, 0)
 	for value := range seriesInfo.NeedDlSeasonDict {
 		// 第一级界面，找到影片的详情界面
-		keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
+		//keyword := seriesInfo.Name + " 第" + zh.Uint64(value).String() + "季"
+		keyword := keyWord + " 第" + zh.Uint64(value).String() + "季"
 		s.log.Infoln("Search Keyword:", keyword)
 		detailPageUrl, err := s.step0(browser, keyword)
 		if err != nil {
