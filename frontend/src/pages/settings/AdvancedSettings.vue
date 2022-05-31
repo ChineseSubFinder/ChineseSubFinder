@@ -353,7 +353,7 @@ const subNameFormatDescMap = {
 const { advanced_settings: form } = toRefs(formModel);
 
 const handleSubSourceUpdate = (item, data) => {
-  formModel.advanced_settings.suppliers_settings[item].root_url = data.url;
-  formModel.advanced_settings.suppliers_settings[item].daily_download_limit = data.dailyLimit;
+  formModel.advanced_settings.suppliers_settings[item.name].root_url = data.url;
+  formModel.advanced_settings.suppliers_settings[item.name].daily_download_limit = data.dailyLimit;
 };
 </script>
