@@ -329,14 +329,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 			v.log.Warningln("scanLowVideoSubInfo.GetMixMediaInfo", videoFPath, err)
 			return false
 		}
-
-		// 使用本程序的 hash 的算法，得到视频的唯一 ID
-		fileHash, err := sub_file_hash.Calculate(videoFPath)
-		if err != nil {
-			v.log.Warningln("scanLowVideoSubInfo.ComputeFileHash", videoFPath, err)
-			return false
-		}
-
+		// 这个视频有对应的文中字幕
 		bFoundChineseSub, _, chineseSubFitVideoNameFullPathList, err := movie_helper.MovieHasChineseSub(v.log, videoFPath)
 		if err != nil {
 			v.log.Warningln("scanLowVideoSubInfo.MovieHasChineseSub", videoFPath, err)
@@ -345,6 +338,13 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 		if bFoundChineseSub == false {
 			// 没有找到中文字幕，那么就不需要下载了
 			v.log.Infoln("scanLowVideoSubInfo.MovieHasChineseSub", videoFPath, "not found chinese sub")
+			return false
+		}
+
+		// 使用本程序的 hash 的算法，得到视频的唯一 ID
+		fileHash, err := sub_file_hash.Calculate(videoFPath)
+		if err != nil {
+			v.log.Warningln("scanLowVideoSubInfo.ComputeFileHash", videoFPath, err)
 			return false
 		}
 
