@@ -1,6 +1,7 @@
 package video_scan_and_refresh_helper
 
 import (
+	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
@@ -66,6 +67,7 @@ func NewVideoScanAndRefreshHelper(inSubFormatter ifaces.ISubFormatter, fileDownl
 		subSupplierHub: subSupplier.NewSubSupplierHub(
 			xunlei.NewSupplier(fileDownloader),
 		),
+		fileDownloader: fileDownloader,
 		// 字幕解析器
 		SubParserHub: sub_parser_hub.NewSubParserHub(fileDownloader.Log, ass.NewParser(fileDownloader.Log), srt.NewParser(fileDownloader.Log)),
 		subFormatter: inSubFormatter,
@@ -323,38 +325,54 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 	// 先处理电影
 	scanVideoResult.Normal.MoviesDirMap.Any(func(movieDirRootPath interface{}, movieFPath interface{}) bool {
 
-		videoFPath := movieFPath.(string)
-		mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.log, v.fileDownloader.SubtitleBestApi, videoFPath, true, v.settings.AdvancedSettings.ProxySettings)
-		if err != nil {
-			v.log.Warningln("scanLowVideoSubInfo.GetMixMediaInfo", videoFPath, err)
-			return false
-		}
-		// 这个视频有对应的文中字幕
-		bFoundChineseSub, _, chineseSubFitVideoNameFullPathList, err := movie_helper.MovieHasChineseSub(v.log, videoFPath)
-		if err != nil {
-			v.log.Warningln("scanLowVideoSubInfo.MovieHasChineseSub", videoFPath, err)
-			return false
-		}
-		if bFoundChineseSub == false {
-			// 没有找到中文字幕，那么就不需要下载了
-			v.log.Infoln("scanLowVideoSubInfo.MovieHasChineseSub", videoFPath, "not found chinese sub")
-			return false
+		videoFPathList := movieFPath.([]string)
+		for _, videoFPath := range videoFPathList {
+			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.log, v.fileDownloader.SubtitleBestApi, videoFPath, true, v.settings.AdvancedSettings.ProxySettings)
+			if err != nil {
+				v.log.Warningln("scanLowVideoSubInfo.GetMixMediaInfo", videoFPath, err)
+				continue
+			}
+			// 这个视频有对应的文中字幕
+			bFoundChineseSub, _, chineseSubFitVideoNameFullPathList, err := movie_helper.MovieHasChineseSub(v.log, videoFPath)
+			if err != nil {
+				v.log.Warningln("scanLowVideoSubInfo.MovieHasChineseSub", videoFPath, err)
+				continue
+			}
+			if bFoundChineseSub == false {
+				// 没有找到中文字幕，那么就不需要下载了
+				v.log.Infoln("scanLowVideoSubInfo.MovieHasChineseSub", videoFPath, "not found chinese sub")
+				continue
+			}
+
+			// 使用本程序的 hash 的算法，得到视频的唯一 ID
+			fileHash, err := sub_file_hash.Calculate(videoFPath)
+			if err != nil {
+				v.log.Warningln("scanLowVideoSubInfo.ComputeFileHash", videoFPath, err)
+				continue
+			}
+
+			v.log.Infoln("--------------------------------------------------------------------------------")
+			v.log.Infoln("scanLowVideoSubInfo.MovieHasChineseSub", videoFPath)
+			for index, orgSubFPath := range chineseSubFitVideoNameFullPathList {
+				v.log.Infoln("index", index, orgSubFPath)
+				// 需要得到这个视频对应的字幕的绝对地址
+				v.addLowVideoSubInfo(orgSubFPath, mixMediaInfo, shareRootDir, fileHash)
+			}
 		}
 
-		// 使用本程序的 hash 的算法，得到视频的唯一 ID
-		fileHash, err := sub_file_hash.Calculate(videoFPath)
+		return false
+	})
+	// 处理连续剧  dir --
+	scanVideoResult.Normal.SeriesDirMap.Any(func(seriesDirRootPath interface{}, seriesFPath interface{}) bool {
+
+		seriesDirRootFPath := seriesFPath.(string)
+		seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(v.log, seriesDirRootFPath, 90, true, true)
 		if err != nil {
-			v.log.Warningln("scanLowVideoSubInfo.ComputeFileHash", videoFPath, err)
+			v.log.Warningln("scanLowVideoSubInfo.ReadSeriesInfoFromDir", seriesDirRootFPath, err)
 			return false
 		}
+		fmt.Println(len(seriesInfo.EpList))
 
-		v.log.Infoln("--------------------------------------------------------------------------------")
-		v.log.Infoln("scanLowVideoSubInfo.MovieHasChineseSub", videoFPath)
-		for index, orgSubFPath := range chineseSubFitVideoNameFullPathList {
-			v.log.Infoln("index", index, orgSubFPath)
-			// 需要得到这个视频对应的字幕的绝对地址
-			v.addLowVideoSubInfo(orgSubFPath, mixMediaInfo, shareRootDir, fileHash)
-		}
 		return false
 	})
 }
