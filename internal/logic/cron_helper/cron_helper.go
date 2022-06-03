@@ -106,7 +106,9 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		if ch.Settings.SpeedDevMode == true {
 
 			//ch.scanPlayedVideoSub()
-			ch.uploadPlayedVideoSub()
+			//ch.uploadPlayedVideoSub()
+			ch.scanVideoProcessAdd2DownloadQueue()
+
 		}
 	}
 

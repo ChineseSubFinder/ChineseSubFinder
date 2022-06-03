@@ -1,7 +1,6 @@
 package video_scan_and_refresh_helper
 
 import (
-	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
@@ -326,7 +325,10 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 	scanVideoResult.Normal.MoviesDirMap.Any(func(movieDirRootPath interface{}, movieFPath interface{}) bool {
 
 		videoFPathList := movieFPath.([]string)
-		for _, videoFPath := range videoFPathList {
+		for videoIndex, videoFPath := range videoFPathList {
+
+			v.log.Infoln("--------------------------------------------------------------------------------")
+			v.log.Infoln("scanLowVideoSubInfo.MovieHasChineseSub", videoIndex, videoFPath)
 			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.log, v.fileDownloader.SubtitleBestApi, videoFPath, true, v.settings.AdvancedSettings.ProxySettings)
 			if err != nil {
 				v.log.Warningln("scanLowVideoSubInfo.GetMixMediaInfo", videoFPath, err)
@@ -350,35 +352,93 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 				v.log.Warningln("scanLowVideoSubInfo.ComputeFileHash", videoFPath, err)
 				continue
 			}
-
-			v.log.Infoln("--------------------------------------------------------------------------------")
-			v.log.Infoln("scanLowVideoSubInfo.MovieHasChineseSub", videoFPath)
-			for index, orgSubFPath := range chineseSubFitVideoNameFullPathList {
-				v.log.Infoln("index", index, orgSubFPath)
+			// 得到的这些字幕需要进行一次 sha256 的排除，因为是多个站点下载的，可能是重复的
+			subSha256Map := make(map[string]string)
+			for _, orgSubFPath := range chineseSubFitVideoNameFullPathList {
+				// 计算需要插入字幕的 sha256
+				saveSHA256String, err := my_util.GetFileSHA256String(orgSubFPath)
+				if err != nil {
+					v.log.Warningln("scanLowVideoSubInfo.GetFileSHA256String", orgSubFPath, err)
+					continue
+				}
+				subSha256Map[saveSHA256String] = orgSubFPath
+			}
+			// 排除重复 sha256 后的字幕
+			for _, orgSubFPath := range subSha256Map {
+				v.log.Infoln(orgSubFPath)
 				// 需要得到这个视频对应的字幕的绝对地址
-				v.addLowVideoSubInfo(orgSubFPath, mixMediaInfo, shareRootDir, fileHash)
+				v.addLowVideoSubInfo(0, 0, orgSubFPath, mixMediaInfo, shareRootDir, fileHash)
 			}
 		}
 
 		return false
 	})
-	// 处理连续剧  dir --
+	// 处理连续剧  media root dir -- series dir
 	scanVideoResult.Normal.SeriesDirMap.Any(func(seriesDirRootPath interface{}, seriesFPath interface{}) bool {
 
-		seriesDirRootFPath := seriesFPath.(string)
-		seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(v.log, seriesDirRootFPath, 90, true, true)
-		if err != nil {
-			v.log.Warningln("scanLowVideoSubInfo.ReadSeriesInfoFromDir", seriesDirRootFPath, err)
-			return false
+		seriesDirRootFPathLisst := seriesFPath.([]string)
+		for seriesDirIndex, seriesDirRootFPath := range seriesDirRootFPathLisst {
+
+			seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(v.log, seriesDirRootFPath, 90, true, true)
+			if err != nil {
+				v.log.Warningln("scanLowVideoSubInfo.ReadSeriesInfoFromDir", seriesDirRootFPath, err)
+				return false
+			}
+
+			if len(seriesInfo.EpList) < 1 {
+				continue
+			}
+
+			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.log, v.fileDownloader.SubtitleBestApi, seriesInfo.EpList[0].FileFullPath, false, v.settings.AdvancedSettings.ProxySettings)
+			if err != nil {
+				v.log.Warningln("scanLowVideoSubInfo.GetMixMediaInfo", seriesInfo.EpList[0].FileFullPath, err)
+				continue
+			}
+
+			for i, episodeInfo := range seriesInfo.EpList {
+
+				videoFPath := episodeInfo.FileFullPath
+				v.log.Infoln("--------------------------------------------------------------------------------")
+				v.log.Infoln("scanLowVideoSubInfo.ReadSeriesInfoFromDir", seriesDirIndex, i, videoFPath)
+				// 使用本程序的 hash 的算法，得到视频的唯一 ID
+				fileHash, err := sub_file_hash.Calculate(videoFPath)
+				if err != nil {
+					v.log.Warningln("scanLowVideoSubInfo.ComputeFileHash", videoFPath, err)
+					continue
+				}
+				// 得到的这些字幕需要进行一次 sha256 的排除，因为是多个站点下载的，可能是重复的
+				subSha256Map := make(map[string]string)
+				// 这个视频有对应的文中字幕
+				for _, subInfo := range episodeInfo.SubAlreadyDownloadedList {
+
+					orgSubFPath := subInfo.FileFullPath
+					if language.HasChineseLang(subInfo.Language) == false {
+						v.log.Warningln("scanLowVideoSubInfo.HasChineseLang Skip", videoFPath, subInfo.Language)
+						continue
+					}
+					// 计算需要插入字幕的 sha256
+					saveSHA256String, err := my_util.GetFileSHA256String(orgSubFPath)
+					if err != nil {
+						v.log.Warningln("scanLowVideoSubInfo.GetFileSHA256String", orgSubFPath, err)
+						continue
+					}
+					subSha256Map[saveSHA256String] = orgSubFPath
+				}
+				// 排除重复 sha256 后的字幕
+				for _, orgSubFPath := range subSha256Map {
+					v.log.Infoln(orgSubFPath)
+					// 需要得到这个视频对应的字幕的绝对地址
+					v.addLowVideoSubInfo(episodeInfo.Season, episodeInfo.Episode, orgSubFPath, mixMediaInfo, shareRootDir, fileHash)
+				}
+			}
 		}
-		fmt.Println(len(seriesInfo.EpList))
 
 		return false
 	})
 }
 
 // 从绝对字幕路径和 mixMediaInfo 信息判断是否需要存储这个低可信度的字幕
-func (v *VideoScanAndRefreshHelper) addLowVideoSubInfo(orgSubFPath string, mixMediaInfo *models.MediaInfo, shareRootDir string, fileHash string) {
+func (v *VideoScanAndRefreshHelper) addLowVideoSubInfo(Season, Eps int, orgSubFPath string, mixMediaInfo *models.MediaInfo, shareRootDir string, fileHash string) {
 
 	// 计算需要插入字幕的 sha256
 	saveSHA256String, err := my_util.GetFileSHA256String(orgSubFPath)
@@ -446,6 +506,9 @@ func (v *VideoScanAndRefreshHelper) addLowVideoSubInfo(orgSubFPath string, mixMe
 		extraSubPreName,
 		saveSHA256String,
 	)
+
+	oneLowVideoSubInfo.Season = Season
+	oneLowVideoSubInfo.Episode = Eps
 
 	dao.GetDb().Save(oneLowVideoSubInfo)
 	return

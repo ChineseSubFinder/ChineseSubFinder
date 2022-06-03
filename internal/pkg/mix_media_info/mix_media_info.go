@@ -95,7 +95,7 @@ func getMediaInfoEx(log *logrus.Logger, SubtitleBestApi *subtitle_best_api.Subti
 			return nil, errors.New("SubtitleBestApi.GetMediaInfo failed, Message: " + mediaInfoReply.Message)
 		}
 
-		if queryCount > 5 {
+		if queryCount > 9 {
 			break
 		}
 	}
