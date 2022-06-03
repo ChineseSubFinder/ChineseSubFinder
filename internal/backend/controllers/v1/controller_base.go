@@ -4,6 +4,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/base"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/lock"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,9 @@ func NewControllerBase(log *logrus.Logger, cronHelper *cron_helper.CronHelper) *
 		cronHelper:              cronHelper,
 		StaticFileSystemBackEnd: base.NewStaticFileSystemBackEnd(log),
 		// 这里因为不进行任务的添加，仅仅是扫描，所以 downloadQueue 可以为 nil
-		videoScanAndRefreshHelper:       video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(cronHelper.FileDownloader, nil),
+		videoScanAndRefreshHelper: video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
+			sub_formatter.GetSubFormatter(log, cronHelper.Settings.AdvancedSettings.SubNameFormatter),
+			cronHelper.FileDownloader, nil),
 		videoScanAndRefreshHelperLocker: lock.NewLock(),
 	}
 

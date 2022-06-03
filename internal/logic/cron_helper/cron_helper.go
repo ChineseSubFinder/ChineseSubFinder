@@ -54,6 +54,7 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 	// ----------------------------------------------
 	// 字幕扫描器
 	ch.videoScanAndRefreshHelper = video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
+		sub_formatter.GetSubFormatter(ch.log, ch.Settings.AdvancedSettings.SubNameFormatter),
 		ch.FileDownloader,
 		ch.DownloadQueue)
 

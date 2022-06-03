@@ -69,7 +69,9 @@ func InitDb() error {
 	err = db.AutoMigrate(&models.HotFix{}, &models.SubFormatRec{},
 		&models.IMDBInfo{}, &models.VideoSubInfo{},
 		&models.ThirdPartSetVideoPlayedInfo{},
-		&models.MediaInfo{})
+		&models.MediaInfo{},
+		&models.LowVideoSubInfo{},
+	)
 	if err != nil {
 		return errors.New(fmt.Sprintf("db AutoMigrate error, %s", err.Error()))
 	}

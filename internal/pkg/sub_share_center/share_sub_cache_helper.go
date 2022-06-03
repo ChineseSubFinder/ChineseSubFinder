@@ -9,12 +9,17 @@ import (
 )
 
 // CopySub2Cache 检测原有字幕是否存在，然后放到缓存目录中
-func CopySub2Cache(log *logrus.Logger, orgSubFileFPath, imdbID string, year int) (bool, string) {
+func CopySub2Cache(log *logrus.Logger, orgSubFileFPath, imdbID string, year int, lowTrust bool) (bool, string) {
 
 	nowFolderDir, err := my_folder.GetShareFolderByYear(year)
 	if err != nil {
 		log.Errorln("CheckOrgSubFileExistAndCopy2Cache.GetShareFolderByYear", err)
 		return false, ""
+	}
+
+	if lowTrust == true {
+		// 低可信度的字幕存储位置
+		nowFolderDir = filepath.Join(nowFolderDir, "low_trust")
 	}
 
 	err = os.MkdirAll(filepath.Join(nowFolderDir, imdbID), os.ModePerm)
