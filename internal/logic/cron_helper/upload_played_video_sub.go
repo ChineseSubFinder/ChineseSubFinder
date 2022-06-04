@@ -17,7 +17,7 @@ import (
 // uploadVideoSub  上传字幕的定时器
 func (ch *CronHelper) uploadVideoSub() {
 
-	//ch.uploadPlayedVideoSub()
+	ch.uploadPlayedVideoSub()
 
 	ch.uploadLowTrustVideoSub()
 }
@@ -94,7 +94,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 
 	ch.log.Infoln("AskFroUpload", notUploadedVideoSubInfos[0].SubName)
 	// 问询这个字幕是否上传过了，如果没有就需要进入上传的队列
-	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(notUploadedVideoSubInfos[0].SHA256)
+	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(notUploadedVideoSubInfos[0].SHA256, true)
 	if err != nil {
 		ch.log.Errorln(fmt.Errorf("AskFroUpload err: %v", err))
 		return
@@ -270,7 +270,7 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 
 	ch.log.Infoln("AskFroUpload", notUploadedVideoSubInfos[0].SubName)
 	// 问询这个字幕是否上传过了，如果没有就需要进入上传的队列
-	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(notUploadedVideoSubInfos[0].SHA256)
+	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(notUploadedVideoSubInfos[0].SHA256, false)
 	if err != nil {
 		ch.log.Errorln(fmt.Errorf("AskFroUpload err: %v", err))
 		return

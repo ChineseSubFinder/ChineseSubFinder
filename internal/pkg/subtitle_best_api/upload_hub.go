@@ -2,6 +2,7 @@ package subtitle_best_api
 
 type AskForUploadReq struct {
 	SubSha256 string `json:"sub_sha256"`
+	Trusted   bool   `json:"trusted,optional"` // 是否是信任的字幕
 }
 
 type AskForUploadReply struct {

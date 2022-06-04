@@ -105,8 +105,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		// 测试部分定时器代码，提前运行
 		if ch.Settings.SpeedDevMode == true {
 
-			//ch.scanPlayedVideoSub()
-			ch.uploadVideoSub()
+			//ch.uploadVideoSub()
 			//ch.scanVideoProcessAdd2DownloadQueue()
 		}
 	}
