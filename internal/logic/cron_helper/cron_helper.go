@@ -106,9 +106,8 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		if ch.Settings.SpeedDevMode == true {
 
 			//ch.scanPlayedVideoSub()
-			//ch.uploadPlayedVideoSub()
-			ch.scanVideoProcessAdd2DownloadQueue()
-
+			ch.uploadVideoSub()
+			//ch.scanVideoProcessAdd2DownloadQueue()
 		}
 	}
 
@@ -140,9 +139,9 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		if ch.Settings.SpeedDevMode == true {
 			intervalNowTask = "@every 1s"
 		}
-		ch.entryIDUploadPlayedVideoSub, err = ch.c.AddFunc(intervalNowTask, ch.uploadPlayedVideoSub)
+		ch.entryIDUploadPlayedVideoSub, err = ch.c.AddFunc(intervalNowTask, ch.uploadVideoSub)
 		if err != nil {
-			ch.log.Panicln("CronHelper QueueDownloader, uploadPlayedVideoSub Cron entryID:", ch.entryIDUploadPlayedVideoSub, "Error:", err)
+			ch.log.Panicln("CronHelper QueueDownloader, uploadVideoSub Cron entryID:", ch.entryIDUploadPlayedVideoSub, "Error:", err)
 		}
 	}
 

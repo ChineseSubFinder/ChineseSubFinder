@@ -159,6 +159,68 @@ func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRo
 	return &uploadSubReply, nil
 }
 
+func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVideoSubInfo, subSaveRootDirPath string, tmdbId, year string, _proxySettings ...*settings.ProxySettings) (*UploadSubReply, error) {
+
+	postUrl := webUrlBase + "/v1/upload-sub"
+	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	if err != nil {
+		return nil, err
+	}
+
+	authKey, err := s.randomAuthKey.GetAuthKey()
+	if err != nil {
+		return nil, err
+	}
+
+	// 从相对路径转换为绝对路径
+	subFileFPath := filepath.Join(subSaveRootDirPath, lowTrustVideoSubInfo.StoreRPath)
+	if my_util.IsFile(subFileFPath) == false {
+		return nil, errors.New(fmt.Sprintf("sub file not exist, %s", subFileFPath))
+	}
+	file, err := os.Open(subFileFPath)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("open sub file failed, %s", subFileFPath))
+	}
+	defer func() {
+		_ = file.Close()
+	}()
+	fd, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("read sub file failed, %s", subFileFPath))
+	}
+
+	isDouble := "false"
+	if lowTrustVideoSubInfo.IsDouble == true {
+		isDouble = "true"
+	}
+
+	var uploadSubReply UploadSubReply
+	_, err = httpClient.R().
+		SetHeader("Authorization", "beer "+authKey).
+		SetFileReader("sub_file_context", lowTrustVideoSubInfo.SubName, bytes.NewReader(fd)).
+		SetFormData(map[string]string{
+			"sub_sha256":     lowTrustVideoSubInfo.SHA256,
+			"season":         strconv.Itoa(lowTrustVideoSubInfo.Season),
+			"episode":        strconv.Itoa(lowTrustVideoSubInfo.Episode),
+			"is_double":      isDouble,
+			"language_iso":   lowTrustVideoSubInfo.LanguageISO,
+			"my_language":    lowTrustVideoSubInfo.MyLanguage,
+			"extra_pre_name": lowTrustVideoSubInfo.ExtraPreName,
+			"imdb_id":        lowTrustVideoSubInfo.IMDBID,
+			"tmdb_id":        tmdbId,
+			"video_feature":  lowTrustVideoSubInfo.Feature,
+			"year":           year,
+			"low_trust":      "true",
+		}).
+		SetResult(&uploadSubReply).
+		Post(postUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	return &uploadSubReply, nil
+}
+
 const (
 	webUrlBase = "https://api.subtitle.best"
 	//webUrlBase = "http://127.0.0.1:8889"
