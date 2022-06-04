@@ -109,11 +109,6 @@ func (v *VideoScanAndRefreshHelper) Start() error {
 		v.log.Errorln("ScanNormalMovieAndSeries", err)
 		return err
 	}
-	if v.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
-		v.log.Infoln("ShareSubEnabled is true, will scan share sub")
-		// 根据上面得到的 scanResult 的 Normal 部分进行字幕的扫描，也存入到 VideoSubInfo 中，但是需要标记这个是低可信度的
-		v.scanLowVideoSubInfo(scanResult)
-	}
 	err = v.ScanEmbyMovieAndSeries(scanResult)
 	if err != nil {
 		v.log.Errorln("ScanEmbyMovieAndSeries", err)
@@ -124,6 +119,11 @@ func (v *VideoScanAndRefreshHelper) Start() error {
 	if err != nil {
 		v.log.Errorln("FilterMovieAndSeriesNeedDownload", err)
 		return err
+	}
+	if v.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
+		v.log.Infoln("ShareSubEnabled is true, will scan share sub")
+		// 根据上面得到的 scanResult 的 Normal 部分进行字幕的扫描，也存入到 VideoSubInfo 中，但是需要标记这个是低可信度的
+		v.scanLowVideoSubInfo(scanResult)
 	}
 
 	return nil
