@@ -94,7 +94,15 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 
 	ch.log.Infoln("AskFroUpload", notUploadedVideoSubInfos[0].SubName)
 	// 问询这个字幕是否上传过了，如果没有就需要进入上传的队列
-	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(notUploadedVideoSubInfos[0].SHA256, true)
+	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(
+		notUploadedVideoSubInfos[0].SHA256,
+		true,
+		finalQueryIMDBInfo.ImdbId,
+		finalQueryIMDBInfo.TmdbId,
+		notUploadedVideoSubInfos[0].Season,
+		notUploadedVideoSubInfos[0].Episode,
+		ch.Settings.AdvancedSettings.ProxySettings,
+	)
 	if err != nil {
 		ch.log.Errorln(fmt.Errorf("AskFroUpload err: %v", err))
 		return
@@ -270,7 +278,15 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 
 	ch.log.Infoln("AskFroUpload", notUploadedVideoSubInfos[0].SubName)
 	// 问询这个字幕是否上传过了，如果没有就需要进入上传的队列
-	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(notUploadedVideoSubInfos[0].SHA256, false)
+	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(
+		notUploadedVideoSubInfos[0].SHA256,
+		false,
+		"",
+		"",
+		0,
+		0,
+		ch.Settings.AdvancedSettings.ProxySettings,
+	)
 	if err != nil {
 		ch.log.Errorln(fmt.Errorf("AskFroUpload err: %v", err))
 		return

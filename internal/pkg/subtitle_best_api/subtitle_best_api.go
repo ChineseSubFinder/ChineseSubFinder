@@ -68,7 +68,7 @@ func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string, _proxySetti
 }
 
 // AskFroUpload 在使用这个接口前，需要从 IMDB ID 获取到 TMDB ID
-func (s *SubtitleBestApi) AskFroUpload(subSha256 string, trusted bool, _proxySettings ...*settings.ProxySettings) (*AskForUploadReply, error) {
+func (s *SubtitleBestApi) AskFroUpload(subSha256 string, trusted bool, ImdbId, TmdbId string, Season, Episode int, _proxySettings ...*settings.ProxySettings) (*AskForUploadReply, error) {
 
 	postUrl := webUrlBase + "/v1/ask-for-upload"
 	httpClient, err := my_util.NewHttpClient(_proxySettings...)
@@ -81,13 +81,26 @@ func (s *SubtitleBestApi) AskFroUpload(subSha256 string, trusted bool, _proxySet
 		return nil, err
 	}
 
+	var askReq AskForUploadReq
+	if trusted == true {
+		askReq = AskForUploadReq{
+			SubSha256: subSha256,
+			Trusted:   trusted,
+			ImdbId:    ImdbId,
+			TmdbId:    TmdbId,
+			Season:    Season,
+			Episode:   Episode,
+		}
+	} else {
+		askReq = AskForUploadReq{
+			SubSha256: subSha256,
+		}
+	}
+
 	var askForUploadReply AskForUploadReply
 	_, err = httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
-		SetBody(AskForUploadReq{
-			SubSha256: subSha256,
-			Trusted:   trusted,
-		}).
+		SetBody(askReq).
 		SetResult(&askForUploadReply).
 		Post(postUrl)
 	if err != nil {
