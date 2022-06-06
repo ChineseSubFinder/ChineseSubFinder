@@ -1,6 +1,10 @@
 package video_scan_and_refresh_helper
 
 import (
+	"path/filepath"
+	"strings"
+	"sync"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
@@ -38,9 +42,6 @@ import (
 	"github.com/jinzhu/now"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	"path/filepath"
-	"strings"
-	"sync"
 )
 
 type VideoScanAndRefreshHelper struct {
@@ -248,6 +249,7 @@ func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *Scan
 			// 如果是强制，那么就临时修改 Setting 的 Emby MaxRequestVideoNumber 参数为 1000000
 			tmpSetting := clone.Clone(v.settings).(*settings.Settings)
 			tmpSetting.EmbySettings.MaxRequestVideoNumber = common.EmbyApiGetItemsLimitMax
+			tmpSetting.EmbySettings.SkipWatched = false
 			v.embyHelper = embyHelper.NewEmbyHelper(v.log, tmpSetting)
 		} else {
 			v.log.Infoln("Not Forced Scan And DownSub")
