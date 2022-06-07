@@ -6,13 +6,14 @@ env:
 before:
   hooks:
     - go mod tidy
-    - sudo apt-get update
+    - sudo apt-get update -y
     - sudo apt-get install gcc-multilib
     - sudo apt-get install -y *-w64-x86-*
-    - sudo apt-get install aarch64-linux-gnu-gcc
-    - sudo apt-get install aarch64-linux-gnu-g++
-    - sudo apt-get install arm-linux-gnueabihf-gcc
-    - sudo apt-get install arm-linux-gnueabihf-g++
+    # https://github.com/goreleaser/goreleaser-cross 交叉编译的文档
+    - sudo apt-get install -y aarch64-linux-gnu-gcc
+    - sudo apt-get install -y aarch64-linux-gnu-g++
+    - sudo apt-get install -y arm-linux-gnueabihf-gcc
+    - sudo apt-get install -y arm-linux-gnueabihf-g++
 builds:
   - id: linux-amd64-build
     env:
