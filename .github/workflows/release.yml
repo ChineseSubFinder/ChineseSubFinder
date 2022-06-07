@@ -1,9 +1,11 @@
-name: goreleaser-ChineseSubFinder
+name: release
 
 on:
   push:
     tags:
       - v*.*.*
+      - v*.*-Beta*
+      - v*.*-ExeBeta*
   workflow_dispatch:
 
 jobs:
@@ -52,14 +54,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      # 获取 tag 版本
+      
       - name: Set Version
         id: set-version
         run: |
           echo "::set-output name=version::${GITHUB_REF:10}"
           echo "ReleaseTag=${GITHUB_REF:10}"
 
-      # Docker Image 构建环境
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -72,13 +73,14 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Build and push
-      - name: Build dockerfile
+      # 当 tag 不包括 Beta 字样时
+      - name: Build Latest Image
+        if: "!contains(steps.set-version.outputs.version, 'Beta')"
         uses: docker/build-push-action@v3
         with:
           context: docker
           file: docker/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:${{ steps.set-version.outputs.version }}
@@ -89,3 +91,22 @@ jobs:
             "BASEKEY=${{ secrets.BASEKEY }}"
             "AESKEY16=${{ secrets.AESKEY16 }}"
             "AESIV16=${{ secrets.AESIV16 }}"
+      
+      # 当 tag 包括 Beta 字样时
+      - name: Build Beta Image
+        if: contains(steps.set-version.outputs.version, 'Beta')
+        uses: docker/build-push-action@v3
+        with:
+          context: docker
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:${{ steps.set-version.outputs.version }}
+          build-args: |
+            VERSION=${{ steps.set-version.outputs.version }}
+          secrets: |
+            "BASEKEY=${{ secrets.BASEKEY }}"
+            "AESKEY16=${{ secrets.AESKEY16 }}"
+            "AESIV16=${{ secrets.AESIV16 }}"
+        
