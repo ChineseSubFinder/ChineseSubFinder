@@ -21,6 +21,19 @@ builds:
     ldflags:
       - -s -w --extldflags "-static -fpic" -X main.AppVersion=v{{ .Version }} -X main.BaseKey={{ .Env.BASEKEY }} -X main.AESKey16={{ .Env.AESKEY16 }} -X main.AESIv16={{ .Env.AESIV16 }}
 
+  - id: linux-armv7-build
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - linux
+    goarch:
+      - arm
+    goarm:
+      - 7
+    main: ./cmd/chinesesubfinder/main.go
+    ldflags:
+      - -s -w --extldflags "-static -fpic" -X main.AppVersion=v{{ .Version }} -X main.BaseKey={{ .Env.BASEKEY }} -X main.AESKey16={{ .Env.AESKEY16 }} -X main.AESIv16={{ .Env.AESIV16 }}
+
   - id: linux-arm64-build
     env:
       - CGO_ENABLED=1
@@ -28,9 +41,6 @@ builds:
       - linux
     goarch:
       - arm64
-      - arm
-    goarm:
-      - 7
     main: ./cmd/chinesesubfinder/main.go
     ldflags:
       - -s -w --extldflags "-static -fpic" -X main.AppVersion=v{{ .Version }} -X main.BaseKey={{ .Env.BASEKEY }} -X main.AESKey16={{ .Env.AESKEY16 }} -X main.AESIv16={{ .Env.AESIV16 }}
