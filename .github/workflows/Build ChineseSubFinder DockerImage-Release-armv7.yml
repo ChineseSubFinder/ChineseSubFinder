@@ -1,4 +1,4 @@
-name: Build ChineseSubFinder DockerImage-Release
+name: Build ChineseSubFinder DockerImage-Release-armv7
 
 on:
   push:
