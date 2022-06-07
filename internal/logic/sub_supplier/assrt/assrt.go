@@ -158,23 +158,25 @@ func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool) ([]suppli
 		return nil, err
 	}
 	if found == false {
-		// 没有找到中文名称，就用英文名称去搜索
-		found, searchSubResult, err = s.getSubInfoEx(mediaInfo, videoFPath, isMovie, "en")
-		if err != nil {
-			s.log.Errorln(s.GetSupplierName(), videoFPath, "GetSubInfoEx", err)
-			return nil, err
-		}
-		if found == false {
-			// 没有找到英文名称，就用原名称去搜索
-			found, searchSubResult, err = s.getSubInfoEx(mediaInfo, videoFPath, isMovie, "org")
-			if err != nil {
-				s.log.Errorln(s.GetSupplierName(), videoFPath, "GetSubInfoEx", err)
-				return nil, err
-			}
-			if found == false {
-				return nil, nil
-			}
-		}
+		// 启用严格模式，中文找不到就停止
+		return nil, nil
+		//// 没有找到中文名称，就用英文名称去搜索
+		//found, searchSubResult, err = s.getSubInfoEx(mediaInfo, videoFPath, isMovie, "en")
+		//if err != nil {
+		//	s.log.Errorln(s.GetSupplierName(), videoFPath, "GetSubInfoEx", err)
+		//	return nil, err
+		//}
+		//if found == false {
+		//	// 没有找到英文名称，就用原名称去搜索
+		//	found, searchSubResult, err = s.getSubInfoEx(mediaInfo, videoFPath, isMovie, "org")
+		//	if err != nil {
+		//		s.log.Errorln(s.GetSupplierName(), videoFPath, "GetSubInfoEx", err)
+		//		return nil, err
+		//	}
+		//	if found == false {
+		//		return nil, nil
+		//	}
+		//}
 	}
 
 	videoFileName := filepath.Base(videoFPath)
