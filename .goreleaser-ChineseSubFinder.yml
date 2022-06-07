@@ -9,6 +9,10 @@ before:
     - sudo apt-get update
     - sudo apt-get install gcc-multilib
     - sudo apt-get install -y *-w64-x86-*
+    - sudo apt-get install aarch64-linux-gnu-gcc
+    - sudo apt-get install aarch64-linux-gnu-g++
+    - sudo apt-get install arm-linux-gnueabihf-gcc
+    - sudo apt-get install arm-linux-gnueabihf-g++
 builds:
   - id: linux-amd64-build
     env:
@@ -24,8 +28,8 @@ builds:
   - id: linux-armv7-build
     env:
       - CGO_ENABLED=1
-      - CC=aarch64-linux-gnu-gcc
-      - CXX=aarch64-linux-gnu-g++
+      - CC=arm-linux-gnueabihf-gcc
+      - CXX=arm-linux-gnueabihf-g++
     goos:
       - linux
     goarch:
