@@ -1,0 +1,22 @@
+FROM allanpk716/chinesesubfinder-base:latest
+ARG VERSION
+ENV TZ=Asia/Shanghai \
+    PERMS=true \
+    PUID=1000 \
+    PGID=100 \
+    UMASK=022 \
+    DISPLAY=:99
+RUN cd /tmp \
+    && arch=$(uname -m | sed -e 's|aarch64|arm64|' -e 's|armv7l|arm|') \
+    && wget -q --no-check-certificate https://github.com/allanpk716/ChineseSubFinder/releases/download/${VERSION}/chinesesubfinder-${VERSION#*v}-Linux-${arch}.tar.gz \
+    && tar xvf chinesesubfinder-${VERSION}-Linux-${arch}.tar.gz \
+    && mv chinesesubfinder /usr/local/bin \
+    && chmod +x /usr/local/bin/chinesesubfinder \
+    && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
+    && echo "${TZ}" > /etc/timezone \
+    && rm -rf /tmp/*
+COPY normal-rootfs /
+ENTRYPOINT ["/init"]
+WORKDIR /config
+VOLUME ["/config", "/media"]
+
