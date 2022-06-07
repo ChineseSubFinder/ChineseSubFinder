@@ -190,26 +190,34 @@ func (v *VideoScanAndRefreshHelper) ScanNormalMovieAndSeries() (*ScanVideoResult
 	var errMovie, errSeries error
 	wg.Add(1)
 	go func() {
+		defer func() {
+			wg.Done()
+		}()
 		// --------------------------------------------------
 		// 电影
 		// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
 		normalScanResult.MoviesDirMap, errMovie = my_util.SearchMatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
-		wg.Done()
 	}()
 	wg.Add(1)
 	go func() {
+
+		defer func() {
+			wg.Done()
+		}()
 		// --------------------------------------------------
 		// 连续剧
 		// 遍历连续剧总目录下的第一层目录
 		normalScanResult.SeriesDirMap, errSeries = seriesHelper.GetSeriesListFromDirs(v.log, v.settings.CommonSettings.SeriesPaths)
 		// ------------------------------------------------------------------------------
 		// 输出调试信息，有那些连续剧文件夹名称
+		if normalScanResult.SeriesDirMap == nil {
+			return
+		}
 		normalScanResult.SeriesDirMap.Each(func(key interface{}, value interface{}) {
 			for i, s := range value.([]string) {
 				v.log.Debugln("embyHelper == nil GetSeriesList", i, s)
 			}
 		})
-		wg.Done()
 	}()
 	wg.Wait()
 	if errMovie != nil {

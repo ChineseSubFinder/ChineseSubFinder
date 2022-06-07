@@ -6,17 +6,53 @@ env:
 before:
   hooks:
     - go mod tidy
-    - sudo apt-get update
+    - sudo apt-get update -y
     - sudo apt-get install gcc-multilib
     - sudo apt-get install -y *-w64-x86-*
+    - sudo apt-get install gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi g++-arm-linux-gnueabihf g++-aarch64-linux-gnu g++-arm-linux-gnueabi
+    # https://github.com/goreleaser/goreleaser-cross 交叉编译的文档
+#    - sudo apt-get install libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev
+#    - sudo apt-get install gcc-arm-linux-gnueabi g++-arm-linux-gnueabi
+#    - sudo apt-get install -y aarch64-linux-gnu-gcc
+#    - sudo apt-get install -y aarch64-linux-gnu-g++
+#    - sudo apt-get install -y arm-linux-gnueabihf-gcc
+#    - sudo apt-get install -y arm-linux-gnueabihf-g++
 builds:
-  - id: linux-build
+  - id: linux-amd64-build
     env:
       - CGO_ENABLED=1
     goos:
       - linux
     goarch:
       - amd64
+    main: ./cmd/chinesesubfinder/main.go
+    ldflags:
+      - -s -w --extldflags "-static -fpic" -X main.AppVersion=v{{ .Version }} -X main.BaseKey={{ .Env.BASEKEY }} -X main.AESKey16={{ .Env.AESKEY16 }} -X main.AESIv16={{ .Env.AESIV16 }}
+
+  - id: linux-armv7-build
+    env:
+      - CGO_ENABLED=1
+      - CC=arm-linux-gnueabihf-gcc
+      - CXX=arm-linux-gnueabihf-g++
+    goos:
+      - linux
+    goarch:
+      - arm
+    goarm:
+      - 7
+    main: ./cmd/chinesesubfinder/main.go
+    ldflags:
+      - -s -w --extldflags "-static -fpic" -X main.AppVersion=v{{ .Version }} -X main.BaseKey={{ .Env.BASEKEY }} -X main.AESKey16={{ .Env.AESKEY16 }} -X main.AESIv16={{ .Env.AESIV16 }}
+
+  - id: linux-arm64-build
+    env:
+      - CGO_ENABLED=1
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
+    goos:
+      - linux
+    goarch:
+      - arm64
     main: ./cmd/chinesesubfinder/main.go
     ldflags:
       - -s -w --extldflags "-static -fpic" -X main.AppVersion=v{{ .Version }} -X main.BaseKey={{ .Env.BASEKEY }} -X main.AESKey16={{ .Env.AESKEY16 }} -X main.AESIv16={{ .Env.AESIV16 }}
