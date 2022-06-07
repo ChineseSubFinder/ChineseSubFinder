@@ -87,10 +87,6 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:latest
           build-args: |
             VERSION=${{ steps.set-version.outputs.version }}
-          secrets: |
-            "BASEKEY=${{ secrets.BASEKEY }}"
-            "AESKEY16=${{ secrets.AESKEY16 }}"
-            "AESIV16=${{ secrets.AESIV16 }}"
       
       # 当 tag 包括 Beta 字样时
       - name: Build Beta Image
@@ -105,8 +101,3 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:${{ steps.set-version.outputs.version }}
           build-args: |
             VERSION=${{ steps.set-version.outputs.version }}
-          secrets: |
-            "BASEKEY=${{ secrets.BASEKEY }}"
-            "AESKEY16=${{ secrets.AESKEY16 }}"
-            "AESIV16=${{ secrets.AESIV16 }}"
-        
