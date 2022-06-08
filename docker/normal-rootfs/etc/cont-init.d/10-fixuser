@@ -1,0 +1,21 @@
+#!/usr/bin/with-contenv bash
+
+if [[ ! -f /usr/bin/chrome && -n $(ls /root/.cache/rod/browser 2>/dev/null) ]]; then
+    ln -s /root/.cache/rod/browser/$(ls /root/.cache/rod/browser)/chrome-linux/chrome /usr/bin/chrome &>/dev/null
+fi
+
+chown -R "${PUID}:${PGID}" /config /root
+if [[ ${PERMS} == true ]]; then
+    echo "已设置 PERMS=true，重设 '/media' 目录权限为 ${PUID}:${PGID} 所有..."
+    chown -R ${PUID}:${PGID} /media
+fi
+
+## 兼容旧的缓存目录
+if [[ -d /app/cache ]]; then
+    if [[ -L /config/cache && $(readlink -f /config/cache) != /app/cache ]]; then
+        rm -rf /config/cache &>/dev/null
+    fi
+    if [[ ! -e /config/cache ]]; then
+        ln -sf /app/cache /config/cache
+    fi
+fi
