@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/models"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
@@ -70,6 +71,9 @@ func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string, _proxySetti
 // AskFroUpload 在使用这个接口前，需要从 IMDB ID 获取到 TMDB ID
 func (s *SubtitleBestApi) AskFroUpload(subSha256 string, trusted bool, ImdbId, TmdbId string, Season, Episode int, _proxySettings ...*settings.ProxySettings) (*AskForUploadReply, error) {
 
+	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
+		return nil, errors.New("auth key is not set")
+	}
 	postUrl := webUrlBase + "/v1/ask-for-upload"
 	httpClient, err := my_util.NewHttpClient(_proxySettings...)
 	if err != nil {
@@ -113,6 +117,10 @@ func (s *SubtitleBestApi) AskFroUpload(subSha256 string, trusted bool, ImdbId, T
 // UploadSub 在使用这个接口前，需要从 IMDB ID 获取到 TMDB ID，其实在这一步应该默认就拿到了 TMDB ID，需要提前在 AskFroUpload 接口调用前就搞定这个
 // year 这个也是从之前的接口拿到, 2019  or  2022
 func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRootDirPath string, tmdbId, year string, _proxySettings ...*settings.ProxySettings) (*UploadSubReply, error) {
+
+	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
+		return nil, errors.New("auth key is not set")
+	}
 
 	postUrl := webUrlBase + "/v1/upload-sub"
 	httpClient, err := my_util.NewHttpClient(_proxySettings...)
@@ -174,6 +182,10 @@ func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRo
 }
 
 func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVideoSubInfo, subSaveRootDirPath string, tmdbId, year string, _proxySettings ...*settings.ProxySettings) (*UploadSubReply, error) {
+
+	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
+		return nil, errors.New("auth key is not set")
+	}
 
 	postUrl := webUrlBase + "/v1/upload-sub"
 	httpClient, err := my_util.NewHttpClient(_proxySettings...)

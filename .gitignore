@@ -121,3 +121,4 @@ ChineseSubFinderSettings.json
 /CustomAuth
 /internal/logic/sub_supplier/assrt/CustomAuth
 /internal/logic/sub_supplier/subhd/CustomAuth
+/internal/pkg/subtitle_best_api/CustomAuth
