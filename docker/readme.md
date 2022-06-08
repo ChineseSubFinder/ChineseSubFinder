@@ -12,7 +12,7 @@ docker run -d \
     -e TZ=Asia/Shanghai `# 时区` \
     -e UMASK=022        `# 权限掩码` \
     -p 19035:19035 `# 从0.20.0版本开始，通过webui来设置` \
-    -p 19037:19307 `# webui 的视频列表读取图片用，务必设置不要暴露到外网` \
+    -p 19037:19037 `# webui 的视频列表读取图片用，务必设置不要暴露到外网` \
     --name chinesesubfinder \
     --hostname chinesesubfinder \
     --log-driver "json-file" \
@@ -46,7 +46,7 @@ services:
     container_name: chinesesubfinder
     ports:
       - 19035:19035  # 从0.20.0版本开始，通过webui来设置
-      - 19037:19307  # webui 的视频列表读取图片用，务必设置不要暴露到外网
+      - 19037:19037  # webui 的视频列表读取图片用，务必设置不要暴露到外网
     logging:
         driver: "json-file"
         options:
