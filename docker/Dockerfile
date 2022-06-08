@@ -2,7 +2,7 @@ FROM allanpk716/chinesesubfinder-base:latest
 ARG VERSION
 ENV TZ=Asia/Shanghai \
     PERMS=true \
-    PUID=1000 \
+    PUID=1026 \
     PGID=100 \
     UMASK=022 \
     DISPLAY=:99

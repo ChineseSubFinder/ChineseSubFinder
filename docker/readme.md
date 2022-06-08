@@ -7,7 +7,7 @@ docker run -d \
     -v $(pwd)/config:/config   `# 冒号左边请修改为你想在主机上保存配置、日志等文件的路径` \
     -v $(pwd)/media:/media     `# 请修改为需要下载字幕的媒体目录，冒号右边可以改成你方便记忆的目录，多个媒体目录需要添加多个-v映射` \
     -v $(pwd)/browser:/root/.cache/rod/browser `# 容器重启后无需再次下载 chrome，除非 go-rod 更新` \
-    -e PUID=1000 \
+    -e PUID=1026 \
     -e PGID=100 \
     -e PERMS=true       `# 是否重设/media权限` \
     -e TZ=Asia/Shanghai `# 时区` \
@@ -37,7 +37,7 @@ services:
       - ./media:/media    # 请修改为你的媒体目录，冒号右边可以改成你方便记忆的目录，多个媒体目录需要分别映射进来
       - ./browser:/root/.cache/rod/browser    # 容器重启后无需再次下载 chrome，除非 go-rod 更新
     environment:
-      - PUID=1000         # uid
+      - PUID=1026         # uid
       - PGID=100          # gid
       - PERMS=true        # 是否重设/media权限
       - TZ=Asia/Shanghai  # 时区
