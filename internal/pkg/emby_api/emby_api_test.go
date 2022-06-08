@@ -8,7 +8,7 @@ import (
 var ec = settings.EmbySettings{
 	Enable:                true,
 	AddressUrl:            "http://192.168.50.252:8096",
-	APIKey:                "asdasda",
+	APIKey:                "xxxx",
 	MaxRequestVideoNumber: 100,
 }
 
@@ -87,7 +87,7 @@ func TestEmbyHelper_GetItemVideoInfoByUserId(t *testing.T) {
 
 // TODO 暂不方便在其他环境进行单元测试
 func TestEmbyHelper_UpdateVideoSubList(t *testing.T) {
-	//em := NewEmbyApi(config.GetConfig().EmbyConfig)
+	//em := NewEmbyApi(log_helper.GetLogger4Tester(), &ec)
 	//// 95813 -- 命运夜
 	//// 96564 -- The Bad Batch - S01E11
 	//// 81873 -- R&M - S05E01
@@ -100,7 +100,7 @@ func TestEmbyHelper_UpdateVideoSubList(t *testing.T) {
 	//// 178071 -- The Night House
 	//// 215162 --  Black Lotus - S01E03
 	//// 229865 --  黄石 - S04E06
-	//err := em.UpdateVideoSubList("229865")
+	//err := em.UpdateVideoSubList("393775")
 	//if err != nil {
 	//	t.Fatal(err)
 	//}

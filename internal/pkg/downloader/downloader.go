@@ -356,10 +356,20 @@ func (d *Downloader) movieDlFunc(ctx context.Context, job taskQueue2.OneJob, dow
 
 	// TODO 刷新字幕，这里是 Emby 的，如果是其他的，需要再对接对应的媒体服务器
 	if d.settings.EmbySettings.Enable == true && d.embyHelper != nil && job.MediaServerInsideVideoID != "" {
+
+		d.log.Infoln("Refresh Emby Subtitle with id:", job.MediaServerInsideVideoID)
 		err = d.embyHelper.EmbyApi.UpdateVideoSubList(job.MediaServerInsideVideoID)
 		if err != nil {
 			d.log.Errorln("UpdateVideoSubList", job.VideoFPath, job.MediaServerInsideVideoID, "Error:", err)
 			return err
+		}
+	} else {
+		if d.settings.EmbySettings.Enable == false {
+			d.log.Infoln("UpdateVideoSubList", job.VideoFPath, "Skip, because Emby enable is false")
+		} else if d.embyHelper == nil {
+			d.log.Infoln("UpdateVideoSubList", job.VideoFPath, "Skip, because EmbyHelper is nil")
+		} else if job.MediaServerInsideVideoID == "" {
+			d.log.Infoln("UpdateVideoSubList", job.VideoFPath, "Skip, because MediaServerInsideVideoID is empty")
 		}
 	}
 
