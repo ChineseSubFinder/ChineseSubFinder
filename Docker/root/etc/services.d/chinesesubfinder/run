@@ -1,6 +1,0 @@
-#!/usr/bin/with-contenv bash
-# 开启 Xvfb 给 Chrome 使用
-Xvfb -ac :99 -screen 0 1280x1024x16 & export DISPLAY=:99
-
-# 启动chinesesubfinder
-cd /app && exec s6-setuidgid abc ./chinesesubfinder

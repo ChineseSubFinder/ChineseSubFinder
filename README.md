@@ -17,10 +17,11 @@
 
 ## How to use
 
-有两个文档可以参考：
+有以下文档可以参考：
 
 - [v0.26 教程、更新说明](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.26教程)
 - [对外的 http api](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/ApiKey%E8%AE%BE%E8%AE%A1),以及[示例](https://github.com/allanpk716/ChineseSubFinder/issues/336)
+- [Docker 部署教程](docker/readme.md)
 - [Docker ChineseSubFinder--中文字幕自动下载 | sleele 的博客 - 第三方教程](https://sleele.com/2021/06/25/docker-chinesesubfinder-中文字幕自动下载/)
 
 高阶设置：

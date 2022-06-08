@@ -1,0 +1,15 @@
+#!/usr/bin/with-contenv bash
+
+if [[ ! -f /usr/bin/chrome && -n $(ls /root/.cache/rod/browser 2>/dev/null) ]]; then
+    ln -s /root/.cache/rod/browser/$(ls /root/.cache/rod/browser)/chrome-linux/chrome /usr/bin/chrome &>/dev/null
+fi
+
+chown -R "${PUID}:${PGID}" /config /root
+if [[ ${PERMS} == true ]]; then
+    chown -R ${PUID}:${PGID} /media
+fi
+
+umask ${UMASK}
+
+cd /config 
+exec s6-setuidgid ${PUID}:${PGID} chinesesubfinder
