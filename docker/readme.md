@@ -12,6 +12,7 @@ docker run -d \
     -e TZ=Asia/Shanghai `# 时区` \
     -e UMASK=022        `# 权限掩码` \
     -p 19035:19035 `# 从0.20.0版本开始，通过webui来设置` \
+    -p 19037:19307 `# webui 的视频列表读取图片用，务必设置不要暴露到外网` \
     --name chinesesubfinder \
     --hostname chinesesubfinder \
     --log-driver "json-file" \
@@ -45,6 +46,7 @@ services:
     container_name: chinesesubfinder
     ports:
       - 19035:19035  # 从0.20.0版本开始，通过webui来设置
+      - 19037:19307  # webui 的视频列表读取图片用，务必设置不要暴露到外网
     logging:
         driver: "json-file"
         options:
@@ -53,6 +55,6 @@ services:
 
 创建好后访问`http://<ip>:19035`来进行下一步设置。
 
-## 关于PUID/PGID的说明
+## 关于 PUID/PGID 的说明
 
-如在使用诸如emby、jellyfin、plex、qbittorrent、transmission、deluge、jackett、sonarr、radarr等等的docker镜像，请在创建本容器时的设置和它们的PUID/PGID和它们一样，如若真的不想设置为一样，至少要保证本容器PUID/PGID所定义的用户拥有你设置的媒体目录（示例中是`/media`）的读取和写入权限。
+如在使用诸如 emby、jellyfin、plex、qbittorrent、transmission、deluge、jackett、sonarr、radarr 等等的 docker 镜像，请在创建本容器时的设置和它们的 PUID/PGID 和它们一样，如若真的不想设置为一样，至少要保证本容器 PUID/PGID 所定义的用户拥有你设置的媒体目录（示例中是`/media`）的读取和写入权限。
