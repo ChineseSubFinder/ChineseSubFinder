@@ -18,6 +18,7 @@ RUN apt-get update \
        libstdc++6 \
        libxss1 \
        libxtst6 \
+       tzdata \
        wget \
        x11-apps \
        xfonts-100dpi \
