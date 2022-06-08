@@ -12,10 +12,11 @@ fi
 
 ## 兼容旧的缓存目录
 if [[ -d /app/cache ]]; then
+    chown -R ${PUID}:${PGID} /app
     if [[ -L /config/cache && $(readlink -f /config/cache) != /app/cache ]]; then
         rm -rf /config/cache &>/dev/null
     fi
     if [[ ! -e /config/cache ]]; then
-        ln -sf /app/cache /config/cache
+        s6-setuidgid ${PUID}:${PGID} ln -sf /app/cache /config/cache
     fi
 fi
