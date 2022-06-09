@@ -66,6 +66,9 @@ func HotFixProcess(log *logrus.Logger, param types.HotFixParam) error {
 		case "003":
 			log.Infoln("Hotfix 003, process == ", processResult.(bool))
 			break
+		case "004":
+			log.Infoln("Hotfix 004, process == ", processResult.(bool))
+			break
 		default:
 			continue
 		}
