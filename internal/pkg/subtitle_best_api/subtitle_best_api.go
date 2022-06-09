@@ -247,7 +247,7 @@ func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVide
 	return &uploadSubReply, nil
 }
 
-func (s SubtitleBestApi) AskFindSub(VideoFeature, ImdbId, TmdbId, Season, Episode, FindSubToken string, _proxySettings ...*settings.ProxySettings) (*AskFindSubReply, error) {
+func (s *SubtitleBestApi) AskFindSub(VideoFeature, ImdbId, TmdbId, Season, Episode, FindSubToken, ApiKey string, _proxySettings ...*settings.ProxySettings) (*AskFindSubReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
@@ -263,17 +263,21 @@ func (s SubtitleBestApi) AskFindSub(VideoFeature, ImdbId, TmdbId, Season, Episod
 		return nil, err
 	}
 
+	postData := map[string]string{
+		"video_feature":  VideoFeature,
+		"imdb_id":        ImdbId,
+		"tmdb_id":        TmdbId,
+		"season":         Season,
+		"episode":        Episode,
+		"find_sub_token": FindSubToken,
+	}
+	if ApiKey != "" {
+		postData["api_key"] = ApiKey
+	}
 	var askFindSubReply AskFindSubReply
 	_, err = httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
-		SetFormData(map[string]string{
-			"video_feature":  VideoFeature,
-			"imdb_id":        ImdbId,
-			"tmdb_id":        TmdbId,
-			"season":         Season,
-			"episode":        Episode,
-			"find_sub_token": FindSubToken,
-		}).
+		SetFormData(postData).
 		SetResult(&askFindSubReply).
 		Post(postUrl)
 	if err != nil {
