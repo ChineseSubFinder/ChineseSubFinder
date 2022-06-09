@@ -1,4 +1,5 @@
 FROM ubuntu
+ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
        ca-certificates \
@@ -18,6 +19,7 @@ RUN apt-get update \
        libstdc++6 \
        libxss1 \
        libxtst6 \
+       tzdata \
        wget \
        x11-apps \
        xfonts-100dpi \
