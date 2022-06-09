@@ -22,10 +22,6 @@ jobs:
         with:
           working-directory: frontend
 
-      - name: frontend install depandence
-        run: npm ci
-        working-directory: frontend
-
       - name: frontend build
         run: npm run build
         working-directory: frontend
@@ -47,7 +43,7 @@ jobs:
           BASEKEY: ${{ secrets.BASEKEY }}
           AESKEY16: ${{ secrets.AESKEY16 }}
           AESIV16: ${{ secrets.AESIV16 }}
-  
+
   buildx:
     runs-on: ubuntu-latest
     needs: goreleaser
@@ -55,7 +51,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      
+
       - name: Set Version
         id: set-version
         run: |
@@ -88,7 +84,7 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:latest
           build-args: |
             VERSION=${{ steps.set-version.outputs.version }}
-      
+
       # 当 tag 包括 Beta 字样时
       - name: Build Beta Image
         if: contains(steps.set-version.outputs.version, 'Beta')
