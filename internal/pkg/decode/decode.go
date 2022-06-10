@@ -56,10 +56,10 @@ func getVideoNfoInfoFromMovieXml(movieFilePath string) (types.VideoNfoInfo, erro
 		videoInfo.Year = t.Text()
 		break
 	}
-	if videoInfo.ImdbId != "" {
-		return videoInfo, nil
-	}
-	return videoInfo, common2.CanNotFindIMDBID
+	//if videoInfo.ImdbId != "" {
+	//	return videoInfo, nil
+	//}
+	return videoInfo, nil
 }
 
 func getVideoNfoInfo(nfoFilePath string, rootKey string) (types.VideoNfoInfo, error) {
@@ -229,7 +229,7 @@ func getVideoNfoInfo(nfoFilePath string, rootKey string) (types.VideoNfoInfo, er
 
 // GetVideoNfoInfo4Movie 从电影视频文件获取 IMDB info，只能确定拿到 IMDB ID 是靠谱的
 func GetVideoNfoInfo4Movie(movieFileFullPath string) (types.VideoNfoInfo, error) {
-	imdbInfo := types.VideoNfoInfo{}
+	videoNfoInfo := types.VideoNfoInfo{}
 	// movie 当前的目录
 	dirPth := filepath.Dir(movieFileFullPath)
 	// 与 movie 文件名一致的 nfo 文件名称
@@ -243,7 +243,7 @@ func GetVideoNfoInfo4Movie(movieFileFullPath string) (types.VideoNfoInfo, error)
 	nfoFilePath := ""
 	dir, err := os.ReadDir(dirPth)
 	if err != nil {
-		return imdbInfo, err
+		return videoNfoInfo, err
 	}
 	for _, fi := range dir {
 		if fi.IsDir() == true {
@@ -268,35 +268,35 @@ func GetVideoNfoInfo4Movie(movieFileFullPath string) (types.VideoNfoInfo, error)
 	}
 	// 根据找到的开始解析
 	if movieNameNfoFPath == "" && movieXmlFPath == "" && nfoFilePath == "" {
-		return imdbInfo, common2.NoMetadataFile
+		return videoNfoInfo, common2.NoMetadataFile
 	}
 	// 优先分析 movieName.nfo 文件
 	if movieNameNfoFPath != "" {
-		imdbInfo, err = getVideoNfoInfo(movieNameNfoFPath, "movie")
+		videoNfoInfo, err = getVideoNfoInfo(movieNameNfoFPath, "movie")
 		if err != nil {
-			return imdbInfo, err
+			return videoNfoInfo, err
 		}
-		return imdbInfo, nil
+		return videoNfoInfo, nil
 	}
 
 	if nfoFilePath != "" {
-		imdbInfo, err = getVideoNfoInfo(nfoFilePath, "movie")
+		videoNfoInfo, err = getVideoNfoInfo(nfoFilePath, "movie")
 		if err != nil {
-			return imdbInfo, err
+			return videoNfoInfo, err
 		} else {
-			return imdbInfo, nil
+			return videoNfoInfo, nil
 		}
 	}
 
 	if movieXmlFPath != "" {
-		imdbInfo, err = getVideoNfoInfoFromMovieXml(movieXmlFPath)
+		videoNfoInfo, err = getVideoNfoInfoFromMovieXml(movieXmlFPath)
 		if err != nil {
 		} else {
-			return imdbInfo, nil
+			return videoNfoInfo, nil
 		}
 	}
 
-	return imdbInfo, common2.CanNotFindIMDBID
+	return videoNfoInfo, common2.NoMetadataFile
 }
 
 // GetVideoNfoInfo4SeriesDir 从一个连续剧的根目录获取 IMDB info
@@ -328,22 +328,20 @@ func GetVideoNfoInfo4SeriesDir(seriesDir string) (types.VideoNfoInfo, error) {
 	if nfoFilePath == "" {
 		return imdbInfo, common2.NoMetadataFile
 	}
-	imdbInfo, err = getVideoNfoInfo(nfoFilePath, "tvshow")
-	if err != nil {
-		return imdbInfo, err
-	}
-	return imdbInfo, nil
+	return getVideoNfoInfo(nfoFilePath, "tvshow")
 }
 
 // GetSeriesSeasonVideoNfoInfoFromEpisode 从一集获取这个 Series 的 IMDB info
 func GetSeriesSeasonVideoNfoInfoFromEpisode(oneEpFPath string) (types.VideoNfoInfo, error) {
 
-	var err error
 	// 当前季的路径
 	EPdir := filepath.Dir(oneEpFPath)
 	// 先判断是否存在 tvshow.nfo
 	nfoFilePath := ""
 	dir, err := os.ReadDir(EPdir)
+	if err != nil {
+		return types.VideoNfoInfo{}, err
+	}
 	for _, fi := range dir {
 		if fi.IsDir() == true {
 			continue
@@ -364,12 +362,7 @@ func GetSeriesSeasonVideoNfoInfoFromEpisode(oneEpFPath string) (types.VideoNfoIn
 		return GetVideoNfoInfo4SeriesDir(seriesDir)
 
 	} else {
-		var videoNfoInfo types.VideoNfoInfo
-		videoNfoInfo, err = getVideoNfoInfo(nfoFilePath, "tvshow")
-		if err != nil {
-			return videoNfoInfo, err
-		}
-		return videoNfoInfo, nil
+		return getVideoNfoInfo(nfoFilePath, "tvshow")
 	}
 }
 
@@ -384,12 +377,7 @@ func GetVideoNfoInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoNfoInfo, er
 	// 全路径
 	EpNfoFPath := filepath.Join(EPdir, EpNfoFileName)
 
-	imdbInfo, err := getVideoNfoInfo(EpNfoFPath, "episodedetails")
-	if err != nil {
-		return imdbInfo, err
-	}
-
-	return imdbInfo, nil
+	return getVideoNfoInfo(EpNfoFPath, "episodedetails")
 }
 
 // GetSeriesDirRootFPath 从一集的绝对路径推断这个连续剧的根目录绝对路径
