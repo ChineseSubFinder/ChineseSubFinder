@@ -14,6 +14,7 @@ type VideoSubInfo struct {
 	ExtraPreName string `json:"extra_pre_name" binding:"required"`             // 字幕额外的命名信息，指 Emby 字幕命名格式(简英,subhd)，的 subhd
 	SHA256       string `json:"sha_256" binding:"required"`                    // 当前文件的 sha256 的值
 	IsSend       bool   `json:"is_send"`                                       // 是否已经发送
+	IsMovie      bool   `json:"is_movie"`                                      // 不是电影就是连续剧
 	IMDBInfoID   string `json:"imdb_info_id"  binding:"required"`              // IMDB ID
 }
 

@@ -21,6 +21,8 @@ func HotFixProcess(log *logrus.Logger, param types.HotFixParam) error {
 		NewHotFix002(log),
 		NewHotFix003(log),
 		NewHotFix004(log),
+		NewHotFix005(log),
+		// 注意下面的 switch case 也要相应的加
 	}
 	// -----------------------------------------------------------------------
 	// 找现在有多少个 hotfix 执行过了
@@ -68,6 +70,9 @@ func HotFixProcess(log *logrus.Logger, param types.HotFixParam) error {
 			break
 		case "004":
 			log.Infoln("Hotfix 004, process == ", processResult.(bool))
+			break
+		case "005":
+			log.Infoln("Hotfix 005, process == ", processResult.(bool))
 			break
 		default:
 			continue

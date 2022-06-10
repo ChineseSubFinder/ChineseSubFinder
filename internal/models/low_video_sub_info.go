@@ -15,6 +15,7 @@ type LowVideoSubInfo struct {
 	StoreRPath   string `json:"store_r_path"`                      // 字幕存在出本地的哪里相对路径上，cache/CSF-ShareSubCache
 	ExtraPreName string `json:"extra_pre_name" binding:"required"` // 字幕额外的命名信息，指 Emby 字幕命名格式(简英,subhd)，的 subhd
 	SHA256       string `json:"sha_256" binding:"required"`        // 当前文件的 sha256 的值
+	IsMovie      bool   `json:"is_movie"`                          // 不是电影就是连续剧
 	IsSend       bool   `json:"is_send"`                           // 是否已经发送
 }
 
