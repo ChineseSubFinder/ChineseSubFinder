@@ -105,11 +105,17 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		// 测试部分定时器代码，提前运行
 		if ch.Settings.SpeedDevMode == true {
 
-			ch.scanPlayedVideoSub()
+			//pj := pre_job.NewPreJob(ch.Settings, ch.log)
+			//err = pj.HotFix().Wait()
+			//if err != nil {
+			//	ch.log.Errorln(err)
+			//}
+			//
+			//ch.scanPlayedVideoSub()
+			//
+			//ch.scanVideoProcessAdd2DownloadQueue()
 
-			ch.scanVideoProcessAdd2DownloadQueue()
-
-			ch.uploadVideoSub()
+			//ch.uploadVideoSub()
 		}
 	}
 
@@ -137,7 +143,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	// 字幕的上传逻辑
 	if ch.Settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
 
-		intervalNowTask := "@every 1m"
+		intervalNowTask := "@every 10s"
 		if ch.Settings.SpeedDevMode == true {
 			intervalNowTask = "@every 1s"
 		}
