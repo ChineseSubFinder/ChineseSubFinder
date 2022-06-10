@@ -69,7 +69,7 @@ func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string, _proxySetti
 }
 
 // AskFroUpload 在使用这个接口前，需要从 IMDB ID 获取到 TMDB ID
-func (s *SubtitleBestApi) AskFroUpload(subSha256 string, trusted bool, ImdbId, TmdbId string, Season, Episode int, _proxySettings ...*settings.ProxySettings) (*AskForUploadReply, error) {
+func (s *SubtitleBestApi) AskFroUpload(subSha256 string, IsMovie, trusted bool, ImdbId, TmdbId string, Season, Episode int, VideoFeature string, _proxySettings ...*settings.ProxySettings) (*AskForUploadReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
@@ -85,26 +85,35 @@ func (s *SubtitleBestApi) AskFroUpload(subSha256 string, trusted bool, ImdbId, T
 		return nil, err
 	}
 
-	var askReq AskForUploadReq
+	isMovieStr := "false"
+	if IsMovie == true {
+		isMovieStr = "true"
+	}
+
+	trustedStr := "false"
 	if trusted == true {
-		askReq = AskForUploadReq{
-			SubSha256: subSha256,
-			Trusted:   trusted,
-			ImdbId:    ImdbId,
-			TmdbId:    TmdbId,
-			Season:    Season,
-			Episode:   Episode,
-		}
+		trustedStr = "true"
+	}
+
+	formData := make(map[string]string)
+	if trusted == true {
+		formData["sub_sha256"] = subSha256
+		formData["is_movie"] = isMovieStr
+		formData["trusted"] = trustedStr
+		formData["imdb_id"] = ImdbId
+		formData["tmdb_id"] = TmdbId
+		formData["season"] = strconv.Itoa(Season)
+		formData["episode"] = strconv.Itoa(Episode)
+		formData["video_feature"] = VideoFeature
 	} else {
-		askReq = AskForUploadReq{
-			SubSha256: subSha256,
-		}
+		formData["sub_sha256"] = subSha256
+		formData["is_movie"] = isMovieStr
 	}
 
 	var askForUploadReply AskForUploadReply
 	_, err = httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
-		SetBody(askReq).
+		SetFormData(formData).
 		SetResult(&askForUploadReply).
 		Post(postUrl)
 	if err != nil {
@@ -155,12 +164,18 @@ func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRo
 		isDouble = "true"
 	}
 
+	isMovieStr := "false"
+	if videoSubInfo.IsMovie == true {
+		isMovieStr = "true"
+	}
+
 	var uploadSubReply UploadSubReply
 	_, err = httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
 		SetFileReader("sub_file_context", videoSubInfo.SubName, bytes.NewReader(fd)).
 		SetFormData(map[string]string{
 			"sub_sha256":     videoSubInfo.SHA256,
+			"is_movie":       isMovieStr,
 			"season":         strconv.Itoa(videoSubInfo.Season),
 			"episode":        strconv.Itoa(videoSubInfo.Episode),
 			"is_double":      isDouble,
@@ -220,12 +235,18 @@ func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVide
 		isDouble = "true"
 	}
 
+	isMovieStr := "false"
+	if lowTrustVideoSubInfo.IsMovie == true {
+		isMovieStr = "true"
+	}
+
 	var uploadSubReply UploadSubReply
 	_, err = httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
 		SetFileReader("sub_file_context", lowTrustVideoSubInfo.SubName, bytes.NewReader(fd)).
 		SetFormData(map[string]string{
 			"sub_sha256":     lowTrustVideoSubInfo.SHA256,
+			"is_movie":       isMovieStr,
 			"season":         strconv.Itoa(lowTrustVideoSubInfo.Season),
 			"episode":        strconv.Itoa(lowTrustVideoSubInfo.Episode),
 			"is_double":      isDouble,

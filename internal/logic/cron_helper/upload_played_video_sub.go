@@ -96,11 +96,13 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 	// 问询这个字幕是否上传过了，如果没有就需要进入上传的队列
 	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(
 		notUploadedVideoSubInfos[0].SHA256,
+		notUploadedVideoSubInfos[0].IsMovie,
 		true,
 		finalQueryIMDBInfo.ImdbId,
 		finalQueryIMDBInfo.TmdbId,
 		notUploadedVideoSubInfos[0].Season,
 		notUploadedVideoSubInfos[0].Episode,
+		notUploadedVideoSubInfos[0].Feature,
 		ch.Settings.AdvancedSettings.ProxySettings,
 	)
 	if err != nil {
@@ -280,11 +282,13 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 	// 问询这个字幕是否上传过了，如果没有就需要进入上传的队列
 	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(
 		notUploadedVideoSubInfos[0].SHA256,
+		notUploadedVideoSubInfos[0].IsMovie,
 		false,
 		"",
 		"",
 		0,
 		0,
+		notUploadedVideoSubInfos[0].Feature,
 		ch.Settings.AdvancedSettings.ProxySettings,
 	)
 	if err != nil {
