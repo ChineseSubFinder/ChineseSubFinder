@@ -828,7 +828,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 				v.processLocker.Unlock()
 
 				videoFileName := filepath.Base(oneEpsMixInfo.PhysicalVideoFileFullPath)
-				infoFromFileName, err := decode.GetVideoInfoFromFileName(videoFileName)
+				epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(oneEpsMixInfo.PhysicalVideoFileFullPath)
 				if err != nil {
 					v.log.Errorln("GetVideoInfoFromFileName", err)
 					break
@@ -839,8 +839,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 					Name:                     videoFileName,
 					VideoFPath:               oneEpsMixInfo.PhysicalVideoFileFullPath,
 					VideoUrl:                 epsFUrl,
-					Season:                   infoFromFileName.Season,
-					Episode:                  infoFromFileName.Episode,
+					Season:                   epsVideoNfoInfo.Season,
+					Episode:                  epsVideoNfoInfo.Episode,
 					MediaServerInsideVideoID: oneEpsMixInfo.VideoInfo.Id,
 					SubFPathList:             make([]string, 0),
 				}
@@ -974,10 +974,10 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 		taskData := inData.(*task_control.TaskData)
 		movieInputData := taskData.DataEx.(TaskInputData)
 		v.log.Infoln("updateLocalVideoCacheInfo", movieInputData.Index, movieInputData.InputPath)
-		videoImdbInfo, err := decode.GetImdbInfo4Movie(movieInputData.InputPath)
+		videoImdbInfo, err := decode.GetVideoNfoInfo4Movie(movieInputData.InputPath)
 		if err != nil {
 			// 允许的错误，跳过，继续进行文件名的搜索
-			v.log.Warningln("GetImdbInfo4Movie", movieInputData.Index, err)
+			v.log.Warningln("GetVideoNfoInfo4Movie", movieInputData.Index, err)
 			return err
 		}
 		// 获取 IMDB 信息
@@ -1028,9 +1028,9 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 		seriesInputData := taskData.DataEx.(TaskInputData)
 		v.log.Infoln("updateLocalVideoCacheInfo", seriesInputData.Index, seriesInputData.InputPath)
 
-		videoInfo, err := decode.GetImdbInfo4SeriesDir(seriesInputData.InputPath)
+		videoInfo, err := decode.GetVideoNfoInfo4SeriesDir(seriesInputData.InputPath)
 		if err != nil {
-			v.log.Warningln("GetImdbInfo4SeriesDir", seriesInputData.InputPath, err)
+			v.log.Warningln("GetVideoNfoInfo4SeriesDir", seriesInputData.InputPath, err)
 			return err
 		}
 
@@ -1247,7 +1247,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 				mixInfo.VideoInfo.Id,
 			)
 
-			info, _, err := decode.GetVideoInfoFromFileFullPath(mixInfo.PhysicalVideoFileFullPath)
+			info, err := decode.GetSeriesSeasonVideoNfoInfoFromEpisode(mixInfo.PhysicalVideoFileFullPath)
 			if err != nil {
 				v.log.Warningln("filterMovieAndSeriesNeedDownloadEmby.Series.GetVideoInfoFromFileFullPath", err)
 				continue

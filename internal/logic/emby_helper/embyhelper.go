@@ -480,7 +480,7 @@ func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyM
 	}
 
 	// 获取 IMDB 信息
-	localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(em.log, types.VideoIMDBInfo{ImdbId: mixInfo.IMDBId}, true)
+	localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(em.log, types.VideoNfoInfo{ImdbId: mixInfo.IMDBId}, true)
 	if err != nil {
 
 		if errors.Is(err, common2.SkipCreateInDB) == true {

@@ -163,11 +163,11 @@ func KeyWordSelect(mediaInfo *models.MediaInfo, videoFPath string, isMovie bool,
 
 	if isMovie == false {
 		// 连续剧需要额外补充 S01E01 这样的信息
-		infoFromFileName, err := decode.GetVideoInfoFromFileName(videoFPath)
+		epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(videoFPath)
 		if err != nil {
 			return "", err
 		}
-		keyWord += " " + my_util.GetEpisodeKeyName(infoFromFileName.Season, infoFromFileName.Episode, true)
+		keyWord += " " + my_util.GetEpisodeKeyName(epsVideoNfoInfo.Season, epsVideoNfoInfo.Episode, true)
 	}
 
 	return keyWord, nil

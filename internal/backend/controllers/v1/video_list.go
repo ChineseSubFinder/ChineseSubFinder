@@ -111,7 +111,7 @@ func (cb *ControllerBase) VideoListAddHandler(c *gin.Context) {
 
 	if videoType == common.Series {
 		// 如果是连续剧，需要额外的读取这一个剧集的信息
-		torrentInfo, err := decode.GetVideoInfoFromFileName(videoListAdd.PhysicalVideoFileFullPath)
+		epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(videoListAdd.PhysicalVideoFileFullPath)
 		if err != nil {
 			return
 		}
@@ -120,8 +120,8 @@ func (cb *ControllerBase) VideoListAddHandler(c *gin.Context) {
 			err = errors.New(fmt.Sprintf("decode.GetSeriesDirRootFPath == Empty, %s", videoListAdd.PhysicalVideoFileFullPath))
 			return
 		}
-		oneJob.Season = torrentInfo.Season
-		oneJob.Episode = torrentInfo.Episode
+		oneJob.Season = epsVideoNfoInfo.Season
+		oneJob.Episode = epsVideoNfoInfo.Episode
 		oneJob.SeriesRootDirPath = seriesInfoDirPath
 	}
 

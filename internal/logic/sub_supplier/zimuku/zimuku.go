@@ -178,19 +178,14 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 			continue
 		}
 		for _, oneVideoFPath := range videoList {
-			oneVideoInfo, err := decode.GetVideoInfoFromFileName(filepath.Base(oneVideoFPath))
+			oneVideoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(oneVideoFPath)
 			if err != nil {
 				s.log.Errorln("GetVideoInfoFromFileName", oneVideoInfo, err)
 				continue
 			}
 			if oneVideoInfo.Season == value && oneVideoInfo.Episode == 1 {
 				// 这一季的第一集
-				episodeInfo, err := decode.GetImdbInfo4OneSeriesEpisode(oneVideoFPath)
-				if err != nil {
-					s.log.Errorln("GetImdbInfo4OneSeriesEpisode", oneVideoFPath, err)
-					break
-				}
-				findSeasonFirstEpsIMDBId = episodeInfo.ImdbId
+				findSeasonFirstEpsIMDBId = oneVideoInfo.ImdbId
 				break
 			}
 		}
@@ -278,24 +273,18 @@ func (s *Supplier) getSubListFromMovie(browser *rod.Browser, fileFPath string) (
 		优先通过 IMDB id 去查找字幕
 		如果找不到，再靠文件名提取影片名称去查找
 	*/
-	// 得到这个视频文件名中的信息
-	info, _, err := decode.GetVideoInfoFromFileFullPath(fileFPath)
-	if err != nil {
-		return nil, err
-	}
-	s.log.Debugln(s.GetSupplierName(), fileFPath, "GetVideoInfoFromFileFullPath -> Title:", info.Title)
 	// 找到这个视频文件，尝试得到 IMDB ID
 	// 目前测试来看，加入 年 这个关键词去搜索，对 2020 年后的影片有利，因为网站有统一的详细页面了，而之前的，没有，会影响识别
 	// 所以，year >= 2020 年，则可以多加一个关键词（年）去搜索影片
-	imdbInfo, err := decode.GetImdbInfo4Movie(fileFPath)
+	imdbInfo, err := decode.GetVideoNfoInfo4Movie(fileFPath)
 	if err != nil {
 		// 允许的错误，跳过，继续进行文件名的搜索
 		s.log.Errorln("model.GetImdbInfo", err)
 	} else {
-		s.log.Debugln(s.GetSupplierName(), fileFPath, "GetImdbInfo4Movie -> Title:", imdbInfo.Title)
-		s.log.Debugln(s.GetSupplierName(), fileFPath, "GetImdbInfo4Movie -> OriginalTitle:", imdbInfo.OriginalTitle)
-		s.log.Debugln(s.GetSupplierName(), fileFPath, "GetImdbInfo4Movie -> Year:", imdbInfo.Year)
-		s.log.Debugln(s.GetSupplierName(), fileFPath, "GetImdbInfo4Movie -> ImdbId:", imdbInfo.ImdbId)
+		s.log.Debugln(s.GetSupplierName(), fileFPath, "GetVideoNfoInfo4Movie -> Title:", imdbInfo.Title)
+		s.log.Debugln(s.GetSupplierName(), fileFPath, "GetVideoNfoInfo4Movie -> OriginalTitle:", imdbInfo.OriginalTitle)
+		s.log.Debugln(s.GetSupplierName(), fileFPath, "GetVideoNfoInfo4Movie -> Year:", imdbInfo.Year)
+		s.log.Debugln(s.GetSupplierName(), fileFPath, "GetVideoNfoInfo4Movie -> ImdbId:", imdbInfo.ImdbId)
 	}
 
 	var subInfoList []supplier.SubInfo
@@ -317,7 +306,7 @@ func (s *Supplier) getSubListFromMovie(browser *rod.Browser, fileFPath string) (
 		}
 	}
 	// 如果没有，那么就用文件名查找
-	searchKeyword := my_util.VideoNameSearchKeywordMaker(s.log, info.Title, imdbInfo.Year)
+	searchKeyword := my_util.VideoNameSearchKeywordMaker(s.log, imdbInfo.Title, imdbInfo.Year)
 
 	s.log.Debugln(s.GetSupplierName(), fileFPath, "VideoNameSearchKeywordMaker Keyword:", searchKeyword)
 

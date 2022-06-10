@@ -1,7 +1,10 @@
 package series_helper
 
 import (
-	"errors"
+	"path/filepath"
+	"strconv"
+	"time"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
@@ -19,9 +22,6 @@ import (
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/jinzhu/now"
 	"github.com/sirupsen/logrus"
-	"path/filepath"
-	"strconv"
-	"time"
 )
 
 func readSeriesInfo(log *logrus.Logger, seriesDir string, need2AnalyzeSub bool) (*series.SeriesInfo, map[string][]series.SubInfo, error) {
@@ -40,47 +40,56 @@ func readSeriesInfo(log *logrus.Logger, seriesDir string, need2AnalyzeSub bool) 
 		return seriesInfo, SubDict, nil
 	}
 
-	// 搜索所有的字幕
 	subParserHub := sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log))
-	subFiles, err := sub_helper.SearchMatchedSubFileByDir(log, seriesDir)
+	// 先搜索这个目录下，所有符合条件的视频
+	matchedVideoFile, err := my_util.SearchMatchedVideoFile(log, seriesDir)
 	if err != nil {
 		return nil, nil, err
 	}
-	for _, subFile := range subFiles {
+	// 然后再从这个视频找到对用匹配的字幕
+	for _, oneVideoFPath := range matchedVideoFile {
 
-		info, _, err := decode.GetVideoInfoFromFileFullPath(subFile)
+		subFiles, err := sub_helper.SearchMatchedSubFileByOneVideo(log, oneVideoFPath)
+		if err != nil {
+			return nil, nil, err
+		}
+		epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(oneVideoFPath)
 		if err != nil {
 			log.Errorln(err)
 			continue
 		}
-		bFind, subParserFileInfo, err := subParserHub.DetermineFileTypeFromFile(subFile)
-		if err != nil {
-			log.Errorln("DetermineFileTypeFromFile", subFile, err)
-			continue
+
+		for _, subFile := range subFiles {
+
+			bFind, subParserFileInfo, err := subParserHub.DetermineFileTypeFromFile(subFile)
+			if err != nil {
+				log.Errorln("DetermineFileTypeFromFile", subFile, err)
+				continue
+			}
+			if bFind == false {
+				log.Warnln("DetermineFileTypeFromFile", subFile, "not support SubType")
+				continue
+			}
+			// 判断这个字幕是否包含中文
+			if subParserHub.IsSubHasChinese(subParserFileInfo) == false {
+				continue
+			}
+			epsKey := my_util.GetEpisodeKeyName(epsVideoNfoInfo.Season, epsVideoNfoInfo.Episode)
+			oneFileSubInfo := series.SubInfo{
+				Title:        epsVideoNfoInfo.Title,
+				Season:       epsVideoNfoInfo.Season,
+				Episode:      epsVideoNfoInfo.Episode,
+				Language:     subParserFileInfo.Lang,
+				Dir:          filepath.Dir(subFile),
+				FileFullPath: subFile,
+			}
+			_, ok := SubDict[epsKey]
+			if ok == false {
+				// 初始化
+				SubDict[epsKey] = make([]series.SubInfo, 0)
+			}
+			SubDict[epsKey] = append(SubDict[epsKey], oneFileSubInfo)
 		}
-		if bFind == false {
-			log.Warnln("DetermineFileTypeFromFile", subFile, "not support SubType")
-			continue
-		}
-		// 判断这个字幕是否包含中文
-		if subParserHub.IsSubHasChinese(subParserFileInfo) == false {
-			continue
-		}
-		epsKey := my_util.GetEpisodeKeyName(info.Season, info.Episode)
-		oneFileSubInfo := series.SubInfo{
-			Title:        info.Title,
-			Season:       info.Season,
-			Episode:      info.Episode,
-			Language:     subParserFileInfo.Lang,
-			Dir:          filepath.Dir(subFile),
-			FileFullPath: subFile,
-		}
-		_, ok := SubDict[epsKey]
-		if ok == false {
-			// 初始化
-			SubDict[epsKey] = make([]series.SubInfo, 0)
-		}
-		SubDict[epsKey] = append(SubDict[epsKey], oneFileSubInfo)
 	}
 
 	return seriesInfo, SubDict, nil
@@ -145,7 +154,7 @@ func ReadSeriesInfoFromEmby(log *logrus.Logger, seriesDir string, seriesVideoLis
 // SkipChineseSeries 跳过中文连续剧
 func SkipChineseSeries(log *logrus.Logger, seriesRootPath string, _proxySettings ...*settings.ProxySettings) (bool, *models.IMDBInfo, error) {
 
-	imdbInfo, err := decode.GetImdbInfo4SeriesDir(seriesRootPath)
+	imdbInfo, err := decode.GetVideoNfoInfo4SeriesDir(seriesRootPath)
 	if err != nil {
 		return false, nil, err
 	}
@@ -314,7 +323,7 @@ func whichSeasonEpsNeedDownloadSub(log *logrus.Logger, seriesInfo *series.Series
 func GetSeriesInfoFromDir(log *logrus.Logger, seriesDir string) (*series.SeriesInfo, error) {
 	seriesInfo := series.SeriesInfo{}
 	// 只考虑 IMDB 去查询，文件名目前发现可能会跟电影重复，导致很麻烦，本来也有前置要求要削刮器处理的
-	videoInfo, err := decode.GetImdbInfo4SeriesDir(seriesDir)
+	videoInfo, err := decode.GetVideoNfoInfo4SeriesDir(seriesDir)
 	if err != nil {
 		return nil, err
 	}
@@ -348,7 +357,7 @@ func GetSeriesInfoFromDir(log *logrus.Logger, seriesDir string) (*series.SeriesI
 		if err != nil {
 			// 不是必须的
 			seriesInfo.Year = 0
-			log.Warnln("ReadSeriesInfoFromDir.GetImdbInfo4SeriesDir.strconv.Atoi", seriesDir, err)
+			log.Warnln("ReadSeriesInfoFromDir.GetVideoNfoInfo4SeriesDir.strconv.Atoi", seriesDir, err)
 		} else {
 			seriesInfo.Year = iYear
 		}
@@ -367,7 +376,7 @@ func getEpsInfoAndSubDic(log *logrus.Logger,
 	SubDict map[string][]series.SubInfo,
 	epsMap ...map[int][]int) {
 	// 正常来说，一集只有一个格式的视频，也就是 S01E01 只有一个，如果有多个则会只保存第一个
-	info, modifyTime, err := decode.GetVideoInfoFromFileFullPath(videoFile)
+	episodeInfo, modifyTime, err := decode.GetVideoInfoFromFileFullPath(videoFile, false)
 	if err != nil {
 		log.Errorln("model.GetVideoInfoFromFileFullPath", videoFile, err)
 		return
@@ -375,13 +384,13 @@ func getEpsInfoAndSubDic(log *logrus.Logger,
 
 	if len(epsMap) > 0 {
 		// 如果这个视频不在需要下载的 Eps 列表中，那么就跳过后续的逻辑
-		epsList, ok := epsMap[0][info.Season]
+		epsList, ok := epsMap[0][episodeInfo.Season]
 		if ok == false {
 			return
 		}
 		found := false
 		for _, oneEpsID := range epsList {
-			if oneEpsID == info.Episode {
+			if oneEpsID == episodeInfo.Episode {
 				// 在需要下载的 Eps 列表中
 				found = true
 				break
@@ -392,22 +401,14 @@ func getEpsInfoAndSubDic(log *logrus.Logger,
 		}
 	}
 
-	episodeInfo, err := decode.GetImdbInfo4OneSeriesEpisode(videoFile)
-	if err != nil {
-		if errors.Is(err, common.CanNotFindIMDBID) == false {
-			log.Errorln("model.GetImdbInfo4OneSeriesEpisode", videoFile, err)
-			return
-		}
-	}
-
-	epsKey := my_util.GetEpisodeKeyName(info.Season, info.Episode)
+	epsKey := my_util.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
 	_, ok := EpisodeDict[epsKey]
 	if ok == false {
 		// 初始化
 		oneFileEpInfo := series.EpisodeInfo{
-			Title:        info.Title,
-			Season:       info.Season,
-			Episode:      info.Episode,
+			Title:        episodeInfo.Title,
+			Season:       episodeInfo.Season,
+			Episode:      episodeInfo.Episode,
 			Dir:          filepath.Dir(videoFile),
 			FileFullPath: videoFile,
 			ModifyTime:   modifyTime,

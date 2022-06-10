@@ -2,30 +2,56 @@ package decode
 
 import (
 	"errors"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/beevik/etree"
-	PTN "github.com/middelink/go-parse-torrent-name"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
+	"github.com/beevik/etree"
+	PTN "github.com/middelink/go-parse-torrent-name"
 )
 
-func getImdbAndYearMovieXml(movieFilePath string) (types.VideoIMDBInfo, error) {
+func getVideoNfoInfoFromMovieXml(movieFilePath string) (types.VideoNfoInfo, error) {
 
-	videoInfo := types.VideoIMDBInfo{}
+	videoInfo := types.VideoNfoInfo{}
 	doc := etree.NewDocument()
 	doc.ReadSettings.Permissive = true
 	if err := doc.ReadFromFile(movieFilePath); err != nil {
 		return videoInfo, err
 	}
+	// --------------------------------------------------
+	// IMDB
+	for _, t := range doc.FindElements("//imdb") {
+		videoInfo.ImdbId = t.Text()
+		break
+	}
 	for _, t := range doc.FindElements("//IMDB") {
 		videoInfo.ImdbId = t.Text()
 		break
 	}
+	for _, t := range doc.FindElements("//Imdb") {
+		videoInfo.ImdbId = t.Text()
+		break
+	}
+	// --------------------------------------------------
+	// TMDB
+	for _, t := range doc.FindElements("//tmdb") {
+		videoInfo.TmdbId = t.Text()
+		break
+	}
+	for _, t := range doc.FindElements("//TMDB") {
+		videoInfo.TmdbId = t.Text()
+		break
+	}
+	for _, t := range doc.FindElements("//Tmdb") {
+		videoInfo.TmdbId = t.Text()
+		break
+	}
+	// --------------------------------------------------
 	for _, t := range doc.FindElements("//ProductionYear") {
 		videoInfo.Year = t.Text()
 		break
@@ -36,8 +62,8 @@ func getImdbAndYearMovieXml(movieFilePath string) (types.VideoIMDBInfo, error) {
 	return videoInfo, common2.CanNotFindIMDBID
 }
 
-func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo, error) {
-	imdbInfo := types.VideoIMDBInfo{}
+func getVideoNfoInfo(nfoFilePath string, rootKey string) (types.VideoNfoInfo, error) {
+	imdbInfo := types.VideoNfoInfo{}
 	doc := etree.NewDocument()
 	doc.ReadSettings.Permissive = true
 	// 这里会遇到一个梗，下面的关键词，可能是小写、大写、首字母大写
@@ -52,6 +78,7 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo,
 		break
 	}
 	//---------------------------------------------------------------------
+	// IMDB
 	for _, t := range doc.FindElements("./" + rootKey + "/imdbid") {
 		imdbInfo.ImdbId = t.Text()
 		break
@@ -73,7 +100,110 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo,
 		break
 	}
 	//---------------------------------------------------------------------
+	// TMDB
+	for _, t := range doc.FindElements("./" + rootKey + "/tmdbid") {
+		imdbInfo.TmdbId = t.Text()
+		break
+	}
+	for _, t := range doc.FindElements("./" + rootKey + "/tmdb_id") {
+		imdbInfo.TmdbId = t.Text()
+		break
+	}
+	for _, t := range doc.FindElements("//uniqueid[@type='tmdb']") {
+		imdbInfo.TmdbId = t.Text()
+		break
+	}
+	for _, t := range doc.FindElements("//uniqueid[@type='Tmdb']") {
+		imdbInfo.TmdbId = t.Text()
+		break
+	}
+	for _, t := range doc.FindElements("//uniqueid[@type='TMDB']") {
+		imdbInfo.TmdbId = t.Text()
+		break
+	}
+	//---------------------------------------------------------------------
+	// TVDB
+	for _, t := range doc.FindElements("./" + rootKey + "/tvdbid") {
+		imdbInfo.TVdbId = t.Text()
+		break
+	}
+	for _, t := range doc.FindElements("./" + rootKey + "/tvdb_id") {
+		imdbInfo.TVdbId = t.Text()
+		break
+	}
+	for _, t := range doc.FindElements("//uniqueid[@type='tvdb']") {
+		imdbInfo.TVdbId = t.Text()
+		break
+	}
+	for _, t := range doc.FindElements("//uniqueid[@type='Tvdb']") {
+		imdbInfo.TVdbId = t.Text()
+		break
+	}
+	for _, t := range doc.FindElements("//uniqueid[@type='TVDB']") {
+		imdbInfo.TVdbId = t.Text()
+		break
+	}
+	//---------------------------------------------------------------------
+	//Season        int
+	//Episode       int
+	for _, t := range doc.FindElements("./" + rootKey + "/Season") {
+		season, err := strconv.Atoi(t.Text())
+		if err != nil {
+			continue
+		}
+		imdbInfo.Season = season
+		break
+	}
+	for _, t := range doc.FindElements("./" + rootKey + "/season") {
+		season, err := strconv.Atoi(t.Text())
+		if err != nil {
+			continue
+		}
+		imdbInfo.Season = season
+		break
+	}
+	for _, t := range doc.FindElements("./" + rootKey + "/SEASON") {
+		season, err := strconv.Atoi(t.Text())
+		if err != nil {
+			continue
+		}
+		imdbInfo.Season = season
+		break
+	}
+	for _, t := range doc.FindElements("./" + rootKey + "/Episode") {
+		episode, err := strconv.Atoi(t.Text())
+		if err != nil {
+			continue
+		}
+		imdbInfo.Episode = episode
+		break
+	}
+	for _, t := range doc.FindElements("./" + rootKey + "/episode") {
+		episode, err := strconv.Atoi(t.Text())
+		if err != nil {
+			continue
+		}
+		imdbInfo.Episode = episode
+		break
+	}
+	for _, t := range doc.FindElements("./" + rootKey + "/EPISODE") {
+		episode, err := strconv.Atoi(t.Text())
+		if err != nil {
+			continue
+		}
+		imdbInfo.Episode = episode
+		break
+	}
+	//---------------------------------------------------------------------
 	for _, t := range doc.FindElements("./" + rootKey + "/year") {
+		imdbInfo.Year = t.Text()
+		break
+	}
+	for _, t := range doc.FindElements("./" + rootKey + "/Year") {
+		imdbInfo.Year = t.Text()
+		break
+	}
+	for _, t := range doc.FindElements("./" + rootKey + "/YEAR") {
 		imdbInfo.Year = t.Text()
 		break
 	}
@@ -91,15 +221,15 @@ func getImdbAndYearNfo(nfoFilePath string, rootKey string) (types.VideoIMDBInfo,
 		imdbInfo.ReleaseDate = t.Text()
 		break
 	}
-	if imdbInfo.ImdbId != "" {
-		return imdbInfo, nil
-	}
-	return imdbInfo, common2.CanNotFindIMDBID
+	//if imdbInfo.ImdbId != "" {
+	//	return imdbInfo, nil
+	//}
+	return imdbInfo, nil
 }
 
-// GetImdbInfo4Movie 从电影视频文件获取 IMDB info，只能确定拿到 IMDB ID 是靠谱的
-func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
-	imdbInfo := types.VideoIMDBInfo{}
+// GetVideoNfoInfo4Movie 从电影视频文件获取 IMDB info，只能确定拿到 IMDB ID 是靠谱的
+func GetVideoNfoInfo4Movie(movieFileFullPath string) (types.VideoNfoInfo, error) {
+	imdbInfo := types.VideoNfoInfo{}
 	// movie 当前的目录
 	dirPth := filepath.Dir(movieFileFullPath)
 	// 与 movie 文件名一致的 nfo 文件名称
@@ -142,24 +272,25 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	}
 	// 优先分析 movieName.nfo 文件
 	if movieNameNfoFPath != "" {
-		imdbInfo, err = getImdbAndYearNfo(movieNameNfoFPath, "movie")
+		imdbInfo, err = getVideoNfoInfo(movieNameNfoFPath, "movie")
 		if err != nil {
 			return imdbInfo, err
 		}
 		return imdbInfo, nil
 	}
 
-	if movieXmlFPath != "" {
-		imdbInfo, err = getImdbAndYearMovieXml(movieXmlFPath)
+	if nfoFilePath != "" {
+		imdbInfo, err = getVideoNfoInfo(nfoFilePath, "movie")
 		if err != nil {
+			return imdbInfo, err
 		} else {
 			return imdbInfo, nil
 		}
 	}
-	if nfoFilePath != "" {
-		imdbInfo, err = getImdbAndYearNfo(nfoFilePath, "movie")
+
+	if movieXmlFPath != "" {
+		imdbInfo, err = getVideoNfoInfoFromMovieXml(movieXmlFPath)
 		if err != nil {
-			return imdbInfo, err
 		} else {
 			return imdbInfo, nil
 		}
@@ -168,9 +299,9 @@ func GetImdbInfo4Movie(movieFileFullPath string) (types.VideoIMDBInfo, error) {
 	return imdbInfo, common2.CanNotFindIMDBID
 }
 
-// GetImdbInfo4SeriesDir 从一个连续剧的根目录获取 IMDB info
-func GetImdbInfo4SeriesDir(seriesDir string) (types.VideoIMDBInfo, error) {
-	imdbInfo := types.VideoIMDBInfo{}
+// GetVideoNfoInfo4SeriesDir 从一个连续剧的根目录获取 IMDB info
+func GetVideoNfoInfo4SeriesDir(seriesDir string) (types.VideoNfoInfo, error) {
+	imdbInfo := types.VideoNfoInfo{}
 	dir, err := os.ReadDir(seriesDir)
 	if err != nil {
 		return imdbInfo, err
@@ -197,15 +328,15 @@ func GetImdbInfo4SeriesDir(seriesDir string) (types.VideoIMDBInfo, error) {
 	if nfoFilePath == "" {
 		return imdbInfo, common2.NoMetadataFile
 	}
-	imdbInfo, err = getImdbAndYearNfo(nfoFilePath, "tvshow")
+	imdbInfo, err = getVideoNfoInfo(nfoFilePath, "tvshow")
 	if err != nil {
 		return imdbInfo, err
 	}
 	return imdbInfo, nil
 }
 
-// GetSeriesSeasonImdbInfoFromEpisode 从一集获取这个 Series 的 IMDB info
-func GetSeriesSeasonImdbInfoFromEpisode(oneEpFPath string) (types.VideoIMDBInfo, error) {
+// GetSeriesSeasonVideoNfoInfoFromEpisode 从一集获取这个 Series 的 IMDB info
+func GetSeriesSeasonVideoNfoInfoFromEpisode(oneEpFPath string) (types.VideoNfoInfo, error) {
 
 	var err error
 	// 当前季的路径
@@ -230,20 +361,20 @@ func GetSeriesSeasonImdbInfoFromEpisode(oneEpFPath string) (types.VideoIMDBInfo,
 		seasonDir := filepath.Base(EPdir)
 		seriesDir := EPdir[:len(EPdir)-len(seasonDir)]
 
-		return GetImdbInfo4SeriesDir(seriesDir)
+		return GetVideoNfoInfo4SeriesDir(seriesDir)
 
 	} else {
-		var imdbInfo types.VideoIMDBInfo
-		imdbInfo, err = getImdbAndYearNfo(nfoFilePath, "tvshow")
+		var videoNfoInfo types.VideoNfoInfo
+		videoNfoInfo, err = getVideoNfoInfo(nfoFilePath, "tvshow")
 		if err != nil {
-			return imdbInfo, err
+			return videoNfoInfo, err
 		}
-		return imdbInfo, nil
+		return videoNfoInfo, nil
 	}
 }
 
-// GetImdbInfo4OneSeriesEpisode 获取这一集的 IMDB info，可能会因为没有获取到 IMDB ID 而返回 common.CanNotFindIMDBID 错误，但是 imdbInfo 其他信息是可用的
-func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoIMDBInfo, error) {
+// GetVideoNfoInfo4OneSeriesEpisode 获取这一集的 IMDB info，可能会因为没有获取到 IMDB ID 而返回 common.CanNotFindIMDBID 错误，但是 imdbInfo 其他信息是可用的
+func GetVideoNfoInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoNfoInfo, error) {
 
 	// 从这一集的视频文件全路径去推算对应的 nfo 文件是否存在
 	EPdir := filepath.Dir(oneEpFPath)
@@ -253,7 +384,7 @@ func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoIMDBInfo, error
 	// 全路径
 	EpNfoFPath := filepath.Join(EPdir, EpNfoFileName)
 
-	imdbInfo, err := getImdbAndYearNfo(EpNfoFPath, "episodedetails")
+	imdbInfo, err := getVideoNfoInfo(EpNfoFPath, "episodedetails")
 	if err != nil {
 		return imdbInfo, err
 	}
@@ -261,7 +392,19 @@ func GetImdbInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoIMDBInfo, error
 	return imdbInfo, nil
 }
 
-// GetVideoInfoFromFileName 从文件名推断文件信息
+// GetSeriesDirRootFPath 从一集的绝对路径推断这个连续剧的根目录绝对路径
+func GetSeriesDirRootFPath(oneEpFPath string) string {
+
+	oneSeasonDirFPath := filepath.Dir(oneEpFPath)
+	oneSeriesDirFPath := filepath.Dir(oneSeasonDirFPath)
+	if IsFile(filepath.Join(oneSeriesDirFPath, MetadateTVNfo)) == true {
+		return oneSeriesDirFPath
+	} else {
+		return ""
+	}
+}
+
+// GetVideoInfoFromFileName 从文件名推断文件信息，这个应该是次要方案，优先还是从 nfo 文件获取这些信息
 func GetVideoInfoFromFileName(fileName string) (*PTN.TorrentInfo, error) {
 
 	parse, err := PTN.Parse(fileName)
@@ -279,33 +422,23 @@ func GetVideoInfoFromFileName(fileName string) (*PTN.TorrentInfo, error) {
 	return parse, nil
 }
 
-// GetSeriesDirRootFPath 从一集的绝对路径推断这个连续剧的根目录绝对路径
-func GetSeriesDirRootFPath(oneEpFPath string) string {
+//GetVideoInfoFromFileFullPath 从全文件路径推断文件信息，这个应该是次要方案，优先还是从 nfo 文件获取这些信息
+func GetVideoInfoFromFileFullPath(videoFileFullPath string, isMovie bool) (types.VideoNfoInfo, time.Time, error) {
 
-	oneSeasonDirFPath := filepath.Dir(oneEpFPath)
-	oneSeriesDirFPath := filepath.Dir(oneSeasonDirFPath)
-	if IsFile(filepath.Join(oneSeriesDirFPath, MetadateTVNfo)) == true {
-		return oneSeriesDirFPath
+	var err error
+	var videoNfoInfo types.VideoNfoInfo
+	if isMovie == true {
+		videoNfoInfo, err = GetVideoNfoInfo4Movie(videoFileFullPath)
+		if err != nil {
+			return types.VideoNfoInfo{}, time.Time{}, err
+		}
+
 	} else {
-		return ""
+		videoNfoInfo, err = GetVideoNfoInfo4OneSeriesEpisode(videoFileFullPath)
+		if err != nil {
+			return types.VideoNfoInfo{}, time.Time{}, err
+		}
 	}
-}
-
-//GetVideoInfoFromFileFullPath 从全文件路径推断文件信息
-func GetVideoInfoFromFileFullPath(videoFileFullPath string) (*PTN.TorrentInfo, time.Time, error) {
-
-	parse, err := PTN.Parse(filepath.Base(videoFileFullPath))
-	if err != nil {
-		return nil, time.Time{}, err
-	}
-	compile, err := regexp.Compile(regFixTitle2)
-	if err != nil {
-		return nil, time.Time{}, err
-	}
-	match := compile.ReplaceAllString(parse.Title, "")
-	match = strings.TrimRight(match, "")
-	parse.Title = match
-
 	/*
 		这里有个特殊情况，如果是某一种蓝光的文件结构，不是一个单一的视频文件
 		* 失控玩家 (2021)
@@ -321,36 +454,38 @@ func GetVideoInfoFromFileFullPath(videoFileFullPath string) (*PTN.TorrentInfo, t
 
 	*/
 	if IsFile(videoFileFullPath) == true {
+
 		// 常见的视频情况
 		fInfo, err := os.Stat(videoFileFullPath)
 		if err != nil {
-			return nil, time.Time{}, err
+			return types.VideoNfoInfo{}, time.Time{}, err
 		}
 
-		return parse, fInfo.ModTime(), nil
+		return videoNfoInfo, fInfo.ModTime(), nil
+
 	} else {
 		// 再次判断是否是蓝光结构
 		// 因为在前面扫描视频的时候，发现特殊的蓝光结构会伪造一个不存在的 xx.mp4 的视频文件过来，这里就需要额外检测一次
 		bok, idBDMVFPath, _ := IsFakeBDMVWorked(videoFileFullPath)
 		if bok == false {
-			return nil, time.Time{}, errors.New("GetVideoInfoFromFileFullPath.IsFakeBDMVWorked == false")
+			return types.VideoNfoInfo{}, time.Time{}, errors.New("GetVideoInfoFromFileFullPath.IsFakeBDMVWorked == false")
 		}
 
 		// 获取这个蓝光 ID BDMV 文件的时间
 		fInfo, err := os.Stat(idBDMVFPath)
 		if err != nil {
-			return nil, time.Time{}, err
+			return types.VideoNfoInfo{}, time.Time{}, err
 		}
-		return parse, fInfo.ModTime(), nil
+		return videoNfoInfo, fInfo.ModTime(), nil
 	}
 }
 
-// GetSeasonAndEpisodeFromSubFileName 从文件名推断 季 和 集 的信息 Season Episode
+// GetSeasonAndEpisodeFromSubFileName 从文件名推断 季 和 集 的信息 Season Episode，这个应该是次要方案，优先还是从 nfo 文件获取这些信息
 func GetSeasonAndEpisodeFromSubFileName(videoFileName string) (bool, int, int, error) {
 	upperName := strings.ToUpper(videoFileName)
 	// 先进行单个 Episode 的匹配
 	// Killing.Eve.S02E01.Do.You.Know.How
-	var re = regexp.MustCompile(`(?m)\.S(\d+)E(\d+)\.`)
+	var re = regexp.MustCompile(`(?m)\.S(\d+).*?E(\d+)\.`)
 	matched := re.FindAllStringSubmatch(upperName, -1)
 	if matched == nil || len(matched) < 1 {
 		// Killing.Eve.S02.Do.You.Know.How

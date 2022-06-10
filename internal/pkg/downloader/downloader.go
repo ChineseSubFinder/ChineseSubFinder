@@ -390,7 +390,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 
 	if job.VideoType == common.Series && job.SeriesRootDirPath == "" {
 		// 连续剧的时候需要额外提交信息
-		torrentInfo, err := decode.GetVideoInfoFromFileName(job.VideoFPath)
+		epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(job.VideoFPath)
 		if err != nil {
 			return err
 		}
@@ -400,8 +400,8 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 			return err
 		}
 
-		job.Season = torrentInfo.Season
-		job.Episode = torrentInfo.Episode
+		job.Season = epsVideoNfoInfo.Season
+		job.Episode = epsVideoNfoInfo.Episode
 		job.SeriesRootDirPath = seriesInfoDirPath
 	}
 

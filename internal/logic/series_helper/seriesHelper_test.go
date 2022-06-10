@@ -1,15 +1,16 @@
 package series_helper
 
 import (
+	"testing"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
-	"testing"
 )
 
 func TestReadSeriesInfoFromDir(t *testing.T) {
 
-	series := unit_test_helper.GetTestDataResourceRootPath([]string{"series", "Loki"}, 4, false)
-	seriesInfo, err := ReadSeriesInfoFromDir(log_helper.GetLogger4Tester(), series, 90, false, false)
+	//series := unit_test_helper.GetTestDataResourceRootPath([]string{"series", "Loki"}, 4, false)
+	seriesInfo, err := ReadSeriesInfoFromDir(log_helper.GetLogger4Tester(), "X:\\连续剧\\黑袍纠察队 (2019)", 90, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,6 +1,11 @@
 package movie_helper
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
@@ -13,10 +18,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/jinzhu/now"
 	"github.com/sirupsen/logrus"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 // OneMovieDlSubInAllSite 一部电影在所有的网站下载相应的字幕
@@ -121,7 +122,7 @@ func MovieHasChineseSub(log *logrus.Logger, videoFilePath string) (bool, []strin
 // SkipChineseMovie 跳过中文的电影
 func SkipChineseMovie(log *logrus.Logger, videoFullPath string, _proxySettings ...*settings.ProxySettings) (bool, error) {
 
-	imdbInfo, err := decode.GetImdbInfo4Movie(videoFullPath)
+	imdbInfo, err := decode.GetVideoNfoInfo4Movie(videoFullPath)
 	if err != nil {
 		return false, err
 	}
@@ -145,12 +146,12 @@ func MovieNeedDlSub(log *logrus.Logger, videoFullPath string, ExpirationTime int
 	}
 	// 资源下载的时间后的多少天内都进行字幕的自动下载，替换原有的字幕
 	currentTime := time.Now()
-	mInfo, modifyTime, err := decode.GetVideoInfoFromFileFullPath(videoFullPath)
+	videoNfoInfo4Movie, modifyTime, err := decode.GetVideoInfoFromFileFullPath(videoFullPath, true)
 	if err != nil {
 		return false, err
 	}
 	// 如果这个视频发布的时间早于现在有两个年的间隔
-	if mInfo.Year > 0 && currentTime.Year()-2 > mInfo.Year {
+	if videoNfoInfo4Movie.GetYear() > 0 && currentTime.Year()-2 > videoNfoInfo4Movie.GetYear() {
 		if found == false {
 			// 需要下载的
 			return true, nil
@@ -160,16 +161,11 @@ func MovieNeedDlSub(log *logrus.Logger, videoFullPath string, ExpirationTime int
 			return false, nil
 		}
 	} else {
-		// 读取不到 IMDB 信息也能接受
-		videoIMDBInfo, err := decode.GetImdbInfo4Movie(videoFullPath)
-		if err != nil {
-			log.Errorln("MovieNeedDlSub.GetImdbInfo4Movie", err)
-		}
 		// 如果播出时间能够读取到，那么就以这个完后推算 3个月
 		// 如果读取不到 Aired Time 那么，下载后的 ModifyTime 3个月天内，都进行字幕的下载
 		var baseTime time.Time
-		if videoIMDBInfo.ReleaseDate != "" {
-			baseTime, err = now.Parse(videoIMDBInfo.ReleaseDate)
+		if videoNfoInfo4Movie.ReleaseDate != "" {
+			baseTime, err = now.Parse(videoNfoInfo4Movie.ReleaseDate)
 			if err != nil {
 				log.Errorln("Movie parse AiredTime", err)
 				baseTime = modifyTime

@@ -1,11 +1,12 @@
 package decode
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/types"
 )
 
 func TestGetImdbAndYearMovieXml(t *testing.T) {
@@ -15,7 +16,7 @@ func TestGetImdbAndYearMovieXml(t *testing.T) {
 	wantid := "tt0993840"
 	wantyear := "2021"
 	dirPth := filepath.Join(rootDir, "movie.xml")
-	imdbInfo, err := getImdbAndYearMovieXml(dirPth)
+	imdbInfo, err := getVideoNfoInfoFromMovieXml(dirPth)
 	if err != nil {
 		t.Error(err)
 	}
@@ -35,7 +36,7 @@ func Test_getImdbAndYearNfo(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    types.VideoIMDBInfo
+		want    types.VideoNfoInfo
 		wantErr bool
 	}{
 		{
@@ -43,7 +44,7 @@ func Test_getImdbAndYearNfo(t *testing.T) {
 				nfoFilePath: filepath.Join(unit_test_helper.GetTestDataResourceRootPath([]string{"movies", "Army of the Dead (2021)"}, 4, false), "Army of the Dead (2021) WEBDL-1080p.nfo"),
 				rootKey:     "movie",
 			},
-			want: types.VideoIMDBInfo{
+			want: types.VideoNfoInfo{
 				ImdbId:      "tt0993840",
 				Title:       "活死人军团",
 				Year:        "2021",
@@ -56,7 +57,7 @@ func Test_getImdbAndYearNfo(t *testing.T) {
 				nfoFilePath: filepath.Join(unit_test_helper.GetTestDataResourceRootPath([]string{"nfo_files", "tvshow"}, 4, false), "tvshow_00 (2).nfo"),
 				rootKey:     "tvshow",
 			},
-			want: types.VideoIMDBInfo{
+			want: types.VideoNfoInfo{
 				ImdbId:      "tt0346314",
 				Title:       "Ghost in the Shell: Stand Alone Complex",
 				ReleaseDate: "2002-10-01",
@@ -68,7 +69,7 @@ func Test_getImdbAndYearNfo(t *testing.T) {
 				nfoFilePath: filepath.Join(unit_test_helper.GetTestDataResourceRootPath([]string{"nfo_files", "tvshow"}, 4, false), "tvshow_00 (3).nfo"),
 				rootKey:     "tvshow",
 			},
-			want: types.VideoIMDBInfo{
+			want: types.VideoNfoInfo{
 				ImdbId:      "tt1856010",
 				Title:       "House of Cards (US)",
 				ReleaseDate: "2013-02-01",
@@ -78,13 +79,13 @@ func Test_getImdbAndYearNfo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getImdbAndYearNfo(tt.args.nfoFilePath, tt.args.rootKey)
+			got, err := getVideoNfoInfo(tt.args.nfoFilePath, tt.args.rootKey)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getImdbAndYearNfo() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getVideoNfoInfo() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getImdbAndYearNfo() got = %v, want %v", got, tt.want)
+				t.Errorf("getVideoNfoInfo() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -130,13 +131,13 @@ func TestGetImdbInfo4SeriesDir(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    types.VideoIMDBInfo
+		want    types.VideoNfoInfo
 		wantErr bool
 	}{
 		{
 			name: "Loki",
 			args: args{seriesDir: unit_test_helper.GetTestDataResourceRootPath([]string{"series", "Loki"}, 4, false)},
-			want: types.VideoIMDBInfo{
+			want: types.VideoNfoInfo{
 				ImdbId:      "tt9140554",
 				Title:       "Loki",
 				ReleaseDate: "2021-06-09",
@@ -146,7 +147,7 @@ func TestGetImdbInfo4SeriesDir(t *testing.T) {
 		{
 			name: "辛普森一家",
 			args: args{seriesDir: unit_test_helper.GetTestDataResourceRootPath([]string{"series", "辛普森一家"}, 4, false)},
-			want: types.VideoIMDBInfo{
+			want: types.VideoNfoInfo{
 				ImdbId:      "tt0096697",
 				Title:       "The Simpsons",
 				ReleaseDate: "1989-12-17",
@@ -156,13 +157,13 @@ func TestGetImdbInfo4SeriesDir(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetImdbInfo4SeriesDir(tt.args.seriesDir)
+			got, err := GetVideoNfoInfo4SeriesDir(tt.args.seriesDir)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetImdbInfo4SeriesDir() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetVideoNfoInfo4SeriesDir() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetImdbInfo4SeriesDir() got = %v, want %v", got, tt.want)
+				t.Errorf("GetVideoNfoInfo4SeriesDir() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -186,7 +187,7 @@ func TestGetImdbInfo4Movie(t *testing.T) {
 	//tests := []struct {
 	//	name    string
 	//	args    args
-	//	want    types.VideoIMDBInfo
+	//	want    types.VideoNfoInfo
 	//	wantErr bool
 	//}{
 	//	{name: "00", args: args{
@@ -195,13 +196,13 @@ func TestGetImdbInfo4Movie(t *testing.T) {
 	//}
 	//for _, tt := range tests {
 	//	t.Run(tt.name, func(t *testing.T) {
-	//		got, err := GetImdbInfo4Movie(tt.args.movieFileFullPath)
+	//		got, err := GetVideoNfoInfo4Movie(tt.args.movieFileFullPath)
 	//		if (err != nil) != tt.wantErr {
-	//			t.Errorf("GetImdbInfo4Movie() error = %v, wantErr %v", err, tt.wantErr)
+	//			t.Errorf("GetVideoNfoInfo4Movie() error = %v, wantErr %v", err, tt.wantErr)
 	//			return
 	//		}
 	//		if !reflect.DeepEqual(got, tt.want) {
-	//			t.Errorf("GetImdbInfo4Movie() got = %v, want %v", got, tt.want)
+	//			t.Errorf("GetVideoNfoInfo4Movie() got = %v, want %v", got, tt.want)
 	//		}
 	//	})
 	//}

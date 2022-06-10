@@ -18,7 +18,7 @@ import (
 )
 
 // GetVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
-func GetVideoInfoFromIMDBWeb(imdbInfo types.VideoIMDBInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
+func GetVideoInfoFromIMDBWeb(imdbInfo types.VideoNfoInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
 
 	client, err := my_util.NewHttpClient(_proxySettings...)
 	if err != nil {
@@ -45,7 +45,7 @@ func GetVideoInfoFromIMDBWeb(imdbInfo types.VideoIMDBInfo, _proxySettings ...*se
 }
 
 // GetVideoIMDBInfoFromLocal 从本地获取 IMDB 信息，注意，如果需要跳过，那么返回 Error == common.SkipCreateInDB
-func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, skipCreate ...bool) (*models.IMDBInfo, error) {
+func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoNfoInfo, skipCreate ...bool) (*models.IMDBInfo, error) {
 
 	/*
 		这里需要注意一个细节，之前理想情况下是从 Web 获取完整的 IMDB Info 回来，放入本地存储
@@ -94,7 +94,7 @@ func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoIMDBInfo,
 }
 
 // IsChineseVideo 从 imdbID 去查询判断是否是中文视频
-func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, _proxySettings ...*settings.ProxySettings) (bool, *models.IMDBInfo, error) {
+func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoNfoInfo, _proxySettings ...*settings.ProxySettings) (bool, *models.IMDBInfo, error) {
 
 	const chName0 = "chinese"
 	const chName1 = "mandarin"
@@ -151,11 +151,11 @@ func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoIMDBInfo, _proxySett
 func GetIMDBInfo(log *logrus.Logger, videoFPath string, isMovie bool, _proxySettings ...*settings.ProxySettings) (*models.IMDBInfo, error) {
 
 	var err error
-	var imdbInfo4Video types.VideoIMDBInfo
+	var imdbInfo4Video types.VideoNfoInfo
 	if isMovie == true {
-		imdbInfo4Video, err = decode.GetImdbInfo4Movie(videoFPath)
+		imdbInfo4Video, err = decode.GetVideoNfoInfo4Movie(videoFPath)
 	} else {
-		imdbInfo4Video, err = decode.GetSeriesSeasonImdbInfoFromEpisode(videoFPath)
+		imdbInfo4Video, err = decode.GetSeriesSeasonVideoNfoInfoFromEpisode(videoFPath)
 	}
 	if err != nil {
 		// 如果找不到当前电影的 IMDB Info 本地文件，那么就跳过

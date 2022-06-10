@@ -3,13 +3,14 @@ package task_queue
 import (
 	"crypto/sha256"
 	"fmt"
+	"path/filepath"
+	"time"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_file_hash"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	"github.com/araddon/dateparse"
-	"path/filepath"
-	"time"
 )
 
 type OneJob struct {
@@ -63,13 +64,13 @@ func NewOneJob(videoType common.VideoType, videoFPath string, taskPriority int, 
 	// 需要获取这个视频的创建时间或者发布时间
 	if ob.VideoType == common.Movie {
 
-		imdbInfo4Movie, err := decode.GetImdbInfo4Movie(videoFPath)
+		imdbInfo4Movie, err := decode.GetVideoNfoInfo4Movie(videoFPath)
 		if err == nil {
 			createTime, _ := dateparse.ParseAny(imdbInfo4Movie.ReleaseDate)
 			ob.CreatedTime = emby.Time(createTime)
 		}
 	} else if ob.VideoType == common.Series {
-		imdbInfo4Eps, err := decode.GetImdbInfo4OneSeriesEpisode(videoFPath)
+		imdbInfo4Eps, err := decode.GetVideoNfoInfo4OneSeriesEpisode(videoFPath)
 		if err == nil {
 			createTime, _ := dateparse.ParseAny(imdbInfo4Eps.ReleaseDate)
 			ob.CreatedTime = emby.Time(createTime)

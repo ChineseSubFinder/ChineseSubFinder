@@ -362,12 +362,12 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	// 通过视频的绝对路径，从本地的视频文件对应的 nfo 获取到这个视频的 IMDB ID,
 	var err error
-	var imdbInfo4Video types.VideoIMDBInfo
+	var imdbInfo4Video types.VideoNfoInfo
 
 	if isMovie == true {
-		imdbInfo4Video, err = decode.GetImdbInfo4Movie(videoFPath)
+		imdbInfo4Video, err = decode.GetVideoNfoInfo4Movie(videoFPath)
 	} else {
-		imdbInfo4Video, err = decode.GetSeriesSeasonImdbInfoFromEpisode(videoFPath)
+		imdbInfo4Video, err = decode.GetSeriesSeasonVideoNfoInfoFromEpisode(videoFPath)
 	}
 	if err != nil {
 		// 如果找不到当前电影的 IMDB Info 本地文件，那么就跳过
@@ -527,13 +527,13 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	if isMovie == false {
 		// 连续剧的时候，如果可能应该获取是 第几季  第几集
-		torrentInfo, _, err := decode.GetVideoInfoFromFileFullPath(videoFPath)
+		epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(videoFPath)
 		if err != nil {
-			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoInfoFromFileFullPath", imdbInfo4Video.Title, err)
+			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoNfoInfo4OneSeriesEpisode", imdbInfo4Video.Title, err)
 			return
 		}
-		oneVideoSubInfo.Season = torrentInfo.Season
-		oneVideoSubInfo.Episode = torrentInfo.Episode
+		oneVideoSubInfo.Season = epsVideoNfoInfo.Season
+		oneVideoSubInfo.Episode = epsVideoNfoInfo.Episode
 	}
 
 	s.log.Debugln(10)

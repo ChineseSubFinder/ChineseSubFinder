@@ -3,6 +3,9 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"path/filepath"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
@@ -11,8 +14,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"path/filepath"
 )
 
 // AddJobHandler 外部 API 接口添加任务的处理
@@ -50,8 +51,9 @@ func (cb *ControllerBase) AddJobHandler(c *gin.Context) {
 	)
 
 	if videoListAdd.VideoType == 1 {
+		// 连续剧
 		// 连续剧的时候需要额外提交信息
-		torrentInfo, err := decode.GetVideoInfoFromFileName(videoListAdd.PhysicalVideoFileFullPath)
+		epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(videoListAdd.PhysicalVideoFileFullPath)
 		if err != nil {
 			return
 		}
@@ -60,8 +62,8 @@ func (cb *ControllerBase) AddJobHandler(c *gin.Context) {
 			err = errors.New(fmt.Sprintf("decode.GetSeriesDirRootFPath == Empty, %s", videoListAdd.PhysicalVideoFileFullPath))
 			return
 		}
-		nowJob.Season = torrentInfo.Season
-		nowJob.Episode = torrentInfo.Episode
+		nowJob.Season = epsVideoNfoInfo.Season
+		nowJob.Episode = epsVideoNfoInfo.Episode
 		nowJob.SeriesRootDirPath = seriesInfoDirPath
 	}
 
