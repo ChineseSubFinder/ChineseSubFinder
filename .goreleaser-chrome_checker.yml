@@ -1,4 +1,4 @@
-project_name: chinesesubfinder
+project_name: chrome_checker
 
 env:
   - GO111MODULE=on
@@ -66,7 +66,7 @@ builds:
 
 archives:
   - id: archive
-    name_template: "chrome_checker-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     replacements:
       darwin: Darwin
       linux: Linux
