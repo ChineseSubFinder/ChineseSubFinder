@@ -16,7 +16,7 @@ RUN cd /tmp \
     && echo "${TZ}" > /etc/timezone \
     && rm -rf /tmp/*
 COPY entrypoint.sh /usr/bin/entrypoint.sh
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["tini", "entrypoint.sh"]
 WORKDIR /config
 VOLUME ["/config", "/media"]
 
