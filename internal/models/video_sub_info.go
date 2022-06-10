@@ -18,6 +18,6 @@ type VideoSubInfo struct {
 	IMDBInfoID   string `json:"imdb_info_id"  binding:"required"`              // IMDB ID
 }
 
-func NewVideoSubInfo(feature string, subName string, languageISO string, isDouble bool, chineseISO string, myLanguage string, storeFPath string, extraPreName string, sha256String string) *VideoSubInfo {
-	return &VideoSubInfo{Feature: feature, SubName: subName, LanguageISO: languageISO, IsDouble: isDouble, ChineseISO: chineseISO, MyLanguage: myLanguage, StoreRPath: storeFPath, ExtraPreName: extraPreName, SHA256: sha256String}
+func NewVideoSubInfo(feature string, subName string, languageISO string, isDouble bool, chineseISO string, myLanguage string, storeFPath string, extraPreName string, sha256String string, IsMovie bool) *VideoSubInfo {
+	return &VideoSubInfo{Feature: feature, SubName: subName, LanguageISO: languageISO, IsDouble: isDouble, ChineseISO: chineseISO, MyLanguage: myLanguage, StoreRPath: storeFPath, ExtraPreName: extraPreName, SHA256: sha256String, IsMovie: IsMovie}
 }

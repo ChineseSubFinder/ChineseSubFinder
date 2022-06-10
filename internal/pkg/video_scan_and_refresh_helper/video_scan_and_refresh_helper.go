@@ -377,7 +377,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 			for _, orgSubFPath := range subSha256Map {
 				v.log.Infoln(orgSubFPath)
 				// 需要得到这个视频对应的字幕的绝对地址
-				v.addLowVideoSubInfo(0, 0, orgSubFPath, mixMediaInfo, shareRootDir, fileHash)
+				v.addLowVideoSubInfo(true, 0, 0, orgSubFPath, mixMediaInfo, shareRootDir, fileHash)
 			}
 		}
 
@@ -438,7 +438,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 				for _, orgSubFPath := range subSha256Map {
 					v.log.Infoln(orgSubFPath)
 					// 需要得到这个视频对应的字幕的绝对地址
-					v.addLowVideoSubInfo(episodeInfo.Season, episodeInfo.Episode, orgSubFPath, mixMediaInfo, shareRootDir, fileHash)
+					v.addLowVideoSubInfo(false, episodeInfo.Season, episodeInfo.Episode, orgSubFPath, mixMediaInfo, shareRootDir, fileHash)
 				}
 			}
 		}
@@ -448,7 +448,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 }
 
 // 从绝对字幕路径和 mixMediaInfo 信息判断是否需要存储这个低可信度的字幕
-func (v *VideoScanAndRefreshHelper) addLowVideoSubInfo(Season, Eps int, orgSubFPath string, mixMediaInfo *models.MediaInfo, shareRootDir string, fileHash string) {
+func (v *VideoScanAndRefreshHelper) addLowVideoSubInfo(isMovie bool, Season, Eps int, orgSubFPath string, mixMediaInfo *models.MediaInfo, shareRootDir string, fileHash string) {
 
 	// 计算需要插入字幕的 sha256
 	saveSHA256String, err := my_util.GetFileSHA256String(orgSubFPath)
@@ -515,6 +515,7 @@ func (v *VideoScanAndRefreshHelper) addLowVideoSubInfo(Season, Eps int, orgSubFP
 		subRelPath,
 		extraSubPreName,
 		saveSHA256String,
+		isMovie,
 	)
 
 	oneLowVideoSubInfo.Season = Season

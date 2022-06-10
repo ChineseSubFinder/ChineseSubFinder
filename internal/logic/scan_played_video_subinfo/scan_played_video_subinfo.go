@@ -522,6 +522,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 		subRelPath,
 		extraSubPreName,
 		saveSHA256String,
+		isMovie,
 	)
 	oneVideoSubInfo.IsSend = false
 

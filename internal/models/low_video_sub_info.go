@@ -19,6 +19,6 @@ type LowVideoSubInfo struct {
 	IsSend       bool   `json:"is_send"`                           // 是否已经发送
 }
 
-func NewLowVideoSubInfo(imdbID, tmdbID, feature string, subName string, languageISO string, isDouble bool, chineseISO string, myLanguage string, storeFPath string, extraPreName string, sha256String string) *LowVideoSubInfo {
-	return &LowVideoSubInfo{IMDBID: imdbID, TMDBID: tmdbID, Feature: feature, SubName: subName, LanguageISO: languageISO, IsDouble: isDouble, ChineseISO: chineseISO, MyLanguage: myLanguage, StoreRPath: storeFPath, ExtraPreName: extraPreName, SHA256: sha256String}
+func NewLowVideoSubInfo(imdbID, tmdbID, feature string, subName string, languageISO string, isDouble bool, chineseISO string, myLanguage string, storeFPath string, extraPreName string, sha256String string, IsMovie bool) *LowVideoSubInfo {
+	return &LowVideoSubInfo{IMDBID: imdbID, TMDBID: tmdbID, Feature: feature, SubName: subName, LanguageISO: languageISO, IsDouble: isDouble, ChineseISO: chineseISO, MyLanguage: myLanguage, StoreRPath: storeFPath, ExtraPreName: extraPreName, SHA256: sha256String, IsMovie: IsMovie}
 }
