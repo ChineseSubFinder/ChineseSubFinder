@@ -15,8 +15,8 @@ RUN cd /tmp \
     && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
     && echo "${TZ}" > /etc/timezone \
     && rm -rf /tmp/*
-COPY normal-rootfs /
-ENTRYPOINT ["/init"]
+COPY entrypoint.sh /usr/bin/entrypoint.sh
+ENTRYPOINT ["tini", "entrypoint.sh"]
 WORKDIR /config
 VOLUME ["/config", "/media"]
 

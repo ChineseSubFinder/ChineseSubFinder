@@ -1,18 +1,7 @@
-#!/usr/bin/with-contenv bash
-
-## 软连接chrome
-if [[ -n $(ls /root/.cache/rod/browser 2>/dev/null) ]]; then
-    target_chrome=/root/.cache/rod/browser/$(ls -t /root/.cache/rod/browser | head -1)/chrome-linux/chrome
-    if [[ -L /usr/bin/chrome && $(readlink -f /usr/bin/chrome) != $target_chrome ]]; then
-        rm -f /usr/bin/chrome
-        ln -s $target_chrome /usr/bin/chrome &>/dev/null
-    elif [[ ! -e /usr/bin/chrome ]]; then
-        ln -s $target_chrome /usr/bin/chrome &>/dev/null
-    fi
-fi
+#!/bin/bash
 
 ## 重设权限
-chown -R "${PUID}:${PGID}" /config /root
+chown -R "${PUID}:${PGID}" /config
 if [[ ${PERMS} == true ]]; then
     echo "已设置 PERMS=true，重设 '/media' 目录权限为 ${PUID}:${PGID} 所有..."
     chown -R ${PUID}:${PGID} /media
@@ -26,7 +15,7 @@ if [[ -d /app/cache ]]; then
         rm -rf /config/cache &>/dev/null
     fi
     if [[ ! -e /config/cache ]]; then
-        s6-setuidgid ${PUID}:${PGID} ln -sf /app/cache /config/cache
+        gosu ${PUID}:${PGID} ln -sf /app/cache /config/cache
     fi
 else
     if [[ -L /config/cache ]]; then
@@ -34,3 +23,9 @@ else
         rm -rf /config/cache &>/dev/null
     fi
 fi
+
+## 启动
+umask ${UMASK}
+cd /config
+Xvfb -ac ${DISPLAY} -screen 0 1280x1024x16 &
+gosu ${PUID}:${PGID} chinesesubfinder
