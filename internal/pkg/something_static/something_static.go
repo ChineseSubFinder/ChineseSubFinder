@@ -107,10 +107,11 @@ func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string) (string, strin
 		if err != nil {
 			updateTimeString, code, err = getCodeFromWeb(l, desUrlBackup)
 			if err != nil {
+				time.Sleep(time.Second * 5)
 				continue
 			}
 		}
-		time.Sleep(time.Second * 5)
+
 		found = true
 	}
 
