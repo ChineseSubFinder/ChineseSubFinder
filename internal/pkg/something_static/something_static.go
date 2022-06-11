@@ -122,9 +122,8 @@ func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string, fileDownloader
 		if err != nil {
 			return "", "", errors.New(fmt.Sprintf("get code from web failed, %v \n", err.Error()))
 		}
-		nowTT := time.Now()
-		timeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
-		return timeFileNamePrix, getCode, nil
+		nowTT := time.Now().Format("2006-01-02")
+		return nowTT, getCode, nil
 	}
 
 	return updateTimeString, code, nil
