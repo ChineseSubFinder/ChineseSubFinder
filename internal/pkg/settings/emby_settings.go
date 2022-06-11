@@ -22,6 +22,7 @@ func NewEmbySettings() *EmbySettings {
 		MoviePathsMapping:     make(map[string]string, 0),
 		SeriesPathsMapping:    make(map[string]string, 0),
 		Threads:               4,
+		AutoOrManual:          true,
 	}
 }
 
@@ -35,4 +36,5 @@ func (e *EmbySettings) Check() {
 	if e.Threads < 1 || e.Threads > 6 {
 		e.Threads = 6
 	}
+
 }
