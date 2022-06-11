@@ -2,6 +2,11 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
+	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
+
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend"
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
@@ -11,8 +16,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
-	"path/filepath"
-	"time"
 )
 
 func newLog() *logrus.Logger {
@@ -96,6 +99,20 @@ func Process(proxySettings *settings.ProxySettings) error {
 
 	loggerBase.Infoln("-----------------------------------------")
 
+	if my_util.ReadCustomAuthFile(loggerBase) == false {
+		return fmt.Errorf("ReadCustomAuthFile failed")
+	}
+	AuthKey := random_auth_key.AuthKey{
+		BaseKey:  global_value.BaseKey(),
+		AESKey16: global_value.AESKey16(),
+		AESIv16:  global_value.AESIv16(),
+	}
+	randomAuthKey := random_auth_key.NewRandomAuthKey(5, AuthKey)
+	nowAuthKey, err := randomAuthKey.GetAuthKey()
+	if err != nil {
+		return err
+	}
+
 	codeB64, err := backend.GetCode(loggerBase, config.GetConfig().DesURL)
 	if err != nil {
 		return err
@@ -115,8 +132,9 @@ func Process(proxySettings *settings.ProxySettings) error {
 	}
 	var codeReply CodeReply
 	_, err = httpClient.R().
-		SetHeader("Authorization", "beer "+config.GetConfig().AuthToken).
+		SetHeader("Authorization", "beer "+nowAuthKey).
 		SetBody(CodeReq{
+			UploadToken:         config.GetConfig().AuthToken,
 			EnCodeString:        codeB64,
 			NowTime:             nowTime,
 			NowTimeFileNamePrix: nowTimeFileNamePrix,
@@ -133,6 +151,7 @@ func Process(proxySettings *settings.ProxySettings) error {
 var loggerBase *logrus.Logger
 
 type CodeReq struct {
+	UploadToken         string `json:"upload_token"`
 	EnCodeString        string `json:"en_code_string"`
 	NowTime             string `json:"now_time"`
 	NowTimeFileNamePrix string `json:"now_time_file_name_prix"`
