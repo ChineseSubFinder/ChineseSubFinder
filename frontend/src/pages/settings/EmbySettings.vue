@@ -56,95 +56,14 @@
 
         <q-separator spaced inset></q-separator>
 
-        <q-item tag="label" v-ripple>
+        <q-item :class="{disabled: form.auto_or_manual}" tag="label" v-ripple>
           <q-item-section>
             <q-item-label>自动匹配IMDB ID</q-item-label>
           </q-item-section>
           <q-item-section avatar>
-            <q-toggle v-model="form.auto_or_manual" />
+            <q-toggle v-model="form.auto_or_manual" :disable="form.auto_or_manual" />
           </q-item-section>
         </q-item>
-
-        <template v-if="!form.auto_or_manual">
-          <q-separator spaced inset></q-separator>
-          <q-item>
-            <q-item-section>
-              <q-item-label>电影的目录映射</q-item-label>
-              <q-markup-table class="q-mt-sm" flat separator="none">
-                <thead>
-                  <tr>
-                    <th>本程序读取到的路径</th>
-                    <th>Emby读取到的路径</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(target, source) in form.movie_paths_mapping" :key="source">
-                    <td>
-                      <q-input :model-value="source" disable hint="" standout dense />
-                    </td>
-                    <td>
-                      <q-input
-                        v-model="form.movie_paths_mapping[source]"
-                        standout
-                        dense
-                        :rules="[
-                          (val) => (form.enable && !!val) || '不能为空',
-                          (val) =>
-                            validateEmbyPath(val, {
-                              address_url: form.address_url,
-                              api_key: form.api_key,
-                              path_type: 'movie', // movie / series
-                              cfs_media_path: source,
-                            }),
-                        ]"
-                      />
-                    </td>
-                  </tr>
-                </tbody>
-              </q-markup-table>
-            </q-item-section>
-          </q-item>
-
-          <q-separator spaced inset></q-separator>
-
-          <q-item>
-            <q-item-section>
-              <q-item-label>连续剧的目录映射</q-item-label>
-              <q-markup-table class="q-mt-sm" flat separator="none">
-                <thead>
-                  <tr>
-                    <th>本程序读取到的路径</th>
-                    <th>Emby读取到的路径</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(target, source) in form.series_paths_mapping" :key="source">
-                    <td>
-                      <q-input :model-value="source" disable hint="" standout dense />
-                    </td>
-                    <td>
-                      <q-input
-                        v-model="form.series_paths_mapping[source]"
-                        standout
-                        dense
-                        :rules="[
-                          (val) => (form.enable && !!val) || '不能为空',
-                          (val) =>
-                            validateEmbyPath(val, {
-                              address_url: form.address_url,
-                              api_key: form.api_key,
-                              path_type: 'series', // movie / series
-                              cfs_media_path: source,
-                            }),
-                        ]"
-                      />
-                    </td>
-                  </tr>
-                </tbody>
-              </q-markup-table>
-            </q-item-section>
-          </q-item>
-        </template>
       </template>
     </q-list>
   </div>
@@ -153,7 +72,6 @@
 <script setup>
 import { formModel } from 'pages/settings/useSettings';
 import { toRefs } from '@vueuse/core';
-import { validateEmbyPath } from 'src/utils/QuasarValidators';
 
 const { emby_settings: form } = toRefs(formModel);
 </script>
