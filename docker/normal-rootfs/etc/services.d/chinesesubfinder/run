@@ -1,0 +1,6 @@
+#!/usr/bin/with-contenv bash
+
+umask ${UMASK}
+
+cd /config 
+exec s6-setuidgid ${PUID}:${PGID} chinesesubfinder

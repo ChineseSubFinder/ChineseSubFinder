@@ -1,16 +1,14 @@
-FROM debian
+FROM ubuntu
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
        ca-certificates \
-       chromium \
        dbus-x11 \
        dumb-init \
        ffmpeg \
        fonts-liberation \
        fonts-noto-cjk \
        fonts-noto-color-emoji \
-       gosu \
        gtk2-engines-pixbuf \
        imagemagick \
        libasound2 \
@@ -21,7 +19,6 @@ RUN apt-get update \
        libstdc++6 \
        libxss1 \
        libxtst6 \
-       tini \
        tzdata \
        wget \
        x11-apps \
@@ -33,10 +30,10 @@ RUN apt-get update \
        xorg \
        xvfb \
        yasm \
-    && ln -s /usr/bin/chromium /usr/bin/chrome \
     && apt-get clean \
     && rm -rf \
        /tmp/* \
        /var/lib/apt/lists/* \
        /var/tmp/*
+COPY --from=nevinee/s6-overlay:2.2.0.3-bin-is-softlink / /
 
