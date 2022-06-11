@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"gorm.io/gorm"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
@@ -50,8 +52,16 @@ func (h HotFix005) process() (bool, error) {
 	var videoInfos []models.VideoSubInfo
 	// 把嵌套关联的 has many 的信息都查询出来
 	dao.GetDb().Find(&videoInfos)
+	err = dao.GetDb().Transaction(func(tx *gorm.DB) error {
+		for _, info := range videoInfos {
+			tx.Delete(&info)
+		}
+		return nil
+	})
+	if err != nil {
+		return false, err
+	}
 	for _, info := range videoInfos {
-
 		delFileFPath := filepath.Join(shareRootDir, info.StoreRPath)
 		if my_util.IsFile(delFileFPath) == true {
 			err = os.Remove(delFileFPath)
@@ -60,14 +70,21 @@ func (h HotFix005) process() (bool, error) {
 				continue
 			}
 		}
-		dao.GetDb().Delete(&info)
 	}
 	// 低可信字幕
 	var lowTrustVideoInfos []models.LowVideoSubInfo
 	// 把嵌套关联的 has many 的信息都查询出来
 	dao.GetDb().Find(&lowTrustVideoInfos)
+	err = dao.GetDb().Transaction(func(tx *gorm.DB) error {
+		for _, info := range lowTrustVideoInfos {
+			tx.Delete(&info)
+		}
+		return nil
+	})
+	if err != nil {
+		return false, err
+	}
 	for _, info := range lowTrustVideoInfos {
-
 		delFileFPath := filepath.Join(shareRootDir, info.StoreRPath)
 		if my_util.IsFile(delFileFPath) == true {
 			err = os.Remove(delFileFPath)
@@ -76,8 +93,6 @@ func (h HotFix005) process() (bool, error) {
 				continue
 			}
 		}
-
-		dao.GetDb().Delete(&info)
 	}
 
 	return true, nil
