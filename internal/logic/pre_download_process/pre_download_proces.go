@@ -61,7 +61,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	// 获取验证码
 	nowTT := time.Now()
 	nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
-	updateTimeString, code, err := something_static.GetCodeFromWeb(p.log, nowTimeFileNamePrix)
+	updateTimeString, code, err := something_static.GetCodeFromWeb(p.log, nowTimeFileNamePrix, p.fileDownloader)
 	if err != nil {
 		notify_center.Notify.Add("GetSubhdCode", "GetCodeFromWeb,"+err.Error())
 		p.log.Errorln("something_static.GetCodeFromWeb", err)

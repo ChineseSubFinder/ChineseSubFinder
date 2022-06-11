@@ -121,9 +121,21 @@ func TestSupplier_getSubListFromKeyword4Movie(t *testing.T) {
 
 func getCode() {
 
+	if my_util.ReadCustomAuthFile(log_helper.GetLogger4Tester()) == false {
+		println("read auth file failed")
+		return
+	}
+	fileDownloader := file_downloader.NewFileDownloader(
+		cache_center.NewCacheCenter("local_task_queue", settings.GetSettings(), log_helper.GetLogger4Tester()),
+		random_auth_key.AuthKey{
+			BaseKey:  global_value.BaseKey(),
+			AESKey16: global_value.AESKey16(),
+			AESIv16:  global_value.AESIv16(),
+		})
+
 	nowTT := time.Now()
 	nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
-	updateTimeString, code, err := something_static.GetCodeFromWeb(log_helper.GetLogger4Tester(), nowTimeFileNamePrix)
+	updateTimeString, code, err := something_static.GetCodeFromWeb(log_helper.GetLogger4Tester(), nowTimeFileNamePrix, fileDownloader)
 	if err != nil {
 		commonValue.SubhdCode = ""
 	} else {

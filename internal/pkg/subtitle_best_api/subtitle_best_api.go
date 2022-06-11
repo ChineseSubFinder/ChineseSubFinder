@@ -2,12 +2,14 @@ package subtitle_best_api
 
 import (
 	"bytes"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 
@@ -26,6 +28,50 @@ func NewSubtitleBestApi(inAuthKey random_auth_key.AuthKey) *SubtitleBestApi {
 		randomAuthKey: random_auth_key.NewRandomAuthKey(5, inAuthKey),
 		authKey:       inAuthKey,
 	}
+}
+
+func (s *SubtitleBestApi) GetCode(_proxySettings ...*settings.ProxySettings) (string, error) {
+
+	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
+		return "", errors.New("auth key is not set")
+	}
+
+	postUrl := webUrlBase + "/v1/subhd-code"
+	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	if err != nil {
+		return "", err
+	}
+
+	authKey, err := s.randomAuthKey.GetAuthKey()
+	if err != nil {
+		return "", err
+	}
+
+	var codeReplyData CodeReplyData
+	_, err = httpClient.R().
+		SetHeader("Authorization", "beer "+authKey).
+		SetQueryParams(map[string]string{
+			"now_time": time.Now().Format("2006-01-02"),
+		}).
+		SetHeader("Accept", "application/json").
+		SetResult(&codeReplyData).
+		Get(postUrl)
+	if err != nil {
+		return "", err
+	}
+
+	//println(resp.StatusCode())
+
+	if codeReplyData.Status == 0 {
+		return "", errors.New(codeReplyData.Message)
+	}
+
+	decodeBytes, err := base64.StdEncoding.DecodeString(codeReplyData.Code)
+	if err != nil {
+		return "", err
+	}
+
+	return string(decodeBytes), nil
 }
 
 func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string, _proxySettings ...*settings.ProxySettings) (*MediaInfoReply, error) {
@@ -310,5 +356,5 @@ func (s *SubtitleBestApi) AskFindSub(VideoFeature, ImdbId, TmdbId, Season, Episo
 
 const (
 	webUrlBase = "https://api.subtitle.best"
-	//webUrlBase = "http://127.0.0.1:8889"
+	//webUrlBase = "http://127.0.0.1:8890"
 )
