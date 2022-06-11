@@ -39,7 +39,7 @@ func HotFixProcess(log *logrus.Logger, param types.HotFixParam) error {
 	// 交叉对比，这个执行的顺序又上面 []ifaces.IHotFix 指定
 	for _, hotfixCase := range hotfixCases {
 		_, bFound := hotFixRecord[hotfixCase.GetKey()]
-		if bFound == true {
+		if bFound == true && hotFixRecord[hotfixCase.GetKey()].Done == true {
 			// 如果修复过了，那么就跳过
 			continue
 		}
