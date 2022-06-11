@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/sirupsen/logrus"
@@ -79,7 +81,7 @@ func writeFile(saveFileFPath, enString, nowTime string) error {
 	return nil
 }
 
-func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string) (string, string, error) {
+func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string, fileDownloader *file_downloader.FileDownloader) (string, string, error) {
 
 	// 默认的位置
 	//const baseCodeFileUrl = "https://raw.githubusercontents.com/"
@@ -116,7 +118,13 @@ func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string) (string, strin
 	}
 
 	if found == false {
-		return "", "", errors.New(fmt.Sprintf("get code from web failed, %v \n", err.Error()))
+		getCode, err := fileDownloader.SubtitleBestApi.GetCode(fileDownloader.Settings.AdvancedSettings.ProxySettings)
+		if err != nil {
+			return "", "", errors.New(fmt.Sprintf("get code from web failed, %v \n", err.Error()))
+		}
+		nowTT := time.Now()
+		timeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
+		return timeFileNamePrix, getCode, nil
 	}
 
 	return updateTimeString, code, nil

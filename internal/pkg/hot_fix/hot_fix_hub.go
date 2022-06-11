@@ -77,21 +77,32 @@ func HotFixProcess(log *logrus.Logger, param types.HotFixParam) error {
 		default:
 			continue
 		}
-		// 执行成功则存入数据库中，标记完成
-		markHotFixDone := models.HotFix{Key: hotfixCase.GetKey(), Done: true}
-		result = dao.GetDb().Create(&markHotFixDone)
-		if result == nil {
-			nowError := errors.New(fmt.Sprintf("hotfix %s is done, but record failed, dao.GetDb().Create return nil", hotfixCase.GetKey()))
-			log.Errorln(nowError)
-			return nowError
+
+		var hotfixs []models.HotFix
+		dao.GetDb().Where("key = ?", hotfixCase.GetKey()).Find(&hotfixs)
+		if len(hotfixs) < 1 {
+			// 不存在则新建
+			// 执行成功则存入数据库中，标记完成
+			markHotFixDone := models.HotFix{Key: hotfixCase.GetKey(), Done: true}
+			result = dao.GetDb().Create(&markHotFixDone)
+			if result == nil {
+				nowError := errors.New(fmt.Sprintf("hotfix %s is done, but record failed, dao.GetDb().Create return nil", hotfixCase.GetKey()))
+				log.Errorln(nowError)
+				return nowError
+			}
+			if result.Error != nil {
+				nowError := errors.New(fmt.Sprintf("hotfix %s is done, but record failed, %s", hotfixCase.GetKey(), result.Error))
+				log.Errorln(nowError)
+				return nowError
+			}
+			log.Infoln("Hotfix", hotfixCase.GetKey(), "is Recorded")
+			// 找到了，目前的逻辑是成功才插入，那么查询到了，就默认是执行成功了
+		} else {
+			// 存在则更新
+			hotfixs[0].Done = true
+			dao.GetDb().Save(&hotfixs[0])
 		}
-		if result.Error != nil {
-			nowError := errors.New(fmt.Sprintf("hotfix %s is done, but record failed, %s", hotfixCase.GetKey(), result.Error))
-			log.Errorln(nowError)
-			return nowError
-		}
-		log.Infoln("Hotfix", hotfixCase.GetKey(), "is Recorded")
-		// 找到了，目前的逻辑是成功才插入，那么查询到了，就默认是执行成功了
+
 	}
 	return nil
 }
