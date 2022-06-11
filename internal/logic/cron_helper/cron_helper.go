@@ -111,11 +111,12 @@ func (ch *CronHelper) Start(runImmediately bool) {
 			//	ch.log.Errorln(err)
 			//}
 			//
-			//ch.scanPlayedVideoSub()
-			//
-			//ch.scanVideoProcessAdd2DownloadQueue()
 
-			//ch.uploadVideoSub()
+			//ch.scanVideoProcessAdd2DownloadQueue()
+			//
+			//ch.scanPlayedVideoSub()
+
+			ch.uploadVideoSub()
 		}
 	}
 
