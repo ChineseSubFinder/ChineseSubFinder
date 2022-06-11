@@ -3,8 +3,10 @@ package something_static
 import (
 	b64 "encoding/base64"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
@@ -88,12 +90,32 @@ func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string) (string, strin
 	const backupCodeFileUrl = "https://get-static.subtitle.best/"
 	desUrlBackup := backupCodeFileUrl + nowTimeFileNamePrix + common.StaticFileName00
 
-	updateTimeString, code, err := getCodeFromWeb(l, desUrl)
-	if err != nil {
-		updateTimeString, code, err = getCodeFromWeb(l, desUrlBackup)
-		if err != nil {
-			return "", "", err
+	var err error
+	updateTimeString := ""
+	code := ""
+	found := false
+	count := 0
+	for {
+		if found == true {
+			break
 		}
+		count++
+		if count > 5 {
+			break
+		}
+		updateTimeString, code, err = getCodeFromWeb(l, desUrl)
+		if err != nil {
+			updateTimeString, code, err = getCodeFromWeb(l, desUrlBackup)
+			if err != nil {
+				continue
+			}
+		}
+		time.Sleep(time.Second * 5)
+		found = true
+	}
+
+	if found == false {
+		return "", "", errors.New(fmt.Sprintf("get code from web failed, %v \n", err.Error()))
 	}
 
 	return updateTimeString, code, nil

@@ -110,7 +110,6 @@ func (ch *CronHelper) Start(runImmediately bool) {
 			//if err != nil {
 			//	ch.log.Errorln(err)
 			//}
-			//
 
 			//ch.scanVideoProcessAdd2DownloadQueue()
 			//
