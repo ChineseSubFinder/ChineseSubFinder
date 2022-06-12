@@ -132,8 +132,8 @@ func Process(proxySettings *settings.ProxySettings) error {
 		return err
 	}
 
-	println(config.GetConfig().PostUrl)
-	
+	loggerBase.Infoln("PostUrl:", config.GetConfig().PostUrl)
+
 	var codeReply CodeReply
 	resp, err := httpClient.R().
 		SetHeader("Authorization", "beer "+nowAuthKey).
@@ -149,7 +149,7 @@ func Process(proxySettings *settings.ProxySettings) error {
 		return err
 	}
 
-	println(resp.StatusCode())
+	loggerBase.Infoln("PostUrl Resp StatusCode:", resp.StatusCode())
 
 	if codeReply.Status == 0 {
 		return fmt.Errorf("codeReply.Status == 0", "codeReply.Message:", codeReply.Message)
