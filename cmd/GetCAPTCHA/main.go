@@ -123,6 +123,7 @@ func Process(proxySettings *settings.ProxySettings) error {
 		return err
 	}
 
+	loggerBase.Infoln("try to upload code to web api")
 	nowTT := time.Now()
 	nowTime := nowTT.Format("2006-01-02")
 	nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
@@ -130,8 +131,11 @@ func Process(proxySettings *settings.ProxySettings) error {
 	if err != nil {
 		return err
 	}
+
+	println(config.GetConfig().PostUrl)
+	
 	var codeReply CodeReply
-	_, err = httpClient.R().
+	resp, err := httpClient.R().
 		SetHeader("Authorization", "beer "+nowAuthKey).
 		SetBody(CodeReq{
 			UploadToken:         config.GetConfig().AuthToken,
@@ -144,6 +148,14 @@ func Process(proxySettings *settings.ProxySettings) error {
 	if err != nil {
 		return err
 	}
+
+	println(resp.StatusCode())
+
+	if codeReply.Status == 0 {
+		return fmt.Errorf("codeReply.Status == 0", "codeReply.Message:", codeReply.Message)
+	}
+
+	loggerBase.Infoln("upload code to web api done")
 
 	return nil
 }
