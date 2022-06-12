@@ -25,7 +25,6 @@ type CronHelper struct {
 	videoScanAndRefreshHelper     *video_scan_and_refresh_helper.VideoScanAndRefreshHelper // 视频扫描和刷新的帮助类
 	cronLock                      sync.Mutex                                               // 锁
 	c                             *cron.Cron                                               // 定时器实例
-	c4UploadSub                   *cron.Cron                                               // 上传字幕专用定时器实例
 	Settings                      *settings.Settings                                       // 设置实例
 	log                           *logrus.Logger                                           // 日志实例
 	entryIDScanVideoProcess       cron.EntryID
@@ -101,8 +100,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		}
 	}
 	// ----------------------------------------------
-	ch.c = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
-	ch.c4UploadSub = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
+	ch.c = cron.New(cron.WithChain(cron.DelayIfStillRunning(cron.DefaultLogger)))
 	{
 		// 测试部分定时器代码，提前运行
 		if ch.Settings.SpeedDevMode == true {
@@ -149,7 +147,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		if ch.Settings.SpeedDevMode == true {
 			intervalNowTask = "@every 1s"
 		}
-		ch.entryIDUploadPlayedVideoSub, err = ch.c4UploadSub.AddFunc(intervalNowTask, ch.uploadVideoSub)
+		ch.entryIDUploadPlayedVideoSub, err = ch.c.AddFunc(intervalNowTask, ch.uploadVideoSub)
 		if err != nil {
 			ch.log.Panicln("CronHelper QueueDownloader, uploadVideoSub Cron entryID:", ch.entryIDUploadPlayedVideoSub, "Error:", err)
 		}
@@ -185,7 +183,6 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		//----------------------------------------------
 		ch.log.Infoln("CronHelper Start...")
 		ch.c.Start()
-		ch.c4UploadSub.Start()
 		//----------------------------------------------
 		// 只有定时任务 start 之后才能拿到信息
 		if len(ch.c.Entries()) > 0 {
@@ -235,14 +232,6 @@ func (ch *CronHelper) Stop() {
 		ch.log.Warningln("Wait over 5 min, CronHelper is timeout")
 	case <-nowContext.Done():
 		ch.log.Infoln("CronHelper.Stop() context<-Done.")
-	}
-
-	nowContextUpload := ch.c4UploadSub.Stop()
-	select {
-	case <-time.After(5 * time.Minute):
-		ch.log.Warningln("Wait over 5 min, CronHelper upload is timeout")
-	case <-nowContextUpload.Done():
-		ch.log.Infoln("CronHelper.Stop() upload context<-Done.")
 	}
 
 	ch.cronLock.Lock()
