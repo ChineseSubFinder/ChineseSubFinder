@@ -599,15 +599,19 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDown
 			return
 		}
 		element := page.MustElement(btnClickCodeBtn)
-		BtnCodeText := element.MustText()
-		if strings.Contains(BtnCodeText, "验证") == true {
+
+		findInputCode, err := page.Element(InputCode)
+		if err != nil {
+			return
+		}
+		if findInputCode != nil {
 			s.log.Debugln("find '验证' 关键词")
 			// 那么需要填写验证码
 			element.MustClick()
 			time.Sleep(time.Second * 2)
 			// 填写“验证码”
 			s.log.Debugln("填写验证码")
-			el := page.MustElement("#gzhcode")
+			el := page.MustElement(InputCode)
 			el.MustInput(common2.SubhdCode)
 			//page.MustEval(`$("#gzhcode").attr("value","` + common2.SubhdCode + `");`)
 			// 是否有“完成验证”按钮
@@ -632,17 +636,14 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDown
 			page.MustElement(btnClickCodeBtn).MustClick()
 
 			time.Sleep(time.Second * 2)
-		} else if strings.Contains(BtnCodeText, "下载") == true {
+		} else {
 
 			s.log.Debugln("点击下载按钮")
 			// 直接可以下载
 			element.MustClick()
 			time.Sleep(time.Second * 2)
-		} else {
-
-			s.log.Errorln("btn not found 下载验证 or 下载")
-			return
 		}
+
 		// 更新 page 的实例对应的 doc Content
 		pString = page.MustHTML()
 		doc, err = goquery.NewDocumentFromReader(strings.NewReader(pString))
@@ -669,11 +670,10 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDown
 	if err != nil {
 		return nil, err
 	}
-
-	inSubInfo := supplier.NewSubInfo(s.GetSupplierName(), 1, fileName, language.ChineseSimple, subDownloadPageUrl, 0, 0, filepath.Ext(fileName), fileByte)
 	if downloadSuccess == false {
 		return nil, common2.SubHDStep2ExCannotFindDownloadBtn
 	}
+	inSubInfo := supplier.NewSubInfo(s.GetSupplierName(), 1, fileName, language.ChineseSimple, subDownloadPageUrl, 0, 0, filepath.Ext(fileName), fileByte)
 
 	return inSubInfo, nil
 }
@@ -800,3 +800,4 @@ type HdListItem struct {
 const TCode = "#TencentCaptcha"
 const btnClickCodeBtn = "button.btn-danger"
 const btnCommitCode = "button.btn-primary"
+const InputCode = "#gzhcode" // id=gzhcode
