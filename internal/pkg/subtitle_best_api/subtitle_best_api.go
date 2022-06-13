@@ -394,6 +394,79 @@ func (s *SubtitleBestApi) FindSub(VideoFeature, ImdbId, TmdbId, Season, Episode,
 	return &findSubReply, nil
 }
 
+func (s *SubtitleBestApi) AskDownloadSub(SubSha256, DownloadToken, ApiKey string, _proxySettings ...*settings.ProxySettings) (*AskForDownloadReply, error) {
+
+	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
+		return nil, errors.New("auth key is not set")
+	}
+	postUrl := webUrlBase + "/v1/ask-for-download"
+	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	if err != nil {
+		return nil, err
+	}
+
+	authKey, err := s.randomAuthKey.GetAuthKey()
+	if err != nil {
+		return nil, err
+	}
+
+	postData := map[string]string{
+		"sub_sha256":     SubSha256,
+		"download_token": DownloadToken,
+	}
+	if ApiKey != "" {
+		postData["api_key"] = ApiKey
+	}
+	var askDownloadReply AskForDownloadReply
+	_, err = httpClient.R().
+		SetHeader("Authorization", "beer "+authKey).
+		SetFormData(postData).
+		SetResult(&askDownloadReply).
+		Post(postUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	return &askDownloadReply, nil
+}
+
+func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, downloadFileDesFPath string, _proxySettings ...*settings.ProxySettings) (*DownloadSubReq, error) {
+
+	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
+		return nil, errors.New("auth key is not set")
+	}
+	postUrl := webUrlBase + "/v1/download-sub"
+	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	if err != nil {
+		return nil, err
+	}
+
+	authKey, err := s.randomAuthKey.GetAuthKey()
+	if err != nil {
+		return nil, err
+	}
+
+	postData := map[string]string{
+		"sub_sha256":     SubSha256,
+		"download_token": DownloadToken,
+	}
+	if ApiKey != "" {
+		postData["api_key"] = ApiKey
+	}
+	var downloadReply DownloadSubReq
+	_, err = httpClient.R().
+		SetHeader("Authorization", "beer "+authKey).
+		SetFormData(postData).
+		SetResult(&downloadReply).
+		SetOutput(downloadFileDesFPath).
+		Post(postUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	return &downloadReply, nil
+}
+
 const (
 	webUrlBase = "https://api.subtitle.best"
 	//webUrlBase = "http://127.0.0.1:8890"
