@@ -403,6 +403,8 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 		job.Season = epsVideoNfoInfo.Season
 		job.Episode = epsVideoNfoInfo.Episode
 		job.SeriesRootDirPath = seriesInfoDirPath
+		// 如果进来的时候是 Season 和 Eps 是 -1， 那么就需要重新赋值那些集是需要下载的，否则后面会跳过
+		epsMap[job.Season] = []int{job.Episode}
 	}
 
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
