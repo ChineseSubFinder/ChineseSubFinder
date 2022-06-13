@@ -55,7 +55,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	}
 
 	// 默认超时是 2 * 60s，如果是调试模式则是 5 min
-	sup.tt = common2.HTMLTimeOut
+	sup.tt = common2.BrowserTimeOut
 	sup.debugMode = sup.settings.AdvancedSettings.DebugMode
 	if sup.debugMode == true {
 		sup.tt = common2.OneMovieProcessTimeOut
