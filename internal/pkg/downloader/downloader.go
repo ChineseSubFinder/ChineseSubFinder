@@ -388,7 +388,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	epsMap := make(map[int][]int, 0)
 	epsMap[job.Season] = []int{job.Episode}
 
-	if job.VideoType == common.Series && job.SeriesRootDirPath == "" {
+	if job.VideoType == common.Series && (job.SeriesRootDirPath == "" || job.Season < 0 || job.Episode < 0) {
 		// 连续剧的时候需要额外提交信息
 		epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(job.VideoFPath)
 		if err != nil {
