@@ -354,6 +354,46 @@ func (s *SubtitleBestApi) AskFindSub(VideoFeature, ImdbId, TmdbId, Season, Episo
 	return &askFindSubReply, nil
 }
 
+func (s *SubtitleBestApi) FindSub(VideoFeature, ImdbId, TmdbId, Season, Episode, FindSubToken, ApiKey string, _proxySettings ...*settings.ProxySettings) (*FindSubReply, error) {
+
+	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
+		return nil, errors.New("auth key is not set")
+	}
+	postUrl := webUrlBase + "/v1/find-sub"
+	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	if err != nil {
+		return nil, err
+	}
+
+	authKey, err := s.randomAuthKey.GetAuthKey()
+	if err != nil {
+		return nil, err
+	}
+
+	postData := map[string]string{
+		"video_feature":  VideoFeature,
+		"imdb_id":        ImdbId,
+		"tmdb_id":        TmdbId,
+		"season":         Season,
+		"episode":        Episode,
+		"find_sub_token": FindSubToken,
+	}
+	if ApiKey != "" {
+		postData["api_key"] = ApiKey
+	}
+	var findSubReply FindSubReply
+	_, err = httpClient.R().
+		SetHeader("Authorization", "beer "+authKey).
+		SetFormData(postData).
+		SetResult(&findSubReply).
+		Post(postUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	return &findSubReply, nil
+}
+
 const (
 	webUrlBase = "https://api.subtitle.best"
 	//webUrlBase = "http://127.0.0.1:8890"
