@@ -25,4 +25,22 @@ func TestSubtitleBestApi_GetMediaInfo(t *testing.T) {
 	}
 
 	println(mediaInfo.TitleCN)
+
+	askForDownloadReply, err := bapi.AskDownloadSub("cd5e4bca49eea1f54f3eda5a38452b1c234075017857d010c76948124316cf2b",
+		"haha123456", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	println("AskDownloadSub.Status:", askForDownloadReply.Status)
+	println("AskDownloadSub.Message:", askForDownloadReply.Message)
+
+	downloadSubReply, err := bapi.DownloadSub("cd5e4bca49eea1f54f3eda5a38452b1c234075017857d010c76948124316cf2b",
+		"haha123456", "", "C:\\Tmp\\downloadhub\\123.srt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	println("DownloadSub.Status", downloadSubReply.Status)
+	println("DownloadSub.Message", downloadSubReply.Message)
 }

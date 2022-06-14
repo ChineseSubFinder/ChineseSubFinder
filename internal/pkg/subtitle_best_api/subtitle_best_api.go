@@ -3,6 +3,7 @@ package subtitle_best_api
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -430,7 +431,8 @@ func (s *SubtitleBestApi) AskDownloadSub(SubSha256, DownloadToken, ApiKey string
 	return &askDownloadReply, nil
 }
 
-func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, downloadFileDesFPath string, _proxySettings ...*settings.ProxySettings) (*DownloadSubReq, error) {
+// DownloadSub 首先要确认 downloadFileDesFPath 这个文件是否存在，如果存在且跟需要下载的文件的 sha256 一样就要跳过，然后下载完毕后，也需要 check 这个文件是否存在，存在则需要判断是否是字幕
+func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, downloadFileDesFPath string, _proxySettings ...*settings.ProxySettings) (*DownloadSubReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
@@ -453,17 +455,41 @@ func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, download
 	if ApiKey != "" {
 		postData["api_key"] = ApiKey
 	}
-	var downloadReply DownloadSubReq
+
+	if my_util.IsFile(downloadFileDesFPath) == true {
+		err = os.Remove(downloadFileDesFPath)
+		if err != nil {
+			return nil, errors.New("remove file error: " + err.Error())
+		}
+	}
+
+	var downloadReply DownloadSubReply
 	_, err = httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
 		SetFormData(postData).
-		SetResult(&downloadReply).
 		SetOutput(downloadFileDesFPath).
 		Post(postUrl)
 	if err != nil {
 		return nil, err
 	}
 
+	readFile, err := ioutil.ReadFile(downloadFileDesFPath)
+	if err != nil {
+		return nil, errors.New("read file error: " + err.Error())
+	}
+	err = json.Unmarshal(readFile, &downloadReply)
+	if err != nil {
+		// 说明成功了
+		downloadReply.Status = 1
+		downloadReply.Message = "success"
+		return &downloadReply, nil
+	}
+
+	// 那么需要把下载的文件给删除了
+	err = os.Remove(downloadFileDesFPath)
+	if err != nil {
+		return nil, errors.New("remove file error: " + err.Error())
+	}
 	return &downloadReply, nil
 }
 
