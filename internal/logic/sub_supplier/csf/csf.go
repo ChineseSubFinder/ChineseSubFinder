@@ -3,6 +3,12 @@ package csf
 import (
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/subtitle_best_api"
@@ -87,7 +93,7 @@ func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo
 		return outSubInfos, nil
 	}
 
-	return s.getSubListFromFile(filePath, true)
+	return s.findAndDownload(filePath, true, "", "")
 }
 
 func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
@@ -97,7 +103,17 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 		return outSubInfos, nil
 	}
 
-	return s.downloadSub4Series(seriesInfo)
+	// 这里拿到的 seriesInfo ，里面包含了，需要下载字幕的 Eps 信息
+	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
+
+		oneSubInfoList, err := s.findAndDownload(episodeInfo.FileFullPath, false, strconv.Itoa(episodeInfo.Season), strconv.Itoa(episodeInfo.Episode))
+		if err != nil {
+			return outSubInfos, errors.New("FindAndDownload error:" + err.Error())
+		}
+		outSubInfos = append(outSubInfos, oneSubInfoList...)
+	}
+
+	return outSubInfos, nil
 }
 
 func (s *Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
@@ -107,22 +123,26 @@ func (s *Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]su
 		return outSubInfos, nil
 	}
 
-	return s.downloadSub4Series(seriesInfo)
+	// 这里拿到的 seriesInfo ，里面包含了，需要下载字幕的 Eps 信息
+	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
+
+		oneSubInfoList, err := s.findAndDownload(episodeInfo.FileFullPath, false, strconv.Itoa(episodeInfo.Season), strconv.Itoa(episodeInfo.Episode))
+		if err != nil {
+			return outSubInfos, errors.New("FindAndDownload error:" + err.Error())
+		}
+		outSubInfos = append(outSubInfos, oneSubInfoList...)
+	}
+
+	return outSubInfos, nil
 }
 
-func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool) ([]supplier.SubInfo, error) {
+func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Episode string) (outSubInfoList []supplier.SubInfo, err error) {
 
 	defer func() {
 		s.log.Debugln(s.GetSupplierName(), videoFPath, "End...")
 	}()
 
 	s.log.Debugln(s.GetSupplierName(), videoFPath, "Start...")
-
-	outSubInfoList := make([]supplier.SubInfo, 0)
-
-}
-
-func (s Supplier) findAndDownload(videoFPath string, isMovie bool) (outSubInfoList []supplier.SubInfo, err error) {
 
 	outSubInfoList = make([]supplier.SubInfo, 0)
 	fileHash, err := sub_file_hash.Calculate(videoFPath)
@@ -135,9 +155,12 @@ func (s Supplier) findAndDownload(videoFPath string, isMovie bool) (outSubInfoLi
 		err = errors.New(fmt.Sprintf("%s.GetMixMediaInfo %s %s", s.GetSupplierName(), videoFPath, err))
 		return
 	}
-	// 根据是电影和是连续剧的一集进行下载
-	Season := ""
-	Episode := ""
+
+	if isMovie == true {
+		Season = "0"
+		Episode = "0"
+	}
+
 	// 标记本次请求的归属性
 	randomAuthToken := my_util.RandStringBytesMaskImprSrcSB(10)
 	var bestOneSub subtitle_best_api.Subtitle
@@ -206,6 +229,18 @@ func (s Supplier) findAndDownload(videoFPath string, isMovie bool) (outSubInfoLi
 		bestOneSub = findBestSub(findSubReply.Subtitle)
 	}
 
+	desSubSaveFPath := ""
+	foundSubCache, cacheSubInfo, err := s.fileDownloader.GetCSF(bestOneSub.SubSha256)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("GetCSF Error: %s", err.Error()))
+	}
+	if foundSubCache == true {
+		// 在本地缓存中找到了
+		outSubInfoList = append(outSubInfoList, *cacheSubInfo)
+		return
+	}
+
+	// 需要从服务器拿去
 	// 得到查询结果，去排队下载
 	reTryTimes = 0
 	retryFail = false
@@ -256,7 +291,7 @@ func (s Supplier) findAndDownload(videoFPath string, isMovie bool) (outSubInfoLi
 		sleepCounter++
 	}
 	// 直接下载，这里需要再前面的过程中搞清楚这个字幕是什么后缀名，然后写入到缓存目录中
-	desSubSaveFPath := ""
+
 	downloadSubReply, err := s.fileDownloader.SubtitleBestApi.DownloadSub(bestOneSub.SubSha256, randomAuthToken, "", desSubSaveFPath)
 	if err != nil {
 		return nil, err
@@ -273,6 +308,37 @@ func (s Supplier) findAndDownload(videoFPath string, isMovie bool) (outSubInfoLi
 		err = errors.New(fmt.Sprintf("DownloadSub Not Support Status: %d, Message: %s", downloadSubReply.Status, downloadSubReply.Message))
 		return
 	}
+
+	// 下载成功后，需要判断一下这里的文件是否是字幕文件，如果不是，需要删除掉，然后跳过
+	bok := false
+	var subFileInfo *subparser.FileInfo
+	bok, subFileInfo, err = s.fileDownloader.SubParserHub.DetermineFileTypeFromFile(desSubSaveFPath)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("DetermineFileTypeFromFile Error: %s", err.Error()))
+	}
+	if bok == false {
+		// 不是字幕文件，需要删除掉
+		err = os.Remove(desSubSaveFPath)
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("Remove File %s Error: %s", desSubSaveFPath, err.Error()))
+		}
+	}
+
+	subFileName := strings.ReplaceAll(filepath.Base(videoFPath), filepath.Ext(videoFPath), "")
+	subBytes, err := ioutil.ReadFile(desSubSaveFPath)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("ReadFile Error: %s", err.Error()))
+	}
+	oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), 1, subFileName, subFileInfo.Lang, bestOneSub.SubSha256, 0, 0, bestOneSub.Ext, subBytes)
+
+	err = s.fileDownloader.AddCSF(oneSubInfo)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("AddCSF Error: %s", err.Error()))
+	}
+
+	outSubInfoList = append(outSubInfoList, *oneSubInfo)
+
+	return
 }
 
 // askFindSubProcess 查找字幕

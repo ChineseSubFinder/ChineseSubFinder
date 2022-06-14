@@ -15,8 +15,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/imdb_helper"
@@ -46,8 +44,6 @@ type ScanPlayedVideoSubInfo struct {
 	taskControl  *task_control.TaskControl
 	canceled     bool
 	canceledLock sync.Mutex
-
-	SubParserHub *sub_parser_hub.SubParserHub
 
 	movieSubMap  map[string]string
 	seriesSubMap map[string]string
@@ -84,8 +80,6 @@ func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings,
 	if err != nil {
 		return nil, err
 	}
-	// 字幕解析器
-	scanPlayedVideoSubInfo.SubParserHub = sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log))
 	// 字幕命名格式解析器
 	scanPlayedVideoSubInfo.subFormatter = emby.NewFormatter()
 	// 缓存目录的根目录
@@ -471,7 +465,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	s.log.Debugln(6)
 
 	// 不存在，插入，建立关系
-	bok, fileInfo, err := s.SubParserHub.DetermineFileTypeFromFile(subCacheFPath)
+	bok, fileInfo, err := s.fileDownloader.SubParserHub.DetermineFileTypeFromFile(subCacheFPath)
 	if err != nil {
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".DetermineFileTypeFromFile", imdbInfo4Video.ImdbId, err)
 		return

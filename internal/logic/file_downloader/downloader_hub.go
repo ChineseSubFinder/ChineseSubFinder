@@ -3,6 +3,9 @@ package file_downloader
 import (
 	"crypto/sha256"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"path/filepath"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
@@ -21,6 +24,7 @@ type FileDownloader struct {
 	Settings        *settings.Settings
 	Log             *logrus.Logger
 	CacheCenter     *cache_center.CacheCenter
+	SubParserHub    *sub_parser_hub.SubParserHub
 	SubtitleBestApi *subtitle_best_api.SubtitleBestApi
 }
 
@@ -29,6 +33,7 @@ func NewFileDownloader(cacheCenter *cache_center.CacheCenter, authKey random_aut
 	f := FileDownloader{Settings: cacheCenter.Settings,
 		Log:             cacheCenter.Log,
 		CacheCenter:     cacheCenter,
+		SubParserHub:    sub_parser_hub.NewSubParserHub(cacheCenter.Log, ass.NewParser(cacheCenter.Log), srt.NewParser(cacheCenter.Log)),
 		SubtitleBestApi: subtitle_best_api.NewSubtitleBestApi(authKey, cacheCenter.Settings.AdvancedSettings.ProxySettings),
 	}
 	return &f
@@ -127,4 +132,32 @@ func (f *FileDownloader) GetEx(supplierName string, browser *rod.Browser, subDow
 		// 如果已经存在缓存中，那么就直接返回
 		return subInfo, nil
 	}
+}
+
+// GetCSF subtitle.best 使用这个
+func (f *FileDownloader) GetCSF(subSha256 string) (bool, *supplier.SubInfo, error) {
+
+	found, subInfo, err := f.CacheCenter.DownloadFileGet(subSha256)
+	if err != nil {
+		return false, nil, err
+	}
+
+	if found == false {
+		// 没有找到就是缓存进去
+		return false, nil, nil
+	} else {
+		// 缓存中有
+		return true, subInfo, nil
+	}
+}
+
+// AddCSF subtitle.best 使用这个
+func (f FileDownloader) AddCSF(inSubInfo *supplier.SubInfo) error {
+
+	inSubInfo.SetFileUrlSha256(inSubInfo.Name)
+	err := f.CacheCenter.DownloadFileAdd(inSubInfo)
+	if err != nil {
+		return err
+	}
+	return nil
 }
