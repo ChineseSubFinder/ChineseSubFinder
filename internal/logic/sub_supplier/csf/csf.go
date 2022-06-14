@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/subtitle_best_api"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_file_hash"
@@ -47,7 +49,7 @@ func (s *Supplier) CheckAlive() (bool, int64) {
 
 	// 计算当前时间
 	startT := time.Now()
-	_, err := s.fileDownloader.SubtitleBestApi.GetMediaInfo("tt4236770", "imdb", "series", s.settings.AdvancedSettings.ProxySettings)
+	_, err := s.fileDownloader.SubtitleBestApi.GetMediaInfo("tt4236770", "imdb", "series")
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
 		s.isAlive = false
@@ -120,40 +122,171 @@ func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool) ([]suppli
 
 }
 
-func (s *Supplier) findAllDownloadSub(videoFPath string, isMovie bool) ([]supplier.SubInfo, error) {
+func (s Supplier) findAndDownload(videoFPath string, isMovie bool) (outSubInfoList []supplier.SubInfo, err error) {
 
-	outSubInfoList := make([]supplier.SubInfo, 0)
-
+	outSubInfoList = make([]supplier.SubInfo, 0)
 	fileHash, err := sub_file_hash.Calculate(videoFPath)
 	if err != nil {
-		s.log.Errorln("scanLowVideoSubInfo.ComputeFileHash", videoFPath, err)
-		return outSubInfoList, errors.New("ComputeFileHash Error")
+		err = errors.New(fmt.Sprintf("%s.Calculate %s %s", s.GetSupplierName(), videoFPath, err))
+		return
 	}
 	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.log, s.fileDownloader.SubtitleBestApi, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
-		s.log.Errorln(s.GetSupplierName(), videoFPath, "GetMixMediaInfo", err)
-		return nil, err
+		err = errors.New(fmt.Sprintf("%s.GetMixMediaInfo %s %s", s.GetSupplierName(), videoFPath, err))
+		return
 	}
-
+	// 根据是电影和是连续剧的一集进行下载
 	Season := ""
 	Episode := ""
+	// 标记本次请求的归属性
 	randomAuthToken := my_util.RandStringBytesMaskImprSrcSB(10)
-	askFindSubReply, err := s.fileDownloader.SubtitleBestApi.AskFindSub(fileHash, mediaInfo.ImdbId, mediaInfo.TmdbId, Season, Episode, randomAuthToken, "", s.settings.AdvancedSettings.ProxySettings)
+	var bestOneSub subtitle_best_api.Subtitle
+	var queueIsFull bool
+	var waitTime int64
+	reTryTimes := 0
+	maxRetryTimes := 5
+	retryFail := false
+	// 重试多次排队
+	for {
+		reTryTimes++
+		if reTryTimes > maxRetryTimes {
+			// 超过了最大重试次数，直接返回
+			retryFail = true
+			break
+		}
+		bestOneSub, queueIsFull, waitTime, err = s.askFindSubProcess(fileHash, mediaInfo.ImdbId, mediaInfo.TmdbId, Season, Episode, randomAuthToken, "")
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("askFindSubProcess Error: %s", err.Error()))
+		}
+		if queueIsFull == true {
+			// 队列满了，需要等待再次重试
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		// 没有错误，没有队列满，可以继续
+		break
+	}
+
+	if retryFail == true {
+		// 没有等待时间，直接返回
+		s.log.Warningln("ask find queue is full, over max retry times, skip this time")
+		return
+	}
+
+	if bestOneSub.SubSha256 != "" {
+		// 说明查询的时候名中了缓存，无需往下继续查询，直接去排队下载即可
+	} else {
+		// 没有命中缓存，需要主动去查询
+		// 等待一定的时间去查询
+		if waitTime <= 0 {
+			waitTime = 5
+		}
+		s.log.Infoln("will wait", waitTime, "s 2 ask download sub")
+		// 等待耗时的动作
+		var sleepCounter int64
+		sleepCounter = 0
+		for true {
+			if sleepCounter > waitTime {
+				break
+			}
+			if sleepCounter%30 == 0 {
+				s.log.Infoln("wait 2 ask download sub")
+			}
+			time.Sleep(1 * time.Second)
+			sleepCounter++
+		}
+		// 直接查询
+		findSubReply, err := s.fileDownloader.SubtitleBestApi.FindSub(fileHash, mediaInfo.ImdbId, mediaInfo.TmdbId, Season, Episode, randomAuthToken, "")
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("FindSub Error: %s", err.Error()))
+		}
+		if len(findSubReply.Subtitle) < 1 {
+			return outSubInfoList, nil
+		}
+		bestOneSub = findBestSub(findSubReply.Subtitle)
+	}
+	// 得到查询结果，去排队下载
+	s.fileDownloader.SubtitleBestApi.AskDownloadSub(bestOneSub.SubSha256, randomAuthToken, "")
+}
+
+// askFindSubProcess 查找字幕
+func (s *Supplier) askFindSubProcess(VideoFeature, ImdbId, TmdbId, Season, Episode, FindSubToken, ApiKey string) (bestOneSub subtitle_best_api.Subtitle, queueIsFull bool, waitTime int64, err error) {
+
+	// 开始排队查询
+	askFindSubReply, err := s.fileDownloader.SubtitleBestApi.AskFindSub(VideoFeature, ImdbId, TmdbId, Season, Episode, FindSubToken, ApiKey)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("AskFindSub Error: %s", err.Error()))
+		err = errors.New(fmt.Sprintf("AskFindSub Error: %s", err.Error()))
+		return
 	}
 
 	if askFindSubReply.Status == 0 {
-		return nil, errors.New(fmt.Sprintf("AskFindSub Error: %s", askFindSubReply.Message))
+		err = errors.New(fmt.Sprintf("AskFindSub Error: %s", askFindSubReply.Message))
+		return
 	} else if askFindSubReply.Status == 1 {
 		// 成功，查询到了字幕列表（缓存有的）
+		if len(askFindSubReply.Subtitle) < 1 {
+			// 查询到了，但是返回的列表是空的，也直接返回
+			return
+		}
+		// 那么获取到了字幕列表，接下来就要去排队请求这个字幕
+		/*
+			每个返回的字幕中有两个特别的字段
+			1. match_video_feature，是否匹配传入的视频特征
+			2. low_trust，是否是低可信
+		*/
+		bestOneSub = findBestSub(askFindSubReply.Subtitle)
+		return
 	} else if askFindSubReply.Status == 2 {
-		// 放入队列，或者已经在队列中了
+		// 放入队列，或者已经在队列中了，根据服务器安排的时间去请求排队下载
+		// 得到目标时间与当前时间的差值，单位是s
+		waitTime = askFindSubReply.ScheduledUnixTime - time.Now().Unix()
+		return
 	} else if askFindSubReply.Status == 3 {
 		// 查询的队列满了
+		queueIsFull = true
+		return
 	} else {
 		// 不支持的返回值
+		err = errors.New(fmt.Sprintf("AskFindSub Not Support Status: %d, Message: %s", askFindSubReply.Status, askFindSubReply.Message))
+		return
 	}
+}
 
-	return outSubInfoList, nil
+func findBestSub(subtitles []subtitle_best_api.Subtitle) (bestOneSub subtitle_best_api.Subtitle) {
+	found := false
+	for _, subtitle := range subtitles {
+		if subtitle.MatchVideoFeature == true && subtitle.LowTrust == false {
+			// 匹配视频 且 高可信
+			bestOneSub = subtitle
+			found = true
+			break
+		}
+	}
+	if found == false {
+		// 没有找到，那么就按照高可信来查询
+		for _, subtitle := range subtitles {
+			if subtitle.LowTrust == false {
+				// 高可信
+				bestOneSub = subtitle
+				found = true
+				break
+			}
+		}
+	}
+	if found == false {
+		// 没有找到，那么就按照高视频匹配的来查询
+		for _, subtitle := range subtitles {
+			if subtitle.MatchVideoFeature == false {
+				// 匹配视频
+				bestOneSub = subtitle
+				found = true
+				break
+			}
+		}
+	}
+	if found == false {
+		// 上面的都没触发，那么就返回第一个字幕吧
+		bestOneSub = subtitles[0]
+	}
+	return
 }

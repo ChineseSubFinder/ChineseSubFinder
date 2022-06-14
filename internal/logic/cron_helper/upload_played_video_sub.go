@@ -103,7 +103,6 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 		notUploadedVideoSubInfos[0].Season,
 		notUploadedVideoSubInfos[0].Episode,
 		notUploadedVideoSubInfos[0].Feature,
-		ch.Settings.AdvancedSettings.ProxySettings,
 	)
 	if err != nil {
 		ch.log.Errorln(fmt.Errorf("AskFroUpload err: %v", err))
@@ -161,7 +160,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 			return
 		}
 		ch.log.Infoln("UploadSub", notUploadedVideoSubInfos[0].SubName)
-		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()), ch.Settings.AdvancedSettings.ProxySettings)
+		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()))
 		if err != nil {
 			ch.log.Errorln("UploadSub error:", err.Error())
 			return
@@ -289,7 +288,6 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 		0,
 		0,
 		notUploadedVideoSubInfos[0].Feature,
-		ch.Settings.AdvancedSettings.ProxySettings,
 	)
 	if err != nil {
 		ch.log.Errorln(fmt.Errorf("AskFroUpload err: %v", err))
@@ -347,7 +345,7 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 			return
 		}
 		ch.log.Infoln("UploadSub", notUploadedVideoSubInfos[0].SubName)
-		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadLowTrustSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()), ch.Settings.AdvancedSettings.ProxySettings)
+		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadLowTrustSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()))
 		if err != nil {
 			ch.log.Errorln("UploadSub error:", err.Error())
 			return

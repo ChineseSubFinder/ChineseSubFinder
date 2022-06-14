@@ -22,23 +22,25 @@ import (
 type SubtitleBestApi struct {
 	authKey       random_auth_key.AuthKey
 	randomAuthKey *random_auth_key.RandomAuthKey
+	proxySettings *settings.ProxySettings
 }
 
-func NewSubtitleBestApi(inAuthKey random_auth_key.AuthKey) *SubtitleBestApi {
+func NewSubtitleBestApi(inAuthKey random_auth_key.AuthKey, proxySettings *settings.ProxySettings) *SubtitleBestApi {
 	return &SubtitleBestApi{
 		randomAuthKey: random_auth_key.NewRandomAuthKey(5, inAuthKey),
 		authKey:       inAuthKey,
+		proxySettings: proxySettings,
 	}
 }
 
-func (s *SubtitleBestApi) GetCode(_proxySettings ...*settings.ProxySettings) (string, error) {
+func (s *SubtitleBestApi) GetCode() (string, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return "", errors.New("auth key is not set")
 	}
 
 	postUrl := webUrlBase + "/v1/subhd-code"
-	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	httpClient, err := my_util.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return "", err
 	}
@@ -75,7 +77,7 @@ func (s *SubtitleBestApi) GetCode(_proxySettings ...*settings.ProxySettings) (st
 	return string(decodeBytes), nil
 }
 
-func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string, _proxySettings ...*settings.ProxySettings) (*MediaInfoReply, error) {
+func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string) (*MediaInfoReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
@@ -88,7 +90,7 @@ func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string, _proxySetti
 	}
 
 	postUrl := webUrlBase + "/v1/media-info"
-	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	httpClient, err := my_util.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -116,13 +118,13 @@ func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string, _proxySetti
 }
 
 // AskFroUpload 在使用这个接口前，需要从 IMDB ID 获取到 TMDB ID
-func (s *SubtitleBestApi) AskFroUpload(subSha256 string, IsMovie, trusted bool, ImdbId, TmdbId string, Season, Episode int, VideoFeature string, _proxySettings ...*settings.ProxySettings) (*AskForUploadReply, error) {
+func (s *SubtitleBestApi) AskFroUpload(subSha256 string, IsMovie, trusted bool, ImdbId, TmdbId string, Season, Episode int, VideoFeature string) (*AskForUploadReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/ask-for-upload"
-	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	httpClient, err := my_util.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -172,14 +174,14 @@ func (s *SubtitleBestApi) AskFroUpload(subSha256 string, IsMovie, trusted bool, 
 
 // UploadSub 在使用这个接口前，需要从 IMDB ID 获取到 TMDB ID，其实在这一步应该默认就拿到了 TMDB ID，需要提前在 AskFroUpload 接口调用前就搞定这个
 // year 这个也是从之前的接口拿到, 2019  or  2022
-func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRootDirPath string, tmdbId, year string, _proxySettings ...*settings.ProxySettings) (*UploadSubReply, error) {
+func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRootDirPath string, tmdbId, year string) (*UploadSubReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
 	}
 
 	postUrl := webUrlBase + "/v1/upload-sub"
-	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	httpClient, err := my_util.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -243,14 +245,14 @@ func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRo
 	return &uploadSubReply, nil
 }
 
-func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVideoSubInfo, subSaveRootDirPath string, tmdbId, year string, _proxySettings ...*settings.ProxySettings) (*UploadSubReply, error) {
+func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVideoSubInfo, subSaveRootDirPath string, tmdbId, year string) (*UploadSubReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
 	}
 
 	postUrl := webUrlBase + "/v1/upload-sub"
-	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	httpClient, err := my_util.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -315,13 +317,13 @@ func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVide
 	return &uploadSubReply, nil
 }
 
-func (s *SubtitleBestApi) AskFindSub(VideoFeature, ImdbId, TmdbId, Season, Episode, FindSubToken, ApiKey string, _proxySettings ...*settings.ProxySettings) (*AskFindSubReply, error) {
+func (s *SubtitleBestApi) AskFindSub(VideoFeature, ImdbId, TmdbId, Season, Episode, FindSubToken, ApiKey string) (*AskFindSubReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/ask-find-sub"
-	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	httpClient, err := my_util.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -355,13 +357,13 @@ func (s *SubtitleBestApi) AskFindSub(VideoFeature, ImdbId, TmdbId, Season, Episo
 	return &askFindSubReply, nil
 }
 
-func (s *SubtitleBestApi) FindSub(VideoFeature, ImdbId, TmdbId, Season, Episode, FindSubToken, ApiKey string, _proxySettings ...*settings.ProxySettings) (*FindSubReply, error) {
+func (s *SubtitleBestApi) FindSub(VideoFeature, ImdbId, TmdbId, Season, Episode, FindSubToken, ApiKey string) (*FindSubReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/find-sub"
-	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	httpClient, err := my_util.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -395,13 +397,13 @@ func (s *SubtitleBestApi) FindSub(VideoFeature, ImdbId, TmdbId, Season, Episode,
 	return &findSubReply, nil
 }
 
-func (s *SubtitleBestApi) AskDownloadSub(SubSha256, DownloadToken, ApiKey string, _proxySettings ...*settings.ProxySettings) (*AskForDownloadReply, error) {
+func (s *SubtitleBestApi) AskDownloadSub(SubSha256, DownloadToken, ApiKey string) (*AskForDownloadReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/ask-for-download"
-	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	httpClient, err := my_util.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -432,13 +434,13 @@ func (s *SubtitleBestApi) AskDownloadSub(SubSha256, DownloadToken, ApiKey string
 }
 
 // DownloadSub 首先要确认 downloadFileDesFPath 这个文件是否存在，如果存在且跟需要下载的文件的 sha256 一样就要跳过，然后下载完毕后，也需要 check 这个文件是否存在，存在则需要判断是否是字幕
-func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, downloadFileDesFPath string, _proxySettings ...*settings.ProxySettings) (*DownloadSubReply, error) {
+func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, downloadFileDesFPath string) (*DownloadSubReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/download-sub"
-	httpClient, err := my_util.NewHttpClient(_proxySettings...)
+	httpClient, err := my_util.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}

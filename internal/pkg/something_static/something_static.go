@@ -118,7 +118,7 @@ func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string, fileDownloader
 	}
 
 	if found == false {
-		getCode, err := fileDownloader.SubtitleBestApi.GetCode(fileDownloader.Settings.AdvancedSettings.ProxySettings)
+		getCode, err := fileDownloader.SubtitleBestApi.GetCode()
 		if err != nil {
 			return "", "", errors.New(fmt.Sprintf("get code from web failed, %v \n", err.Error()))
 		}

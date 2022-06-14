@@ -29,7 +29,7 @@ func NewFileDownloader(cacheCenter *cache_center.CacheCenter, authKey random_aut
 	f := FileDownloader{Settings: cacheCenter.Settings,
 		Log:             cacheCenter.Log,
 		CacheCenter:     cacheCenter,
-		SubtitleBestApi: subtitle_best_api.NewSubtitleBestApi(authKey),
+		SubtitleBestApi: subtitle_best_api.NewSubtitleBestApi(authKey, cacheCenter.Settings.AdvancedSettings.ProxySettings),
 	}
 	return &f
 }
