@@ -144,7 +144,7 @@ func (s Supplier) findAndDownload(videoFPath string, isMovie bool) (outSubInfoLi
 	var queueIsFull bool
 	var waitTime int64
 	reTryTimes := 0
-	maxRetryTimes := 5
+	const maxRetryTimes = 5
 	retryFail := false
 	// 重试多次排队
 	for {
@@ -181,7 +181,7 @@ func (s Supplier) findAndDownload(videoFPath string, isMovie bool) (outSubInfoLi
 		if waitTime <= 0 {
 			waitTime = 5
 		}
-		s.log.Infoln("will wait", waitTime, "s 2 ask download sub")
+		s.log.Infoln("will wait", waitTime, "s 2 ask find sub")
 		// 等待耗时的动作
 		var sleepCounter int64
 		sleepCounter = 0
@@ -190,7 +190,7 @@ func (s Supplier) findAndDownload(videoFPath string, isMovie bool) (outSubInfoLi
 				break
 			}
 			if sleepCounter%30 == 0 {
-				s.log.Infoln("wait 2 ask download sub")
+				s.log.Infoln("wait 2 ask find sub")
 			}
 			time.Sleep(1 * time.Second)
 			sleepCounter++
@@ -205,8 +205,62 @@ func (s Supplier) findAndDownload(videoFPath string, isMovie bool) (outSubInfoLi
 		}
 		bestOneSub = findBestSub(findSubReply.Subtitle)
 	}
+
 	// 得到查询结果，去排队下载
-	s.fileDownloader.SubtitleBestApi.AskDownloadSub(bestOneSub.SubSha256, randomAuthToken, "")
+	reTryTimes = 0
+	retryFail = false
+	// 重试多次排队
+	for {
+		reTryTimes++
+		if reTryTimes > maxRetryTimes {
+			// 超过了最大重试次数，直接返回
+			retryFail = true
+			break
+		}
+		queueIsFull, waitTime, err = s.askDownloadSubProcess(bestOneSub.SubSha256, randomAuthToken, "")
+		if err != nil {
+			err = errors.New(fmt.Sprintf("AskDownloadSub Error: %s", err.Error()))
+			return
+		}
+		if queueIsFull == true {
+			// 队列满了，需要等待再次重试
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		// 没有错误，没有队列满，可以继续
+		break
+	}
+
+	if retryFail == true {
+		// 没有等待时间，直接返回
+		s.log.Warningln("ask download queue is full, over max retry times, skip this time")
+		return
+	}
+
+	// 等待一定的时间去查询
+	if waitTime <= 0 {
+		waitTime = 5
+	}
+	s.log.Infoln("will wait", waitTime, "s 2 ask download sub")
+	// 等待耗时的动作
+	var sleepCounter int64
+	sleepCounter = 0
+	for true {
+		if sleepCounter > waitTime {
+			break
+		}
+		if sleepCounter%30 == 0 {
+			s.log.Infoln("wait 2 ask download sub")
+		}
+		time.Sleep(1 * time.Second)
+		sleepCounter++
+	}
+	// 直接下载，这里需要再前面的过程中搞清楚这个字幕是什么后缀名，然后写入到缓存目录中
+	desSubSaveFPath := ""
+	downloadSubReply, err := s.fileDownloader.SubtitleBestApi.DownloadSub(bestOneSub.SubSha256, randomAuthToken, "", desSubSaveFPath)
+	if err != nil {
+		return nil, err
+	}
 }
 
 // askFindSubProcess 查找字幕
@@ -248,6 +302,34 @@ func (s *Supplier) askFindSubProcess(VideoFeature, ImdbId, TmdbId, Season, Episo
 	} else {
 		// 不支持的返回值
 		err = errors.New(fmt.Sprintf("AskFindSub Not Support Status: %d, Message: %s", askFindSubReply.Status, askFindSubReply.Message))
+		return
+	}
+}
+
+// askDownloadSubProcess 下载排队
+func (s *Supplier) askDownloadSubProcess(SubSha256, DownloadSubToken, ApiKey string) (queueIsFull bool, waitTime int64, err error) {
+
+	askDownloadSubReply, err := s.fileDownloader.SubtitleBestApi.AskDownloadSub(SubSha256, DownloadSubToken, ApiKey)
+	if err != nil {
+		err = errors.New(fmt.Sprintf("AskDownloadSub Error: %s", err.Error()))
+		return
+	}
+	if askDownloadSubReply.Status == 0 {
+		err = errors.New(fmt.Sprintf("AskDownloadSub Error: %s", askDownloadSubReply.Message))
+		return
+	} else if askDownloadSubReply.Status == 2 {
+		// 放入队列，或者已在队列中，根据等待的时间再去下载即可
+		waitTime = askDownloadSubReply.ScheduledUnixTime - time.Now().Unix()
+		return
+	} else if askDownloadSubReply.Status == 3 {
+		// 队列满了
+		queueIsFull = true
+		return
+	} else {
+		// 不应该出现 status = 1 的情况，这个先不改了，懒
+		// 其他情况也是
+		// 不支持的返回值
+		err = errors.New(fmt.Sprintf("AskFindSub Not Support Status: %d, Message: %s", askDownloadSubReply.Status, askDownloadSubReply.Message))
 		return
 	}
 }

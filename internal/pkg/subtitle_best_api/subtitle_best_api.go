@@ -481,13 +481,12 @@ func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, download
 	}
 	err = json.Unmarshal(readFile, &downloadReply)
 	if err != nil {
-		// 说明成功了
+		// 说明成功了，但是出去，还是要再次判断这个是不是字幕文件才行
 		downloadReply.Status = 1
 		downloadReply.Message = "success"
 		return &downloadReply, nil
 	}
-
-	// 那么需要把下载的文件给删除了
+	// 说明返回的这个文件是正常的 reply 文件，那么需要把下载的文件给删除了
 	err = os.Remove(downloadFileDesFPath)
 	if err != nil {
 		return nil, errors.New("remove file error: " + err.Error())
