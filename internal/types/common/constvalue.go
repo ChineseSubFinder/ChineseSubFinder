@@ -14,12 +14,13 @@ const EmbyApiGetItemsLimitMin = 50
 const EmbyApiGetItemsLimitMax = 1000000
 
 const (
-	SubSiteZiMuKu  = "zimuku"
-	SubSiteSubHd   = "subhd"
-	SubSiteShooter = "shooter"
-	SubSiteXunLei  = "xunlei"
-	SubSiteAssrt   = "assrt"
-	SubSiteA4K     = "a4k"
+	SubSiteChineseSubFinder = "csf"
+	SubSiteZiMuKu           = "zimuku"
+	SubSiteSubHd            = "subhd"
+	SubSiteShooter          = "shooter"
+	SubSiteXunLei           = "xunlei"
+	SubSiteAssrt            = "assrt"
+	SubSiteA4K              = "a4k"
 )
 
 const (
