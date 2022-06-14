@@ -154,7 +154,7 @@ func (f *FileDownloader) GetCSF(subSha256 string) (bool, *supplier.SubInfo, erro
 // AddCSF subtitle.best 使用这个
 func (f FileDownloader) AddCSF(inSubInfo *supplier.SubInfo) error {
 
-	inSubInfo.SetFileUrlSha256(inSubInfo.Name)
+	inSubInfo.SetFileUrlSha256(inSubInfo.FileUrl)
 	err := f.CacheCenter.DownloadFileAdd(inSubInfo)
 	if err != nil {
 		return err

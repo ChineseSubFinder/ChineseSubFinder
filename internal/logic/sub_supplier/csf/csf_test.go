@@ -9,8 +9,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
-	"path/filepath"
 	"testing"
 )
 
@@ -35,11 +33,13 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 
 	// 可以指定几集去调试
 	epsMap := make(map[int][]int, 0)
-	epsMap[4] = []int{1}
+	//epsMap[4] = []int{1}
+	epsMap[1] = []int{1}
 	//epsMap[1] = []int{1, 2, 3}
 
-	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
-	ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")
+	//rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
+	//ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")
+	ser := "X:\\连续剧\\Tokyo Vice"
 	// 读取本地的视频和字幕信息
 	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(log_helper.GetLogger4Tester(),
 		ser,

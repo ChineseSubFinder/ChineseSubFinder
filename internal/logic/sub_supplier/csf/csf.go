@@ -3,6 +3,7 @@ package csf
 import (
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"io/ioutil"
 	"os"
@@ -229,7 +230,11 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 		bestOneSub = findBestSub(findSubReply.Subtitle)
 	}
 
-	desSubSaveFPath := ""
+	tmpFolder, err := my_folder.GetRootTmpFolder()
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("GetRootTmpFolder Error: %s", err.Error()))
+	}
+	desSubSaveFPath := filepath.Join(tmpFolder, bestOneSub.SubSha256+bestOneSub.Ext)
 	foundSubCache, cacheSubInfo, err := s.fileDownloader.GetCSF(bestOneSub.SubSha256)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("GetCSF Error: %s", err.Error()))
