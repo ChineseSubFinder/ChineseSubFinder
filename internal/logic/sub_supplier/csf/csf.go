@@ -261,6 +261,18 @@ func (s Supplier) findAndDownload(videoFPath string, isMovie bool) (outSubInfoLi
 	if err != nil {
 		return nil, err
 	}
+
+	if downloadSubReply.Status == 0 {
+		// 下载失败了
+		err = errors.New(fmt.Sprintf("DownloadSub Error: %s", downloadSubReply.Message))
+		return
+	} else if downloadSubReply.Status == 1 {
+		// 下载成功
+	} else {
+		// 不支持的返回值
+		err = errors.New(fmt.Sprintf("DownloadSub Not Support Status: %d, Message: %s", downloadSubReply.Status, downloadSubReply.Message))
+		return
+	}
 }
 
 // askFindSubProcess 查找字幕

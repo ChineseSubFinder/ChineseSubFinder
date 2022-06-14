@@ -486,6 +486,7 @@ func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, download
 		downloadReply.Message = "success"
 		return &downloadReply, nil
 	}
+	// 正常来说，只会获取到字幕，不会有这个 DownloadSubReply 结构的返回，上面获取到了字幕文件，也是伪造一个返回而已
 	// 说明返回的这个文件是正常的 reply 文件，那么需要把下载的文件给删除了
 	err = os.Remove(downloadFileDesFPath)
 	if err != nil {
