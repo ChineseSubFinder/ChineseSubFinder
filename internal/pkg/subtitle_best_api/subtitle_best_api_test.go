@@ -23,15 +23,29 @@ func TestSubtitleBestApi_GetMediaInfo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	println(mediaInfo.TitleCN)
+
+	askFindSubReply, err := bapi.AskFindSub("0053b934afa0285e4de140e148c1c3768de73cfaad4170825c698308f8485c19",
+		"tt4236770", "73586", "4", "1", "haha123456", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	println("AskFindSub.Status:", askFindSubReply.Status)
+	println("AskFindSub.Message:", askFindSubReply.Message)
+
+	findSubReply, err := bapi.FindSub("0053b934afa0285e4de140e148c1c3768de73cfaad4170825c698308f8485c19",
+		"tt4236770", "73586", "4", "1", "haha123456", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	println("FindSub.Status:", findSubReply.Status)
+	println("FindSub.Message:", findSubReply.Message)
 
 	askForDownloadReply, err := bapi.AskDownloadSub("cd5e4bca49eea1f54f3eda5a38452b1c234075017857d010c76948124316cf2b",
 		"haha123456", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	println("AskDownloadSub.Status:", askForDownloadReply.Status)
 	println("AskDownloadSub.Message:", askForDownloadReply.Message)
 
@@ -40,7 +54,6 @@ func TestSubtitleBestApi_GetMediaInfo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	println("DownloadSub.Status", downloadSubReply.Status)
 	println("DownloadSub.Message", downloadSubReply.Message)
 }
