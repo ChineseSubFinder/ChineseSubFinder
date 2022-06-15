@@ -70,6 +70,7 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	// TODO 这里写固定了抉择字幕的顺序
 	sitesSequence = append(sitesSequence, common.SubSiteZiMuKu)
 	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
+	sitesSequence = append(sitesSequence, common.SubSiteChineseSubFinder)
 	sitesSequence = append(sitesSequence, common.SubSiteAssrt)
 	sitesSequence = append(sitesSequence, common.SubSiteShooter)
 	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
@@ -388,7 +389,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	epsMap := make(map[int][]int, 0)
 	epsMap[job.Season] = []int{job.Episode}
 
-	if job.VideoType == common.Series && (job.SeriesRootDirPath == "" || job.Season < 0 || job.Episode < 0) {
+	if job.VideoType == common.Series && (job.SeriesRootDirPath == "" || job.Season <= 0 || job.Episode <= 0) {
 		// 连续剧的时候需要额外提交信息
 		epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(job.VideoFPath)
 		if err != nil {
@@ -404,6 +405,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 		job.Episode = epsVideoNfoInfo.Episode
 		job.SeriesRootDirPath = seriesInfoDirPath
 		// 如果进来的时候是 Season 和 Eps 是 -1， 那么就需要重新赋值那些集是需要下载的，否则后面会跳过
+		epsMap = make(map[int][]int, 0)
 		epsMap[job.Season] = []int{job.Episode}
 	}
 

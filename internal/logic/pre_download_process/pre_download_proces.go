@@ -6,6 +6,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/assrt"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/csf"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
@@ -111,6 +112,11 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 		if common2.SubhdCode != "" {
 			// 如果找到 code 了，那么就可以继续用这个实例
 			p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.fileDownloader))
+		}
+
+		if p.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
+			// 如果开启了分享字幕功能，那么就可以开启这个功能
+			p.SubSupplierHub.AddSubSupplier(csf.NewSupplier(p.fileDownloader))
 		}
 	}
 	// ------------------------------------------------------------------------

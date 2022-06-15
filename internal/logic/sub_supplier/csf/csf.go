@@ -3,14 +3,15 @@ package csf
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/subtitle_best_api"
 
@@ -227,7 +228,7 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 		if len(findSubReply.Subtitle) < 1 {
 			return outSubInfoList, nil
 		}
-		bestOneSub = findBestSub(findSubReply.Subtitle)
+		bestOneSub = s.findBestSub(findSubReply.Subtitle)
 	}
 
 	tmpFolder, err := my_folder.GetRootTmpFolder()
@@ -371,7 +372,7 @@ func (s *Supplier) askFindSubProcess(VideoFeature, ImdbId, TmdbId, Season, Episo
 			1. match_video_feature，是否匹配传入的视频特征
 			2. low_trust，是否是低可信
 		*/
-		bestOneSub = findBestSub(askFindSubReply.Subtitle)
+		bestOneSub = s.findBestSub(askFindSubReply.Subtitle)
 		return
 	} else if askFindSubReply.Status == 2 {
 		// 放入队列，或者已经在队列中了，根据服务器安排的时间去请求排队下载
@@ -417,13 +418,14 @@ func (s *Supplier) askDownloadSubProcess(SubSha256, DownloadSubToken, ApiKey str
 	}
 }
 
-func findBestSub(subtitles []subtitle_best_api.Subtitle) (bestOneSub subtitle_best_api.Subtitle) {
+func (s *Supplier) findBestSub(subtitles []subtitle_best_api.Subtitle) (bestOneSub subtitle_best_api.Subtitle) {
 	found := false
 	for _, subtitle := range subtitles {
 		if subtitle.MatchVideoFeature == true && subtitle.LowTrust == false {
 			// 匹配视频 且 高可信
 			bestOneSub = subtitle
 			found = true
+			s.log.Infoln("Find Best Subtitle, MatchVideoFeature == true and HighTrust", subtitle.SubSha256)
 			break
 		}
 	}
@@ -434,6 +436,7 @@ func findBestSub(subtitles []subtitle_best_api.Subtitle) (bestOneSub subtitle_be
 				// 高可信
 				bestOneSub = subtitle
 				found = true
+				s.log.Infoln("Find Best Subtitle, HighTrust", subtitle.SubSha256)
 				break
 			}
 		}
@@ -444,6 +447,7 @@ func findBestSub(subtitles []subtitle_best_api.Subtitle) (bestOneSub subtitle_be
 			if subtitle.MatchVideoFeature == false {
 				// 匹配视频
 				bestOneSub = subtitle
+				s.log.Infoln("Find Best Subtitle, MatchVideoFeature == true", subtitle.SubSha256)
 				found = true
 				break
 			}
@@ -452,6 +456,7 @@ func findBestSub(subtitles []subtitle_best_api.Subtitle) (bestOneSub subtitle_be
 	if found == false {
 		// 上面的都没触发，那么就返回第一个字幕吧
 		bestOneSub = subtitles[0]
+		s.log.Infoln("Find Best Subtitle, LowTrust", bestOneSub.SubSha256)
 	}
 	return
 }
