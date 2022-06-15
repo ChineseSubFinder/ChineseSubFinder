@@ -42,3 +42,7 @@ npm run build
 | key         | value             |
 | ----------- | ----------------- |
 | BACKEND_URL | 后台 API 服务地址 |
+
+## WebUI 进入后更新说明
+
+修改这个文件的内容即可：`/front/NOTIFY.md`
