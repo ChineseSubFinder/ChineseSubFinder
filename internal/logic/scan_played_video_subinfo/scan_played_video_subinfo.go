@@ -231,58 +231,61 @@ func (s *ScanPlayedVideoSubInfo) Scan() error {
 
 	// 使用 Http API 标记的已观看列表
 	{
-		// 下面需要把给出外部的 HTTP API 提交的视频和字幕信息(ThirdPartSetVideoPlayedInfo)进行判断，存入数据库
-		shareRootDir, err := my_folder.GetShareSubRootFolder()
-		if err != nil {
-			return err
-		}
-
-		var videoPlayedInfos []models.ThirdPartSetVideoPlayedInfo
-		dao.GetDb().Find(&videoPlayedInfos)
-
-		for i, thirdPartSetVideoPlayedInfo := range videoPlayedInfos {
-			// 先要判断这个是 Movie 还是 Series
-			// 因为设计这个 API 的时候为了简化提交的参数，也假定传入的可能不是正确的分类（电影or连续剧）
-			// 所以只能比较傻的，低效率的匹配映射的目录来做到识别是哪个分类的
-
-			bFoundMovie := false
-			bFoundSeries := false
-			for _, moviePath := range s.settings.CommonSettings.MoviePaths {
-				// 先判断类型是否是 Movie
-				if strings.HasPrefix(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, moviePath) == true {
-					bFoundMovie = true
-					break
-				}
+		// TODO 暂时屏蔽掉 http api 提交的已看字幕的接口上传
+		if false {
+			// 下面需要把给出外部的 HTTP API 提交的视频和字幕信息(ThirdPartSetVideoPlayedInfo)进行判断，存入数据库
+			shareRootDir, err := my_folder.GetShareSubRootFolder()
+			if err != nil {
+				return err
 			}
-			if bFoundMovie == false {
-				for _, seriesPath := range s.settings.CommonSettings.SeriesPaths {
-					// 判断是否是 Series
-					if strings.HasPrefix(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, seriesPath) == true {
-						bFoundSeries = true
+
+			var videoPlayedInfos []models.ThirdPartSetVideoPlayedInfo
+			dao.GetDb().Find(&videoPlayedInfos)
+
+			for i, thirdPartSetVideoPlayedInfo := range videoPlayedInfos {
+				// 先要判断这个是 Movie 还是 Series
+				// 因为设计这个 API 的时候为了简化提交的参数，也假定传入的可能不是正确的分类（电影or连续剧）
+				// 所以只能比较傻的，低效率的匹配映射的目录来做到识别是哪个分类的
+
+				bFoundMovie := false
+				bFoundSeries := false
+				for _, moviePath := range s.settings.CommonSettings.MoviePaths {
+					// 先判断类型是否是 Movie
+					if strings.HasPrefix(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, moviePath) == true {
+						bFoundMovie = true
 						break
 					}
 				}
-			}
+				if bFoundMovie == false {
+					for _, seriesPath := range s.settings.CommonSettings.SeriesPaths {
+						// 判断是否是 Series
+						if strings.HasPrefix(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, seriesPath) == true {
+							bFoundSeries = true
+							break
+						}
+					}
+				}
 
-			if bFoundMovie == false && bFoundSeries == false {
-				// 说明提交的这个视频文件无法匹配电影或者连续剧的目录前缀
-				s.log.Warningln("Not matched Movie and Series Prefix Path", thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath)
-				continue
-			}
+				if bFoundMovie == false && bFoundSeries == false {
+					// 说明提交的这个视频文件无法匹配电影或者连续剧的目录前缀
+					s.log.Warningln("Not matched Movie and Series Prefix Path", thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath)
+					continue
+				}
 
-			IsMovie := false
-			videoTypes := common.Movie
-			if bFoundMovie == true {
-				videoTypes = common.Movie
-				IsMovie = true
-			}
-			if bFoundSeries == true {
-				videoTypes = common.Series
-				IsMovie = false
-			}
+				IsMovie := false
+				videoTypes := common.Movie
+				if bFoundMovie == true {
+					videoTypes = common.Movie
+					IsMovie = true
+				}
+				if bFoundSeries == true {
+					videoTypes = common.Series
+					IsMovie = false
+				}
 
-			tmpSubFPath := filepath.Join(filepath.Dir(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath), thirdPartSetVideoPlayedInfo.SubName)
-			s.dealOneVideo(i, thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, tmpSubFPath, videoTypes.String(), shareRootDir, IsMovie, s.imdbInfoCache)
+				tmpSubFPath := filepath.Join(filepath.Dir(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath), thirdPartSetVideoPlayedInfo.SubName)
+				s.dealOneVideo(i, thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, tmpSubFPath, videoTypes.String(), shareRootDir, IsMovie, s.imdbInfoCache)
+			}
 		}
 	}
 
