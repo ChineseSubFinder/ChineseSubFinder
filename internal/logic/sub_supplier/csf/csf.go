@@ -339,6 +339,8 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 		return nil, errors.New(fmt.Sprintf("ReadFile Error: %s", err.Error()))
 	}
 	oneSubInfo := supplier.NewSubInfo(s.GetSupplierName(), 1, subFileName, subFileInfo.Lang, bestOneSub.SubSha256, 0, 0, bestOneSub.Ext, subBytes)
+	oneSubInfo.Season = Season
+	oneSubInfo.Episode = Episode
 
 	err = s.fileDownloader.AddCSF(oneSubInfo)
 	if err != nil {
