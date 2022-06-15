@@ -104,6 +104,12 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 			xunlei.NewSupplier(p.fileDownloader),
 			shooter.NewSupplier(p.fileDownloader),
 		)
+		
+		if p.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
+			// 如果开启了分享字幕功能，那么就可以开启这个功能
+			p.SubSupplierHub.AddSubSupplier(csf.NewSupplier(p.fileDownloader))
+		}
+
 		if p.settings.SubtitleSources.AssrtSettings.Enabled == true &&
 			p.settings.SubtitleSources.AssrtSettings.Token != "" {
 			// 如果开启了 ASSRt 字幕源，则需要新增
@@ -112,11 +118,6 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 		if common2.SubhdCode != "" {
 			// 如果找到 code 了，那么就可以继续用这个实例
 			p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.fileDownloader))
-		}
-
-		if p.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
-			// 如果开启了分享字幕功能，那么就可以开启这个功能
-			p.SubSupplierHub.AddSubSupplier(csf.NewSupplier(p.fileDownloader))
 		}
 	}
 	// ------------------------------------------------------------------------
