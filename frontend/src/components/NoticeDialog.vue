@@ -8,9 +8,7 @@
       <q-separator />
 
       <q-card-section>
-        <ul>
-          <li>新增共享字幕功能，可以在 <span class="text-bold">配置中心-实验室</span> 开启</li>
-        </ul>
+        <markdown :source="notifyContent"></markdown>
       </q-card-section>
 
       <q-separator />
@@ -27,6 +25,9 @@ import {computed, onMounted, ref} from 'vue';
 import {LocalStorage} from 'quasar';
 import {until} from '@vueuse/core';
 import {systemState} from 'src/store/systemState';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import notifyContent from 'raw-loader!../../NOTIFY.md'
+import Markdown from 'components/Markdown';
 
 const visible = ref(false);
 
