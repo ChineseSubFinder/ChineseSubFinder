@@ -95,7 +95,7 @@ func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo
 		return outSubInfos, nil
 	}
 
-	return s.findAndDownload(filePath, true, "", "")
+	return s.findAndDownload(filePath, true, 0, 0)
 }
 
 func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
@@ -108,7 +108,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 	// 这里拿到的 seriesInfo ，里面包含了，需要下载字幕的 Eps 信息
 	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 
-		oneSubInfoList, err := s.findAndDownload(episodeInfo.FileFullPath, false, strconv.Itoa(episodeInfo.Season), strconv.Itoa(episodeInfo.Episode))
+		oneSubInfoList, err := s.findAndDownload(episodeInfo.FileFullPath, false, episodeInfo.Season, episodeInfo.Episode)
 		if err != nil {
 			return outSubInfos, errors.New("FindAndDownload error:" + err.Error())
 		}
@@ -128,7 +128,7 @@ func (s *Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]su
 	// 这里拿到的 seriesInfo ，里面包含了，需要下载字幕的 Eps 信息
 	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 
-		oneSubInfoList, err := s.findAndDownload(episodeInfo.FileFullPath, false, strconv.Itoa(episodeInfo.Season), strconv.Itoa(episodeInfo.Episode))
+		oneSubInfoList, err := s.findAndDownload(episodeInfo.FileFullPath, false, episodeInfo.Season, episodeInfo.Episode)
 		if err != nil {
 			return outSubInfos, errors.New("FindAndDownload error:" + err.Error())
 		}
@@ -138,7 +138,7 @@ func (s *Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]su
 	return outSubInfos, nil
 }
 
-func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Episode string) (outSubInfoList []supplier.SubInfo, err error) {
+func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Episode int) (outSubInfoList []supplier.SubInfo, err error) {
 
 	defer func() {
 		s.log.Debugln(s.GetSupplierName(), videoFPath, "End...")
@@ -159,8 +159,8 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 	}
 
 	if isMovie == true {
-		Season = "0"
-		Episode = "0"
+		Season = 0
+		Episode = 0
 	}
 
 	// 标记本次请求的归属性
@@ -221,11 +221,12 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 			sleepCounter++
 		}
 		// 直接查询
-		findSubReply, err := s.fileDownloader.SubtitleBestApi.FindSub(fileHash, mediaInfo.ImdbId, mediaInfo.TmdbId, Season, Episode, randomAuthToken, "")
+		findSubReply, err := s.fileDownloader.SubtitleBestApi.FindSub(fileHash, mediaInfo.ImdbId, mediaInfo.TmdbId, strconv.Itoa(Season), strconv.Itoa(Episode), randomAuthToken, "")
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("FindSub Error: %s", err.Error()))
 		}
 		if len(findSubReply.Subtitle) < 1 {
+			s.log.Warningln("FindSub Error: no sub found")
 			return outSubInfoList, nil
 		}
 		bestOneSub = s.findBestSub(findSubReply.Subtitle)
@@ -242,6 +243,8 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 	}
 	if foundSubCache == true {
 		// 在本地缓存中找到了
+		cacheSubInfo.Season = Season
+		cacheSubInfo.Episode = Episode
 		outSubInfoList = append(outSubInfoList, *cacheSubInfo)
 		return
 	}
@@ -300,7 +303,7 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 
 	downloadSubReply, err := s.fileDownloader.SubtitleBestApi.DownloadSub(bestOneSub.SubSha256, randomAuthToken, "", desSubSaveFPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("DownloadSub Error: %s", err.Error()))
 	}
 
 	if downloadSubReply.Status == 0 {
@@ -348,10 +351,10 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 }
 
 // askFindSubProcess 查找字幕
-func (s *Supplier) askFindSubProcess(VideoFeature, ImdbId, TmdbId, Season, Episode, FindSubToken, ApiKey string) (bestOneSub subtitle_best_api.Subtitle, queueIsFull bool, waitTime int64, err error) {
+func (s *Supplier) askFindSubProcess(VideoFeature, ImdbId, TmdbId string, Season, Episode int, FindSubToken, ApiKey string) (bestOneSub subtitle_best_api.Subtitle, queueIsFull bool, waitTime int64, err error) {
 
 	// 开始排队查询
-	askFindSubReply, err := s.fileDownloader.SubtitleBestApi.AskFindSub(VideoFeature, ImdbId, TmdbId, Season, Episode, FindSubToken, ApiKey)
+	askFindSubReply, err := s.fileDownloader.SubtitleBestApi.AskFindSub(VideoFeature, ImdbId, TmdbId, strconv.Itoa(Season), strconv.Itoa(Episode), FindSubToken, ApiKey)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("AskFindSub Error: %s", err.Error()))
 		return

@@ -1,13 +1,17 @@
 package xunlei
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/cache_center"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
 	"testing"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/cache_center"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 )
 
 func TestGetList(t *testing.T) {
@@ -30,8 +34,8 @@ func TestGetList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	xunlie := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter(settings.NewSettings(), log_helper.GetLogger4Tester())))
-	outList, err := xunlie.getSubListFromFile(gVideoFPath)
+	defInstance()
+	outList, err := xunleiInstance.getSubListFromFile(gVideoFPath)
 	if err != nil {
 		t.Error(err)
 	}
@@ -41,8 +45,24 @@ func TestGetList(t *testing.T) {
 		println(i, sublist.Name, sublist.Ext, sublist.Language.String(), sublist.Score, len(sublist.Data))
 	}
 
-	alive, _ := xunlie.CheckAlive()
+	alive, _ := xunleiInstance.CheckAlive()
 	if alive == false {
 		t.Fatal("CheckAlive == false")
 	}
+}
+
+var xunleiInstance *Supplier
+
+func defInstance() {
+
+	my_util.ReadCustomAuthFile(log_helper.GetLogger4Tester())
+
+	authKey := random_auth_key.AuthKey{
+		BaseKey:  global_value.BaseKey(),
+		AESKey16: global_value.AESKey16(),
+		AESIv16:  global_value.AESIv16(),
+	}
+
+	xunleiInstance = NewSupplier(file_downloader.NewFileDownloader(
+		cache_center.NewCacheCenter("test", settings.GetSettings(), log_helper.GetLogger4Tester()), authKey))
 }

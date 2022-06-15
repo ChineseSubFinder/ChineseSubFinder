@@ -115,7 +115,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 			//
 			//ch.scanPlayedVideoSub()
 
-			ch.uploadVideoSub()
+			//ch.uploadVideoSub()
 		}
 	}
 

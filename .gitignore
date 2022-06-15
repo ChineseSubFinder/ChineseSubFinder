@@ -123,6 +123,5 @@ ChineseSubFinderSettings.json
 /internal/logic/sub_supplier/subhd/CustomAuth
 /internal/pkg/subtitle_best_api/CustomAuth
 /internal/logic/sub_supplier/csf/CustomAuth
-/internal/logic/sub_supplier/csf/cache/CSF-CacheCenter/*.db
-/internal/logic/sub_supplier/csf/cache/CSF-CacheCenter/download_files
-/internal/logic/sub_supplier/csf/cache/tmp
+/internal/logic/sub_supplier/csf/cache
+/internal/logic/sub_supplier/xunlei/cache

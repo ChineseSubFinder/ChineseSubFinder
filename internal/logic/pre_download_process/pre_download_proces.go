@@ -3,6 +3,8 @@ package pre_download_process
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/assrt"
@@ -18,7 +20,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/url_connectedness_helper"
 	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 type PreDownloadProcess struct {
@@ -95,7 +96,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	if p.settings.SpeedDevMode == true {
 
 		p.SubSupplierHub = subSupplier.NewSubSupplierHub(
-			assrt.NewSupplier(p.fileDownloader),
+			csf.NewSupplier(p.fileDownloader),
 		)
 	} else {
 
@@ -104,7 +105,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 			xunlei.NewSupplier(p.fileDownloader),
 			shooter.NewSupplier(p.fileDownloader),
 		)
-		
+
 		if p.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
 			// 如果开启了分享字幕功能，那么就可以开启这个功能
 			p.SubSupplierHub.AddSubSupplier(csf.NewSupplier(p.fileDownloader))
