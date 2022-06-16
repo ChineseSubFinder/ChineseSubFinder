@@ -73,6 +73,7 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
 	sitesSequence = append(sitesSequence, common.SubSiteChineseSubFinder)
 	sitesSequence = append(sitesSequence, common.SubSiteAssrt)
+	sitesSequence = append(sitesSequence, common.SubSiteA4K)
 	sitesSequence = append(sitesSequence, common.SubSiteShooter)
 	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
 	downloader.mk = markSystem.NewMarkingSystem(downloader.log, sitesSequence, downloader.settings.AdvancedSettings.SubTypePriority)

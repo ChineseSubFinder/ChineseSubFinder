@@ -3,6 +3,7 @@ package pre_download_process
 import (
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/a4k"
 	"time"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
@@ -104,6 +105,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 			//zimuku.NewSupplier(p.fileDownloader),
 			xunlei.NewSupplier(p.fileDownloader),
 			shooter.NewSupplier(p.fileDownloader),
+			a4k.NewSupplier(p.fileDownloader),1
 		)
 
 		if p.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
