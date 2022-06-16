@@ -76,6 +76,12 @@ func (s *Supplier) IsAlive() bool {
 }
 
 func (s *Supplier) OverDailyDownloadLimit() bool {
+
+	if s.settings.AdvancedSettings.SuppliersSettings.A4k.DailyDownloadLimit == 0 {
+		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit is 0, will Skip Download")
+		return true
+	}
+
 	// 对于这个接口暂时没有限制
 	return false
 }

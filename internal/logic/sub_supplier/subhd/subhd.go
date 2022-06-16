@@ -94,6 +94,11 @@ func (s *Supplier) IsAlive() bool {
 
 func (s *Supplier) OverDailyDownloadLimit() bool {
 
+	if s.settings.AdvancedSettings.SuppliersSettings.SubHD.DailyDownloadLimit == 0 {
+		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit is 0, will Skip Download")
+		return true
+	}
+
 	// 需要查询今天的限额
 	count, err := s.fileDownloader.CacheCenter.DailyDownloadCountGet(s.GetSupplierName(),
 		my_util.GetPublicIP(s.log, s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
@@ -101,7 +106,7 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 		s.log.Errorln(s.GetSupplierName(), "DailyDownloadCountGet", err)
 		return true
 	}
-	if count > s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit {
+	if count >= s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit {
 		// 超限了
 		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.AdvancedSettings.SuppliersSettings.SubHD.DailyDownloadLimit, "Now Is:", count)
 		return true
