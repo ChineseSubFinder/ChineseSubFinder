@@ -105,7 +105,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 			//zimuku.NewSupplier(p.fileDownloader),
 			xunlei.NewSupplier(p.fileDownloader),
 			shooter.NewSupplier(p.fileDownloader),
-			a4k.NewSupplier(p.fileDownloader),1
+			a4k.NewSupplier(p.fileDownloader),
 		)
 
 		if p.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
