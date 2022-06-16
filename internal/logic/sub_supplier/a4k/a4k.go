@@ -204,6 +204,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 			}
 		}
 		// 开启下载
+		downloadCounter := 0
 		for _, searchResultItem := range searchResultItems {
 
 			if episodeInfo.Season == searchResultItem.Season && episodeInfo.Episode == searchResultItem.Episode {
@@ -220,6 +221,11 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 			}
 
 			outSubInfos = append(outSubInfos, *subInfo)
+			// 连续剧的时候至多下载 5 个即可
+			downloadCounter++
+			if downloadCounter >= 5 {
+				break
+			}
 		}
 	}
 
@@ -267,6 +273,9 @@ func (s *Supplier) searchKeyword(keyword string, isMovie bool) (searchResultItem
 
 func (s *Supplier) listPageItems(keyword string, pageIndex int, isMovie bool) (searchResultItems []SearchResultItem, totalPage int, err error) {
 
+	defer func() {
+		time.Sleep(time.Second * 10)
+	}()
 	searchResultItems = make([]SearchResultItem, 0)
 	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
@@ -365,6 +374,10 @@ func (s *Supplier) listPageItems(keyword string, pageIndex int, isMovie bool) (s
 }
 
 func (s Supplier) downloadSub(videoFileName, downloadPageUrl string, season, eps int) (subInfo *supplier.SubInfo, err error) {
+
+	defer func() {
+		time.Sleep(time.Second * 5)
+	}()
 
 	var httpClient *resty.Client
 	httpClient, err = my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)

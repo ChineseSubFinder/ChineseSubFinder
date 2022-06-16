@@ -73,7 +73,9 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i, got := range organizeSubFiles {
-		println(i, got)
+		for j, s := range got {
+			println(i, j, s)
+		}
 	}
 }
 
