@@ -52,6 +52,21 @@ func (s *Supplier) CheckAlive() (bool, int64) {
 
 	// 计算当前时间
 	startT := time.Now()
+	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	if err != nil {
+		s.log.Errorln(s.GetSupplierName(), "CheckAlive.NewHttpClient", err)
+		return false, 0
+	}
+	searPageUrl := fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.A4k.RootUrl)
+	resp, err := httpClient.R().Get(searPageUrl)
+	if err != nil {
+		s.log.Errorln(s.GetSupplierName(), "CheckAlive.Get", err)
+		return false, 0
+	}
+	if resp.StatusCode() != 200 {
+		s.log.Errorln(s.GetSupplierName(), "CheckAlive.StatusCode", resp.StatusCode())
+		return false, 0
+	}
 	s.isAlive = true
 	return true, time.Since(startT).Milliseconds()
 }
