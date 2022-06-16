@@ -150,7 +150,7 @@ func (d *SubSupplierHub) DownloadSub4Movie(videoFullPath string, index int64) ([
 		return nil, nil
 	}
 	// 整理字幕，比如解压什么的
-	organizeSubFiles, err := sub_helper.OrganizeDlSubFiles(d.log, filepath.Base(videoFullPath), subInfos)
+	organizeSubFiles, err := sub_helper.OrganizeDlSubFiles(d.log, filepath.Base(videoFullPath), subInfos, true)
 	if err != nil {
 		return nil, errors.Newf("OrganizeDlSubFiles %v %v", videoFullPath, err)
 	}
@@ -237,7 +237,7 @@ func (d *SubSupplierHub) dlSubFromSeriesInfo(seriesDirPath string, index int64, 
 		d.log.Warningln("DownloadSubtitleInAllSiteByOneSeries.subInfos == 0, No Sub Downloaded.")
 	}
 
-	organizeSubFiles, err := sub_helper.OrganizeDlSubFiles(d.log, filepath.Base(seriesDirPath), subInfos)
+	organizeSubFiles, err := sub_helper.OrganizeDlSubFiles(d.log, filepath.Base(seriesDirPath), subInfos, false)
 	if err != nil {
 		return nil, errors.Newf("OrganizeDlSubFiles %v %v", seriesDirPath, err)
 	}

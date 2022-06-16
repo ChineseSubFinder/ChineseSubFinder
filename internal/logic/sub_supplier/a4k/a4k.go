@@ -3,6 +3,10 @@ package a4k
 import (
 	"errors"
 	"fmt"
+	"github.com/Tnze/go.num/v2/zh"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/mix_media_info"
+	"github.com/go-resty/resty/v2"
+	"github.com/jinzhu/now"
 	"strconv"
 	"strings"
 	"time"
@@ -73,48 +77,147 @@ func (s *Supplier) GetSupplierName() string {
 	return common2.SubSiteA4K
 }
 
-func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
+func (s *Supplier) GetSubListFromFile4Movie(videoFPath string) ([]supplier.SubInfo, error) {
+
+	defer func() {
+		s.log.Debugln(s.GetSupplierName(), videoFPath, "End...")
+	}()
+
+	s.log.Debugln(s.GetSupplierName(), videoFPath, "Start...")
 
 	outSubInfos := make([]supplier.SubInfo, 0)
-	//return s.findAndDownload(filePath, true, 0, 0)
+
+	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.log, s.fileDownloader.SubtitleBestApi,
+		videoFPath, true, s.settings.AdvancedSettings.ProxySettings)
+	if err != nil {
+		s.log.Errorln(s.GetSupplierName(), "GetMixMediaInfo", err)
+		return nil, err
+	}
+	// 需要找到中文名称去搜索
+	keyWord, err := mix_media_info.KeyWordSelect(mediaInfo, videoFPath, true, "cn")
+	if err != nil {
+		s.log.Errorln(s.GetSupplierName(), "keyWordSelect", err)
+		return nil, err
+	}
+	airTime, err := now.Parse(mediaInfo.Year)
+	if err != nil {
+		s.log.Errorln(s.GetSupplierName(), "Parse airTime", err)
+		return nil, err
+	}
+	searchKeyword := fmt.Sprintf("%s %d", keyWord, airTime.Year())
+	s.log.Infoln(s.GetSupplierName(), "searchKeyword", searchKeyword)
+	searchResultItems, err := s.searchKeyword(searchKeyword, true)
+	if err != nil {
+		return nil, err
+	}
+	if len(searchResultItems) == 0 {
+		// 没有找到则返回
+		s.log.Infoln(s.GetSupplierName(), "searchKeyword", searchKeyword, "not found")
+		return nil, nil
+	}
+	// 开启下载
+	downloadCounter := 0
+	for _, searchResultItem := range searchResultItems {
+
+		downloadPageUrl := s.settings.AdvancedSettings.SuppliersSettings.A4k.RootUrl + searchResultItem.RUrl
+		subInfo, err := s.downloadSub(videoFPath, downloadPageUrl, 0, 0)
+		if err != nil {
+			s.log.Errorln(s.GetSupplierName(), "downloadSub", err)
+			return nil, err
+		}
+
+		outSubInfos = append(outSubInfos, *subInfo)
+		downloadCounter++
+
+		if downloadCounter >= s.topic {
+			break
+		}
+	}
+
 	return outSubInfos, nil
 }
 
 func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 
+	defer func() {
+		s.log.Debugln(s.GetSupplierName(), seriesInfo.Name, "End...")
+	}()
+
+	s.log.Debugln(s.GetSupplierName(), seriesInfo.Name, "Start...")
+
 	// 搜索的策略应该是 绝命律师 第五季  or 绝命律师 S05E06 这两种方式，优先后者，具体去搜索，如果找不到然后再切换关键词为全季
 	outSubInfos := make([]supplier.SubInfo, 0)
 	// 这里拿到的 seriesInfo ，里面包含了，需要下载字幕的 Eps 信息
-	//for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
-	//
-	//	oneSubInfoList, err := s.findAndDownload(episodeInfo.FileFullPath, false, episodeInfo.Season, episodeInfo.Episode)
-	//	if err != nil {
-	//		return outSubInfos, errors.New("FindAndDownload error:" + err.Error())
-	//	}
-	//	outSubInfos = append(outSubInfos, oneSubInfoList...)
-	//}
+	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
+
+		mediaInfo, err := mix_media_info.GetMixMediaInfo(s.log, s.fileDownloader.SubtitleBestApi,
+			episodeInfo.FileFullPath, false, s.settings.AdvancedSettings.ProxySettings)
+		if err != nil {
+			s.log.Errorln(s.GetSupplierName(), "GetMixMediaInfo", err)
+			return nil, err
+		}
+		// 需要找到中文名称去搜索
+		keyWord, err := mix_media_info.KeyWordSelect(mediaInfo, episodeInfo.FileFullPath, false, "cn")
+		if err != nil {
+			s.log.Errorln(s.GetSupplierName(), "keyWordSelect", err)
+			return nil, err
+		}
+		// 第一次搜索 黄石 S04E01
+		s.log.Infoln(s.GetSupplierName(), "searchKeyword", keyWord)
+		searchResultItems, err := s.searchKeyword(keyWord, false)
+		if err != nil {
+			return nil, err
+		}
+		if len(searchResultItems) == 0 {
+			// 没有找到则更换关键词
+			// 黄石 第四季
+			keyWord, err = mix_media_info.KeyWordSelect(mediaInfo, episodeInfo.FileFullPath, true, "cn")
+			if err != nil {
+				s.log.Errorln(s.GetSupplierName(), "keyWordSelect", err)
+				return nil, err
+			}
+			searchKeyword := fmt.Sprintf("%s %s", keyWord, " 第"+zh.Uint64(episodeInfo.Season).String()+"季")
+			s.log.Infoln(s.GetSupplierName(), "searchKeyword", searchKeyword)
+			searchResultItems, err = s.searchKeyword(searchKeyword, false)
+			if err != nil {
+				return nil, err
+			}
+			if len(searchResultItems) == 0 {
+				// 没有找到则返回
+				s.log.Infoln(s.GetSupplierName(), episodeInfo.Season, episodeInfo.Episode, "no sub found")
+				return nil, nil
+			}
+		}
+		// 开启下载
+		for _, searchResultItem := range searchResultItems {
+
+			if episodeInfo.Season == searchResultItem.Season && episodeInfo.Episode == searchResultItem.Episode {
+				// Season 和 Eps 匹配上再继续下载
+			} else if episodeInfo.Season == searchResultItem.Season && searchResultItem.IsFullSeason == true {
+				// Season 匹配上，Eps 为 0 则下载，全季
+			}
+			downloadPageUrl := s.settings.AdvancedSettings.SuppliersSettings.A4k.RootUrl + searchResultItem.RUrl
+			// 注意这里传入的 Season Episode 是这个字幕下载时候解析出来的信息
+			subInfo, err := s.downloadSub(episodeInfo.FileFullPath, downloadPageUrl, searchResultItem.Season, searchResultItem.Episode)
+			if err != nil {
+				s.log.Errorln(s.GetSupplierName(), "downloadSub", err)
+				return nil, err
+			}
+
+			outSubInfos = append(outSubInfos, *subInfo)
+		}
+	}
 
 	return outSubInfos, nil
 }
 
 func (s *Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 
-	outSubInfos := make([]supplier.SubInfo, 0)
-	// 这里拿到的 seriesInfo ，里面包含了，需要下载字幕的 Eps 信息
-	//for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
-	//
-	//	oneSubInfoList, err := s.findAndDownload(episodeInfo.FileFullPath, false, episodeInfo.Season, episodeInfo.Episode)
-	//	if err != nil {
-	//		return outSubInfos, errors.New("FindAndDownload error:" + err.Error())
-	//	}
-	//	outSubInfos = append(outSubInfos, oneSubInfoList...)
-	//}
-
-	return outSubInfos, nil
+	panic("not implemented")
 }
 
 // searchKeyword 通过关键词获取所有的字幕列表
-func (s *Supplier) searchKeyword(keyword string) (searchResultItems []SearchResultItem, err error) {
+func (s *Supplier) searchKeyword(keyword string, isMovie bool) (searchResultItems []SearchResultItem, err error) {
 
 	var totalPage int
 	totalPage = 0
@@ -125,10 +228,10 @@ func (s *Supplier) searchKeyword(keyword string) (searchResultItems []SearchResu
 		var nowSearchResultItem []SearchResultItem
 		if nowPageIndex == 0 {
 			// 第一页才有获取总页数的操作
-			nowSearchResultItem, totalPage, err = s.listPageItems(keyword, nowPageIndex)
+			nowSearchResultItem, totalPage, err = s.listPageItems(keyword, nowPageIndex, isMovie)
 		} else {
 			// 其他页面，跳过总页数的获取逻辑
-			nowSearchResultItem, _, err = s.listPageItems(keyword, nowPageIndex)
+			nowSearchResultItem, _, err = s.listPageItems(keyword, nowPageIndex, isMovie)
 		}
 		if err != nil {
 			return
@@ -147,7 +250,7 @@ func (s *Supplier) searchKeyword(keyword string) (searchResultItems []SearchResu
 	return
 }
 
-func (s *Supplier) listPageItems(keyword string, pageIndex int) (searchResultItems []SearchResultItem, totalPage int, err error) {
+func (s *Supplier) listPageItems(keyword string, pageIndex int, isMovie bool) (searchResultItems []SearchResultItem, totalPage int, err error) {
 
 	searchResultItems = make([]SearchResultItem, 0)
 	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
@@ -191,6 +294,7 @@ func (s *Supplier) listPageItems(keyword string, pageIndex int) (searchResultIte
 		}
 		searchResultItems = append(searchResultItems, SearchResultItem{
 			Title:        title,
+			IsMovie:      isMovie,
 			RUrl:         hrefUrl,
 			Season:       season,
 			Episode:      eps,
@@ -211,9 +315,17 @@ func (s *Supplier) listPageItems(keyword string, pageIndex int) (searchResultIte
 	}
 	// 判断一共有多少页，一页就是 0，第二页就是 1，以此类推
 	lastPageSelection := doc.Find("a.pager__item--last")
+	if pageIndex == 0 && lastPageSelection == nil {
+		// 说明只有一页的结果
+		return
+	}
 	if lastPageSelection != nil {
 		// 说明至少有两页
 		lastPageHrefUrl, ok := lastPageSelection.Attr("href")
+		if pageIndex == 0 && ok == false {
+			// 说明只有一页的结果
+			return
+		}
 		if ok == false {
 			err = errors.New("last page a href is nil")
 			return
@@ -237,19 +349,19 @@ func (s *Supplier) listPageItems(keyword string, pageIndex int) (searchResultIte
 	return
 }
 
-func (s Supplier) downloadSub(downloadPageUrl string) {
+func (s Supplier) downloadSub(videoFileName, downloadPageUrl string, season, eps int) (subInfo *supplier.SubInfo, err error) {
 
-	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	var httpClient *resty.Client
+	httpClient, err = my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
+		err = errors.New("NewHttpClient error:" + err.Error())
 		return
 	}
 	// 先对第一页进行分析
-	resp, err := httpClient.R().Get(downloadPageUrl)
+	var resp *resty.Response
+	resp, err = httpClient.R().Get(downloadPageUrl)
 	if err != nil {
-		return
-	}
-	if err != nil {
-		err = errors.New("goquery NewDocumentFromReader error:" + err.Error())
+		err = errors.New("http get error:" + err.Error())
 		return
 	}
 	var doc *goquery.Document
@@ -258,13 +370,32 @@ func (s Supplier) downloadSub(downloadPageUrl string) {
 		err = errors.New("goquery NewDocumentFromReader error:" + err.Error())
 		return
 	}
+	// 找到下载的 btn
+	downloadBtSelection := doc.Find("div.buttons a.green")
+	if downloadBtSelection == nil {
+		err = errors.New("download btn is nil")
+		return
+	}
+	downloadBtHrefUrl, ok := downloadBtSelection.Attr("href")
+	if ok == false {
+		err = errors.New("download btn href is nil")
+		return
+	}
+	// 开始下载
+	downloadFileUrl := s.settings.AdvancedSettings.SuppliersSettings.A4k.RootUrl + downloadBtHrefUrl
+	subInfo, err = s.fileDownloader.GetA4k(s.GetSupplierName(), 0, season, eps, videoFileName, downloadFileUrl)
+	if err != nil {
+		err = errors.New("fileDownloader.Get error:" + err.Error())
+		return
+	}
 
-	doc.Find(".sub-item-list li.item div.content h3")
+	return
 }
 
 type SearchResultItem struct {
 	Title        string `json:"title"`
 	RUrl         string `json:"r_url"`
+	IsMovie      bool   `json:"is_movie"`
 	Season       int    `json:"season"`
 	Episode      int    `json:"episode"`
 	IsFullSeason bool   `json:"is_full_season"`

@@ -24,7 +24,7 @@ import (
 )
 
 // OrganizeDlSubFiles 需要从汇总来是网站字幕中，解压对应的压缩包中的字幕出来
-func OrganizeDlSubFiles(log *logrus.Logger, tmpFolderName string, subInfos []supplier.SubInfo) (map[string][]string, error) {
+func OrganizeDlSubFiles(log *logrus.Logger, tmpFolderName string, subInfos []supplier.SubInfo, isMovie bool) (map[string][]string, error) {
 
 	// 缓存列表，整理后的字幕列表
 	// SxEx - []string 字幕的路径
@@ -85,16 +85,43 @@ func OrganizeDlSubFiles(log *logrus.Logger, tmpFolderName string, subInfos []sup
 			}
 			// 这里需要给这些下载到的文件进行改名，加是从那个网站来的前缀，后续好查找
 			for _, fileFullPath := range subFileFullPaths {
-				newSubName := AddFrontName(subInfos[i], filepath.Base(fileFullPath))
-				newSubNameFullPath := filepath.Join(tmpFolderFullPath, newSubName)
-				// 改名
-				err = os.Rename(fileFullPath, newSubNameFullPath)
-				if err != nil {
-					log.Errorln("os.Rename", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
-					continue
+				if isMovie == false {
+					// 连续剧的情况
+					// 从解压的文件名称推断 Season 和 Episode 信息
+					_, nowSeason, nowEps, err := decode.GetSeasonAndEpisodeFromSubFileName(filepath.Base(fileFullPath))
+					if err != nil {
+						continue
+					}
+					newSubName := AddFrontName(subInfos[i], filepath.Base(fileFullPath))
+					newSubNameFullPath := filepath.Join(tmpFolderFullPath, newSubName)
+					// 改名
+					err = os.Rename(fileFullPath, newSubNameFullPath)
+					if err != nil {
+						log.Errorln("os.Rename", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
+						continue
+					}
+					// 加入缓存列表
+					// 根据当前字幕的信息来构建 key
+					SEPKey := my_util.GetEpisodeKeyName(nowSeason, nowEps)
+					_, ok = siteSubInfoDict[SEPKey]
+					if ok == false {
+						siteSubInfoDict[SEPKey] = make([]string, 0)
+					}
+					siteSubInfoDict[SEPKey] = append(siteSubInfoDict[SEPKey], newSubNameFullPath)
+				} else {
+					// 电影的情况
+					newSubName := AddFrontName(subInfos[i], filepath.Base(fileFullPath))
+					newSubNameFullPath := filepath.Join(tmpFolderFullPath, newSubName)
+					// 改名
+					err = os.Rename(fileFullPath, newSubNameFullPath)
+					if err != nil {
+						log.Errorln("os.Rename", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
+						continue
+					}
+					// 加入缓存列表
+					siteSubInfoDict[epsKey] = append(siteSubInfoDict[epsKey], newSubNameFullPath)
 				}
-				// 加入缓存列表
-				siteSubInfoDict[epsKey] = append(siteSubInfoDict[epsKey], newSubNameFullPath)
+
 			}
 		}
 	}
