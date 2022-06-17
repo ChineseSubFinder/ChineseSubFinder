@@ -3,15 +3,16 @@ package cron_helper
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/mix_media_info"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/jinzhu/now"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // uploadVideoSub  上传字幕的定时器
@@ -180,10 +181,11 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 				strings.Contains(uploadSubReply.Message, "sub file has no chinese") == true {
 				notUploadedVideoSubInfos[0].IsSend = true
 				dao.GetDb().Save(&notUploadedVideoSubInfos[0])
-				ch.log.Infoln("subtitle upload error,", uploadSubReply.Message, "will not upload again")
+				ch.log.Infoln("subtitle upload error, uploadSubReply.Status == 0, ", uploadSubReply.Message, "will not upload again")
 				return
 			} else {
-				ch.log.Errorln("subtitle upload error,", uploadSubReply.Message)
+				ch.log.Errorln("subtitle upload error, uploadSubReply.Status == 0, not support error:", uploadSubReply.Message)
+				return
 			}
 		} else {
 			ch.log.Warningln("UploadSub Message:", uploadSubReply.Message)
@@ -347,7 +349,7 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 		ch.log.Infoln("UploadSub", notUploadedVideoSubInfos[0].SubName)
 		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadLowTrustSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()))
 		if err != nil {
-			ch.log.Errorln("UploadSub error:", err.Error())
+			ch.log.Errorln("UploadLowTrustSub error:", err.Error())
 			return
 		}
 		if uploadSubReply.Status == 1 {
@@ -365,10 +367,11 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 				strings.Contains(uploadSubReply.Message, "sub file has no chinese") == true {
 				notUploadedVideoSubInfos[0].IsSend = true
 				dao.GetDb().Save(&notUploadedVideoSubInfos[0])
-				ch.log.Infoln("subtitle upload error,", uploadSubReply.Message, "will not upload again")
+				ch.log.Infoln("subtitle upload error, uploadSubReply.Status == 0, Message:", uploadSubReply.Message, "will not upload again")
 				return
 			} else {
-				ch.log.Errorln("subtitle upload error,", uploadSubReply.Message)
+				ch.log.Errorln("subtitle upload error, uploadSubReply.Status == 0, not support error:", uploadSubReply.Message)
+				return
 			}
 		} else {
 			ch.log.Warningln("UploadSub Message:", uploadSubReply.Message)

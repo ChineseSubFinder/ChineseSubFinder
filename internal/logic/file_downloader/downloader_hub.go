@@ -34,7 +34,7 @@ func NewFileDownloader(cacheCenter *cache_center.CacheCenter, authKey random_aut
 		Log:             cacheCenter.Log,
 		CacheCenter:     cacheCenter,
 		SubParserHub:    sub_parser_hub.NewSubParserHub(cacheCenter.Log, ass.NewParser(cacheCenter.Log), srt.NewParser(cacheCenter.Log)),
-		SubtitleBestApi: subtitle_best_api.NewSubtitleBestApi(authKey, cacheCenter.Settings.AdvancedSettings.ProxySettings),
+		SubtitleBestApi: subtitle_best_api.NewSubtitleBestApi(cacheCenter.Log, authKey, cacheCenter.Settings.AdvancedSettings.ProxySettings),
 	}
 	return &f
 }

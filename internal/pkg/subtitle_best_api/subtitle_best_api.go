@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
@@ -20,13 +22,15 @@ import (
 )
 
 type SubtitleBestApi struct {
+	log           *logrus.Logger
 	authKey       random_auth_key.AuthKey
 	randomAuthKey *random_auth_key.RandomAuthKey
 	proxySettings *settings.ProxySettings
 }
 
-func NewSubtitleBestApi(inAuthKey random_auth_key.AuthKey, proxySettings *settings.ProxySettings) *SubtitleBestApi {
+func NewSubtitleBestApi(log *logrus.Logger, inAuthKey random_auth_key.AuthKey, proxySettings *settings.ProxySettings) *SubtitleBestApi {
 	return &SubtitleBestApi{
+		log:           log,
 		randomAuthKey: random_auth_key.NewRandomAuthKey(5, inAuthKey),
 		authKey:       inAuthKey,
 		proxySettings: proxySettings,
@@ -51,7 +55,7 @@ func (s *SubtitleBestApi) GetCode() (string, error) {
 	}
 
 	var codeReplyData CodeReplyData
-	_, err = httpClient.R().
+	resp, err := httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
 		SetQueryParams(map[string]string{
 			"now_time": time.Now().Format("2006-01-02"),
@@ -60,10 +64,13 @@ func (s *SubtitleBestApi) GetCode() (string, error) {
 		SetResult(&codeReplyData).
 		Get(postUrl)
 	if err != nil {
+		s.log.Errorln("get code error, status code:", resp.StatusCode(), "Error:", err)
 		return "", err
 	}
 
-	//println(resp.StatusCode())
+	if codeReplyData.Status == 0 {
+		s.log.Warningln("status code:", resp.StatusCode())
+	}
 
 	if codeReplyData.Status == 0 {
 		return "", errors.New(codeReplyData.Message)
@@ -101,7 +108,7 @@ func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string) (*MediaInfo
 	}
 
 	var mediaInfoReply MediaInfoReply
-	_, err = httpClient.R().
+	resp, err := httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
 		SetBody(MediaInfoReq{
 			Id:        id,
@@ -111,7 +118,12 @@ func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string) (*MediaInfo
 		SetResult(&mediaInfoReply).
 		Post(postUrl)
 	if err != nil {
+		s.log.Errorln("get media info error, status code:", resp.StatusCode(), "Error:", err)
 		return nil, err
+	}
+
+	if mediaInfoReply.Status == 0 {
+		s.log.Warningln("status code:", resp.StatusCode())
 	}
 
 	return &mediaInfoReply, nil
@@ -160,13 +172,18 @@ func (s *SubtitleBestApi) AskFroUpload(subSha256 string, IsMovie, trusted bool, 
 	}
 
 	var askForUploadReply AskForUploadReply
-	_, err = httpClient.R().
+	resp, err := httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
 		SetFormData(formData).
 		SetResult(&askForUploadReply).
 		Post(postUrl)
 	if err != nil {
+		s.log.Errorln("ask for upload error, status code:", resp.StatusCode(), "Error:", err)
 		return nil, err
+	}
+
+	if askForUploadReply.Status == 0 {
+		s.log.Warningln("status code:", resp.StatusCode())
 	}
 
 	return &askForUploadReply, nil
@@ -219,7 +236,7 @@ func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRo
 	}
 
 	var uploadSubReply UploadSubReply
-	_, err = httpClient.R().
+	resp, err := httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
 		SetFileReader("sub_file_context", videoSubInfo.SubName, bytes.NewReader(fd)).
 		SetFormData(map[string]string{
@@ -239,7 +256,12 @@ func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRo
 		SetResult(&uploadSubReply).
 		Post(postUrl)
 	if err != nil {
+		s.log.Errorln("upload sub error, status code:", resp.StatusCode(), "Error:", err)
 		return nil, err
+	}
+
+	if uploadSubReply.Status == 0 {
+		s.log.Warningln("status code:", resp.StatusCode())
 	}
 
 	return &uploadSubReply, nil
@@ -290,7 +312,7 @@ func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVide
 	}
 
 	var uploadSubReply UploadSubReply
-	_, err = httpClient.R().
+	resp, err := httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
 		SetFileReader("sub_file_context", lowTrustVideoSubInfo.SubName, bytes.NewReader(fd)).
 		SetFormData(map[string]string{
@@ -311,7 +333,12 @@ func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVide
 		SetResult(&uploadSubReply).
 		Post(postUrl)
 	if err != nil {
+		s.log.Errorln("upload sub error, status code:", resp.StatusCode(), "Error:", err)
 		return nil, err
+	}
+
+	if uploadSubReply.Status == 0 {
+		s.log.Warningln("status code:", resp.StatusCode())
 	}
 
 	return &uploadSubReply, nil
@@ -345,13 +372,18 @@ func (s *SubtitleBestApi) AskFindSub(VideoFeature, ImdbId, TmdbId, Season, Episo
 		postData["api_key"] = ApiKey
 	}
 	var askFindSubReply AskFindSubReply
-	_, err = httpClient.R().
+	resp, err := httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
 		SetFormData(postData).
 		SetResult(&askFindSubReply).
 		Post(postUrl)
 	if err != nil {
+		s.log.Errorln("ask find sub error, status code:", resp.StatusCode(), "Error:", err)
 		return nil, err
+	}
+
+	if askFindSubReply.Status == 0 {
+		s.log.Warningln("status code:", resp.StatusCode())
 	}
 
 	return &askFindSubReply, nil
@@ -385,13 +417,18 @@ func (s *SubtitleBestApi) FindSub(VideoFeature, ImdbId, TmdbId, Season, Episode,
 		postData["api_key"] = ApiKey
 	}
 	var findSubReply FindSubReply
-	_, err = httpClient.R().
+	resp, err := httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
 		SetFormData(postData).
 		SetResult(&findSubReply).
 		Post(postUrl)
 	if err != nil {
+		s.log.Errorln("find sub error, status code:", resp.StatusCode(), "Error:", err)
 		return nil, err
+	}
+
+	if findSubReply.Status == 0 {
+		s.log.Warningln("status code:", resp.StatusCode())
 	}
 
 	return &findSubReply, nil
@@ -421,13 +458,18 @@ func (s *SubtitleBestApi) AskDownloadSub(SubSha256, DownloadToken, ApiKey string
 		postData["api_key"] = ApiKey
 	}
 	var askDownloadReply AskForDownloadReply
-	_, err = httpClient.R().
+	resp, err := httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
 		SetFormData(postData).
 		SetResult(&askDownloadReply).
 		Post(postUrl)
 	if err != nil {
+		s.log.Errorln("ask download sub error, status code:", resp.StatusCode(), "Error:", err)
 		return nil, err
+	}
+
+	if askDownloadReply.Status == 0 {
+		s.log.Warningln("status code:", resp.StatusCode())
 	}
 
 	return &askDownloadReply, nil
@@ -466,13 +508,18 @@ func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, download
 	}
 
 	var downloadReply DownloadSubReply
-	_, err = httpClient.R().
+	resp, err := httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
 		SetFormData(postData).
 		SetOutput(downloadFileDesFPath).
 		Post(postUrl)
 	if err != nil {
+		s.log.Errorln("download sub error, status code:", resp.StatusCode(), "Error:", err)
 		return nil, err
+	}
+
+	if downloadReply.Status == 0 {
+		s.log.Warningln("status code:", resp.StatusCode())
 	}
 
 	readFile, err := ioutil.ReadFile(downloadFileDesFPath)
