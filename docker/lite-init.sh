@@ -33,7 +33,7 @@ cross_make() {
     fi
     echo "[$(date +'%H:%M:%S')] 开始编译 ${GOARCH} 平台..."
     go build \
-        -ldflags="-s -w --extldflags '-static -fpic' -X main.AppVersion=${VERSION} -X main.LiteMode=true -X main.BaseKey=${ASEKEY} -X main.AESKey16=${AESKEY16} -X main.AESIv16=${AESIV16}" \
+        -ldflags="-s -w --extldflags '-static -fpic' -X main.AppVersion=${VERSION} -X main.LiteMode=true -X main.BaseKey=${BASEKEY} -X main.AESKey16=${AESKEY16} -X main.AESIv16=${AESIV16}" \
         -o ~/go/out/${GOARCH}/chinesesubfinder \
         ./cmd/chinesesubfinder
     if [[ -n ${CROSS_NAME} ]]; then
