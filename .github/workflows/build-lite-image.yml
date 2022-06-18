@@ -43,7 +43,15 @@ jobs:
         name: Go Build
         working-directory: docker
         run: |
-          docker run --rm -e VERSION=${{ steps.prepare.outputs.version }} -v $(pwd)/go:/root/go -v $(pwd)/lite-init.sh:/init.sh --entrypoint "/init.sh" nevinee/csf-cross-builder
+          docker run --rm \
+            -e VERSION=${{ steps.prepare.outputs.version }} \
+            -e BASEKEY=${{ secrets.BASEKEY }} \
+            -e AESKEY16=${{ secrets.AESKEY16 }} \
+            -e AESIV16=${{ secrets.AESIV16 }}
+            -v $(pwd)/go:/root/go \
+            -v $(pwd)/lite-init.sh:/init.sh \
+            --entrypoint "/init.sh" \
+            nevinee/csf-cross-builder
 
       - 
         name: Docker Buildx Latest Image
