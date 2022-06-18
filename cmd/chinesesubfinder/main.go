@@ -5,6 +5,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
@@ -43,11 +44,14 @@ func newLog() *logrus.Logger {
 func init() {
 	loggerBase = newLog()
 	// --------------------------------------------------
-	if LiteMode == true {
+	if strings.ToLower(LiteMode) == "true" {
 		loggerBase.Info("LiteMode is true")
 		AppVersion += " Lite"
+		global_value.SetLiteMode(true)
+	} else {
+		global_value.SetLiteMode(false)
 	}
-	global_value.SetLiteMode(LiteMode)
+
 	loggerBase.Infoln("ChineseSubFinder Version:", AppVersion)
 
 	global_value.SetAppVersion(AppVersion)
@@ -168,6 +172,6 @@ var (
 	AESIv16  = "1234567890123456"    // 初始化向量
 )
 
-var LiteMode = false // 是否轻量级运行模式（不支持Chrome相关操作，也就是无法支持 subhd 和 zimuku 等类似需要复杂爬虫的字幕源）
+var LiteMode = "false" // 是否轻量级运行模式（不支持Chrome相关操作，也就是无法支持 subhd 和 zimuku 等类似需要复杂爬虫的字幕源）
 
 var loggerBase *logrus.Logger
