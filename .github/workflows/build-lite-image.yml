@@ -4,7 +4,6 @@ on:
     tags:
       - v*.*.*
       - v*.*-Beta*
-      - v*.*-ExeBeta*
   workflow_dispatch:
 
 jobs:
@@ -34,7 +33,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Go Build
+      - name: Go Cross Build
         working-directory: docker
         run: |
           docker run --rm \
@@ -43,9 +42,10 @@ jobs:
             -e AESKEY16=${{ secrets.AESKEY16 }} \
             -e AESIV16=${{ secrets.AESIV16 }} \
             -v $(pwd)/go:/root/go \
-            -v $(pwd)/lite-init.sh:/init.sh \
+            -v $(pwd)/lite-make.sh:/init.sh \
             --entrypoint "/init.sh" \
             nevinee/csf-cross-builder
+
       - name: Docker Buildx Latest Image
         if: "!contains(steps.prepare.outputs.version, 'Beta')"
         uses: docker/build-push-action@v3
