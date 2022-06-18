@@ -1,4 +1,4 @@
-name: 构建镜像：chinesesubfinder-base
+name: 构建base镜像
 on:
   workflow_dispatch:
 
@@ -31,7 +31,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: docker
-          file: docker/base.Dockerfile
+          file: docker/full-base.Dockerfile
           platforms: |
             linux/amd64
             linux/arm64
