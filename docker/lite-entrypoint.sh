@@ -15,7 +15,7 @@ if [[ -d /app/cache ]]; then
         rm -rf /config/cache &>/dev/null
     fi
     if [[ ! -e /config/cache ]]; then
-        s6-setuidgid ${PUID}:${PGID} ln -sf /app/cache /config/cache
+        su-exec ${PUID}:${PGID} ln -sf /app/cache /config/cache
     fi
 else
     if [[ -L /config/cache ]]; then
