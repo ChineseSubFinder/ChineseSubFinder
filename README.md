@@ -125,7 +125,8 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 
 ## 感谢
 
-感谢 [iMyon (Myon) ](https://github.com/iMyon) 帮搞定 Web 前端部分
+- [iMyon (Myon) ](https://github.com/iMyon) 帮搞定 Web 前端部分
+- [devome](https://github.com/devome) 帮解决 Linux 和 Docker 编译、部署相关问题
 
 感谢下面项目的帮助
 
