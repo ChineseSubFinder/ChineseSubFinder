@@ -1,19 +1,17 @@
 <template>
-  <span v-if="latestVersion?.tag_name
-   && systemState.systemInfo
-   &&latestVersion.tag_name !== systemState.systemInfo?.version"
-        @click="visible = true"
+  <span
+    v-if="
+      latestVersion?.tag_name && systemState.systemInfo && latestVersion.tag_name !== systemState.systemInfo?.version
+    "
+    @click="visible = true"
   >
     <slot v-if="$slots.default"></slot>
-    <q-badge v-else class="cursor-pointer"
-             label="new"
-             title="有新的版本更新"
-    />
+    <q-badge v-else class="cursor-pointer" label="new" title="有新的版本更新" />
   </span>
   <q-dialog v-if="latestVersion" v-model="visible">
-    <q-card class="column" style="width: 600px; min-height: 400px;">
+    <q-card class="column" style="width: 600px; min-height: 400px">
       <q-card-section>
-        <div class="text-h5">{{latestVersion.tag_name}}</div>
+        <div class="text-h5">{{ latestVersion.tag_name }}</div>
       </q-card-section>
 
       <q-tabs
@@ -29,7 +27,7 @@
         <q-tab name="update" label="升级方式" />
       </q-tabs>
 
-      <q-separator/>
+      <q-separator />
 
       <q-tab-panels class="col" v-model="tab" animated>
         <q-tab-panel name="log">
@@ -40,9 +38,7 @@
             <div class="text-h6">Windows</div>
             <div>
               下载最新版本替换，
-              <a :href="latestVersion.html_url" target="_blank">
-                下载地址
-              </a>
+              <a :href="latestVersion.html_url" target="_blank"> 下载地址 </a>
             </div>
           </section>
 
@@ -51,51 +47,44 @@
             <div>
               参考教程
               <!-- eslint-disable-next-line max-len -->
-              <a href="https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/v0.20%E6%95%99%E7%A8%8B/00.Docker%E9%83%A8%E7%BD%B2%E6%95%99%E7%A8%8B.md" target="_blank">
+              <a href="https://github.com/allanpk716/ChineseSubFinder/blob/master/docker/readme.md" target="_blank">
                 Docker部署教程
               </a>
             </div>
-            <div class="text-grey">* 新版本发布到Docker发布完成可能需要一小时左右，如果发现Docker拉取的版本没有变化，请耐心等待一段时间</div>
+            <div class="text-grey">
+              * 新版本发布到Docker发布完成可能需要一小时左右，如果发现Docker拉取的版本没有变化，请耐心等待一段时间
+            </div>
           </section>
-
         </q-tab-panel>
       </q-tab-panels>
 
-      <q-separator/>
+      <q-separator />
 
       <q-card-actions align="right">
-        <q-btn
-          color="primary"
-          @click="navigateToReleasePage"
-        >
-          前往更新
-        </q-btn>
+        <q-btn color="primary" @click="navigateToReleasePage"> 前往更新 </q-btn>
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue';
+import { onMounted, ref } from 'vue';
 import Markdown from 'components/Markdown';
-import {systemState} from 'src/store/systemState';
-import {LocalStorage} from 'quasar';
+import { systemState } from 'src/store/systemState';
+import { LocalStorage } from 'quasar';
 
 const latestVersion = ref(LocalStorage.getItem('latestVersion') ?? null);
 const visible = ref(false);
 const tab = ref('log');
 
-
 const getLatestVersion = async () => {
   try {
-    const data = await fetch('https://api.github.com/repos/allanpk716/chinesesubfinder/releases/latest').then(
-      (res) => {
-        if (res.ok) {
-          return res.json();
-        }
-        return Promise.reject(res)
+    const data = await fetch('https://api.github.com/repos/allanpk716/chinesesubfinder/releases/latest').then((res) => {
+      if (res.ok) {
+        return res.json();
       }
-    );
+      return Promise.reject(res);
+    });
     latestVersion.value = data;
     // 接口请求速率过高有可能403，本地存一份
     LocalStorage.set('latestVersion', data);
@@ -107,11 +96,10 @@ const getLatestVersion = async () => {
 const navigateToReleasePage = () => {
   window.open(latestVersion.value.html_url);
   visible.value = false;
-}
+};
 
 onMounted(getLatestVersion);
 </script>
-
 
 <style lang="scss" scoped>
 a {
