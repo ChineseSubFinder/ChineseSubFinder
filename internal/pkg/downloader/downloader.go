@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/csf"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
@@ -280,7 +282,10 @@ func (d *Downloader) QueueDownloader() {
 			if err != nil {
 				d.log.Error("ClearRootTmpFolder", err)
 			}
-			my_util.CloseChrome(d.log)
+
+			if global_value.LiteMode() == false {
+				my_util.CloseChrome(d.log)
+			}
 		}()
 
 		if oneJob.VideoType == common.Movie {

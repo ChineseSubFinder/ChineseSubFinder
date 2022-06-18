@@ -3,8 +3,10 @@ package pre_download_process
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/a4k"
 	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/a4k"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
@@ -62,33 +64,36 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	notify_center.Notify.Clear()
 	// ------------------------------------------------------------------------
 	// 获取验证码
-	nowTT := time.Now()
-	nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
-	updateTimeString, code, err := something_static.GetCodeFromWeb(p.log, nowTimeFileNamePrix, p.fileDownloader)
-	if err != nil {
-		notify_center.Notify.Add("GetSubhdCode", "GetCodeFromWeb,"+err.Error())
-		p.log.Errorln("something_static.GetCodeFromWeb", err)
-		p.log.Errorln("Skip Subhd download")
-		// 没有则需要清空
-		common2.SubhdCode = ""
-	} else {
+	if global_value.LiteMode() == false {
 
-		// 获取到的更新时间不是当前的日期，那么本次也跳过本次
-		codeTime, err := time.Parse("2006-01-02", updateTimeString)
+		nowTT := time.Now()
+		nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
+		updateTimeString, code, err := something_static.GetCodeFromWeb(p.log, nowTimeFileNamePrix, p.fileDownloader)
 		if err != nil {
-			p.log.Errorln("something_static.GetCodeFromWeb.time.Parse", err)
+			notify_center.Notify.Add("GetSubhdCode", "GetCodeFromWeb,"+err.Error())
+			p.log.Errorln("something_static.GetCodeFromWeb", err)
+			p.log.Errorln("Skip Subhd download")
 			// 没有则需要清空
 			common2.SubhdCode = ""
 		} else {
 
-			nowTime := time.Now()
-			if codeTime.YearDay() != nowTime.YearDay() {
+			// 获取到的更新时间不是当前的日期，那么本次也跳过本次
+			codeTime, err := time.Parse("2006-01-02", updateTimeString)
+			if err != nil {
+				p.log.Errorln("something_static.GetCodeFromWeb.time.Parse", err)
 				// 没有则需要清空
 				common2.SubhdCode = ""
-				p.log.Warningln("something_static.GetCodeFromWeb, GetCodeTime:", updateTimeString, "NowTime:", time.Now().String(), "Skip")
 			} else {
-				p.log.Infoln("GetCode", updateTimeString, code)
-				common2.SubhdCode = code
+
+				nowTime := time.Now()
+				if codeTime.YearDay() != nowTime.YearDay() {
+					// 没有则需要清空
+					common2.SubhdCode = ""
+					p.log.Warningln("something_static.GetCodeFromWeb, GetCodeTime:", updateTimeString, "NowTime:", time.Now().String(), "Skip")
+				} else {
+					p.log.Infoln("GetCode", updateTimeString, code)
+					common2.SubhdCode = code
+				}
 			}
 		}
 	}
@@ -118,14 +123,18 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 			// 如果开启了 ASSRt 字幕源，则需要新增
 			p.SubSupplierHub.AddSubSupplier(assrt.NewSupplier(p.fileDownloader))
 		}
-		if common2.SubhdCode != "" {
-			// 如果找到 code 了，那么就可以继续用这个实例
-			p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.fileDownloader))
+
+		if global_value.LiteMode() == false {
+			// 如果不是 Lite 模式，那么就可以开启这个功能
+			if common2.SubhdCode != "" {
+				// 如果找到 code 了，那么就可以继续用这个实例
+				p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.fileDownloader))
+			}
 		}
 	}
 	// ------------------------------------------------------------------------
 	// 清理自定义的 rod 缓存目录
-	err = my_folder.ClearRodTmpRootFolder()
+	err := my_folder.ClearRodTmpRootFolder()
 	if err != nil {
 		p.gError = errors.New("ClearRodTmpRootFolder " + err.Error())
 		return p

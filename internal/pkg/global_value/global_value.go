@@ -118,6 +118,15 @@ func AdblockTmpFolder() string {
 	return _adblockTmpFolder
 }
 
+// LiteMode ---------------------------------------------
+func LiteMode() bool {
+	return _liteMode
+}
+
+func SetLiteMode(liteMode bool) {
+	_liteMode = liteMode
+}
+
 // ---------------------------------------------
 // util.go
 var (
@@ -132,4 +141,5 @@ var (
 	_defRodTmpRootFolder  = ""
 	_defSubFixCacheFolder = ""
 	_adblockTmpFolder     = ""
+	_liteMode             = false
 )

@@ -43,6 +43,11 @@ func newLog() *logrus.Logger {
 func init() {
 	loggerBase = newLog()
 	// --------------------------------------------------
+	if LiteMode == true {
+		loggerBase.Info("LiteMode is true")
+		AppVersion += " Lite"
+	}
+	global_value.SetLiteMode(LiteMode)
 	loggerBase.Infoln("ChineseSubFinder Version:", AppVersion)
 
 	global_value.SetAppVersion(AppVersion)
@@ -52,7 +57,7 @@ func init() {
 		global_value.SetAESKey16(AESKey16)
 		global_value.SetAESIv16(AESIv16)
 	}
-
+	// --------------------------------------------------
 	if my_util.OSCheck() == false {
 		loggerBase.Panicln(`You should search runtime.GOOS in the project, Implement unimplemented function`)
 	}
@@ -106,10 +111,21 @@ func main() {
 	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
 	if settings.GetSettings().SpeedDevMode == false {
 		pj := pre_job.NewPreJob(settings.GetSettings(), loggerBase)
-		err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
-		if err != nil {
-			loggerBase.Panicln("pre_job", err)
+
+		if global_value.LiteMode() == true {
+			// 不启用 Chrome 相关操作
+			err := pj.HotFix().ChangeSubNameFormat().Wait()
+			if err != nil {
+				loggerBase.Panicln("pre_job", err)
+			}
+		} else {
+			// 完整版模式，启用 Chrome 相关操作
+			err := pj.HotFix().ChangeSubNameFormat().ReloadBrowser().Wait()
+			if err != nil {
+				loggerBase.Panicln("pre_job", err)
+			}
 		}
+
 	}
 	// ----------------------------------------------
 	fileDownloader := file_downloader.NewFileDownloader(
@@ -151,5 +167,7 @@ var (
 	AESKey16 = "1234567890123456"    // AES密钥
 	AESIv16  = "1234567890123456"    // 初始化向量
 )
+
+var LiteMode = false // 是否轻量级运行模式（不支持Chrome相关操作，也就是无法支持 subhd 和 zimuku 等类似需要复杂爬虫的字幕源）
 
 var loggerBase *logrus.Logger
