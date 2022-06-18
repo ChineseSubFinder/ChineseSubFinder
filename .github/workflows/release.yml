@@ -22,7 +22,7 @@ jobs:
         with:
           working-directory: frontend
 
-      - name: frontend build
+      - name: Frontend Build
         run: npm run build
         working-directory: frontend
 
@@ -76,7 +76,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: docker
-          file: docker/Dockerfile
+          file: docker/full-release.Dockerfile
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: |
@@ -91,7 +91,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: docker
-          file: docker/Dockerfile
+          file: docker/full-release.Dockerfile
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: |

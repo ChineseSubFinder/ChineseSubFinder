@@ -1,4 +1,4 @@
-name: release
+name: 编译ChromeChecker
 
 on:
   push:
