@@ -43,7 +43,7 @@ jobs:
             -e AESKEY16=${{ secrets.AESKEY16 }} \
             -e AESIV16=${{ secrets.AESIV16 }} \
             -v $(pwd)/go:/root/go \
-            -v $(pwd)/lite-init.sh:/init.sh \
+            -v $(pwd)/lite-make.sh:/init.sh \
             --entrypoint "/init.sh" \
             nevinee/csf-cross-builder
       - name: Docker Buildx Latest Image
