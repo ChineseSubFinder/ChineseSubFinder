@@ -1,5 +1,6 @@
 FROM alpine
 ENV TZ=Asia/Shanghai \
+    PERMS=true \
     PUID=1026 \
     PGID=100 \
     UMASK=022 \
@@ -17,6 +18,6 @@ RUN apk add --no-cache \
     && rm -rf /tmp/* /var/cache/apk/*
 COPY go/out/${TARGETARCH}/chinesesubfinder /usr/bin/chinesesubfinder
 COPY lite-entrypoint.sh /usr/bin/entrypoint.sh
-VOLUME ["/config"]
+VOLUME ["/config", "/media"]
 WORKDIR /config
 ENTRYPOINT ["tini", "entrypoint.sh"]
