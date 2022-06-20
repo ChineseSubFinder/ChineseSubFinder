@@ -5,7 +5,8 @@ ENV TZ=Asia/Shanghai \
     PUID=1026 \
     PGID=100 \
     UMASK=022 \
-    DISPLAY=:99
+    DISPLAY=:99 \
+    PS1="\u@\h:\w \$ "
 RUN cd /tmp \
     && arch=$(uname -m | sed -e 's|aarch64|arm64|' -e 's|armv7l|arm|') \
     && wget -q --no-check-certificate https://github.com/allanpk716/ChineseSubFinder/releases/download/${VERSION}/chinesesubfinder-${VERSION#*v}-Linux-${arch}.tar.gz \
