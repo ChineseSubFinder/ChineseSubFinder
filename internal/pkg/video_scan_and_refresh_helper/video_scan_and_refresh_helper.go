@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
@@ -92,12 +93,14 @@ func (v *VideoScanAndRefreshHelper) Start() error {
 	v.running = true
 	v.locker.Unlock()
 
+	startT := time.Now()
 	defer func() {
 
 		v.locker.Lock()
 		v.running = false
 		v.locker.Unlock()
 
+		v.log.Infoln("VideoScanAndRefreshHelper finished, cost:", time.Since(startT).Minutes(), "min")
 		v.log.Infoln("Video Scan End")
 		v.log.Infoln("------------------------------------")
 	}()

@@ -245,6 +245,13 @@ func (ch *CronHelper) Stop() {
 
 func (ch *CronHelper) scanPlayedVideoSub() {
 
+	ch.log.Infoln("------------------------------------------------------")
+	ch.log.Infoln("scanPlayedVideoSub Start")
+	startT := time.Now()
+	defer func() {
+		ch.log.Infoln("scanPlayedVideoSub End, Cost:", time.Since(startT).Minutes(), "min")
+		ch.log.Infoln("------------------------------------------------------")
+	}()
 	bok, err := ch.scanPlayedVideoSubInfo.GetPlayedItemsSubtitle()
 	if err != nil {
 		ch.log.Errorln(err)

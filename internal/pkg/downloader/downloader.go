@@ -176,19 +176,18 @@ func (d *Downloader) SupplierCheck() {
 // QueueDownloader 从字幕队列中取一个视频的字幕下载任务出来，并且开始下载
 func (d *Downloader) QueueDownloader() {
 
+	d.log.Debugln("Download.QueueDownloader() Try Start ...")
+	d.downloaderLock.Lock()
+	d.log.Debugln("Download.QueueDownloader() Start ...")
+
 	defer func() {
 		if p := recover(); p != nil {
 			d.log.Errorln("Downloader.QueueDownloader() panic")
 			my_util.PrintPanicStack(d.log)
 		}
-
 		d.downloaderLock.Unlock()
 		d.log.Debugln("Download.QueueDownloader() End")
 	}()
-
-	d.log.Debugln("Download.QueueDownloader() Try Start ...")
-	d.downloaderLock.Lock()
-	d.log.Debugln("Download.QueueDownloader() Start ...")
 
 	var downloadCounter int64
 	downloadCounter = 0
