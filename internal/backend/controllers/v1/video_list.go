@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
@@ -47,15 +48,17 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 	cb.videoScanAndRefreshHelper.NeedForcedScanAndDownSub = true
 	cb.videoScanAndRefreshHelperIsRunning = true
 	go func() {
+
+		startT := time.Now()
+		cb.log.Infoln("------------------------------------")
+		cb.log.Infoln("Video Scan Started By webui...")
+
 		defer func() {
 			cb.videoScanAndRefreshHelperIsRunning = false
 			cb.videoScanAndRefreshHelperLocker.Unlock()
-			cb.log.Infoln("Video Scan End By webui")
+			cb.log.Infoln("Video Scan Finished By webui, cost:", time.Since(startT).Minutes(), "min")
 			cb.log.Infoln("------------------------------------")
 		}()
-
-		cb.log.Infoln("------------------------------------")
-		cb.log.Infoln("Video Scan Started By webui...")
 		// 先进行扫描
 		var err2 error
 		var scanVideoResult *video_scan_and_refresh_helper.ScanVideoResult
