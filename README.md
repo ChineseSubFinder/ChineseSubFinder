@@ -6,13 +6,13 @@
 
 后续会长期支持两个方向的 Docker 镜像，差异见 [Docker 部署教程](docker/readme.md)
 
-1. 全功能版本 allanpk716/chinesesubfinder:latest
-2. 轻量化版本 allanpk716/chinesesubfinder:latest-lite
+1. 全功能版本 `allanpk716/chinesesubfinder:latest`
+2. 轻量化版本 `allanpk716/chinesesubfinder:latest-lite`
 
 如果使用了国内 Docker 镜像源，可能 latest 无法正确拉取到最新，那么请指定具体的 tag 去拉取，举例：
 
-1. allanpk716/chinesesubfinder:v0.33.0
-2. allanpk716/chinesesubfinder:v0.33.0-lite
+1. `allanpk716/chinesesubfinder:v0.33.0`
+2. `allanpk716/chinesesubfinder:v0.33.0-lite`
 
 最新的版本可以查看 [Docker Hub](https://hub.docker.com/repository/docker/allanpk716/chinesesubfinder) ，如果不在 telegram 群内，没有特殊的需求请不要选择 **Beta** 版本使用。
 
