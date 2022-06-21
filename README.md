@@ -2,11 +2,19 @@
 
 本项目的初衷仅仅是想自动化搞定**限定条件**下 **中文** 字幕下载。
 
-> 正在实现共享字幕功能，前期欢迎讨论，也会在初版出来的时候需要有人参与内测。见：
->
-> [大版本规划，以及新功能“共享字幕”功能的简介和讨论](https://github.com/allanpk716/ChineseSubFinder/issues/277)
+## 前言
 
-> docker 如果拉取 latest 标签，可能在国内无法真正拉取到最新镜像，请手动指定具体的一个版本，比如: chinesesubfinder:v0.29.0
+后续会长期支持两个方向的 Docker 镜像，差异见 [Docker 部署教程](docker/readme.md)
+
+1. 全功能版本 allanpk716/chinesesubfinder:latest
+2. 轻量化版本 allanpk716/chinesesubfinder:latest-lite
+
+如果使用了国内 Docker 镜像源，可能 latest 无法正确拉取到最新，那么请指定具体的 tag 去拉取，举例：
+
+1. allanpk716/chinesesubfinder:v0.33.0
+2. allanpk716/chinesesubfinder:v0.33.0-lite
+
+最新的版本可以查看 [Docker Hub](https://hub.docker.com/repository/docker/allanpk716/chinesesubfinder) ，如果不在 telegram 群内，没有特殊的需求请不要选择 **Beta** 版本使用。
 
 ## 前置要求
 
@@ -19,9 +27,9 @@
 
 有以下文档可以参考：
 
-- [v0.26 教程、更新说明](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.26教程)
-- [对外的 http api](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/ApiKey%E8%AE%BE%E8%AE%A1),以及[示例](https://github.com/allanpk716/ChineseSubFinder/issues/336)
 - [Docker 部署教程](docker/readme.md)
+- [如何在 Windows 上使用](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/v0.20教程/01.如何在Windows上使用.md)
+- [对外的 http api](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/ApiKey%E8%AE%BE%E8%AE%A1),以及[示例](https://github.com/allanpk716/ChineseSubFinder/issues/336)
 - [Docker ChineseSubFinder--中文字幕自动下载 | sleele 的博客 - 第三方教程](https://sleele.com/2021/06/25/docker-chinesesubfinder-中文字幕自动下载/)
 
 高阶设置：
@@ -86,6 +94,7 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 
 ## 版本
 
+- v0.33.x 新增，Lite Docker 镜像，见 [Docker 部署教程](docker/readme.md) ，新增支持 a4k 字幕源 -- 2022 年 6 月 19 日
 - v0.32.x 修复，若干 bug，上线“共享字幕”下载功能 -- 2022 年 6 月 15 日
 - v0.31.x 修复，若干 bug，调整 docker 镜像制作细节 -- 2022 年 6 月 13 日
 - v0.30.x 新增，“共享字幕”，低可信字幕收集功能 -- 2022 年 6 月 5 日

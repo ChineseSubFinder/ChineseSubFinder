@@ -1,3 +1,17 @@
+## 前言
+
+使用本程序是有前提的，高度依赖 Emby、Jellyfin、Plex、tinyMediaManager 这类软件对你的视频（电影、连续剧）进行削刮。
+
+> 没有削刮的时候，电影可以正常下载字幕，连续剧无法正确下载，如果目录结构不对，也不确定能够下载，也不打算解决类似的问题
+
+### 推荐的电影目录结构
+
+见 [文档](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E7%94%B5%E5%BD%B1%E7%9A%84%E6%8E%A8%E8%8D%90%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84.md)
+
+### 推荐的连续剧目录结构
+
+见 [文档](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E8%BF%9E%E7%BB%AD%E5%89%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E8%A6%81%E6%B1%82.md)
+
 ## 镜像标签说明
 
 ### latest
@@ -8,7 +22,7 @@
 
 - 支持 `linux/amd64` `linux/arm64`；
 
-- 可以从包括subhd、zimuku在内的所有字幕源下载字幕；
+- **支持**从包括 subhd、zimuku 在内的所有字幕源下载字幕；
 
 - 宿主机是基于 `musl-libc` 的系统，无法正常使用，如 `openwrt` 和 `alpine`。
 
@@ -20,7 +34,7 @@
 
 - 支持`linux/amd64` `linux/arm64` `linux/386` `linux/arm/v7`平台；
 
-- 不支持从subhd、zimuku下载字幕，其他字幕源不受影响，针对少了两个字幕来源的问题，建议开启`实验室->共享字幕`功能，可在一定程度上缓解下载字幕难的问题；
+- **不支持**从 subhd、zimuku 下载字幕，其他字幕源不受影响，针对少了两个字幕来源的问题，建议开启`实验室->共享字幕`功能，可在一定程度上缓解下载字幕难的问题；
 
 - 宿主机无论是基于 `glibc` 还是 `musl-libc` 的系统，都可以使用。
 
@@ -74,6 +88,7 @@ docker run -d \
 新建`docker-compose.yml`文件如下，并以命令`docker-compose up -d`启动。
 
 **`latest` 标签**
+
 ```
 version: "3"
 services:
@@ -103,6 +118,7 @@ services:
 ```
 
 **`latest-lite`标签**
+
 ```
 version: "3"
 services:
