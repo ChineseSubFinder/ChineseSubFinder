@@ -223,6 +223,26 @@ func (d *Downloader) QueueDownloader() {
 			oneJob.SeriesRootDirPath = seriesInfoDirPath
 		}
 	}
+	{
+		// --------------------------------------------------
+		// 这个视频文件不存在了
+		isBlue, _, _ := decode.IsFakeBDMVWorked(oneJob.VideoFPath)
+		if isBlue == false && my_util.IsFile(oneJob.VideoFPath) == false {
+			// 不是蓝光，那么就判断文件是否存在，不存在，那么就标记 ignore
+			oneJob.JobStatus = taskQueue2.Ignore
+			bok, err = d.downloadQueue.Update(oneJob)
+			if err != nil {
+				d.log.Errorln("d.downloadQueue.Update()", err)
+				return
+			}
+			if bok == false {
+				d.log.Errorln("d.downloadQueue.Update() Failed")
+				return
+			}
+			d.log.Infoln(oneJob.VideoFPath, "is missing, Ignore This Job")
+			return
+		}
+	}
 	// --------------------------------------------------
 	// 判断是否看过，这个只有 Emby 情况下才会生效
 	{
