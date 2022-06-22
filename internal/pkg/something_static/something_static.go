@@ -84,13 +84,9 @@ func writeFile(saveFileFPath, enString, nowTime string) error {
 func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string, fileDownloader *file_downloader.FileDownloader) (string, string, error) {
 
 	// 默认的位置
-	//const baseCodeFileUrl = "https://raw.githubusercontents.com/"
-	const baseCodeFileUrl = "https://raw.staticdn.net/"
+	const baseCodeFileUrl = "https://raw.githubusercontent.com/"
 	const whichProject = "allanpk716/SomeThingsStatic/"
 	desUrl := baseCodeFileUrl + whichProject + "master/" + nowTimeFileNamePrix + common.StaticFileName00
-	// 备用的位置
-	const backupCodeFileUrl = "https://get-static.subtitle.best/"
-	desUrlBackup := backupCodeFileUrl + nowTimeFileNamePrix + common.StaticFileName00
 
 	var err error
 	updateTimeString := ""
@@ -102,16 +98,13 @@ func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string, fileDownloader
 			break
 		}
 		count++
-		if count > 5 {
+		if count > 2 {
 			break
 		}
 		updateTimeString, code, err = getCodeFromWeb(l, desUrl)
 		if err != nil {
-			updateTimeString, code, err = getCodeFromWeb(l, desUrlBackup)
-			if err != nil {
-				time.Sleep(time.Second * 5)
-				continue
-			}
+			time.Sleep(time.Second * 5)
+			continue
 		}
 
 		found = true
