@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/mix_media_info"
@@ -164,6 +166,15 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()))
 		if err != nil {
 			ch.log.Errorln("UploadSub error:", err.Error())
+
+			if errors.Is(err, common.ErrorUpload413) == true {
+				// 文件发送大小超限
+				notUploadedVideoSubInfos[0].IsSend = true
+				dao.GetDb().Save(&notUploadedVideoSubInfos[0])
+				ch.log.Infoln("subtitle upload file over size limit, will not upload again")
+				return
+			}
+
 			return
 		}
 		if uploadSubReply.Status == 1 {
@@ -350,6 +361,15 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadLowTrustSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()))
 		if err != nil {
 			ch.log.Errorln("UploadLowTrustSub error:", err.Error())
+
+			if errors.Is(err, common.ErrorUpload413) == true {
+				// 文件发送大小超限
+				notUploadedVideoSubInfos[0].IsSend = true
+				dao.GetDb().Save(&notUploadedVideoSubInfos[0])
+				ch.log.Infoln("subtitle upload file over size limit, will not upload again")
+				return
+			}
+
 			return
 		}
 		if uploadSubReply.Status == 1 {

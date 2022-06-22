@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
@@ -257,11 +259,20 @@ func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRo
 		Post(postUrl)
 	if err != nil {
 		s.log.Errorln("upload sub error, status code:", resp.StatusCode(), "Error:", err)
+		if resp.StatusCode() == 413 {
+			// 文件上传大小超限
+			return nil, common.ErrorUpload413
+		}
+
 		return nil, err
 	}
 
 	if uploadSubReply.Status == 0 {
 		s.log.Warningln("status code:", resp.StatusCode())
+	}
+	if resp.StatusCode() == 413 {
+		// 文件上传大小超限
+		return nil, common.ErrorUpload413
 	}
 
 	return &uploadSubReply, nil
@@ -334,11 +345,21 @@ func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVide
 		Post(postUrl)
 	if err != nil {
 		s.log.Errorln("upload sub error, status code:", resp.StatusCode(), "Error:", err)
+
+		if resp.StatusCode() == 413 {
+			// 文件上传大小超限
+			return nil, common.ErrorUpload413
+		}
 		return nil, err
 	}
 
 	if uploadSubReply.Status == 0 {
 		s.log.Warningln("status code:", resp.StatusCode())
+	}
+
+	if resp.StatusCode() == 413 {
+		// 文件上传大小超限
+		return nil, common.ErrorUpload413
 	}
 
 	return &uploadSubReply, nil
