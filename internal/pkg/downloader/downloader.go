@@ -223,9 +223,9 @@ func (d *Downloader) QueueDownloader() {
 			oneJob.SeriesRootDirPath = seriesInfoDirPath
 		}
 	}
+	// --------------------------------------------------
+	// 这个视频文件不存在了
 	{
-		// --------------------------------------------------
-		// 这个视频文件不存在了
 		isBlue, _, _ := decode.IsFakeBDMVWorked(oneJob.VideoFPath)
 		if isBlue == false && my_util.IsFile(oneJob.VideoFPath) == false {
 			// 不是蓝光，那么就判断文件是否存在，不存在，那么就标记 ignore
