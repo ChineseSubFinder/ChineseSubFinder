@@ -15,8 +15,8 @@
       v-model.number="form.dailyLimit"
       type="number"
       label="每日下载次数下载"
-      placeholder="-1为不限制次数，最高建议100"
-      :rules="[(val) => !!val || '不能为空或0']"
+      placeholder="0为禁用字幕源，-1为不限制次数。最高建议100"
+      :rules="[(val) => val !== '' || '不能为空']"
       outlined
     />
   </common-form-dialog>
