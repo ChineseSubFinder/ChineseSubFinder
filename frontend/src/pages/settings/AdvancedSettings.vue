@@ -154,6 +154,12 @@
       <q-item>
         <q-item-section>
           <q-item-label class="q-mb-sm">字幕源设置</q-item-label>
+          <div class="text-warning">
+<!--            eslint-disable-next-line max-len-->
+            如果你使用的是 <a href="https://github.com/allanpk716/ChineseSubFinder/tree/master/docker#%E9%95%9C%E5%83%8F%E6%A0%87%E7%AD%BE%E8%AF%B4%E6%98%8E" target="_blank" class="text-negative">lite轻量模式的Docker镜像</a> ，这个镜像去除了chome及其依赖，
+            <span class="text-negative">不支持从 subhd、zimuku 下载字幕</span>，其他字幕源不受影响。
+            <br/>针对少了两个字幕来源的问题，建议开启实验室->共享字幕功能，可在一定程度上缓解下载字幕难的问题
+          </div>
           <q-item v-for="item in form.suppliers_settings" :key="item" clickable>
             <q-item-section avatar class="text-bold" style="width: 120px">
               {{ item.name }}
