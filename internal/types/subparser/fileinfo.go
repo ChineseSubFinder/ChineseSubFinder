@@ -63,23 +63,21 @@ func (f *FileInfo) SetTranslatedStrings(translatedString string) error {
 
 	// 分行
 	lines := strings.Split(translatedString, "\n")
+	linesWithOutEmpty := make([]string, len(lines))
 	// 移除空行
-	for index, line := range lines {
-
-		if index >= len(lines) {
+	for _, line := range lines {
+		if len(line) < 1 {
 			continue
 		}
-		if len(line) < 1 {
-			lines = append(lines[:index], lines[index+1:]...)
-		}
+		linesWithOutEmpty = append(linesWithOutEmpty, line)
 	}
 	// 比较两个数组是否长度一致
-	if len(f.Dialogues) != len(lines) {
-		return fmt.Errorf("dialogue line not the same，org：%d，translated：%d", len(f.Dialogues), len(lines))
+	if len(f.Dialogues) != len(linesWithOutEmpty) {
+		return fmt.Errorf("dialogue line not the same，org：%d，translated：%d", len(f.Dialogues), len(linesWithOutEmpty))
 	}
 	// 对每一句话进行赋值
 	for index := range f.Dialogues {
-		f.Dialogues[index].Lines = []string{lines[index]}
+		f.Dialogues[index].Lines = []string{linesWithOutEmpty[index]}
 	}
 
 	return nil
