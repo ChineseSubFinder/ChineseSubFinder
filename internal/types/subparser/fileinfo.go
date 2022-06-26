@@ -1,11 +1,13 @@
 package subparser
 
 import (
+	"fmt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"math"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -40,6 +42,43 @@ func (f *FileInfo) SaveTranslated(desSubFileFPath string) error {
 	}
 
 	return my_util.WriteFile(desSubFileFPath, f.Data)
+}
+
+// GetSourceTranslateString 获取翻以前的字符串，会移除 \N 这样的信息，替换为空格
+func (f *FileInfo) GetSourceTranslateString() string {
+	sourceString := ""
+
+	// 去除每一句中的 \N
+	for index, oneDialogue := range f.Dialogues {
+
+		f.Dialogues[index].Lines[0] = strings.ReplaceAll(oneDialogue.Lines[0], `\N`, " ")
+
+		sourceString += f.Dialogues[index].Lines[0] + "\n"
+	}
+
+	return sourceString
+}
+
+func (f *FileInfo) SetTranslatedStrings(translatedString string) error {
+
+	// 分行
+	lines := strings.Split(translatedString, "\n")
+	// 移除空行
+	for index, line := range lines {
+		if len(line) < 1 {
+			lines = append(lines[:index], lines[index+1:]...)
+		}
+	}
+	// 比较两个数组是否长度一致
+	if len(f.Dialogues) != len(lines) {
+		return fmt.Errorf("dialogue line not the same，org：%d，translated：%d", len(f.Dialogues), len(lines))
+	}
+	// 对每一句话进行赋值
+	for index := range f.Dialogues {
+		f.Dialogues[index].Lines = []string{lines[index]}
+	}
+
+	return nil
 }
 
 // SortDialogues 排序对话，时间递减
