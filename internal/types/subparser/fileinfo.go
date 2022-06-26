@@ -65,6 +65,10 @@ func (f *FileInfo) SetTranslatedStrings(translatedString string) error {
 	lines := strings.Split(translatedString, "\n")
 	// 移除空行
 	for index, line := range lines {
+
+		if index >= len(lines) {
+			continue
+		}
 		if len(line) < 1 {
 			lines = append(lines[:index], lines[index+1:]...)
 		}
