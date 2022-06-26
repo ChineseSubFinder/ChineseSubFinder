@@ -41,7 +41,7 @@ func (f *FileInfo) SaveTranslated(desSubFileFPath string) error {
 		allString += oneDialogueString + "\n"
 	}
 
-	return my_util.WriteFile(desSubFileFPath, f.Data)
+	return my_util.WriteFile(desSubFileFPath, []byte(allString))
 }
 
 // GetSourceTranslateString 获取翻以前的字符串，会移除 \N 这样的信息，替换为空格
