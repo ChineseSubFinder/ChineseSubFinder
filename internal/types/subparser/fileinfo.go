@@ -63,7 +63,7 @@ func (f *FileInfo) SetTranslatedStrings(translatedString string) error {
 
 	// 分行
 	lines := strings.Split(translatedString, "\n")
-	linesWithOutEmpty := make([]string, len(lines))
+	linesWithOutEmpty := make([]string, 0)
 	// 移除空行
 	for _, line := range lines {
 		if len(line) < 1 {
