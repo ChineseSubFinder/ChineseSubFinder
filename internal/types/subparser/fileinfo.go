@@ -25,6 +25,23 @@ type FileInfo struct {
 	OtherLines           []string            // 抽取出所有的第二语言对话，可能是英文、韩文、日文
 }
 
+// SaveTranslated 保存字幕文件，注意，这里是用于翻译后的字幕文件
+func (f *FileInfo) SaveTranslated(desSubFileFPath string) error {
+
+	allString := ""
+	allString += f.PrefixDialogueString + "\n"
+	for _, oneDialogue := range f.Dialogues {
+
+		if len(oneDialogue.Lines) < 1 {
+			continue
+		}
+		oneDialogueString := "Dialogue: 0," + oneDialogue.StartTime + "," + oneDialogue.EndTime + ",Default,,0,0,0,," + oneDialogue.Lines[0]
+		allString += oneDialogueString + "\n"
+	}
+
+	return my_util.WriteFile(desSubFileFPath, f.Data)
+}
+
 // SortDialogues 排序对话，时间递减
 func (f *FileInfo) SortDialogues() {
 	sort.Sort(OneDialogueByStartTime(f.Dialogues))
