@@ -50,6 +50,13 @@ func (p Parser) DetermineFileTypeFromFile(filePath string) (bool, *subparser.Fil
 // DetermineFileTypeFromBytes 确定字幕文件的类型，是双语字幕或者某一种语言等等信息
 func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool, *subparser.FileInfo, error) {
 	allString := string(inBytes)
+
+	subFileInfo := subparser.FileInfo{}
+	// 找到 Dialogue: 之前的信息
+	prefixDialogueIndex := strings.Index(allString, "Dialogue:")
+	if prefixDialogueIndex > 0 {
+		subFileInfo.PrefixDialogueString = allString[:prefixDialogueIndex]
+	}
 	// 注意，需要替换掉 \r 不然正则表达式会有问题
 	allString = strings.ReplaceAll(allString, "\r", "")
 	// 找到 start end text
@@ -60,7 +67,6 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 		}
 		return false, nil, nil
 	}
-	subFileInfo := subparser.FileInfo{}
 	subFileInfo.Content = string(inBytes)
 	subFileInfo.Ext = nowExt
 	subFileInfo.Dialogues = make([]subparser.OneDialogue, 0)
