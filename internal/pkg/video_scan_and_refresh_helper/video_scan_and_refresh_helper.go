@@ -37,6 +37,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
+	embyType "github.com/allanpk716/ChineseSubFinder/internal/types/emby"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/huandu/go-clone"
@@ -1207,13 +1208,13 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 	// Emby 过滤，电影
 	for _, oneMovieMixInfo := range emby.MovieSubNeedDlEmbyMixInfoList {
 		// 放入队列
-		if v.subSupplierHub.MovieNeedDlSub(oneMovieMixInfo.PhysicalVideoFileFullPath, v.NeedForcedScanAndDownSub) == false {
-			continue
-		}
 		nowOneJob := TTaskqueue.NewOneJob(
-			common.Movie, oneMovieMixInfo.PhysicalVideoFileFullPath, task_queue.DefaultTaskPriorityLevel,
+			-1, oneMovieMixInfo.PhysicalVideoFileFullPath, task_queue.DefaultTaskPriorityLevel,
 			oneMovieMixInfo.VideoInfo.Id,
 		)
+		nowOneJob.VideoType = common.Movie
+		nowOneJob.CreatedTime = embyType.Time(oneMovieMixInfo.VideoInfo.PremiereDate)
+
 		bok, err := v.downloadQueue.Add(*nowOneJob)
 		if err != nil {
 			v.log.Errorln("filterMovieAndSeriesNeedDownloadEmby.Movie.NewOneJob", err)
@@ -1251,9 +1252,11 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 			// 在 GetRecentlyAddVideoListWithNoChineseSubtitle 的时候就进行了筛选，所以这里就直接加入队列了
 			// 放入队列
 			oneJob := TTaskqueue.NewOneJob(
-				common.Series, mixInfo.PhysicalVideoFileFullPath, task_queue.DefaultTaskPriorityLevel,
+				-1, mixInfo.PhysicalVideoFileFullPath, task_queue.DefaultTaskPriorityLevel,
 				mixInfo.VideoInfo.Id,
 			)
+			oneJob.VideoType = common.Series
+			oneJob.CreatedTime = embyType.Time(mixInfo.VideoInfo.PremiereDate)
 
 			info, err := decode.GetSeriesSeasonVideoNfoInfoFromEpisode(mixInfo.PhysicalVideoFileFullPath)
 			if err != nil {
