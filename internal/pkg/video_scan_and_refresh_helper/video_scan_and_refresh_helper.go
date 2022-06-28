@@ -108,10 +108,14 @@ func (v *VideoScanAndRefreshHelper) Start() error {
 	v.log.Infoln("------------------------------------")
 	v.log.Infoln("Video Scan Started...")
 	// 先进行扫描
-	scanResult, err := v.ScanNormalMovieAndSeries()
-	if err != nil {
-		v.log.Errorln("ScanNormalMovieAndSeries", err)
-		return err
+	var err error
+	scanResult := &ScanVideoResult{}
+	if v.settings.EmbySettings.Enable == false {
+		scanResult, err = v.ScanNormalMovieAndSeries()
+		if err != nil {
+			v.log.Errorln("ScanNormalMovieAndSeries", err)
+			return err
+		}
 	}
 	err = v.ScanEmbyMovieAndSeries(scanResult)
 	if err != nil {
