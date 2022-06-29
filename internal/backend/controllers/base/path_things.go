@@ -1,7 +1,7 @@
 package base
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"

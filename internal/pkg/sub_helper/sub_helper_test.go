@@ -2,9 +2,9 @@ package sub_helper
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_parser/ass"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"

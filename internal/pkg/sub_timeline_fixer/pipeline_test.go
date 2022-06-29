@@ -2,14 +2,15 @@ package sub_timeline_fixer
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"path/filepath"
+	"testing"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_parser/ass"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/vad"
-	"path/filepath"
-	"testing"
 )
 
 func TestPipeline_getFramerateRatios2Try(t *testing.T) {

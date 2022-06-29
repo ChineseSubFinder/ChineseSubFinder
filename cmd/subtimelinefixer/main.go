@@ -6,7 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_timeline_fixer"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"

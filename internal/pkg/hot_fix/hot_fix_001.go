@@ -2,8 +2,8 @@ package hot_fix
 
 import (
 	"errors"
-	movieHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/movie_helper"
-	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/series_helper"
+	movieHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/movie_helper"
+	seriesHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/series_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/old"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_helper"

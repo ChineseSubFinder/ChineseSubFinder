@@ -1,14 +1,14 @@
 package base
 
 import (
+	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_supplier"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_supplier/assrt"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_supplier/csf"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_supplier/shooter"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_supplier/subhd"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_supplier/xunlei"
 	"net/http"
 
-	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/assrt"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/csf"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/shooter"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/subhd"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/xunlei"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
 )

@@ -3,21 +3,20 @@ package downloader
 import (
 	"errors"
 	"fmt"
+	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/emby_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/file_downloader"
+	markSystem "github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/mark_system"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/pre_download_process"
+	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_supplier"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_supplier/csf"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_timeline_fixer"
 	"sync"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier/csf"
-
 	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
-	embyHelper "github.com/allanpk716/ChineseSubFinder/internal/logic/emby_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
-	markSystem "github.com/allanpk716/ChineseSubFinder/internal/logic/mark_system"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_download_process"
-	subSupplier "github.com/allanpk716/ChineseSubFinder/internal/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_timeline_fixer"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"

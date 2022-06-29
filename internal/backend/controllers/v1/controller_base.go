@@ -1,15 +1,16 @@
 package v1
 
 import (
+	"net/http"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/base"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/lock"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"net/http"
 )
 
 type ControllerBase struct {

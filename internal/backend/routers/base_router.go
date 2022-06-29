@@ -4,8 +4,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/base"
 	v1 "github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/v1"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/middle"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/cron_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/file_downloader"
 	"github.com/gin-gonic/gin"
 )
 

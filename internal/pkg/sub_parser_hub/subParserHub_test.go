@@ -1,9 +1,9 @@
 package sub_parser_hub
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_parser/ass"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/unit_test_helper"
 	"path/filepath"
 	"testing"

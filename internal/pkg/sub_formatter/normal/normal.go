@@ -1,18 +1,19 @@
 package normal
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/sub_parser/srt"
+	"path/filepath"
+	"regexp"
+	"strings"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/language"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_parser/ass"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_parser_hub"
 	languageConst "github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	"github.com/sirupsen/logrus"
-	"path/filepath"
-	"regexp"
-	"strings"
 )
 
 type Formatter struct {

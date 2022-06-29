@@ -8,12 +8,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/cron_helper"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/file_downloader"
+	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/pre_job"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/random_auth_key"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/backend"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/cron_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_job"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
