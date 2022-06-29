@@ -59,8 +59,8 @@ github.com/allanpk716/go-parse-torrent-name v0.0.1 h1:Eje8FZTq8qSpFiRMNa2cwfgQql
 github.com/allanpk716/go-parse-torrent-name v0.0.1/go.mod h1:H66QhXPJpUSdWschhL6u//v3ge96/qMnQ9mWp3efbxA=
 github.com/allanpk716/opencc v0.1.8 h1:9jQN/nbav5S7wxeekOr5Zl/LrITcQgJuk7MuhN7bOdU=
 github.com/allanpk716/opencc v0.1.8/go.mod h1:jRuKtq8eLA+cZUu75XgMvkB/hFSXJbZDmij0v29lNaY=
-github.com/allanpk716/sat v0.0.0-20210622112535-2e00ce54a80b h1:vxXQuRgTH0D6aacl7Jyk4Kz8N4wbVTFn7M7Ib+/IFq4=
-github.com/allanpk716/sat v0.0.0-20210622112535-2e00ce54a80b/go.mod h1:ZxAhQ0ikMzjqeMbFeoMdCr6es8p10Y87F2nHkqNjSbY=
+github.com/allanpk716/sat v1.0.4 h1:Oz3Ba2T4Y8QM+fQdoP7ZHTF34psu2HY46sO/EbauM/U=
+github.com/allanpk716/sat v1.0.4/go.mod h1:PScEbYw8UMiu0y9VNvPdBkF9NU+xXnyK9FbrUUTFM2s=
 github.com/andybalholm/brotli v1.0.0 h1:7UCwP93aiSfvWpapti8g88vVVGp2qqtGyePsSuDafo4=
 github.com/andybalholm/brotli v1.0.0/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
 github.com/andybalholm/cascadia v1.2.0 h1:vuRCkM5Ozh/BfmsaTm26kbjm0mIOM3yS5Ek/F5h18aE=

@@ -139,7 +139,7 @@ require (
 )
 
 replace (
-	github.com/go-creed/sat => github.com/allanpk716/sat v0.0.0-20210622112535-2e00ce54a80b
+	github.com/go-creed/sat => github.com/allanpk716/sat v1.0.4
 	github.com/longbridgeapp/opencc => github.com/allanpk716/opencc v0.1.8
 	github.com/middelink/go-parse-torrent-name => github.com/allanpk716/go-parse-torrent-name v0.0.1
 )
