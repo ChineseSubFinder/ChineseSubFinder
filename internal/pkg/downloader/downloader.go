@@ -309,10 +309,21 @@ func (d *Downloader) QueueDownloader() {
 					d.log.Errorln("SeriesNeedDlSub", err)
 					return
 				}
-				// 需要下载的 Eps 是否与 Normal 判断这个连续剧中有那些剧集需要下载的，情况符合。通过下载的时间来判断
-				epsKey := my_util.GetEpisodeKeyName(oneJob.Season, oneJob.Episode)
-				_, found := seriesInfo.NeedDlEpsKeyList[epsKey]
-				if bNeedDlSub == false || found == false {
+				needMarkSkip := false
+				if bNeedDlSub == false {
+					// 需要跳过
+					needMarkSkip = true
+				} else {
+					// 需要下载的 Eps 是否与 Normal 判断这个连续剧中有那些剧集需要下载的，情况符合。通过下载的时间来判断
+					epsKey := my_util.GetEpisodeKeyName(oneJob.Season, oneJob.Episode)
+					_, found := seriesInfo.NeedDlEpsKeyList[epsKey]
+					if found == false {
+						// 需要跳过
+						needMarkSkip = true
+					}
+				}
+
+				if needMarkSkip == true {
 					// 需要标记忽略
 					oneJob.JobStatus = taskQueue2.Ignore
 					bok, err = d.downloadQueue.Update(oneJob)
