@@ -15,6 +15,7 @@
   "lint-staged": {
     "src/**/*.{js,vue}": [
       "eslint --fix",
+      "prettier --write --ignore-unknown",
       "git add"
     ]
   },
@@ -43,8 +44,7 @@
     "eslint-webpack-plugin": "^2.4.0",
     "husky": "^6.0.0",
     "lint-staged": "^11.0.0",
-    "prettier": "2.3.0",
-    "pretty-quick": "^3.1.0",
+    "prettier": "^2.6.2",
     "raw-loader": "^4.0.2",
     "workbox-webpack-plugin": "^6.4.2"
   },
