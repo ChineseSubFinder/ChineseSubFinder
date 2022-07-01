@@ -1,6 +1,6 @@
 package backend
 
-import "github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+import "github.com/allanpk716/ChineseSubFinder/pkg/settings"
 
 type ReplyLogin struct {
 	AccessToken string            `json:"access_token,omitempty"` // 登录成功后返回令牌

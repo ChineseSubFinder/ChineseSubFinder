@@ -3,8 +3,8 @@ package TestCode
 import (
 	"fmt"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	tmdb "github.com/cyruzin/golang-tmdb"
 )
 

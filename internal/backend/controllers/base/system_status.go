@@ -1,11 +1,12 @@
 package base
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
+	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/gin-gonic/gin"
 )
 
 // SystemStatusHandler 获取系统状态

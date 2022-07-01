@@ -3,11 +3,12 @@ package backend
 import (
 	b64 "encoding/base64"
 	"errors"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/rod_helper"
-	"github.com/go-rod/rod/lib/proto"
-	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/rod_helper"
+	"github.com/go-rod/rod/lib/proto"
+	"github.com/sirupsen/logrus"
 )
 
 func GetCode(log *logrus.Logger, codeUrl string) (string, error) {

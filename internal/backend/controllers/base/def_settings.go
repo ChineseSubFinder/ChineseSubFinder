@@ -1,9 +1,10 @@
 package base
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/gin-gonic/gin"
 )
 
 func (cb ControllerBase) DefSettingsHandler(c *gin.Context) {

@@ -3,13 +3,14 @@ package ws_helper
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend/ws"
-	"github.com/gorilla/websocket"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/types/backend/ws"
+	"github.com/allanpk716/ChineseSubFinder/pkg/common"
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
 const (

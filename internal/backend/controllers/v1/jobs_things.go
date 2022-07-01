@@ -3,17 +3,18 @@ package v1
 import (
 	"bufio"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/global_value"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
-	task_queue2 "github.com/allanpk716/ChineseSubFinder/internal/pkg/task_queue"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
+	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
+	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	task_queue2 "github.com/allanpk716/ChineseSubFinder/pkg/task_queue"
+	"github.com/gin-gonic/gin"
 )
 
 func (cb ControllerBase) JobsListHandler(c *gin.Context) {

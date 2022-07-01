@@ -8,8 +8,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/frontend/dist"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/routers"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/ws_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/cron_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/file_downloader"
+	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
+	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )

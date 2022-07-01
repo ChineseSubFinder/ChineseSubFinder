@@ -1,12 +1,13 @@
 package base
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/emby_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
+	"github.com/allanpk716/ChineseSubFinder/pkg/logic/emby_helper"
+	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/gin-gonic/gin"
 )
 
 func (cb ControllerBase) CheckPathHandler(c *gin.Context) {

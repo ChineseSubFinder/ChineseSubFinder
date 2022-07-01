@@ -1,10 +1,11 @@
 package base
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
+	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
+	"github.com/gin-gonic/gin"
 )
 
 type ControllerBase struct {

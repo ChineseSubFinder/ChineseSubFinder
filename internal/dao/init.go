@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_folder"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
+	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

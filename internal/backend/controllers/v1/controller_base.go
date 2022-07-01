@@ -4,11 +4,11 @@ import (
 	"net/http"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/base"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/lock"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/logic/cron_helper"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/sub_formatter"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
+	"github.com/allanpk716/ChineseSubFinder/pkg/lock"
+	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
+	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter"
+	"github.com/allanpk716/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )

@@ -8,11 +8,11 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
+	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
+	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/gin-gonic/gin"
 )
 

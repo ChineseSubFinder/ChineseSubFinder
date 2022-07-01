@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/video_scan_and_refresh_helper"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
+	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
+	"github.com/allanpk716/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
 	"github.com/gin-gonic/gin"
 )
 

@@ -2,13 +2,14 @@ package subparser
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/my_util"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"math"
 	"sort"
 	"strings"
 	"time"
+
+	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
+	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
+	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 )
 
 type FileInfo struct {

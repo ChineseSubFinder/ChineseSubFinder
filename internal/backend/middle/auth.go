@@ -1,11 +1,12 @@
 package middle
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
+	"github.com/allanpk716/ChineseSubFinder/pkg/common"
+	"github.com/gin-gonic/gin"
 )
 
 func CheckAuth() gin.HandlerFunc {

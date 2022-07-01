@@ -2,13 +2,14 @@ package base
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/pkg/settings"
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/net/context"
 )
 
 type StaticFileSystemBackEnd struct {
