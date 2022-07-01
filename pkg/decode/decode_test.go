@@ -5,7 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
 )
 

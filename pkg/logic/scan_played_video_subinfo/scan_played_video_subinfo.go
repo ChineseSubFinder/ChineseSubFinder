@@ -8,16 +8,17 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types"
+	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+
 	embyHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/mix_media_info"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
@@ -199,7 +200,7 @@ func (s *ScanPlayedVideoSubInfo) Scan() error {
 		s.imdbInfoCache = make(map[string]*models.IMDBInfo)
 		// -----------------------------------------------------
 		// 并发控制
-		s.taskControl.SetCtxProcessFunc("ScanSubPlayedPool", s.scan, common.ScanPlayedSubTimeOut)
+		s.taskControl.SetCtxProcessFunc("ScanSubPlayedPool", s.scan, common2.ScanPlayedSubTimeOut)
 		// -----------------------------------------------------
 
 		err := s.taskControl.Invoke(&task_control.TaskData{
@@ -273,13 +274,13 @@ func (s *ScanPlayedVideoSubInfo) Scan() error {
 				}
 
 				IsMovie := false
-				videoTypes := common.Movie
+				videoTypes := common2.Movie
 				if bFoundMovie == true {
-					videoTypes = common.Movie
+					videoTypes = common2.Movie
 					IsMovie = true
 				}
 				if bFoundSeries == true {
-					videoTypes = common.Series
+					videoTypes = common2.Series
 					IsMovie = false
 				}
 

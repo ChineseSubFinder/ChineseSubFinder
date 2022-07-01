@@ -1,7 +1,7 @@
 package settings
 
 import (
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 )
 
 type SuppliersSettings struct {
@@ -16,13 +16,13 @@ type SuppliersSettings struct {
 
 func NewSuppliersSettings() *SuppliersSettings {
 	return &SuppliersSettings{
-		ChineseSubFinder: NewOneSupplierSettings(common2.SubSiteChineseSubFinder, "haha", -1),
-		Xunlei:           NewOneSupplierSettings(common2.SubSiteXunLei, common2.SubXunLeiRootUrlDef, -1),
-		Shooter:          NewOneSupplierSettings(common2.SubSiteShooter, common2.SubShooterRootUrlDef, -1),
-		SubHD:            NewOneSupplierSettings(common2.SubSiteSubHd, common2.SubSubHDRootUrlDef, 20),
-		Zimuku:           NewOneSupplierSettings(common2.SubSiteZiMuKu, common2.SubZiMuKuRootUrlDef, 20),
-		Assrt:            NewOneSupplierSettings(common2.SubSiteAssrt, common2.SubAssrtRootUrlDef, -1),
-		A4k:              NewOneSupplierSettings(common2.SubSiteA4K, common2.SubA4kRootUrlDef, -1),
+		ChineseSubFinder: NewOneSupplierSettings(common.SubSiteChineseSubFinder, "haha", -1),
+		Xunlei:           NewOneSupplierSettings(common.SubSiteXunLei, common.SubXunLeiRootUrlDef, -1),
+		Shooter:          NewOneSupplierSettings(common.SubSiteShooter, common.SubShooterRootUrlDef, -1),
+		SubHD:            NewOneSupplierSettings(common.SubSiteSubHd, common.SubSubHDRootUrlDef, 20),
+		Zimuku:           NewOneSupplierSettings(common.SubSiteZiMuKu, common.SubZiMuKuRootUrlDef, 20),
+		Assrt:            NewOneSupplierSettings(common.SubSiteAssrt, common.SubAssrtRootUrlDef, -1),
+		A4k:              NewOneSupplierSettings(common.SubSiteA4K, common.SubA4kRootUrlDef, -1),
 	}
 }
 

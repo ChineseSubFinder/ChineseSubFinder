@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"

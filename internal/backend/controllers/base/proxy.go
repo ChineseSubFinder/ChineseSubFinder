@@ -3,6 +3,8 @@ package base
 import (
 	"net/http"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+
 	subSupplier "github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/csf"
@@ -10,7 +12,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/gin-gonic/gin"
 )
 

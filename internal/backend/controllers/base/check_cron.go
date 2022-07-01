@@ -1,10 +1,11 @@
 package base
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
+	"net/http"
+
+	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
-	"net/http"
 )
 
 func (cb ControllerBase) CheckCronHandler(c *gin.Context) {
@@ -14,7 +15,7 @@ func (cb ControllerBase) CheckCronHandler(c *gin.Context) {
 		cb.ErrorProcess(c, "CheckCronHandler", err)
 	}()
 
-	checkCron := backend.ReqCheckCron{}
+	checkCron := backend2.ReqCheckCron{}
 	err = c.ShouldBindJSON(&checkCron)
 	if err != nil {
 		return
@@ -22,9 +23,9 @@ func (cb ControllerBase) CheckCronHandler(c *gin.Context) {
 
 	_, err2 := cron.ParseStandard(checkCron.ScanInterval)
 	if err2 != nil {
-		c.JSON(http.StatusOK, backend.ReplyCommon{Message: err2.Error()})
+		c.JSON(http.StatusOK, backend2.ReplyCommon{Message: err2.Error()})
 		return
 	} else {
-		c.JSON(http.StatusOK, backend.ReplyCommon{Message: "ok"})
+		c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "ok"})
 	}
 }

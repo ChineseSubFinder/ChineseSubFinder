@@ -6,7 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/regex_things"

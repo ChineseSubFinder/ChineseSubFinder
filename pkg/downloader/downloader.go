@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
+	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	taskQueue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
+
 	embyHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	markSystem "github.com/allanpk716/ChineseSubFinder/pkg/logic/mark_system"
@@ -17,9 +21,6 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	taskQueue2 "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
@@ -67,13 +68,13 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 
 	var sitesSequence = make([]string, 0)
 	// TODO 这里写固定了抉择字幕的顺序
-	sitesSequence = append(sitesSequence, common.SubSiteZiMuKu)
-	sitesSequence = append(sitesSequence, common.SubSiteSubHd)
-	sitesSequence = append(sitesSequence, common.SubSiteChineseSubFinder)
-	sitesSequence = append(sitesSequence, common.SubSiteAssrt)
-	sitesSequence = append(sitesSequence, common.SubSiteA4K)
-	sitesSequence = append(sitesSequence, common.SubSiteShooter)
-	sitesSequence = append(sitesSequence, common.SubSiteXunLei)
+	sitesSequence = append(sitesSequence, common2.SubSiteZiMuKu)
+	sitesSequence = append(sitesSequence, common2.SubSiteSubHd)
+	sitesSequence = append(sitesSequence, common2.SubSiteChineseSubFinder)
+	sitesSequence = append(sitesSequence, common2.SubSiteAssrt)
+	sitesSequence = append(sitesSequence, common2.SubSiteA4K)
+	sitesSequence = append(sitesSequence, common2.SubSiteShooter)
+	sitesSequence = append(sitesSequence, common2.SubSiteXunLei)
 	downloader.mk = markSystem.NewMarkingSystem(downloader.log, sitesSequence, downloader.settings.AdvancedSettings.SubTypePriority)
 
 	// 初始化，字幕校正的实例
@@ -206,7 +207,7 @@ func (d *Downloader) QueueDownloader() {
 	// --------------------------------------------------
 	// 这个任务如果是 series 那么需要考虑是否原始存入的信息是缺失的，需要补全
 	{
-		if oneJob.VideoType == common.Series && (oneJob.SeriesRootDirPath == "" || oneJob.Season <= 0 || oneJob.Episode <= 0) {
+		if oneJob.VideoType == common2.Series && (oneJob.SeriesRootDirPath == "" || oneJob.Season <= 0 || oneJob.Episode <= 0) {
 			// 连续剧的时候需要额外提交信息
 			epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(oneJob.VideoFPath)
 			if err != nil {
@@ -285,7 +286,7 @@ func (d *Downloader) QueueDownloader() {
 	{
 		if oneJob.TaskPriority > task_queue.HighTaskPriorityLevel {
 			// 优先级大于 3，那么就不是很急的任务，才需要判断
-			if oneJob.VideoType == common.Movie {
+			if oneJob.VideoType == common2.Movie {
 				if d.subSupplierHub.MovieNeedDlSub(oneJob.VideoFPath, false) == false {
 					// 需要标记忽略
 					oneJob.JobStatus = taskQueue2.Ignore
@@ -301,7 +302,7 @@ func (d *Downloader) QueueDownloader() {
 					d.log.Infoln("MovieNeedDlSub == false, Ignore This Job")
 					return
 				}
-			} else if oneJob.VideoType == common.Series {
+			} else if oneJob.VideoType == common2.Series {
 
 				bNeedDlSub, seriesInfo, err := d.subSupplierHub.SeriesNeedDlSub(oneJob.SeriesRootDirPath,
 					false, false)
@@ -386,11 +387,11 @@ func (d *Downloader) QueueDownloader() {
 			}
 		}()
 
-		if oneJob.VideoType == common.Movie {
+		if oneJob.VideoType == common2.Movie {
 			// 电影
 			// 具体的下载逻辑 func()
 			done <- d.movieDlFunc(d.ctx, oneJob, downloadCounter)
-		} else if oneJob.VideoType == common.Series {
+		} else if oneJob.VideoType == common2.Series {
 			// 连续剧
 			// 具体的下载逻辑 func()
 			done <- d.seriesDlFunc(d.ctx, oneJob, downloadCounter)

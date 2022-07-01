@@ -1,7 +1,7 @@
 package settings
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 )
 
 type EmbySettings struct {

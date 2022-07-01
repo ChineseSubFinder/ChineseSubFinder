@@ -6,6 +6,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
+	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/emby"
+	task_queue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
+
 	embyHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/forced_scan_and_down_sub"
@@ -18,12 +24,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
-	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
@@ -260,7 +261,7 @@ func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *Scan
 			v.log.Infoln("Forced Scan And DownSub, tmpSetting.EmbySettings.MaxRequestVideoNumber = 1000000")
 			// 如果是强制，那么就临时修改 Setting 的 Emby MaxRequestVideoNumber 参数为 1000000
 			tmpSetting := clone.Clone(v.settings).(*settings.Settings)
-			tmpSetting.EmbySettings.MaxRequestVideoNumber = common.EmbyApiGetItemsLimitMax
+			tmpSetting.EmbySettings.MaxRequestVideoNumber = common2.EmbyApiGetItemsLimitMax
 			tmpSetting.EmbySettings.SkipWatched = false
 			v.embyHelper = embyHelper.NewEmbyHelper(v.log, tmpSetting)
 		} else {
@@ -529,7 +530,7 @@ func (v *VideoScanAndRefreshHelper) addLowVideoSubInfo(isMovie bool, Season, Eps
 	return
 }
 
-func (v *VideoScanAndRefreshHelper) ScrabbleUpVideoList(scanVideoResult *ScanVideoResult, pathUrlMap map[string]string) ([]backend.MovieInfo, []backend.SeasonInfo) {
+func (v *VideoScanAndRefreshHelper) ScrabbleUpVideoList(scanVideoResult *ScanVideoResult, pathUrlMap map[string]string) ([]backend2.MovieInfo, []backend2.SeasonInfo) {
 
 	defer func() {
 		scanVideoResult = nil
@@ -546,10 +547,10 @@ func (v *VideoScanAndRefreshHelper) ScrabbleUpVideoList(scanVideoResult *ScanVid
 	return nil, nil
 }
 
-func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScanVideoResult, pathUrlMap map[string]string) ([]backend.MovieInfo, []backend.SeasonInfo) {
+func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScanVideoResult, pathUrlMap map[string]string) ([]backend2.MovieInfo, []backend2.SeasonInfo) {
 
-	movieInfos := make([]backend.MovieInfo, 0)
-	seasonInfos := make([]backend.SeasonInfo, 0)
+	movieInfos := make([]backend2.MovieInfo, 0)
+	seasonInfos := make([]backend2.SeasonInfo, 0)
 
 	if normal == nil {
 		return movieInfos, seasonInfos
@@ -573,7 +574,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 
 		// 匹配上了前缀就替换这个，并记录
 		movieFUrl := strings.ReplaceAll(oneMovieFPath, oneMovieDirRootPath, desUrl)
-		oneMovieInfo := backend.MovieInfo{
+		oneMovieInfo := backend2.MovieInfo{
 			Name:         filepath.Base(movieFUrl),
 			DirRootUrl:   filepath.Dir(movieFUrl),
 			VideoFPath:   oneMovieFPath,
@@ -599,7 +600,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 		return nil
 	}
 	// ----------------------------------------
-	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common.ScanPlayedSubTimeOut)
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common2.ScanPlayedSubTimeOut)
 	// ----------------------------------------
 	normal.MoviesDirMap.Any(func(movieDirRootPath interface{}, moviesFPath interface{}) bool {
 
@@ -653,16 +654,16 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 			return nil
 		}
 		seriesDirRootFUrl := strings.ReplaceAll(oneSeriesRootDir, oneSeriesRootPathName, desUrl)
-		oneSeasonInfo := backend.SeasonInfo{
+		oneSeasonInfo := backend2.SeasonInfo{
 			Name:          filepath.Base(oneSeriesRootDir),
 			RootDirPath:   oneSeriesRootDir,
 			DirRootUrl:    seriesDirRootFUrl,
-			OneVideoInfos: make([]backend.OneVideoInfo, 0),
+			OneVideoInfos: make([]backend2.OneVideoInfo, 0),
 		}
 		for _, epsInfo := range seriesInfo.EpList {
 
 			videoFUrl := strings.ReplaceAll(epsInfo.FileFullPath, oneSeriesRootPathName, desUrl)
-			oneVideoInfo := backend.OneVideoInfo{
+			oneVideoInfo := backend2.OneVideoInfo{
 				Name:         epsInfo.Title,
 				VideoFPath:   epsInfo.FileFullPath,
 				VideoUrl:     videoFUrl,
@@ -692,7 +693,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 		return nil
 	}
 	// ----------------------------------------
-	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", seriesProcess, common.ScanPlayedSubTimeOut)
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", seriesProcess, common2.ScanPlayedSubTimeOut)
 	// ----------------------------------------
 	normal.SeriesDirMap.Any(func(seriesRootPathName interface{}, seriesNames interface{}) bool {
 
@@ -721,10 +722,10 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 	return movieInfos, seasonInfos
 }
 
-func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoResult, pathUrlMap map[string]string) ([]backend.MovieInfo, []backend.SeasonInfo) {
+func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoResult, pathUrlMap map[string]string) ([]backend2.MovieInfo, []backend2.SeasonInfo) {
 
-	movieInfos := make([]backend.MovieInfo, 0)
-	seasonInfos := make([]backend.SeasonInfo, 0)
+	movieInfos := make([]backend2.MovieInfo, 0)
+	seasonInfos := make([]backend2.SeasonInfo, 0)
 
 	if emby == nil {
 		return movieInfos, seasonInfos
@@ -755,7 +756,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 				v.processLocker.Unlock()
 				// 匹配上了前缀就替换这个，并记录
 				movieFUrl := strings.ReplaceAll(oneMovieMixInfo.PhysicalVideoFileFullPath, oneMovieDirPath.Path, desUrl)
-				oneMovieInfo := backend.MovieInfo{
+				oneMovieInfo := backend2.MovieInfo{
 					Name:                     filepath.Base(movieFUrl),
 					DirRootUrl:               filepath.Dir(movieFUrl),
 					VideoFPath:               oneMovieMixInfo.PhysicalVideoFileFullPath,
@@ -787,7 +788,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 		return nil
 	}
 	// ----------------------------------------
-	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common.ScanPlayedSubTimeOut)
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common2.ScanPlayedSubTimeOut)
 	// ----------------------------------------
 	for i, oneMovieMixInfo := range emby.MovieSubNeedDlEmbyMixInfoList {
 
@@ -840,7 +841,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 				}
 				// 匹配上了前缀就替换这个，并记录
 				epsFUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path, desUrl)
-				oneVideoInfo := backend.OneVideoInfo{
+				oneVideoInfo := backend2.OneVideoInfo{
 					Name:                     videoFileName,
 					VideoFPath:               oneEpsMixInfo.PhysicalVideoFileFullPath,
 					VideoUrl:                 epsFUrl,
@@ -872,11 +873,11 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 		return nil
 	}
 	// ----------------------------------------
-	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", seriesProcess, common.ScanPlayedSubTimeOut)
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", seriesProcess, common2.ScanPlayedSubTimeOut)
 	// ----------------------------------------
 	for seriesName, oneSeriesMixInfo := range emby.SeriesSubNeedDlEmbyMixInfoMap {
 
-		var oneSeasonInfo backend.SeasonInfo
+		var oneSeasonInfo backend2.SeasonInfo
 		// 需要先得到 oneSeasonInfo 的信息
 		for _, oneEpsMixInfo := range oneSeriesMixInfo {
 
@@ -894,11 +895,11 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 				}
 				dirRootUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalSeriesRootDir, oneSeriesDirPath.Path, desUrl)
 
-				oneSeasonInfo = backend.SeasonInfo{
+				oneSeasonInfo = backend2.SeasonInfo{
 					Name:          seriesName,
 					RootDirPath:   oneEpsMixInfo.PhysicalSeriesRootDir,
 					DirRootUrl:    dirRootUrl,
-					OneVideoInfos: make([]backend.OneVideoInfo, 0),
+					OneVideoInfos: make([]backend2.OneVideoInfo, 0),
 				}
 				break
 			}
@@ -1003,7 +1004,7 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 		return nil
 	}
 	// ------------------------------------------------------------------------------
-	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common.ScanPlayedSubTimeOut)
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common2.ScanPlayedSubTimeOut)
 	// ------------------------------------------------------------------------------
 	scanVideoResult.Normal.MoviesDirMap.Any(func(movieDirRootPath interface{}, movieFPath interface{}) bool {
 
@@ -1055,7 +1056,7 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 		return nil
 	}
 	// ------------------------------------------------------------------------------
-	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", seriesProcess, common.ScanPlayedSubTimeOut)
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", seriesProcess, common2.ScanPlayedSubTimeOut)
 	// ------------------------------------------------------------------------------
 	// 连续剧
 	scanVideoResult.Normal.SeriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
@@ -1090,21 +1091,21 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 		if v.subSupplierHub.MovieNeedDlSub(movieInputData.InputPath, v.NeedForcedScanAndDownSub) == false {
 			return nil
 		}
-		bok, err := v.downloadQueue.Add(*TTaskqueue.NewOneJob(
-			common.Movie, movieInputData.InputPath, task_queue.DefaultTaskPriorityLevel,
+		bok, err := v.downloadQueue.Add(*task_queue2.NewOneJob(
+			common2.Movie, movieInputData.InputPath, task_queue.DefaultTaskPriorityLevel,
 		))
 		if err != nil {
 			v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.Movie.NewOneJob", err)
 			return err
 		}
 		if bok == false {
-			v.log.Warningln(common.Movie.String(), movieInputData.InputPath, "downloadQueue isExisted")
+			v.log.Warningln(common2.Movie.String(), movieInputData.InputPath, "downloadQueue isExisted")
 		}
 
 		return nil
 	}
 	// ----------------------------------------
-	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common.ScanPlayedSubTimeOut)
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", movieProcess, common2.ScanPlayedSubTimeOut)
 	// ----------------------------------------
 	normal.MoviesDirMap.Any(func(movieDirRootPath interface{}, movieFPath interface{}) bool {
 
@@ -1147,8 +1148,8 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 
 		for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 			// 放入队列
-			oneJob := TTaskqueue.NewOneJob(
-				common.Series, episodeInfo.FileFullPath, task_queue.DefaultTaskPriorityLevel,
+			oneJob := task_queue2.NewOneJob(
+				common2.Series, episodeInfo.FileFullPath, task_queue.DefaultTaskPriorityLevel,
 			)
 			oneJob.Season = episodeInfo.Season
 			oneJob.Episode = episodeInfo.Episode
@@ -1160,14 +1161,14 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 				continue
 			}
 			if bok == false {
-				v.log.Warningln(common.Series.String(), episodeInfo.FileFullPath, "downloadQueue isExisted")
+				v.log.Warningln(common2.Series.String(), episodeInfo.FileFullPath, "downloadQueue isExisted")
 			}
 		}
 
 		return nil
 	}
 	// ----------------------------------------
-	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", seriesProcess, common.ScanPlayedSubTimeOut)
+	v.taskControl.SetCtxProcessFunc("updateLocalVideoCacheInfo", seriesProcess, common2.ScanPlayedSubTimeOut)
 	// ----------------------------------------
 	// seriesDirMap: dir <--> seriesList
 	normal.SeriesDirMap.Each(func(seriesRootPathName interface{}, seriesNames interface{}) {
@@ -1207,8 +1208,8 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 		if v.subSupplierHub.MovieNeedDlSub(oneMovieMixInfo.PhysicalVideoFileFullPath, v.NeedForcedScanAndDownSub) == false {
 			continue
 		}
-		nowOneJob := TTaskqueue.NewOneJob(
-			common.Movie, oneMovieMixInfo.PhysicalVideoFileFullPath, task_queue.DefaultTaskPriorityLevel,
+		nowOneJob := task_queue2.NewOneJob(
+			common2.Movie, oneMovieMixInfo.PhysicalVideoFileFullPath, task_queue.DefaultTaskPriorityLevel,
 			oneMovieMixInfo.VideoInfo.Id,
 		)
 		bok, err := v.downloadQueue.Add(*nowOneJob)
@@ -1218,19 +1219,19 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 		}
 		if bok == false {
 
-			v.log.Warningln(common.Movie.String(), oneMovieMixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
+			v.log.Warningln(common2.Movie.String(), oneMovieMixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
 			// 如果任务存在了，需要判断这个任务的视频已经被看过了，如果是，那么就需要标记 Skip
 			_, bok = playedVideoIdMap[oneMovieMixInfo.VideoInfo.Id]
 			if bok == true {
 				// 找到了,那么就是看过了
-				nowOneJob.JobStatus = TTaskqueue.Ignore
+				nowOneJob.JobStatus = task_queue2.Ignore
 				bok, err = v.downloadQueue.Update(*nowOneJob)
 				if err != nil {
 					v.log.Errorln("filterMovieAndSeriesNeedDownloadEmby.Movie.Update", err)
 					continue
 				}
 				if bok == false {
-					v.log.Warningln(common.Movie.String(), oneMovieMixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
+					v.log.Warningln(common2.Movie.String(), oneMovieMixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
 					continue
 				}
 			}
@@ -1247,8 +1248,8 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 		for _, mixInfo := range embyMixInfos {
 			// 在 GetRecentlyAddVideoListWithNoChineseSubtitle 的时候就进行了筛选，所以这里就直接加入队列了
 			// 放入队列
-			oneJob := TTaskqueue.NewOneJob(
-				common.Series, mixInfo.PhysicalVideoFileFullPath, task_queue.DefaultTaskPriorityLevel,
+			oneJob := task_queue2.NewOneJob(
+				common2.Series, mixInfo.PhysicalVideoFileFullPath, task_queue.DefaultTaskPriorityLevel,
 				mixInfo.VideoInfo.Id,
 			)
 
@@ -1268,19 +1269,19 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 			}
 			if bok == false {
 
-				v.log.Warningln(common.Series.String(), mixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
+				v.log.Warningln(common2.Series.String(), mixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
 				// 如果任务存在了，需要判断这个任务的视频已经被看过了，如果是，那么就需要标记 Skip
 				_, bok = playedVideoIdMap[mixInfo.VideoInfo.Id]
 				if bok == true {
 					// 找到了,那么就是看过了
-					oneJob.JobStatus = TTaskqueue.Ignore
+					oneJob.JobStatus = task_queue2.Ignore
 					bok, err = v.downloadQueue.Update(*oneJob)
 					if err != nil {
 						v.log.Errorln("filterMovieAndSeriesNeedDownloadEmby.Series.Update", err)
 						continue
 					}
 					if bok == false {
-						v.log.Warningln(common.Series.String(), mixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
+						v.log.Warningln(common2.Series.String(), mixInfo.PhysicalVideoFileFullPath, "downloadQueue isExisted")
 						continue
 					}
 				}
@@ -1371,6 +1372,6 @@ type ScrabbleUpVideoMovieEmbyInput struct {
 }
 
 type ScrabbleUpVideoSeriesEmbyInput struct {
-	OneSeasonInfo *backend.SeasonInfo
+	OneSeasonInfo *backend2.SeasonInfo
 	OneEpsMixInfo emby.EmbyMixInfo
 }

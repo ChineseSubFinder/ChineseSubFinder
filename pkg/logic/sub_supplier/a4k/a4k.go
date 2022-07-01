@@ -7,6 +7,10 @@ import (
 	"strings"
 	"time"
 
+	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
+
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/pkg/mix_media_info"
@@ -17,9 +21,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/sirupsen/logrus"

@@ -3,7 +3,8 @@ package supplier
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
 )
 
 type SubInfo struct {

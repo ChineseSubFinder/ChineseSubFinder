@@ -3,23 +3,24 @@ package downloader
 import (
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
+	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/strcut_json"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
 )
 
-func (d *Downloader) SetMovieAndSeasonInfo(movieInfos []backend.MovieInfo, seasonInfos []backend.SeasonInfo) {
+func (d *Downloader) SetMovieAndSeasonInfo(movieInfos []backend2.MovieInfo, seasonInfos []backend2.SeasonInfo) {
 	d.cacheLocker.Lock()
 	defer d.cacheLocker.Unlock()
 
 	d.setMovieAndSeasonInfo(movieInfos, seasonInfos)
 }
 
-func (d *Downloader) GetMovieInfoAndSeasonInfo() ([]backend.MovieInfo, []backend.SeasonInfo) {
+func (d *Downloader) GetMovieInfoAndSeasonInfo() ([]backend2.MovieInfo, []backend2.SeasonInfo) {
 	// 需要把本实例中的缓存 map 转换到 Web 传递的结构体中
 	d.cacheLocker.Lock()
 	defer d.cacheLocker.Unlock()
@@ -75,7 +76,7 @@ func (d *Downloader) UpdateInfo(job task_queue.OneJob) {
 	}
 }
 
-func (d *Downloader) setMovieAndSeasonInfo(movieInfos []backend.MovieInfo, seasonInfos []backend.SeasonInfo, skip ...bool) {
+func (d *Downloader) setMovieAndSeasonInfo(movieInfos []backend2.MovieInfo, seasonInfos []backend2.SeasonInfo, skip ...bool) {
 	// 需要把 Web 传递的结构体 转换到 本实例中的缓存 map
 
 	// 清空
@@ -135,16 +136,16 @@ func (d *Downloader) setMovieAndSeasonInfo(movieInfos []backend.MovieInfo, seaso
 	}
 }
 
-func (d *Downloader) getMovieInfoAndSeasonInfo(AllorFrontorEnd int) ([]backend.MovieInfo, []backend.SeasonInfo) {
+func (d *Downloader) getMovieInfoAndSeasonInfo(AllorFrontorEnd int) ([]backend2.MovieInfo, []backend2.SeasonInfo) {
 
-	outMovieInfos := make([]backend.MovieInfo, 0)
-	outSeasonInfo := make([]backend.SeasonInfo, 0)
+	outMovieInfos := make([]backend2.MovieInfo, 0)
+	outSeasonInfo := make([]backend2.SeasonInfo, 0)
 	// AllorFrontorEnd == 0, 全部, AllorFrontorEnd == 1, MovieInfo, AllorFrontorEnd == 2, SeasonInfo
 	if AllorFrontorEnd == 0 || AllorFrontorEnd == 1 {
 
 		for _, movieInfo := range d.movieInfoMap {
 
-			nowMovieInfo := backend.MovieInfo{
+			nowMovieInfo := backend2.MovieInfo{
 				Name:                     movieInfo.Name,
 				DirRootUrl:               movieInfo.DirRootUrl,
 				VideoFPath:               movieInfo.VideoFPath,
@@ -161,16 +162,16 @@ func (d *Downloader) getMovieInfoAndSeasonInfo(AllorFrontorEnd int) ([]backend.M
 
 		for _, seasonInfo := range d.seasonInfoMap {
 
-			nowSeasonInfo := backend.SeasonInfo{
+			nowSeasonInfo := backend2.SeasonInfo{
 				Name:          seasonInfo.Name,
 				RootDirPath:   seasonInfo.RootDirPath,
 				DirRootUrl:    seasonInfo.DirRootUrl,
-				OneVideoInfos: make([]backend.OneVideoInfo, 0),
+				OneVideoInfos: make([]backend2.OneVideoInfo, 0),
 			}
 
 			for _, oneVideoInfo := range seasonInfo.OneVideoInfoMap {
 
-				nowOneVideoInfo := backend.OneVideoInfo{
+				nowOneVideoInfo := backend2.OneVideoInfo{
 
 					Name:                     oneVideoInfo.Name,
 					VideoFPath:               oneVideoInfo.VideoFPath,
@@ -191,7 +192,7 @@ func (d *Downloader) getMovieInfoAndSeasonInfo(AllorFrontorEnd int) ([]backend.M
 	return outMovieInfos, outSeasonInfo
 }
 
-func (d *Downloader) saveVideoListCache(movieInfos []backend.MovieInfo, seasonInfos []backend.SeasonInfo) error {
+func (d *Downloader) saveVideoListCache(movieInfos []backend2.MovieInfo, seasonInfos []backend2.SeasonInfo) error {
 
 	// 缓存下来
 	cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
@@ -230,8 +231,8 @@ func (d *Downloader) loadVideoListCache() error {
 	movieInfosFileName := filepath.Join(cacheCenterFolder, "movie_infos.json")
 	seasonInfosFileName := filepath.Join(cacheCenterFolder, "season_infos.json")
 
-	movieInfos := make([]backend.MovieInfo, 0)
-	seasonInfos := make([]backend.SeasonInfo, 0)
+	movieInfos := make([]backend2.MovieInfo, 0)
+	seasonInfos := make([]backend2.SeasonInfo, 0)
 
 	if my_util.IsFile(movieInfosFileName) == true {
 		err = strcut_json.ToStruct(movieInfosFileName, &movieInfos)

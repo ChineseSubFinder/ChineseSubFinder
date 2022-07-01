@@ -11,16 +11,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	language2 "github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/rod_helper"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	language2 "github.com/allanpk716/ChineseSubFinder/internal/types/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
@@ -48,7 +49,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	sup := Supplier{}
 	sup.log = fileDownloader.Log
 	sup.fileDownloader = fileDownloader
-	sup.topic = common2.DownloadSubsPerSite
+	sup.topic = common.DownloadSubsPerSite
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
 	sup.settings = fileDownloader.Settings
@@ -57,10 +58,10 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	}
 
 	// 默认超时是 2 * 60s，如果是调试模式则是 5 min
-	sup.tt = common2.BrowserTimeOut
+	sup.tt = common.BrowserTimeOut
 	sup.debugMode = sup.settings.AdvancedSettings.DebugMode
 	if sup.debugMode == true {
-		sup.tt = common2.OneMovieProcessTimeOut
+		sup.tt = common.OneMovieProcessTimeOut
 	}
 	// 判断是否启用代理
 	sup.httpProxyAddress = sup.settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl()
@@ -126,7 +127,7 @@ func (s *Supplier) GetSettings() *settings.Settings {
 }
 
 func (s *Supplier) GetSupplierName() string {
-	return common2.SubSiteZiMuKu
+	return common.SubSiteZiMuKu
 }
 
 func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
@@ -206,7 +207,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 			if err != nil {
 				s.log.Errorln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword, err)
 				// 如果只是搜索不到，则继续换关键词
-				if err != common2.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
+				if err != common.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
 					s.log.Errorln(s.GetSupplierName(), "ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound", keyword, err)
 					continue
 				}
@@ -221,7 +222,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 			if err != nil {
 				s.log.Errorln(s.GetSupplierName(), "step 0", "0 times", "keyword:", keyword, err)
 				// 如果只是搜索不到，则继续换关键词
-				if err != common2.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
+				if err != common.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound {
 					s.log.Errorln(s.GetSupplierName(), "ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound", keyword, err)
 					continue
 				}
@@ -509,7 +510,7 @@ func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 		}
 	}()
 
-	desUrl := fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl+common2.SubZiMuKuSearchFormatUrl, url.QueryEscape(keyword))
+	desUrl := fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl+common.SubZiMuKuSearchFormatUrl, url.QueryEscape(keyword))
 	result, page, err := rod_helper.HttpGetFromBrowser(browser, desUrl, s.tt)
 	if err != nil {
 		return "", err
@@ -521,7 +522,7 @@ func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 	re := regexp.MustCompile(`<p\s+class="tt\s+clearfix"><a\s+href="(/subs/[\w]+\.html)"\s+target="_blank"><b>(.*?)</b></a></p>`)
 	matched := re.FindAllStringSubmatch(result, -1)
 	if matched == nil || len(matched) < 1 {
-		return "", common2.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound
+		return "", common.ZiMuKuSearchKeyWordStep0DetailPageUrlNotFound
 	}
 	// 影片的详情界面 url
 	filmDetailPageUrl := matched[0][1]
@@ -654,7 +655,7 @@ func (s *Supplier) step2(browser *rod.Browser, subInfo *SubInfo) error {
 	matched := re.FindAllStringSubmatch(result, -1)
 	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
 		s.log.Warnln("Step2,sub download url not found", detailUrl)
-		return common2.ZiMuKuDownloadUrlStep2NotFound
+		return common.ZiMuKuDownloadUrlStep2NotFound
 	}
 	if strings.Contains(matched[0][1], "://") {
 		subInfo.SubDownloadPageUrl = matched[0][1]
@@ -684,7 +685,7 @@ func (s *Supplier) DownFile(browser *rod.Browser, subDownloadPageUrl string, Top
 	matched := re.FindAllStringSubmatch(result, -1)
 	if matched == nil || len(matched) == 0 || len(matched[0]) == 0 {
 		s.log.Debugln("Step3,sub download url not found", subDownloadPageFullUrl)
-		return nil, common2.ZiMuKuDownloadUrlStep3NotFound
+		return nil, common.ZiMuKuDownloadUrlStep3NotFound
 	}
 
 	fileName := ""
@@ -734,7 +735,7 @@ func (s *Supplier) DownFile(browser *rod.Browser, subDownloadPageUrl string, Top
 		return inSubInfo, nil
 	} else {
 		s.log.Debugln("Step3,sub download url not found", subDownloadPageFullUrl)
-		return nil, common2.ZiMuKuDownloadUrlDownFileFailed
+		return nil, common.ZiMuKuDownloadUrlDownFileFailed
 	}
 }
 

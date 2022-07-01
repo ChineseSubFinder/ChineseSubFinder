@@ -1,10 +1,10 @@
 package v1
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	"net/http"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/base"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/pkg/lock"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter"

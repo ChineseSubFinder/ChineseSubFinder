@@ -1,6 +1,8 @@
 package settings
 
-import "github.com/allanpk716/ChineseSubFinder/internal/types/language"
+import (
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+)
 
 type ChsChtChanger struct {
 	Enable                 bool `json:"enable"`

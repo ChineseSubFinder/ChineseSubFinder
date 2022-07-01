@@ -3,15 +3,14 @@ package task_queue
 import (
 	"encoding/json"
 	"errors"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/emby"
+	task_queue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
-	taskQueue2 "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
@@ -90,7 +89,7 @@ func (t *TaskQueue) Size() int {
 }
 
 // checkPriority 检测优先级，会校验范围
-func (t *TaskQueue) checkPriority(oneJob taskQueue2.OneJob) taskQueue2.OneJob {
+func (t *TaskQueue) checkPriority(oneJob task_queue2.OneJob) task_queue2.OneJob {
 
 	if oneJob.TaskPriority > taskPriorityCount {
 		oneJob.TaskPriority = taskPriorityCount
@@ -104,7 +103,7 @@ func (t *TaskQueue) checkPriority(oneJob taskQueue2.OneJob) taskQueue2.OneJob {
 }
 
 // degrade 降一级，会校验范围
-func (t *TaskQueue) degrade(oneJob taskQueue2.OneJob) taskQueue2.OneJob {
+func (t *TaskQueue) degrade(oneJob task_queue2.OneJob) task_queue2.OneJob {
 
 	oneJob.TaskPriority -= 1
 
@@ -112,7 +111,7 @@ func (t *TaskQueue) degrade(oneJob taskQueue2.OneJob) taskQueue2.OneJob {
 }
 
 // Add 放入元素，放入的时候会根据 TaskPriority 进行归类，存在的不会新增和更新
-func (t *TaskQueue) Add(oneJob task_queue.OneJob) (bool, error) {
+func (t *TaskQueue) Add(oneJob task_queue2.OneJob) (bool, error) {
 
 	defer t.queueLock.Unlock()
 	t.queueLock.Lock()
@@ -148,7 +147,7 @@ func (t *TaskQueue) Add(oneJob task_queue.OneJob) (bool, error) {
 }
 
 // update 更新素，不存在则会失败，内部用，没有锁
-func (t *TaskQueue) update(oneJob task_queue.OneJob) (bool, error) {
+func (t *TaskQueue) update(oneJob task_queue2.OneJob) (bool, error) {
 
 	if t.isExist(oneJob.Id) == false {
 		return false, nil
@@ -183,7 +182,7 @@ func (t *TaskQueue) update(oneJob task_queue.OneJob) (bool, error) {
 }
 
 // Update 更新素，不存在则会失败
-func (t *TaskQueue) Update(oneJob task_queue.OneJob) (bool, error) {
+func (t *TaskQueue) Update(oneJob task_queue2.OneJob) (bool, error) {
 
 	defer t.queueLock.Unlock()
 	t.queueLock.Lock()
@@ -192,7 +191,7 @@ func (t *TaskQueue) Update(oneJob task_queue.OneJob) (bool, error) {
 }
 
 // AutoDetectUpdateJobStatus 根据任务的生命周期图，进行自动判断更新，见《任务的生命周期》流程图
-func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue.OneJob, inErr error) {
+func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue2.OneJob, inErr error) {
 
 	defer t.queueLock.Unlock()
 	t.queueLock.Lock()
@@ -204,18 +203,18 @@ func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue.OneJob, inErr er
 
 		// 如果任务的优先级是 0，那么这个任务就认为是一次性任务，下载完毕不管如何都会设置为 ignore
 		if oneJob.TaskPriority == 0 {
-			oneJob.JobStatus = task_queue.Ignore
+			oneJob.JobStatus = task_queue2.Ignore
 		}
 
 		// 没有错误就是完成
 		oneJob.TaskPriority = DefaultTaskPriorityLevel
-		oneJob.JobStatus = taskQueue2.Done
+		oneJob.JobStatus = task_queue2.Done
 		oneJob.DownloadTimes += 1
 	} else {
 		// 超过了时间限制，默认是 90 天, A.Before(B) : A < B == true
 		if (time.Time)(oneJob.AddedTime).AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.ExpirationTime).Before(time.Now()) == true {
 			// 超过 90 天了
-			oneJob.JobStatus = taskQueue2.Failed
+			oneJob.JobStatus = task_queue2.Failed
 		} else {
 			// 还在 90 天内
 			// 是否是首次，那么就看它的 Level 是否是在 5，然后 retry == 0
@@ -232,12 +231,12 @@ func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue.OneJob, inErr er
 			}
 
 			// 强制为 waiting
-			oneJob.JobStatus = taskQueue2.Waiting
+			oneJob.JobStatus = task_queue2.Waiting
 		}
 
 		// 如果任务的优先级是 0，那么这个任务就认为是一次性任务，下载完毕不管如何都会设置为 ignore
 		if oneJob.TaskPriority == 0 {
-			oneJob.JobStatus = task_queue.Ignore
+			oneJob.JobStatus = task_queue2.Ignore
 		}
 		// 传入的错误需要放进来
 		oneJob.ErrorInfo = inErr.Error()
@@ -274,7 +273,7 @@ func (t *TaskQueue) del(jobId string) (bool, error) {
 	if bok == false {
 		return false, nil
 	}
-	needDelJob := needDelJobObj.(task_queue.OneJob)
+	needDelJob := needDelJobObj.(task_queue2.OneJob)
 	jobSetsObj, bok := t.taskGroupBySeries.Get(needDelJob.SeriesRootDirPath)
 	if bok == false {
 		return false, nil
@@ -337,7 +336,7 @@ func (t *TaskQueue) read() {
 			if err != nil {
 				t.log.Panicln(err)
 			}
-			nowOneJob := task_queue.OneJob{}
+			nowOneJob := task_queue2.OneJob{}
 			err = json.Unmarshal(jsonString, &nowOneJob)
 			if err != nil {
 				t.log.Panicln(err)
@@ -350,7 +349,7 @@ func (t *TaskQueue) read() {
 			// JobID -- taskPriority
 			t.taskKeyMap.Put(key, i)
 			// SeriesRootDirPath -- tree.Set(JobID)
-			oneJob := value.(task_queue.OneJob)
+			oneJob := value.(task_queue2.OneJob)
 			jobIDSet, found := t.taskGroupBySeries.Get(oneJob.SeriesRootDirPath)
 			if found == false {
 				// 不存在
@@ -372,9 +371,9 @@ func (t *TaskQueue) afterRead() {
 	for TaskPriority := 0; TaskPriority <= taskPriorityCount; TaskPriority++ {
 		t.taskPriorityMapList[TaskPriority].Each(func(key interface{}, value interface{}) {
 
-			nowOneJob := value.(task_queue.OneJob)
-			if nowOneJob.JobStatus == task_queue.Downloading {
-				nowOneJob.JobStatus = task_queue.Waiting
+			nowOneJob := value.(task_queue2.OneJob)
+			if nowOneJob.JobStatus == task_queue2.Downloading {
+				nowOneJob.JobStatus = task_queue2.Waiting
 				nowOneJob.DownloadTimes += 1
 				bok, err := t.update(nowOneJob)
 				if err != nil {

@@ -6,9 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/change_file_encode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/chs_cht_changer"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"

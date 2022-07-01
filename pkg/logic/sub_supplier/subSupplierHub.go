@@ -3,10 +3,11 @@ package sub_supplier
 import (
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
+	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/emby"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
+
 	movieHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/movie_helper"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/series_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"

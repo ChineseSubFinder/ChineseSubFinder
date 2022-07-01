@@ -3,7 +3,8 @@ package imdb_helper
 import (
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 )
 

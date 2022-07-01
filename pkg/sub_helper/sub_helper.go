@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/archive_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/filter"

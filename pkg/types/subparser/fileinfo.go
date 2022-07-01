@@ -7,8 +7,9 @@ import (
 	"strings"
 	"time"
 
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 )
 
@@ -93,10 +94,10 @@ func (f *FileInfo) SortDialogues() {
 
 // GetTimeFormat 获取时间轴的格式化格式
 func (f FileInfo) GetTimeFormat() string {
-	if f.Ext == common2.SubExtASS || f.Ext == common2.SubExtSSA {
-		return common2.TimeFormatPoint2
+	if f.Ext == common.SubExtASS || f.Ext == common.SubExtSSA {
+		return common.TimeFormatPoint2
 	} else {
-		return common2.TimeFormatPoint3
+		return common.TimeFormatPoint3
 	}
 }
 

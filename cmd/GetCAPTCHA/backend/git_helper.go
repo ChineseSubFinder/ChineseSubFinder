@@ -5,8 +5,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/something_static"
 	"github.com/go-git/go-git/v5"

@@ -1,6 +1,8 @@
 package backend
 
-import "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
+import (
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
+)
 
 type ReplyJobThings struct {
 	JobID     string               `json:"job_id"`

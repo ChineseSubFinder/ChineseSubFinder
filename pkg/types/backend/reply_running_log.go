@@ -1,6 +1,8 @@
 package backend
 
-import "github.com/allanpk716/ChineseSubFinder/internal/types/log_hub"
+import (
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/log_hub"
+)
 
 type ReplyRunningLog struct {
 	RecentLogs []log_hub.OnceLog `json:"recent_logs"`

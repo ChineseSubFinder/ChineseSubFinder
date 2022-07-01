@@ -8,9 +8,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
+	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	task_queue3 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	task_queue2 "github.com/allanpk716/ChineseSubFinder/pkg/task_queue"
@@ -30,13 +31,13 @@ func (cb ControllerBase) JobsListHandler(c *gin.Context) {
 	}
 
 	if bok == false {
-		c.JSON(http.StatusOK, backend.ReplyAllJobs{
-			AllJobs: make([]task_queue.OneJob, 0),
+		c.JSON(http.StatusOK, backend2.ReplyAllJobs{
+			AllJobs: make([]task_queue3.OneJob, 0),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, backend.ReplyAllJobs{
+	c.JSON(http.StatusOK, backend2.ReplyAllJobs{
 		AllJobs: allJobs,
 	})
 }
@@ -48,7 +49,7 @@ func (cb ControllerBase) ChangeJobStatusHandler(c *gin.Context) {
 		cb.ErrorProcess(c, "JobsListHandler", err)
 	}()
 
-	desJobStatus := backend.ReqChangeJobStatus{}
+	desJobStatus := backend2.ReqChangeJobStatus{}
 	err = c.ShouldBindJSON(&desJobStatus)
 	if err != nil {
 		return
@@ -56,7 +57,7 @@ func (cb ControllerBase) ChangeJobStatusHandler(c *gin.Context) {
 
 	bok, nowOneJob := cb.cronHelper.DownloadQueue.GetOneJobByID(desJobStatus.Id)
 	if bok == false {
-		c.JSON(http.StatusOK, backend.ReplyCommon{Message: "job not found"})
+		c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "job not found"})
 		return
 	}
 
@@ -71,10 +72,10 @@ func (cb ControllerBase) ChangeJobStatusHandler(c *gin.Context) {
 		nowOneJob.TaskPriority = task_queue2.LowTaskPriorityLevel
 	}
 	// 默认只能把任务改变为这两种状态
-	if desJobStatus.JobStatus == task_queue.Waiting || desJobStatus.JobStatus == task_queue.Ignore {
+	if desJobStatus.JobStatus == task_queue3.Waiting || desJobStatus.JobStatus == task_queue3.Ignore {
 		nowOneJob.JobStatus = desJobStatus.JobStatus
 	} else {
-		nowOneJob.JobStatus = task_queue.Waiting
+		nowOneJob.JobStatus = task_queue3.Waiting
 	}
 
 	bok, err = cb.cronHelper.DownloadQueue.Update(nowOneJob)
@@ -83,11 +84,11 @@ func (cb ControllerBase) ChangeJobStatusHandler(c *gin.Context) {
 	}
 
 	if bok == false {
-		c.JSON(http.StatusOK, backend.ReplyCommon{Message: "update job status failed"})
+		c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "update job status failed"})
 		return
 	}
 
-	c.JSON(http.StatusOK, backend.ReplyCommon{Message: "ok"})
+	c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "ok"})
 }
 
 func (cb ControllerBase) JobLogHandler(c *gin.Context) {
@@ -97,7 +98,7 @@ func (cb ControllerBase) JobLogHandler(c *gin.Context) {
 		cb.ErrorProcess(c, "JobLogHandler", err)
 	}()
 
-	reqJobLog := backend.ReqJobLog{}
+	reqJobLog := backend2.ReqJobLog{}
 	err = c.ShouldBindJSON(&reqJobLog)
 	if err != nil {
 		return
@@ -116,7 +117,7 @@ func (cb ControllerBase) JobLogHandler(c *gin.Context) {
 		}
 		defer fi.Close()
 
-		ReplyJobLog := backend.ReplyJobLog{}
+		ReplyJobLog := backend2.ReplyJobLog{}
 		ReplyJobLog.OneLine = make([]string, 0)
 		br := bufio.NewReader(fi)
 		for {
@@ -131,7 +132,7 @@ func (cb ControllerBase) JobLogHandler(c *gin.Context) {
 		return
 	} else {
 		// 不存在
-		c.JSON(http.StatusOK, backend.ReplyCommon{Message: "job log not found"})
+		c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "job log not found"})
 		return
 	}
 }

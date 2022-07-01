@@ -9,10 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	emby2 "github.com/allanpk716/ChineseSubFinder/pkg/types/emby"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+
 	embyHelper "github.com/allanpk716/ChineseSubFinder/pkg/emby_api"
 	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
@@ -41,14 +42,14 @@ func NewEmbyHelper(_log *logrus.Logger, _settings *settings.Settings) *EmbyHelpe
 }
 
 // GetRecentlyAddVideoListWithNoChineseSubtitle 获取最近新添加的视频，且没有中文字幕的
-func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle(needForcedScanAndDownSub ...bool) ([]emby.EmbyMixInfo, map[string][]emby.EmbyMixInfo, error) {
+func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle(needForcedScanAndDownSub ...bool) ([]emby2.EmbyMixInfo, map[string][]emby2.EmbyMixInfo, error) {
 
 	filterMovieList, filterSeriesList, err := em.GetRecentlyAddVideoList()
 	if err != nil {
 		return nil, nil, err
 	}
-	var noSubMovieList, noSubSeriesList []emby.EmbyMixInfo
-	var seriesMap = make(map[string][]emby.EmbyMixInfo)
+	var noSubMovieList, noSubSeriesList []emby2.EmbyMixInfo
+	var seriesMap = make(map[string][]emby2.EmbyMixInfo)
 
 	if len(needForcedScanAndDownSub) > 0 && needForcedScanAndDownSub[0] == true {
 		// 强制扫描，无需过滤
@@ -70,7 +71,7 @@ func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle(needForcedSca
 			_, ok := seriesMap[info.VideoFolderName]
 			if ok == false {
 				// 不存在则新建初始化
-				seriesMap[info.VideoFolderName] = make([]emby.EmbyMixInfo, 0)
+				seriesMap[info.VideoFolderName] = make([]emby2.EmbyMixInfo, 0)
 			}
 			seriesMap[info.VideoFolderName] = append(seriesMap[info.VideoFolderName], info)
 		}
@@ -106,7 +107,7 @@ func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle(needForcedSca
 			_, ok := seriesMap[info.VideoFolderName]
 			if ok == false {
 				// 不存在则新建初始化
-				seriesMap[info.VideoFolderName] = make([]emby.EmbyMixInfo, 0)
+				seriesMap[info.VideoFolderName] = make([]emby2.EmbyMixInfo, 0)
 			}
 			seriesMap[info.VideoFolderName] = append(seriesMap[info.VideoFolderName], info)
 		}
@@ -117,7 +118,7 @@ func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle(needForcedSca
 }
 
 // GetRecentlyAddVideoList 获取最近新添加的视频
-func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby.EmbyMixInfo, []emby.EmbyMixInfo, error) {
+func (em *EmbyHelper) GetRecentlyAddVideoList() ([]emby2.EmbyMixInfo, []emby2.EmbyMixInfo, error) {
 	// 获取最近的影片列表
 	items, err := em.EmbyApi.GetRecentlyItems()
 	if err != nil {
@@ -174,7 +175,7 @@ func (em *EmbyHelper) GetVideoIDPlayedMap() map[string]bool {
 
 	videoIDPlayedMap := make(map[string]bool)
 	// 获取有那些用户
-	var userIds emby.EmbyUsers
+	var userIds emby2.EmbyUsers
 	userIds, err := em.EmbyApi.GetUserIdList()
 	if err != nil {
 		em.log.Errorln("IsVideoIDPlayed - GetUserIdList error:", err)
@@ -203,9 +204,9 @@ func (em *EmbyHelper) GetVideoIDPlayedMap() map[string]bool {
 func (em *EmbyHelper) GetPlayedItemsSubtitle() (map[string]string, map[string]string, error) {
 
 	// 这个用户看过那些视频
-	var userPlayedItemsList = make([]emby.UserPlayedItems, 0)
+	var userPlayedItemsList = make([]emby2.UserPlayedItems, 0)
 	// 获取有那些用户
-	var userIds emby.EmbyUsers
+	var userIds emby2.EmbyUsers
 	userIds, err := em.EmbyApi.GetUserIdList()
 	if err != nil {
 		return nil, nil, err
@@ -218,10 +219,10 @@ func (em *EmbyHelper) GetPlayedItemsSubtitle() (map[string]string, map[string]st
 		}
 		// 相同的视频项目，需要判断是否已经看过了，看过的需要排除
 		// 项目是否相同可以通过 Id 判断
-		oneUserPlayedItems := emby.UserPlayedItems{
+		oneUserPlayedItems := emby2.UserPlayedItems{
 			UserName: item.Name,
 			UserID:   item.Id,
-			Items:    make([]emby.EmbyRecentlyItem, 0),
+			Items:    make([]emby2.EmbyRecentlyItem, 0),
 		}
 		for _, recentlyItem := range tmpRecItems.Items {
 
@@ -336,7 +337,7 @@ func (em *EmbyHelper) RefreshEmbySubList() (bool, error) {
 func (em *EmbyHelper) IsVideoPlayed(videoID string) (bool, error) {
 
 	// 获取有那些用户
-	var userIds emby.EmbyUsers
+	var userIds emby2.EmbyUsers
 	userIds, err := em.EmbyApi.GetUserIdList()
 	if err != nil {
 		return false, err
@@ -413,7 +414,7 @@ func (em *EmbyHelper) findMappingPath(fileFPathWithEmby string, isMovieOrSeries 
 }
 
 // getVideoIMDBId 从视频的内部 ID 找到 IMDB id
-func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*emby.EmbyMixInfo, error) {
+func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*emby2.EmbyMixInfo, error) {
 
 	if isMovieOrSeries == true {
 		// 电影的情况
@@ -427,7 +428,7 @@ func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*e
 			return nil, err
 		}
 
-		mixInfo := emby.EmbyMixInfo{IMDBId: info.ProviderIds.Imdb, Ancestors: ancs, VideoInfo: info}
+		mixInfo := emby2.EmbyMixInfo{IMDBId: info.ProviderIds.Imdb, Ancestors: ancs, VideoInfo: info}
 
 		return &mixInfo, nil
 	} else {
@@ -465,14 +466,14 @@ func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*e
 			return nil, err
 		}
 
-		mixInfo := emby.EmbyMixInfo{IMDBId: nowSeriesIMDBID, Ancestors: ancs, VideoInfo: info}
+		mixInfo := emby2.EmbyMixInfo{IMDBId: nowSeriesIMDBID, Ancestors: ancs, VideoInfo: info}
 
 		return &mixInfo, nil
 	}
 }
 
 // 根据 IMDB ID 自动转换路径
-func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyMixInfo, isMovieOrSeries bool) bool {
+func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby2.EmbyMixInfo, isMovieOrSeries bool) bool {
 
 	if mixInfo.IMDBId == "" {
 		em.log.Debugln("autoFindMappingPathWithMixInfoByIMDBId", " mixInfo.IMDBId == \"\"")
@@ -483,7 +484,7 @@ func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyM
 	localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(em.log, types.VideoNfoInfo{ImdbId: mixInfo.IMDBId}, true)
 	if err != nil {
 
-		if errors.Is(err, common2.SkipCreateInDB) == true {
+		if errors.Is(err, common.SkipCreateInDB) == true {
 			em.log.Debugln("autoFindMappingPathWithMixInfoByIMDBId.GetVideoIMDBInfoFromLocal", err)
 			return false
 		}
@@ -513,11 +514,11 @@ func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyM
 			// 这个就是蓝光了
 			// 先替换再拼接，不然会出现拼接完成后，在 Windows 下会把 /mnt/share1/电影 变为这样了 \mnt\share1\电影\失控玩家 (2021)\失控玩家 (2021).mp4
 			videoReplacedDirFPath := strings.ReplaceAll(mixInfo.VideoInfo.Path, mixInfo.VideoInfo.Path, localIMDBInfo.RootDirPath)
-			fakeVideoFPath := filepath.Join(videoReplacedDirFPath, filepath.Base(mixInfo.VideoInfo.Path)+common2.VideoExtMp4)
+			fakeVideoFPath := filepath.Join(videoReplacedDirFPath, filepath.Base(mixInfo.VideoInfo.Path)+common.VideoExtMp4)
 			mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(fakeVideoFPath, filepath.Dir(mixInfo.VideoInfo.Path), localIMDBInfo.RootDirPath)
 			// 这个电影的文件夹
 			mixInfo.VideoFolderName = filepath.Base(mixInfo.VideoInfo.Path)
-			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path) + common2.VideoExtMp4
+			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path) + common.VideoExtMp4
 		} else {
 			// 常规的电影情况，也就是有一个具体的视频文件 .mp4 or .mkv
 			// 在 Windows 下，如果操作 linux 的路径 /mnt/abc/123 filepath.Dir 那么得到的是 \mnt\abc
@@ -559,7 +560,7 @@ func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby.EmbyM
 // findMappingPathWithMixInfo 从 Emby 内置路径匹配到物理路径
 // X:\电影    - /mnt/share1/电影
 // X:\连续剧  - /mnt/share1/连续剧
-func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMovieOrSeries bool) bool {
+func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby2.EmbyMixInfo, isMovieOrSeries bool) bool {
 
 	defer func() {
 		// 见 https://github.com/allanpk716/ChineseSubFinder/issues/278
@@ -635,11 +636,11 @@ func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMo
 			// 这个就是蓝光了
 			// 先替换再拼接，不然会出现拼接完成后，在 Windows 下会把 /mnt/share1/电影 变为这样了 \mnt\share1\电影\失控玩家 (2021)\失控玩家 (2021).mp4
 			videoReplacedDirFPath := strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
-			fakeVideoFPath := filepath.Join(videoReplacedDirFPath, filepath.Base(mixInfo.VideoInfo.Path)+common2.VideoExtMp4)
+			fakeVideoFPath := filepath.Join(videoReplacedDirFPath, filepath.Base(mixInfo.VideoInfo.Path)+common.VideoExtMp4)
 			mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(fakeVideoFPath, pathSlices[0].Path, nowPhRootPath)
 			// 这个电影的文件夹
 			mixInfo.VideoFolderName = filepath.Base(mixInfo.VideoInfo.Path)
-			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path) + common2.VideoExtMp4
+			mixInfo.VideoFileName = filepath.Base(mixInfo.VideoInfo.Path) + common.VideoExtMp4
 		} else {
 			// 常规的电影情况，也就是有一个具体的视频文件 .mp4 or .mkv
 			mixInfo.PhysicalVideoFileFullPath = strings.ReplaceAll(mixInfo.VideoInfo.Path, pathSlices[0].Path, nowPhRootPath)
@@ -676,11 +677,11 @@ func (em *EmbyHelper) findMappingPathWithMixInfo(mixInfo *emby.EmbyMixInfo, isMo
 }
 
 // getMoreVideoInfoList 把视频的更多信息查询出来，需要并发去做
-func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries bool) ([]emby.EmbyMixInfo, error) {
-	var filterVideoEmbyInfo = make([]emby.EmbyMixInfo, 0)
+func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries bool) ([]emby2.EmbyMixInfo, error) {
+	var filterVideoEmbyInfo = make([]emby2.EmbyMixInfo, 0)
 
 	// 这个方法是使用两边的路径映射表来实现的转换，使用的体验不佳，很多人搞不定
-	queryFuncByMatchPath := func(m string) (*emby.EmbyMixInfo, error) {
+	queryFuncByMatchPath := func(m string) (*emby2.EmbyMixInfo, error) {
 
 		oneMixInfo, err := em.getMoreVideoInfo(m, isMovieOrSeries)
 		if err != nil {
@@ -793,10 +794,10 @@ func (em *EmbyHelper) getMoreVideoInfoList(videoIdList []string, isMovieOrSeries
 }
 
 // filterNoChineseSubVideoList 将没有中文字幕的视频找出来
-func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) ([]emby.EmbyMixInfo, error) {
+func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby2.EmbyMixInfo) ([]emby2.EmbyMixInfo, error) {
 	currentTime := time.Now()
 
-	var noSubVideoList = make([]emby.EmbyMixInfo, 0)
+	var noSubVideoList = make([]emby2.EmbyMixInfo, 0)
 	// TODO 这里有一种情况需要考虑的，如果内置有中文的字幕，那么是否需要跳过，目前暂定的一定要有外置的字幕
 	for _, info := range videoList {
 
@@ -865,7 +866,7 @@ func (em *EmbyHelper) filterNoChineseSubVideoList(videoList []emby.EmbyMixInfo) 
 }
 
 // GetInternalEngSubAndExChineseEnglishSub 获取对应 videoId 的内置英文字幕，外置中文字幕（只要是带有中文的都算，简体、繁体、简英、繁英，需要后续额外的判断）字幕
-func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (bool, []emby.SubInfo, []emby.SubInfo, error) {
+func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (bool, []emby2.SubInfo, []emby2.SubInfo, error) {
 
 	// 先刷新以下这个资源，避免找到的字幕不存在了
 	err := em.EmbyApi.UpdateVideoSubList(videoId)
@@ -902,9 +903,9 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 	}
 	// 再内置英文字幕能找到的前提下，就可以先找中文的外置字幕，目前版本只能考虑双语字幕
 	// 内置英文字幕，这里把 srt 和 ass 的都导出来
-	var inSubList = make([]emby.SubInfo, 0)
+	var inSubList = make([]emby2.SubInfo, 0)
 	// 外置中文双语字幕
-	var exSubList = make([]emby.SubInfo, 0)
+	var exSubList = make([]emby2.SubInfo, 0)
 	tmpFileNameWithOutExt := ""
 	for _, stream := range videoInfo.MediaStreams {
 		// 首先找到外置的字幕文件
@@ -918,7 +919,7 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 				//tmpFileName = strings.ReplaceAll(tmpFileName, subparser.Sub_Ext_Mark_Default, "")
 				//tmpFileName = strings.ReplaceAll(tmpFileName, subparser.Sub_Ext_Mark_Forced, "")
 				tmpFileNameWithOutExt = strings.ReplaceAll(tmpFileName, path.Ext(tmpFileName), "")
-				exSubList = append(exSubList, *emby.NewSubInfo(tmpFileNameWithOutExt+"."+stream.Codec, "."+stream.Codec, stream.Index))
+				exSubList = append(exSubList, *emby2.NewSubInfo(tmpFileNameWithOutExt+"."+stream.Codec, "."+stream.Codec, stream.Index))
 			} else {
 				continue
 			}
@@ -945,7 +946,7 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 		var tmpSubContentLenList = make([]int, 0)
 		for _, index := range insideEngSUbIndexList {
 			// TODO 这里默认是去 Emby 去拿字幕，但是其实可以缓存在视频文件同级的目录下，这样后续就无需多次下载了，毕竟每次下载都需要读取完整的视频
-			subFileData, err := em.EmbyApi.GetSubFileData(videoId, mediaSourcesId, fmt.Sprintf("%d", index), common2.SubExtSRT)
+			subFileData, err := em.EmbyApi.GetSubFileData(videoId, mediaSourcesId, fmt.Sprintf("%d", index), common.SubExtSRT)
 			if err != nil {
 				return false, nil, nil, err
 			}
@@ -961,15 +962,15 @@ func (em *EmbyHelper) GetInternalEngSubAndExChineseEnglishSub(videoId string) (b
 	}
 	// 这里才是下载最佳的那个字幕
 	for i := 0; i < 2; i++ {
-		tmpExt := common2.SubExtSRT
+		tmpExt := common.SubExtSRT
 		if i == 1 {
-			tmpExt = common2.SubExtASS
+			tmpExt = common.SubExtASS
 		}
 		subFileData, err := em.EmbyApi.GetSubFileData(videoId, mediaSourcesId, fmt.Sprintf("%d", InsideEngSubIndex), tmpExt)
 		if err != nil {
 			return false, nil, nil, err
 		}
-		tmpInSubInfo := emby.NewSubInfo(videoFileNameWithOutExt+tmpExt, tmpExt, InsideEngSubIndex)
+		tmpInSubInfo := emby2.NewSubInfo(videoFileNameWithOutExt+tmpExt, tmpExt, InsideEngSubIndex)
 		tmpInSubInfo.Content = []byte(subFileData)
 		inSubList = append(inSubList, *tmpInSubInfo)
 	}
@@ -1059,7 +1060,7 @@ type InputData struct {
 }
 
 type OutData struct {
-	Info *emby.EmbyMixInfo
+	Info *emby2.EmbyMixInfo
 	Err  error
 }
 

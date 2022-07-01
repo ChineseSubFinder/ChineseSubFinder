@@ -6,10 +6,11 @@ import (
 	"testing"
 	"time"
 
+	commonValue "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/series_helper"
 
-	commonValue "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"

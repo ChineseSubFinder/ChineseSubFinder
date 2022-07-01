@@ -3,8 +3,9 @@ package pre_job
 import (
 	"errors"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types"
+	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/pkg/rod_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"

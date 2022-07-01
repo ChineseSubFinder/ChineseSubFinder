@@ -13,6 +13,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/pkg/rod_helper"
 
@@ -20,10 +25,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
@@ -52,7 +53,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	sup := Supplier{}
 	sup.log = fileDownloader.Log
 	sup.fileDownloader = fileDownloader
-	sup.topic = common2.DownloadSubsPerSite
+	sup.topic = common.DownloadSubsPerSite
 
 	sup.settings = fileDownloader.Settings
 	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
@@ -61,10 +62,10 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
 	// 默认超时是 2 * 60s，如果是调试模式则是 5 min
-	sup.tt = common2.BrowserTimeOut
+	sup.tt = common.BrowserTimeOut
 	sup.debugMode = sup.settings.AdvancedSettings.DebugMode
 	if sup.debugMode == true {
-		sup.tt = common2.OneMovieProcessTimeOut
+		sup.tt = common.OneMovieProcessTimeOut
 	}
 
 	return &sup
@@ -127,7 +128,7 @@ func (s *Supplier) GetSettings() *settings.Settings {
 }
 
 func (s *Supplier) GetSupplierName() string {
-	return common2.SubSiteSubHd
+	return common.SubSiteSubHd
 }
 
 func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
@@ -405,7 +406,7 @@ func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 		}
 	}()
 
-	result, page, err := rod_helper.HttpGetFromBrowser(browser, fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl+common2.SubSubHDSearchUrl, url.QueryEscape(keyword)), s.tt)
+	result, page, err := rod_helper.HttpGetFromBrowser(browser, fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl+common.SubSubHDSearchUrl, url.QueryEscape(keyword)), s.tt)
 	if err != nil {
 		return "", err
 	}
@@ -416,7 +417,7 @@ func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 	re := regexp.MustCompile(`共\s*(\d+)\s*条`)
 	matched := re.FindAllStringSubmatch(result, -1)
 	if matched == nil || len(matched) < 1 {
-		return "", common2.SubHDStep0SubCountElementNotFound
+		return "", common.SubHDStep0SubCountElementNotFound
 	}
 	subCount, err := decode.GetNumber2int(matched[0][0])
 	if err != nil {
@@ -436,7 +437,7 @@ func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 	if ok == true {
 
 		if len(imgSelection.Nodes) < 1 {
-			return "", common2.SubHDStep0ImgParentLessThan1
+			return "", common.SubHDStep0ImgParentLessThan1
 		}
 		step1Url := ""
 		if imgSelection.Nodes[0].Parent.Data == "a" {
@@ -457,11 +458,11 @@ func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 			}
 		}
 		if step1Url == "" {
-			return "", common2.SubHDStep0HrefIsNull
+			return "", common.SubHDStep0HrefIsNull
 		}
 		return step1Url, nil
 	} else {
-		return "", common2.SubHDStep0HrefIsNull
+		return "", common.SubHDStep0HrefIsNull
 	}
 }
 
@@ -618,7 +619,7 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDown
 			// 填写“验证码”
 			s.log.Debugln("填写验证码")
 			el := page.MustElement(InputCode)
-			el.MustInput(common2.SubhdCode)
+			el.MustInput(common.SubhdCode)
 			//page.MustEval(`$("#gzhcode").attr("value","` + common2.SubhdCode + `");`)
 			// 是否有“完成验证”按钮
 			s.log.Debugln("查找是否有交验证码按钮1")
@@ -677,7 +678,7 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDown
 		return nil, err
 	}
 	if downloadSuccess == false {
-		return nil, common2.SubHDStep2ExCannotFindDownloadBtn
+		return nil, common.SubHDStep2ExCannotFindDownloadBtn
 	}
 	inSubInfo := supplier.NewSubInfo(s.GetSupplierName(), 1, fileName, language.ChineseSimple, subDownloadPageUrl, 0, 0, filepath.Ext(fileName), fileByte)
 

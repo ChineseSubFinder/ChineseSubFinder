@@ -7,11 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
+	interCommon "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/internal/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	interCommon "github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
 	movieHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/movie_helper"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/series_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"

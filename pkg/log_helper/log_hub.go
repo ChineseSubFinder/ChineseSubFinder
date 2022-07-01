@@ -8,8 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/log_hub"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/log_hub"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"

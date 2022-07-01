@@ -1,9 +1,9 @@
 package base
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	"net/http"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/pkg/common"
 	"github.com/gin-gonic/gin"
 )

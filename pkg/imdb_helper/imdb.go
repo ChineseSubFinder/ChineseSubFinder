@@ -5,11 +5,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/types"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+
 	"github.com/StalkR/imdb"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"

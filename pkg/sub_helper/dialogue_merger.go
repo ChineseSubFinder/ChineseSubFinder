@@ -1,6 +1,8 @@
 package sub_helper
 
-import "github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+import (
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+)
 
 // DialogueMerger 合并分散的对白，目标是搞定英文字幕
 type DialogueMerger struct {

@@ -1,8 +1,8 @@
 package settings
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 )
 
 type AdvancedSettings struct {

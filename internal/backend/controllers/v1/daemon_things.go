@@ -3,7 +3,8 @@ package v1
 import (
 	"net/http"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
+	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +22,7 @@ func (cb ControllerBase) DaemonStartHandler(c *gin.Context) {
 		}()
 	}
 
-	c.JSON(http.StatusOK, backend.ReplyCommon{
+	c.JSON(http.StatusOK, backend2.ReplyCommon{
 		Message: "ok",
 	})
 }
@@ -39,7 +40,7 @@ func (cb ControllerBase) DaemonStopHandler(c *gin.Context) {
 		}()
 	}
 
-	c.JSON(http.StatusOK, backend.ReplyCommon{
+	c.JSON(http.StatusOK, backend2.ReplyCommon{
 		Message: "ok",
 	})
 }
@@ -51,7 +52,7 @@ func (cb ControllerBase) DaemonStatusHandler(c *gin.Context) {
 		cb.ErrorProcess(c, "DaemonStatusHandler", err)
 	}()
 
-	c.JSON(http.StatusOK, backend.ReplyJobStatus{
+	c.JSON(http.StatusOK, backend2.ReplyJobStatus{
 		Status: cb.cronHelper.CronRunningStatusString(),
 	})
 }

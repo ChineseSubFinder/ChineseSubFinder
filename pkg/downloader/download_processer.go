@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"path/filepath"
 
+	taskQueue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/series_helper"
 
-	taskQueue2 "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/task_queue"

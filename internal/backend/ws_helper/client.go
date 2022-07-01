@@ -7,7 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend/ws"
+	ws2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend/ws"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/common"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
@@ -98,7 +99,7 @@ func (c *Client) readPump() {
 			return
 		}
 
-		revMessage := ws.BaseMessage{}
+		revMessage := ws2.BaseMessage{}
 		err = json.Unmarshal(message, &revMessage)
 		if err != nil {
 			c.log.Debugln("readPump.BaseMessage.parse", err)
@@ -107,12 +108,12 @@ func (c *Client) readPump() {
 
 		if c.authed == false {
 			// 如果没有经过认证，那么第一条一定需要判断是认证的消息
-			if revMessage.Type != ws.Auth.String() {
+			if revMessage.Type != ws2.Auth.String() {
 				// 提掉线
 				return
 			}
 			// 认证
-			login := ws.Login{}
+			login := ws2.Login{}
 			err = json.Unmarshal([]byte(revMessage.Data), &login)
 			if err != nil {
 				c.log.Debugln("readPump.Login.parse", err)
@@ -122,18 +123,18 @@ func (c *Client) readPump() {
 			if login.Token != common.GetAccessToken() {
 				// 登录 Token 不对
 				// 发送 token 失败的消息
-				outBytes, err := AuthReply(ws.AuthError)
+				outBytes, err := AuthReply(ws2.AuthError)
 				if err != nil {
 					c.log.Debugln("readPump.AuthReply", err)
 					return
 				}
 				c.send <- outBytes
 				// 直接退出可能会导致发送的队列没有清空，这里单独判断一条特殊的命令，收到 Write 线程就退出
-				c.send <- ws.CloseThisConnect
+				c.send <- ws2.CloseThisConnect
 
 			} else {
 				// Token 通过
-				outBytes, err := AuthReply(ws.AuthOk)
+				outBytes, err := AuthReply(ws2.AuthOk)
 				if err != nil {
 					c.log.Debugln("readPump.AuthReply", err)
 					return
@@ -168,7 +169,7 @@ func (c *Client) writePump() {
 		select {
 		case message, ok := <-c.send:
 
-			if bytes.Equal(message, ws.CloseThisConnect) == true {
+			if bytes.Equal(message, ws2.CloseThisConnect) == true {
 				return
 			}
 
@@ -219,18 +220,18 @@ func (c *Client) writePump() {
 }
 
 // AuthReply 生成认证通过的回复数据
-func AuthReply(inType ws.AuthMessage) ([]byte, error) {
+func AuthReply(inType ws2.AuthMessage) ([]byte, error) {
 
 	var err error
 	var outData, outBytes []byte
-	outData, err = json.Marshal(&ws.Reply{
+	outData, err = json.Marshal(&ws2.Reply{
 		Message: inType.String(),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	outBytes, err = ws.NewBaseMessage(ws.CommonReply.String(), string(outData)).Bytes()
+	outBytes, err = ws2.NewBaseMessage(ws2.CommonReply.String(), string(outData)).Bytes()
 	if err != nil {
 		return nil, err
 	}

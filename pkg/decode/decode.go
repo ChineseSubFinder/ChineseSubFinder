@@ -9,8 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types"
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+
 	"github.com/beevik/etree"
 	PTN "github.com/middelink/go-parse-torrent-name"
 )
@@ -268,7 +269,7 @@ func GetVideoNfoInfo4Movie(movieFileFullPath string) (types.VideoNfoInfo, error)
 	}
 	// 根据找到的开始解析
 	if movieNameNfoFPath == "" && movieXmlFPath == "" && nfoFilePath == "" {
-		return videoNfoInfo, common2.NoMetadataFile
+		return videoNfoInfo, common.NoMetadataFile
 	}
 	// 优先分析 movieName.nfo 文件
 	if movieNameNfoFPath != "" {
@@ -296,7 +297,7 @@ func GetVideoNfoInfo4Movie(movieFileFullPath string) (types.VideoNfoInfo, error)
 		}
 	}
 
-	return videoNfoInfo, common2.NoMetadataFile
+	return videoNfoInfo, common.NoMetadataFile
 }
 
 // GetVideoNfoInfo4SeriesDir 从一个连续剧的根目录获取 IMDB info
@@ -326,7 +327,7 @@ func GetVideoNfoInfo4SeriesDir(seriesDir string) (types.VideoNfoInfo, error) {
 	}
 	// 根据找到的开始解析
 	if nfoFilePath == "" {
-		return imdbInfo, common2.NoMetadataFile
+		return imdbInfo, common.NoMetadataFile
 	}
 	return getVideoNfoInfo(nfoFilePath, "tvshow")
 }
@@ -555,7 +556,7 @@ func IsFakeBDMVWorked(fakseVideFPath string) (bool, string, string) {
 	CERDir := filepath.Join(rootDir, "CERTIFICATE")
 	BDMVDir := filepath.Join(rootDir, "BDMV")
 	STREAMDir := filepath.Join(BDMVDir, "STREAM")
-	idBDMVFPath := filepath.Join(CERDir, common2.FileBDMV)
+	idBDMVFPath := filepath.Join(CERDir, common.FileBDMV)
 
 	if IsDir(CERDir) == true && IsDir(BDMVDir) == true && IsFile(idBDMVFPath) == true {
 		return true, idBDMVFPath, STREAMDir

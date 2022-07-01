@@ -3,7 +3,8 @@ package base
 import (
 	"net/http"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
+	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +16,7 @@ func (cb ControllerBase) SetupHandler(c *gin.Context) {
 		cb.ErrorProcess(c, "SetupHandler", err)
 	}()
 
-	setupInfo := backend.ReqSetupInfo{}
+	setupInfo := backend2.ReqSetupInfo{}
 	err = c.ShouldBindJSON(&setupInfo)
 	if err != nil {
 		return
@@ -28,7 +29,7 @@ func (cb ControllerBase) SetupHandler(c *gin.Context) {
 
 	if found == true {
 		// 存在则反馈无需初始化
-		c.JSON(http.StatusNoContent, backend.ReplyCommon{Message: "already setup"})
+		c.JSON(http.StatusNoContent, backend2.ReplyCommon{Message: "already setup"})
 		return
 	} else {
 		// 需要创建用户，因为上述判断了没有用户存在，所以就默认直接新建了
@@ -36,7 +37,7 @@ func (cb ControllerBase) SetupHandler(c *gin.Context) {
 		if err != nil {
 			return
 		}
-		c.JSON(http.StatusOK, backend.ReplyCommon{Message: "ok"})
+		c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "ok"})
 		return
 	}
 }

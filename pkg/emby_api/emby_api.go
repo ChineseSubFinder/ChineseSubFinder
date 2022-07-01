@@ -6,7 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/emby"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/emby"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/go-resty/resty/v2"
 	"github.com/panjf2000/ants/v2"

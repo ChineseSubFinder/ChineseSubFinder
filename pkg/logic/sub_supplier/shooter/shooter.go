@@ -9,9 +9,10 @@ import (
 	"path/filepath"
 	"time"
 
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/series"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/supplier"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
@@ -33,7 +34,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	sup := Supplier{}
 	sup.log = fileDownloader.Log
 	sup.fileDownloader = fileDownloader
-	sup.topic = common2.DownloadSubsPerSite
+	sup.topic = common.DownloadSubsPerSite
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
 	sup.settings = fileDownloader.Settings
@@ -81,7 +82,7 @@ func (s *Supplier) GetSettings() *settings.Settings {
 }
 
 func (s *Supplier) GetSupplierName() string {
-	return common2.SubSiteShooter
+	return common.SubSiteShooter
 }
 
 func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
@@ -129,7 +130,7 @@ func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, erro
 		return nil, err
 	}
 	if hash == "" {
-		return nil, common2.ShooterFileHashIsEmpty
+		return nil, common.ShooterFileHashIsEmpty
 	}
 
 	videoFileName := filepath.Base(filePath)
@@ -202,7 +203,7 @@ func ComputeFileHash(filePath string) (string, error) {
 	}
 	size := float64(stat.Size())
 	if size < 0xF000 {
-		return "", common2.VideoFileIsTooSmall
+		return "", common.VideoFileIsTooSmall
 	}
 	samplePositions := [4]int64{
 		4 * 1024,

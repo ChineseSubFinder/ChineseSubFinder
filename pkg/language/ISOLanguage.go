@@ -2,81 +2,82 @@ package language
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
 	"strings"
+
+	language2 "github.com/allanpk716/ChineseSubFinder/pkg/types/language"
 )
 
 // ISOString2SupportLang 从语言缩写字符串转换为内部的 MyLanguage 类型
 // 1. 支持 ISO 639-1、639-2/B、639-2/T、639-3
 // 2. 支持中文的多种变种编码
 // https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
-func ISOString2SupportLang(isoString string) language.MyLanguage {
+func ISOString2SupportLang(isoString string) language2.MyLanguage {
 
 	lowerString := strings.ToLower(isoString)
 
 	// 639-1
 	switch lowerString {
-	case language.ISO_639_1_Chinese:
-		return language.ChineseSimple
-	case language.ISO_639_1_English:
-		return language.English
-	case language.ISO_639_1_Korean:
-		return language.Korean
-	case language.ISO_639_1_Japanese:
-		return language.Japanese
+	case language2.ISO_639_1_Chinese:
+		return language2.ChineseSimple
+	case language2.ISO_639_1_English:
+		return language2.English
+	case language2.ISO_639_1_Korean:
+		return language2.Korean
+	case language2.ISO_639_1_Japanese:
+		return language2.Japanese
 	}
 	// 639-2/B
 	switch lowerString {
-	case language.ISO_639_2B_Chinese:
-		return language.ChineseSimple
-	case language.ISO_639_2B_English:
-		return language.English
-	case language.ISO_639_2B_Japanese:
-		return language.Japanese
-	case language.ISO_639_2B_Korean:
-		return language.Korean
+	case language2.ISO_639_2B_Chinese:
+		return language2.ChineseSimple
+	case language2.ISO_639_2B_English:
+		return language2.English
+	case language2.ISO_639_2B_Japanese:
+		return language2.Japanese
+	case language2.ISO_639_2B_Korean:
+		return language2.Korean
 	}
 	// 639-2/T
 	switch lowerString {
-	case language.ISO_639_2T_Chinese:
-		return language.ChineseSimple
-	case language.ISO_639_2T_English:
-		return language.English
-	case language.ISO_639_2T_Japanese:
-		return language.Japanese
-	case language.ISO_639_2T_Korean:
-		return language.Korean
+	case language2.ISO_639_2T_Chinese:
+		return language2.ChineseSimple
+	case language2.ISO_639_2T_English:
+		return language2.English
+	case language2.ISO_639_2T_Japanese:
+		return language2.Japanese
+	case language2.ISO_639_2T_Korean:
+		return language2.Korean
 	}
 	// 639-3
 	switch lowerString {
-	case language.ISO_639_3_Chinese:
-		return language.ChineseSimple
-	case language.ISO_639_3_English:
-		return language.English
-	case language.ISO_639_3_Korean:
-		return language.Korean
-	case language.ISO_639_3_Japanese:
-		return language.Japanese
+	case language2.ISO_639_3_Chinese:
+		return language2.ChineseSimple
+	case language2.ISO_639_3_English:
+		return language2.English
+	case language2.ISO_639_3_Korean:
+		return language2.Korean
+	case language2.ISO_639_3_Japanese:
+		return language2.Japanese
 	}
 	// 中文编码变种
 	switch lowerString {
-	case language.ChineseISO_Hans:
-		return language.ChineseSimple
-	case language.ChineseISO_Hant:
-		return language.ChineseTraditional
-	case language.ChineseISO_CN:
-		return language.ChineseSimple
-	case language.ChineseISO_TW:
-		return language.ChineseTraditional
-	case language.ChineseISO_SG,
-		language.ChineseISO_MY:
-		return language.ChineseSimple
-	case language.ChineseISO_HK,
-		language.ChineseISO_MO:
-		return language.ChineseTraditional
+	case language2.ChineseISO_Hans:
+		return language2.ChineseSimple
+	case language2.ChineseISO_Hant:
+		return language2.ChineseTraditional
+	case language2.ChineseISO_CN:
+		return language2.ChineseSimple
+	case language2.ChineseISO_TW:
+		return language2.ChineseTraditional
+	case language2.ChineseISO_SG,
+		language2.ChineseISO_MY:
+		return language2.ChineseSimple
+	case language2.ChineseISO_HK,
+		language2.ChineseISO_MO:
+		return language2.ChineseTraditional
 	}
 
-	return language.Unknown
+	return language2.Unknown
 }
 
 // IsSupportISOString 是否是受支持的语言，中、英、日、韩
@@ -87,34 +88,34 @@ func IsSupportISOString(isoString string) bool {
 	lowerString := strings.ToLower(isoString)
 
 	switch lowerString {
-	case language.ISO_639_1_Chinese, language.ISO_639_1_English, language.ISO_639_1_Korean, language.ISO_639_1_Japanese:
+	case language2.ISO_639_1_Chinese, language2.ISO_639_1_English, language2.ISO_639_1_Korean, language2.ISO_639_1_Japanese:
 		// 639-1
 		return true
 	}
 	switch lowerString {
-	case language.ISO_639_2B_Chinese, language.ISO_639_2B_English, language.ISO_639_2B_Japanese, language.ISO_639_2B_Korean:
+	case language2.ISO_639_2B_Chinese, language2.ISO_639_2B_English, language2.ISO_639_2B_Japanese, language2.ISO_639_2B_Korean:
 		// 639-2/B
 		return true
 	}
 	switch lowerString {
-	case language.ISO_639_2T_Chinese, language.ISO_639_2T_English, language.ISO_639_2T_Japanese, language.ISO_639_2T_Korean:
+	case language2.ISO_639_2T_Chinese, language2.ISO_639_2T_English, language2.ISO_639_2T_Japanese, language2.ISO_639_2T_Korean:
 		// 639-2/T
 		return true
 	}
 	switch lowerString {
-	case language.ISO_639_3_Chinese, language.ISO_639_3_English, language.ISO_639_3_Korean, language.ISO_639_3_Japanese:
+	case language2.ISO_639_3_Chinese, language2.ISO_639_3_English, language2.ISO_639_3_Korean, language2.ISO_639_3_Japanese:
 		// 639-3
 		return true
 	}
 	switch lowerString {
-	case language.ChineseISO_Hans,
-		language.ChineseISO_Hant,
-		language.ChineseISO_CN,
-		language.ChineseISO_TW,
-		language.ChineseISO_SG,
-		language.ChineseISO_MY,
-		language.ChineseISO_HK,
-		language.ChineseISO_MO:
+	case language2.ChineseISO_Hans,
+		language2.ChineseISO_Hant,
+		language2.ChineseISO_CN,
+		language2.ChineseISO_TW,
+		language2.ChineseISO_SG,
+		language2.ChineseISO_MY,
+		language2.ChineseISO_HK,
+		language2.ChineseISO_MO:
 		// 中文编码变种
 		return true
 	}
@@ -130,34 +131,34 @@ func IsSupportISOChineseString(isoString string) bool {
 	lowerString := strings.ToLower(isoString)
 
 	switch lowerString {
-	case language.ISO_639_1_Chinese:
+	case language2.ISO_639_1_Chinese:
 		// 639-1
 		return true
 	}
 	switch lowerString {
-	case language.ISO_639_2B_Chinese:
+	case language2.ISO_639_2B_Chinese:
 		// 639-2/B
 		return true
 	}
 	switch lowerString {
-	case language.ISO_639_2T_Chinese:
+	case language2.ISO_639_2T_Chinese:
 		// 639-2/T
 		return true
 	}
 	switch lowerString {
-	case language.ISO_639_3_Chinese:
+	case language2.ISO_639_3_Chinese:
 		// 639-3
 		return true
 	}
 	switch lowerString {
-	case language.ChineseISO_Hans,
-		language.ChineseISO_Hant,
-		language.ChineseISO_CN,
-		language.ChineseISO_TW,
-		language.ChineseISO_SG,
-		language.ChineseISO_MY,
-		language.ChineseISO_HK,
-		language.ChineseISO_MO:
+	case language2.ChineseISO_Hans,
+		language2.ChineseISO_Hant,
+		language2.ChineseISO_CN,
+		language2.ChineseISO_TW,
+		language2.ChineseISO_SG,
+		language2.ChineseISO_MY,
+		language2.ChineseISO_HK,
+		language2.ChineseISO_MO:
 		// 中文编码变种
 		return true
 	}
@@ -166,45 +167,45 @@ func IsSupportISOChineseString(isoString string) bool {
 }
 
 // MyLang2ISO_639_1_String 内置的语言转换到 ISO_639-1_codes 标准
-func MyLang2ISO_639_1_String(myLanguage language.MyLanguage) string {
+func MyLang2ISO_639_1_String(myLanguage language2.MyLanguage) string {
 
 	switch myLanguage {
-	case language.ChineseSimple,
-		language.ChineseTraditional,
-		language.ChineseSimpleEnglish,
-		language.ChineseTraditionalEnglish,
-		language.ChineseSimpleJapanese,
-		language.ChineseTraditionalJapanese,
-		language.ChineseSimpleKorean,
-		language.ChineseTraditionalKorean:
-		return language.ISO_639_1_Chinese
-	case language.English:
-		return language.ISO_639_1_English
-	case language.Japanese:
-		return language.ISO_639_1_Japanese
-	case language.Korean:
-		return language.ISO_639_1_Korean
+	case language2.ChineseSimple,
+		language2.ChineseTraditional,
+		language2.ChineseSimpleEnglish,
+		language2.ChineseTraditionalEnglish,
+		language2.ChineseSimpleJapanese,
+		language2.ChineseTraditionalJapanese,
+		language2.ChineseSimpleKorean,
+		language2.ChineseTraditionalKorean:
+		return language2.ISO_639_1_Chinese
+	case language2.English:
+		return language2.ISO_639_1_English
+	case language2.Japanese:
+		return language2.ISO_639_1_Japanese
+	case language2.Korean:
+		return language2.ISO_639_1_Korean
 	default:
-		return language.MathLangChnUnknown
+		return language2.MathLangChnUnknown
 	}
 }
 
 // MyLang2ChineseISO 中文语言编码变种，见 ISOLanguage.go 文件，这里区分简体、繁体等，如果语言是非中文则这里是空
-func MyLang2ChineseISO(myLanguage language.MyLanguage) string {
+func MyLang2ChineseISO(myLanguage language2.MyLanguage) string {
 	switch myLanguage {
-	case language.ChineseSimple,
-		language.ChineseSimpleEnglish,
-		language.ChineseSimpleJapanese,
-		language.ChineseSimpleKorean:
-		return language.ChineseISO_Hans
+	case language2.ChineseSimple,
+		language2.ChineseSimpleEnglish,
+		language2.ChineseSimpleJapanese,
+		language2.ChineseSimpleKorean:
+		return language2.ChineseISO_Hans
 
-	case language.ChineseTraditional,
-		language.ChineseTraditionalEnglish,
-		language.ChineseTraditionalJapanese,
-		language.ChineseTraditionalKorean:
-		return language.ChineseISO_Hant
+	case language2.ChineseTraditional,
+		language2.ChineseTraditionalEnglish,
+		language2.ChineseTraditionalJapanese,
+		language2.ChineseTraditionalKorean:
+		return language2.ChineseISO_Hant
 
-	case language.English, language.Japanese, language.Korean:
+	case language2.English, language2.Japanese, language2.Korean:
 		return ""
 	default:
 		return ""
@@ -218,30 +219,30 @@ func ISOSupportRegexRule() string {
 		return isoISORegString
 	}
 
-	isoISORegString = language.RegISORuleFront
+	isoISORegString = language2.RegISORuleFront
 
-	isoISORegString += addISORegSubLangString(language.ChineseISO_Hans)
-	isoISORegString += addISORegSubLangString(language.ChineseISO_Hant)
-	isoISORegString += addISORegSubLangString(language.ChineseISO_CN)
-	isoISORegString += addISORegSubLangString(language.ChineseISO_TW)
-	isoISORegString += addISORegSubLangString(language.ChineseISO_SG)
-	isoISORegString += addISORegSubLangString(language.ChineseISO_MY)
-	isoISORegString += addISORegSubLangString(language.ChineseISO_HK)
-	isoISORegString += addISORegSubLangString(language.ChineseISO_MO)
+	isoISORegString += addISORegSubLangString(language2.ChineseISO_Hans)
+	isoISORegString += addISORegSubLangString(language2.ChineseISO_Hant)
+	isoISORegString += addISORegSubLangString(language2.ChineseISO_CN)
+	isoISORegString += addISORegSubLangString(language2.ChineseISO_TW)
+	isoISORegString += addISORegSubLangString(language2.ChineseISO_SG)
+	isoISORegString += addISORegSubLangString(language2.ChineseISO_MY)
+	isoISORegString += addISORegSubLangString(language2.ChineseISO_HK)
+	isoISORegString += addISORegSubLangString(language2.ChineseISO_MO)
 
-	isoISORegString += addISORegSubLangString(language.ISO_639_1_Chinese)
-	isoISORegString += addISORegSubLangString(language.ISO_639_1_English)
-	isoISORegString += addISORegSubLangString(language.ISO_639_1_Korean)
-	isoISORegString += addISORegSubLangString(language.ISO_639_1_Japanese)
+	isoISORegString += addISORegSubLangString(language2.ISO_639_1_Chinese)
+	isoISORegString += addISORegSubLangString(language2.ISO_639_1_English)
+	isoISORegString += addISORegSubLangString(language2.ISO_639_1_Korean)
+	isoISORegString += addISORegSubLangString(language2.ISO_639_1_Japanese)
 
-	isoISORegString += addISORegSubLangString(language.ISO_639_2T_Chinese)
-	isoISORegString += addISORegSubLangString(language.ISO_639_2T_English)
-	isoISORegString += addISORegSubLangString(language.ISO_639_2T_Korean)
-	isoISORegString += addISORegSubLangString(language.ISO_639_2T_Japanese)
+	isoISORegString += addISORegSubLangString(language2.ISO_639_2T_Chinese)
+	isoISORegString += addISORegSubLangString(language2.ISO_639_2T_English)
+	isoISORegString += addISORegSubLangString(language2.ISO_639_2T_Korean)
+	isoISORegString += addISORegSubLangString(language2.ISO_639_2T_Japanese)
 
-	isoISORegString += addISORegSubLangString(language.ISO_639_2B_Chinese)
+	isoISORegString += addISORegSubLangString(language2.ISO_639_2B_Chinese)
 
-	isoISORegString += language.RegISORuleEnd
+	isoISORegString += language2.RegISORuleEnd
 
 	return isoISORegString
 }

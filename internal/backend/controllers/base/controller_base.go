@@ -3,7 +3,8 @@ package base
 import (
 	"net/http"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/gin-gonic/gin"
 )

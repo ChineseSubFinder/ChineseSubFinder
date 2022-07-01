@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/backend"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	TTaskqueue "github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
+	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	TTaskqueue "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
 	"github.com/gin-gonic/gin"
@@ -26,7 +27,7 @@ func (cb *ControllerBase) RefreshVideoListStatusHandler(c *gin.Context) {
 		status = "stopped"
 	}
 
-	c.JSON(http.StatusOK, backend.ReplyRefreshVideoList{
+	c.JSON(http.StatusOK, backend2.ReplyRefreshVideoList{
 		Status:     status,
 		ErrMessage: cb.videoScanAndRefreshHelperErrMessage})
 	return
@@ -41,7 +42,7 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 
 	if cb.videoScanAndRefreshHelperLocker.Lock() == false {
 		// 已经在执行，跳过
-		c.JSON(http.StatusOK, backend.ReplyRefreshVideoList{
+		c.JSON(http.StatusOK, backend2.ReplyRefreshVideoList{
 			Status: "running"})
 		return
 	}
@@ -84,7 +85,7 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 		cb.cronHelper.Downloader.SetMovieAndSeasonInfo(MovieInfos, SeasonInfos)
 	}()
 
-	c.JSON(http.StatusOK, backend.ReplyRefreshVideoList{
+	c.JSON(http.StatusOK, backend2.ReplyRefreshVideoList{
 		Status: "running"})
 	return
 }
@@ -96,7 +97,7 @@ func (cb *ControllerBase) VideoListAddHandler(c *gin.Context) {
 		cb.ErrorProcess(c, "VideoListAddHandler", err)
 	}()
 
-	videoListAdd := backend.ReqVideoListAdd{}
+	videoListAdd := backend2.ReqVideoListAdd{}
 	err = c.ShouldBindJSON(&videoListAdd)
 	if err != nil {
 		return
@@ -139,7 +140,7 @@ func (cb *ControllerBase) VideoListAddHandler(c *gin.Context) {
 			return
 		}
 		if bok == false {
-			c.JSON(http.StatusOK, backend.ReplyJobThings{
+			c.JSON(http.StatusOK, backend2.ReplyJobThings{
 				JobID:   oneJob.Id,
 				Message: "update job status failed",
 			})
@@ -147,7 +148,7 @@ func (cb *ControllerBase) VideoListAddHandler(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, backend.ReplyJobThings{
+	c.JSON(http.StatusOK, backend2.ReplyJobThings{
 		JobID:   oneJob.Id,
 		Message: "ok",
 	})
@@ -162,7 +163,7 @@ func (cb *ControllerBase) VideoListHandler(c *gin.Context) {
 
 	outMovieInfos, outSeasonInfo := cb.cronHelper.Downloader.GetMovieInfoAndSeasonInfo()
 
-	c.JSON(http.StatusOK, backend.ReplyVideoList{
+	c.JSON(http.StatusOK, backend2.ReplyVideoList{
 		MovieInfos:  outMovieInfos,
 		SeasonInfos: outSeasonInfo,
 	})

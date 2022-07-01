@@ -2,10 +2,10 @@ package task_queue
 
 import (
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	task_queue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/task_queue"
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
@@ -26,7 +26,7 @@ func TestTaskQueue_AddAndGetAndDel(t *testing.T) {
 		taskQueue.Close()
 	}()
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
+		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}
@@ -35,7 +35,7 @@ func TestTaskQueue_AddAndGetAndDel(t *testing.T) {
 		}
 	}
 
-	bok, waitingJobs, err := taskQueue.GetJobsByStatus(task_queue.Waiting)
+	bok, waitingJobs, err := taskQueue.GetJobsByStatus(task_queue2.Waiting)
 	if err != nil {
 		t.Fatal("TestTaskQueue.Get", err)
 	}
@@ -78,7 +78,7 @@ func TestTaskQueue_AddAndClear(t *testing.T) {
 
 	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, settings.GetSettings(), log_helper.GetLogger4Tester()))
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
+		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}
@@ -106,7 +106,7 @@ func TestTaskQueue_Update(t *testing.T) {
 
 	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, settings.GetSettings(), log_helper.GetLogger4Tester()))
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
+		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}
@@ -115,7 +115,7 @@ func TestTaskQueue_Update(t *testing.T) {
 		}
 	}
 
-	bok, waitingJobs, err := taskQueue.GetJobsByStatus(task_queue.Waiting)
+	bok, waitingJobs, err := taskQueue.GetJobsByStatus(task_queue2.Waiting)
 	if err != nil {
 		t.Fatal("TestTaskQueue.Get", err)
 	}
@@ -136,7 +136,7 @@ func TestTaskQueue_Update(t *testing.T) {
 
 	for _, waitingJob := range waitingJobs {
 
-		waitingJob.JobStatus = task_queue.Committed
+		waitingJob.JobStatus = task_queue2.Committed
 
 		bok, err = taskQueue.Update(waitingJob)
 		if err != nil {
@@ -147,7 +147,7 @@ func TestTaskQueue_Update(t *testing.T) {
 		}
 	}
 
-	bok, committedJobs, err := taskQueue.GetJobsByStatus(task_queue.Committed)
+	bok, committedJobs, err := taskQueue.GetJobsByStatus(task_queue2.Committed)
 	if err != nil {
 		t.Fatal("TestTaskQueue.Get", err)
 	}
@@ -169,7 +169,7 @@ func TestTaskQueue_UpdateAdGetOneWaiting(t *testing.T) {
 
 	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, settings.GetSettings(), log_helper.GetLogger4Tester()))
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, fmt.Sprintf("%d", i), i))
+		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, fmt.Sprintf("%d", i), i))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}
@@ -190,7 +190,7 @@ func TestTaskQueue_UpdateAdGetOneWaiting(t *testing.T) {
 		t.Fatal("waitingJob.TaskPriority != 0")
 	}
 
-	waitingJob.JobStatus = task_queue.Committed
+	waitingJob.JobStatus = task_queue2.Committed
 	bok, err = taskQueue.Update(waitingJob)
 	if err != nil {
 		t.Fatal("TestTaskQueue.Update", err)
@@ -221,7 +221,7 @@ func TestTaskQueue_UpdatePriority(t *testing.T) {
 
 	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, settings.GetSettings(), log_helper.GetLogger4Tester()))
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, fmt.Sprintf("%d", i), i))
+		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, fmt.Sprintf("%d", i), i))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}
@@ -251,7 +251,7 @@ func TestTaskQueue_UpdatePriority(t *testing.T) {
 		t.Fatal("TestTaskQueue.Update == false")
 	}
 
-	bok, waitingJobs, err := taskQueue.GetJobsByPriorityAndStatus(0, task_queue.Waiting)
+	bok, waitingJobs, err := taskQueue.GetJobsByPriorityAndStatus(0, task_queue2.Waiting)
 	if err != nil {
 		t.Fatal("TestTaskQueue.GetJobsByPriorityAndStatus", err)
 	}
@@ -263,7 +263,7 @@ func TestTaskQueue_UpdatePriority(t *testing.T) {
 		t.Fatal("len(waitingJobs) != 0")
 	}
 
-	bok, waitingJobs, err = taskQueue.GetJobsByPriorityAndStatus(1, task_queue.Waiting)
+	bok, waitingJobs, err = taskQueue.GetJobsByPriorityAndStatus(1, task_queue2.Waiting)
 	if err != nil {
 		t.Fatal("TestTaskQueue.GetJobsByPriorityAndStatus", err)
 	}
@@ -286,7 +286,7 @@ func TestTaskQueue_AddAndGetOneJob(t *testing.T) {
 	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, settings.GetSettings(), log_helper.GetLogger4Tester()))
 
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue.NewOneJob(common.Movie, fmt.Sprintf("%d", i), DefaultTaskPriorityLevel))
+		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, fmt.Sprintf("%d", i), DefaultTaskPriorityLevel))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}
@@ -319,7 +319,7 @@ func TestTaskQueue_AddAndGetOneJob(t *testing.T) {
 	println("VideoFPath", oneJob.VideoFPath)
 	println("TaskPriority", oneJob.TaskPriority)
 
-	found, waitingJobs, err := taskQueue.GetJobsByStatus(task_queue.Waiting)
+	found, waitingJobs, err := taskQueue.GetJobsByStatus(task_queue2.Waiting)
 	if err != nil {
 		return
 	}
@@ -328,7 +328,7 @@ func TestTaskQueue_AddAndGetOneJob(t *testing.T) {
 		println("QueueDownloader Waiting:", i, job.VideoName)
 	}
 
-	found, waitingJobs, err = taskQueue.GetJobsByStatus(task_queue.Done)
+	found, waitingJobs, err = taskQueue.GetJobsByStatus(task_queue2.Done)
 	if err != nil {
 		return
 	}
@@ -337,7 +337,7 @@ func TestTaskQueue_AddAndGetOneJob(t *testing.T) {
 		println("QueueDownloader Done:", i, job.VideoName)
 	}
 
-	found, waitingJobs, err = taskQueue.GetJobsByStatus(task_queue.Failed)
+	found, waitingJobs, err = taskQueue.GetJobsByStatus(task_queue2.Failed)
 	if err != nil {
 		return
 	}

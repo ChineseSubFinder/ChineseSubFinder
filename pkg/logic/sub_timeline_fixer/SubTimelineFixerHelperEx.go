@@ -5,7 +5,8 @@ import (
 	"math"
 	"os"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"

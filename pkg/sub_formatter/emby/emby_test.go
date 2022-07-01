@@ -3,8 +3,9 @@ package emby
 import (
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/types/common"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+
 	subCommon "github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
 )
 

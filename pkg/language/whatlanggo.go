@@ -2,8 +2,8 @@ package language
 
 import (
 	"github.com/abadojack/whatlanggo"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/language"
-	"github.com/allanpk716/ChineseSubFinder/internal/types/subparser"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
 )
 
 // WhichChineseType 是简体中文（1）还是繁体中文（2），如果都不是，那么是 0

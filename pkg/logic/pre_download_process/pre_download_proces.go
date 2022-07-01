@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/a4k"
@@ -16,7 +18,6 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 
-	common2 "github.com/allanpk716/ChineseSubFinder/internal/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
