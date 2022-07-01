@@ -96,6 +96,8 @@ func (s *Supplier) IsAlive() bool {
 
 func (s *Supplier) OverDailyDownloadLimit() bool {
 
+	return true
+
 	if s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit == 0 {
 		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit is 0, will Skip Download")
 		return true
