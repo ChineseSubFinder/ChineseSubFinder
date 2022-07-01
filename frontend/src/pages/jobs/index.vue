@@ -1,85 +1,82 @@
 <template>
   <q-page class="q-pa-md">
+    <div class="row items-center">
+      <div class="q-gutter-xs">
+        <q-btn
+          :disable="selected.length === 0"
+          size="md"
+          icon="expand_less"
+          label="升级"
+          color="primary"
+          @click="batchUpdatePriority('high')"
+        />
+
+        <q-btn
+          :disable="selected.length === 0"
+          size="md"
+          icon="expand_more"
+          label="降级"
+          color="primary"
+          @click="batchUpdatePriority('low')"
+        />
+
+        <q-btn
+          :disable="selected.length === 0"
+          size="md"
+          label="修改状态"
+          color="primary"
+          @click="batchUpdateStatus"
+        />
+      </div>
+
+      <q-space/>
+
+      <div class="q-gutter-sm row">
+        <q-select
+          label="状态"
+          v-model.number="form.status"
+          :options="statusOptions"
+          outlined
+          dense
+          map-options
+          emit-value
+          style="width: 120px"
+        ></q-select>
+        <q-select
+          v-model.number="form.videoType"
+          :options="videoTypeOptions"
+          label="类型"
+          emit-value
+          map-options
+          outlined
+          dense
+          style="width: 100px"
+        ></q-select>
+        <q-select
+          v-model="form.priority"
+          :options="priorityOptions"
+          label="优先级"
+          outlined
+          dense
+          map-options
+          emit-value
+          style="width: 130px"
+        ></q-select>
+        <q-input v-model="form.search" outlined label="输入关键字搜索" dense></q-input>
+      </div>
+    </div>
+
+    <q-separator class="q-mt-md"/>
+
     <q-table
       :columns="columns"
       :rows="filteredData"
       flat
-      bordered
       selection="multiple"
       v-model:selected="selected"
+      class="sticky-column-table"
       :pagination="{ rowsPerPage: 20 }"
     >
-      <template v-slot:top>
-        <div class="col">
-          <div class="row">
-            <div class="col-2 q-table__title">下载队列</div>
-
-            <q-space />
-
-            <div class="q-gutter-sm row">
-              <q-select
-                label="状态"
-                v-model.number="form.status"
-                :options="statusOptions"
-                outlined
-                dense
-                map-options
-                emit-value
-                style="width: 120px"
-              ></q-select>
-              <q-select
-                v-model.number="form.videoType"
-                :options="videoTypeOptions"
-                label="类型"
-                emit-value
-                map-options
-                outlined
-                dense
-                style="width: 100px"
-              ></q-select>
-              <q-select
-                v-model="form.priority"
-                :options="priorityOptions"
-                label="优先级"
-                outlined
-                dense
-                map-options
-                emit-value
-                style="width: 130px"
-              ></q-select>
-              <q-input v-model="form.search" outlined label="输入关键字搜索" dense></q-input>
-            </div>
-          </div>
-
-          <div class="q-mt-sm q-gutter-xs">
-            <q-btn
-              :disable="selected.length === 0"
-              size="sm"
-              icon="expand_less"
-              label="升级"
-              color="primary"
-              @click="batchUpdatePriority('high')"
-            />
-
-            <q-btn
-              :disable="selected.length === 0"
-              size="sm"
-              icon="expand_more"
-              label="降级"
-              color="primary"
-              @click="batchUpdatePriority('low')"
-            />
-
-            <q-btn
-              :disable="selected.length === 0"
-              size="sm"
-              label="修改状态"
-              color="primary"
-              @click="batchUpdateStatus"
-            />
-          </div>
-        </div>
-      </template>
 
       <template v-slot:body-cell-jobStatus="{ row }">
         <q-td>
@@ -87,8 +84,8 @@
             :style="{
               background: JOB_STATUS_COLOR_MAP[row.job_status],
               color: 'white',
-              borderRadius: '3px',
-              padding: '2px 4px',
+              borderRadius: '5px',
+              padding: '2px 6px',
               fontSize: '12px',
             }"
             >{{ JOB_STATUS_MAP[row.job_status] }}</span
@@ -126,23 +123,23 @@ const $q = useQuasar();
 
 const columns = [
   // { label: 'ID', field: 'id' },
-  { label: '状态', field: 'job_status', name: 'jobStatus' },
-  { label: '类型', field: 'video_type', format: (val) => VIDEO_TYPE_NAME_MAP[val] },
+  { label: '状态', field: 'job_status', name: 'jobStatus', align: 'left' },
+  { label: '类型', field: 'video_type', format: (val) => VIDEO_TYPE_NAME_MAP[val], align: 'left' },
   // { label: '路径', field: 'video_f_path' },
-  { label: '名称', field: 'video_name', width: '100px' },
+  { label: '名称', field: 'video_name', width: '100px', align: 'left' },
   // { label: '特征码', field: 'feature' },
   // { label: '连续剧目录', field: 'series_root_dir_path' },
   // { label: '季', field: 'season' },
   // { label: '集', field: 'episode' },
-  { label: '优先级', field: 'task_priority' },
+  { label: '优先级', field: 'task_priority', align: 'left' },
   // { label: '视频创建时间', field: 'created_time' },
-  { label: '创建时间', field: 'added_time' },
-  { label: '更新时间', field: 'update_time' },
+  { label: '创建时间', field: 'added_time', align: 'left' },
+  { label: '更新时间', field: 'update_time', align: 'left' },
   // { label: '媒体服务器ID', field: 'media_server_inside_video_id' },
-  { label: '错误信息', field: 'error_info' },
-  { label: '下载次数', field: 'download_times' },
-  { label: '重试次数', field: 'retry_times' },
-  { label: '操作', name: 'actions' },
+  { label: '错误信息', field: 'error_info', align: 'left' },
+  { label: '下载次数', field: 'download_times', align: 'left' },
+  { label: '重试次数', field: 'retry_times', align: 'left' },
+  { label: '操作', name: 'actions', align: 'left', headerClasses: 'sticky-column-header' },
 ];
 
 const data = ref([]);
@@ -301,3 +298,27 @@ onMounted(() => {
   getData();
 });
 </script>
+
+<style lang="scss">
+.sticky-column-table {
+  thead tr:last-child th:last-child {
+    background-color: #fff
+  }
+
+  td:last-child {
+    background-color: #fff;
+  }
+
+  th:last-child,
+  td:last-child {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    box-shadow: -5px 0px 5px -1px #ddd;
+  }
+  td:last-child {
+    //border-left: 1px solid $grey-3;
+  }
+}
+
+</style>
