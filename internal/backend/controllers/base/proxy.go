@@ -3,13 +3,14 @@ package base
 import (
 	"net/http"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/a4k"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 
 	subSupplier "github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/csf"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
 
 	"github.com/gin-gonic/gin"
@@ -43,9 +44,10 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 	subSupplierHub := subSupplier.NewSubSupplierHub(
 		// 这里无需传递下载字幕的缓存实例
 		//zimuku.NewSupplier(cb.fileDownloader),
+		//subhd.NewSupplier(cb.fileDownloader),
 		xunlei.NewSupplier(cb.fileDownloader),
 		shooter.NewSupplier(cb.fileDownloader),
-		subhd.NewSupplier(cb.fileDownloader),
+		a4k.NewSupplier(cb.fileDownloader),
 	)
 
 	if cb.fileDownloader.Settings.SubtitleSources.AssrtSettings.Enabled == true &&

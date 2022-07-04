@@ -13,7 +13,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/csf"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/subhd"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
@@ -130,7 +129,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 			// 如果不是 Lite 模式，那么就可以开启这个功能
 			if common2.SubhdCode != "" {
 				// 如果找到 code 了，那么就可以继续用这个实例
-				p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.fileDownloader))
+				//p.SubSupplierHub.AddSubSupplier(subhd.NewSupplier(p.fileDownloader))
 			}
 		}
 	}
