@@ -181,9 +181,9 @@ func (p Parser) parseContent(inBytes []byte) []subparser.OneDialogue {
 		if steps == 1 {
 			// 匹配时间
 			matched := regex_things.ReMatchDialogueTimeSRT.FindAllStringSubmatch(line, -1)
-			if matched == nil || len(matched) < 1 {
+			if matched == nil || len(matched) < 1 || matched[0][0] != line {
 				matched = regex_things.ReMatchDialogueTimeSRT2.FindAllStringSubmatch(line, -1)
-				if matched == nil || len(matched) < 1 {
+				if matched == nil || len(matched) < 1 || matched[0][0] != line {
 					newOneDialogueFun()
 					continue
 				}
