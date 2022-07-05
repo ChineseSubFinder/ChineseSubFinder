@@ -7,17 +7,17 @@ type TimelineFixerSettings struct {
 
 func NewTimelineFixerSettings() *TimelineFixerSettings {
 	return &TimelineFixerSettings{
-		MaxOffsetTime: 120,
-		MinOffset:     0.1,
+		MaxOffsetTime: 700,
+		MinOffset:     0.2,
 	}
 }
 
 func (t *TimelineFixerSettings) Check() {
-	if t.MaxOffsetTime <= 0 || t.MaxOffsetTime > 600 {
-		t.MaxOffsetTime = 60 // 60s
+	if t.MaxOffsetTime <= 0 || t.MaxOffsetTime > 700 {
+		t.MaxOffsetTime = 700 // 60s
 	}
 
 	if t.MinOffset <= 0 || t.MinOffset > 1 {
-		t.MinOffset = 0.1 // 100ms
+		t.MinOffset = 0.2 // 100ms
 	}
 }

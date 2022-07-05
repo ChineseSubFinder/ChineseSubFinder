@@ -111,7 +111,7 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 			s.log.Warnln("Can`t find audio info, skip time fix --", videoFileFullPath)
 			return nil
 		}
-		bProcess, infoSrc, pipeResultMax, err = s.processByAudio(ffmpegInfo.AudioInfoList[0].FullPath, srcSubFPath)
+		bProcess, infoSrc, pipeResultMax, err = s.ProcessByAudioFile(ffmpegInfo.AudioInfoList[0].FullPath, srcSubFPath)
 		if err != nil {
 			return err
 		}
@@ -130,7 +130,7 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 		}
 		_, index := fileSizes.Max()
 		baseSubFPath := ffmpegInfo.SubtitleInfoList[index.(int)].FullPath
-		bProcess, infoSrc, pipeResultMax, err = s.processBySub(baseSubFPath, srcSubFPath)
+		bProcess, infoSrc, pipeResultMax, err = s.ProcessBySubFile(baseSubFPath, srcSubFPath)
 		if err != nil {
 			return err
 		}
@@ -145,30 +145,15 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	if err != nil {
 		return err
 	}
+	s.log.Infoln("TimeLine Fix -- Score:", pipeResultMax.Score, srcSubFPath)
 	s.log.Infoln("Fix Offset:", pipeResultMax.GetOffsetTime(), srcSubFPath)
 	s.log.Infoln("BackUp Org SubFile:", pipeResultMax.GetOffsetTime(), srcSubFPath+sub_timeline_fixer.BackUpExt)
 
 	return nil
 }
 
-func (s SubTimelineFixerHelperEx) processBySub(baseSubFileFPath, srcSubFileFPath string) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
+func (s SubTimelineFixerHelperEx) ProcessBySubFileInfo(infoBase *subparser.FileInfo, infoSrc *subparser.FileInfo) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
 
-	bFind, infoBase, err := s.subParserHub.DetermineFileTypeFromFile(baseSubFileFPath)
-	if err != nil {
-		return false, nil, sub_timeline_fixer.PipeResult{}, err
-	}
-	if bFind == false {
-		s.log.Warnln("processBySub.DetermineFileTypeFromFile sub not match --", baseSubFileFPath)
-		return false, nil, sub_timeline_fixer.PipeResult{}, nil
-	}
-	bFind, infoSrc, err := s.subParserHub.DetermineFileTypeFromFile(srcSubFileFPath)
-	if err != nil {
-		return false, nil, sub_timeline_fixer.PipeResult{}, err
-	}
-	if bFind == false {
-		s.log.Warnln("processBySub.DetermineFileTypeFromFile sub not match --", srcSubFileFPath)
-		return false, nil, sub_timeline_fixer.PipeResult{}, nil
-	}
 	// ---------------------------------------------------------------------------------------
 	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTime(infoBase, infoSrc, nil, false)
 	if err != nil {
@@ -178,7 +163,41 @@ func (s SubTimelineFixerHelperEx) processBySub(baseSubFileFPath, srcSubFileFPath
 	return true, infoSrc, pipeResult, nil
 }
 
-func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileFPath string) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
+func (s SubTimelineFixerHelperEx) ProcessBySubFile(baseSubFileFPath, srcSubFileFPath string) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
+
+	bFind, infoBase, err := s.subParserHub.DetermineFileTypeFromFile(baseSubFileFPath)
+	if err != nil {
+		return false, nil, sub_timeline_fixer.PipeResult{}, err
+	}
+	if bFind == false {
+		s.log.Warnln("ProcessBySubFile.DetermineFileTypeFromFile sub not match --", baseSubFileFPath)
+		return false, nil, sub_timeline_fixer.PipeResult{}, nil
+	}
+
+	bFind, infoSrc, err := s.subParserHub.DetermineFileTypeFromFile(srcSubFileFPath)
+	if err != nil {
+		return false, nil, sub_timeline_fixer.PipeResult{}, err
+	}
+	if bFind == false {
+		s.log.Warnln("ProcessBySubFile.DetermineFileTypeFromFile sub not match --", srcSubFileFPath)
+		return false, nil, sub_timeline_fixer.PipeResult{}, nil
+	}
+
+	return s.ProcessBySubFileInfo(infoBase, infoSrc)
+}
+
+func (s SubTimelineFixerHelperEx) ProcessByAudioVAD(audioVADInfos []vad.VADInfo, infoSrc *subparser.FileInfo) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
+
+	// ---------------------------------------------------------------------------------------
+	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTime(nil, infoSrc, audioVADInfos, false)
+	if err != nil {
+		return false, nil, sub_timeline_fixer.PipeResult{}, err
+	}
+
+	return true, infoSrc, pipeResult, nil
+}
+
+func (s SubTimelineFixerHelperEx) ProcessByAudioFile(baseAudioFileFPath, srcSubFileFPath string) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
 
 	audioVADInfos, err := vad.GetVADInfoFromAudio(vad.AudioInfo{
 		FileFullPath: baseAudioFileFPath,
@@ -194,16 +213,28 @@ func (s SubTimelineFixerHelperEx) processByAudio(baseAudioFileFPath, srcSubFileF
 		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
 	if bFind == false {
-		s.log.Warnln("processByAudio.DetermineFileTypeFromFile sub not match --", srcSubFileFPath)
+		s.log.Warnln("ProcessByAudioFile.DetermineFileTypeFromFile sub not match --", srcSubFileFPath)
 		return false, nil, sub_timeline_fixer.PipeResult{}, nil
 	}
-	// ---------------------------------------------------------------------------------------
-	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTime(nil, infoSrc, audioVADInfos, false)
-	if err != nil {
-		return false, nil, sub_timeline_fixer.PipeResult{}, err
-	}
 
-	return true, infoSrc, pipeResult, nil
+	return s.ProcessByAudioVAD(audioVADInfos, infoSrc)
+}
+
+func (s SubTimelineFixerHelperEx) IsMatchBySubFile(baseSubFileFPath, srcSubFileFPath string) (bool, error) {
+
+	//bProcess, _, pipeResultMax, err := s.ProcessBySubFile(baseSubFileFPath, srcSubFileFPath)
+	//if err != nil {
+	//	return false, fmt.Errorf("ProcessBySubFile error: %v", err)
+	//}
+	//if bProcess == false {
+	//	return false, nil
+	//}
+	return false, nil
+}
+
+func (s SubTimelineFixerHelperEx) IsMatchBySubFileInfo(infoBase *subparser.FileInfo, srcSubFileFPath string) (bool, error) {
+
+	return false, nil
 }
 
 func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileInfo, pipeResult sub_timeline_fixer.PipeResult, desSubSaveFPath string) error {
