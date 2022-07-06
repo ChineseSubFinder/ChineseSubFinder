@@ -4,6 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
 )
 
@@ -23,7 +25,7 @@ func TestRestore(t *testing.T) {
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_timeline_fixer"}, 4, true)
 	movieDir := filepath.Join(rootDir, "movies")
 	seriesDir := filepath.Join(rootDir, "series")
-	count, err := Restore([]string{movieDir}, []string{seriesDir})
+	count, err := Restore(log_helper.GetLogger4Tester(), []string{movieDir}, []string{seriesDir})
 	if err != nil {
 		t.Fatal(err)
 	}
