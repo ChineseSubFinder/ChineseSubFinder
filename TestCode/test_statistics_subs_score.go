@@ -29,11 +29,19 @@ func statistics_subs_score(baseAudioFileFPath, baseSubFileFPath, subSearchRootPa
 	if err != nil {
 		return
 	}
-	err = f.SetCellValue(sheetName, fmt.Sprintf("B%d", 1), "Score")
+	err = f.SetCellValue(sheetName, fmt.Sprintf("B%d", 1), "AudioScore")
 	if err != nil {
 		return
 	}
-	err = f.SetCellValue(sheetName, fmt.Sprintf("C%d", 1), "Offset")
+	err = f.SetCellValue(sheetName, fmt.Sprintf("C%d", 1), "AudioOffset")
+	if err != nil {
+		return
+	}
+	err = f.SetCellValue(sheetName, fmt.Sprintf("D%d", 1), "SubScore")
+	if err != nil {
+		return
+	}
+	err = f.SetCellValue(sheetName, fmt.Sprintf("E%d", 1), "SubOffset")
 	if err != nil {
 		return
 	}
@@ -86,7 +94,7 @@ func statistics_subs_score(baseAudioFileFPath, baseSubFileFPath, subSearchRootPa
 			// path X:\电影\21座桥 (2019)\21座桥 (2019) 720p AAC.chinese(简,subhd).ass
 			// 音频处理
 			cloneSrcBase := clone.Clone(srcBase).(*subparser.FileInfo)
-			bok, _, pipeResult, err := s.ProcessByAudioVAD(audioVADInfos, cloneSrcBase)
+			bok, _, pipeResultAudio, err := s.ProcessByAudioVAD(audioVADInfos, cloneSrcBase)
 			if err != nil {
 				return nil
 			}
@@ -95,7 +103,7 @@ func statistics_subs_score(baseAudioFileFPath, baseSubFileFPath, subSearchRootPa
 			}
 			// 字幕处理
 			cloneSrcBase = clone.Clone(srcBase).(*subparser.FileInfo)
-			bok, _, pipeResult, err = s.ProcessBySubFileInfo(infoBase, cloneSrcBase)
+			bok, _, pipeResultSub, err := s.ProcessBySubFileInfo(infoBase, cloneSrcBase)
 			if err != nil {
 				return nil
 			}
@@ -108,11 +116,19 @@ func statistics_subs_score(baseAudioFileFPath, baseSubFileFPath, subSearchRootPa
 			if err != nil {
 				return nil
 			}
-			err = f.SetCellValue(sheetName, fmt.Sprintf("B%d", subCounter+1), pipeResult.Score)
+			err = f.SetCellValue(sheetName, fmt.Sprintf("B%d", subCounter+1), pipeResultAudio.Score)
 			if err != nil {
 				return nil
 			}
-			err = f.SetCellValue(sheetName, fmt.Sprintf("C%d", subCounter+1), pipeResult.GetOffsetTime())
+			err = f.SetCellValue(sheetName, fmt.Sprintf("C%d", subCounter+1), pipeResultAudio.GetOffsetTime())
+			if err != nil {
+				return nil
+			}
+			err = f.SetCellValue(sheetName, fmt.Sprintf("D%d", subCounter+1), pipeResultSub.Score)
+			if err != nil {
+				return nil
+			}
+			err = f.SetCellValue(sheetName, fmt.Sprintf("E%d", subCounter+1), pipeResultSub.GetOffsetTime())
 			if err != nil {
 				return nil
 			}
