@@ -220,21 +220,96 @@ func (s SubTimelineFixerHelperEx) ProcessByAudioFile(baseAudioFileFPath, srcSubF
 	return s.ProcessByAudioVAD(audioVADInfos, infoSrc)
 }
 
-func (s SubTimelineFixerHelperEx) IsMatchBySubFile(baseSubFileFPath, srcSubFileFPath string) (bool, error) {
+func (s SubTimelineFixerHelperEx) IsVideoCanExportSubtitleAndAudio(videoFileFullPath string) (bool, []vad.VADInfo, *subparser.FileInfo, error) {
 
-	//bProcess, _, pipeResultMax, err := s.ProcessBySubFile(baseSubFileFPath, srcSubFileFPath)
-	//if err != nil {
-	//	return false, fmt.Errorf("ProcessBySubFile error: %v", err)
-	//}
-	//if bProcess == false {
-	//	return false, nil
-	//}
-	return false, nil
+	// 先尝试获取内置字幕的信息
+	bok, ffmpegInfo, err := s.ffmpegHelper.GetFFMPEGInfo(videoFileFullPath, ffmpeg_helper.SubtitleAndAudio)
+	if err != nil {
+		return false, nil, nil, err
+	}
+	if bok == false {
+		return false, nil, nil, nil
+	}
+	// ---------------------------------------------------------------------------------------
+	// 音频
+	if len(ffmpegInfo.AudioInfoList) <= 0 {
+		return false, nil, nil, nil
+	}
+	audioVADInfos, err := vad.GetVADInfoFromAudio(vad.AudioInfo{
+		FileFullPath: ffmpegInfo.AudioInfoList[0].FullPath,
+		SampleRate:   16000,
+		BitDepth:     16,
+	}, true)
+	if err != nil {
+		return false, nil, nil, err
+	}
+	// ---------------------------------------------------------------------------------------
+	// 字幕
+	if len(ffmpegInfo.SubtitleInfoList) <= 0 {
+		return false, nil, nil, nil
+	}
+	// 使用内置的字幕进行时间轴的校正，这里需要考虑一个问题，内置的字幕可能是有问题的（先考虑一种，就是字幕的长度不对，是一小段的）
+	// 那么就可以比较多个内置字幕的大小选择大的去使用
+	// 如果有多个内置的字幕，还是要判断下的，选体积最大的那个吧
+	fileSizes := treemap.NewWith(utils.Int64Comparator)
+	for index, info := range ffmpegInfo.SubtitleInfoList {
+		fi, err := os.Stat(info.FullPath)
+		if err != nil {
+			fileSizes.Put(0, index)
+		} else {
+			fileSizes.Put(fi.Size(), index)
+		}
+	}
+	_, index := fileSizes.Max()
+	baseSubFPath := ffmpegInfo.SubtitleInfoList[index.(int)].FullPath
+	bFind, infoBase, err := s.subParserHub.DetermineFileTypeFromFile(baseSubFPath)
+	if err != nil {
+		return false, nil, nil, err
+	}
+	if bFind == false {
+		return false, nil, nil, nil
+	}
+	// ---------------------------------------------------------------------------------------
+
+	return true, audioVADInfos, infoBase, nil
 }
 
-func (s SubTimelineFixerHelperEx) IsMatchBySubFileInfo(infoBase *subparser.FileInfo, srcSubFileFPath string) (bool, error) {
+func (s SubTimelineFixerHelperEx) IsMatchBySubFile(audioVADInfos []vad.VADInfo, infoBase *subparser.FileInfo, srcSubFileFPath string, minScore float64, offsetRange float64) (bool, float64, float64, float64, float64, error) {
 
-	return false, nil
+	bFind, srcBase, err := s.subParserHub.DetermineFileTypeFromFile(srcSubFileFPath)
+	if err != nil {
+		return false, 0, 0, 0, 0, err
+	}
+	if bFind == false {
+		return false, 0, 0, 0, 0, nil
+	}
+	// ---------------------------------------------------------------------------------------
+	// 音频
+	s.log.Infoln("IsMatchBySubFile:", srcSubFileFPath)
+	bProcess, _, pipeResultMaxAudio, err := s.ProcessByAudioVAD(audioVADInfos, srcBase)
+	if err != nil {
+		return false, 0, 0, 0, 0, err
+	}
+	if bProcess == false {
+		return false, 0, 0, 0, 0, nil
+	}
+	// ---------------------------------------------------------------------------------------
+	// 字幕
+	bProcess, _, pipeResultMaxSub, err := s.ProcessBySubFileInfo(infoBase, srcBase)
+	if err != nil {
+		return false, 0, 0, 0, 0, err
+	}
+	if bProcess == false {
+		return false, 0, 0, 0, 0, nil
+	}
+	// ---------------------------------------------------------------------------------------
+	if pipeResultMaxAudio.Score < minScore || pipeResultMaxSub.Score < minScore {
+		return false, pipeResultMaxAudio.Score, pipeResultMaxAudio.GetOffsetTime(), pipeResultMaxSub.Score, pipeResultMaxSub.GetOffsetTime(), nil
+	}
+	if math.Abs(pipeResultMaxAudio.GetOffsetTime()-pipeResultMaxSub.GetOffsetTime()) > offsetRange {
+		return false, pipeResultMaxAudio.Score, pipeResultMaxAudio.GetOffsetTime(), pipeResultMaxSub.Score, pipeResultMaxSub.GetOffsetTime(), nil
+	}
+	return true, pipeResultMaxAudio.Score, pipeResultMaxAudio.GetOffsetTime(), pipeResultMaxSub.Score, pipeResultMaxSub.GetOffsetTime(), nil
 }
 
 func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileInfo, pipeResult sub_timeline_fixer.PipeResult, desSubSaveFPath string) error {
