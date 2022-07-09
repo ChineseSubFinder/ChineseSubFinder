@@ -1,6 +1,7 @@
 package imdb_helper
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -58,39 +59,49 @@ func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoNfoInfo, 
 		3. 因为现在默认是不跳过中文视频扫描的，所以如果开启后，则会再判断的时候访问外网获取，然后写入本地，过程会比较慢
 		4. 同时，再发送字幕和 IMDB Info 到服务器的时候，也需要判断是否 IMDB Info 信息是否齐全，否则就需要从外网获取齐全后再上传
 	*/
-	log.Debugln(imdbInfo.Title, imdbInfo.Season, imdbInfo.Episode)
+	log.Debugln("GetVideoIMDBInfoFromLocal", "IMDBID:", imdbInfo.ImdbId, "TMDBID:", imdbInfo.TmdbId, imdbInfo.Title, imdbInfo.Season, imdbInfo.Episode)
 	log.Debugln("GetVideoIMDBInfoFromLocal", 0)
 
-	// 首先从数据库中查找是否存在这个 IMDB 信息，如果不存在再使用 Web 查找，且写入数据库
-	var imdbInfos []models.IMDBInfo
-	// 把嵌套关联的 has many 的信息都查询出来
-	dao.GetDb().
-		Preload("VideoSubInfos").
-		Limit(1).Where(&models.IMDBInfo{IMDBID: imdbInfo.ImdbId}).Find(&imdbInfos)
+	if imdbInfo.ImdbId != "" {
+		// 优先从 IMDB ID 去查找本地的信息
+		// 首先从数据库中查找是否存在这个 IMDB 信息，如果不存在再使用 Web 查找，且写入数据库
+		var imdbInfos []models.IMDBInfo
+		// 把嵌套关联的 has many 的信息都查询出来
+		dao.GetDb().
+			Preload("VideoSubInfos").
+			Limit(1).Where(&models.IMDBInfo{IMDBID: imdbInfo.ImdbId}).Find(&imdbInfos)
 
-	log.Debugln("GetVideoIMDBInfoFromLocal", 1)
+		log.Debugln("GetVideoIMDBInfoFromLocal", 1)
 
-	if len(imdbInfos) <= 0 {
+		if len(imdbInfos) <= 0 {
 
-		if len(skipCreate) > 0 && skipCreate[0] == true {
-			log.Debugln(fmt.Sprintf("skip insert, imdbInfo.ImdbId = %v", imdbInfo.ImdbId))
-			return nil, common.SkipCreateInDB
+			if len(skipCreate) > 0 && skipCreate[0] == true {
+				log.Debugln(fmt.Sprintf("skip insert, imdbInfo.ImdbId = %v", imdbInfo.ImdbId))
+				return nil, common.SkipCreateInDB
+			}
+
+			// 没有找到，新增，存储本地，但是信息肯定是不完整的，需要在判断是否是中文的时候再次去外网获取补全信息
+			log.Debugln("GetVideoIMDBInfoFromLocal", 2)
+			// 存入数据库
+			nowIMDBInfo := models.NewIMDBInfo(imdbInfo.ImdbId, "", 0, "", []string{}, []string{})
+			dao.GetDb().Create(nowIMDBInfo)
+
+			log.Debugln("GetVideoIMDBInfoFromLocal", 3)
+
+			return nowIMDBInfo, nil
+		} else {
+
+			log.Debugln("GetVideoIMDBInfoFromLocal", 4)
+			// 找到
+			return &imdbInfos[0], nil
 		}
+	} else if imdbInfo.TmdbId != "" {
+		// 如果 IMDB ID 在本地没有获取到，但是 TMDB ID 获取到了，那么就从 Web 去查询 IMDB ID 出来
 
-		// 没有找到，新增，存储本地，但是信息肯定是不完整的，需要在判断是否是中文的时候再次去外网获取补全信息
-		log.Debugln("GetVideoIMDBInfoFromLocal", 2)
-		// 存入数据库
-		nowIMDBInfo := models.NewIMDBInfo(imdbInfo.ImdbId, "", 0, "", []string{}, []string{})
-		dao.GetDb().Create(nowIMDBInfo)
-
-		log.Debugln("GetVideoIMDBInfoFromLocal", 3)
-
-		return nowIMDBInfo, nil
 	} else {
-
-		log.Debugln("GetVideoIMDBInfoFromLocal", 4)
-		// 找到
-		return &imdbInfos[0], nil
+		// 都没有，那么就报错
+		log.Debugln("GetVideoIMDBInfoFromLocal IMDB TMDB ID is empty")
+		return nil, errors.New("IMDB TMDB ID is empty")
 	}
 }
 

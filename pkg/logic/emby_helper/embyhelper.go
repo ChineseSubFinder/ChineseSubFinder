@@ -428,7 +428,12 @@ func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*e
 			return nil, err
 		}
 
-		mixInfo := emby2.EmbyMixInfo{IMDBId: info.ProviderIds.Imdb, Ancestors: ancs, VideoInfo: info}
+		mixInfo := emby2.EmbyMixInfo{
+			IMDBId:    info.ProviderIds.Imdb,
+			TMDBId:    info.ProviderIds.Tmdb,
+			Ancestors: ancs,
+			VideoInfo: info,
+		}
 
 		return &mixInfo, nil
 	} else {
@@ -466,7 +471,12 @@ func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*e
 			return nil, err
 		}
 
-		mixInfo := emby2.EmbyMixInfo{IMDBId: nowSeriesIMDBID, Ancestors: ancs, VideoInfo: info}
+		mixInfo := emby2.EmbyMixInfo{
+			IMDBId:    nowSeriesIMDBID,
+			TMDBId:    info.ProviderIds.Tmdb,
+			Ancestors: ancs,
+			VideoInfo: info,
+		}
 
 		return &mixInfo, nil
 	}
@@ -482,7 +492,13 @@ func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby2.Emby
 	}
 
 	// 获取 IMDB 信息
-	localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(em.log, types.VideoNfoInfo{ImdbId: mixInfo.IMDBId}, true)
+	localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(
+		em.log,
+		types.VideoNfoInfo{
+			ImdbId: mixInfo.IMDBId,
+			TmdbId: mixInfo.TMDBId,
+		},
+		true)
 	if err != nil {
 
 		if errors.Is(err, common.SkipCreateInDB) == true {
