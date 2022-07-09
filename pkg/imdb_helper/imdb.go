@@ -58,7 +58,7 @@ func GetVideoIMDBInfoFromLocal(log *logrus.Logger, imdbInfo types.VideoNfoInfo, 
 		3. 因为现在默认是不跳过中文视频扫描的，所以如果开启后，则会再判断的时候访问外网获取，然后写入本地，过程会比较慢
 		4. 同时，再发送字幕和 IMDB Info 到服务器的时候，也需要判断是否 IMDB Info 信息是否齐全，否则就需要从外网获取齐全后再上传
 	*/
-
+	log.Debugln(imdbInfo.Title, imdbInfo.Season, imdbInfo.Episode)
 	log.Debugln("GetVideoIMDBInfoFromLocal", 0)
 
 	// 首先从数据库中查找是否存在这个 IMDB 信息，如果不存在再使用 Web 查找，且写入数据库
