@@ -214,9 +214,13 @@ func GetFrontNameAndOrgName(log *logrus.Logger, info *supplier.SubInfo) string {
 	fileName, err := decode.GetVideoInfoFromFileName(info.Name)
 	if err != nil {
 		log.Warnln("", err)
-		infoName = info.Name
+		// 替换特殊字符
+		infoName = my_util.ReplaceSpecString(info.Name, "x")
 	} else {
 		infoName = fileName.Title + "_S" + strconv.Itoa(fileName.Season) + "E" + strconv.Itoa(fileName.Episode) + filepath.Ext(info.Name)
+	}
+	if len(infoName) < 1 {
+		infoName = my_util.RandStringBytesMaskImprSrcSB(10) + filepath.Ext(info.Name)
 	}
 	info.Name = infoName
 
