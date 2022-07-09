@@ -47,7 +47,7 @@ func OrganizeDlSubFiles(log *logrus.Logger, tmpFolderName string, subInfos []sup
 		nowFileSaveFullPath := filepath.Join(tmpFolderFullPath, GetFrontNameAndOrgName(log, &subInfos[i]))
 		err = my_util.WriteFile(nowFileSaveFullPath, subInfos[i].Data)
 		if err != nil {
-			log.Errorln("getFrontNameAndOrgName - WriteFile", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
+			log.Errorln("getFrontNameAndOrgName - WriteFile", nowFileSaveFullPath, "FromWhere Name TopN", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
 			continue
 		}
 		nowExt := strings.ToLower(subInfos[i].Ext)
