@@ -74,6 +74,7 @@ require (
 	github.com/longbridgeapp/opencc v0.1.7
 	github.com/urfave/cli/v2 v2.6.0
 	github.com/wumansgy/goEncrypt v1.0.0
+	github.com/xuri/excelize/v2 v2.6.0
 )
 
 require (
@@ -132,7 +133,6 @@ require (
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xuri/efp v0.0.0-20220407160117-ad0f7a785be8 // indirect
-	github.com/xuri/excelize/v2 v2.6.0 // indirect
 	github.com/xuri/nfp v0.0.0-20220409054826-5e722a1d9e22 // indirect
 	github.com/ysmood/goob v0.4.0 // indirect
 	github.com/ysmood/leakless v0.7.0 // indirect

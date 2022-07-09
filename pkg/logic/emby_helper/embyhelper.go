@@ -475,6 +475,7 @@ func (em *EmbyHelper) getMoreVideoInfo(videoID string, isMovieOrSeries bool) (*e
 // 根据 IMDB ID 自动转换路径
 func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby2.EmbyMixInfo, isMovieOrSeries bool) bool {
 
+	em.log.Debugln(mixInfo.VideoInfo.Name, "--", mixInfo.VideoFileName)
 	if mixInfo.IMDBId == "" {
 		em.log.Debugln("autoFindMappingPathWithMixInfoByIMDBId", " mixInfo.IMDBId == \"\"")
 		return false
