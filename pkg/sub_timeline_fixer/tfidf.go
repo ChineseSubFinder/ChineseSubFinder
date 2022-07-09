@@ -3,13 +3,14 @@ package sub_timeline_fixer
 import (
 	"errors"
 	"fmt"
+
 	"github.com/james-bowman/nlp"
 	"gonum.org/v1/gonum/mat"
 )
 
 // NewTFIDF 初始化 TF-IDF
 func NewTFIDF(testCorpus []string) (*nlp.Pipeline, mat.Matrix, error) {
-	vectors := nlp.NewCountVectoriser(StopWords...)
+	vectors := nlp.NewCountVectoriser(EnStopWords...)
 	transformer := nlp.NewTfidfTransformer()
 	// set k (the number of dimensions following truncation) to 4
 	reducer := nlp.NewTruncatedSVD(4)

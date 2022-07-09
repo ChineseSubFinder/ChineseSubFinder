@@ -1,10 +1,11 @@
 package sub_timeline_fixer
 
 import (
+	"testing"
+
 	"github.com/james-bowman/nlp"
 	"github.com/james-bowman/nlp/measures/pairwise"
 	"gonum.org/v1/gonum/mat"
-	"testing"
 )
 
 func TestStopWordCounter(t *testing.T) {
@@ -38,7 +39,7 @@ func TestTFIDF(t *testing.T) {
 
 	query := "the brown fox ran around the dog"
 
-	vectoriser := nlp.NewCountVectoriser(StopWords...)
+	vectoriser := nlp.NewCountVectoriser(EnStopWords...)
 	transformer := nlp.NewTfidfTransformer()
 
 	// set k (the number of dimensions following truncation) to 4
