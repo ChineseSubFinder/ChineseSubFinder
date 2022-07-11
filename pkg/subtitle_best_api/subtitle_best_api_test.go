@@ -15,17 +15,25 @@ import (
 func TestSubtitleBestApi_GetMediaInfo(t *testing.T) {
 
 	my_util.ReadCustomAuthFile(log_helper.GetLogger4Tester())
-	bapi := NewSubtitleBestApi(random_auth_key.AuthKey{
-		BaseKey:  global_value.BaseKey(),
-		AESKey16: global_value.AESKey16(),
-		AESIv16:  global_value.AESIv16(),
-	}, settings.GetSettings().AdvancedSettings.ProxySettings)
+	bapi := NewSubtitleBestApi(
+		log_helper.GetLogger4Tester(),
+		random_auth_key.AuthKey{
+			BaseKey:  global_value.BaseKey(),
+			AESKey16: global_value.AESKey16(),
+			AESIv16:  global_value.AESIv16(),
+		}, settings.GetSettings().AdvancedSettings.ProxySettings)
 
 	mediaInfo, err := bapi.GetMediaInfo("tt7278862", "imdb", "series")
 	if err != nil {
 		t.Fatal(err)
 	}
 	println(mediaInfo.TitleCN)
+
+	convertIDResult, err := bapi.ConvertId("438148", "tmdb", "movie")
+	if err != nil {
+		t.Fatal(err)
+	}
+	println("IMDBId", convertIDResult.IMDBId)
 
 	askFindSubReply, err := bapi.AskFindSub("0053b934afa0285e4de140e148c1c3768de73cfaad4170825c698308f8485c19",
 		"tt4236770", "73586", "4", "1", "haha123456", "")

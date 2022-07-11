@@ -563,6 +563,51 @@ func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, download
 	return &downloadReply, nil
 }
 
+func (s SubtitleBestApi) ConvertId(id, source, videoType string) (*IdConvertReply, error) {
+
+	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
+		return nil, errors.New("auth key is not set")
+	}
+	if len(s.authKey.AESKey16) != 16 {
+		return nil, errors.New(fmt.Sprintf("AESKey16 is not set, %s", s.authKey.AESKey16))
+	}
+	if len(s.authKey.AESIv16) != 16 {
+		return nil, errors.New(fmt.Sprintf("AESIv16 is not set, %s", s.authKey.AESIv16))
+	}
+
+	postUrl := webUrlBase + "/v1/id-convert"
+	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	if err != nil {
+		return nil, err
+	}
+
+	authKey, err := s.randomAuthKey.GetAuthKey()
+	if err != nil {
+		return nil, err
+	}
+
+	var idConvertReply IdConvertReply
+	resp, err := httpClient.R().
+		SetHeader("Authorization", "beer "+authKey).
+		SetBody(IdConvertReq{
+			Id:        id,
+			Source:    source,
+			VideoType: videoType,
+		}).
+		SetResult(&idConvertReply).
+		Post(postUrl)
+	if err != nil {
+		s.log.Errorln("convert id error, status code:", resp.StatusCode(), "Error:", err)
+		return nil, err
+	}
+
+	if idConvertReply.Status == 0 {
+		s.log.Warningln("status code:", resp.StatusCode())
+	}
+
+	return &idConvertReply, nil
+}
+
 const (
 	webUrlBase = "https://api.subtitle.best"
 	//webUrlBase = "http://127.0.0.1:8890"

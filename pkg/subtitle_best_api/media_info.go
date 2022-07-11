@@ -52,3 +52,16 @@ type MediaInfoReply struct {
 	TitleCN          string `json:"title_cn,omitempty"`
 	Year             string `json:"year,omitempty"`
 }
+
+type IdConvertReq struct {
+	Id        string `json:"id"`
+	Source    string `json:"source"`     // options=imdb|tmdb
+	VideoType string `json:"video_type"` // ,options=movie|series
+}
+
+type IdConvertReply struct {
+	Status  int    `json:"status"` // 0 失败，1 成功
+	Message string `json:"message"`
+	IMDBId  string `json:"imdb_id,omitempty"`
+	TVDBId  string `json:"tvdb_id,omitempty"`
+}
