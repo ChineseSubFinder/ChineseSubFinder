@@ -13,6 +13,7 @@ type VideoNfoInfo struct {
 	Title         string
 	OriginalTitle string
 	ReleaseDate   string
+	IsMovie       bool
 }
 
 func (v *VideoNfoInfo) GetYear() int {

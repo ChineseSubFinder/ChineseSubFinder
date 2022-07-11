@@ -20,9 +20,9 @@ import (
 
 func GetMixMediaInfo(log *logrus.Logger,
 	SubtitleBestApi *subtitle_best_api.SubtitleBestApi,
-	videoFPath string, isMovie bool, _proxySettings ...*settings.ProxySettings) (*models.MediaInfo, error) {
+	videoFPath string, isMovie bool, _proxySettings *settings.ProxySettings) (*models.MediaInfo, error) {
 
-	imdbInfo, err := imdb_helper.GetIMDBInfo(log, videoFPath, isMovie, _proxySettings...)
+	imdbInfo, err := imdb_helper.GetIMDBInfoFromVideoFile(log, videoFPath, isMovie, _proxySettings)
 	if err != nil {
 		return nil, err
 	}

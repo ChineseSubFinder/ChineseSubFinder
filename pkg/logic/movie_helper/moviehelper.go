@@ -122,13 +122,13 @@ func MovieHasChineseSub(log *logrus.Logger, videoFilePath string) (bool, []strin
 }
 
 // SkipChineseMovie 跳过中文的电影
-func SkipChineseMovie(log *logrus.Logger, videoFullPath string, _proxySettings ...*settings.ProxySettings) (bool, error) {
+func SkipChineseMovie(log *logrus.Logger, videoFullPath string, _proxySettings *settings.ProxySettings) (bool, error) {
 
 	imdbInfo, err := decode.GetVideoNfoInfo4Movie(videoFullPath)
 	if err != nil {
 		return false, err
 	}
-	isChineseVideo, _, err := imdb_helper.IsChineseVideo(log, imdbInfo, _proxySettings...)
+	isChineseVideo, _, err := imdb_helper.IsChineseVideo(log, imdbInfo, _proxySettings)
 	if err != nil {
 		return false, err
 	}

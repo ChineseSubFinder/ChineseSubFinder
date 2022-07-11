@@ -394,7 +394,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 		seriesDirRootFPathLisst := seriesFPath.([]string)
 		for seriesDirIndex, seriesDirRootFPath := range seriesDirRootFPathLisst {
 
-			seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(v.log, seriesDirRootFPath, 90, true, true)
+			seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(v.log, seriesDirRootFPath, 90, true, true, v.settings.AdvancedSettings.ProxySettings)
 			if err != nil {
 				v.log.Warningln("scanLowVideoSubInfo.ReadSeriesInfoFromDir", seriesDirRootFPath, err)
 				return false
@@ -987,9 +987,9 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 			return err
 		}
 		// 获取 IMDB 信息
-		localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(v.log, videoImdbInfo)
+		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.log, videoImdbInfo, v.settings.AdvancedSettings.ProxySettings)
 		if err != nil {
-			v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", videoImdbInfo.ImdbId, movieInputData.InputPath, err)
+			v.log.Warningln("GetIMDBInfoFromVideoNfoInfo,IMDB:", videoImdbInfo.ImdbId, movieInputData.InputPath, err)
 			return err
 		}
 
@@ -1041,9 +1041,9 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 		}
 
 		// 获取 IMDB 信息
-		localIMDBInfo, err := imdb_helper.GetVideoIMDBInfoFromLocal(v.log, videoInfo)
+		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.log, videoInfo, v.settings.AdvancedSettings.ProxySettings)
 		if err != nil {
-			v.log.Warningln("GetVideoIMDBInfoFromLocal,IMDB:", videoInfo.ImdbId, seriesInputData.InputPath, err)
+			v.log.Warningln("GetIMDBInfoFromVideoNfoInfo,IMDB:", videoInfo.ImdbId, seriesInputData.InputPath, err)
 			return err
 		}
 		if (seriesInputData.InputPath != "" && localIMDBInfo.RootDirPath != seriesInputData.InputPath) || localIMDBInfo.IsMovie != false {

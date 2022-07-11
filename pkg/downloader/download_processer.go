@@ -84,6 +84,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 		d.settings.AdvancedSettings.TaskQueue.ExpirationTime,
 		false,
 		false,
+		d.settings.AdvancedSettings.ProxySettings,
 		epsMap)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("seriesDlFunc.ReadSeriesInfoFromDir, Error: %v", err))

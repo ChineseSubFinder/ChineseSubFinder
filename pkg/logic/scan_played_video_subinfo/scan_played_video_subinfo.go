@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types"
 	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 
 	embyHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/emby_helper"
@@ -360,16 +359,9 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	// 通过视频的绝对路径，从本地的视频文件对应的 nfo 获取到这个视频的 IMDB ID,
 	var err error
-	var imdbInfo4Video types.VideoNfoInfo
-
-	if isMovie == true {
-		imdbInfo4Video, err = decode.GetVideoNfoInfo4Movie(videoFPath)
-	} else {
-		imdbInfo4Video, err = decode.GetSeriesSeasonVideoNfoInfoFromEpisode(videoFPath)
-	}
+	imdbInfoFromVideoFile, err := imdb_helper.GetIMDBInfoFromVideoFile(s.log, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
-		// 如果找不到当前电影的 IMDB Info 本地文件，那么就跳过
-		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetImdbInfo", videoFPath, err)
+		s.log.Errorln("GetIMDBInfoFromVideoFile", err)
 		return
 	}
 
@@ -387,32 +379,11 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	var ok bool
 	// 先把 IMDB 信息查询查来，不管是从数据库还是网络（查询出来也得写入到数据库）
 	s.cacheImdbInfoCacheLocker.Lock()
-	imdbInfo, ok = imdbInfoCache[imdbInfo4Video.ImdbId]
+	imdbInfo, ok = imdbInfoCache[imdbInfoFromVideoFile.IMDBID]
 	s.cacheImdbInfoCacheLocker.Unlock()
 	if ok == false {
-		// 不存在，那么就去查询和新建缓存
-		imdbInfo, err = imdb_helper.GetVideoIMDBInfoFromLocal(s.log, imdbInfo4Video)
-		if err != nil {
-			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoIMDBInfoFromLocal", videoFPath, err)
-			return
-		}
-		if len(imdbInfo.Description) <= 0 {
-			// 需要去外网获去补全信息，然后更新本地的信息
-			t, err := imdb_helper.GetVideoInfoFromIMDBWeb(imdbInfo4Video, s.settings.AdvancedSettings.ProxySettings)
-			if err != nil {
-				s.log.Errorln("dealOneVideo.GetVideoInfoFromIMDBWeb,", imdbInfo4Video.Title, err)
-				return
-			}
-			imdbInfo.Year = t.Year
-			imdbInfo.AKA = t.AKA
-			imdbInfo.Description = t.Description
-			imdbInfo.Languages = t.Languages
-
-			dao.GetDb().Save(imdbInfo)
-		}
-
 		s.cacheImdbInfoCacheLocker.Lock()
-		imdbInfoCache[imdbInfo4Video.ImdbId] = imdbInfo
+		imdbInfoCache[imdbInfoFromVideoFile.IMDBID] = imdbInfo
 		s.cacheImdbInfoCacheLocker.Unlock()
 	}
 	s.log.Debugln(3)
@@ -471,11 +442,11 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	// 不存在，插入，建立关系
 	bok, fileInfo, err := s.fileDownloader.SubParserHub.DetermineFileTypeFromFile(subCacheFPath)
 	if err != nil {
-		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".DetermineFileTypeFromFile", imdbInfo4Video.ImdbId, err)
+		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".DetermineFileTypeFromFile", imdbInfo.IMDBID, err)
 		return
 	}
 	if bok == false {
-		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".DetermineFileTypeFromFile == false", imdbInfo4Video.ImdbId)
+		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".DetermineFileTypeFromFile == false", imdbInfo.IMDBID)
 		return
 	}
 
@@ -486,7 +457,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	// 转相对路径存储
 	subRelPath, err := filepath.Rel(shareRootDir, subCacheFPath)
 	if err != nil {
-		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".Rel", imdbInfo4Video.ImdbId, err)
+		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".Rel", imdbInfo.IMDBID, err)
 		return
 	}
 
@@ -528,7 +499,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 		// 连续剧的时候，如果可能应该获取是 第几季  第几集
 		epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(videoFPath)
 		if err != nil {
-			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoNfoInfo4OneSeriesEpisode", imdbInfo4Video.Title, err)
+			s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, ".GetVideoNfoInfo4OneSeriesEpisode", imdbInfo.Name, err)
 			return
 		}
 		oneVideoSubInfo.Season = epsVideoNfoInfo.Season
