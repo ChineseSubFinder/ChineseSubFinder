@@ -16,7 +16,7 @@ func TestGetVideoInfoFromIMDB(t *testing.T) {
 	//imdbID := "tt6468322" 	// 纸钞屋
 	//imdbID := "tt15299712" // 云南虫谷
 	imdbID := "tt6856242" // The King`s Man
-	imdbInfo, err := GetVideoInfoFromIMDBWeb(types.VideoNfoInfo{ImdbId: imdbID})
+	imdbInfo, err := getVideoInfoFromIMDBWeb(types.VideoNfoInfo{ImdbId: imdbID})
 	if err != nil {
 		t.Fatal(err)
 	}

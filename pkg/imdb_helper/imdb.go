@@ -2,10 +2,11 @@ package imdb_helper
 
 import (
 	"errors"
-	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/subtitle_best_api"
 
@@ -46,9 +47,9 @@ func GetIMDBInfoFromVideoFile(log *logrus.Logger, videoFPath string, isMovie boo
 	}
 	if len(imdbInfo.Description) <= 0 {
 		// 需要去外网获去补全信息，然后更新本地的信息
-		t, err := GetVideoInfoFromIMDBWeb(imdbInfo4Video, _proxySettings)
+		t, err := getVideoInfoFromIMDBWeb(imdbInfo4Video, _proxySettings)
 		if err != nil {
-			log.Errorln("GetVideoInfoFromIMDBWeb,", imdbInfo4Video.Title, err)
+			log.Errorln("getVideoInfoFromIMDBWeb,", imdbInfo4Video.Title, err)
 			return nil, err
 		}
 		imdbInfo.Year = t.Year
@@ -153,33 +154,6 @@ func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, imdbInfo types.VideoNfoInfo
 	}
 }
 
-// GetVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
-func GetVideoInfoFromIMDBWeb(imdbInfo types.VideoNfoInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
-
-	client, err := my_util.NewHttpClient(_proxySettings...)
-	if err != nil {
-		return nil, err
-	}
-
-	t, err := imdb.NewTitle(client.GetClient(), imdbInfo.ImdbId)
-	if err != nil {
-		notify_center.Notify.Add("imdb model - imdb.NewTitle :", err.Error())
-		return nil, err
-	}
-	if t.Year == 0 {
-		// IMDB 信息获取的库(1.0.7)，目前有bug，比如，tt6856242 年份为 0
-		if imdbInfo.Year != "" {
-			year, err := strconv.Atoi(imdbInfo.Year)
-			if err != nil {
-				return nil, err
-			}
-			t.Year = year
-		}
-	}
-
-	return t, nil
-}
-
 // IsChineseVideo 从 imdbID 去查询判断是否是中文视频
 func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoNfoInfo, _proxySettings *settings.ProxySettings) (bool, *models.IMDBInfo, error) {
 
@@ -196,7 +170,7 @@ func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoNfoInfo, _proxySetti
 		// 需要去外网获去补全信息，然后更新本地的信息
 		log.Debugln("IsChineseVideo", 1)
 
-		t, err := GetVideoInfoFromIMDBWeb(imdbInfo, _proxySettings)
+		t, err := getVideoInfoFromIMDBWeb(imdbInfo, _proxySettings)
 		if err != nil {
 			log.Errorln("IsChineseVideo.getVideoInfoFromIMDBWeb,", imdbInfo.Title, err)
 			return false, nil, err
@@ -232,6 +206,33 @@ func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoNfoInfo, _proxySetti
 	default:
 		return false, localIMDBInfo, nil
 	}
+}
+
+// getVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
+func getVideoInfoFromIMDBWeb(imdbInfo types.VideoNfoInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
+
+	client, err := my_util.NewHttpClient(_proxySettings...)
+	if err != nil {
+		return nil, err
+	}
+
+	t, err := imdb.NewTitle(client.GetClient(), imdbInfo.ImdbId)
+	if err != nil {
+		notify_center.Notify.Add("imdb model - imdb.NewTitle :", err.Error())
+		return nil, err
+	}
+	if t.Year == 0 {
+		// IMDB 信息获取的库(1.0.7)，目前有bug，比如，tt6856242 年份为 0
+		if imdbInfo.Year != "" {
+			year, err := strconv.Atoi(imdbInfo.Year)
+			if err != nil {
+				return nil, err
+			}
+			t.Year = year
+		}
+	}
+
+	return t, nil
 }
 
 func getReady(log *logrus.Logger, proxySettings *settings.ProxySettings) {
