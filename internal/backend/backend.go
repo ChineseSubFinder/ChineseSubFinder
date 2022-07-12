@@ -114,7 +114,7 @@ func (b *BackEnd) Restart() {
 		case <-b.restartSignal:
 			{
 				stopFunc()
-				b. ()
+				b.start()
 			}
 		}
 	}
