@@ -209,7 +209,7 @@ func statistics_subs_score(baseAudioFileFPath, baseSubFileFPath, subSearchRootPa
 func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
 
 	s := sub_timeline_fixer.NewSubTimelineFixerHelperEx(log_helper.GetLogger4Tester(), *settings.NewTimelineFixerSettings())
-	bok, audioVADInfos, infoBase, err := s.IsVideoCanExportSubtitleAndAudio(videoFPath)
+	bok, ffmpegInfo, audioVADInfos, infoBase, err := s.IsVideoCanExportSubtitleAndAudio(videoFPath)
 	if err != nil {
 		return
 	}
@@ -260,7 +260,7 @@ func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
 				return nil
 			}
 
-			bok, audioScore, audioOffset, subScore, subOffset, err := s.IsMatchBySubFile(audioVADInfos, infoBase, path, 40000, 2)
+			bok, audioScore, audioOffset, subScore, subOffset, err := s.IsMatchBySubFile(ffmpegInfo, audioVADInfos, infoBase, path, 40000, 2)
 			if err != nil {
 				return nil
 			}

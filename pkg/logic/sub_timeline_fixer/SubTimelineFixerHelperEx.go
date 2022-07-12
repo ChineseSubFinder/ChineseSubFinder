@@ -220,20 +220,20 @@ func (s SubTimelineFixerHelperEx) ProcessByAudioFile(baseAudioFileFPath, srcSubF
 	return s.ProcessByAudioVAD(audioVADInfos, infoSrc)
 }
 
-func (s SubTimelineFixerHelperEx) IsVideoCanExportSubtitleAndAudio(videoFileFullPath string) (bool, []vad.VADInfo, *subparser.FileInfo, error) {
+func (s SubTimelineFixerHelperEx) IsVideoCanExportSubtitleAndAudio(videoFileFullPath string) (bool, *ffmpeg_helper.FFMPEGInfo, []vad.VADInfo, *subparser.FileInfo, error) {
 
 	// 先尝试获取内置字幕的信息
 	bok, ffmpegInfo, err := s.ffmpegHelper.GetFFMPEGInfo(videoFileFullPath, ffmpeg_helper.SubtitleAndAudio)
 	if err != nil {
-		return false, nil, nil, err
+		return false, nil, nil, nil, err
 	}
 	if bok == false {
-		return false, nil, nil, nil
+		return false, nil, nil, nil, nil
 	}
 	// ---------------------------------------------------------------------------------------
 	// 音频
 	if len(ffmpegInfo.AudioInfoList) <= 0 {
-		return false, nil, nil, nil
+		return false, nil, nil, nil, nil
 	}
 	audioVADInfos, err := vad.GetVADInfoFromAudio(vad.AudioInfo{
 		FileFullPath: ffmpegInfo.AudioInfoList[0].FullPath,
@@ -241,12 +241,12 @@ func (s SubTimelineFixerHelperEx) IsVideoCanExportSubtitleAndAudio(videoFileFull
 		BitDepth:     16,
 	}, true)
 	if err != nil {
-		return false, nil, nil, err
+		return false, nil, nil, nil, err
 	}
 	// ---------------------------------------------------------------------------------------
 	// 字幕
 	if len(ffmpegInfo.SubtitleInfoList) <= 0 {
-		return false, nil, nil, nil
+		return false, nil, nil, nil, nil
 	}
 	// 使用内置的字幕进行时间轴的校正，这里需要考虑一个问题，内置的字幕可能是有问题的（先考虑一种，就是字幕的长度不对，是一小段的）
 	// 那么就可以比较多个内置字幕的大小选择大的去使用
@@ -264,17 +264,17 @@ func (s SubTimelineFixerHelperEx) IsVideoCanExportSubtitleAndAudio(videoFileFull
 	baseSubFPath := ffmpegInfo.SubtitleInfoList[index.(int)].FullPath
 	bFind, infoBase, err := s.subParserHub.DetermineFileTypeFromFile(baseSubFPath)
 	if err != nil {
-		return false, nil, nil, err
+		return false, nil, nil, nil, err
 	}
 	if bFind == false {
-		return false, nil, nil, nil
+		return false, nil, nil, nil, nil
 	}
 	// ---------------------------------------------------------------------------------------
 
-	return true, audioVADInfos, infoBase, nil
+	return true, ffmpegInfo, audioVADInfos, infoBase, nil
 }
 
-func (s SubTimelineFixerHelperEx) IsMatchBySubFile(audioVADInfos []vad.VADInfo, infoBase *subparser.FileInfo, srcSubFileFPath string, minScore float64, offsetRange float64) (bool, float64, float64, float64, float64, error) {
+func (s SubTimelineFixerHelperEx) IsMatchBySubFile(ffmpegInfo *ffmpeg_helper.FFMPEGInfo, audioVADInfos []vad.VADInfo, infoBase *subparser.FileInfo, srcSubFileFPath string, minScore float64, offsetRange float64) (bool, float64, float64, float64, float64, error) {
 
 	bFind, srcBase, err := s.subParserHub.DetermineFileTypeFromFile(srcSubFileFPath)
 	if err != nil {
@@ -309,6 +309,11 @@ func (s SubTimelineFixerHelperEx) IsMatchBySubFile(audioVADInfos []vad.VADInfo, 
 	}
 	// 两种方式获取到的时间轴的偏移量，差值需要在一定范围内
 	if math.Abs(pipeResultMaxAudio.GetOffsetTime()-pipeResultMaxSub.GetOffsetTime()) > offsetRange {
+		return false, pipeResultMaxAudio.Score, pipeResultMaxAudio.GetOffsetTime(), pipeResultMaxSub.Score, pipeResultMaxSub.GetOffsetTime(), nil
+	}
+	// ---------------------------------------------------------------------------------------
+	// 待判断的字幕的时间长度要小于等于视频的总长度
+	if float64(srcBase.GetEndTime().Second()) > ffmpegInfo.Duration {
 		return false, pipeResultMaxAudio.Score, pipeResultMaxAudio.GetOffsetTime(), pipeResultMaxSub.Score, pipeResultMaxSub.GetOffsetTime(), nil
 	}
 	return true, pipeResultMaxAudio.Score, pipeResultMaxAudio.GetOffsetTime(), pipeResultMaxSub.Score, pipeResultMaxSub.GetOffsetTime(), nil
