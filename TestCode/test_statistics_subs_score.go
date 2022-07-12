@@ -245,6 +245,14 @@ func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
 	if err != nil {
 		return
 	}
+	err = f.SetCellValue(sheetName, fmt.Sprintf("G%d", 1), "VideoDuration")
+	if err != nil {
+		return
+	}
+	err = f.SetCellValue(sheetName, fmt.Sprintf("H%d", 1), "TargetSubEndTime")
+	if err != nil {
+		return
+	}
 
 	subCounter := 1
 	err = filepath.Walk(subSearchRootPath,
@@ -260,7 +268,12 @@ func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
 				return nil
 			}
 
-			bok, audioScore, audioOffset, subScore, subOffset, err := s.IsMatchBySubFile(ffmpegInfo, audioVADInfos, infoBase, path, 40000, 2)
+			bok, matchResult, err := s.IsMatchBySubFile(ffmpegInfo, audioVADInfos, infoBase, path,
+				sub_timeline_fixer.CompareConfig{
+					MinScore:                      40000,
+					OffsetRange:                   2,
+					DialoguesDifferencePercentage: 0.1,
+				})
 			if err != nil {
 				return nil
 			}
@@ -270,19 +283,19 @@ func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
 			if err != nil {
 				return nil
 			}
-			err = f.SetCellValue(sheetName, fmt.Sprintf("B%d", subCounter+1), audioScore)
+			err = f.SetCellValue(sheetName, fmt.Sprintf("B%d", subCounter+1), matchResult.AudioCompareScore)
 			if err != nil {
 				return nil
 			}
-			err = f.SetCellValue(sheetName, fmt.Sprintf("C%d", subCounter+1), audioOffset)
+			err = f.SetCellValue(sheetName, fmt.Sprintf("C%d", subCounter+1), matchResult.AudioCompareOffsetTime)
 			if err != nil {
 				return nil
 			}
-			err = f.SetCellValue(sheetName, fmt.Sprintf("D%d", subCounter+1), subScore)
+			err = f.SetCellValue(sheetName, fmt.Sprintf("D%d", subCounter+1), matchResult.SubCompareScore)
 			if err != nil {
 				return nil
 			}
-			err = f.SetCellValue(sheetName, fmt.Sprintf("E%d", subCounter+1), subOffset)
+			err = f.SetCellValue(sheetName, fmt.Sprintf("E%d", subCounter+1), matchResult.SubCompareOffsetTime)
 			if err != nil {
 				return nil
 			}
@@ -291,6 +304,16 @@ func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
 				iTrue = 1
 			}
 			err = f.SetCellValue(sheetName, fmt.Sprintf("F%d", subCounter+1), iTrue)
+			if err != nil {
+				return nil
+			}
+
+			err = f.SetCellValue(sheetName, fmt.Sprintf("G%d", subCounter+1), matchResult.VideoDuration)
+			if err != nil {
+				return nil
+			}
+
+			err = f.SetCellValue(sheetName, fmt.Sprintf("H%d", subCounter+1), matchResult.TargetSubEndTime)
 			if err != nil {
 				return nil
 			}

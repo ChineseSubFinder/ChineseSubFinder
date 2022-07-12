@@ -274,49 +274,66 @@ func (s SubTimelineFixerHelperEx) IsVideoCanExportSubtitleAndAudio(videoFileFull
 	return true, ffmpegInfo, audioVADInfos, infoBase, nil
 }
 
-func (s SubTimelineFixerHelperEx) IsMatchBySubFile(ffmpegInfo *ffmpeg_helper.FFMPEGInfo, audioVADInfos []vad.VADInfo, infoBase *subparser.FileInfo, srcSubFileFPath string, minScore float64, offsetRange float64) (bool, float64, float64, float64, float64, error) {
+func (s SubTimelineFixerHelperEx) IsMatchBySubFile(ffmpegInfo *ffmpeg_helper.FFMPEGInfo, audioVADInfos []vad.VADInfo, infoBase *subparser.FileInfo, srcSubFileFPath string, config CompareConfig) (bool, *MathResult, error) {
 
 	bFind, srcBase, err := s.subParserHub.DetermineFileTypeFromFile(srcSubFileFPath)
 	if err != nil {
-		return false, 0, 0, 0, 0, err
+		return false, nil, err
 	}
 	if bFind == false {
-		return false, 0, 0, 0, 0, nil
+		return false, nil, nil
 	}
 	// ---------------------------------------------------------------------------------------
 	// 音频
 	s.log.Infoln("IsMatchBySubFile:", srcSubFileFPath)
 	bProcess, _, pipeResultMaxAudio, err := s.ProcessByAudioVAD(audioVADInfos, srcBase)
 	if err != nil {
-		return false, 0, 0, 0, 0, err
+		return false, nil, err
 	}
 	if bProcess == false {
-		return false, 0, 0, 0, 0, nil
+		return false, nil, nil
 	}
 	// ---------------------------------------------------------------------------------------
 	// 字幕
 	bProcess, _, pipeResultMaxSub, err := s.ProcessBySubFileInfo(infoBase, srcBase)
 	if err != nil {
-		return false, 0, 0, 0, 0, err
+		return false, nil, err
 	}
 	if bProcess == false {
-		return false, 0, 0, 0, 0, nil
+		return false, nil, nil
+	}
+
+	targetSubEndTime := float64(srcBase.GetEndTime().Second())
+
+	matchResult := &MathResult{
+		VideoDuration:          ffmpegInfo.Duration,
+		TargetSubEndTime:       targetSubEndTime,
+		AudioCompareScore:      pipeResultMaxAudio.Score,
+		AudioCompareOffsetTime: pipeResultMaxAudio.GetOffsetTime(),
+		SubCompareScore:        pipeResultMaxSub.Score,
+		SubCompareOffsetTime:   pipeResultMaxSub.GetOffsetTime(),
 	}
 	// ---------------------------------------------------------------------------------------
 	// 分数需要大于某个值
-	if pipeResultMaxAudio.Score < minScore || pipeResultMaxSub.Score < minScore {
-		return false, pipeResultMaxAudio.Score, pipeResultMaxAudio.GetOffsetTime(), pipeResultMaxSub.Score, pipeResultMaxSub.GetOffsetTime(), nil
+	if pipeResultMaxAudio.Score < config.MinScore || pipeResultMaxSub.Score < config.MinScore {
+		return false, matchResult, nil
 	}
 	// 两种方式获取到的时间轴的偏移量，差值需要在一定范围内
-	if math.Abs(pipeResultMaxAudio.GetOffsetTime()-pipeResultMaxSub.GetOffsetTime()) > offsetRange {
-		return false, pipeResultMaxAudio.Score, pipeResultMaxAudio.GetOffsetTime(), pipeResultMaxSub.Score, pipeResultMaxSub.GetOffsetTime(), nil
+	if math.Abs(pipeResultMaxAudio.GetOffsetTime()-pipeResultMaxSub.GetOffsetTime()) > config.OffsetRange {
+		return false, matchResult, nil
 	}
 	// ---------------------------------------------------------------------------------------
 	// 待判断的字幕的时间长度要小于等于视频的总长度
-	if float64(srcBase.GetEndTime().Second()) > ffmpegInfo.Duration {
-		return false, pipeResultMaxAudio.Score, pipeResultMaxAudio.GetOffsetTime(), pipeResultMaxSub.Score, pipeResultMaxSub.GetOffsetTime(), nil
+	if targetSubEndTime > ffmpegInfo.Duration {
+		return false, matchResult, nil
 	}
-	return true, pipeResultMaxAudio.Score, pipeResultMaxAudio.GetOffsetTime(), pipeResultMaxSub.Score, pipeResultMaxSub.GetOffsetTime(), nil
+	// ---------------------------------------------------------------------------------------
+	// 两个对比字幕的对白数量不能超过 10%
+	minRage := float64(len(infoBase.Dialogues)) * 0.1
+	if math.Abs(float64(len(srcBase.Dialogues)-len(infoBase.Dialogues))) > minRage {
+		return false, matchResult, nil
+	}
+	return true, matchResult, nil
 }
 
 func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileInfo, pipeResult sub_timeline_fixer.PipeResult, desSubSaveFPath string) error {
@@ -353,4 +370,19 @@ func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileI
 	}
 
 	return nil
+}
+
+type CompareConfig struct {
+	MinScore                      float64 // 最低的分数
+	OffsetRange                   float64 // 偏移量的范围
+	DialoguesDifferencePercentage float64 // 两个字幕的对白字幕差异百分比
+}
+
+type MathResult struct {
+	VideoDuration          float64 // 视频的时长
+	TargetSubEndTime       float64 // 目标字幕的结束时间
+	AudioCompareScore      float64 // 音频的对比分数
+	AudioCompareOffsetTime float64 // 音频的对比偏移量
+	SubCompareScore        float64 // 字幕的对比分数
+	SubCompareOffsetTime   float64 // 字幕的对比偏移量
 }
