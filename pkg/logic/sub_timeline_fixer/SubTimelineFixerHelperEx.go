@@ -303,9 +303,11 @@ func (s SubTimelineFixerHelperEx) IsMatchBySubFile(audioVADInfos []vad.VADInfo, 
 		return false, 0, 0, 0, 0, nil
 	}
 	// ---------------------------------------------------------------------------------------
+	// 分数需要大于某个值
 	if pipeResultMaxAudio.Score < minScore || pipeResultMaxSub.Score < minScore {
 		return false, pipeResultMaxAudio.Score, pipeResultMaxAudio.GetOffsetTime(), pipeResultMaxSub.Score, pipeResultMaxSub.GetOffsetTime(), nil
 	}
+	// 两种方式获取到的时间轴的偏移量，差值需要在一定范围内
 	if math.Abs(pipeResultMaxAudio.GetOffsetTime()-pipeResultMaxSub.GetOffsetTime()) > offsetRange {
 		return false, pipeResultMaxAudio.Score, pipeResultMaxAudio.GetOffsetTime(), pipeResultMaxSub.Score, pipeResultMaxSub.GetOffsetTime(), nil
 	}
