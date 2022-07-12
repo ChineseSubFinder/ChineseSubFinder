@@ -156,7 +156,10 @@ func main() {
 	nowPort := my_util.ReadCustomPortFile(loggerBase)
 	loggerBase.Infoln(fmt.Sprintf("WebUI will listen at 0.0.0.0:%d", nowPort))
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
-	backend.StartBackEnd(fileDownloader, nowPort, cronHelper)
+	bend := backend.NewBackEnd(loggerBase, settings.GetSettings(), cronHelper, nowPort)
+	bend.Start()
+	//// 阻塞
+	//select {}
 }
 
 /*

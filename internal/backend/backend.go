@@ -1,21 +1,48 @@
 package backend
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync"
+	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 
 	"github.com/allanpk716/ChineseSubFinder/frontend/dist"
-	"github.com/allanpk716/ChineseSubFinder/internal/backend/routers"
-	"github.com/allanpk716/ChineseSubFinder/internal/backend/ws_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	"github.com/sirupsen/logrus"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
 )
 
-// StartBackEnd 开启后端的服务器
-func StartBackEnd(fileDownloader *file_downloader.FileDownloader, httpPort int, cronHelper *cron_helper.CronHelper) {
+type BackEnd struct {
+	logger     *logrus.Logger
+	settings   *settings.Settings
+	cronHelper *cron_helper.CronHelper
+	httpPort   int
+	running    bool
+	srv        *http.Server
+	locker     sync.Mutex
+}
+
+func NewBackEnd(logger *logrus.Logger, settings *settings.Settings, cronHelper *cron_helper.CronHelper, httpPort int) *BackEnd {
+	return &BackEnd{logger: logger, settings: settings, cronHelper: cronHelper, httpPort: httpPort}
+}
+
+func (b *BackEnd) Start() {
+
+	defer b.locker.Unlock()
+	b.locker.Lock()
+
+	if b.running == true {
+		b.logger.Warningln("Http Server is already running")
+		return
+	}
+	b.running = true
 
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = ioutil.Discard
@@ -23,7 +50,7 @@ func StartBackEnd(fileDownloader *file_downloader.FileDownloader, httpPort int, 
 	engine := gin.Default()
 	// 默认所有都通过
 	engine.Use(cors.Default())
-	v1Router := routers.InitRouter(fileDownloader, engine, cronHelper)
+	v1Router := InitRouter(b.logger, b.settings, engine, b.cronHelper)
 	defer func() {
 		v1Router.Close()
 	}()
@@ -42,19 +69,40 @@ func StartBackEnd(fileDownloader *file_downloader.FileDownloader, httpPort int, 
 		c.Redirect(http.StatusMovedPermanently, "/")
 	})
 
-	hub := ws_helper.NewHub()
-	go hub.Run()
-	defer func() {
-		hub.Clear()
-	}()
-	engine.GET("/ws", func(context *gin.Context) {
-		ws_helper.ServeWs(fileDownloader.Log, hub, context.Writer, context.Request)
-	})
-
 	// listen and serve on 0.0.0.0:8080(default)
-	fileDownloader.Log.Infoln("Try Start Server At Port", httpPort)
-	err := engine.Run(":" + fmt.Sprintf("%d", httpPort))
-	if err != nil {
-		fileDownloader.Log.Errorln("Start Server At Port", httpPort, "Error", err)
+	b.srv = &http.Server{
+		Addr:    fmt.Sprintf(":%d", b.httpPort),
+		Handler: engine,
 	}
+	//go func() {
+	b.logger.Infoln("Try Start Http Server At Port", b.httpPort)
+	if err := b.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		b.logger.Errorln("Start Server Error:", err)
+	}
+	//}()
+}
+
+func (b *BackEnd) Stop() {
+	defer func() {
+		b.locker.Unlock()
+	}()
+	b.locker.Lock()
+
+	if b.running == false {
+		b.logger.Warningln("Http Server is not running")
+		return
+	}
+
+	b.running = false
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := b.srv.Shutdown(ctx); err != nil {
+		b.logger.Errorln("Http Server Shutdown:", err)
+	}
+	select {
+	case <-ctx.Done():
+		b.logger.Warningln("timeout of 5 seconds.")
+	}
+	b.logger.Infoln("Http Server exiting")
 }

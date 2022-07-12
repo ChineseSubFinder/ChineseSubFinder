@@ -1,32 +1,40 @@
-package routers
+package backend
 
 import (
 	"fmt"
 	"net/http"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+
+	"github.com/sirupsen/logrus"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/base"
 	v1 "github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/v1"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/middle"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/gin-gonic/gin"
 )
 
-func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engine, cronHelper *cron_helper.CronHelper) *v1.ControllerBase {
+func InitRouter(
+	log *logrus.Logger,
+	settings *settings.Settings, // 设置实例
+	router *gin.Engine,
+	cronHelper *cron_helper.CronHelper,
+) *v1.ControllerBase {
 
-	cbBase := base.NewControllerBase(fileDownloader)
-	cbV1 := v1.NewControllerBase(fileDownloader.Log, cronHelper)
+	cbBase := base.NewControllerBase(log)
+	cbV1 := v1.NewControllerBase(log, cronHelper)
 	// --------------------------------------------------
 	// 静态文件服务器
 	// 添加电影的
-	for i, path := range fileDownloader.Settings.CommonSettings.MoviePaths {
+	for i, path := range settings.CommonSettings.MoviePaths {
 
 		nowUrl := "/movie_dir_" + fmt.Sprintf("%d", i)
 		cbV1.SetPathUrlMapItem(path, nowUrl)
 		router.StaticFS(nowUrl, http.Dir(path))
 	}
 	// 添加连续剧的
-	for i, path := range fileDownloader.Settings.CommonSettings.SeriesPaths {
+	for i, path := range settings.CommonSettings.SeriesPaths {
 
 		nowUrl := "/series_dir_" + fmt.Sprintf("%d", i)
 		cbV1.SetPathUrlMapItem(path, nowUrl)
