@@ -1,6 +1,9 @@
 package routers
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/base"
 	v1 "github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/v1"
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/middle"
@@ -13,8 +16,23 @@ func InitRouter(fileDownloader *file_downloader.FileDownloader, router *gin.Engi
 
 	cbBase := base.NewControllerBase(fileDownloader)
 	cbV1 := v1.NewControllerBase(fileDownloader.Log, cronHelper)
+	// --------------------------------------------------
 	// 静态文件服务器
-	cbV1.StaticFileSystemBackEnd.Start(fileDownloader.Settings.CommonSettings)
+	// 添加电影的
+	for i, path := range fileDownloader.Settings.CommonSettings.MoviePaths {
+
+		nowUrl := "/movie_dir_" + fmt.Sprintf("%d", i)
+		cbV1.SetPathUrlMapItem(path, nowUrl)
+		router.StaticFS(nowUrl, http.Dir(path))
+	}
+	// 添加连续剧的
+	for i, path := range fileDownloader.Settings.CommonSettings.SeriesPaths {
+
+		nowUrl := "/series_dir_" + fmt.Sprintf("%d", i)
+		cbV1.SetPathUrlMapItem(path, nowUrl)
+		router.StaticFS(nowUrl, http.Dir(path))
+	}
+	// --------------------------------------------------
 	// 基础的路由
 	router.GET("/system-status", cbBase.SystemStatusHandler)
 

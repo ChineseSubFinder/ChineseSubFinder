@@ -1,10 +1,10 @@
 package v1
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	"net/http"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/base"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/lock"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter"
@@ -14,10 +14,9 @@ import (
 )
 
 type ControllerBase struct {
-	log                     *logrus.Logger
-	cronHelper              *cron_helper.CronHelper
-	StaticFileSystemBackEnd *base.StaticFileSystemBackEnd
-
+	log                                 *logrus.Logger
+	cronHelper                          *cron_helper.CronHelper
+	pathUrlMap                          map[string]string
 	videoScanAndRefreshHelper           *video_scan_and_refresh_helper.VideoScanAndRefreshHelper
 	videoScanAndRefreshHelperIsRunning  bool
 	videoScanAndRefreshHelperLocker     lock.Lock
@@ -26,9 +25,9 @@ type ControllerBase struct {
 
 func NewControllerBase(log *logrus.Logger, cronHelper *cron_helper.CronHelper) *ControllerBase {
 	cb := &ControllerBase{
-		log:                     log,
-		cronHelper:              cronHelper,
-		StaticFileSystemBackEnd: base.NewStaticFileSystemBackEnd(log),
+		log:        log,
+		cronHelper: cronHelper,
+		pathUrlMap: make(map[string]string),
 		// 这里因为不进行任务的添加，仅仅是扫描，所以 downloadQueue 可以为 nil
 		videoScanAndRefreshHelper: video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
 			sub_formatter.GetSubFormatter(log, cronHelper.Settings.AdvancedSettings.SubNameFormatter),
@@ -37,6 +36,15 @@ func NewControllerBase(log *logrus.Logger, cronHelper *cron_helper.CronHelper) *
 	}
 
 	return cb
+}
+
+func (cb ControllerBase) SetPathUrlMapItem(path string, url string) {
+	cb.pathUrlMap[path] = url
+}
+
+// GetPathUrlMap x://电影 -- /movie_dir_0  or x://电视剧 -- /series_dir_0
+func (cb *ControllerBase) GetPathUrlMap() map[string]string {
+	return cb.pathUrlMap
 }
 
 func (cb *ControllerBase) Close() {

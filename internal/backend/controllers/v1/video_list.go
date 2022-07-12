@@ -77,7 +77,7 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 			return
 		}
 
-		pathUrlMap := cb.StaticFileSystemBackEnd.GetPathUrlMap()
+		pathUrlMap := cb.GetPathUrlMap()
 
 		MovieInfos, SeasonInfos := cb.videoScanAndRefreshHelper.ScrabbleUpVideoList(scanVideoResult, pathUrlMap)
 
