@@ -59,8 +59,10 @@ import LoginBgArea from 'pages/access/login/LoginBgArea';
 import { deepCopy } from 'src/utils/CommonUtils';
 import { getInfo } from 'src/store/systemState';
 import { SUB_NAME_FORMAT_NORMAL } from 'src/constants/SettingConstants';
+import { useAppStatusLoading } from 'src/composables/useAppStatusLoading';
 
 useSetup();
+const { startLoading } = useAppStatusLoading();
 
 const router = useRouter();
 const step = ref('1');
@@ -134,6 +136,7 @@ const submit = async () => {
   }
   SystemMessage.success('初始化完成');
   await getInfo();
+  startLoading();
   router.push('/access/login');
 };
 </script>
