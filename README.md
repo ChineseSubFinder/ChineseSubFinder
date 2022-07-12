@@ -94,6 +94,8 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 
 ## 版本
 
+- v0.35.x 新增，支持 TMDB ID 转换 IMDB ID（由服务器提供支持，无需用户去填写 TMDB ID） -- 2022 年 7月 12 日
+- v0.34.x 新增，暂时下线 subhd 的支持，修复若干 bug -- 2022 年 7月 1 日
 - v0.33.x 新增，Lite Docker 镜像，见 [Docker 部署教程](docker/readme.md) ，新增支持 a4k 字幕源 -- 2022 年 6 月 19 日
 - v0.32.x 修复，若干 bug，上线“共享字幕”下载功能 -- 2022 年 6 月 15 日
 - v0.31.x 修复，若干 bug，调整 docker 镜像制作细节 -- 2022 年 6 月 13 日
