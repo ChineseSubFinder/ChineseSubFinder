@@ -21,9 +21,10 @@ type ControllerBase struct {
 	videoScanAndRefreshHelperIsRunning  bool
 	videoScanAndRefreshHelperLocker     lock.Lock
 	videoScanAndRefreshHelperErrMessage string
+	restartSignal                       chan interface{}
 }
 
-func NewControllerBase(log *logrus.Logger, cronHelper *cron_helper.CronHelper) *ControllerBase {
+func NewControllerBase(log *logrus.Logger, cronHelper *cron_helper.CronHelper, restartSignal chan interface{}) *ControllerBase {
 	cb := &ControllerBase{
 		log:        log,
 		cronHelper: cronHelper,
@@ -33,6 +34,7 @@ func NewControllerBase(log *logrus.Logger, cronHelper *cron_helper.CronHelper) *
 			sub_formatter.GetSubFormatter(log, cronHelper.Settings.AdvancedSettings.SubNameFormatter),
 			cronHelper.FileDownloader, nil),
 		videoScanAndRefreshHelperLocker: lock.NewLock(),
+		restartSignal:                   restartSignal,
 	}
 
 	return cb

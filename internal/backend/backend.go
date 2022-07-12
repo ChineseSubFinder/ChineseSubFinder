@@ -20,26 +20,27 @@ import (
 )
 
 type BackEnd struct {
-	logger     *logrus.Logger
-	settings   *settings.Settings
-	cronHelper *cron_helper.CronHelper
-	httpPort   int
-	running    bool
-	srv        *http.Server
-	locker     sync.Mutex
+	logger        *logrus.Logger
+	settings      *settings.Settings
+	cronHelper    *cron_helper.CronHelper
+	httpPort      int
+	running       bool
+	srv           *http.Server
+	locker        sync.Mutex
+	restartSignal chan interface{}
 }
 
-func NewBackEnd(logger *logrus.Logger, settings *settings.Settings, cronHelper *cron_helper.CronHelper, httpPort int) *BackEnd {
-	return &BackEnd{logger: logger, settings: settings, cronHelper: cronHelper, httpPort: httpPort}
+func NewBackEnd(logger *logrus.Logger, settings *settings.Settings, cronHelper *cron_helper.CronHelper, httpPort int, restartSignal chan interface{}) *BackEnd {
+	return &BackEnd{logger: logger, settings: settings, cronHelper: cronHelper, httpPort: httpPort, restartSignal: restartSignal}
 }
 
-func (b *BackEnd) Start() {
+func (b *BackEnd) start() {
 
 	defer b.locker.Unlock()
 	b.locker.Lock()
 
 	if b.running == true {
-		b.logger.Warningln("Http Server is already running")
+		b.logger.Debugln("Http Server is already running")
 		return
 	}
 	b.running = true
@@ -50,10 +51,7 @@ func (b *BackEnd) Start() {
 	engine := gin.Default()
 	// 默认所有都通过
 	engine.Use(cors.Default())
-	v1Router := InitRouter(b.logger, b.settings, engine, b.cronHelper)
-	defer func() {
-		v1Router.Close()
-	}()
+	v1Router := InitRouter(b.logger, b.settings, engine, b.cronHelper, b.restartSignal)
 
 	engine.GET("/", func(c *gin.Context) {
 		c.Header("content-type", "text/html;charset=utf-8")
@@ -74,35 +72,50 @@ func (b *BackEnd) Start() {
 		Addr:    fmt.Sprintf(":%d", b.httpPort),
 		Handler: engine,
 	}
-	//go func() {
-	b.logger.Infoln("Try Start Http Server At Port", b.httpPort)
-	if err := b.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		b.logger.Errorln("Start Server Error:", err)
-	}
-	//}()
+	go func() {
+		b.logger.Infoln("Try Start Http Server At Port", b.httpPort)
+		if err := b.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			b.logger.Errorln("Start Server Error:", err)
+		}
+		defer func() {
+			v1Router.Close()
+		}()
+	}()
 }
 
-func (b *BackEnd) Stop() {
-	defer func() {
-		b.locker.Unlock()
-	}()
-	b.locker.Lock()
+func (b *BackEnd) Restart() {
 
-	if b.running == false {
-		b.logger.Warningln("Http Server is not running")
-		return
+	stopFunc := func() {
+
+		b.locker.Lock()
+		defer func() {
+			b.locker.Unlock()
+		}()
+		if b.running == false {
+			b.logger.Debugln("Http Server is not running")
+			return
+		}
+		b.running = false
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := b.srv.Shutdown(ctx); err != nil {
+			b.logger.Errorln("Http Server Shutdown:", err)
+		}
+		select {
+		case <-ctx.Done():
+			b.logger.Warningln("timeout of 5 seconds.")
+		}
+		b.logger.Infoln("Http Server exiting")
 	}
 
-	b.running = false
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := b.srv.Shutdown(ctx); err != nil {
-		b.logger.Errorln("Http Server Shutdown:", err)
+	for {
+		select {
+		case <-b.restartSignal:
+			{
+				stopFunc()
+				b. ()
+			}
+		}
 	}
-	select {
-	case <-ctx.Done():
-		b.logger.Warningln("timeout of 5 seconds.")
-	}
-	b.logger.Infoln("Http Server exiting")
 }

@@ -20,10 +20,11 @@ func InitRouter(
 	settings *settings.Settings, // 设置实例
 	router *gin.Engine,
 	cronHelper *cron_helper.CronHelper,
+	restartSignal chan interface{},
 ) *v1.ControllerBase {
 
 	cbBase := base.NewControllerBase(log)
-	cbV1 := v1.NewControllerBase(log, cronHelper)
+	cbV1 := v1.NewControllerBase(log, cronHelper, restartSignal)
 	// --------------------------------------------------
 	// 静态文件服务器
 	// 添加电影的

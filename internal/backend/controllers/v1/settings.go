@@ -61,6 +61,8 @@ func (cb ControllerBase) SettingsHandler(c *gin.Context) {
 			}
 
 			c.JSON(http.StatusOK, backend.ReplyCommon{Message: "Settings Save Success"})
+			// 回复完毕后，发送重启 http server 的信号
+			cb.restartSignal <- 1
 		}
 	default:
 		c.JSON(http.StatusNoContent, backend.ReplyCommon{Message: "Settings Request.Method Error"})
