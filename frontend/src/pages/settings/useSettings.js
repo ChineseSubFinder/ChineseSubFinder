@@ -2,6 +2,9 @@ import { reactive, ref, watch } from 'vue';
 import SettingApi from 'src/api/SettingApi';
 import { SystemMessage } from 'src/utils/Message';
 import { deepCopy } from 'src/utils/CommonUtils';
+import { useAppStatusLoading } from 'src/composables/useAppStatusLoading';
+
+const { startLoading } = useAppStatusLoading();
 
 export const settingsState = reactive({
   data: null,
@@ -68,6 +71,7 @@ export const submitAll = async () => {
   }
   settingsState.data = { ...settingsState.data, ...deepCopy(formModel) };
   SystemMessage.success('保存成功');
+  startLoading();
 };
 
 /**

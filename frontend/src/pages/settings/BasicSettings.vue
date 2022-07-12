@@ -142,6 +142,7 @@
                 dense
                 lazy-rules
                 :rules="[(val) => !!val || '不能为空', validateRemotePath]"
+                style="width: 200px"
               />
               <q-btn
                 v-if="i === 0"
@@ -183,6 +184,7 @@
                 standout
                 dense
                 :rules="[(val) => !!val || '不能为空', validateRemotePath]"
+                style="width: 200px"
               />
               <q-btn
                 v-if="i === 0"
