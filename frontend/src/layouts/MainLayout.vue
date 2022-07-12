@@ -9,15 +9,13 @@
           <q-item clickable>
             <q-item-section class="relative-position q-px-sm">
               版本升级
-              <div class="absolute-top-right bg-red" style="border-radius: 50%; width: 8px;height: 8px;"></div>
+              <div class="absolute-top-right bg-red" style="border-radius: 50%; width: 8px; height: 8px"></div>
             </q-item-section>
           </q-item>
         </version-update-item>
         <q-item
           clickable
-          @click="
-            openPage('https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.20%E6%95%99%E7%A8%8B')
-          "
+          @click="openPage('https://github.com/allanpk716/ChineseSubFinder/blob/master/docker/readme.md')"
         >
           <q-item-section> 帮助文档 </q-item-section>
         </q-item>
@@ -47,7 +45,7 @@
         <div>ChineseSubFinder</div>
         <div class="text-body2">
           {{ systemState.systemInfo?.version }}
-<!--          <version-update-item />-->
+          <!--          <version-update-item />-->
         </div>
       </div>
       <q-list>
@@ -58,7 +56,7 @@
     <q-page-container>
       <router-view />
 
-      <notice-dialog/>
+      <notice-dialog />
     </q-page-container>
   </q-layout>
 </template>

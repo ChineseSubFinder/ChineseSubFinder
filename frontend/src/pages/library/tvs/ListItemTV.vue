@@ -44,7 +44,7 @@ const hasSubtitleVideoCount = computed(
   () => props.data.one_video_info.filter((e) => e.sub_f_path_list.length > 0).length
 );
 
-const getUrl = (path) => config.BACKEND_STATIC_URL + path.split(/\/|\\/).join('/');
+const getUrl = (path) => config.BACKEND_URL + path.split(/\/|\\/).join('/');
 </script>
 
 <style lang="scss" scoped>

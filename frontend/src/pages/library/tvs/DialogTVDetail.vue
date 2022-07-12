@@ -104,7 +104,7 @@ const pandStart2 = (num) => {
 
 const visible = ref(false);
 
-const getUrl = (path) => config.BACKEND_STATIC_URL + path.split(/\/|\\/).join('/');
+const getUrl = (path) => config.BACKEND_URL + path.split(/\/|\\/).join('/');
 
 const downloadSubtitle = async (item) => {
   $q.dialog({
