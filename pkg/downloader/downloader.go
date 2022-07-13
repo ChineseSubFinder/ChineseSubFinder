@@ -212,7 +212,7 @@ func (d *Downloader) QueueDownloader() {
 			epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(oneJob.VideoFPath)
 			if err != nil {
 				d.log.Errorln("decode.GetVideoNfoInfo4OneSeriesEpisode()", err)
-				d.log.Infoln("will delete this job")
+				d.log.Infoln("maybe your moved video file to another place or delete it, so will delete this job")
 				bok, err = d.downloadQueue.Del(oneJob.Id)
 				if err != nil {
 					d.log.Errorln("d.downloadQueue.Del()", err)
@@ -227,7 +227,7 @@ func (d *Downloader) QueueDownloader() {
 			seriesInfoDirPath := decode.GetSeriesDirRootFPath(oneJob.VideoFPath)
 			if seriesInfoDirPath == "" {
 				d.log.Errorln(fmt.Sprintf("decode.GetSeriesDirRootFPath == Empty, %s", oneJob.VideoFPath))
-				d.log.Infoln("will delete this job")
+				d.log.Infoln("you need check the directory structure of a series, so will delete this job")
 				bok, err = d.downloadQueue.Del(oneJob.Id)
 				if err != nil {
 					d.log.Errorln("d.downloadQueue.Del()", err)
