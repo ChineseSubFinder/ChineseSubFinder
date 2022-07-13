@@ -285,7 +285,7 @@ func statistics_subs_score_is_match(
 				return nil
 			}
 
-			if bok == false {
+			if bok == false && matchResult == nil {
 				return nil
 			}
 
