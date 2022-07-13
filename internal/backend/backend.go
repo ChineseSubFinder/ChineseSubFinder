@@ -97,16 +97,23 @@ func (b *BackEnd) Restart() {
 		}
 		b.running = false
 
+		exitOk := make(chan interface{}, 1)
+		defer close(exitOk)
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		if err := b.srv.Shutdown(ctx); err != nil {
-			b.logger.Errorln("Http Server Shutdown:", err)
-		}
+		go func() {
+			if err := b.srv.Shutdown(ctx); err != nil {
+				b.logger.Errorln("Http Server Shutdown:", err)
+			}
+			exitOk <- true
+		}()
 		select {
 		case <-ctx.Done():
-			b.logger.Warningln("timeout of 5 seconds.")
+			b.logger.Warningln("Http Server Shutdown timeout of 5 seconds.")
+		case <-exitOk:
+			b.logger.Infoln("Http Server Shutdown Successfully")
 		}
-		b.logger.Infoln("Http Server exiting")
+		b.logger.Infoln("Http Server Shutdown Done.")
 	}
 
 	for {
