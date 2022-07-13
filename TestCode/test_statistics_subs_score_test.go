@@ -1,6 +1,13 @@
 package TestCode
 
-import "testing"
+import (
+	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
+	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_timeline_fixer"
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/prometheus/common/log"
+	"path/filepath"
+	"testing"
+)
 
 func Test_statistics_subs_score(t *testing.T) {
 	type args struct {
@@ -81,7 +88,20 @@ func Test_statistics_subs_score_is_match(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			statistics_subs_score_is_match(tt.args.videoFPath, tt.args.subSearchRootPath)
+
+			logger := log_helper.GetLogger4Tester()
+			s := sub_timeline_fixer.NewSubTimelineFixerHelperEx(logger, *settings.NewTimelineFixerSettings())
+			bok, ffmpegInfo, audioVADInfos, infoBase, err := s.IsVideoCanExportSubtitleAndAudio(tt.args.videoFPath)
+			if err != nil {
+				log.Errorln("IsVideoCanExportSubtitleAndAudio", err)
+				return
+			}
+			if bok == false {
+				log.Errorln("IsVideoCanExportSubtitleAndAudio", "bok == false")
+				return
+			}
+
+			statistics_subs_score_is_match(s, ffmpegInfo, audioVADInfos, infoBase, tt.args.subSearchRootPath, filepath.Base(tt.args.videoFPath))
 		})
 	}
 }

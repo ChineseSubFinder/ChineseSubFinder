@@ -5,6 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/ffmpeg_helper"
+	"github.com/prometheus/common/log"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
 	"github.com/huandu/go-clone"
 
@@ -206,20 +209,13 @@ func statistics_subs_score(baseAudioFileFPath, baseSubFileFPath, subSearchRootPa
 	}
 }
 
-func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
+func statistics_subs_score_is_match(
+	s *sub_timeline_fixer.SubTimelineFixerHelperEx,
+	ffmpegInfo *ffmpeg_helper.FFMPEGInfo,
+	audioVADInfos []vad.VADInfo, infoBase *subparser.FileInfo,
+	subSearchRootPath, excelFileName string) {
 
-	log := log_helper.GetLogger4Tester()
-	s := sub_timeline_fixer.NewSubTimelineFixerHelperEx(log, *settings.NewTimelineFixerSettings())
-	bok, ffmpegInfo, audioVADInfos, infoBase, err := s.IsVideoCanExportSubtitleAndAudio(videoFPath)
-	if err != nil {
-		log.Errorln("IsVideoCanExportSubtitleAndAudio", err)
-		return
-	}
-	if bok == false {
-		log.Errorln("IsVideoCanExportSubtitleAndAudio", "bok == false")
-		return
-	}
-
+	var err error
 	f := excelize.NewFile()
 	// Create a new sheet.
 	sheetName := filepath.Base(subSearchRootPath)
@@ -349,7 +345,7 @@ func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
 	}
 
 	f.SetActiveSheet(newSheet)
-	err = f.SaveAs(fmt.Sprintf("%s.xlsx", filepath.Base(videoFPath)))
+	err = f.SaveAs(fmt.Sprintf("%s.xlsx", excelFileName))
 	if err != nil {
 		log.Errorln("SaveAs", err)
 		return
