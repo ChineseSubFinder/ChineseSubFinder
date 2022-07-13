@@ -208,12 +208,15 @@ func statistics_subs_score(baseAudioFileFPath, baseSubFileFPath, subSearchRootPa
 
 func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
 
-	s := sub_timeline_fixer.NewSubTimelineFixerHelperEx(log_helper.GetLogger4Tester(), *settings.NewTimelineFixerSettings())
+	log := log_helper.GetLogger4Tester()
+	s := sub_timeline_fixer.NewSubTimelineFixerHelperEx(log, *settings.NewTimelineFixerSettings())
 	bok, ffmpegInfo, audioVADInfos, infoBase, err := s.IsVideoCanExportSubtitleAndAudio(videoFPath)
 	if err != nil {
+		log.Errorln("IsVideoCanExportSubtitleAndAudio", err)
 		return
 	}
 	if bok == false {
+		log.Errorln("IsVideoCanExportSubtitleAndAudio", "bok == false")
 		return
 	}
 
@@ -223,34 +226,42 @@ func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
 	newSheet := f.NewSheet(sheetName)
 	err = f.SetCellValue(sheetName, fmt.Sprintf("A%d", 1), "SubFPath")
 	if err != nil {
+		log.Errorln("SetCellValue A Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("B%d", 1), "AudioScore")
 	if err != nil {
+		log.Errorln("SetCellValue B Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("C%d", 1), "AudioOffset")
 	if err != nil {
+		log.Errorln("SetCellValue C Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("D%d", 1), "SubScore")
 	if err != nil {
+		log.Errorln("SetCellValue D Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("E%d", 1), "SubOffset")
 	if err != nil {
+		log.Errorln("SetCellValue E Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("F%d", 1), "IsMatch")
 	if err != nil {
+		log.Errorln("SetCellValue F Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("G%d", 1), "VideoDuration")
 	if err != nil {
+		log.Errorln("SetCellValue G Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("H%d", 1), "TargetSubEndTime")
 	if err != nil {
+		log.Errorln("SetCellValue H Header", err)
 		return
 	}
 
@@ -281,22 +292,27 @@ func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
 			subCounter++
 			err = f.SetCellValue(sheetName, fmt.Sprintf("A%d", subCounter+1), info.Name())
 			if err != nil {
+				log.Errorln("SetCellValue A", info.Name(), subCounter+1, err)
 				return nil
 			}
 			err = f.SetCellValue(sheetName, fmt.Sprintf("B%d", subCounter+1), matchResult.AudioCompareScore)
 			if err != nil {
+				log.Errorln("SetCellValue B", info.Name(), subCounter+1, err)
 				return nil
 			}
 			err = f.SetCellValue(sheetName, fmt.Sprintf("C%d", subCounter+1), matchResult.AudioCompareOffsetTime)
 			if err != nil {
+				log.Errorln("SetCellValue C", info.Name(), subCounter+1, err)
 				return nil
 			}
 			err = f.SetCellValue(sheetName, fmt.Sprintf("D%d", subCounter+1), matchResult.SubCompareScore)
 			if err != nil {
+				log.Errorln("SetCellValue D", info.Name(), subCounter+1, err)
 				return nil
 			}
 			err = f.SetCellValue(sheetName, fmt.Sprintf("E%d", subCounter+1), matchResult.SubCompareOffsetTime)
 			if err != nil {
+				log.Errorln("SetCellValue E", info.Name(), subCounter+1, err)
 				return nil
 			}
 			iTrue := 0
@@ -305,32 +321,35 @@ func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
 			}
 			err = f.SetCellValue(sheetName, fmt.Sprintf("F%d", subCounter+1), iTrue)
 			if err != nil {
+				log.Errorln("SetCellValue F", info.Name(), subCounter+1, err)
 				return nil
 			}
-
 			err = f.SetCellValue(sheetName, fmt.Sprintf("G%d", subCounter+1), matchResult.VideoDuration)
 			if err != nil {
+				log.Errorln("SetCellValue G", info.Name(), subCounter+1, err)
 				return nil
 			}
-
 			err = f.SetCellValue(sheetName, fmt.Sprintf("H%d", subCounter+1), matchResult.TargetSubEndTime)
 			if err != nil {
+				log.Errorln("SetCellValue H", info.Name(), subCounter+1, err)
 				return nil
 			}
 
-			fmt.Println(subCounter, path, info.Size())
+			log.Infoln(subCounter, path, info.Size())
 
 			return nil
 		})
 	if err != nil {
-		fmt.Println("Walk", err)
+		log.Errorln("Walk", err)
 		return
 	}
 
 	f.SetActiveSheet(newSheet)
 	err = f.SaveAs(fmt.Sprintf("%s.xlsx", filepath.Base(videoFPath)))
 	if err != nil {
-		fmt.Println("SaveAs", err)
+		log.Errorln("SaveAs", err)
 		return
 	}
+
+	log.Infoln("Done")
 }
