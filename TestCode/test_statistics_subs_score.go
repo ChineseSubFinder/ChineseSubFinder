@@ -289,6 +289,10 @@ func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
 				return nil
 			}
 
+			if bok == false {
+				return nil
+			}
+
 			subCounter++
 			err = f.SetCellValue(sheetName, fmt.Sprintf("A%d", subCounter+1), info.Name())
 			if err != nil {
