@@ -212,11 +212,31 @@ func (d *Downloader) QueueDownloader() {
 			epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(oneJob.VideoFPath)
 			if err != nil {
 				d.log.Errorln("decode.GetVideoNfoInfo4OneSeriesEpisode()", err)
+				d.log.Infoln("will delete this job")
+				bok, err = d.downloadQueue.Del(oneJob.Id)
+				if err != nil {
+					d.log.Errorln("d.downloadQueue.Del()", err)
+					return
+				}
+				if bok == false {
+					d.log.Errorln(fmt.Sprintf("d.downloadQueue.Del(%d) == false", oneJob.Id))
+					return
+				}
 				return
 			}
 			seriesInfoDirPath := decode.GetSeriesDirRootFPath(oneJob.VideoFPath)
 			if seriesInfoDirPath == "" {
 				d.log.Errorln(fmt.Sprintf("decode.GetSeriesDirRootFPath == Empty, %s", oneJob.VideoFPath))
+				d.log.Infoln("will delete this job")
+				bok, err = d.downloadQueue.Del(oneJob.Id)
+				if err != nil {
+					d.log.Errorln("d.downloadQueue.Del()", err)
+					return
+				}
+				if bok == false {
+					d.log.Errorln(fmt.Sprintf("d.downloadQueue.Del(%d) == false", oneJob.Id))
+					return
+				}
 				return
 			}
 			oneJob.Season = epsVideoNfoInfo.Season
