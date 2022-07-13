@@ -16,7 +16,7 @@ export const useAppStatusLoading = () => {
         setTimeout(resolve, ms);
       });
     // 考虑保存配置后HTTP服务没有立即重启的情况，等待几秒再请求状态接口
-    await sleep(5000);
+    await sleep(6000);
 
     const handler = async () => {
       const [res, err] = await SystemApi.getInfo();
