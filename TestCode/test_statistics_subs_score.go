@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/ffmpeg_helper"
-	"github.com/prometheus/common/log"
+	"github.com/sirupsen/logrus"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
 	"github.com/huandu/go-clone"
 
@@ -210,6 +210,7 @@ func statistics_subs_score(baseAudioFileFPath, baseSubFileFPath, subSearchRootPa
 }
 
 func statistics_subs_score_is_match(
+	logger *logrus.Logger,
 	s *sub_timeline_fixer.SubTimelineFixerHelperEx,
 	ffmpegInfo *ffmpeg_helper.FFMPEGInfo,
 	audioVADInfos []vad.VADInfo, infoBase *subparser.FileInfo,
@@ -222,42 +223,42 @@ func statistics_subs_score_is_match(
 	newSheet := f.NewSheet(sheetName)
 	err = f.SetCellValue(sheetName, fmt.Sprintf("A%d", 1), "SubFPath")
 	if err != nil {
-		log.Errorln("SetCellValue A Header", err)
+		logger.Errorln("SetCellValue A Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("B%d", 1), "AudioScore")
 	if err != nil {
-		log.Errorln("SetCellValue B Header", err)
+		logger.Errorln("SetCellValue B Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("C%d", 1), "AudioOffset")
 	if err != nil {
-		log.Errorln("SetCellValue C Header", err)
+		logger.Errorln("SetCellValue C Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("D%d", 1), "SubScore")
 	if err != nil {
-		log.Errorln("SetCellValue D Header", err)
+		logger.Errorln("SetCellValue D Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("E%d", 1), "SubOffset")
 	if err != nil {
-		log.Errorln("SetCellValue E Header", err)
+		logger.Errorln("SetCellValue E Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("F%d", 1), "IsMatch")
 	if err != nil {
-		log.Errorln("SetCellValue F Header", err)
+		logger.Errorln("SetCellValue F Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("G%d", 1), "VideoDuration")
 	if err != nil {
-		log.Errorln("SetCellValue G Header", err)
+		logger.Errorln("SetCellValue G Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("H%d", 1), "TargetSubEndTime")
 	if err != nil {
-		log.Errorln("SetCellValue H Header", err)
+		logger.Errorln("SetCellValue H Header", err)
 		return
 	}
 
@@ -292,27 +293,27 @@ func statistics_subs_score_is_match(
 			subCounter++
 			err = f.SetCellValue(sheetName, fmt.Sprintf("A%d", subCounter+1), info.Name())
 			if err != nil {
-				log.Errorln("SetCellValue A", info.Name(), subCounter+1, err)
+				logger.Errorln("SetCellValue A", info.Name(), subCounter+1, err)
 				return nil
 			}
 			err = f.SetCellValue(sheetName, fmt.Sprintf("B%d", subCounter+1), matchResult.AudioCompareScore)
 			if err != nil {
-				log.Errorln("SetCellValue B", info.Name(), subCounter+1, err)
+				logger.Errorln("SetCellValue B", info.Name(), subCounter+1, err)
 				return nil
 			}
 			err = f.SetCellValue(sheetName, fmt.Sprintf("C%d", subCounter+1), matchResult.AudioCompareOffsetTime)
 			if err != nil {
-				log.Errorln("SetCellValue C", info.Name(), subCounter+1, err)
+				logger.Errorln("SetCellValue C", info.Name(), subCounter+1, err)
 				return nil
 			}
 			err = f.SetCellValue(sheetName, fmt.Sprintf("D%d", subCounter+1), matchResult.SubCompareScore)
 			if err != nil {
-				log.Errorln("SetCellValue D", info.Name(), subCounter+1, err)
+				logger.Errorln("SetCellValue D", info.Name(), subCounter+1, err)
 				return nil
 			}
 			err = f.SetCellValue(sheetName, fmt.Sprintf("E%d", subCounter+1), matchResult.SubCompareOffsetTime)
 			if err != nil {
-				log.Errorln("SetCellValue E", info.Name(), subCounter+1, err)
+				logger.Errorln("SetCellValue E", info.Name(), subCounter+1, err)
 				return nil
 			}
 			iTrue := 0
@@ -321,35 +322,35 @@ func statistics_subs_score_is_match(
 			}
 			err = f.SetCellValue(sheetName, fmt.Sprintf("F%d", subCounter+1), iTrue)
 			if err != nil {
-				log.Errorln("SetCellValue F", info.Name(), subCounter+1, err)
+				logger.Errorln("SetCellValue F", info.Name(), subCounter+1, err)
 				return nil
 			}
 			err = f.SetCellValue(sheetName, fmt.Sprintf("G%d", subCounter+1), matchResult.VideoDuration)
 			if err != nil {
-				log.Errorln("SetCellValue G", info.Name(), subCounter+1, err)
+				logger.Errorln("SetCellValue G", info.Name(), subCounter+1, err)
 				return nil
 			}
 			err = f.SetCellValue(sheetName, fmt.Sprintf("H%d", subCounter+1), matchResult.TargetSubEndTime)
 			if err != nil {
-				log.Errorln("SetCellValue H", info.Name(), subCounter+1, err)
+				logger.Errorln("SetCellValue H", info.Name(), subCounter+1, err)
 				return nil
 			}
 
-			log.Infoln(subCounter, path, info.Size())
+			logger.Infoln(subCounter, path, info.Size())
 
 			return nil
 		})
 	if err != nil {
-		log.Errorln("Walk", err)
+		logger.Errorln("Walk", err)
 		return
 	}
 
 	f.SetActiveSheet(newSheet)
 	err = f.SaveAs(fmt.Sprintf("%s.xlsx", excelFileName))
 	if err != nil {
-		log.Errorln("SaveAs", err)
+		logger.Errorln("SaveAs", err)
 		return
 	}
 
-	log.Infoln("Done")
+	logger.Infoln("Done")
 }
