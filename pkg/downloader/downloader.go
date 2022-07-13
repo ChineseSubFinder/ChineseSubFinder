@@ -212,7 +212,7 @@ func (d *Downloader) QueueDownloader() {
 			epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(oneJob.VideoFPath)
 			if err != nil {
 				d.log.Errorln("decode.GetVideoNfoInfo4OneSeriesEpisode()", err)
-				d.log.Infoln("maybe your moved video file to another place or delete it, so will delete this job")
+				d.log.Infoln("maybe you moved video file to another place or delete it, so will delete this job")
 				bok, err = d.downloadQueue.Del(oneJob.Id)
 				if err != nil {
 					d.log.Errorln("d.downloadQueue.Del()", err)
