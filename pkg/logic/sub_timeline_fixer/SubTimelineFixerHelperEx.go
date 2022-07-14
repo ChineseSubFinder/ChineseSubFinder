@@ -303,7 +303,7 @@ func (s SubTimelineFixerHelperEx) IsMatchBySubFile(ffmpegInfo *ffmpeg_helper.FFM
 		return false, nil, nil
 	}
 
-	targetSubEndTime := float64(srcBase.GetEndTime().Second())
+	targetSubEndTime := my_util.Time2SecondNumber(srcBase.GetEndTime())
 
 	matchResult := &MathResult{
 		VideoDuration:          ffmpegInfo.Duration,
