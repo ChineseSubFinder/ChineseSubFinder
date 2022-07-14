@@ -608,7 +608,54 @@ func (s SubtitleBestApi) ConvertId(id, source, videoType string) (*IdConvertRepl
 	return &idConvertReply, nil
 }
 
+func (s SubtitleBestApi) FeedBack(id, version, MediaServer string, EnableShare, EnableApiKey bool) (*FeedReply, error) {
+
+	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
+		return nil, errors.New("auth key is not set")
+	}
+	if len(s.authKey.AESKey16) != 16 {
+		return nil, errors.New(fmt.Sprintf("AESKey16 is not set, %s", s.authKey.AESKey16))
+	}
+	if len(s.authKey.AESIv16) != 16 {
+		return nil, errors.New(fmt.Sprintf("AESIv16 is not set, %s", s.authKey.AESIv16))
+	}
+
+	postUrl := webUrlBase + "/v1/feedback"
+	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	if err != nil {
+		return nil, err
+	}
+
+	authKey, err := s.randomAuthKey.GetAuthKey()
+	if err != nil {
+		return nil, err
+	}
+
+	formData := make(map[string]string)
+	formData["id"] = id
+	formData["version"] = version
+	formData["media_server"] = MediaServer
+	formData["enable_share"] = strconv.FormatBool(EnableShare)
+	formData["enable_api_key"] = strconv.FormatBool(EnableApiKey)
+	var feedReply FeedReply
+	resp, err := httpClient.R().
+		SetHeader("Authorization", "beer "+authKey).
+		SetFormData(formData).
+		SetResult(&feedReply).
+		Post(postUrl)
+	if err != nil {
+		s.log.Errorln("feedback error, status code:", resp.StatusCode(), "Error:", err)
+		return nil, err
+	}
+
+	if feedReply.Status == 0 {
+		s.log.Warningln("status code:", resp.StatusCode())
+	}
+
+	return &feedReply, nil
+}
+
 const (
 	webUrlBase = "https://api.subtitle.best"
-	//webUrlBase = "http://127.0.0.1:8890"
+	//webUrlBase = "http://127.0.0.1:8893"
 )

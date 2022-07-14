@@ -23,6 +23,12 @@ func TestSubtitleBestApi_GetMediaInfo(t *testing.T) {
 			AESIv16:  global_value.AESIv16(),
 		}, settings.GetSettings().AdvancedSettings.ProxySettings)
 
+	feedReply, err := bapi.FeedBack(my_util.RandStringBytesMaskImprSrcSB(64), "1.0.0", "None", true, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	println("FeedBack:", feedReply.Status, feedReply.Message)
+
 	mediaInfo, err := bapi.GetMediaInfo("tt7278862", "imdb", "series")
 	if err != nil {
 		t.Fatal(err)
