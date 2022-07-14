@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/internal/dao"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/pre_job"
@@ -66,6 +68,9 @@ func init() {
 	if my_util.OSCheck() == false {
 		loggerBase.Panicln(`You should search runtime.GOOS in the project, Implement unimplemented function`)
 	}
+	// --------------------------------------------------
+	// 初始化设备的信息
+	dao.UpdateInfo(AppVersion, settings.GetSettings())
 }
 
 func main() {
