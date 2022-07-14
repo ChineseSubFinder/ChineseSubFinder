@@ -274,7 +274,7 @@ func (s SubTimelineFixerHelperEx) IsVideoCanExportSubtitleAndAudio(videoFileFull
 	return true, ffmpegInfo, audioVADInfos, infoBase, nil
 }
 
-func (s SubTimelineFixerHelperEx) IsMatchBySubFile(ffmpegInfo *ffmpeg_helper.FFMPEGInfo, audioVADInfos []vad.VADInfo, infoBase *subparser.FileInfo, srcSubFileFPath string, config CompareConfig) (bool, *MathResult, error) {
+func (s SubTimelineFixerHelperEx) IsMatchBySubFile(ffmpegInfo *ffmpeg_helper.FFMPEGInfo, audioVADInfos []vad.VADInfo, infoBase *subparser.FileInfo, srcSubFileFPath string, config CompareConfig) (bool, *MatchResult, error) {
 
 	bFind, srcBase, err := s.subParserHub.DetermineFileTypeFromFile(srcSubFileFPath)
 	if err != nil {
@@ -305,7 +305,7 @@ func (s SubTimelineFixerHelperEx) IsMatchBySubFile(ffmpegInfo *ffmpeg_helper.FFM
 
 	targetSubEndTime := my_util.Time2SecondNumber(srcBase.GetEndTime())
 
-	matchResult := &MathResult{
+	matchResult := &MatchResult{
 		VideoDuration:          ffmpegInfo.Duration,
 		TargetSubEndTime:       targetSubEndTime,
 		AudioCompareScore:      pipeResultMaxAudio.Score,
@@ -378,7 +378,7 @@ type CompareConfig struct {
 	DialoguesDifferencePercentage float64 // 两个字幕的对白字幕差异百分比
 }
 
-type MathResult struct {
+type MatchResult struct {
 	VideoDuration          float64 // 视频的时长
 	TargetSubEndTime       float64 // 目标字幕的结束时间
 	AudioCompareScore      float64 // 音频的对比分数
