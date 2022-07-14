@@ -329,7 +329,7 @@ func (s SubTimelineFixerHelperEx) IsMatchBySubFile(ffmpegInfo *ffmpeg_helper.FFM
 	}
 	// ---------------------------------------------------------------------------------------
 	// 两个对比字幕的对白数量不能超过 10%
-	minRage := float64(len(infoBase.Dialogues)) * 0.1
+	minRage := float64(len(infoBase.Dialogues)) * config.DialoguesDifferencePercentage
 	if math.Abs(float64(len(srcBase.Dialogues)-len(infoBase.Dialogues))) > minRage {
 		return false, matchResult, nil
 	}
@@ -385,4 +385,5 @@ type MathResult struct {
 	AudioCompareOffsetTime float64 // 音频的对比偏移量
 	SubCompareScore        float64 // 字幕的对比分数
 	SubCompareOffsetTime   float64 // 字幕的对比偏移量
+
 }
