@@ -53,3 +53,40 @@ func TestSubTimelineFixerHelperEx_Process(t *testing.T) {
 		})
 	}
 }
+
+func TestSubTimelineFixerHelperEx_IsMatchBySubFile(t *testing.T) {
+
+	videoFPath := "C:\\temp\\video\\Rick and Morty - S05E01 - Mort Dinner Rick Andre WEBDL-1080p.mkv"
+	NowTargetSubFPath := "X:\\连续剧\\瑞克和莫蒂 (2013)\\Season 5\\Rick and Morty - S05E01 - Mort Dinner Rick Andre WEBDL-1080p.chinese(简,subhd).ass"
+
+	logger := log_helper.GetLogger4Tester()
+	s := NewSubTimelineFixerHelperEx(logger, *settings.NewTimelineFixerSettings())
+	bok, ffmpegInfo, audioVADInfos, infoBase, err := s.IsVideoCanExportSubtitleAndAudio(videoFPath)
+	if err != nil {
+		logger.Errorln("IsVideoCanExportSubtitleAndAudio", err)
+		return
+	}
+	if bok == false {
+		logger.Errorln("IsVideoCanExportSubtitleAndAudio", "bok == false")
+		return
+	}
+
+	bok, matchResult, err := s.IsMatchBySubFile(
+		ffmpegInfo,
+		audioVADInfos,
+		infoBase,
+		NowTargetSubFPath,
+		CompareConfig{
+			MinScore:                      40000,
+			OffsetRange:                   2,
+			DialoguesDifferencePercentage: 0.25,
+		})
+	if err != nil {
+		logger.Errorln("IsMatchBySubFile", err)
+		return
+	}
+
+	if bok == false && matchResult == nil {
+		return
+	}
+}

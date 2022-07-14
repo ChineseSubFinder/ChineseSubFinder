@@ -343,7 +343,7 @@ func dealOne(ctx context.Context, inData interface{}) error {
 		sub_timeline_fixer.CompareConfig{
 			MinScore:                      40000,
 			OffsetRange:                   2,
-			DialoguesDifferencePercentage: 0.1,
+			DialoguesDifferencePercentage: 0.25,
 		})
 	if err != nil {
 		return nil
