@@ -383,7 +383,8 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	s.cacheImdbInfoCacheLocker.Unlock()
 	if ok == false {
 		s.cacheImdbInfoCacheLocker.Lock()
-		imdbInfoCache[imdbInfoFromVideoFile.IMDBID] = imdbInfo
+		imdbInfoCache[imdbInfoFromVideoFile.IMDBID] = imdbInfoFromVideoFile
+		imdbInfo = imdbInfoFromVideoFile
 		s.cacheImdbInfoCacheLocker.Unlock()
 	}
 	s.log.Debugln(3)
