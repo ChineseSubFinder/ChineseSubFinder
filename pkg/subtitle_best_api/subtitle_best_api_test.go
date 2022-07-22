@@ -23,6 +23,12 @@ func TestSubtitleBestApi_GetMediaInfo(t *testing.T) {
 			AESIv16:  global_value.AESIv16(),
 		}, settings.GetSettings().AdvancedSettings.ProxySettings)
 
+	downloadTaskReply, err := bapi.AskDownloadTask("123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	println(downloadTaskReply.Status, downloadTaskReply.Message)
+
 	feedReply, err := bapi.FeedBack(my_util.RandStringBytesMaskImprSrcSB(64), "1.0.0", "None", true, true)
 	if err != nil {
 		t.Fatal(err)
