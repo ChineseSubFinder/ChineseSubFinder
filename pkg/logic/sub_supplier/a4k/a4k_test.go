@@ -20,7 +20,7 @@ import (
 
 func TestSupplier_searchKeyword(t *testing.T) {
 
-	keyword := "绝命律师 第四季"
+	keyword := "Spider-Man: No Way Home 2021"
 	defInstance()
 	gotOutSubInfos, err := a4kInstance.searchKeyword(keyword, false)
 	if err != nil {
@@ -54,7 +54,8 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(log_helper.GetLogger4Tester(), ser, 90, false, false, epsMap)
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(log_helper.GetLogger4Tester(), ser,
+		90, false, false, settings.GetSettings().AdvancedSettings.ProxySettings, epsMap)
 	if err != nil {
 		t.Fatal(err)
 	}
