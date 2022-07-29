@@ -42,6 +42,8 @@ type Downloader struct {
 	cacheLocker   sync.Mutex
 	movieInfoMap  map[string]MovieInfo  // 给 Web 界面使用的，Key: VideoFPath
 	seasonInfoMap map[string]SeasonInfo // 给 Web 界面使用的,Key: RootDirPath
+
+	needSkipCloudTask bool // 是否跳过云端任务，比如当前的 App 版本低于服务器的要求（过低可能爬虫已经失效，意义不大）
 }
 
 func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_downloader.FileDownloader, downloadQueue *task_queue.TaskQueue) *Downloader {

@@ -1,6 +1,9 @@
 package global_value
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 )
 
@@ -11,6 +14,32 @@ func SetAppVersion(appVersion string) {
 
 func AppVersion() string {
 	return _appVersion
+}
+
+func AppVersionInt() (int, int, int) {
+
+	if _major == 0 && _minor == 0 && _patch == 0 {
+
+		nowAppVersion := strings.ToLower(_appVersion)
+		nowAppVersion = strings.ReplaceAll(nowAppVersion, "v", "")
+		if strings.Contains(nowAppVersion, "-lite") == true {
+			nowAppVersion = strings.ReplaceAll(nowAppVersion, "-lite", "")
+		}
+		if strings.Contains(nowAppVersion, "-beta") == true {
+			nowAppVersion = strings.Split(nowAppVersion, "-beta")[0]
+		}
+		versions := strings.Split(nowAppVersion, ".")
+		if len(versions) == 3 {
+			_major, _ = strconv.Atoi(versions[0])
+			_minor, _ = strconv.Atoi(versions[1])
+			_patch, _ = strconv.Atoi(versions[2])
+			return _major, _minor, _patch
+		} else {
+			return 0, 0, 0
+		}
+	}
+
+	return _major, _minor, _patch
 }
 
 // SetExtEnCode ---------------------------------------------
@@ -142,4 +171,7 @@ var (
 	_defSubFixCacheFolder = ""
 	_adblockTmpFolder     = ""
 	_liteMode             = false
+	_major                = 0
+	_minor                = 0
+	_patch                = 0
 )

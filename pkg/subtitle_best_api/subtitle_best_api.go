@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -679,11 +680,15 @@ func (s SubtitleBestApi) AskDownloadTask(id string) (*AskDownloadTaskReply, erro
 		return nil, err
 	}
 
+	major, minor, patch := global_value.AppVersionInt()
 	var askDownloadTaskReply AskDownloadTaskReply
 	resp, err := httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).
 		SetFormData(map[string]string{
-			"fid": id,
+			"fid":               id,
+			"app_version_major": fmt.Sprintf("%d", major),
+			"app_version_minor": fmt.Sprintf("%d", minor),
+			"app_version_patch": fmt.Sprintf("%d", patch),
 		}).
 		SetResult(&askDownloadTaskReply).
 		Post(postUrl)
