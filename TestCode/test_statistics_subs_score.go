@@ -1,10 +1,19 @@
 package TestCode
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
+	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/task_control"
+
+	"github.com/sirupsen/logrus"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
 	"github.com/huandu/go-clone"
 
@@ -206,47 +215,69 @@ func statistics_subs_score(baseAudioFileFPath, baseSubFileFPath, subSearchRootPa
 	}
 }
 
-func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
+func statistics_subs_score_is_match(
+	logger *logrus.Logger,
+	s *sub_timeline_fixer.SubTimelineFixerHelperEx,
+	ffmpegInfo *ffmpeg_helper.FFMPEGInfo,
+	audioVADInfos []vad.VADInfo, infoBase *subparser.FileInfo,
+	subSearchRootPath, excelFileName string) {
 
-	s := sub_timeline_fixer.NewSubTimelineFixerHelperEx(log_helper.GetLogger4Tester(), *settings.NewTimelineFixerSettings())
-	bok, audioVADInfos, infoBase, err := s.IsVideoCanExportSubtitleAndAudio(videoFPath)
-	if err != nil {
-		return
-	}
-	if bok == false {
-		return
-	}
-
+	var err error
 	f := excelize.NewFile()
 	// Create a new sheet.
 	sheetName := filepath.Base(subSearchRootPath)
 	newSheet := f.NewSheet(sheetName)
 	err = f.SetCellValue(sheetName, fmt.Sprintf("A%d", 1), "SubFPath")
 	if err != nil {
+		logger.Errorln("SetCellValue A Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("B%d", 1), "AudioScore")
 	if err != nil {
+		logger.Errorln("SetCellValue B Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("C%d", 1), "AudioOffset")
 	if err != nil {
+		logger.Errorln("SetCellValue C Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("D%d", 1), "SubScore")
 	if err != nil {
+		logger.Errorln("SetCellValue D Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("E%d", 1), "SubOffset")
 	if err != nil {
+		logger.Errorln("SetCellValue E Header", err)
 		return
 	}
 	err = f.SetCellValue(sheetName, fmt.Sprintf("F%d", 1), "IsMatch")
 	if err != nil {
+		logger.Errorln("SetCellValue F Header", err)
 		return
 	}
-
-	subCounter := 1
+	err = f.SetCellValue(sheetName, fmt.Sprintf("G%d", 1), "VideoDuration")
+	if err != nil {
+		logger.Errorln("SetCellValue G Header", err)
+		return
+	}
+	err = f.SetCellValue(sheetName, fmt.Sprintf("H%d", 1), "TargetSubEndTime")
+	if err != nil {
+		logger.Errorln("SetCellValue H Header", err)
+		return
+	}
+	// --------------------------------------------------
+	// 并发控制
+	var taskControl *task_control.TaskControl
+	taskControl, err = task_control.NewTaskControl(6, logger)
+	if err != nil {
+		logger.Errorln("NewTaskControl", err)
+		return
+	}
+	taskControl.SetCtxProcessFunc("ScanSubPlayedPool", dealOne, common2.ScanPlayedSubTimeOut)
+	// --------------------------------------------------
+	subCounter = 1
 	err = filepath.Walk(subSearchRootPath,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -260,54 +291,139 @@ func statistics_subs_score_is_match(videoFPath, subSearchRootPath string) {
 				return nil
 			}
 
-			bok, audioScore, audioOffset, subScore, subOffset, err := s.IsMatchBySubFile(audioVADInfos, infoBase, path, 40000, 2)
+			// 并发控制
+			err = taskControl.Invoke(&task_control.TaskData{
+				Index: 0,
+				Count: 0,
+				DataEx: ExcelInputData{
+					Logger:            logger,
+					F:                 f,
+					S:                 s,
+					FfmpegInfo:        ffmpegInfo,
+					AudioVADInfos:     audioVADInfos,
+					InfoBase:          infoBase,
+					NowTargetSubFPath: path,
+					SubFileName:       info.Name(),
+					SheetName:         sheetName,
+				},
+			})
 			if err != nil {
-				return nil
+				logger.Errorln("Invoke", err)
 			}
-
-			subCounter++
-			err = f.SetCellValue(sheetName, fmt.Sprintf("A%d", subCounter+1), info.Name())
-			if err != nil {
-				return nil
-			}
-			err = f.SetCellValue(sheetName, fmt.Sprintf("B%d", subCounter+1), audioScore)
-			if err != nil {
-				return nil
-			}
-			err = f.SetCellValue(sheetName, fmt.Sprintf("C%d", subCounter+1), audioOffset)
-			if err != nil {
-				return nil
-			}
-			err = f.SetCellValue(sheetName, fmt.Sprintf("D%d", subCounter+1), subScore)
-			if err != nil {
-				return nil
-			}
-			err = f.SetCellValue(sheetName, fmt.Sprintf("E%d", subCounter+1), subOffset)
-			if err != nil {
-				return nil
-			}
-			iTrue := 0
-			if bok == true {
-				iTrue = 1
-			}
-			err = f.SetCellValue(sheetName, fmt.Sprintf("F%d", subCounter+1), iTrue)
-			if err != nil {
-				return nil
-			}
-
-			fmt.Println(subCounter, path, info.Size())
 
 			return nil
 		})
 	if err != nil {
-		fmt.Println("Walk", err)
+		logger.Errorln("Walk", err)
 		return
 	}
 
+	taskControl.Hold()
+
 	f.SetActiveSheet(newSheet)
-	err = f.SaveAs(fmt.Sprintf("%s.xlsx", filepath.Base(videoFPath)))
+	err = f.SaveAs(fmt.Sprintf("%s.xlsx", excelFileName))
 	if err != nil {
-		fmt.Println("SaveAs", err)
+		logger.Errorln("SaveAs", err)
 		return
 	}
+
+	logger.Infoln("Done")
+}
+
+func dealOne(ctx context.Context, inData interface{}) error {
+
+	taskData := inData.(*task_control.TaskData)
+	excelInputData := taskData.DataEx.(ExcelInputData)
+
+	bok, matchResult, err := excelInputData.S.IsMatchBySubFile(
+		excelInputData.FfmpegInfo,
+		excelInputData.AudioVADInfos,
+		excelInputData.InfoBase,
+		excelInputData.NowTargetSubFPath,
+		sub_timeline_fixer.CompareConfig{
+			MinScore:                      40000,
+			OffsetRange:                   2,
+			DialoguesDifferencePercentage: 0.25,
+		})
+	if err != nil {
+		return nil
+	}
+
+	if bok == false && matchResult == nil {
+		return nil
+	}
+	counterLock.Lock()
+	defer counterLock.Unlock()
+
+	subCounter++
+
+	err = excelInputData.F.SetCellValue(excelInputData.SheetName, fmt.Sprintf("A%d", subCounter+1), excelInputData.SubFileName)
+	if err != nil {
+		excelInputData.Logger.Errorln("SetCellValue A", excelInputData.SubFileName, subCounter+1, err)
+		return nil
+	}
+	err = excelInputData.F.SetCellValue(excelInputData.SheetName, fmt.Sprintf("B%d", subCounter+1), matchResult.AudioCompareScore)
+	if err != nil {
+		excelInputData.Logger.Errorln("SetCellValue B", excelInputData.SubFileName, subCounter+1, err)
+		return nil
+	}
+	err = excelInputData.F.SetCellValue(excelInputData.SheetName, fmt.Sprintf("C%d", subCounter+1), matchResult.AudioCompareOffsetTime)
+	if err != nil {
+		excelInputData.Logger.Errorln("SetCellValue C", excelInputData.SubFileName, subCounter+1, err)
+		return nil
+	}
+	err = excelInputData.F.SetCellValue(excelInputData.SheetName, fmt.Sprintf("D%d", subCounter+1), matchResult.SubCompareScore)
+	if err != nil {
+		excelInputData.Logger.Errorln("SetCellValue D", excelInputData.SubFileName, subCounter+1, err)
+		return nil
+	}
+	err = excelInputData.F.SetCellValue(excelInputData.SheetName, fmt.Sprintf("E%d", subCounter+1), matchResult.SubCompareOffsetTime)
+	if err != nil {
+		excelInputData.Logger.Errorln("SetCellValue E", excelInputData.SubFileName, subCounter+1, err)
+		return nil
+	}
+	iTrue := 0
+	if bok == true {
+		iTrue = 1
+	}
+	err = excelInputData.F.SetCellValue(excelInputData.SheetName, fmt.Sprintf("F%d", subCounter+1), iTrue)
+	if err != nil {
+		excelInputData.Logger.Errorln("SetCellValue F", excelInputData.SubFileName, subCounter+1, err)
+		return nil
+	}
+	err = excelInputData.F.SetCellValue(excelInputData.SheetName, fmt.Sprintf("G%d", subCounter+1), matchResult.VideoDuration)
+	if err != nil {
+		excelInputData.Logger.Errorln("SetCellValue G", excelInputData.SubFileName, subCounter+1, err)
+		return nil
+	}
+	err = excelInputData.F.SetCellValue(excelInputData.SheetName, fmt.Sprintf("H%d", subCounter+1), matchResult.TargetSubEndTime)
+	if err != nil {
+		excelInputData.Logger.Errorln("SetCellValue H", excelInputData.SubFileName, subCounter+1, err)
+		return nil
+	}
+
+	excelInputData.Logger.Infoln(subCounter, excelInputData.NowTargetSubFPath)
+
+	return nil
+}
+
+var counterLock sync.Mutex
+var subCounter int
+
+type ExcelInputData struct {
+	Logger            *logrus.Logger
+	F                 *excelize.File
+	S                 *sub_timeline_fixer.SubTimelineFixerHelperEx
+	FfmpegInfo        *ffmpeg_helper.FFMPEGInfo
+	AudioVADInfos     []vad.VADInfo
+	InfoBase          *subparser.FileInfo
+	NowTargetSubFPath string
+	SubFileName       string
+	SheetName         string
+}
+
+type ExcelMathResult struct {
+	Index       int
+	Name        string
+	MatchResult *sub_timeline_fixer.MatchResult
 }

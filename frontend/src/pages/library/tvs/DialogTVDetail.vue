@@ -9,11 +9,32 @@
         <div class="text-h6">{{ data.name }} 剧集列表</div>
       </q-card-section>
 
-      <q-separator />
+      <q-card-section class="row items-center q-ml-md q-py-none">
+        <q-checkbox
+          :model-value="selectAllValue"
+          indeterminate-value="maybe"
+          @click="handleSelectAll"
+          title="全选/反选"
+        />
+
+        <q-btn
+          class="btn-download"
+          color="primary"
+          label="下载选中"
+          flat
+          :disable="selection.length === 0"
+          @click="downloadSelection"
+        ></q-btn>
+      </q-card-section>
+
+      <q-separator class="q-my-sm" />
 
       <q-card-section style="max-height: 40vh; overflow: auto">
         <q-list dense>
           <q-item v-for="item in sortedVideos" :key="item.name">
+            <q-item-section side top>
+              <q-checkbox v-model="selection" :val="item" />
+            </q-item-section>
             <q-item-section>第 {{ item.season }} 季 {{ pandStart2(item.episode) }} 集</q-item-section>
             <q-item-section side>
               <q-btn
@@ -45,7 +66,7 @@
 
             <q-item-section side>
               <q-btn
-                class="btn-download absolute-bottom-right"
+                class="btn-download"
                 color="primary"
                 round
                 flat
@@ -69,6 +90,7 @@ import { SystemMessage } from 'src/utils/Message';
 import { VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
 import config from 'src/config';
 import { useQuasar } from 'quasar';
+import { useSelection } from 'src/composables/useSelection';
 
 const props = defineProps({
   data: Object,
@@ -95,6 +117,8 @@ const sortedVideos = computed(() =>
   })
 );
 
+const { selectAllValue, handleSelectAll, selection } = useSelection(sortedVideos);
+
 const pandStart2 = (num) => {
   if (num < 10) {
     return `0${num}`;
@@ -104,11 +128,12 @@ const pandStart2 = (num) => {
 
 const visible = ref(false);
 
-const getUrl = (path) => config.BACKEND_STATIC_URL + path.split(/\/|\\/).join('/');
+const getUrl = (path) => config.BACKEND_URL + path.split(/\/|\\/).join('/');
 
-const downloadSubtitle = async (item) => {
+const downloadSubtitle = async (items) => {
+  const downloadList = items instanceof Array ? items : [items];
   $q.dialog({
-    title: '添加到下载队列',
+    title: `添加 ${downloadList.length}个 视频任务到下载队列`,
     message: '选择下载任务的类型：',
     options: {
       model: 3,
@@ -121,18 +146,33 @@ const downloadSubtitle = async (item) => {
     cancel: true,
     persistent: true,
   }).onOk(async (val) => {
-    const [, err] = await LibraryApi.downloadSubtitle({
-      video_type: VIDEO_TYPE_TV,
-      physical_video_file_full_path: item.video_f_path,
-      task_priority_level: val, // 一般的队列等级是5，如果想要快，那么可以先默认这里填写3，这样就可以插队
-      // 媒体服务器内部视频ID  `video/list` 中 获取到的 media_server_inside_video_id，可以用于自动 Emby 字幕列表刷新用
-      media_server_inside_video_id: item.media_server_inside_video_id,
+    // 下载全部Promises
+    const promises = downloadList.map(async (item) => {
+      const [, err] = await LibraryApi.downloadSubtitle({
+        video_type: VIDEO_TYPE_TV,
+        physical_video_file_full_path: item.video_f_path,
+        task_priority_level: val, // 一般的队列等级是5，如果想要快，那么可以先默认这里填写3，这样就可以插队
+        // 媒体服务器内部视频ID  `video/list` 中 获取到的 media_server_inside_video_id，可以用于自动 Emby 字幕列表刷新用
+        media_server_inside_video_id: item.media_server_inside_video_id,
+      });
+      if (err !== null) {
+        return Promise.reject(err);
+      }
+      return Promise.resolve();
     });
-    if (err !== null) {
-      SystemMessage.error(err.message);
-    } else {
-      SystemMessage.success('已加入下载队列');
-    }
+
+    const result = await Promise.allSettled(promises);
+
+    const successCount = result.filter((item) => item.status === 'fulfilled').length;
+    const errorCount = result.filter((item) => item.status === 'rejected').length;
+
+    const msg = `成功添加 ${successCount} 个任务到下载队列${errorCount ? `，失败 ${errorCount} 个` : ''}`;
+
+    SystemMessage.success(msg);
   });
+};
+
+const downloadSelection = () => {
+  downloadSubtitle(selection.value);
 };
 </script>

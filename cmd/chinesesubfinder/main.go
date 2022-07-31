@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/internal/dao"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/pre_job"
@@ -66,6 +68,9 @@ func init() {
 	if my_util.OSCheck() == false {
 		loggerBase.Panicln(`You should search runtime.GOOS in the project, Implement unimplemented function`)
 	}
+	// --------------------------------------------------
+	// 初始化设备的信息
+	dao.UpdateInfo(AppVersion, settings.GetSettings())
 }
 
 func main() {
@@ -156,7 +161,13 @@ func main() {
 	nowPort := my_util.ReadCustomPortFile(loggerBase)
 	loggerBase.Infoln(fmt.Sprintf("WebUI will listen at 0.0.0.0:%d", nowPort))
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
-	backend.StartBackEnd(fileDownloader, nowPort, cronHelper)
+	restartSignal := make(chan interface{}, 1)
+	defer close(restartSignal)
+	bend := backend.NewBackEnd(loggerBase, settings.GetSettings(), cronHelper, nowPort, restartSignal)
+	go bend.Restart()
+	restartSignal <- 1
+	// 阻塞
+	select {}
 }
 
 /*

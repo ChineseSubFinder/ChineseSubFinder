@@ -89,7 +89,7 @@ const downloadSubtitle = async () => {
   });
 };
 
-const getUrl = (path) => config.BACKEND_STATIC_URL + path.split(/\/|\\/).join('/');
+const getUrl = (path) => config.BACKEND_URL + path.split(/\/|\\/).join('/');
 </script>
 
 <style lang="scss" scoped>

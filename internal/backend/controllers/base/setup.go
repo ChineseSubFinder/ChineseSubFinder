@@ -30,7 +30,6 @@ func (cb ControllerBase) SetupHandler(c *gin.Context) {
 	if found == true {
 		// 存在则反馈无需初始化
 		c.JSON(http.StatusNoContent, backend2.ReplyCommon{Message: "already setup"})
-		return
 	} else {
 		// 需要创建用户，因为上述判断了没有用户存在，所以就默认直接新建了
 		err = settings.SetFullNewSettings(&setupInfo.Settings)
@@ -38,6 +37,8 @@ func (cb ControllerBase) SetupHandler(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "ok"})
-		return
 	}
+
+	// 回复完毕后，发送重启 http server 的信号
+	cb.restartSignal <- 1
 }

@@ -17,6 +17,7 @@ import (
 type FFMPEGInfo struct {
 	log              *logrus.Logger
 	VideoFullPath    string                // 视频文件的路径
+	Duration         float64               // 视频的时长
 	AudioInfoList    []AudioInfo           // 内置音频列表
 	SubtitleInfoList []SubtitleInfo        // 内置字幕列表
 	ExternalSubInfos []*subparser.FileInfo // 外置字幕列表

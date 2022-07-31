@@ -3,6 +3,7 @@ package a4k
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -291,7 +292,7 @@ func (s *Supplier) listPageItems(keyword string, pageIndex int, isMovie bool) (s
 		return
 	}
 	// 先对第一页进行分析
-	searPageUrl := fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.A4k.RootUrl+"/search?term=%s&page=%d", keyword, pageIndex)
+	searPageUrl := fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.A4k.RootUrl+"/search?term=%s&page=%d", url.QueryEscape(keyword), pageIndex)
 	resp, err := httpClient.R().Get(searPageUrl)
 	if err != nil {
 		err = errors.New("http get error:" + err.Error())

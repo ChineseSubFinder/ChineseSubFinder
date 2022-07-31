@@ -358,7 +358,7 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 			return
 		}
 		ch.log.Infoln("UploadSub", notUploadedVideoSubInfos[0].SubName)
-		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadLowTrustSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()))
+		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadLowTrustSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()), "")
 		if err != nil {
 			ch.log.Errorln("UploadLowTrustSub error:", err.Error())
 

@@ -26,9 +26,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func readSeriesInfo(log *logrus.Logger, seriesDir string, need2AnalyzeSub bool) (*series.SeriesInfo, map[string][]series.SubInfo, error) {
+func readSeriesInfo(log *logrus.Logger, seriesDir string, need2AnalyzeSub bool, _proxySettings *settings.ProxySettings) (*series.SeriesInfo, map[string][]series.SubInfo, error) {
 
-	seriesInfo, err := GetSeriesInfoFromDir(log, seriesDir)
+	seriesInfo, err := GetSeriesInfoFromDir(log, seriesDir, _proxySettings)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -103,9 +103,10 @@ func ReadSeriesInfoFromDir(log *logrus.Logger,
 	ExpirationTime int,
 	forcedScanAndDownloadSub bool,
 	need2AnalyzeSub bool,
+	_proxySettings *settings.ProxySettings,
 	epsMap ...map[int][]int) (*series.SeriesInfo, error) {
 
-	seriesInfo, SubDict, err := readSeriesInfo(log, seriesDir, need2AnalyzeSub)
+	seriesInfo, SubDict, err := readSeriesInfo(log, seriesDir, need2AnalyzeSub, _proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -131,9 +132,9 @@ func ReadSeriesInfoFromDir(log *logrus.Logger,
 }
 
 // ReadSeriesInfoFromEmby 将 Emby API 读取到的数据进行转换到通用的结构中，需要填充那些剧集需要下载，这样要的是一个连续剧的，不是所有的传入(只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList)
-func ReadSeriesInfoFromEmby(log *logrus.Logger, seriesDir string, seriesVideoList []emby.EmbyMixInfo, ExpirationTime int, forcedScanAndDownloadSub bool, need2AnalyzeSub bool) (*series.SeriesInfo, error) {
+func ReadSeriesInfoFromEmby(log *logrus.Logger, seriesDir string, seriesVideoList []emby.EmbyMixInfo, ExpirationTime int, forcedScanAndDownloadSub bool, need2AnalyzeSub bool, _proxySettings *settings.ProxySettings) (*series.SeriesInfo, error) {
 
-	seriesInfo, SubDict, err := readSeriesInfo(log, seriesDir, need2AnalyzeSub)
+	seriesInfo, SubDict, err := readSeriesInfo(log, seriesDir, need2AnalyzeSub, _proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -154,14 +155,14 @@ func ReadSeriesInfoFromEmby(log *logrus.Logger, seriesDir string, seriesVideoLis
 }
 
 // SkipChineseSeries 跳过中文连续剧
-func SkipChineseSeries(log *logrus.Logger, seriesRootPath string, _proxySettings ...*settings.ProxySettings) (bool, *models.IMDBInfo, error) {
+func SkipChineseSeries(log *logrus.Logger, seriesRootPath string, _proxySettings *settings.ProxySettings) (bool, *models.IMDBInfo, error) {
 
 	imdbInfo, err := decode.GetVideoNfoInfo4SeriesDir(seriesRootPath)
 	if err != nil {
 		return false, nil, err
 	}
 
-	isChineseVideo, t, err := imdb_helper.IsChineseVideo(log, imdbInfo, _proxySettings...)
+	isChineseVideo, t, err := imdb_helper.IsChineseVideo(log, imdbInfo, _proxySettings)
 	if err != nil {
 		return false, nil, err
 	}
@@ -322,7 +323,7 @@ func whichSeasonEpsNeedDownloadSub(log *logrus.Logger, seriesInfo *series.Series
 	return needDlSubEpsList, needDlSeasonList
 }
 
-func GetSeriesInfoFromDir(log *logrus.Logger, seriesDir string) (*series.SeriesInfo, error) {
+func GetSeriesInfoFromDir(log *logrus.Logger, seriesDir string, _proxySettings *settings.ProxySettings) (*series.SeriesInfo, error) {
 	seriesInfo := series.SeriesInfo{}
 	// 只考虑 IMDB 去查询，文件名目前发现可能会跟电影重复，导致很麻烦，本来也有前置要求要削刮器处理的
 	videoInfo, err := decode.GetVideoNfoInfo4SeriesDir(seriesDir)
@@ -330,7 +331,7 @@ func GetSeriesInfoFromDir(log *logrus.Logger, seriesDir string) (*series.SeriesI
 		return nil, err
 	}
 
-	imdbInfoFromLocal, err := imdb_helper.GetVideoIMDBInfoFromLocal(log, videoInfo)
+	imdbInfoFromLocal, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(log, videoInfo, _proxySettings)
 	if err != nil {
 		return nil, err
 	}

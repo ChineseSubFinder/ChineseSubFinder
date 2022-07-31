@@ -110,7 +110,8 @@ func (d *SubSupplierHub) SeriesNeedDlSub(seriesRootPath string, forcedScanAndDow
 	seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(d.log, seriesRootPath,
 		d.settings.AdvancedSettings.TaskQueue.ExpirationTime,
 		forcedScanAndDownloadSub,
-		need2AnalyzeSub)
+		need2AnalyzeSub,
+		d.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		return false, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesRootPath, err)
 	}
@@ -134,7 +135,7 @@ func (d *SubSupplierHub) SeriesNeedDlSubFromEmby(seriesRootPath string, seriesVi
 		}
 	}
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := seriesHelper.ReadSeriesInfoFromEmby(d.log, seriesRootPath, seriesVideoList, ExpirationTime, forcedScanAndDownloadSub, false)
+	seriesInfo, err := seriesHelper.ReadSeriesInfoFromEmby(d.log, seriesRootPath, seriesVideoList, ExpirationTime, forcedScanAndDownloadSub, false, d.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		return false, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesRootPath, err)
 	}

@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 
@@ -95,6 +96,8 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType Export
 	if err != nil {
 		return false, nil, err
 	}
+
+	ffMPEGInfo.Duration = f.getVideoDuration(videoFileFullPath)
 
 	// 判断这个视频是否已经导出过内置的字幕和音频文件了
 	if ffMPEGInfo.IsExported(exportType) == false {
@@ -642,6 +645,34 @@ func (f FFMPEGHelper) isSupportSubCodecName(name string) bool {
 	default:
 		return false
 	}
+}
+
+func (f FFMPEGHelper) getVideoDuration(videoFileFullPath string) float64 {
+
+	const args = "-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 -i"
+	cmdArgs := strings.Fields(args)
+	cmdArgs = append(cmdArgs, videoFileFullPath)
+	cmd := exec.Command("ffprobe", cmdArgs...)
+	buf := bytes.NewBufferString("")
+	//指定输出位置
+	cmd.Stderr = buf
+	cmd.Stdout = buf
+	err := cmd.Start()
+	if err != nil {
+		return 0
+	}
+	err = cmd.Wait()
+	if err != nil {
+		return 0
+	}
+
+	// 字符串转 float64
+	durationStr := strings.TrimSpace(buf.String())
+	duration, err := strconv.ParseFloat(durationStr, 32)
+	if err != nil {
+		return 0
+	}
+	return duration
 }
 
 const (

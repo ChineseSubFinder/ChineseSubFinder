@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
 
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend"
@@ -95,6 +97,13 @@ func Process(proxySettings *settings.ProxySettings) error {
 		}
 
 		notify_center.Notify.Send()
+
+		err = my_folder.ClearRodTmpRootFolder()
+		if err != nil {
+			loggerBase.Errorln(err.Error())
+			return
+		}
+		loggerBase.Infoln("ClearRodTmpRootFolder OK")
 	}()
 
 	loggerBase.Infoln("-----------------------------------------")
