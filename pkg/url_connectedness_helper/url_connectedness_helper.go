@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -22,13 +23,16 @@ func UrlConnectednessTest(testUrl, proxyAddr string) (bool, int64, error) {
 	} else {
 		// 需要代理
 		// 检测代理iP访问地址
-		if proxyAddressValidHttpFormat(proxyAddr) == false {
-			return false, 0, errors.New("proxy address illegal, only support http://xx:xx")
-		}
+		//if proxyAddressValidHttpFormat(proxyAddr) == false {
+		//	return false, 0, errors.New("proxy address illegal, only support http://xx:xx")
+		//}
 		// 解析代理地址
 		proxy, err := url.Parse(proxyAddr)
 		if err != nil {
 			return false, 0, err
+		}
+		if strings.ToLower(proxy.Scheme) != "http" {
+			return false, 0, errors.New("proxy address illegal, only support http://xx:xx")
 		}
 		// 设置网络传输
 		netTransport := &http.Transport{
