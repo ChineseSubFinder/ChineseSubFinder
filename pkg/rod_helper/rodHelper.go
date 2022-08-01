@@ -209,10 +209,14 @@ func NewBrowserFromDocker(httpProxyURL, remoteDockerURL string, remoteAdblockPat
 	return browser, nil
 }
 
-func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration, maxRetryTimes int) (*rod.Page, error) {
+func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration, maxRetryTimes int, debugMode ...bool) (*rod.Page, error) {
 
 	addSleepTime := time.Second * 5
 
+	if len(debugMode) > 0 && debugMode[0] == true {
+		addSleepTime = 0 * time.Second
+	}
+	
 	page, err := newPage(browser)
 	if err != nil {
 		return nil, err
@@ -253,7 +257,7 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 
 func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration, debugMode ...bool) (string, *rod.Page, error) {
 
-	page, err := NewPageNavigate(browser, inputUrl, tt, 2)
+	page, err := NewPageNavigate(browser, inputUrl, tt, 2, debugMode...)
 	if err != nil {
 		return "", nil, err
 	}
@@ -266,7 +270,7 @@ func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration,
 	}
 	// 每次搜索间隔
 	if len(debugMode) > 0 && debugMode[0] == true {
-		time.Sleep(my_util.RandomSecondDuration(2, 5))
+		//time.Sleep(my_util.RandomSecondDuration(0, 1))
 	} else {
 		time.Sleep(my_util.RandomSecondDuration(2, 5))
 	}
