@@ -47,6 +47,10 @@ func GetIMDBInfoFromVideoFile(log *logrus.Logger, videoFPath string, isMovie boo
 	}
 	if len(imdbInfo.Description) <= 0 {
 		// 需要去外网获去补全信息，然后更新本地的信息
+		if imdbInfo.IMDBID != "" && imdbInfo4Video.ImdbId == "" {
+			// 可能本地没有获取到 IMDB ID 信息，那么从上面的 GetIMDBInfoFromVideoNfoInfo 可以从 TMDB ID 获取到 IMDB ID，那么需要传递下去
+			imdbInfo4Video.ImdbId = imdbInfo.IMDBID
+		}
 		t, err := getVideoInfoFromIMDBWeb(imdbInfo4Video, _proxySettings)
 		if err != nil {
 			log.Errorln("getVideoInfoFromIMDBWeb,", imdbInfo4Video.Title, err)
