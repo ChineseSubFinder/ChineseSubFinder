@@ -18,7 +18,7 @@ import (
 func SimulationTest() {
 	// 具体的应用见 subhd 的解析器
 	// 感谢 https://www.bigs3.com/article/gorod-crack-slider-captcha/
-	browser, err := rod_helper.NewBrowser(log_helper.GetLogger4Tester(), "", "", false)
+	browser, err := rod_helper.NewBrowserBase(log_helper.GetLogger4Tester(), "", "", false)
 	if err != nil {
 		println(err.Error())
 		return

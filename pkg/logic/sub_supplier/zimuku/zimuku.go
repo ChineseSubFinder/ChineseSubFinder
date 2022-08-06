@@ -71,7 +71,10 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 func (s *Supplier) CheckAlive() (bool, int64) {
 
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(s.log, true, s.settings, s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+
+	opt := rod_helper.NewBrowserOptions(s.log, true, s.settings)
+	opt.SetPreLoadUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserEx(opt)
 	if err != nil {
 		return false, 0
 	}
@@ -135,7 +138,9 @@ func (s *Supplier) GetSupplierName() string {
 func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(s.log, true, s.settings, s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	opt := rod_helper.NewBrowserOptions(s.log, true, s.settings)
+	opt.SetPreLoadUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserEx(opt)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +161,9 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 
 	var err error
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(s.log, true, s.settings, s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	opt := rod_helper.NewBrowserOptions(s.log, true, s.settings)
+	opt.SetPreLoadUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserEx(opt)
 	if err != nil {
 		return nil, err
 	}

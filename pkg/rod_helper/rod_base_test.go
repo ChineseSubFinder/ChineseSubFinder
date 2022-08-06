@@ -14,7 +14,7 @@ func TestNewBrowser(t *testing.T) {
 	println(bok, bPath)
 	desURL := "https://www.wikipedia.org/"
 	httpProxyURL := ""
-	browser, err := NewBrowser(log_helper.GetLogger4Tester(), "", httpProxyURL, true)
+	browser, err := NewBrowserBase(log_helper.GetLogger4Tester(), "", httpProxyURL, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func TestNewBrowserFromDocker(t *testing.T) {
 	//httpProxyURL := "http://127.0.0.1:10809"
 	//remoteDockerURL := "ws://192.168.50.135:9222"
 	//
-	//browser, err := NewBrowserFromDocker(httpProxyURL, remoteDockerURL)
+	//browser, err := NewBrowserBaseFromDocker(httpProxyURL, remoteDockerURL)
 	//if err != nil {
 	//	t.Fatal(err)
 	//}

@@ -22,29 +22,31 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func NewBrowserEx(log *logrus.Logger, loadAdblock bool, _settings *settings.Settings, preLoadUrl ...string) (*rod.Browser, error) {
+// NewBrowserEx 创建一个 Browser 并且初始化
+func NewBrowserEx(rodOptions *BrowserOptions) (*rod.Browser, error) {
 
-	if _settings.ExperimentalFunction.RemoteChromeSettings.Enable == false {
+	if rodOptions.Settings.ExperimentalFunction.RemoteChromeSettings.Enable == false {
 
 		localChromeFPath := ""
-		if _settings.ExperimentalFunction.LocalChromeSettings.Enabled == true {
-			localChromeFPath = _settings.ExperimentalFunction.LocalChromeSettings.LocalChromeExeFPath
+		if rodOptions.Settings.ExperimentalFunction.LocalChromeSettings.Enabled == true {
+			localChromeFPath = rodOptions.Settings.ExperimentalFunction.LocalChromeSettings.LocalChromeExeFPath
 		}
-		return NewBrowser(log,
+		return NewBrowserBase(rodOptions.Log,
 			localChromeFPath,
-			_settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
-			loadAdblock,
-			preLoadUrl...)
+			rodOptions.Settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
+			rodOptions.LoadAdblock,
+			rodOptions.PreLoadUrl())
 	} else {
-		return NewBrowserFromDocker(_settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
-			_settings.ExperimentalFunction.RemoteChromeSettings.RemoteDockerURL,
-			_settings.ExperimentalFunction.RemoteChromeSettings.RemoteAdblockPath,
-			_settings.ExperimentalFunction.RemoteChromeSettings.ReMoteUserDataDir,
-			loadAdblock, preLoadUrl...)
+		return NewBrowserBaseFromDocker(rodOptions.Settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
+			rodOptions.Settings.ExperimentalFunction.RemoteChromeSettings.RemoteDockerURL,
+			rodOptions.Settings.ExperimentalFunction.RemoteChromeSettings.RemoteAdblockPath,
+			rodOptions.Settings.ExperimentalFunction.RemoteChromeSettings.ReMoteUserDataDir,
+			rodOptions.LoadAdblock,
+			rodOptions.PreLoadUrl())
 	}
 }
 
-func NewBrowser(log *logrus.Logger, localChromeFPath, httpProxyURL string, loadAdblock bool, preLoadUrl ...string) (*rod.Browser, error) {
+func NewBrowserBase(log *logrus.Logger, localChromeFPath, httpProxyURL string, loadAdblock bool, preLoadUrl ...string) (*rod.Browser, error) {
 
 	var err error
 
@@ -147,7 +149,7 @@ func NewBrowser(log *logrus.Logger, localChromeFPath, httpProxyURL string, loadA
 	return browser, nil
 }
 
-func NewBrowserFromDocker(httpProxyURL, remoteDockerURL string, remoteAdblockPath, reMoteUserDataDir string,
+func NewBrowserBaseFromDocker(httpProxyURL, remoteDockerURL string, remoteAdblockPath, reMoteUserDataDir string,
 	loadAdblock bool, preLoadUrl ...string) (*rod.Browser, error) {
 	var browser *rod.Browser
 
@@ -216,7 +218,7 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 	if len(debugMode) > 0 && debugMode[0] == true {
 		addSleepTime = 0 * time.Second
 	}
-	
+
 	page, err := newPage(browser)
 	if err != nil {
 		return nil, err
@@ -287,7 +289,7 @@ func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration,
 
 // ReloadBrowser 提前把浏览器下载好
 func ReloadBrowser(log *logrus.Logger) {
-	newBrowser, err := NewBrowserEx(log, true, settings.GetSettings())
+	newBrowser, err := NewBrowserEx(NewBrowserOptions(log, true, settings.GetSettings()))
 	if err != nil {
 		return
 	}

@@ -1,0 +1,86 @@
+package rod_helper
+
+import (
+	_ "embed"
+	"errors"
+	"strconv"
+
+	"github.com/sirupsen/logrus"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+
+	"github.com/go-rod/rod"
+)
+
+type Browser struct {
+	log            *logrus.Logger
+	rodOptions     *BrowserOptions // 参数
+	multiBrowser   []*rod.Browser  // 如果使用 XrayPoolUrl 做爬虫的时候，需要多个 Browser
+	httpProxyUrls  []string        // XrayPool 中的代理信息
+	socksProxyUrls []string        // XrayPool 中的代理信息
+}
+
+// NewMultiBrowser 面向与爬虫的时候使用 Browser
+func NewMultiBrowser(browserOptions *BrowserOptions) *Browser {
+
+	// 从配置中，判断 XrayPool 是否启动
+	if browserOptions.XrayPoolUrl() == "" {
+		browserOptions.Log.Panic("XrayPoolUrl is empty")
+	}
+	// 尝试从本地的 XrayPoolUrl 获取 代理信息
+	httpClient, err := my_util.NewHttpClient()
+	if err != nil {
+		browserOptions.Log.Panic(errors.New("NewHttpClient error:" + err.Error()))
+	}
+
+	var proxyResult ProxyResult
+	_, err = httpClient.R().
+		SetResult(&proxyResult).
+		Get(httpPrefix +
+			browserOptions.XrayPoolUrl() +
+			":" +
+			browserOptions.XrayPoolPort() +
+			"/v1/proxy_list")
+	if err != nil {
+		browserOptions.Log.Panic(errors.New("Get error:" + err.Error()))
+	}
+
+	if len(proxyResult.SocksPots) == 0 && len(proxyResult.HttpPots) == 0 {
+		browserOptions.Log.Panic("XrayPool Not Started!")
+	}
+	if len(proxyResult.HttpPots) == 0 {
+		browserOptions.Log.Panic("HttpPots is empty, need set xray_pool_config.json xray_open_socks_and_http == true")
+	}
+
+	b := &Browser{
+		log:          browserOptions.Log,
+		rodOptions:   browserOptions,
+		multiBrowser: make([]*rod.Browser, 0),
+	}
+
+	for index, httpPot := range proxyResult.HttpPots {
+		b.httpProxyUrls = append(b.httpProxyUrls, httpPrefix+browserOptions.XrayPoolUrl()+":"+strconv.Itoa(httpPot))
+		b.socksProxyUrls = append(b.socksProxyUrls, socksPrefix+browserOptions.XrayPoolUrl()+":"+strconv.Itoa(proxyResult.SocksPots[index]))
+	}
+
+	for _, httpProxyUrl := range b.httpProxyUrls {
+
+		oneBrowser, err := NewBrowserBase(b.log, "", httpProxyUrl, true)
+		if err != nil {
+			b.log.Panic(errors.New("NewBrowserBase error:" + err.Error()))
+		}
+		b.multiBrowser = append(b.multiBrowser, oneBrowser)
+	}
+
+	return b
+}
+
+type ProxyResult struct {
+	SocksPots []int `json:"socks_pots"`
+	HttpPots  []int `json:"http_pots"`
+}
+
+const (
+	httpPrefix  = "http://"
+	socksPrefix = "socks5://"
+)
