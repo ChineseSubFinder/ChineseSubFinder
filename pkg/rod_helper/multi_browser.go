@@ -53,9 +53,6 @@ func NewMultiBrowser(browserOptions *BrowserOptions) *Browser {
 	if len(proxyResult.SocksPots) == 0 && len(proxyResult.HttpPots) == 0 {
 		browserOptions.Log.Panic("XrayPool Not Started!")
 	}
-	if len(proxyResult.HttpPots) == 0 {
-		browserOptions.Log.Panic("HttpPots is empty, need set xray_pool_config.json xray_open_socks_and_http == true")
-	}
 
 	b := &Browser{
 		log:          browserOptions.Log,
