@@ -97,6 +97,13 @@ func (b *Browser) GetOneBrowser() *rod.Browser {
 	return b.multiBrowser[b.browserIndex]
 }
 
+func (b *Browser) Close() {
+
+	for _, oneBrowser := range b.multiBrowser {
+		oneBrowser.Close()
+	}
+}
+
 type ProxyResult struct {
 	LBPort    int   `json:"lb_port"`
 	SocksPots []int `json:"socks_pots"`
