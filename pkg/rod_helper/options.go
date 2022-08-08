@@ -26,8 +26,8 @@ func (r *BrowserOptions) PreLoadUrl() string {
 	return r.preLoadUrl
 }
 
-// SetXrayUrl 127.0.0.1
-func (r *BrowserOptions) SetXrayUrl(xrayUrl string) {
+// SetXrayPoolUrl 127.0.0.1
+func (r *BrowserOptions) SetXrayPoolUrl(xrayUrl string) {
 	r.xrayPoolUrl = xrayUrl
 }
 
@@ -36,8 +36,8 @@ func (r *BrowserOptions) XrayPoolUrl() string {
 	return r.xrayPoolUrl
 }
 
-// SetXrayPort 19035
-func (r *BrowserOptions) SetXrayPort(xrayPort string) {
+// SetXrayPoolPort 19035
+func (r *BrowserOptions) SetXrayPoolPort(xrayPort string) {
 	r.xrayPoolPort = xrayPort
 }
 

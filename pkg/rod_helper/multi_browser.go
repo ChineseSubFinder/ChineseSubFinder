@@ -3,6 +3,7 @@ package rod_helper
 import (
 	_ "embed"
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/sirupsen/logrus"
@@ -15,7 +16,8 @@ import (
 type Browser struct {
 	log            *logrus.Logger
 	rodOptions     *BrowserOptions // 参数
-	multiBrowser   []*rod.Browser  // 如果使用 XrayPoolUrl 做爬虫的时候，需要多个 Browser
+	multiBrowser   []*rod.Browser  // 如果使用 XrayPoolUrl 做爬虫的时候
+	LBPort         int             //负载均衡 http 端口
 	httpProxyUrls  []string        // XrayPool 中的代理信息
 	socksProxyUrls []string        // XrayPool 中的代理信息
 }
@@ -62,10 +64,12 @@ func NewMultiBrowser(browserOptions *BrowserOptions) *Browser {
 		b.httpProxyUrls = append(b.httpProxyUrls, httpPrefix+browserOptions.XrayPoolUrl()+":"+strconv.Itoa(httpPot))
 		b.socksProxyUrls = append(b.socksProxyUrls, socksPrefix+browserOptions.XrayPoolUrl()+":"+strconv.Itoa(proxyResult.SocksPots[index]))
 	}
+	b.LBPort = proxyResult.LBPort
 
-	for _, httpProxyUrl := range b.httpProxyUrls {
+	for i := 0; i < browserOptions.BrowserInstanceCount(); i++ {
 
-		oneBrowser, err := NewBrowserBase(b.log, "", httpProxyUrl, true)
+		lbHttpUrl := fmt.Sprintf(httpPrefix + browserOptions.XrayPoolUrl() + ":" + strconv.Itoa(b.LBPort))
+		oneBrowser, err := NewBrowserBase(b.log, "", lbHttpUrl, true)
 		if err != nil {
 			b.log.Panic(errors.New("NewBrowserBase error:" + err.Error()))
 		}
@@ -76,6 +80,7 @@ func NewMultiBrowser(browserOptions *BrowserOptions) *Browser {
 }
 
 type ProxyResult struct {
+	LBPort    int   `json:"lb_port"`
 	SocksPots []int `json:"socks_pots"`
 	HttpPots  []int `json:"http_pots"`
 }
