@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 
@@ -16,7 +17,9 @@ import (
 type Browser struct {
 	log            *logrus.Logger
 	rodOptions     *BrowserOptions // 参数
-	multiBrowser   []*rod.Browser  // 如果使用 XrayPoolUrl 做爬虫的时候
+	multiBrowser   []*rod.Browser  // 多浏览器实例
+	browserIndex   int             // 当前使用的浏览器的索引
+	browserLocker  sync.Mutex      // 浏览器的锁
 	LBPort         int             //负载均衡 http 端口
 	httpProxyUrls  []string        // XrayPool 中的代理信息
 	socksProxyUrls []string        // XrayPool 中的代理信息
@@ -77,6 +80,21 @@ func NewMultiBrowser(browserOptions *BrowserOptions) *Browser {
 	}
 
 	return b
+}
+
+func (b *Browser) GetOneBrowser() *rod.Browser {
+
+	b.browserLocker.Lock()
+	defer func() {
+		b.browserIndex++
+		b.browserLocker.Unlock()
+	}()
+
+	if b.browserIndex >= len(b.multiBrowser) {
+		b.browserIndex = 0
+	}
+
+	return b.multiBrowser[b.browserIndex]
 }
 
 type ProxyResult struct {
