@@ -568,6 +568,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 		if found == false {
 			v.processLocker.Unlock()
 			// 没有找到对应的 URL
+			v.log.Warningln("scrabbleUpVideoListNormal.movieProcess.processLocker.Unlock", oneMovieDirRootPath)
 			return nil
 		}
 		v.processLocker.Unlock()
@@ -607,6 +608,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 		oneMovieDirRootPath := movieDirRootPath.(string)
 		for i, oneMovieFPath := range moviesFPath.([]string) {
 
+			v.log.Debugln("scrabbleUpVideoListNormal.movieDirMap.Any", oneMovieDirRootPath, oneMovieFPath)
 			// 放入队列
 			err := v.taskControl.Invoke(&task_control.TaskData{
 				Index: i,
@@ -617,7 +619,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 				},
 			})
 			if err != nil {
-				v.log.Errorln(err)
+				v.log.Errorln("scrabbleUpVideoListNormal.normal.MoviesDirMap.taskControl.Invoke", err)
 				return true
 			}
 		}
@@ -640,6 +642,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 		if found == false {
 			v.processLocker.Unlock()
 			// 没有找到对应的 URL
+			v.log.Warningln("scrabbleUpVideoListNormal.seriesProcess.processLocker.Unlock", oneSeriesRootPathName)
 			return nil
 		}
 		v.processLocker.Unlock()
@@ -651,6 +654,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 			return err
 		}
 		if bNeedDlSub == false {
+			v.log.Debugln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub bNeedDlSub == false", oneSeriesRootPathName)
 			return nil
 		}
 		seriesDirRootFUrl := strings.ReplaceAll(oneSeriesRootDir, oneSeriesRootPathName, desUrl)
@@ -699,6 +703,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 
 		oneSeriesRootPathName := seriesRootPathName.(string)
 		for i, oneSeriesRootDir := range seriesNames.([]string) {
+
+			v.log.Debugln("scrabbleUpVideoListNormal.seriesDirMap.Any", oneSeriesRootPathName, oneSeriesRootDir)
 			// 放入队列
 			err := v.taskControl.Invoke(&task_control.TaskData{
 				Index: i,
@@ -709,7 +715,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 				},
 			})
 			if err != nil {
-				v.log.Errorln(err)
+				v.log.Errorln("scrabbleUpVideoListNormal.normal.SeriesDirMap.taskControl.Invoke", err)
 				return true
 			}
 		}
@@ -751,6 +757,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 				if found == false {
 					v.processLocker.Unlock()
 					// 没有找到对应的 URL
+					v.log.Warningln("scrabbleUpVideoListEmby.movieProcess.pathUrlMap", oneMovieDirPath.Path)
 					return nil
 				}
 				v.processLocker.Unlock()
@@ -793,6 +800,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 	for i, oneMovieMixInfo := range emby.MovieSubNeedDlEmbyMixInfoList {
 
 		if oneMovieMixInfo.PhysicalVideoFileFullPath == "" {
+			v.log.Warningln("oneMovieMixInfo.PhysicalVideoFileFullPath is empty")
 			continue
 		}
 
@@ -805,7 +813,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 			},
 		})
 		if err != nil {
-			v.log.Errorln(err)
+			v.log.Errorln("scrabbleUpVideoListEmby.movieProcess.taskControl.Invoke", err)
 			break
 		}
 	}
@@ -829,6 +837,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 				if found == false {
 					v.processLocker.Unlock()
 					// 没有找到对应的 URL
+					v.log.Warningln("scrabbleUpVideoListEmby.seriesProcess.pathUrlMap", oneSeriesDirPath.Path)
 					continue
 				}
 				v.processLocker.Unlock()
@@ -882,6 +891,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 		for _, oneEpsMixInfo := range oneSeriesMixInfo {
 
 			if oneEpsMixInfo.PhysicalVideoFileFullPath == "" {
+				v.log.Warningln("oneEpsMixInfo.PhysicalVideoFileFullPath is empty")
 				continue
 			}
 			// 首先需要找到对应的最长的视频媒体库路径，x://ABC  x://ABC/DEF
@@ -891,6 +901,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 				desUrl, found := pathUrlMap[oneSeriesDirPath.Path]
 				if found == false {
 					// 没有找到对应的 URL
+					v.log.Warningln("scrabbleUpVideoListEmby.seriesProcess.pathUrlMap", oneSeriesDirPath.Path)
 					continue
 				}
 				dirRootUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalSeriesRootDir, oneSeriesDirPath.Path, desUrl)
@@ -911,6 +922,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 
 		if oneSeasonInfo.Name == "" {
 			// 说明找了一圈没有找到匹配的，那么后续的也没必要继续
+			v.log.Warningln("oneSeasonInfo.Name is empty")
 			continue
 		}
 
@@ -918,6 +930,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 		for i, oneEpsMixInfo := range oneSeriesMixInfo {
 
 			if oneEpsMixInfo.PhysicalVideoFileFullPath == "" {
+				v.log.Warningln("oneEpsMixInfo.PhysicalVideoFileFullPath is empty")
 				continue
 			}
 
@@ -931,7 +944,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 				},
 			})
 			if err != nil {
-				v.log.Errorln(err)
+				v.log.Errorln("scrabbleUpVideoListEmby.seriesProcess.taskControl.Invoke", err)
 				break
 			}
 		}

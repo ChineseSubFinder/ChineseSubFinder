@@ -79,7 +79,27 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 
 		pathUrlMap := cb.GetPathUrlMap()
 
+		cb.log.Debugln("---------------------------------")
+		cb.log.Debugln("GetPathUrlMap")
+		for s, s2 := range pathUrlMap {
+			cb.log.Debugln("pathUrlMap", s, s2)
+		}
+		cb.log.Debugln("---------------------------------")
+
 		MovieInfos, SeasonInfos := cb.videoScanAndRefreshHelper.ScrabbleUpVideoList(scanVideoResult, pathUrlMap)
+
+		cb.log.Debugln("---------------------------------")
+		for i, i2 := range MovieInfos {
+			cb.log.Debugln("MovieInfos", i, i2.VideoFPath)
+		}
+		cb.log.Debugln("---------------------------------")
+		for i, seasonInfo := range SeasonInfos {
+			cb.log.Debugln("SeasonInfos.RootDirPath", i, seasonInfo.RootDirPath)
+			for i2, i3 := range seasonInfo.OneVideoInfos {
+				cb.log.Debugln("SeasonInfos.SeasonInfos", i2, i3.VideoFPath)
+			}
+		}
+		cb.log.Debugln("---------------------------------")
 
 		// 缓存视频列表
 		cb.cronHelper.Downloader.SetMovieAndSeasonInfo(MovieInfos, SeasonInfos)
