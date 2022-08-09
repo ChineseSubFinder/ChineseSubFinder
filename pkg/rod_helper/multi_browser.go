@@ -70,7 +70,7 @@ func NewMultiBrowser(browserOptions *BrowserOptions) *Browser {
 	b.LbHttpUrl = fmt.Sprintf(httpPrefix + browserOptions.XrayPoolUrl() + ":" + strconv.Itoa(b.LBPort))
 	for i := 0; i < browserOptions.BrowserInstanceCount(); i++ {
 
-		oneBrowser, err := NewBrowserBase(b.log, "", b.LbHttpUrl, true)
+		oneBrowser, err := NewBrowserBase(b.log, "", b.LbHttpUrl, browserOptions.LoadAdblock)
 		if err != nil {
 			b.log.Panic(errors.New("NewBrowserBase error:" + err.Error()))
 		}
