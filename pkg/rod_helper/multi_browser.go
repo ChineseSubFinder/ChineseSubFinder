@@ -31,12 +31,18 @@ func NewMultiBrowser(browserOptions *BrowserOptions) *Browser {
 
 	// 从配置中，判断 XrayPool 是否启动
 	if browserOptions.XrayPoolUrl() == "" {
-		browserOptions.Log.Panic("XrayPoolUrl is empty")
+		browserOptions.Log.Errorf("XrayPoolUrl is empty")
+		return nil
+	}
+	if browserOptions.XrayPoolPort() == "" {
+		browserOptions.Log.Errorf("XrayPoolPort is empty")
+		return nil
 	}
 	// 尝试从本地的 XrayPoolUrl 获取 代理信息
 	httpClient, err := my_util.NewHttpClient()
 	if err != nil {
-		browserOptions.Log.Panic(errors.New("NewHttpClient error:" + err.Error()))
+		browserOptions.Log.Error(errors.New("NewHttpClient error:" + err.Error()))
+		return nil
 	}
 
 	var proxyResult ProxyResult
@@ -48,11 +54,13 @@ func NewMultiBrowser(browserOptions *BrowserOptions) *Browser {
 			browserOptions.XrayPoolPort() +
 			"/v1/proxy_list")
 	if err != nil {
-		browserOptions.Log.Panic(errors.New("Get error:" + err.Error()))
+		browserOptions.Log.Error(errors.New("Get error:" + err.Error()))
+		return nil
 	}
 
-	if len(proxyResult.SocksPots) == 0 && len(proxyResult.HttpPots) == 0 {
-		browserOptions.Log.Panic("XrayPool Not Started!")
+	if proxyResult.Status == "stopped" || (len(proxyResult.SocksPots) == 0 && len(proxyResult.HttpPots) == 0) {
+		browserOptions.Log.Error("XrayPool Not Started!")
+		return nil
 	}
 
 	b := &Browser{
@@ -72,7 +80,8 @@ func NewMultiBrowser(browserOptions *BrowserOptions) *Browser {
 
 		oneBrowser, err := NewBrowserBase(b.log, "", b.LbHttpUrl, browserOptions.LoadAdblock)
 		if err != nil {
-			b.log.Panic(errors.New("NewBrowserBase error:" + err.Error()))
+			b.log.Error(errors.New("NewBrowserBase error:" + err.Error()))
+			return nil
 		}
 		b.multiBrowser = append(b.multiBrowser, oneBrowser)
 	}
@@ -103,9 +112,10 @@ func (b *Browser) Close() {
 }
 
 type ProxyResult struct {
-	LBPort    int   `json:"lb_port"`
-	SocksPots []int `json:"socks_pots"`
-	HttpPots  []int `json:"http_pots"`
+	Status    string `json:"status"`
+	LBPort    int    `json:"lb_port"`
+	SocksPots []int  `json:"socks_pots"`
+	HttpPots  []int  `json:"http_pots"`
 }
 
 const (
