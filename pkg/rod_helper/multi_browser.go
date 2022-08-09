@@ -20,6 +20,7 @@ type Browser struct {
 	multiBrowser   []*rod.Browser  // 多浏览器实例
 	browserIndex   int             // 当前使用的浏览器的索引
 	browserLocker  sync.Mutex      // 浏览器的锁
+	LbHttpUrl      string          // 负载均衡的 http proxy url
 	LBPort         int             //负载均衡 http 端口
 	httpProxyUrls  []string        // XrayPool 中的代理信息
 	socksProxyUrls []string        // XrayPool 中的代理信息
@@ -66,10 +67,10 @@ func NewMultiBrowser(browserOptions *BrowserOptions) *Browser {
 	}
 	b.LBPort = proxyResult.LBPort
 
+	b.LbHttpUrl = fmt.Sprintf(httpPrefix + browserOptions.XrayPoolUrl() + ":" + strconv.Itoa(b.LBPort))
 	for i := 0; i < browserOptions.BrowserInstanceCount(); i++ {
 
-		lbHttpUrl := fmt.Sprintf(httpPrefix + browserOptions.XrayPoolUrl() + ":" + strconv.Itoa(b.LBPort))
-		oneBrowser, err := NewBrowserBase(b.log, "", lbHttpUrl, true)
+		oneBrowser, err := NewBrowserBase(b.log, "", b.LbHttpUrl, true)
 		if err != nil {
 			b.log.Panic(errors.New("NewBrowserBase error:" + err.Error()))
 		}

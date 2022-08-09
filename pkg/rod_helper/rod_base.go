@@ -2,8 +2,11 @@ package rod_helper
 
 import (
 	"context"
+	"crypto/tls"
 	_ "embed"
 	"errors"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -255,6 +258,53 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 		page.Close()
 	}
 	return nil, err
+}
+
+func NewPageNavigateWithProxy(browser *rod.Browser, proxyUrl string, desURL string, timeOut time.Duration) (*rod.Page, error) {
+
+	page, err := newPage(browser)
+	if err != nil {
+		return nil, err
+	}
+
+	router := page.HijackRequests()
+	defer router.Stop()
+
+	router.MustAdd("*", func(ctx *rod.Hijack) {
+		px, _ := url.Parse(proxyUrl)
+		err = ctx.LoadResponse(&http.Client{
+			Transport: &http.Transport{
+				Proxy:           http.ProxyURL(px),
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		}, true)
+		if err != nil {
+			return
+		}
+	})
+	go router.Run()
+
+	err = page.SetUserAgent(&proto.NetworkSetUserAgentOverride{
+		UserAgent: random_useragent.RandomUserAgent(true),
+	})
+	if err != nil {
+		if page != nil {
+			page.Close()
+		}
+		return nil, err
+	}
+	page = page.Timeout(timeOut)
+	err = rod.Try(func() {
+		page.MustNavigate(desURL).MustWaitLoad()
+	})
+	if err != nil {
+		if page != nil {
+			page.Close()
+		}
+		return nil, err
+	}
+
+	return page, nil
 }
 
 func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration, debugMode ...bool) (string, *rod.Page, error) {
