@@ -58,7 +58,7 @@ func NewMultiBrowser(browserOptions *BrowserOptions) *Browser {
 		return nil
 	}
 
-	if proxyResult.Status == "stopped" || (len(proxyResult.SocksPots) == 0 && len(proxyResult.HttpPots) == 0) {
+	if proxyResult.Status == "stopped" || len(proxyResult.OpenResultList) == 0 {
 		browserOptions.Log.Error("XrayPool Not Started!")
 		return nil
 	}
@@ -69,11 +69,11 @@ func NewMultiBrowser(browserOptions *BrowserOptions) *Browser {
 		multiBrowser: make([]*rod.Browser, 0),
 	}
 
-	for index, httpPot := range proxyResult.HttpPots {
-		b.httpProxyUrls = append(b.httpProxyUrls, httpPrefix+browserOptions.XrayPoolUrl()+":"+strconv.Itoa(httpPot))
-		b.socksProxyUrls = append(b.socksProxyUrls, socksPrefix+browserOptions.XrayPoolUrl()+":"+strconv.Itoa(proxyResult.SocksPots[index]))
+	for _, result := range proxyResult.OpenResultList {
+		b.httpProxyUrls = append(b.httpProxyUrls, httpPrefix+browserOptions.XrayPoolUrl()+":"+strconv.Itoa(result.HttpPort))
+		b.socksProxyUrls = append(b.socksProxyUrls, socksPrefix+browserOptions.XrayPoolUrl()+":"+strconv.Itoa(result.SocksPort))
 	}
-	b.LBPort = proxyResult.LBPort
+	b.LBPort = proxyResult.LbPort
 
 	b.LbHttpUrl = fmt.Sprintf(httpPrefix + browserOptions.XrayPoolUrl() + ":" + strconv.Itoa(b.LBPort))
 	for i := 0; i < browserOptions.BrowserInstanceCount(); i++ {
@@ -112,10 +112,14 @@ func (b *Browser) Close() {
 }
 
 type ProxyResult struct {
-	Status    string `json:"status"`
-	LBPort    int    `json:"lb_port"`
-	SocksPots []int  `json:"socks_pots"`
-	HttpPots  []int  `json:"http_pots"`
+	Status         string `json:"status"`
+	LbPort         int    `json:"lb_port"`
+	OpenResultList []struct {
+		Name       string `json:"name"`
+		ProtoModel string `json:"proto_model"`
+		SocksPort  int    `json:"socks_port"`
+		HttpPort   int    `json:"http_port"`
+	} `json:"open_result_list"`
 }
 
 const (
