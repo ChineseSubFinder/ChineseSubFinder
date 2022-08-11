@@ -109,6 +109,8 @@ func (b *Browser) Close() {
 	for _, oneBrowser := range b.multiBrowser {
 		oneBrowser.Close()
 	}
+
+	b.multiBrowser = make([]*rod.Browser, 0)
 }
 
 type ProxyResult struct {
