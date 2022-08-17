@@ -31,7 +31,7 @@ func TestNewBrowser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	println(status, responseUrl)
+	println("Status:", status, "ResponseUrl:", responseUrl)
 
 	page, err = browser.Page(proto.TargetCreateTarget{URL: desURL})
 	if err != nil {

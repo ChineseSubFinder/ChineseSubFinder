@@ -13,6 +13,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/regex_things"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
@@ -268,12 +270,20 @@ func PageNavigate(page *rod.Page, desURL string, timeOut time.Duration) (*rod.Pa
 	Status := e.Response.Status
 	ResponseURL := e.Response.URL
 
-	if Status != 200 {
-		if page != nil {
-			page.Close()
+	if Status >= 400 {
+		publicIP := "xx.xx.xx.xx"
+		publicIP, err = GetPublicIP(page, timeOut, nil)
+		if err != nil {
+			return nil, 0, "", errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
 		}
-		return nil, Status, ResponseURL, errors.New(fmt.Sprintf("status code is not 200, is %d, ResponseURL is %v", Status, ResponseURL))
+		if page != nil {
+			_ = page.Close()
+		}
+		return nil, Status, ResponseURL, errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
 	}
+
+	// 出去前把 TimeOUt 取消了
+	page = page.CancelTimeout()
 
 	return page, Status, ResponseURL, nil
 }
@@ -324,14 +334,59 @@ func PageNavigateWithProxy(page *rod.Page, proxyUrl string, desURL string, timeO
 	Status := e.Response.Status
 	ResponseURL := e.Response.URL
 
-	if Status != 200 {
-		if page != nil {
-			page.Close()
+	if Status >= 400 {
+
+		publicIP := "xx.xx.xx.xx"
+		publicIP, err = GetPublicIP(page, timeOut, nil)
+		if err != nil {
+			return nil, 0, "", errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
 		}
-		return nil, Status, ResponseURL, errors.New(fmt.Sprintf("status code is not 200, is %d, ResponseURL is %v", Status, ResponseURL))
+		if page != nil {
+			_ = page.Close()
+		}
+		return nil, Status, ResponseURL, errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
 	}
 
+	// 出去前把 TimeOUt 取消了
+	page = page.CancelTimeout()
+
 	return page, Status, ResponseURL, nil
+}
+
+func GetPublicIP(page *rod.Page, timeOut time.Duration, customDectIPSites []string) (string, error) {
+	defPublicIPSites := []string{
+		"https://myip.biturl.top/",
+		"https://ip4.seeip.org/",
+		"https://ipecho.net/plain",
+		"https://api-ipv4.ip.sb/ip",
+		"https://api.ipify.org/",
+		"http://myexternalip.com/raw",
+	}
+
+	customPublicIPSites := make([]string, 0)
+	if customDectIPSites != nil {
+		customPublicIPSites = append(customPublicIPSites, customDectIPSites...)
+	} else {
+		customPublicIPSites = append(customPublicIPSites, defPublicIPSites...)
+	}
+
+	for _, publicIPSite := range customPublicIPSites {
+
+		publicIPPage, _, _, err := PageNavigate(page, publicIPSite, timeOut)
+		if err != nil {
+			return "", err
+		}
+		html, err := publicIPPage.HTML()
+		if err != nil {
+			return "", err
+		}
+		matcheds := regex_things.ReMatchIP.FindAllString(html, -1)
+		if html != "" && matcheds != nil && len(matcheds) >= 1 {
+			return matcheds[0], nil
+		}
+	}
+
+	return "", errors.New("get public ip failed")
 }
 
 func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration, debugMode ...bool) (string, *rod.Page, error) {
