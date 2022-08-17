@@ -266,10 +266,11 @@ func PageNavigate(page *rod.Page, desURL string, timeOut time.Duration) (*rod.Pa
 		}
 		return nil, 0, "", err
 	}
+	// 出去前把 TimeOUt 取消了
+	page = page.CancelTimeout()
 
 	Status := e.Response.Status
 	ResponseURL := e.Response.URL
-
 	if Status >= 400 {
 		publicIP := "xx.xx.xx.xx"
 		publicIP, err = GetPublicIP(page, timeOut, nil)
@@ -281,10 +282,6 @@ func PageNavigate(page *rod.Page, desURL string, timeOut time.Duration) (*rod.Pa
 		}
 		return nil, Status, ResponseURL, errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
 	}
-
-	// 出去前把 TimeOUt 取消了
-	page = page.CancelTimeout()
-
 	return page, Status, ResponseURL, nil
 }
 
@@ -331,6 +328,9 @@ func PageNavigateWithProxy(page *rod.Page, proxyUrl string, desURL string, timeO
 		return nil, 0, "", err
 	}
 
+	// 出去前把 TimeOUt 取消了
+	page = page.CancelTimeout()
+
 	Status := e.Response.Status
 	ResponseURL := e.Response.URL
 
@@ -346,10 +346,7 @@ func PageNavigateWithProxy(page *rod.Page, proxyUrl string, desURL string, timeO
 		}
 		return nil, Status, ResponseURL, errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
 	}
-
-	// 出去前把 TimeOUt 取消了
-	page = page.CancelTimeout()
-
+	
 	return page, Status, ResponseURL, nil
 }
 
