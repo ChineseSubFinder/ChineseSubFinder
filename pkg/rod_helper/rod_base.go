@@ -307,6 +307,72 @@ func NewPageNavigateWithProxy(browser *rod.Browser, proxyUrl string, desURL stri
 	return page, nil
 }
 
+func PageNavigate(page *rod.Page, desURL string, timeOut time.Duration) (*rod.Page, error) {
+
+	err := page.SetUserAgent(&proto.NetworkSetUserAgentOverride{
+		UserAgent: random_useragent.RandomUserAgent(true),
+	})
+	if err != nil {
+		if page != nil {
+			page.Close()
+		}
+		return nil, err
+	}
+	page = page.Timeout(timeOut)
+	err = rod.Try(func() {
+		page.MustNavigate(desURL).MustWaitLoad()
+	})
+	if err != nil {
+		if page != nil {
+			page.Close()
+		}
+		return nil, err
+	}
+	return page, err
+}
+
+func PageNavigateWithProxy(page *rod.Page, proxyUrl string, desURL string, timeOut time.Duration) (*rod.Page, error) {
+
+	router := page.HijackRequests()
+	defer router.Stop()
+
+	router.MustAdd("*", func(ctx *rod.Hijack) {
+		px, _ := url.Parse(proxyUrl)
+		err := ctx.LoadResponse(&http.Client{
+			Transport: &http.Transport{
+				Proxy:           http.ProxyURL(px),
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		}, true)
+		if err != nil {
+			return
+		}
+	})
+	go router.Run()
+
+	err := page.SetUserAgent(&proto.NetworkSetUserAgentOverride{
+		UserAgent: random_useragent.RandomUserAgent(true),
+	})
+	if err != nil {
+		if page != nil {
+			page.Close()
+		}
+		return nil, err
+	}
+	page = page.Timeout(timeOut)
+	err = rod.Try(func() {
+		page.MustNavigate(desURL).MustWaitLoad()
+	})
+	if err != nil {
+		if page != nil {
+			page.Close()
+		}
+		return nil, err
+	}
+
+	return page, nil
+}
+
 func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration, debugMode ...bool) (string, *rod.Page, error) {
 
 	page, err := NewPageNavigate(browser, inputUrl, tt, 2, debugMode...)
