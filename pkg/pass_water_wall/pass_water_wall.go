@@ -26,7 +26,7 @@ func SimulationTest() {
 	defer func() {
 		_ = browser.Close()
 	}()
-	page, err := rod_helper.NewPageNavigate(browser, "https://007.qq.com/online.html", 10*time.Second, 5)
+	page, err := rod_helper.NewPageNavigate(browser, "https://007.qq.com/online.html", 10*time.Second)
 	if err != nil {
 		println(err.Error())
 		return

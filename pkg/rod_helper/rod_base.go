@@ -1,10 +1,10 @@
 package rod_helper
 
 import (
-	"context"
 	"crypto/tls"
 	_ "embed"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -214,7 +214,7 @@ func NewBrowserBaseFromDocker(httpProxyURL, remoteDockerURL string, remoteAdbloc
 	return browser, nil
 }
 
-func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration, maxRetryTimes int, debugMode ...bool) (*rod.Page, error) {
+func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration, debugMode ...bool) (*rod.Page, int, string, error) {
 
 	addSleepTime := time.Second * 5
 
@@ -224,90 +224,23 @@ func NewPageNavigate(browser *rod.Browser, desURL string, timeOut time.Duration,
 
 	page, err := newPage(browser)
 	if err != nil {
-		return nil, err
+		return nil, 0, "", err
 	}
-	err = page.SetUserAgent(&proto.NetworkSetUserAgentOverride{
-		UserAgent: random_useragent.RandomUserAgent(true),
-	})
-	if err != nil {
-		if page != nil {
-			page.Close()
-		}
-		return nil, err
-	}
-	page = page.Timeout(timeOut + addSleepTime)
-	nowRetryTimes := 0
-	for nowRetryTimes <= maxRetryTimes {
-		err = rod.Try(func() {
-			page.MustNavigate(desURL).MustWaitLoad()
-			time.Sleep(addSleepTime)
-			nowRetryTimes++
-		})
-		if errors.Is(err, context.DeadlineExceeded) {
-			// 超时
-			if page != nil {
-				page.Close()
-			}
-			return nil, err
-		} else if err == nil {
-			// 没有问题
-			return page, nil
-		}
-	}
-	if page != nil {
-		page.Close()
-	}
-	return nil, err
+
+	return PageNavigate(page, desURL, timeOut+addSleepTime)
 }
 
-func NewPageNavigateWithProxy(browser *rod.Browser, proxyUrl string, desURL string, timeOut time.Duration) (*rod.Page, error) {
+func NewPageNavigateWithProxy(browser *rod.Browser, proxyUrl string, desURL string, timeOut time.Duration) (*rod.Page, int, string, error) {
 
 	page, err := newPage(browser)
 	if err != nil {
-		return nil, err
+		return nil, 0, "", err
 	}
 
-	router := page.HijackRequests()
-	defer router.Stop()
-
-	router.MustAdd("*", func(ctx *rod.Hijack) {
-		px, _ := url.Parse(proxyUrl)
-		err = ctx.LoadResponse(&http.Client{
-			Transport: &http.Transport{
-				Proxy:           http.ProxyURL(px),
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
-		}, true)
-		if err != nil {
-			return
-		}
-	})
-	go router.Run()
-
-	err = page.SetUserAgent(&proto.NetworkSetUserAgentOverride{
-		UserAgent: random_useragent.RandomUserAgent(true),
-	})
-	if err != nil {
-		if page != nil {
-			page.Close()
-		}
-		return nil, err
-	}
-	page = page.Timeout(timeOut)
-	err = rod.Try(func() {
-		page.MustNavigate(desURL).MustWaitLoad()
-	})
-	if err != nil {
-		if page != nil {
-			page.Close()
-		}
-		return nil, err
-	}
-
-	return page, nil
+	return PageNavigateWithProxy(page, proxyUrl, desURL, timeOut)
 }
 
-func PageNavigate(page *rod.Page, desURL string, timeOut time.Duration) (*rod.Page, error) {
+func PageNavigate(page *rod.Page, desURL string, timeOut time.Duration) (*rod.Page, int, string, error) {
 
 	err := page.SetUserAgent(&proto.NetworkSetUserAgentOverride{
 		UserAgent: random_useragent.RandomUserAgent(true),
@@ -316,22 +249,36 @@ func PageNavigate(page *rod.Page, desURL string, timeOut time.Duration) (*rod.Pa
 		if page != nil {
 			page.Close()
 		}
-		return nil, err
+		return nil, 0, "", err
 	}
+	var e proto.NetworkResponseReceived
+	wait := page.WaitEvent(&e)
 	page = page.Timeout(timeOut)
 	err = rod.Try(func() {
-		page.MustNavigate(desURL).MustWaitLoad()
+		page.MustNavigate(desURL)
+		wait()
 	})
 	if err != nil {
 		if page != nil {
 			page.Close()
 		}
-		return nil, err
+		return nil, 0, "", err
 	}
-	return page, err
+
+	Status := e.Response.Status
+	ResponseURL := e.Response.URL
+
+	if Status != 200 {
+		if page != nil {
+			page.Close()
+		}
+		return nil, Status, ResponseURL, errors.New(fmt.Sprintf("status code is not 200, is %d, ResponseURL is %v", Status, ResponseURL))
+	}
+
+	return page, Status, ResponseURL, nil
 }
 
-func PageNavigateWithProxy(page *rod.Page, proxyUrl string, desURL string, timeOut time.Duration) (*rod.Page, error) {
+func PageNavigateWithProxy(page *rod.Page, proxyUrl string, desURL string, timeOut time.Duration) (*rod.Page, int, string, error) {
 
 	router := page.HijackRequests()
 	defer router.Stop()
@@ -357,25 +304,39 @@ func PageNavigateWithProxy(page *rod.Page, proxyUrl string, desURL string, timeO
 		if page != nil {
 			page.Close()
 		}
-		return nil, err
+		return nil, 0, "", err
 	}
+
+	var e proto.NetworkResponseReceived
+	wait := page.WaitEvent(&e)
 	page = page.Timeout(timeOut)
 	err = rod.Try(func() {
-		page.MustNavigate(desURL).MustWaitLoad()
+		page.MustNavigate(desURL)
+		wait()
 	})
 	if err != nil {
 		if page != nil {
 			page.Close()
 		}
-		return nil, err
+		return nil, 0, "", err
 	}
 
-	return page, nil
+	Status := e.Response.Status
+	ResponseURL := e.Response.URL
+
+	if Status != 200 {
+		if page != nil {
+			page.Close()
+		}
+		return nil, Status, ResponseURL, errors.New(fmt.Sprintf("status code is not 200, is %d, ResponseURL is %v", Status, ResponseURL))
+	}
+
+	return page, Status, ResponseURL, nil
 }
 
 func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration, debugMode ...bool) (string, *rod.Page, error) {
 
-	page, err := NewPageNavigate(browser, inputUrl, tt, 2, debugMode...)
+	page, _, _, err := NewPageNavigate(browser, inputUrl, tt, debugMode...)
 	if err != nil {
 		return "", nil, err
 	}
@@ -412,7 +373,7 @@ func ReloadBrowser(log *logrus.Logger) {
 	defer func() {
 		_ = newBrowser.Close()
 	}()
-	page, err := NewPageNavigate(newBrowser, "https://www.baidu.com", 30*time.Second, 5)
+	page, _, _, err := NewPageNavigate(newBrowser, "https://www.baidu.com", 30*time.Second)
 	if err != nil {
 		return
 	}

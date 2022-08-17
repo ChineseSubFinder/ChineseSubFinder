@@ -2,6 +2,7 @@ package rod_helper
 
 import (
 	"testing"
+	"time"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/go-rod/rod/lib/launcher"
@@ -12,8 +13,8 @@ func TestNewBrowser(t *testing.T) {
 
 	bPath, bok := launcher.LookPath()
 	println(bok, bPath)
-	desURL := "https://www.wikipedia.org/"
-	httpProxyURL := ""
+	desURL := "https://google.com"
+	httpProxyURL := "http://127.0.0.1:63204"
 	browser, err := NewBrowserBase(log_helper.GetLogger4Tester(), "", httpProxyURL, true)
 	if err != nil {
 		t.Fatal(err)
@@ -21,7 +22,18 @@ func TestNewBrowser(t *testing.T) {
 	defer func() {
 		_ = browser.Close()
 	}()
-	page, err := browser.Page(proto.TargetCreateTarget{URL: desURL})
+
+	page, status, responseUrl, err := NewPageNavigateWithProxy(browser, httpProxyURL, desURL, 10*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	println(status, responseUrl)
+
+	page, err = browser.Page(proto.TargetCreateTarget{URL: desURL})
 	if err != nil {
 		t.Fatal(err)
 	}

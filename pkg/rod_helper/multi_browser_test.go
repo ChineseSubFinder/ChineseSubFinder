@@ -16,7 +16,7 @@ func TestNewMultiBrowser(t *testing.T) {
 	b := NewMultiBrowser(browserOptions)
 
 	for i := 0; i < 5; i++ {
-		page, err := NewPageNavigateWithProxy(b.GetOneBrowser(), b.LbHttpUrl, "https://www.ipaddress.my/", 10*time.Second)
+		page, _, _, err := NewPageNavigateWithProxy(b.GetOneBrowser(), b.LbHttpUrl, "https://www.ipaddress.my/", 10*time.Second)
 		if err != nil {
 			return
 		}
