@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	_ "embed"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -271,17 +270,17 @@ func PageNavigate(page *rod.Page, desURL string, timeOut time.Duration) (*rod.Pa
 
 	Status := e.Response.Status
 	ResponseURL := e.Response.URL
-	if Status >= 400 {
-		publicIP := "xx.xx.xx.xx"
-		publicIP, err = GetPublicIP(page, timeOut, nil)
-		if err != nil {
-			return nil, 0, "", errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
-		}
-		if page != nil {
-			_ = page.Close()
-		}
-		return nil, Status, ResponseURL, errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
-	}
+	//if Status >= 400 {
+	//	publicIP := "xx.xx.xx.xx"
+	//	publicIP, err = GetPublicIP(page, timeOut, nil)
+	//	if err != nil {
+	//		return nil, 0, "", errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
+	//	}
+	//	if page != nil {
+	//		_ = page.Close()
+	//	}
+	//	return nil, Status, ResponseURL, errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
+	//}
 	return page, Status, ResponseURL, nil
 }
 
@@ -334,19 +333,19 @@ func PageNavigateWithProxy(page *rod.Page, proxyUrl string, desURL string, timeO
 	Status := e.Response.Status
 	ResponseURL := e.Response.URL
 
-	if Status >= 400 {
+	//if Status >= 400 {
+	//
+	//	publicIP := "xx.xx.xx.xx"
+	//	publicIP, err = GetPublicIP(page, timeOut, nil)
+	//	if err != nil {
+	//		return nil, 0, "", errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
+	//	}
+	//	if page != nil {
+	//		_ = page.Close()
+	//	}
+	//	return nil, Status, ResponseURL, errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
+	//}
 
-		publicIP := "xx.xx.xx.xx"
-		publicIP, err = GetPublicIP(page, timeOut, nil)
-		if err != nil {
-			return nil, 0, "", errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
-		}
-		if page != nil {
-			_ = page.Close()
-		}
-		return nil, Status, ResponseURL, errors.New(fmt.Sprintf("status code >= 400, PublicIP: %v, Status is %d, ResponseURL is %v", publicIP, Status, ResponseURL))
-	}
-	
 	return page, Status, ResponseURL, nil
 }
 
