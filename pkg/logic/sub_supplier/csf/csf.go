@@ -55,11 +55,11 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	return &sup
 }
 
-func (s *Supplier) CheckAlive() (bool, int64) {
+func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, int64) {
 
 	// 计算当前时间
 	startT := time.Now()
-	_, err := s.fileDownloader.SubtitleBestApi.GetMediaInfo("tt4236770", "imdb", "series")
+	err := s.fileDownloader.SubtitleBestApi.CheckAlive(proxySettings...)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
 		s.isAlive = false
@@ -339,6 +339,8 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("Remove File %s Error: %s", desSubSaveFPath, err.Error()))
 		}
+		s.log.Errorln("CSF.Download.DetermineFileTypeFromFile == false, Remove", desSubSaveFPath)
+		return
 	}
 
 	subFileName := strings.ReplaceAll(filepath.Base(videoFPath), filepath.Ext(videoFPath), "")

@@ -47,7 +47,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	return &sup
 }
 
-func (s *Supplier) CheckAlive() (bool, int64) {
+func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, int64) {
 
 	// 计算当前时间
 	startT := time.Now()

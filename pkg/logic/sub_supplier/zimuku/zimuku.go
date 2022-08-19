@@ -68,7 +68,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	return &sup
 }
 
-func (s *Supplier) CheckAlive() (bool, int64) {
+func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, int64) {
 
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
 

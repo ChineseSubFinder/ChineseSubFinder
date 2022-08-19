@@ -21,7 +21,7 @@ func InitRouter(
 	router *gin.Engine,
 	cronHelper *cron_helper.CronHelper,
 	restartSignal chan interface{},
-) *v1.ControllerBase {
+) (*base.ControllerBase, *v1.ControllerBase) {
 
 	cbBase := base.NewControllerBase(log, restartSignal)
 	cbV1 := v1.NewControllerBase(log, cronHelper, restartSignal)
@@ -95,5 +95,5 @@ func InitRouter(
 		GroupAPIV1.DELETE("/del-video-played-info", cbV1.DelVideoPlayedInfoHandler)
 	}
 
-	return cbV1
+	return cbBase, cbV1
 }

@@ -71,7 +71,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	return &sup
 }
 
-func (s *Supplier) CheckAlive() (bool, int64) {
+func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, int64) {
 
 	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl,
 		s.settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl())

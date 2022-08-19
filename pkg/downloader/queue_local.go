@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"fmt"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
@@ -232,7 +233,7 @@ func (d *Downloader) queueDownloaderLocal() {
 			}
 			close(done)
 			close(panicChan)
-			// 没下载完毕一次，进行一次缓存和 Chrome 的清理
+			// 每下载完毕一次，进行一次缓存和 Chrome 的清理
 			err = my_folder.ClearRootTmpFolder()
 			if err != nil {
 				d.log.Error("ClearRootTmpFolder", err)

@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/common"
 
@@ -38,6 +39,38 @@ func NewSubtitleBestApi(log *logrus.Logger, inAuthKey random_auth_key.AuthKey, p
 		authKey:       inAuthKey,
 		proxySettings: proxySettings,
 	}
+}
+
+func (s *SubtitleBestApi) CheckAlive(proxySettings ...*settings.ProxySettings) error {
+
+	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
+		return errors.New("auth key is not set")
+	}
+
+	postUrl := webUrlBase + "/v1/subhd-code"
+	httpClient, err := my_util.NewHttpClient(proxySettings...)
+	if err != nil {
+		return err
+	}
+	authKey, err := s.randomAuthKey.GetAuthKey()
+	if err != nil {
+		return err
+	}
+	var codeReplyData CodeReplyData
+	resp, err := httpClient.R().
+		SetHeader("Authorization", "beer "+authKey).
+		SetQueryParams(map[string]string{
+			"now_time": time.Now().Format("2006-01-02"),
+		}).
+		SetHeader("Accept", "application/json").
+		SetResult(&codeReplyData).
+		Get(postUrl)
+	if err != nil {
+		s.log.Errorln("get code error, status code:", resp.StatusCode(), "Error:", err)
+		return err
+	}
+
+	return nil
 }
 
 func (s *SubtitleBestApi) GetCode() (string, error) {
@@ -565,7 +598,7 @@ func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, download
 	return &downloadReply, nil
 }
 
-func (s SubtitleBestApi) ConvertId(id, source, videoType string) (*IdConvertReply, error) {
+func (s *SubtitleBestApi) ConvertId(id, source, videoType string) (*IdConvertReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
@@ -610,7 +643,7 @@ func (s SubtitleBestApi) ConvertId(id, source, videoType string) (*IdConvertRepl
 	return &idConvertReply, nil
 }
 
-func (s SubtitleBestApi) FeedBack(id, version, MediaServer string, EnableShare, EnableApiKey bool) (*FeedReply, error) {
+func (s *SubtitleBestApi) FeedBack(id, version, MediaServer string, EnableShare, EnableApiKey bool) (*FeedReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")
@@ -657,7 +690,7 @@ func (s SubtitleBestApi) FeedBack(id, version, MediaServer string, EnableShare, 
 	return &feedReply, nil
 }
 
-func (s SubtitleBestApi) AskDownloadTask(id string) (*AskDownloadTaskReply, error) {
+func (s *SubtitleBestApi) AskDownloadTask(id string) (*AskDownloadTaskReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {
 		return nil, errors.New("auth key is not set")

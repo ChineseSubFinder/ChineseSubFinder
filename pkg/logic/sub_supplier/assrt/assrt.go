@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 
@@ -53,7 +54,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	return &sup
 }
 
-func (s *Supplier) CheckAlive() (bool, int64) {
+func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, int64) {
 
 	// 如果没有设置这个 API 接口，那么就任务是不可用的
 	if s.settings.SubtitleSources.AssrtSettings.Token == "" {

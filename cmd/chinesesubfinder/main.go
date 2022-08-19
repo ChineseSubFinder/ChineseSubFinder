@@ -101,7 +101,7 @@ func main() {
 		common.SetApiToken("")
 	}
 	// 是否开启开发模式，跳过某些流程
-	//settings.GetSettings().SpeedDevMode = true
+	settings.GetSettings().SpeedDevMode = false
 	if settings.GetSettings().SpeedDevMode == true {
 		loggerBase.Infoln("Speed Dev Mode is On")
 	} else {

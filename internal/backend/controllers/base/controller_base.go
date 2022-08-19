@@ -3,6 +3,8 @@ package base
 import (
 	"net/http"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/lock"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
@@ -16,8 +18,9 @@ import (
 )
 
 type ControllerBase struct {
-	fileDownloader *file_downloader.FileDownloader
-	restartSignal  chan interface{}
+	fileDownloader   *file_downloader.FileDownloader
+	proxyCheckLocker lock.Lock
+	restartSignal    chan interface{}
 }
 
 func NewControllerBase(loggerBase *logrus.Logger, restartSignal chan interface{}) *ControllerBase {
@@ -29,7 +32,8 @@ func NewControllerBase(loggerBase *logrus.Logger, restartSignal chan interface{}
 				AESKey16: global_value.AESKey16(),
 				AESIv16:  global_value.AESIv16(),
 			}),
-		restartSignal: restartSignal,
+		proxyCheckLocker: lock.NewLock(),
+		restartSignal:    restartSignal,
 	}
 }
 
@@ -38,4 +42,8 @@ func (cb *ControllerBase) ErrorProcess(c *gin.Context, funcName string, err erro
 		cb.fileDownloader.Log.Errorln(funcName, err.Error())
 		c.JSON(http.StatusInternalServerError, backend.ReplyCommon{Message: err.Error()})
 	}
+}
+
+func (cb *ControllerBase) Close() {
+	cb.proxyCheckLocker.Close()
 }

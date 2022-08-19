@@ -181,7 +181,7 @@ func (d *SubSupplierHub) DownloadSub4Series(seriesDirPath string, seriesInfo *se
 }
 
 // CheckSubSiteStatus 检测多个字幕提供的网站是否是有效的，是否下载次数超限
-func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
+func (d *SubSupplierHub) CheckSubSiteStatus(proxySettings ...*settings.ProxySettings) backend.ReplyCheckStatus {
 
 	outStatus := backend.ReplyCheckStatus{
 		SubSiteStatus: make([]backend.SiteStatus, 0),
@@ -190,7 +190,7 @@ func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 	// 测试提供字幕的网站是有效的
 	d.log.Infoln("Check Sub Supplier Start...")
 	for _, supplier := range d.Suppliers {
-		bAlive, speed := supplier.CheckAlive()
+		bAlive, speed := supplier.CheckAlive(proxySettings...)
 		if bAlive == false {
 			d.log.Warningln(supplier.GetSupplierName(), "Check Alive = false")
 		} else {

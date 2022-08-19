@@ -51,7 +51,7 @@ func (b *BackEnd) start() {
 	engine := gin.Default()
 	// 默认所有都通过
 	engine.Use(cors.Default())
-	v1Router := InitRouter(b.logger, b.settings, engine, b.cronHelper, b.restartSignal)
+	cbBase, v1Router := InitRouter(b.logger, b.settings, engine, b.cronHelper, b.restartSignal)
 
 	engine.GET("/", func(c *gin.Context) {
 		c.Header("content-type", "text/html;charset=utf-8")
@@ -78,6 +78,7 @@ func (b *BackEnd) start() {
 			b.logger.Errorln("Start Server Error:", err)
 		}
 		defer func() {
+			cbBase.Close()
 			v1Router.Close()
 		}()
 	}()

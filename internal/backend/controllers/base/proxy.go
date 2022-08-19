@@ -23,6 +23,11 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 		cb.ErrorProcess(c, "CheckProxyHandler", err)
 	}()
 
+	if cb.proxyCheckLocker.Lock() == false {
+		c.JSON(http.StatusOK, backend.ReplyCommon{Message: "running"})
+		return
+	}
+
 	checkProxy := backend.ReqCheckProxy{}
 	err = c.ShouldBindJSON(&checkProxy)
 	if err != nil {
@@ -61,15 +66,20 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 		subSupplierHub.AddSubSupplier(csf.NewSupplier(cb.fileDownloader))
 	}
 
-	outStatus := subSupplierHub.CheckSubSiteStatus()
+	outStatus := subSupplierHub.CheckSubSiteStatus(cb.fileDownloader.Settings.AdvancedSettings.ProxySettings)
 
 	defer func() {
 		// 还原
-		err = cb.fileDownloader.Settings.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
+		err = checkProxy.ProxySettings.CloseLocalHttpProxyServer()
 		if err != nil {
 			return
 		}
 		cb.fileDownloader.Settings.AdvancedSettings.ProxySettings = bkProxySettings
+		cb.proxyCheckLocker.Unlock()
+		err = cb.fileDownloader.Settings.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
+		if err != nil {
+			return
+		}
 	}()
 
 	c.JSON(http.StatusOK, outStatus)

@@ -51,7 +51,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	return &sup
 }
 
-func (s *Supplier) CheckAlive() (bool, int64) {
+func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, int64) {
 
 	// 计算当前时间
 	startT := time.Now()
@@ -382,7 +382,7 @@ func (s *Supplier) listPageItems(keyword string, pageIndex int, isMovie bool) (s
 	return
 }
 
-func (s Supplier) downloadSub(videoFileName, downloadPageUrl string, season, eps int) (subInfo *supplier.SubInfo, err error) {
+func (s *Supplier) downloadSub(videoFileName, downloadPageUrl string, season, eps int) (subInfo *supplier.SubInfo, err error) {
 
 	defer func() {
 		time.Sleep(time.Second * 5)

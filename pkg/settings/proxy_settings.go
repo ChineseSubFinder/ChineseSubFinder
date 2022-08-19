@@ -40,10 +40,13 @@ func NewProxySettings(useProxy bool, useWhichProxyProtocol string,
 }
 
 func (p *ProxySettings) CopyOne() *ProxySettings {
-	return NewProxySettings(
+
+	nowSettings := NewProxySettings(
 		p.UseProxy, p.UseWhichProxyProtocol, p.LocalHttpProxyServerPort,
 		p.InputProxyAddress, p.InputProxyPort,
 		p.InputProxyUsername, p.InputProxyPassword)
+	nowSettings.localHttpProxyServer = p.localHttpProxyServer
+	return nowSettings
 }
 
 func (p *ProxySettings) GetLocalHttpProxyUrl() string {
@@ -81,7 +84,10 @@ func (p *ProxySettings) GetLocalHttpProxyUrl() string {
 }
 
 func (p *ProxySettings) CloseLocalHttpProxyServer() error {
-	defer p.locker.Unlock()
+	defer func() {
+		println("CloseLocalHttpProxyServer Done")
+		p.locker.Unlock()
+	}()
 	p.locker.Lock()
 
 	if p.localHttpProxyServer == nil {

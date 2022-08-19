@@ -8,7 +8,7 @@ import (
 )
 
 type ISupplier interface {
-	CheckAlive() (bool, int64)
+	CheckAlive(proxySettings ...*settings.ProxySettings) (bool, int64)
 
 	IsAlive() bool
 

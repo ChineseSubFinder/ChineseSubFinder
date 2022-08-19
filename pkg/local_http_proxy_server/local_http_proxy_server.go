@@ -3,12 +3,14 @@ package local_http_proxy_server
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/elazarl/goproxy"
-	"golang.org/x/net/context"
-	"golang.org/x/net/proxy"
 	"net"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/elazarl/goproxy"
+	"golang.org/x/net/context"
+	"golang.org/x/net/proxy"
 )
 
 // LocalHttpProxyServer see https://github.com/go-rod/rod/issues/305
@@ -71,8 +73,11 @@ func (l *LocalHttpProxyServer) Start(settings []string, localHttpProxyServerPort
 		}))
 
 		l.srv = &http.Server{Addr: ":" + l.LocalHttpProxyServerPort, Handler: middleProxy}
-
+		l.isRunning = true
 		go func() {
+
+			println("Try Start Local Proxy Server at :", l.LocalHttpProxyServerPort)
+
 			if err := l.srv.ListenAndServe(); err != http.ErrServerClosed {
 				panic(fmt.Sprintln("ListenAndServe() http proxy:", err))
 			}
@@ -80,7 +85,8 @@ func (l *LocalHttpProxyServer) Start(settings []string, localHttpProxyServerPort
 			println("http proxy closed")
 		}()
 
-		l.isRunning = true
+		time.Sleep(3 * time.Second)
+
 		l.LocalHttpProxyUrl = "http://127.0.0.1:" + l.LocalHttpProxyServerPort
 
 		return l.LocalHttpProxyUrl, nil
@@ -122,8 +128,10 @@ func (l *LocalHttpProxyServer) Start(settings []string, localHttpProxyServerPort
 		}))
 
 		l.srv = &http.Server{Addr: ":" + l.LocalHttpProxyServerPort, Handler: middleProxy}
-
+		l.isRunning = true
 		go func() {
+
+			println("Try Start Local Proxy Server at :", l.LocalHttpProxyServerPort)
 			if err := l.srv.ListenAndServe(); err != http.ErrServerClosed {
 				panic(fmt.Sprintln("ListenAndServe() socks5 proxy:", err))
 			}
@@ -131,7 +139,8 @@ func (l *LocalHttpProxyServer) Start(settings []string, localHttpProxyServerPort
 			println("socks5 proxy closed")
 		}()
 
-		l.isRunning = true
+		time.Sleep(3 * time.Second)
+
 		l.LocalHttpProxyUrl = "http://127.0.0.1:" + l.LocalHttpProxyServerPort
 
 		return l.LocalHttpProxyUrl, nil
