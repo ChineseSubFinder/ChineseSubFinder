@@ -41,7 +41,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/task_control"
 	"github.com/allanpk716/ChineseSubFinder/pkg/task_queue"
 	"github.com/emirpasic/gods/maps/treemap"
-	"github.com/huandu/go-clone"
 	"github.com/jinzhu/now"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -260,10 +259,10 @@ func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *Scan
 
 			v.log.Infoln("Forced Scan And DownSub, tmpSetting.EmbySettings.MaxRequestVideoNumber = 1000000")
 			// 如果是强制，那么就临时修改 Setting 的 Emby MaxRequestVideoNumber 参数为 1000000
-			tmpSetting := clone.Clone(v.settings).(*settings.Settings)
-			tmpSetting.EmbySettings.MaxRequestVideoNumber = common2.EmbyApiGetItemsLimitMax
-			tmpSetting.EmbySettings.SkipWatched = false
-			v.embyHelper = embyHelper.NewEmbyHelper(v.log, tmpSetting)
+			//tmpSetting := clone.Clone(v.settings).(*settings.Settings)
+			v.embyHelper = embyHelper.NewEmbyHelper(v.log, v.settings)
+			v.embyHelper.SetMaxRequestVideoNumber(common2.EmbyApiGetItemsLimitMax)
+			v.embyHelper.SetSkipWatched(false)
 		} else {
 			v.log.Infoln("Not Forced Scan And DownSub")
 			v.embyHelper = embyHelper.NewEmbyHelper(v.log, v.settings)

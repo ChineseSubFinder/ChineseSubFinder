@@ -40,6 +40,14 @@ func NewEmbyHelper(_log *logrus.Logger, _settings *settings.Settings) *EmbyHelpe
 	return &em
 }
 
+func (em *EmbyHelper) SetMaxRequestVideoNumber(maxValue int) {
+	em.EmbyApi.SetMaxRequestVideoNumber(maxValue)
+}
+
+func (em *EmbyHelper) SetSkipWatched(skip bool) {
+	em.EmbyApi.SetSkipWatched(skip)
+}
+
 // GetRecentlyAddVideoListWithNoChineseSubtitle 获取最近新添加的视频，且没有中文字幕的
 func (em *EmbyHelper) GetRecentlyAddVideoListWithNoChineseSubtitle(needForcedScanAndDownSub ...bool) ([]emby2.EmbyMixInfo, map[string][]emby2.EmbyMixInfo, error) {
 

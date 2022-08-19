@@ -84,43 +84,13 @@ func writeFile(saveFileFPath, enString, nowTime string) error {
 
 func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string, fileDownloader *file_downloader.FileDownloader) (string, string, error) {
 
-	// 默认的位置
-	const baseCodeFileUrl = "https://raw.githubusercontent.com/"
-	const whichProject = "allanpk716/SomeThingsStatic/"
-	desUrl := baseCodeFileUrl + whichProject + "master/" + nowTimeFileNamePrix + common.StaticFileName00
-
-	var err error
-	updateTimeString := ""
-	code := ""
-	found := false
-	count := 0
-	for {
-		if found == true {
-			break
-		}
-		count++
-		if count > 2 {
-			break
-		}
-		updateTimeString, code, err = getCodeFromWeb(l, desUrl)
-		if err != nil {
-			time.Sleep(time.Second * 5)
-			continue
-		}
-
-		found = true
+	getCode, err := fileDownloader.SubtitleBestApi.GetCode()
+	if err != nil {
+		l.Errorln("SubtitleBestApi.GetCode", err)
+		return "", "", errors.New(fmt.Sprintf("get code from web failed, %v \n", err.Error()))
 	}
-
-	if found == false {
-		getCode, err := fileDownloader.SubtitleBestApi.GetCode()
-		if err != nil {
-			return "", "", errors.New(fmt.Sprintf("get code from web failed, %v \n", err.Error()))
-		}
-		nowTT := time.Now().Format("2006-01-02")
-		return nowTT, getCode, nil
-	}
-
-	return updateTimeString, code, nil
+	nowTT := time.Now().Format("2006-01-02")
+	return nowTT, getCode, nil
 }
 
 func getCodeFromWeb(l *logrus.Logger, desUrl string) (string, string, error) {

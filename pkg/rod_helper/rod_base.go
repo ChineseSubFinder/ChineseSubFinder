@@ -136,7 +136,7 @@ func NewBrowserBase(log *logrus.Logger, localChromeFPath, httpProxyURL string, l
 		//	_ = page.Close()
 		//}
 	}
-	if len(preLoadUrl) > 0 {
+	if len(preLoadUrl) > 0 && preLoadUrl[0] != "" {
 		_, _, err := HttpGetFromBrowser(browser, preLoadUrl[0], 15*time.Second)
 		if err != nil {
 			if browser != nil {
@@ -198,7 +198,7 @@ func NewBrowserBaseFromDocker(httpProxyURL, remoteDockerURL string, remoteAdbloc
 		}
 	}
 
-	if len(preLoadUrl) > 0 {
+	if len(preLoadUrl) > 0 && preLoadUrl[0] != "" {
 		_, page, err := HttpGetFromBrowser(browser, preLoadUrl[0], 15*time.Second)
 		if err != nil {
 			if browser != nil {

@@ -113,6 +113,8 @@ func (s *Settings) Save() error {
 }
 
 func (s *Settings) GetNoPasswordSettings() *Settings {
+
+	_ = s.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
 	nowSettings := clone.Clone(s).(*Settings)
 	nowSettings.UserInfo.Password = noPassword4Show
 	return nowSettings
