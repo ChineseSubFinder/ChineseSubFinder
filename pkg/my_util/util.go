@@ -58,7 +58,7 @@ func NewHttpClient(_proxySettings ...*settings.ProxySettings) (*resty.Client, er
 		MaxIdleConnsPerHost: 1000,
 	})
 	httpClient.SetTimeout(common.HTMLTimeOut)
-	httpClient.SetRetryCount(2)
+	httpClient.SetRetryCount(1)
 	// ------------------------------------------------
 	// 设置 Referer
 	if len(_proxySettings) > 0 {
