@@ -7,6 +7,7 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/sirupsen/logrus"
+	lSyslog "github.com/sirupsen/logrus/hooks/syslog"
 )
 
 type ExtendLog struct {
