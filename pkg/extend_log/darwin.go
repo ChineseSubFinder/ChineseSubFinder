@@ -26,6 +26,8 @@ func (e *ExtendLog) AddHook(log *logrus.Logger, extendLog settings.ExtendLog) {
 			extendLog.SysLog.Tag)
 		if err == nil {
 			log.Hooks.Add(hook)
+		} else {
+			log.Errorln("Add Syslog Hook Error:", err)
 		}
 	}
 }
