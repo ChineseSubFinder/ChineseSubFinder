@@ -16,7 +16,7 @@ func (e *ExtendLog) AddHook(log *logrus.Logger, extendLog settings.ExtendLog) {
 
 	if extendLog.SysLog.Enable == true {
 		pri := syslog.LOG_DEBUG
-		if extendLog.SysLog.Tag == 1 {
+		if extendLog.SysLog.Priority == 1 {
 			pri = syslog.LOG_INFO
 		}
 		hook, err := lSyslog.NewSyslogHook(
