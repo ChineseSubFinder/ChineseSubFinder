@@ -36,9 +36,11 @@ func newLog() *logrus.Logger {
 	} else {
 		level = logrus.InfoLevel
 	}
-	logger := log_helper.NewLogHelper(log_helper.LogNameChineseSubFinder,
+	logger := log_helper.NewLogHelper(
+		log_helper.LogNameChineseSubFinder,
 		global_value.ConfigRootDirFPath(),
-		level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
+		level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour,
+		settings.GetSettings().ExperimentalFunction.ExtendLog)
 	logger.AddHook(log_helper.NewLoggerHub())
 
 	return logger
