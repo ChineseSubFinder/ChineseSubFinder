@@ -40,7 +40,7 @@ func NewControllerBase(log *logrus.Logger, cronHelper *cron_helper.CronHelper, r
 	return cb
 }
 
-func (cb ControllerBase) SetPathUrlMapItem(path string, url string) {
+func (cb *ControllerBase) SetPathUrlMapItem(path string, url string) {
 	cb.pathUrlMap[path] = url
 }
 
@@ -55,7 +55,7 @@ func (cb *ControllerBase) Close() {
 	cb.videoScanAndRefreshHelperLocker.Close()
 }
 
-func (cb ControllerBase) GetVersion() string {
+func (cb *ControllerBase) GetVersion() string {
 	return "v1"
 }
 

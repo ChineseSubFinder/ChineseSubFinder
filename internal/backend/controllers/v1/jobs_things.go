@@ -18,7 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (cb ControllerBase) JobsListHandler(c *gin.Context) {
+func (cb *ControllerBase) JobsListHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
@@ -42,7 +42,7 @@ func (cb ControllerBase) JobsListHandler(c *gin.Context) {
 	})
 }
 
-func (cb ControllerBase) ChangeJobStatusHandler(c *gin.Context) {
+func (cb *ControllerBase) ChangeJobStatusHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
@@ -91,7 +91,7 @@ func (cb ControllerBase) ChangeJobStatusHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "ok"})
 }
 
-func (cb ControllerBase) JobLogHandler(c *gin.Context) {
+func (cb *ControllerBase) JobLogHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理

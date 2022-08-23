@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (cb ControllerBase) CheckSubSupplierHandler(c *gin.Context) {
+func (cb *ControllerBase) CheckSubSupplierHandler(c *gin.Context) {
 
 	var err error
 	defer func() {

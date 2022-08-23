@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (cb ControllerBase) DaemonStartHandler(c *gin.Context) {
+func (cb *ControllerBase) DaemonStartHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
@@ -27,7 +27,7 @@ func (cb ControllerBase) DaemonStartHandler(c *gin.Context) {
 	})
 }
 
-func (cb ControllerBase) DaemonStopHandler(c *gin.Context) {
+func (cb *ControllerBase) DaemonStopHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
@@ -45,7 +45,7 @@ func (cb ControllerBase) DaemonStopHandler(c *gin.Context) {
 	})
 }
 
-func (cb ControllerBase) DaemonStatusHandler(c *gin.Context) {
+func (cb *ControllerBase) DaemonStatusHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
