@@ -379,12 +379,14 @@ func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVide
 		SetResult(&uploadSubReply).
 		Post(postUrl)
 	if err != nil {
-		s.log.Errorln("upload sub error, status code:", resp.StatusCode(), "Error:", err)
 
 		if resp != nil && resp.StatusCode() == 413 {
 			// 文件上传大小超限
+			s.log.Errorln("upload sub error, status code:", resp.StatusCode(), "Error:", err)
 			return nil, common.ErrorUpload413
 		}
+
+		s.log.Errorln("upload sub Error:", err)
 		return nil, err
 	}
 
