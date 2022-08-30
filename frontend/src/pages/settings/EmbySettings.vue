@@ -38,6 +38,8 @@
             <q-input v-model="form.api_key" standout dense :rules="[(val) => (form.enable && !!val) || '不能为空']" />
           </q-item-section>
         </q-item>
+
+        <q-item> <btn-check-emby-server /> </q-item>
         <q-item>
           <q-item-section>
             <q-item-label>获取最多的剧集数量</q-item-label>
@@ -78,6 +80,7 @@
 <script setup>
 import { formModel } from 'pages/settings/useSettings';
 import { toRefs } from '@vueuse/core';
+import BtnCheckEmbyServer from 'pages/settings/BtnCheckEmbyServer';
 
 const { emby_settings: form } = toRefs(formModel);
 </script>
