@@ -62,6 +62,8 @@ func InitRouter(
 
 	router.GET("/def-settings", cbBase.DefSettingsHandler)
 
+	router.POST("/check-emby-settings", cbBase.CheckEmbySettingsHandler)
+
 	// v1路由: /v1/xxx
 	GroupV1 := router.Group("/" + cbV1.GetVersion())
 	{
