@@ -1265,7 +1265,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 				mixInfo.VideoInfo.Id,
 			)
 
-			info, err := decode.GetSeriesSeasonVideoNfoInfoFromEpisode(mixInfo.PhysicalVideoFileFullPath)
+			info, err := decode.GetVideoNfoInfoFromEpisode(mixInfo.PhysicalVideoFileFullPath)
 			if err != nil {
 				v.log.Warningln("filterMovieAndSeriesNeedDownloadEmby.Series.GetVideoInfoFromFileFullPath", err)
 				continue

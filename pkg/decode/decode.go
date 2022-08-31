@@ -332,8 +332,8 @@ func GetVideoNfoInfo4SeriesDir(seriesDir string) (types.VideoNfoInfo, error) {
 	return getVideoNfoInfo(nfoFilePath, "tvshow")
 }
 
-// GetSeriesSeasonVideoNfoInfoFromEpisode 从一集获取这个 Series 的 IMDB info
-func GetSeriesSeasonVideoNfoInfoFromEpisode(oneEpFPath string) (types.VideoNfoInfo, error) {
+// GetVideoNfoInfoFromEpisode 从一集获取这个 Series 的 IMDB info
+func GetVideoNfoInfoFromEpisode(oneEpFPath string) (types.VideoNfoInfo, error) {
 
 	// 当前季的路径
 	EPdir := filepath.Dir(oneEpFPath)

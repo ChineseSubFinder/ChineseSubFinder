@@ -29,31 +29,31 @@ func GetIMDBInfoFromVideoFile(log *logrus.Logger, videoFPath string, isMovie boo
 	getReady(log, _proxySettings)
 
 	var err error
-	var imdbInfo4Video types.VideoNfoInfo
+	var videoNfoInfo types.VideoNfoInfo
 	if isMovie == true {
-		imdbInfo4Video, err = decode.GetVideoNfoInfo4Movie(videoFPath)
+		videoNfoInfo, err = decode.GetVideoNfoInfo4Movie(videoFPath)
 	} else {
-		imdbInfo4Video, err = decode.GetSeriesSeasonVideoNfoInfoFromEpisode(videoFPath)
+		videoNfoInfo, err = decode.GetVideoNfoInfoFromEpisode(videoFPath)
 	}
 	if err != nil {
 		// 如果找不到当前电影的 IMDB Info 本地文件，那么就跳过
 		log.Warningln("getSubListFromFile", videoFPath, err)
 		return nil, err
 	}
-	imdbInfo, err := GetIMDBInfoFromVideoNfoInfo(log, imdbInfo4Video, _proxySettings)
+	imdbInfo, err := GetIMDBInfoFromVideoNfoInfo(log, videoNfoInfo, _proxySettings)
 	if err != nil {
 		log.Warningln("GetIMDBInfoFromVideoNfoInfo", videoFPath, err)
 		return nil, err
 	}
 	if len(imdbInfo.Description) <= 0 {
 		// 需要去外网获去补全信息，然后更新本地的信息
-		if imdbInfo.IMDBID != "" && imdbInfo4Video.ImdbId == "" {
+		if imdbInfo.IMDBID != "" && videoNfoInfo.ImdbId == "" {
 			// 可能本地没有获取到 IMDB ID 信息，那么从上面的 GetIMDBInfoFromVideoNfoInfo 可以从 TMDB ID 获取到 IMDB ID，那么需要传递下去
-			imdbInfo4Video.ImdbId = imdbInfo.IMDBID
+			videoNfoInfo.ImdbId = imdbInfo.IMDBID
 		}
-		t, err := getVideoInfoFromIMDBWeb(imdbInfo4Video, _proxySettings)
+		t, err := getVideoInfoFromIMDBWeb(videoNfoInfo, _proxySettings)
 		if err != nil {
-			log.Errorln("getVideoInfoFromIMDBWeb,", imdbInfo4Video.Title, err)
+			log.Errorln("getVideoInfoFromIMDBWeb,", videoNfoInfo.Title, err)
 			return nil, err
 		}
 		imdbInfo.Year = t.Year
@@ -68,7 +68,7 @@ func GetIMDBInfoFromVideoFile(log *logrus.Logger, videoFPath string, isMovie boo
 }
 
 // GetIMDBInfoFromVideoNfoInfo 从本地获取 IMDB 信息，注意，如果需要跳过，那么返回 Error == common.SkipCreateInDB
-func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, imdbInfo types.VideoNfoInfo, _proxySettings *settings.ProxySettings) (*models.IMDBInfo, error) {
+func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, videoNfoInfo types.VideoNfoInfo, _proxySettings *settings.ProxySettings) (*models.IMDBInfo, error) {
 
 	getReady(log, _proxySettings)
 	/*
@@ -81,17 +81,17 @@ func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, imdbInfo types.VideoNfoInfo
 		3. 因为现在默认是不跳过中文视频扫描的，所以如果开启后，则会再判断的时候访问外网获取，然后写入本地，过程会比较慢
 		4. 同时，再发送字幕和 IMDB Info 到服务器的时候，也需要判断是否 IMDB Info 信息是否齐全，否则就需要从外网获取齐全后再上传
 	*/
-	log.Debugln("GetIMDBInfoFromVideoNfoInfo", "IMDBID:", imdbInfo.ImdbId, "TMDBID:", imdbInfo.TmdbId, imdbInfo.Title, imdbInfo.Season, imdbInfo.Episode)
+	log.Debugln("GetIMDBInfoFromVideoNfoInfo", "IMDBID:", videoNfoInfo.ImdbId, "TMDBID:", videoNfoInfo.TmdbId, videoNfoInfo.Title, videoNfoInfo.Season, videoNfoInfo.Episode)
 	log.Debugln("GetIMDBInfoFromVideoNfoInfo", 0)
 
-	if imdbInfo.ImdbId != "" {
+	if videoNfoInfo.ImdbId != "" {
 		// 优先从 IMDB ID 去查找本地的信息
 		// 首先从数据库中查找是否存在这个 IMDB 信息，如果不存在再使用 Web 查找，且写入数据库
 		var imdbInfos []models.IMDBInfo
 		// 把嵌套关联的 has many 的信息都查询出来
 		dao.GetDb().
 			Preload("VideoSubInfos").
-			Limit(1).Where(&models.IMDBInfo{IMDBID: imdbInfo.ImdbId}).Find(&imdbInfos)
+			Limit(1).Where(&models.IMDBInfo{IMDBID: videoNfoInfo.ImdbId}).Find(&imdbInfos)
 
 		log.Debugln("GetIMDBInfoFromVideoNfoInfo", 1)
 
@@ -99,7 +99,7 @@ func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, imdbInfo types.VideoNfoInfo
 			// 没有找到，新增，存储本地，但是信息肯定是不完整的，需要在判断是否是中文的时候再次去外网获取补全信息
 			log.Debugln("GetIMDBInfoFromVideoNfoInfo", 2)
 			// 存入数据库
-			nowIMDBInfo := models.NewIMDBInfo(imdbInfo.ImdbId, "", 0, "", []string{}, []string{})
+			nowIMDBInfo := models.NewIMDBInfo(videoNfoInfo.ImdbId, "", 0, "", []string{}, []string{})
 			dao.GetDb().Create(nowIMDBInfo)
 
 			log.Debugln("GetIMDBInfoFromVideoNfoInfo", 3)
@@ -111,13 +111,13 @@ func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, imdbInfo types.VideoNfoInfo
 			// 找到
 			return &imdbInfos[0], nil
 		}
-	} else if imdbInfo.TmdbId != "" {
+	} else if videoNfoInfo.TmdbId != "" {
 		// 如果 IMDB ID 在本地没有获取到，但是 TMDB ID 获取到了，那么就从 Web 去查询 IMDB ID 出来
 		var imdbInfos []models.IMDBInfo
 		// 把嵌套关联的 has many 的信息都查询出来
 		dao.GetDb().
 			Preload("VideoSubInfos").
-			Limit(1).Where(&models.IMDBInfo{TmdbId: imdbInfo.TmdbId}).Find(&imdbInfos)
+			Limit(1).Where(&models.IMDBInfo{TmdbId: videoNfoInfo.TmdbId}).Find(&imdbInfos)
 
 		log.Debugln("GetIMDBInfoFromVideoNfoInfo", 1)
 
@@ -125,7 +125,7 @@ func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, imdbInfo types.VideoNfoInfo
 			// 没有找到那么就从 Web 端获取 imdb id 信息
 		} else if len(imdbInfos) > 1 {
 			// 如果找到多个，那么就应该删除这些，因为这些都是重复的，然后再次从 Web 去获取 imdb id 信息
-			dao.GetDb().Where(&models.IMDBInfo{TmdbId: imdbInfo.TmdbId}).Delete(&models.IMDBInfo{})
+			dao.GetDb().Where(&models.IMDBInfo{TmdbId: videoNfoInfo.TmdbId}).Delete(&models.IMDBInfo{})
 		} else {
 			log.Debugln("GetIMDBInfoFromVideoNfoInfo", 4)
 			// 找到
@@ -134,13 +134,13 @@ func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, imdbInfo types.VideoNfoInfo
 		// 确定需要从 Web 端获取 imdb id 信息
 		log.Debugln("GetIMDBInfoFromVideoNfoInfo", 2)
 		videoType := ""
-		if imdbInfo.IsMovie == true {
+		if videoNfoInfo.IsMovie == true {
 			videoType = "movie"
 		} else {
 			videoType = "series"
 		}
 		// 联网查询
-		idConvertReply, err := subtitleBestApi.ConvertId(imdbInfo.TmdbId, "tmdb", videoType)
+		idConvertReply, err := subtitleBestApi.ConvertId(videoNfoInfo.TmdbId, "tmdb", videoType)
 		if err != nil {
 			return nil, err
 		}
@@ -213,22 +213,22 @@ func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoNfoInfo, _proxySetti
 }
 
 // getVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
-func getVideoInfoFromIMDBWeb(imdbInfo types.VideoNfoInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
+func getVideoInfoFromIMDBWeb(videoNfoInfo types.VideoNfoInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
 
 	client, err := my_util.NewHttpClient(_proxySettings...)
 	if err != nil {
 		return nil, err
 	}
 
-	t, err := imdb.NewTitle(client.GetClient(), imdbInfo.ImdbId)
+	t, err := imdb.NewTitle(client.GetClient(), videoNfoInfo.ImdbId)
 	if err != nil {
 		notify_center.Notify.Add("imdb model - imdb.NewTitle :", err.Error())
 		return nil, err
 	}
 	if t.Year == 0 {
 		// IMDB 信息获取的库(1.0.7)，目前有bug，比如，tt6856242 年份为 0
-		if imdbInfo.Year != "" {
-			year, err := strconv.Atoi(imdbInfo.Year)
+		if videoNfoInfo.Year != "" {
+			year, err := strconv.Atoi(videoNfoInfo.Year)
 			if err != nil {
 				return nil, err
 			}

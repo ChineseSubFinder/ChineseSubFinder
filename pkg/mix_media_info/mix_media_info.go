@@ -67,9 +67,9 @@ func getMediaInfoEx(log *logrus.Logger, SubtitleBestApi *subtitle_best_api.Subti
 			return nil, err
 		}
 		if mediaInfoReply.Status == 2 {
-			// 说明进入了查询队列，可以等 20s 以上再次查询
-			log.Infoln("query queue, sleep 20s")
-			time.Sleep(20 * time.Second)
+			// 说明进入了查询队列，可以等 30s 以上再次查询
+			log.Infoln("query queue, sleep 30s")
+			time.Sleep(30 * time.Second)
 
 		} else if mediaInfoReply.Status == 1 {
 
@@ -111,7 +111,7 @@ func GetMediaInfoAndSave(log *logrus.Logger, SubtitleBestApi *subtitle_best_api.
 		return nil, err
 	}
 	if mediaInfo == nil {
-		// 超过 5次 20s 等待都没有查询到，返回错误
+		// 超过 9次 30s 等待都没有查询到，返回错误
 		return nil, errors.New("can't get media info from subtitle.best api")
 	}
 	// 更新 ID
