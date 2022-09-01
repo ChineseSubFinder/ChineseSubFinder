@@ -2,6 +2,8 @@
 
 本项目的初衷仅仅是想自动化搞定**限定条件**下 **中文** 字幕下载。
 
+> CSF 使用交流目前只有一个 telegram 小组，https://t.me/chinesesubfinder 。个人建议是以使用和讨论为主，bug 的反馈最好去 issue 按模板反馈和提出问题，也好有一个地方追溯。
+
 ## 前言
 
 后续会长期支持两个方向的 Docker 镜像，差异见 [Docker 部署教程](docker/readme.md)
@@ -25,14 +27,21 @@
 
 ## How to use
 
-有以下文档可以参考：
+### 如何部署
 
 - [Docker 部署教程](docker/readme.md)
 - [如何在 Windows 上使用](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/v0.20教程/01.如何在Windows上使用.md)
-- [对外的 http api](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/ApiKey%E8%AE%BE%E8%AE%A1),以及[示例](https://github.com/allanpk716/ChineseSubFinder/issues/336)
 - [Docker ChineseSubFinder--中文字幕自动下载 | sleele 的博客 - 第三方教程](https://sleele.com/2021/06/25/docker-chinesesubfinder-中文字幕自动下载/)
 
-高阶设置：
+### 如何使用
+
+* [使用教程](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/使用教程)
+
+### API 文档文档
+
+- [对外的 http api](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/ApiKey%E8%AE%BE%E8%AE%A1),以及[示例](https://github.com/allanpk716/ChineseSubFinder/issues/336)
+
+### 高阶设置
 
 - [字幕时间轴校正 V2](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3V2.md)，有待更新 v0.20.x 对应的设置
 
@@ -94,6 +103,9 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 
 ## 版本
 
+- v0.38.x 修复，一些问题 -- 2022年8月22日
+- v0.37.x 修复，a4k 的搜索失效问题 -- 2022年7月29日
+- v0.36.x 新增，库-电视剧 添加批量加入任务队列功能 -- 2022年7月25日
 - v0.35.x 新增，支持 TMDB ID 转换 IMDB ID（由服务器提供支持，无需用户去填写 TMDB ID） -- 2022 年 7月 12 日
 - v0.34.x 新增，暂时下线 subhd 的支持，修复若干 bug -- 2022 年 7月 1 日
 - v0.33.x 新增，Lite Docker 镜像，见 [Docker 部署教程](docker/readme.md) ，新增支持 a4k 字幕源 -- 2022 年 6 月 19 日
