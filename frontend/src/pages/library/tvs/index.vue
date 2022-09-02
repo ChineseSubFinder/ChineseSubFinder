@@ -1,7 +1,8 @@
 <template>
   <q-page class="q-pa-lg">
     <div class="row q-gutter-md">
-      <btn-dialog-library-refresh/>
+      <btn-dialog-library-refresh />
+      <btn-dialog-cover-setting />
 
       <q-space />
 
@@ -44,6 +45,7 @@ import { useLibrary } from 'pages/library/useLibrary';
 import { computed, reactive } from 'vue';
 import ListItemTV from 'pages/library/tvs/ListItemTV';
 import BtnDialogLibraryRefresh from 'pages/library/BtnDialogLibraryRefresh';
+import BtnDialogCoverSetting from 'pages/library/BtnDialogCoverSetting';
 
 const filterForm = reactive({
   hasSubtitle: null,

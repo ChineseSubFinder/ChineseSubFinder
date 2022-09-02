@@ -2,7 +2,7 @@
   <q-card flat square>
     <div class="area-cover q-mb-sm relative-position">
       <q-img
-        :src="getUrl(data.dir_root_url) + '/poster.jpg'"
+        :src="data.cover"
         class="content-width bg-grey-2"
         no-spinner
         style="width: 160px; height: 200px"
@@ -34,7 +34,6 @@
 <script setup>
 import { computed } from 'vue';
 import DialogTVDetail from 'pages/library/tvs/DialogTVDetail';
-import config from 'src/config';
 
 const props = defineProps({
   data: Object,
@@ -43,8 +42,6 @@ const props = defineProps({
 const hasSubtitleVideoCount = computed(
   () => props.data.one_video_info.filter((e) => e.sub_f_path_list.length > 0).length
 );
-
-const getUrl = (path) => config.BACKEND_URL + path.split(/\/|\\/).join('/');
 </script>
 
 <style lang="scss" scoped>

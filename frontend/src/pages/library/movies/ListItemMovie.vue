@@ -2,7 +2,7 @@
   <q-card flat square>
     <div class="area-cover q-mb-sm relative-position">
       <q-img
-        :src="getUrl(data.dir_root_url) + '/poster.jpg'"
+        :src="data.cover"
         class="content-width bg-grey-2"
         no-spinner
         style="width: 160px; height: 200px"
@@ -48,8 +48,8 @@ import { computed } from 'vue';
 import LibraryApi from 'src/api/LibraryApi';
 import { SystemMessage } from 'src/utils/Message';
 import { VIDEO_TYPE_MOVIE } from 'src/constants/SettingConstants';
-import config from 'src/config';
 import { useQuasar } from 'quasar';
+import { getUrl } from 'pages/library/useLibrary';
 
 const props = defineProps({
   data: Object,
@@ -88,8 +88,6 @@ const downloadSubtitle = async () => {
     }
   });
 };
-
-const getUrl = (path) => config.BACKEND_URL + path.split(/\/|\\/).join('/');
 </script>
 
 <style lang="scss" scoped>

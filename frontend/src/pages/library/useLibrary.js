@@ -1,13 +1,35 @@
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import LibraryApi from 'src/api/LibraryApi';
 import { SystemMessage } from 'src/utils/Message';
 import { until } from '@vueuse/core';
+import config from 'src/config';
+import { LocalStorage } from 'quasar';
+
+export const getUrl = (basePath) => config.BACKEND_URL + basePath.split(/\/|\\/).join('/');
+
+// 封面规则
+export const coverRule = ref(LocalStorage.getItem('coverRule') ?? 'poster.jpg');
 
 export const useLibrary = () => {
-  const movies = ref([]);
-  const tvs = ref([]);
+  const originMovies = ref([]);
+  const originTvs = ref([]);
   const refreshCacheLoading = ref(false);
   const libraryRefreshStatus = ref(null);
+
+  const movies = computed(() =>
+    originMovies.value.map((movie) => ({
+      ...movie,
+      cover: `${getUrl(movie.dir_root_url)}/${coverRule.value}`,
+    }))
+  );
+
+  const tvs = computed(() =>
+    originTvs.value.map((tv) => ({
+      ...tv,
+      cover: `${getUrl(tv.dir_root_url)}/${coverRule.value}`,
+    }))
+  );
+
   let getRefreshStatusTimer = null;
 
   const getLibraryRefreshStatus = async () => {
@@ -20,8 +42,8 @@ export const useLibrary = () => {
     if (err !== null) {
       SystemMessage.error(err.message);
     } else {
-      movies.value = res.movie_infos;
-      tvs.value = res.season_infos;
+      originMovies.value = res.movie_infos;
+      originTvs.value = res.season_infos;
     }
   };
 
