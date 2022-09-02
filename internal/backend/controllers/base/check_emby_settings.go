@@ -1,11 +1,12 @@
 package base
 
 import (
+	"net/http"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func (cb ControllerBase) CheckEmbySettingsHandler(c *gin.Context) {
@@ -34,7 +35,6 @@ func (cb ControllerBase) CheckEmbySettingsHandler(c *gin.Context) {
 	emHelper := emby_helper.NewEmbyHelper(cb.fileDownloader.Log, &settings.Settings{EmbySettings: &emSettings})
 	userList, err := emHelper.EmbyApi.GetUserIdList()
 	if err != nil {
-		c.JSON(http.StatusOK, backend2.ReplyCommon{Message: err.Error()})
 		return
 	}
 	if len(userList.Items) <= 0 {
