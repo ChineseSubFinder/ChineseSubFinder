@@ -20,7 +20,13 @@
               v-model="form.address_url"
               standout
               dense
-              :rules="[(val) => (form.enable && !!val) || '不能为空']"
+              :rules="[
+                (val) => (form.enable && !!val) || '不能为空',
+                (val) =>
+                  val.match(
+                    /^(http|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?$/
+                  ) || '请输入正确的URL',
+              ]"
             />
           </q-item-section>
         </q-item>
@@ -56,7 +62,7 @@
 
         <q-separator spaced inset></q-separator>
 
-        <q-item :class="{disabled: form.auto_or_manual}" tag="label" v-ripple>
+        <q-item :class="{ disabled: form.auto_or_manual }" tag="label" v-ripple>
           <q-item-section>
             <q-item-label>自动匹配IMDB ID</q-item-label>
           </q-item-section>
