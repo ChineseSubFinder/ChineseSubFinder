@@ -57,6 +57,8 @@ github.com/allanpk716/fake-useragent v0.2.1 h1:5EurHovAMGNwMZNbZ2cFOH8HsLdHwopnn
 github.com/allanpk716/fake-useragent v0.2.1/go.mod h1:U3tmrxBYvSPeQKQ/9x59CXJPkHbU4x4eXw3ji5TDhPk=
 github.com/allanpk716/go-parse-torrent-name v0.0.1 h1:Eje8FZTq8qSpFiRMNa2cwfgQqlL+yMT+0hwMdRb7YK8=
 github.com/allanpk716/go-parse-torrent-name v0.0.1/go.mod h1:H66QhXPJpUSdWschhL6u//v3ge96/qMnQ9mWp3efbxA=
+github.com/allanpk716/is_running_in_docker v0.0.1 h1:S7lKLTWvPw+HY14OtwM1mIPgbVOZapb15GpxVreGXcM=
+github.com/allanpk716/is_running_in_docker v0.0.1/go.mod h1:n1aXa4T+SRfOLMtus+N6r3RPwGN9xnpBhbpMEhPfmB8=
 github.com/allanpk716/opencc v0.1.8 h1:9jQN/nbav5S7wxeekOr5Zl/LrITcQgJuk7MuhN7bOdU=
 github.com/allanpk716/opencc v0.1.8/go.mod h1:jRuKtq8eLA+cZUu75XgMvkB/hFSXJbZDmij0v29lNaY=
 github.com/allanpk716/sat v1.0.4 h1:Oz3Ba2T4Y8QM+fQdoP7ZHTF34psu2HY46sO/EbauM/U=

@@ -3,14 +3,16 @@ package base
 import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	"net/http"
+	"runtime"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	running "github.com/allanpk716/is_running_in_docker"
 	"github.com/gin-gonic/gin"
 )
 
 // SystemStatusHandler 获取系统状态
-func (cb ControllerBase) SystemStatusHandler(c *gin.Context) {
+func (cb *ControllerBase) SystemStatusHandler(c *gin.Context) {
 
 	var err error
 	defer func() {
@@ -25,7 +27,9 @@ func (cb ControllerBase) SystemStatusHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, backend.ReplySystemStatus{
-		IsSetup: isSetup,
-		Version: global_value.AppVersion(),
-	})
+		IsSetup:           isSetup,
+		Version:           global_value.AppVersion(),
+		OS:                runtime.GOOS,
+		ARCH:              runtime.GOARCH,
+		IsRunningInDocker: running.IsRunningInDocker()})
 }
