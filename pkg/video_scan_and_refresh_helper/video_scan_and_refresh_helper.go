@@ -907,6 +907,9 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 			// 首先需要找到对应的最长的视频媒体库路径，x://ABC  x://ABC/DEF
 			for _, oneSeriesDirPath := range sortSeriesPaths {
 
+				if strings.HasPrefix(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path) == false {
+					continue
+				}
 				// 匹配上了
 				desUrl, found := pathUrlMap[oneSeriesDirPath.Path]
 				if found == false {

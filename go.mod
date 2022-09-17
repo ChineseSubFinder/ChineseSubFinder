@@ -23,7 +23,6 @@ require (
 	github.com/go-rod/rod v0.106.8
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/uuid v1.3.0
-	github.com/gorilla/websocket v1.4.2
 	github.com/grd/stat v0.0.0-20130623202159-138af3fd5012
 	github.com/huandu/go-clone v1.3.0
 	github.com/james-bowman/nlp v0.0.0-20210511120306-26d441fa0ded
@@ -68,6 +67,7 @@ require (
 )
 
 require (
+	github.com/allanpk716/is_running_in_docker v0.0.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/cyruzin/golang-tmdb v1.4.3
 	github.com/elazarl/goproxy v0.0.0-20220417044921-416226498f94
@@ -82,7 +82,6 @@ require (
 	github.com/Microsoft/go-winio v0.4.16 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
-	github.com/allanpk716/is_running_in_docker v0.0.1 // indirect
 	github.com/andybalholm/brotli v1.0.0 // indirect
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
