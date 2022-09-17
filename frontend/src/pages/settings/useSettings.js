@@ -3,6 +3,8 @@ import SettingApi from 'src/api/SettingApi';
 import { SystemMessage } from 'src/utils/Message';
 import { deepCopy } from 'src/utils/CommonUtils';
 import { useAppStatusLoading } from 'src/composables/useAppStatusLoading';
+import { isRunningInDocker } from 'src/store/systemState';
+import { Dialog } from 'quasar';
 
 const { startLoading } = useAppStatusLoading();
 
@@ -62,6 +64,23 @@ export const useSettings = () => {
 export const submitting = ref(false);
 
 export const submitAll = async () => {
+  if (isRunningInDocker.value) {
+    const isMoviePathStarsWithMedia = formModel.common_settings.movie_paths.every((path) => path.startsWith('/media'));
+    const isSeriesPathStarsWithMedia = formModel.common_settings.series_paths.every((path) =>
+      path.startsWith('/media')
+    );
+    if (!isMoviePathStarsWithMedia || !isSeriesPathStarsWithMedia) {
+      Dialog.create({
+        title: '请修改相关配置后继续',
+        html: true,
+        message:
+          '软件运行在Docker中，请将基础设置中的电影和电视剧目录修改为 <b>/media</b> 下的目录，否则可能会因为权限问题导致无法正确的加载媒体库',
+        persistent: true,
+        ok: '确定',
+      });
+      return;
+    }
+  }
   submitting.value = true;
   const [, err] = await SettingApi.update(formModel);
   submitting.value = false;

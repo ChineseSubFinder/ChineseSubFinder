@@ -13,6 +13,7 @@ export const getInfo = async () => {
 };
 
 export const isJobRunning = computed(() => systemState.jobStatus?.status === 'running');
+export const isRunningInDocker = computed(() => systemState.systemInfo?.is_running_in_docker);
 
 export const getJobsStatus = async () => {
   const [res] = await JobApi.getStatus();

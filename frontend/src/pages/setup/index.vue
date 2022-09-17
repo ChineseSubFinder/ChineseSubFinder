@@ -57,9 +57,10 @@ import { setupState, useSetup } from 'pages/setup/useSetup';
 import EmbySetupForm from 'pages/setup/EmbySetupForm';
 import LoginBgArea from 'pages/access/login/LoginBgArea';
 import { deepCopy } from 'src/utils/CommonUtils';
-import { getInfo } from 'src/store/systemState';
+import { getInfo, isRunningInDocker } from 'src/store/systemState';
 import { SUB_NAME_FORMAT_NORMAL } from 'src/constants/SettingConstants';
 import { useAppStatusLoading } from 'src/composables/useAppStatusLoading';
+import { Dialog } from 'quasar';
 
 useSetup();
 const { startLoading } = useAppStatusLoading();
@@ -95,6 +96,23 @@ const showSubmitButton = computed(() => {
 });
 
 const submit = async () => {
+  if (isRunningInDocker.value) {
+    // 检测电影和连续剧目录是否以 /media 开头
+    const isMovieStartsWithMedia = setupState.form.movieFolder.every((item) => item.startsWith('/media'));
+    const isSeriesStartsWithMedia = setupState.form.seriesFolder.every((item) => item.startsWith('/media'));
+    if (!isMovieStartsWithMedia || !isSeriesStartsWithMedia) {
+      Dialog.create({
+        title: '请修改相关配置后继续',
+        html: true,
+        message:
+          '软件运行在Docker中，请将电影和电视剧目录修改为 <b>/media</b> 下的目录，否则可能会因为权限问题导致无法正确的加载媒体库',
+        persistent: true,
+        ok: '确定',
+      });
+      return;
+    }
+  }
+
   let isValid = true;
   if (setupState.form.mediaServer === 'emby') {
     isValid = await mediaServerSettingForm.value.$refs.form.validate();
