@@ -914,6 +914,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 					v.log.Warningln("scrabbleUpVideoListEmby.seriesProcess.pathUrlMap", oneSeriesDirPath.Path)
 					continue
 				}
+
+				v.log.Infoln("scrabbleUpVideoListEmby", oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path, desUrl)
 				dirRootUrl := path_helper.ChangePhysicalPathToSharePath(oneEpsMixInfo.PhysicalSeriesRootDir, oneSeriesDirPath.Path, desUrl)
 				//dirRootUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalSeriesRootDir, oneSeriesDirPath.Path, desUrl)
 
