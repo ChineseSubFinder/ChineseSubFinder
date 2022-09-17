@@ -853,8 +853,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 				videoFileName := filepath.Base(oneEpsMixInfo.PhysicalVideoFileFullPath)
 				epsVideoNfoInfo, err := decode.GetVideoNfoInfo4OneSeriesEpisode(oneEpsMixInfo.PhysicalVideoFileFullPath)
 				if err != nil {
-					v.log.Errorln("GetVideoInfoFromFileName", err)
-					break
+					v.log.Warningln("GetVideoInfoFromFileName", err)
+					continue
 				}
 				// 匹配上了前缀就替换这个，并记录
 				epsFUrl := path_helper.ChangePhysicalPathToSharePath(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path, desUrl)
