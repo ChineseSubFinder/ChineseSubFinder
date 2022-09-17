@@ -37,6 +37,17 @@ func ChangePhysicalPathToSharePath(physicalFullPath, pathUrlMapKey, sharePrefixP
 	dirName := strings.ReplaceAll(physicalFullPath, pathUrlMapKey, "")
 	outPath := filepath.Join(sharePrefixPath, dirName)
 	return outPath
+
+	/*
+		// 首先需要判断这个需要替换的部分是否是包含关系
+		if strings.HasPrefix(physicalFullPath, pathUrlMapKey) == true {
+			dirName := strings.ReplaceAll(physicalFullPath, pathUrlMapKey, "")
+			outPath := filepath.Join(sharePrefixPath, dirName)
+			return outPath
+		} else {
+			return ""
+		}
+	*/
 }
 
 const (

@@ -54,6 +54,14 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 		cb.log.Infoln("------------------------------------")
 		cb.log.Infoln("Video Scan Started By webui...")
 
+		pathUrlMap := cb.GetPathUrlMap()
+		cb.log.Infoln("---------------------------------")
+		cb.log.Infoln("GetPathUrlMap")
+		for s, s2 := range pathUrlMap {
+			cb.log.Infoln("pathUrlMap", s, s2)
+		}
+		cb.log.Infoln("---------------------------------")
+
 		defer func() {
 			cb.videoScanAndRefreshHelperIsRunning = false
 			cb.videoScanAndRefreshHelperLocker.Unlock()
@@ -76,15 +84,6 @@ func (cb *ControllerBase) RefreshVideoListHandler(c *gin.Context) {
 			cb.videoScanAndRefreshHelperErrMessage = err2.Error()
 			return
 		}
-
-		pathUrlMap := cb.GetPathUrlMap()
-
-		cb.log.Debugln("---------------------------------")
-		cb.log.Debugln("GetPathUrlMap")
-		for s, s2 := range pathUrlMap {
-			cb.log.Debugln("pathUrlMap", s, s2)
-		}
-		cb.log.Debugln("---------------------------------")
 
 		MovieInfos, SeasonInfos := cb.videoScanAndRefreshHelper.ScrabbleUpVideoList(scanVideoResult, pathUrlMap)
 
