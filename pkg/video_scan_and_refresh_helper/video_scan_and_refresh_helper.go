@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/path_helper"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
 	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
@@ -573,7 +575,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 		v.processLocker.Unlock()
 
 		// 匹配上了前缀就替换这个，并记录
-		movieFUrl := strings.ReplaceAll(oneMovieFPath, oneMovieDirRootPath, desUrl)
+		movieFUrl := path_helper.ChangePhysicalPathToSharePath(oneMovieFPath, oneMovieDirRootPath, desUrl)
+		//movieFUrl := strings.ReplaceAll(oneMovieFPath, oneMovieDirRootPath, desUrl)
 		oneMovieInfo := backend2.MovieInfo{
 			Name:         filepath.Base(movieFUrl),
 			DirRootUrl:   filepath.Dir(movieFUrl),
@@ -588,7 +591,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 		}
 		matchedSubFileByOneVideoUrl := make([]string, 0)
 		for _, oneSubFPath := range matchedSubFileByOneVideo {
-			oneSubFUrl := strings.ReplaceAll(oneSubFPath, oneMovieDirRootPath, desUrl)
+			oneSubFUrl := path_helper.ChangePhysicalPathToSharePath(oneSubFPath, oneMovieDirRootPath, desUrl)
+			//oneSubFUrl := strings.ReplaceAll(oneSubFPath, oneMovieDirRootPath, desUrl)
 			matchedSubFileByOneVideoUrl = append(matchedSubFileByOneVideoUrl, oneSubFUrl)
 		}
 		oneMovieInfo.SubFPathList = append(oneMovieInfo.SubFPathList, matchedSubFileByOneVideoUrl...)
@@ -656,7 +660,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 			v.log.Debugln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub bNeedDlSub == false", oneSeriesRootPathName)
 			return nil
 		}
-		seriesDirRootFUrl := strings.ReplaceAll(oneSeriesRootDir, oneSeriesRootPathName, desUrl)
+		seriesDirRootFUrl := path_helper.ChangePhysicalPathToSharePath(oneSeriesRootDir, oneSeriesRootPathName, desUrl)
+		//seriesDirRootFUrl := strings.ReplaceAll(oneSeriesRootDir, oneSeriesRootPathName, desUrl)
 		oneSeasonInfo := backend2.SeasonInfo{
 			Name:          filepath.Base(oneSeriesRootDir),
 			RootDirPath:   oneSeriesRootDir,
@@ -665,7 +670,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 		}
 		for _, epsInfo := range seriesInfo.EpList {
 
-			videoFUrl := strings.ReplaceAll(epsInfo.FileFullPath, oneSeriesRootPathName, desUrl)
+			videoFUrl := path_helper.ChangePhysicalPathToSharePath(epsInfo.FileFullPath, oneSeriesRootPathName, desUrl)
+			//videoFUrl := strings.ReplaceAll(epsInfo.FileFullPath, oneSeriesRootPathName, desUrl)
 			oneVideoInfo := backend2.OneVideoInfo{
 				Name:         epsInfo.Title,
 				VideoFPath:   epsInfo.FileFullPath,
@@ -682,7 +688,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 			}
 			matchedSubFileByOneVideoUrl := make([]string, 0)
 			for _, oneSubFPath := range matchedSubFileByOneVideo {
-				oneSubFUrl := strings.ReplaceAll(oneSubFPath, oneSeriesRootPathName, desUrl)
+				oneSubFUrl := path_helper.ChangePhysicalPathToSharePath(oneSubFPath, oneSeriesRootPathName, desUrl)
+				//oneSubFUrl := strings.ReplaceAll(oneSubFPath, oneSeriesRootPathName, desUrl)
 				matchedSubFileByOneVideoUrl = append(matchedSubFileByOneVideoUrl, oneSubFUrl)
 			}
 			oneVideoInfo.SubFPathList = append(oneVideoInfo.SubFPathList, matchedSubFileByOneVideoUrl...)
@@ -761,7 +768,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 				}
 				v.processLocker.Unlock()
 				// 匹配上了前缀就替换这个，并记录
-				movieFUrl := strings.ReplaceAll(oneMovieMixInfo.PhysicalVideoFileFullPath, oneMovieDirPath.Path, desUrl)
+				movieFUrl := path_helper.ChangePhysicalPathToSharePath(oneMovieMixInfo.PhysicalVideoFileFullPath, oneMovieDirPath.Path, desUrl)
+				//movieFUrl := strings.ReplaceAll(oneMovieMixInfo.PhysicalVideoFileFullPath, oneMovieDirPath.Path, desUrl)
 				oneMovieInfo := backend2.MovieInfo{
 					Name:                     filepath.Base(movieFUrl),
 					DirRootUrl:               filepath.Dir(movieFUrl),
@@ -778,7 +786,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 				}
 				matchedSubFileByOneVideoUrl := make([]string, 0)
 				for _, oneSubFPath := range matchedSubFileByOneVideo {
-					oneSubFUrl := strings.ReplaceAll(oneSubFPath, oneMovieDirPath.Path, desUrl)
+					oneSubFUrl := path_helper.ChangePhysicalPathToSharePath(oneSubFPath, oneMovieDirPath.Path, desUrl)
+					//oneSubFUrl := strings.ReplaceAll(oneSubFPath, oneMovieDirPath.Path, desUrl)
 					matchedSubFileByOneVideoUrl = append(matchedSubFileByOneVideoUrl, oneSubFUrl)
 				}
 				oneMovieInfo.SubFPathList = append(oneMovieInfo.SubFPathList, matchedSubFileByOneVideoUrl...)
@@ -848,7 +857,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 					break
 				}
 				// 匹配上了前缀就替换这个，并记录
-				epsFUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path, desUrl)
+				epsFUrl := path_helper.ChangePhysicalPathToSharePath(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path, desUrl)
+				//epsFUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalVideoFileFullPath, oneSeriesDirPath.Path, desUrl)
 				oneVideoInfo := backend2.OneVideoInfo{
 					Name:                     videoFileName,
 					VideoFPath:               oneEpsMixInfo.PhysicalVideoFileFullPath,
@@ -866,7 +876,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 				}
 				matchedSubFileByOneVideoUrl := make([]string, 0)
 				for _, oneSubFPath := range matchedSubFileByOneVideo {
-					oneSubFUrl := strings.ReplaceAll(oneSubFPath, oneSeriesDirPath.Path, desUrl)
+					oneSubFUrl := path_helper.ChangePhysicalPathToSharePath(oneSubFPath, oneSeriesDirPath.Path, desUrl)
+					//oneSubFUrl := strings.ReplaceAll(oneSubFPath, oneSeriesDirPath.Path, desUrl)
 					matchedSubFileByOneVideoUrl = append(matchedSubFileByOneVideoUrl, oneSubFUrl)
 				}
 				oneVideoInfo.SubFPathList = append(oneVideoInfo.SubFPathList, matchedSubFileByOneVideoUrl...)
@@ -903,7 +914,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 					v.log.Warningln("scrabbleUpVideoListEmby.seriesProcess.pathUrlMap", oneSeriesDirPath.Path)
 					continue
 				}
-				dirRootUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalSeriesRootDir, oneSeriesDirPath.Path, desUrl)
+				dirRootUrl := path_helper.ChangePhysicalPathToSharePath(oneEpsMixInfo.PhysicalSeriesRootDir, oneSeriesDirPath.Path, desUrl)
+				//dirRootUrl := strings.ReplaceAll(oneEpsMixInfo.PhysicalSeriesRootDir, oneSeriesDirPath.Path, desUrl)
 
 				oneSeasonInfo = backend2.SeasonInfo{
 					Name:          seriesName,

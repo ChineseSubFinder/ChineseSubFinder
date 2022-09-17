@@ -1,6 +1,9 @@
 package path_helper
 
-import "strings"
+import (
+	"path/filepath"
+	"strings"
+)
 
 func FixShareFileProtocolsPath(orgPath string) string {
 
@@ -26,6 +29,14 @@ func fixSMBPath(orgPath string, prefixBase, prefixFull string) string {
 		// 无需调整，因为没得 smb 关键词
 		return orgPath
 	}
+}
+
+// ChangePhysicalPathToSharePath 从物理地址转换为静态文件服务器分享地址
+func ChangePhysicalPathToSharePath(physicalFullPath, pathUrlMapKey, sharePrefixPath string) string {
+
+	dirName := strings.ReplaceAll(physicalFullPath, pathUrlMapKey, "")
+	outPath := filepath.Join(sharePrefixPath, dirName)
+	return outPath
 }
 
 const (
