@@ -48,7 +48,7 @@ func (d *Downloader) movieDlFunc(ctx context.Context, job taskQueue2.OneJob, dow
 	// TODO 刷新字幕，这里是 Emby 的，如果是其他的，需要再对接对应的媒体服务器
 	if d.settings.EmbySettings.Enable == true && d.embyHelper != nil && job.MediaServerInsideVideoID != "" {
 
-		d.log.Infoln("Refresh Emby Subtitle with id:", job.MediaServerInsideVideoID)
+		d.log.Infoln("字幕下载完毕，尝试刷新 Emby 中对应字幕", job.VideoFPath, job.MediaServerInsideVideoID)
 		err = d.embyHelper.EmbyApi.UpdateVideoSubList(job.MediaServerInsideVideoID)
 		if err != nil {
 			d.log.Errorln("UpdateVideoSubList", job.VideoFPath, job.MediaServerInsideVideoID, "Error:", err)
@@ -56,11 +56,11 @@ func (d *Downloader) movieDlFunc(ctx context.Context, job taskQueue2.OneJob, dow
 		}
 	} else {
 		if d.settings.EmbySettings.Enable == false {
-			d.log.Infoln("UpdateVideoSubList", job.VideoFPath, "Skip, because Emby enable is false")
+			d.log.Infoln("字幕下载完毕，尝试刷新 Emby 中对应字幕", job.VideoFPath, "Skip, because Emby enable is false")
 		} else if d.embyHelper == nil {
-			d.log.Infoln("UpdateVideoSubList", job.VideoFPath, "Skip, because EmbyHelper is nil")
+			d.log.Infoln("字幕下载完毕，尝试刷新 Emby 中对应字幕", job.VideoFPath, "Skip, because EmbyHelper is nil")
 		} else if job.MediaServerInsideVideoID == "" {
-			d.log.Infoln("UpdateVideoSubList", job.VideoFPath, "Skip, because MediaServerInsideVideoID is empty")
+			d.log.Infoln("字幕下载完毕，尝试刷新 Emby 中对应字幕", job.VideoFPath, "Skip, because MediaServerInsideVideoID is empty")
 		}
 	}
 
@@ -227,11 +227,17 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	// 哪怕有一个写入到本地成功了，也无需对本次任务报错
 	d.downloadQueue.AutoDetectUpdateJobStatus(job, nil)
 	// TODO 刷新字幕，这里是 Emby 的，如果是其他的，需要再对接对应的媒体服务器
-	if d.settings.EmbySettings.Enable == true && d.embyHelper != nil && job.MediaServerInsideVideoID != "" {
-		err = d.embyHelper.EmbyApi.UpdateVideoSubList(job.MediaServerInsideVideoID)
-		if err != nil {
-			d.log.Errorln("UpdateVideoSubList", job.SeriesRootDirPath, job.MediaServerInsideVideoID, job.Season, job.Episode, "Error:", err)
-			return err
+	if d.settings.EmbySettings.Enable == true && d.embyHelper != nil {
+
+		if job.MediaServerInsideVideoID != "" {
+			d.log.Infoln("字幕下载完毕，尝试刷新 Emby 中对应字幕", job.SeriesRootDirPath, job.MediaServerInsideVideoID, job.Season, job.Episode)
+			err = d.embyHelper.EmbyApi.UpdateVideoSubList(job.MediaServerInsideVideoID)
+			if err != nil {
+				d.log.Errorln("UpdateVideoSubList", job.SeriesRootDirPath, job.MediaServerInsideVideoID, job.Season, job.Episode, "Error:", err)
+				return err
+			}
+		} else {
+			d.log.Warningln("字幕下载完毕，尝试刷新 Emby 中对应字幕，跳过，因为 MediaServerInsideVideoID 为空", job.SeriesRootDirPath, job.Season, job.Episode)
 		}
 	}
 
