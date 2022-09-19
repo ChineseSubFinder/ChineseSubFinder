@@ -6,7 +6,7 @@
           <q-item-label>字幕扫描时机</q-item-label>
           <q-item>
             <q-item-section avatar top>
-              <q-radio v-model="form.interval_or_assign_or_custom" :val="0" />
+              <q-radio v-model="scanType" :val="0" />
             </q-item-section>
             <q-item-section>
               <q-item-label>扫描的间隔</q-item-label>
@@ -22,7 +22,7 @@
                 :rules="[(val) => !!val || '不能为空']"
                 emit-value
                 map-options
-                :disable="form.interval_or_assign_or_custom !== 0"
+                :disable="scanType !== 0"
                 @update:model-value="handleScanIntervalChange"
               />
             </q-item-section>
@@ -30,7 +30,7 @@
 
           <q-item>
             <q-item-section avatar top>
-              <q-radio v-model="form.interval_or_assign_or_custom" :val="1" />
+              <q-radio v-model="scanType" :val="1" />
             </q-item-section>
             <q-item-section>
               <q-item-label>指定扫描时间</q-item-label>
@@ -49,7 +49,7 @@
                   (val) => !!val || !!val?.length || '不能为空',
                   (val) => val.length <= 4 || '最多选择4个时间点',
                 ]"
-                :disable="form.interval_or_assign_or_custom !== 1"
+                :disable="scanType !== 1"
                 @update:model-value="handleScanSpecTimeChange"
                 multiple
               />
@@ -58,7 +58,7 @@
 
           <q-item>
             <q-item-section avatar top>
-              <q-radio v-model="form.interval_or_assign_or_custom" :val="2" />
+              <q-radio v-model="scanType" :val="2" />
             </q-item-section>
             <q-item-section>
               <q-item-label>自定义规则</q-item-label>
@@ -77,8 +77,17 @@
                 style="width: 200px"
                 :rules="[(val) => !!val || '不能为空', validateCronTime]"
                 @update:model-value="handleScanCustomChange"
-                :disable="form.interval_or_assign_or_custom !== 2"
+                :disable="scanType !== 2"
               />
+            </q-item-section>
+          </q-item>
+
+          <q-item>
+            <q-item-section avatar top>
+              <q-radio v-model="scanType" :val="3" @update:model-value="handleScanNoScanChange" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>不扫描</q-item-label>
             </q-item-section>
           </q-item>
         </q-item-section>
@@ -222,15 +231,23 @@ import { ref, watch } from 'vue';
 
 const { common_settings: form } = toRefs(formModel);
 
+const NO_SCAN_CRON_RULE = '0 0 0 1 1 1 2077';
+
 const scanCronString0 = ref('');
 const scanCronString1 = ref([]);
 const scanCronString2 = ref('');
+const scanType = ref(0);
 
-if (form.value.interval_or_assign_or_custom === 0) {
+if (form.value.scan_interval === NO_SCAN_CRON_RULE) {
+  scanType.value = 3;
+} else if (form.value.interval_or_assign_or_custom === 0) {
+  scanType.value = 0;
   scanCronString0.value = form.value.scan_interval.split(' ').pop();
 } else if (form.value.interval_or_assign_or_custom === 1) {
+  scanType.value = 1;
   scanCronString1.value = form.value.scan_interval.split(' ')[1].split(',');
 } else if (form.value.interval_or_assign_or_custom === 2) {
+  scanType.value = 2;
   scanCronString2.value = form.value.scan_interval;
 }
 
@@ -271,15 +288,23 @@ const scanSpecTimeOptions = [
 ];
 
 const handleScanIntervalChange = () => {
+  formModel.common_settings.interval_or_assign_or_custom = 0;
   formModel.common_settings.scan_interval = `@every ${scanCronString0.value}`;
 };
 
 const handleScanSpecTimeChange = () => {
+  formModel.common_settings.interval_or_assign_or_custom = 1;
   formModel.common_settings.scan_interval = `0 ${scanCronString1.value.join(',')} * * *`;
 };
 
 const handleScanCustomChange = () => {
+  formModel.common_settings.interval_or_assign_or_custom = 2;
   formModel.common_settings.scan_interval = `${scanCronString2.value}`;
+};
+
+const handleScanNoScanChange = () => {
+  formModel.common_settings.interval_or_assign_or_custom = 2;
+  formModel.common_settings.scan_interval = NO_SCAN_CRON_RULE;
 };
 
 // 同步更新emby的线程设置
