@@ -27,11 +27,6 @@ import (
 	既然是没有替换的打算，那么就使用 logrus 的 hook 接口去完成额外日志的记录即可，也就是在“每次”扫描的开始和结束进行标记，然后拆分成多次的日志好了
 */
 
-func init() {
-	// 第一次运行需要清理、读取一次
-	cleanAndLoadOnceLogs()
-}
-
 type LoggerHub struct {
 	onceLogger *logrus.Logger // 一次扫描日志的实例
 	onceStart  bool
@@ -80,7 +75,7 @@ func (lh *LoggerHub) Fire(entry *logrus.Entry) error {
 		lh.onceStart = false
 
 		// 注意这个函数的调用时机
-		cleanAndLoadOnceLogs()
+		CleanAndLoadOnceLogs()
 
 		return nil
 	}
@@ -159,7 +154,7 @@ func newOnceLogger(logFileName string) *logrus.Logger {
 	fileAbsPath := filepath.Join(pathRoot, fileName)
 
 	// 注意这个函数的调用时机
-	cleanAndLoadOnceLogs()
+	CleanAndLoadOnceLogs()
 
 	onceLoggerFile, err = os.OpenFile(fileAbsPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
 	if err != nil {
@@ -170,8 +165,8 @@ func newOnceLogger(logFileName string) *logrus.Logger {
 	return Logger
 }
 
-// cleanAndLoadOnceLogs 调用的时机，一定是要在新开一个日志前，且把上一个日志的文件流关闭的时候
-func cleanAndLoadOnceLogs() {
+// CleanAndLoadOnceLogs 调用的时机，一定是要在新开一个日志前，且把上一个日志的文件流关闭的时候
+func CleanAndLoadOnceLogs() {
 	defer func() {
 		onceLogsLock.Unlock()
 	}()

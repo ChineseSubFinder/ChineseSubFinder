@@ -382,7 +382,7 @@ func GetConfigRootDirFPath() string {
 	if sysType == "linux" {
 
 		if LinuxConfigPathInSelfPath() != "" {
-			// 跟 Windows 一样直接在当前程序目录下的 .
+			// 自定义路径
 			nowConfigFPath = LinuxConfigPathInSelfPath()
 		} else {
 			// 专用目录，与 Docker 设置一致
@@ -390,13 +390,24 @@ func GetConfigRootDirFPath() string {
 		}
 
 	} else if sysType == "windows" {
-		nowConfigFPath = configDirRootFPathWindows
-	} else if sysType == "darwin" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			panic("GetConfigRootDirFPath darwin get UserHomeDir, Error:" + err.Error())
+		if LinuxConfigPathInSelfPath() != "" {
+			// 自定义路径
+			nowConfigFPath = LinuxConfigPathInSelfPath()
+		} else {
+			nowConfigFPath = configDirRootFPathWindows
 		}
-		nowConfigFPath = home + configDirRootFPathDarwin
+	} else if sysType == "darwin" {
+
+		if LinuxConfigPathInSelfPath() != "" {
+			// 自定义路径
+			nowConfigFPath = LinuxConfigPathInSelfPath()
+		} else {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				panic("GetConfigRootDirFPath darwin get UserHomeDir, Error:" + err.Error())
+			}
+			nowConfigFPath = home + configDirRootFPathDarwin
+		}
 	} else {
 		panic("GetConfigRootDirFPath can't matched OSType: " + sysType + " ,You Should Implement It Yourself")
 	}
