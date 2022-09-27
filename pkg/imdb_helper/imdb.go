@@ -6,11 +6,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/subtitle_best_api"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
 
 	"github.com/StalkR/imdb"
@@ -244,9 +245,9 @@ func getReady(log *logrus.Logger, proxySettings *settings.ProxySettings) {
 	locker.Lock()
 	if randomAuthKey == nil {
 		randomAuthKey = &random_auth_key.AuthKey{
-			BaseKey:  global_value.BaseKey(),
-			AESKey16: global_value.AESKey16(),
-			AESIv16:  global_value.AESIv16(),
+			BaseKey:  pkg.BaseKey(),
+			AESKey16: pkg.AESKey16(),
+			AESIv16:  pkg.AESIv16(),
 		}
 
 		subtitleBestApi = subtitle_best_api.NewSubtitleBestApi(log, *randomAuthKey, proxySettings)

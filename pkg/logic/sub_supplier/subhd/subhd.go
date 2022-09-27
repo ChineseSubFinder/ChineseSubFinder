@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
@@ -26,7 +28,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
@@ -578,7 +579,7 @@ func (s *Supplier) downloadSubFile(browser *rod.Browser, page *rod.Page, subDown
 	fileName := ""
 	fileByte := []byte{0}
 	err = rod.Try(func() {
-		tmpDir := filepath.Join(global_value.DefTmpFolder(), "downloads")
+		tmpDir := filepath.Join(pkg.DefTmpFolder(), "downloads")
 		wait := browser.Timeout(30 * time.Second).WaitDownload(tmpDir)
 		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()
@@ -783,7 +784,7 @@ search:
 
 	if s.debugMode == true {
 		//截圖保存
-		page.MustScreenshot(global_value.DefDebugFolder(), "result.png")
+		page.MustScreenshot(pkg.DefDebugFolder(), "result.png")
 	}
 }
 

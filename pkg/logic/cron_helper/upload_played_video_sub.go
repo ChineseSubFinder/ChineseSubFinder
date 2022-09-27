@@ -3,6 +3,7 @@ package cron_helper
 import (
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -13,7 +14,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/pkg/mix_media_info"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/jinzhu/now"
 )
 
@@ -76,7 +76,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 	}
 	// 在这之前，需要进行一次判断，这个字幕是否是有效的，因为可能会有是 1kb 的错误字幕
 	// 如果解析这个字幕是错误的，那么也可以标记完成
-	shareRootDir, err := my_folder.GetShareSubRootFolder()
+	shareRootDir, err := pkg.GetShareSubRootFolder()
 	if err != nil {
 		ch.log.Errorln("GetShareSubRootFolder error:", err.Error())
 		return
@@ -271,7 +271,7 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 	}
 	// 在这之前，需要进行一次判断，这个字幕是否是有效的，因为可能会有是 1kb 的错误字幕
 	// 如果解析这个字幕是错误的，那么也可以标记完成
-	shareRootDir, err := my_folder.GetShareSubRootFolder()
+	shareRootDir, err := pkg.GetShareSubRootFolder()
 	if err != nil {
 		ch.log.Errorln("GetShareSubRootFolder error:", err.Error())
 		return

@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -81,7 +82,7 @@ func InitDb() error {
 }
 
 func getDbName() string {
-	return filepath.Join(my_folder.GetConfigRootDirFPath(), dbFileName)
+	return filepath.Join(pkg.GetConfigRootDirFPath(), dbFileName)
 }
 
 var (

@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
@@ -20,7 +22,6 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/mix_media_info"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
@@ -357,7 +358,7 @@ func (s *Supplier) getSubDetail(subID int) (OneSubDetail, error) {
 			notify_center.Notify.Add(s.GetSupplierName()+" NewHttpClient", fmt.Sprintf("subID: %d, resp: %s, error: %s", subID, resp.String(), err.Error()))
 
 			// 输出调试文件
-			cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
+			cacheCenterFolder, err := pkg.GetRootCacheCenterFolder()
 			if err != nil {
 				s.log.Errorln(s.GetSupplierName(), "GetRootCacheCenterFolder", err)
 			}

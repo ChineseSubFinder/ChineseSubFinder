@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/common"
 
@@ -715,7 +715,7 @@ func (s *SubtitleBestApi) AskDownloadTask(id string) (*AskDownloadTaskReply, err
 		return nil, err
 	}
 
-	major, minor, patch := global_value.AppVersionInt()
+	major, minor, patch := pkg.AppVersionInt()
 	var askDownloadTaskReply AskDownloadTaskReply
 	resp, err := httpClient.R().
 		SetHeader("Authorization", "beer "+authKey).

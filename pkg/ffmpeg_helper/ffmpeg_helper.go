@@ -9,12 +9,13 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
 	"github.com/sirupsen/logrus"
@@ -104,7 +105,7 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType Export
 		// 说明缓存不存在，需要导出，这里需要注意，如果导出失败了，这个文件夹要清理掉
 		if my_util.IsDir(nowCacheFolderPath) == true {
 			// 如果存在则，先清空一个这个文件夹
-			err = my_folder.ClearFolder(nowCacheFolderPath)
+			err = pkg.ClearFolder(nowCacheFolderPath)
 			if err != nil {
 				bok = false
 				return bok, nil, err

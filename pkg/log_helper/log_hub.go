@@ -8,10 +8,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/log_hub"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
 	easy "github.com/t-tomalak/logrus-easy-formatter"
@@ -153,7 +154,7 @@ func newOnceLogger(logFileName string) *logrus.Logger {
 		TimestampFormat: "2006-01-02 15:04:05",
 		LogFormat:       "[%lvl%]: %time% - %msg%\n",
 	}
-	pathRoot := filepath.Join(global_value.ConfigRootDirFPath(), "Logs")
+	pathRoot := filepath.Join(pkg.ConfigRootDirFPath(), "Logs")
 	fileName := fmt.Sprintf(common.OnceLogPrefix+"%v.log", logFileName)
 	fileAbsPath := filepath.Join(pathRoot, fileName)
 
@@ -182,7 +183,7 @@ func cleanAndLoadOnceLogs() {
 
 	onceLogsLock.Lock()
 
-	pathRoot := filepath.Join(global_value.ConfigRootDirFPath(), "Logs")
+	pathRoot := filepath.Join(pkg.ConfigRootDirFPath(), "Logs")
 	// 扫描当前日志存储目录下有多少个符合要求的 Once- 日志
 	// 确保有且仅有最近的 20 次扫描日志记录存在即可
 	matches, err := filepath.Glob(filepath.Join(pathRoot, common.OnceLogPrefix+"*.log"))

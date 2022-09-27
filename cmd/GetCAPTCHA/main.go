@@ -5,13 +5,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
 
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend"
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
@@ -25,13 +24,13 @@ func newLog() *logrus.Logger {
 	// --------------------------------------------------
 	// 之前是读取配置文件，现在改为，读取当前目录下，是否有一个特殊的文件，有则启动 Debug 日志级别
 	// 那么怎么写入这个文件，就靠额外的逻辑控制了
-	if my_util.IsFile(filepath.Join(global_value.ConfigRootDirFPath(), log_helper.DebugFileName)) == true {
+	if my_util.IsFile(filepath.Join(pkg.ConfigRootDirFPath(), log_helper.DebugFileName)) == true {
 		level = logrus.DebugLevel
 	} else {
 		level = logrus.InfoLevel
 	}
 	logger := log_helper.NewLogHelper(log_helper.LogNameGetCAPTCHA,
-		global_value.ConfigRootDirFPath(),
+		pkg.ConfigRootDirFPath(),
 		level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
 	logger.AddHook(log_helper.NewLoggerHub())
 
@@ -98,7 +97,7 @@ func Process(proxySettings *settings.ProxySettings) error {
 
 		notify_center.Notify.Send()
 
-		err = my_folder.ClearRodTmpRootFolder()
+		err = pkg.ClearRodTmpRootFolder()
 		if err != nil {
 			loggerBase.Errorln(err.Error())
 			return
@@ -112,9 +111,9 @@ func Process(proxySettings *settings.ProxySettings) error {
 		return fmt.Errorf("ReadCustomAuthFile failed")
 	}
 	AuthKey := random_auth_key.AuthKey{
-		BaseKey:  global_value.BaseKey(),
-		AESKey16: global_value.AESKey16(),
-		AESIv16:  global_value.AESIv16(),
+		BaseKey:  pkg.BaseKey(),
+		AESKey16: pkg.AESKey16(),
+		AESIv16:  pkg.AESIv16(),
 	}
 	randomAuthKey := random_auth_key.NewRandomAuthKey(5, AuthKey)
 	nowAuthKey, err := randomAuthKey.GetAuthKey()

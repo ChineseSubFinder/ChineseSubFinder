@@ -3,9 +3,10 @@ package subtitle_best_api
 import (
 	"testing"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 
@@ -18,9 +19,9 @@ func TestSubtitleBestApi_GetMediaInfo(t *testing.T) {
 	bapi := NewSubtitleBestApi(
 		log_helper.GetLogger4Tester(),
 		random_auth_key.AuthKey{
-			BaseKey:  global_value.BaseKey(),
-			AESKey16: global_value.AESKey16(),
-			AESIv16:  global_value.AESIv16(),
+			BaseKey:  pkg.BaseKey(),
+			AESKey16: pkg.AESKey16(),
+			AESIv16:  pkg.AESIv16(),
 		}, settings.GetSettings().AdvancedSettings.ProxySettings)
 
 	downloadTaskReply, err := bapi.AskDownloadTask("123")

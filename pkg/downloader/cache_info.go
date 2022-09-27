@@ -3,11 +3,12 @@ package downloader
 import (
 	"path/filepath"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/strcut_json"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
@@ -195,7 +196,7 @@ func (d *Downloader) getMovieInfoAndSeasonInfo(AllorFrontorEnd int) ([]backend2.
 func (d *Downloader) saveVideoListCache(movieInfos []backend2.MovieInfo, seasonInfos []backend2.SeasonInfo) error {
 
 	// 缓存下来
-	cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
+	cacheCenterFolder, err := pkg.GetRootCacheCenterFolder()
 	if err != nil {
 		return err
 	}
@@ -223,7 +224,7 @@ func (d *Downloader) saveVideoListCache(movieInfos []backend2.MovieInfo, seasonI
 func (d *Downloader) loadVideoListCache() error {
 
 	// 缓存下来
-	cacheCenterFolder, err := my_folder.GetRootCacheCenterFolder()
+	cacheCenterFolder, err := pkg.GetRootCacheCenterFolder()
 	if err != nil {
 		return err
 	}

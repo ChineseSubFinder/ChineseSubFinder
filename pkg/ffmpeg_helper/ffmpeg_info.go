@@ -1,13 +1,13 @@
 package ffmpeg_helper
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
@@ -37,7 +37,7 @@ func NewFFMPEGInfo(log *logrus.Logger, videoFullPath string) *FFMPEGInfo {
 // csf-cache/当前的视频文件名(不带后缀)
 func (f *FFMPEGInfo) GetCacheFolderFPath() (string, error) {
 	noExtVideoName := strings.ReplaceAll(filepath.Base(f.VideoFullPath), filepath.Ext(f.VideoFullPath), "")
-	return my_folder.GetSubFixCacheFolderByName(noExtVideoName)
+	return pkg.GetSubFixCacheFolderByName(noExtVideoName)
 }
 
 // IsExported 是否已经导出过，如果没有导出或者导出不完整为 false

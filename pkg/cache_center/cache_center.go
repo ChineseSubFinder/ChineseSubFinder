@@ -6,8 +6,9 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/sirupsen/logrus"
@@ -33,7 +34,7 @@ func NewCacheCenter(cacheName string, Settings *settings.Settings, Log *logrus.L
 	c.Settings = Settings
 	c.Log = Log
 	var err error
-	c.centerFolder, err = my_folder.GetRootCacheCenterFolder()
+	c.centerFolder, err = pkg.GetRootCacheCenterFolder()
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +77,7 @@ func (c *CacheCenter) Close() {
 
 func DelDb(cacheName string) {
 
-	centerFolder, err := my_folder.GetRootCacheCenterFolder()
+	centerFolder, err := pkg.GetRootCacheCenterFolder()
 	if err != nil {
 		return
 	}
@@ -89,13 +90,13 @@ func DelDb(cacheName string) {
 	}
 
 	taskQueueSaveRootPath := filepath.Join(centerFolder, taskQueueFolderName, cacheName)
-	err = my_folder.ClearFolder(taskQueueSaveRootPath)
+	err = pkg.ClearFolder(taskQueueSaveRootPath)
 	if err != nil {
 		return
 	}
 
 	downloadFileSaveRootPath := filepath.Join(centerFolder, downloadFilesFolderName, cacheName)
-	err = my_folder.ClearFolder(downloadFileSaveRootPath)
+	err = pkg.ClearFolder(downloadFileSaveRootPath)
 	if err != nil {
 		return
 	}

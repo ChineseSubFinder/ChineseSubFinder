@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
@@ -15,9 +17,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
-
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
@@ -65,7 +64,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	notify_center.Notify.Clear()
 	// ------------------------------------------------------------------------
 	// 获取验证码
-	if global_value.LiteMode() == false {
+	if pkg.LiteMode() == false {
 
 		nowTT := time.Now()
 		nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
@@ -125,7 +124,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 			p.SubSupplierHub.AddSubSupplier(assrt.NewSupplier(p.fileDownloader))
 		}
 
-		if global_value.LiteMode() == false {
+		if pkg.LiteMode() == false {
 			// 如果不是 Lite 模式，那么就可以开启这个功能
 			if common2.SubhdCode != "" {
 				// 如果找到 code 了，那么就可以继续用这个实例
@@ -135,7 +134,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	}
 	// ------------------------------------------------------------------------
 	// 清理自定义的 rod 缓存目录
-	err := my_folder.ClearRodTmpRootFolder()
+	err := pkg.ClearRodTmpRootFolder()
 	if err != nil {
 		p.gError = errors.New("ClearRodTmpRootFolder " + err.Error())
 		return p

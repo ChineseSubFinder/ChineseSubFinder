@@ -1,4 +1,4 @@
-package my_folder
+package pkg
 
 import (
 	"testing"

@@ -1,4 +1,4 @@
-package my_folder
+package pkg
 
 import (
 	"fmt"
@@ -380,7 +380,15 @@ func GetConfigRootDirFPath() string {
 	nowConfigFPath := ""
 	sysType := runtime.GOOS
 	if sysType == "linux" {
-		nowConfigFPath = configDirRootFPathLinux
+
+		if LinuxConfigPathInSelfPath() != "" {
+			// 跟 Windows 一样直接在当前程序目录下的 .
+			nowConfigFPath = LinuxConfigPathInSelfPath()
+		} else {
+			// 专用目录，与 Docker 设置一致
+			nowConfigFPath = configDirRootFPathLinux
+		}
+
 	} else if sysType == "windows" {
 		nowConfigFPath = configDirRootFPathWindows
 	} else if sysType == "darwin" {

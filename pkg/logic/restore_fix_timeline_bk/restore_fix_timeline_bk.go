@@ -1,10 +1,10 @@
 package restore_fix_timeline_bk
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"os"
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 )
 
@@ -26,7 +26,7 @@ func CheckSpeFile() (bool, error) {
 }
 
 func getSpeFileName() string {
-	return filepath.Join(my_folder.GetConfigRootDirFPath(), specialFileName)
+	return filepath.Join(pkg.GetConfigRootDirFPath(), specialFileName)
 }
 
 /*

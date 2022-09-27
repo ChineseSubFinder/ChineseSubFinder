@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
@@ -17,7 +19,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/filter"
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
@@ -31,7 +32,7 @@ func OrganizeDlSubFiles(log *logrus.Logger, tmpFolderName string, subInfos []sup
 	// 缓存列表，整理后的字幕列表
 	// SxEx - []string 字幕的路径
 	var siteSubInfoDict = make(map[string][]string)
-	tmpFolderFullPath, err := my_folder.GetTmpFolderByName(tmpFolderName)
+	tmpFolderFullPath, err := pkg.GetTmpFolderByName(tmpFolderName)
 	if err != nil {
 		return nil, err
 	}
@@ -369,7 +370,7 @@ func SearchVideoMatchSubFileAndRemoveExtMark(l *logrus.Logger, oneVideoFullPath 
 // DeleteOneSeasonSubCacheFolder 删除一个连续剧中的所有一季字幕的缓存文件夹
 func DeleteOneSeasonSubCacheFolder(seriesDir string) error {
 
-	debugFolderByName, err := my_folder.GetDebugFolderByName([]string{filepath.Base(seriesDir)})
+	debugFolderByName, err := pkg.GetDebugFolderByName([]string{filepath.Base(seriesDir)})
 	if err != nil {
 		return err
 	}

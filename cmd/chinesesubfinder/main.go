@@ -1,12 +1,15 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 
@@ -19,7 +22,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/backend"
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
@@ -31,14 +33,14 @@ func newLog() *logrus.Logger {
 	// --------------------------------------------------
 	// 之前是读取配置文件，现在改为，读取当前目录下，是否有一个特殊的文件，有则启动 Debug 日志级别
 	// 那么怎么写入这个文件，就靠额外的逻辑控制了
-	if my_util.IsFile(filepath.Join(global_value.ConfigRootDirFPath(), log_helper.DebugFileName)) == true {
+	if my_util.IsFile(filepath.Join(pkg.ConfigRootDirFPath(), log_helper.DebugFileName)) == true {
 		level = logrus.DebugLevel
 	} else {
 		level = logrus.InfoLevel
 	}
 	logger := log_helper.NewLogHelper(
 		log_helper.LogNameChineseSubFinder,
-		global_value.ConfigRootDirFPath(),
+		pkg.ConfigRootDirFPath(),
 		level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour,
 		settings.GetSettings().ExperimentalFunction.ExtendLog)
 	logger.AddHook(log_helper.NewLoggerHub())
@@ -47,24 +49,27 @@ func newLog() *logrus.Logger {
 }
 
 func init() {
+	// 要先进行 flag 的读取，并且写入全局变量中，否则后续的逻辑由于顺序问题故障
+	flag.Parse()
+	pkg.SetLinuxConfigPathInSelfPath(*SetLinuxConfigPathInSelfPathFlag)
+
 	loggerBase = newLog()
 	// --------------------------------------------------
 	if strings.ToLower(LiteMode) == "true" {
 		loggerBase.Info("LiteMode is true")
 		AppVersion += " Lite"
-		global_value.SetLiteMode(true)
+		pkg.SetLiteMode(true)
 	} else {
-		global_value.SetLiteMode(false)
+		pkg.SetLiteMode(false)
 	}
 
 	loggerBase.Infoln("ChineseSubFinder Version:", AppVersion)
-
-	global_value.SetAppVersion(AppVersion)
-	global_value.SetExtEnCode(ExtEnCode)
+	pkg.SetAppVersion(AppVersion)
+	pkg.SetExtEnCode(ExtEnCode)
 	if my_util.ReadCustomAuthFile(loggerBase) == false {
-		global_value.SetBaseKey(BaseKey)
-		global_value.SetAESKey16(AESKey16)
-		global_value.SetAESIv16(AESIv16)
+		pkg.SetBaseKey(BaseKey)
+		pkg.SetAESKey16(AESKey16)
+		pkg.SetAESIv16(AESIv16)
 	}
 	// --------------------------------------------------
 	if my_util.OSCheck() == false {
@@ -93,6 +98,15 @@ func main() {
 		}
 		loggerBase = newLog()
 		loggerBase.Infoln("Reload Log Settings, level = Info")
+	}
+	if pkg.LinuxConfigPathInSelfPath() != "" {
+
+		loggerBase.Infoln("SetLinuxConfigPathInSelfPath:", pkg.LinuxConfigPathInSelfPath())
+
+		if my_util.IsDir(pkg.LinuxConfigPathInSelfPath()) == false {
+			// 如果设置了这个路径，但是不存在则会崩溃
+			loggerBase.Panicln("LinuxConfigPathInSelfPath", pkg.LinuxConfigPathInSelfPath(), "is not dir")
+		}
 	}
 
 	// ------------------------------------------------------------------------
@@ -124,7 +138,7 @@ func main() {
 	if settings.GetSettings().SpeedDevMode == false {
 		pj := pre_job.NewPreJob(settings.GetSettings(), loggerBase)
 
-		if global_value.LiteMode() == true {
+		if pkg.LiteMode() == true {
 			// 不启用 Chrome 相关操作
 			err := pj.HotFix().ChangeSubNameFormat().Wait()
 			if err != nil {
@@ -143,9 +157,9 @@ func main() {
 	fileDownloader := file_downloader.NewFileDownloader(
 		cache_center.NewCacheCenter("local_task_queue", settings.GetSettings(), loggerBase),
 		random_auth_key.AuthKey{
-			BaseKey:  global_value.BaseKey(),
-			AESKey16: global_value.AESKey16(),
-			AESIv16:  global_value.AESIv16(),
+			BaseKey:  pkg.BaseKey(),
+			AESKey16: pkg.AESKey16(),
+			AESIv16:  pkg.AESIv16(),
 		})
 	// ----------------------------------------------
 	cronHelper := cron_helper.NewCronHelper(fileDownloader)
@@ -179,6 +193,9 @@ var AppVersion = "unknow"
 
 // go build -ldflags="-X main.AppVersion=aabb -X main.ExtEnCode=ccdd" .
 var ExtEnCode = "abcdefg1234567890"
+
+// 针对制作群晖的 SPK 应用，无法写入默认的 /config 目录而给出的新的编译条件，直接指向这个目录到当前程序的目录
+var SetLinuxConfigPathInSelfPathFlag = flag.String("setconfigselfpath", "", "针对制作群晖的 SPK 应用，无法写入默认的 /config 目录而给出的新的编译条件，直接指向这个目录到当前程序的目录")
 
 var (
 	BaseKey  = "0123456789123456789" // 基础的密钥，密钥会基于这个基础的密钥生成

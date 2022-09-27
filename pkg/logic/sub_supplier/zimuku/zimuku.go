@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	language2 "github.com/allanpk716/ChineseSubFinder/pkg/types/language"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
@@ -23,7 +25,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
@@ -701,7 +702,7 @@ func (s *Supplier) DownFile(browser *rod.Browser, subDownloadPageUrl string, Top
 	fileByte := []byte{0}
 	downloadSuccess := false
 	err = rod.Try(func() {
-		tmpDir := filepath.Join(global_value.DefTmpFolder(), "downloads")
+		tmpDir := filepath.Join(pkg.DefTmpFolder(), "downloads")
 		wait := browser.Timeout(30 * time.Second).WaitDownload(tmpDir)
 		getDownloadFile := func() ([]byte, string, error) {
 			info := wait()

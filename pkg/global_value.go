@@ -1,10 +1,8 @@
-package global_value
+package pkg
 
 import (
 	"strconv"
 	"strings"
-
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 )
 
 // SetAppVersion ---------------------------------------------
@@ -82,7 +80,7 @@ func AESIv16() string {
 func ConfigRootDirFPath() string {
 
 	if _configRootDirFPath == "" {
-		_configRootDirFPath = my_folder.GetConfigRootDirFPath()
+		_configRootDirFPath = GetConfigRootDirFPath()
 	}
 	return _configRootDirFPath
 }
@@ -90,7 +88,7 @@ func ConfigRootDirFPath() string {
 func DefDebugFolder() string {
 	var err error
 	if _defDebugFolder == "" {
-		_defDebugFolder, err = my_folder.GetRootDebugFolder()
+		_defDebugFolder, err = GetRootDebugFolder()
 		if err != nil {
 			panic(err)
 		}
@@ -102,7 +100,7 @@ func DefDebugFolder() string {
 func DefTmpFolder() string {
 	var err error
 	if _defTmpFolder == "" {
-		_defTmpFolder, err = my_folder.GetRootTmpFolder()
+		_defTmpFolder, err = GetRootTmpFolder()
 		if err != nil {
 			panic(err)
 		}
@@ -114,7 +112,7 @@ func DefTmpFolder() string {
 func DefRodTmpRootFolder() string {
 	var err error
 	if _defRodTmpRootFolder == "" {
-		_defRodTmpRootFolder, err = my_folder.GetRodTmpRootFolder()
+		_defRodTmpRootFolder, err = GetRodTmpRootFolder()
 		if err != nil {
 			panic(err)
 		}
@@ -126,7 +124,7 @@ func DefRodTmpRootFolder() string {
 func DefSubFixCacheFolder() string {
 	var err error
 	if _defSubFixCacheFolder == "" {
-		_defSubFixCacheFolder, err = my_folder.GetRootSubFixCacheFolder()
+		_defSubFixCacheFolder, err = GetRootSubFixCacheFolder()
 		if err != nil {
 			panic(err)
 		}
@@ -138,7 +136,7 @@ func DefSubFixCacheFolder() string {
 func AdblockTmpFolder() string {
 	var err error
 	if _adblockTmpFolder == "" {
-		_adblockTmpFolder, err = my_folder.GetPluginFolderByName(my_folder.Plugin_Adblock)
+		_adblockTmpFolder, err = GetPluginFolderByName(Plugin_Adblock)
 		if err != nil {
 			panic(err)
 		}
@@ -155,6 +153,19 @@ func LiteMode() bool {
 func SetLiteMode(liteMode bool) {
 	_liteMode = liteMode
 }
+
+// LinuxConfigPathInSelfPath ---------------------------------------------
+// 针对制作群晖的 SPK 应用，无法写入默认的 /config 目录而给出的新的编译条件，直接指向这个目录到当前程序的目录
+func LinuxConfigPathInSelfPath() string {
+	return setLinuxConfigPathInSelfPath
+}
+
+func SetLinuxConfigPathInSelfPath(setPath string) {
+
+	setLinuxConfigPathInSelfPath = setPath
+}
+
+var setLinuxConfigPathInSelfPath = ""
 
 // ---------------------------------------------
 // util.go

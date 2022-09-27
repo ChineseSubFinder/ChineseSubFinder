@@ -2,10 +2,10 @@ package debug_view
 
 import (
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"os"
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/vad"
 	"github.com/go-echarts/go-echarts/v2/charts"
@@ -44,7 +44,7 @@ func SaveDebugChartBase(vadList []vad.VADInfo, title, subTitle string) error {
 		AddSeries("VAD", lineData)
 
 	// Where the magic happens
-	f, err := os.Create(filepath.Join(global_value.DefDebugFolder, title+".html"))
+	f, err := os.Create(filepath.Join(pkg.DefDebugFolder, title+".html"))
 	if err != nil {
 		return err
 	}

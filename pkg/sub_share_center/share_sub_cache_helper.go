@@ -4,7 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/sirupsen/logrus"
 )
@@ -12,7 +13,7 @@ import (
 // CopySub2Cache 检测原有字幕是否存在，然后放到缓存目录中
 func CopySub2Cache(log *logrus.Logger, orgSubFileFPath, imdbID string, year int, lowTrust bool) (bool, string) {
 
-	nowFolderDir, err := my_folder.GetShareFolderByYear(year)
+	nowFolderDir, err := pkg.GetShareFolderByYear(year)
 	if err != nil {
 		log.Errorln("CheckOrgSubFileExistAndCopy2Cache.GetShareFolderByYear", err)
 		return false, ""

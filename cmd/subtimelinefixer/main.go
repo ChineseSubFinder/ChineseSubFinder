@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_timeline_fixer"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/sirupsen/logrus"
@@ -34,7 +35,7 @@ var loggerBase *logrus.Logger
 
 func newLog() *logrus.Logger {
 	logger := log_helper.NewLogHelper(log_helper.LogNameCliSubTimelineFixer,
-		global_value.ConfigRootDirFPath(),
+		pkg.ConfigRootDirFPath(),
 		logrus.InfoLevel, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
 	return logger
 }

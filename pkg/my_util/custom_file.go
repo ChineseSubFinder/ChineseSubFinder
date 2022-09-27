@@ -5,7 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -49,9 +50,9 @@ func ReadCustomAuthFile(log *logrus.Logger) bool {
 			return false
 		}
 
-		global_value.SetBaseKey(authStings[0])
-		global_value.SetAESKey16(authStings[1])
-		global_value.SetAESIv16(authStings[2])
+		pkg.SetBaseKey(authStings[0])
+		pkg.SetAESKey16(authStings[1])
+		pkg.SetAESIv16(authStings[2])
 
 		log.Infoln("Use CustomAuth")
 		return true

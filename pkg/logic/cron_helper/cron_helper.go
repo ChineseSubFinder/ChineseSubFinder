@@ -2,7 +2,7 @@ package cron_helper
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/scan_played_video_subinfo"
 
@@ -249,7 +249,7 @@ func (ch *CronHelper) Stop() {
 func (ch *CronHelper) scanPlayedVideoSub() {
 
 	ch.log.Infoln("Update Info...")
-	nowInfo := dao.UpdateInfo(global_value.AppVersion(), ch.Settings)
+	nowInfo := dao.UpdateInfo(pkg.AppVersion(), ch.Settings)
 	_, err := ch.FileDownloader.SubtitleBestApi.FeedBack(
 		nowInfo.Id,
 		nowInfo.Version, nowInfo.MediaServer,

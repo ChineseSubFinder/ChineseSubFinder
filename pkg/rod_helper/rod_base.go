@@ -12,10 +12,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/regex_things"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_useragent"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
@@ -63,7 +63,7 @@ func NewBrowserBase(log *logrus.Logger, localChromeFPath, httpProxyURL string, l
 	})
 
 	// 随机的 rod 子文件夹名称
-	nowUserData := filepath.Join(global_value.DefRodTmpRootFolder(), my_util.RandStringBytesMaskImprSrcSB(20))
+	nowUserData := filepath.Join(pkg.DefRodTmpRootFolder(), my_util.RandStringBytesMaskImprSrcSB(20))
 	var browser *rod.Browser
 
 	if localChromeFPath != "" {
@@ -435,7 +435,7 @@ func ReloadBrowser(log *logrus.Logger) {
 
 // Clear 清理缓存
 func Clear(log *logrus.Logger) {
-	err := my_folder.ClearRodTmpRootFolder()
+	err := pkg.ClearRodTmpRootFolder()
 	if err != nil {
 		log.Errorln("ClearRodTmpRootFolder", err)
 		return
@@ -461,14 +461,14 @@ func releaseAdblock(log *logrus.Logger) (string, error) {
 
 	log.Infoln("releaseAdblock start")
 
-	adblockFolderPath := global_value.AdblockTmpFolder()
+	adblockFolderPath := pkg.AdblockTmpFolder()
 	err := os.MkdirAll(filepath.Join(adblockFolderPath), os.ModePerm)
 	if err != nil {
 		return "", err
 	}
 	desPath := filepath.Join(adblockFolderPath, "RunAdblock")
 	// 清理之前缓存的信息
-	_ = my_folder.ClearFolder(desPath)
+	_ = pkg.ClearFolder(desPath)
 	// 具体把 adblock zip 解压下载到哪里
 	outZipFileFPath := filepath.Join(adblockFolderPath, "adblock.zip")
 	adblockZipFile, err := os.Create(outZipFileFPath)

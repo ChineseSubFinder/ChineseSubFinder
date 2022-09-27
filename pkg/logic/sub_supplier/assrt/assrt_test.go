@@ -3,9 +3,10 @@ package assrt
 import (
 	"testing"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
@@ -21,9 +22,9 @@ func defInstance() {
 	my_util.ReadCustomAuthFile(log_helper.GetLogger4Tester())
 
 	authKey := random_auth_key.AuthKey{
-		BaseKey:  global_value.BaseKey(),
-		AESKey16: global_value.AESKey16(),
-		AESIv16:  global_value.AESIv16(),
+		BaseKey:  pkg.BaseKey(),
+		AESKey16: pkg.AESKey16(),
+		AESIv16:  pkg.AESIv16(),
 	}
 
 	assrtInstance = NewSupplier(file_downloader.NewFileDownloader(

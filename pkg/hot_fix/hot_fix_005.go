@@ -4,11 +4,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"gorm.io/gorm"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/sirupsen/logrus"
 )
@@ -42,7 +43,7 @@ func (h HotFix005) Process() (interface{}, error) {
 
 func (h HotFix005) process() (bool, error) {
 
-	shareRootDir, err := my_folder.GetShareSubRootFolder()
+	shareRootDir, err := pkg.GetShareSubRootFolder()
 	if err != nil {
 		h.log.Errorln("GetShareSubRootFolder error:", err.Error())
 		return false, err

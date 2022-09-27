@@ -10,14 +10,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
-
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/subtitle_best_api"
 
@@ -240,7 +240,7 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 		bestOneSub = s.findBestSub(findSubReply.Subtitle)
 	}
 
-	tmpFolder, err := my_folder.GetRootTmpFolder()
+	tmpFolder, err := pkg.GetRootTmpFolder()
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("GetRootTmpFolder Error: %s", err.Error()))
 	}

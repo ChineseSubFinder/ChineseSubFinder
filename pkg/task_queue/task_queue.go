@@ -3,16 +3,17 @@ package task_queue
 import (
 	"encoding/json"
 	"errors"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/emby"
-	task_queue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/emby"
+	task_queue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/emirpasic/gods/maps/treemap"
@@ -289,7 +290,7 @@ func (t *TaskQueue) del(jobId string) (bool, error) {
 		return false, err
 	}
 	// 删除任务的时候也需要删除对应的日志
-	pathRoot := filepath.Join(global_value.ConfigRootDirFPath(), "Logs")
+	pathRoot := filepath.Join(pkg.ConfigRootDirFPath(), "Logs")
 	fileFPath := filepath.Join(pathRoot, common.OnceLogPrefix+jobId+".log")
 	if my_util.IsFile(fileFPath) == true {
 		err = os.Remove(fileFPath)

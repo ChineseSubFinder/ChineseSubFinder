@@ -3,10 +3,10 @@ package downloader
 import (
 	"fmt"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/task_queue"
 	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
@@ -234,12 +234,12 @@ func (d *Downloader) queueDownloaderLocal() {
 			close(done)
 			close(panicChan)
 			// 每下载完毕一次，进行一次缓存和 Chrome 的清理
-			err = my_folder.ClearRootTmpFolder()
+			err = pkg.ClearRootTmpFolder()
 			if err != nil {
 				d.log.Error("ClearRootTmpFolder", err)
 			}
 
-			if global_value.LiteMode() == false {
+			if pkg.LiteMode() == false {
 				my_util.CloseChrome(d.log)
 			}
 		}()

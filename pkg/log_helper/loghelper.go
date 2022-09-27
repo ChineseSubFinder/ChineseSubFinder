@@ -6,11 +6,12 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/extend_log"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/sirupsen/logrus"
 
@@ -58,10 +59,10 @@ func isFile(filePath string) bool {
 
 // WriteDebugFile 写入开启 Debug 级别日志记录的特殊文件，注意这个最好是在主程序中调用，这样就跟主程序在一个目录下生成，log 去检测是否存在才有意义
 func WriteDebugFile() error {
-	if isFile(filepath.Join(global_value.ConfigRootDirFPath(), DebugFileName)) == true {
+	if isFile(filepath.Join(pkg.ConfigRootDirFPath(), DebugFileName)) == true {
 		return nil
 	}
-	f, err := os.Create(filepath.Join(global_value.ConfigRootDirFPath(), DebugFileName))
+	f, err := os.Create(filepath.Join(pkg.ConfigRootDirFPath(), DebugFileName))
 	defer func() {
 		_ = f.Close()
 	}()
@@ -74,10 +75,10 @@ func WriteDebugFile() error {
 // DeleteDebugFile 删除开启 Debug 级别日志记录的特殊文件
 func DeleteDebugFile() error {
 
-	if isFile(filepath.Join(global_value.ConfigRootDirFPath(), DebugFileName)) == false {
+	if isFile(filepath.Join(pkg.ConfigRootDirFPath(), DebugFileName)) == false {
 		return nil
 	}
-	err := os.Remove(filepath.Join(global_value.ConfigRootDirFPath(), DebugFileName))
+	err := os.Remove(filepath.Join(pkg.ConfigRootDirFPath(), DebugFileName))
 	if err != nil {
 		return err
 	}

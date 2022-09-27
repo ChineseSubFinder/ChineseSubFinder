@@ -5,15 +5,16 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 )
 
 func (c *CacheCenter) TaskQueueClear() error {
 
 	// 没有必要删除 DB 中的数据，直接删除外部的缓存文件即可
-	err := my_folder.ClearFolder(c.taskQueueSaveRootPath)
+	err := pkg.ClearFolder(c.taskQueueSaveRootPath)
 	if err != nil {
 		return err
 	}

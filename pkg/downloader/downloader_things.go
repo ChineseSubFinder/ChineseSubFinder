@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
@@ -13,7 +15,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/change_file_encode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/chs_cht_changer"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	subcommon "github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
@@ -34,7 +35,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 	// 调试缓存，把下载好的字幕写到对应的视频目录下，方便调试
 	if d.settings.AdvancedSettings.DebugMode == true {
 
-		err = my_folder.CopyFiles2DebugFolder([]string{videoFileName}, organizeSubFiles)
+		err = pkg.CopyFiles2DebugFolder([]string{videoFileName}, organizeSubFiles)
 		if err != nil {
 			// 这个错误可以忍
 			d.log.Errorln("copySubFile2DesFolder", err)
@@ -138,7 +139,7 @@ func (d *Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSu
 		for _, sub := range subs {
 			subFileName := filepath.Base(sub)
 
-			newSeasonSubRootPath, err := my_folder.GetDebugFolderByName([]string{
+			newSeasonSubRootPath, err := pkg.GetDebugFolderByName([]string{
 				filepath.Base(seriesInfo.DirPath),
 				"Sub_" + seasonKey})
 			if err != nil {

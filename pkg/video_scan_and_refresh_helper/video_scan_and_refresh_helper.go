@@ -1,6 +1,7 @@
 package video_scan_and_refresh_helper
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -31,7 +32,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/pkg/mix_media_info"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sort_things"
@@ -331,7 +331,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 		return
 	}
 
-	shareRootDir, err := my_folder.GetShareSubRootFolder()
+	shareRootDir, err := pkg.GetShareSubRootFolder()
 	if err != nil {
 		v.log.Errorln("scanLowVideoSubInfo.GetShareSubRootFolder", err)
 		return

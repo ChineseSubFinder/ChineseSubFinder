@@ -1,12 +1,12 @@
 package downloader
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 )
 
 func (d *Downloader) queueDownloaderCloud() {
 
-	if global_value.LiteMode() == true ||
+	if pkg.LiteMode() == true ||
 		d.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == false ||
 		d.needSkipCloudTask == true {
 		// Lite 版本无法执行复杂的任务，因为没有浏览器

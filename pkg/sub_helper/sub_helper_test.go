@@ -2,13 +2,13 @@ package sub_helper
 
 import (
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"path/filepath"
 	"testing"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
@@ -18,11 +18,11 @@ func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
 	const testSerName = "XXX"
 	const needDelFolderName = "Sub_S1E0"
 	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_helper", "org", needDelFolderName}, 4, false)
-	desSerFullPath, err := my_folder.GetDebugFolderByName([]string{testSerName})
+	desSerFullPath, err := pkg.GetDebugFolderByName([]string{testSerName})
 	if err != nil {
 		t.Fatal(err)
 	}
-	desSeasonFullPath, err := my_folder.GetDebugFolderByName([]string{testSerName, filepath.Base(testRootDir)})
+	desSeasonFullPath, err := pkg.GetDebugFolderByName([]string{testSerName, filepath.Base(testRootDir)})
 	if err != nil {
 		t.Fatal(err)
 	}

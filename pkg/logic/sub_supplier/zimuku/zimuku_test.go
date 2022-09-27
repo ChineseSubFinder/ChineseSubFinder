@@ -1,13 +1,13 @@
 package zimuku
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"path/filepath"
 	"testing"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/rod_helper"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
-	"github.com/allanpk716/ChineseSubFinder/pkg/global_value"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/series_helper"
@@ -179,9 +179,9 @@ func defInstance() {
 	my_util.ReadCustomAuthFile(log_helper.GetLogger4Tester())
 
 	authKey := random_auth_key.AuthKey{
-		BaseKey:  global_value.BaseKey(),
-		AESKey16: global_value.AESKey16(),
-		AESIv16:  global_value.AESIv16(),
+		BaseKey:  pkg.BaseKey(),
+		AESKey16: pkg.AESKey16(),
+		AESIv16:  pkg.AESIv16(),
 	}
 
 	zimukuInstance = NewSupplier(file_downloader.NewFileDownloader(

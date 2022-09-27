@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
 	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 
@@ -21,7 +23,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_folder"
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_file_hash"
@@ -84,7 +85,7 @@ func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings,
 	// 字幕命名格式解析器
 	scanPlayedVideoSubInfo.subFormatter = emby.NewFormatter()
 	// 缓存目录的根目录
-	shareRootDir, err := my_folder.GetShareSubRootFolder()
+	shareRootDir, err := pkg.GetShareSubRootFolder()
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +236,7 @@ func (s *ScanPlayedVideoSubInfo) Scan() error {
 		// TODO 暂时屏蔽掉 http api 提交的已看字幕的接口上传
 		if false {
 			// 下面需要把给出外部的 HTTP API 提交的视频和字幕信息(ThirdPartSetVideoPlayedInfo)进行判断，存入数据库
-			shareRootDir, err := my_folder.GetShareSubRootFolder()
+			shareRootDir, err := pkg.GetShareSubRootFolder()
 			if err != nil {
 				return err
 			}
@@ -313,7 +314,7 @@ func (s *ScanPlayedVideoSubInfo) scan(ctx context.Context, inData interface{}) e
 	s.log.Infoln("-----------------------------------------------")
 	s.log.Infoln("ScanPlayedVideoSubInfo", videoTypes, "Sub Start...")
 
-	shareRootDir, err := my_folder.GetShareSubRootFolder()
+	shareRootDir, err := pkg.GetShareSubRootFolder()
 	if err != nil {
 		return err
 	}
