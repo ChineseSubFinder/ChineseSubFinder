@@ -41,6 +41,7 @@
 ### 如何使用
 
 * [使用教程](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/使用教程)
+* [传参启动（v0.41.x 之后才支持）](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/传参启动/传参启动.md)
 
 ### API 文档文档
 
