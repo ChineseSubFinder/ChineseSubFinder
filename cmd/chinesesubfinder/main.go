@@ -51,11 +51,11 @@ func newLog() *logrus.Logger {
 func init() {
 	// 要先进行 flag 的读取，并且写入全局变量中，否则后续的逻辑由于顺序问题故障
 	flag.Parse()
-	pkg.SetLinuxConfigPathInSelfPath(*SetLinuxConfigPathInSelfPathFlag)
+	pkg.SetLinuxConfigPathInSelfPath(*setLinuxConfigPathInSelfPathFlag)
 
 	loggerBase = newLog()
 	// --------------------------------------------------
-	if strings.ToLower(LiteMode) == "true" {
+	if strings.ToLower(LiteMode) == "true" || *setLiteModeFlag == true {
 		loggerBase.Info("LiteMode is true")
 		AppVersion += " Lite"
 		pkg.SetLiteMode(true)
@@ -195,7 +195,9 @@ var AppVersion = "unknow"
 var ExtEnCode = "abcdefg1234567890"
 
 // 针对制作群晖的 SPK 应用，无法写入默认的 /config 目录而给出的新的编译条件，直接指向这个目录到当前程序的目录
-var SetLinuxConfigPathInSelfPathFlag = flag.String("setconfigselfpath", "", "针对制作群晖的 SPK 应用，无法写入默认的 /config 目录而给出的新的编译条件，直接指向这个目录到当前程序的目录")
+var setLinuxConfigPathInSelfPathFlag = flag.String("setconfigselfpath", "", "针对制作群晖的 SPK 应用，无法写入默认的 /config 目录而给出的新的编译条件，直接指向这个目录到当前程序的目录")
+
+var setLiteModeFlag = flag.Bool("litemode", false, "设置为 Lite 模式，不启用 Chrome 相关操作")
 
 var (
 	BaseKey  = "0123456789123456789" // 基础的密钥，密钥会基于这个基础的密钥生成
