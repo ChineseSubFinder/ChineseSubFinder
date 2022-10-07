@@ -12,7 +12,7 @@ import (
 
 func TestSubParserHubIsSubHasChinese(t *testing.T) {
 
-	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_parser", "org"}, 4, false)
+	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_parser", "org"}, 3, false)
 
 	type args struct {
 		filePath string
@@ -30,6 +30,7 @@ func TestSubParserHubIsSubHasChinese(t *testing.T) {
 		{name: "6", args: args{filePath: filepath.Join(testRootDir, "[zimuku]_5_Loki.S01E02.The.Variant.1080p.DSNP.WEB-DL.DDP5.1.Atmos.H.264-CM.chs&eng.srt")}, want: true},
 		{name: "7", args: args{filePath: filepath.Join(testRootDir, "[zimuku]_5_Loki.S01E03.Lamentis.1080p.DSNP.WEB-DL.DDP5.1.H.264-TOMMY.chs&eng.srt")}, want: true},
 		{name: "8", args: args{filePath: filepath.Join(testRootDir, "苍穹浩瀚 - S02E06 - 范式转换.chinese(简英,xunlei).default.srt")}, want: true},
+		{name: "9", args: args{filePath: filepath.Join(testRootDir, "SP-[assrt]_0_Pantheon _S1E3.ass")}, want: true},
 	}
 
 	test4Log := log_helper.GetLogger4Tester()

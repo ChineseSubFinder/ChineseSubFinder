@@ -112,7 +112,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	// 把所有的对白缓存下来，其实优先是把时间信息缓存，其他信息无所谓
 	p.oneLineSubDialogueParser0(matched, &subFileInfo)
 
-	if p.detectOneOrTwoLineDialogue(matched) == true {
+	if p.detectOneOrTwoLineDialogue(matched, mapByValue) == true {
 		// 情况1
 		usefullyDialogueCount, countLineFeed = p.oneLineSubDialogueParser1(matched, mapByValue, &subFileInfo)
 	} else {
@@ -279,9 +279,16 @@ func (p Parser) parseOneDialogueText(nowText string, odl *subparser.OneDialogue,
 }
 
 // detectOneOrTwoLineDialogue 优先检测一次字幕文件，可能存在的双语字幕的情况，是 1 还是 2 ，详细解释看调用此函数前的解释
-func (p Parser) detectOneOrTwoLineDialogue(matched [][]string) bool {
+func (p Parser) detectOneOrTwoLineDialogue(matched [][]string, mapByValue StyleNameInfos) bool {
+
+	if mapByValue.Len() == 1 {
+		// 如果只有一个类型，那么直接返回 true
+		return true
+	}
 	/*
+		初版的方案：
 		这里判断的方法粗暴一点，直接判断两个 Dialogue 都是一个时间段的比例是多少，达到了就是情况2，不是就是情况1
+		实现的方式是用一个 map 来存储，key 是时间段，如果重复出现相同 key，那么就认为是双语字幕，出现两句话，切时间轴一致
 	*/
 	allDialogue := len(matched)
 	twoLine := 0
@@ -310,6 +317,34 @@ func (p Parser) detectOneOrTwoLineDialogue(matched [][]string) bool {
 		// 使用情况2的字幕分析方式
 		return false
 	}
-	// 使用情况1的字幕分析方式
-	return true
+
+	/*
+		新版本的方案，相较于初版方案，这里优先考虑排序后 Dialogue 的类型的统计行数
+		之所以新增这个判断逻辑，就是因为现在可能出现一种情况，双语字幕:
+			00:00:01.000 --> 00:00:02.000 haha
+			00:00:01.011 --> 00:00:01.990 哈哈
+		这种情况对于老的方案是无法正确区分的，因为时间轴不是一致的，差那么几毫秒，导致 Map 的 Key 无法正确匹配统计
+	*/
+	/*
+		首先可以确认，这里 mapByValue.Len() 肯定不为零，那么这里 else 的可能性就只会是 > 1 的情况
+		居然确定没法匹配老方案的双语字幕，那么就只能使用新方案了。
+		新方案的思路:
+			1. Dialogue 的类型，前两个类型的行数统计要接近，小的除以大的值，要大于90%
+			2. 前两个类型的行数统计，要大于 80%，相对于所有的 Dialogue 来说
+		如果符合这两个条件，那么就是双语，否则就是单语。
+	*/
+	if float64(mapByValue[0].Count+mapByValue[1].Count)/float64(allDialogue) < 0.8 {
+		// 使用情况1的字幕分析方式
+		return true
+	} else {
+		// 因为是按照行数排序的，所以这里可以直接取前两个，前是从大到小排序的
+		per2 := float64(mapByValue[1].Count) / float64(mapByValue[0].Count)
+		if per2 > 0.9 {
+			// 使用情况2的字幕分析方式
+			return false
+		} else {
+			// 使用情况1的字幕分析方式
+			return true
+		}
+	}
 }

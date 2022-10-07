@@ -36,6 +36,7 @@ func TestParser_DetermineFileTypeFromFile(t *testing.T) {
 		{name: "8", args: args{filePath: filepath.Join(testRootDir, "SP-One.Hundred.And.One.Dalmatians.1961.1080p.BluRay.x264.AAC5.1-[YTS.LT].zh-cn.ass")}, wantNil: false, wantErr: false, wantLang: language.ChineseSimpleEnglish, wantDialogueLen: 2030},
 		{name: "9", args: args{filePath: filepath.Join(testRootDir, "SP-Pirates.of.the.Caribbean.The.Curse.of.the.Black.Pearl.2003.BluRay.1080p.x265.10bit.2Audio.MNHD-FRDS.zh-cn.ssa")}, wantNil: false, wantErr: false, wantLang: language.ChineseSimpleEnglish, wantDialogueLen: 3188},
 		{name: "10", args: args{filePath: filepath.Join(testRootDir, "SP-Schindlers.List.1993.BluRay.1080p.x265.10bit.2Audio.MNHD-FRDS.zh-cn.ass")}, wantNil: false, wantErr: false, wantLang: language.ChineseSimpleEnglish, wantDialogueLen: 3304},
+		{name: "11", args: args{filePath: filepath.Join(testRootDir, "SP-[assrt]_0_Pantheon _S1E3.ass")}, wantNil: false, wantErr: false, wantLang: language.ChineseSimpleEnglish, wantDialogueLen: 1238},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
