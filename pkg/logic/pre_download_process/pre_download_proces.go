@@ -102,7 +102,8 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	if p.settings.SpeedDevMode == true {
 
 		p.SubSupplierHub = subSupplier.NewSubSupplierHub(
-			csf.NewSupplier(p.fileDownloader),
+			//csf.NewSupplier(p.fileDownloader),
+			assrt.NewSupplier(p.fileDownloader),
 		)
 	} else {
 

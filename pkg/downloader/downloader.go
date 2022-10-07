@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
 	embyHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/emby_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	markSystem "github.com/allanpk716/ChineseSubFinder/pkg/logic/mark_system"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/pre_download_process"
 	subSupplier "github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/csf"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_timeline_fixer"
 	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 
@@ -132,7 +133,8 @@ func (d *Downloader) SupplierCheck() {
 
 	if d.settings.SpeedDevMode == true {
 		// 这里是调试使用的，指定了只用一个字幕源
-		subSupplierHub := subSupplier.NewSubSupplierHub(csf.NewSupplier(d.fileDownloader))
+		//subSupplierHub := subSupplier.NewSubSupplierHub(csf.NewSupplier(d.fileDownloader))
+		subSupplierHub := subSupplier.NewSubSupplierHub(assrt.NewSupplier(d.fileDownloader))
 		d.subSupplierHub = subSupplierHub
 	} else {
 
