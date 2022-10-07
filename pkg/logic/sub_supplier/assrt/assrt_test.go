@@ -37,7 +37,8 @@ func TestSupplier_getSubListFromFile(t *testing.T) {
 	//isMovie := true
 	defInstance()
 	//videoFPath := "X:\\连续剧\\杀死伊芙 (2018)\\Season 4\\Killing Eve - S04E08 - Hello, Losers WEBDL-1080p.mkv"
-	videoFPath := "X:\\连续剧\\Why Didn’t They Ask Evans!\\Season 1\\Why Didn’t They Ask Evans! - S01E01 - Episode 1 WEBRip-1080p.mp4"
+	//videoFPath := "X:\\连续剧\\Why Didn’t They Ask Evans!\\Season 1\\Why Didn’t They Ask Evans! - S01E01 - Episode 1 WEBRip-1080p.mp4"
+	videoFPath := "X:\\连续剧\\Pantheon\\Season 1\\Pantheon - S01E03 - Reign of Winter WEBDL-1080p.mkv"
 	//videoFPath := "X:\\连续剧\\风骚律师 (2015)\\Season 6\\Better Call Saul - S06E05 - Black and Blue WEBDL-1080p.mkv"
 	isMovie := false
 

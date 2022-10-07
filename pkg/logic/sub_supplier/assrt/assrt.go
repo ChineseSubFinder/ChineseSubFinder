@@ -470,11 +470,11 @@ type OneSubDetail struct {
 			Subtype     string `json:"subtype,omitempty"`
 			VoteScore   int    `json:"vote_score,omitempty"`
 			ReleaseSite string `json:"release_site,omitempty"`
-			Filelist    []struct {
-				S   string `json:"s,omitempty"`
-				F   string `json:"f,omitempty"`
-				Url string `json:"url,omitempty"`
-			} `json:"filelist,omitempty"`
+			//Filelist    []struct {
+			//	S   string `json:"s,omitempty"`
+			//	F   string `json:"f,omitempty"`
+			//	Url string `json:"url,omitempty"`
+			//} `json:"filelist,omitempty"`
 			Id       int    `json:"id,omitempty"`
 			Filename string `json:"filename,omitempty"`
 			Url      string `json:"url,omitempty"`
