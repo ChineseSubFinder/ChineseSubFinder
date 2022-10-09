@@ -14,7 +14,7 @@ func CheckAuth() gin.HandlerFunc {
 
 	return func(context *gin.Context) {
 		authHeader := context.Request.Header.Get("Authorization")
-		if len(authHeader) <= 1 {
+		if len(authHeader) != 2 {
 			context.JSON(http.StatusUnauthorized, backend.ReplyCheckAuth{Message: "Request Header Authorization Error"})
 			context.Abort()
 			return
