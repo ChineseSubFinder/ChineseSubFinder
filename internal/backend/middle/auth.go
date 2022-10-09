@@ -14,12 +14,13 @@ func CheckAuth() gin.HandlerFunc {
 
 	return func(context *gin.Context) {
 		authHeader := context.Request.Header.Get("Authorization")
-		if len(authHeader) <= 1 {
+		fields := strings.Fields(authHeader)
+		if len(fields) != 2 {
 			context.JSON(http.StatusUnauthorized, backend.ReplyCheckAuth{Message: "Request Header Authorization Error"})
 			context.Abort()
 			return
 		}
-		nowAccessToken := strings.Fields(authHeader)[1]
+		nowAccessToken := fields[1]
 		if nowAccessToken == "" || nowAccessToken != common.GetAccessToken() {
 			context.JSON(http.StatusUnauthorized, backend.ReplyCheckAuth{Message: "AccessToken Error"})
 			context.Abort()
