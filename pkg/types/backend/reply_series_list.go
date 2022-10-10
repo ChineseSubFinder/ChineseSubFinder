@@ -18,6 +18,7 @@ type OneVideoInfo struct {
 }
 
 type SeasonInfoV2 struct {
-	Name        string `json:"name"`
-	RootDirPath string `json:"root_dir_path"` // x:\连续剧\绝命毒师
+	Name             string `json:"name"`
+	MainRootDirFPath string `json:"main_root_dir_f_path"` // x:\连续剧
+	RootDirPath      string `json:"root_dir_path"`        // x:\连续剧\绝命毒师
 }

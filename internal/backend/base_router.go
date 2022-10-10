@@ -84,7 +84,11 @@ func InitRouter(
 		GroupV1.GET("/video/list/refresh-status", cbV1.RefreshVideoListStatusHandler)
 		GroupV1.GET("/video/list", cbV1.VideoListHandler)
 		GroupV1.POST("/video/list/add", cbV1.VideoListAddHandler)
+
 		GroupV1.POST("/video/list/refresh_main_list", cbV1.RefreshMainList)
+		GroupV1.GET("/video/list/video_main_list", cbV1.VideoMainList)
+		GroupV1.POST("/video/list/movie_poster", cbV1.MoviePoster)
+		GroupV1.POST("/video/list/series_poster", cbV1.SeriesPoster)
 	}
 
 	GroupAPIV1 := router.Group("/api/v1")

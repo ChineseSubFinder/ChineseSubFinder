@@ -272,15 +272,18 @@ func (d *Downloader) SetMovieAndSeasonInfoV2(mainList *vsh.NormalScanVideoResult
 
 	if mainList != nil && mainList.MoviesDirMap != nil && mainList.MoviesDirMap.Size() > 0 {
 
-		for _, movieDirs := range mainList.MoviesDirMap.Values() {
+		mainList.MoviesDirMap.Any(func(movieDirRootPath interface{}, moviesFPath interface{}) bool {
 
-			for _, movieDir := range movieDirs.([]string) {
+			oneMovieDirRootPath := movieDirRootPath.(string)
+			for _, movieFPath := range moviesFPath.([]string) {
 				movieInfos = append(movieInfos, backend2.MovieInfoV2{
-					Name:       filepath.Base(movieDir),
-					VideoFPath: movieDir,
+					Name:             filepath.Base(movieFPath),
+					MainRootDirFPath: oneMovieDirRootPath,
+					VideoFPath:       movieFPath,
 				})
 			}
-		}
+			return false
+		})
 
 		err = strcut_json.ToFile(movieInfosFileName, movieInfos)
 		if err != nil {
@@ -290,15 +293,18 @@ func (d *Downloader) SetMovieAndSeasonInfoV2(mainList *vsh.NormalScanVideoResult
 
 	if mainList != nil && mainList.SeriesDirMap != nil && mainList.SeriesDirMap.Size() > 0 {
 
-		for _, seriesDirs := range mainList.SeriesDirMap.Values() {
+		mainList.SeriesDirMap.Any(func(seriesRootPathName interface{}, seriesNames interface{}) bool {
 
-			for _, seriesDir := range seriesDirs.([]string) {
+			oneSeriesRootPathName := seriesRootPathName.(string)
+			for _, oneSeriesRootDir := range seriesNames.([]string) {
 				seasonInfos = append(seasonInfos, backend2.SeasonInfoV2{
-					Name:        filepath.Base(seriesDir),
-					RootDirPath: seriesDir,
+					Name:             filepath.Base(oneSeriesRootDir),
+					MainRootDirFPath: oneSeriesRootPathName,
+					RootDirPath:      oneSeriesRootDir,
 				})
 			}
-		}
+			return false
+		})
 
 		err = strcut_json.ToFile(seasonInfosFileName, seasonInfos)
 		if err != nil {
