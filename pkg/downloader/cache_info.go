@@ -4,10 +4,10 @@ import (
 	"path/filepath"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg"
-
 	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
+	vsh "github.com/allanpk716/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/strcut_json"
@@ -252,6 +252,96 @@ func (d *Downloader) loadVideoListCache() error {
 	d.setMovieAndSeasonInfo(movieInfos, seasonInfos, true)
 
 	return nil
+}
+
+// SetMovieAndSeasonInfoV2 只把第一级目录的信息给缓存下来，比如 x:\电影\壮志凌云\壮志凌云.mp4 或者是连续剧的 x:\连续剧\绝命毒师 根目录
+func (d *Downloader) SetMovieAndSeasonInfoV2(mainList *vsh.NormalScanVideoResult) error {
+
+	d.cacheLocker.Lock()
+	defer d.cacheLocker.Unlock()
+	// 缓存下来
+	cacheCenterFolder, err := pkg.GetRootCacheCenterFolder()
+	if err != nil {
+		return err
+	}
+	var movieInfos = make([]backend2.MovieInfoV2, 0)
+	var seasonInfos = make([]backend2.SeasonInfoV2, 0)
+
+	movieInfosFileName := filepath.Join(cacheCenterFolder, "movie_main_list.json")
+	seasonInfosFileName := filepath.Join(cacheCenterFolder, "season_main_list.json")
+
+	if mainList != nil && mainList.MoviesDirMap != nil && mainList.MoviesDirMap.Size() > 0 {
+
+		for _, movieDirs := range mainList.MoviesDirMap.Values() {
+
+			for _, movieDir := range movieDirs.([]string) {
+				movieInfos = append(movieInfos, backend2.MovieInfoV2{
+					Name:       filepath.Base(movieDir),
+					VideoFPath: movieDir,
+				})
+			}
+		}
+
+		err = strcut_json.ToFile(movieInfosFileName, movieInfos)
+		if err != nil {
+			return err
+		}
+	}
+
+	if mainList != nil && mainList.SeriesDirMap != nil && mainList.SeriesDirMap.Size() > 0 {
+
+		for _, seriesDirs := range mainList.SeriesDirMap.Values() {
+
+			for _, seriesDir := range seriesDirs.([]string) {
+				seasonInfos = append(seasonInfos, backend2.SeasonInfoV2{
+					Name:        filepath.Base(seriesDir),
+					RootDirPath: seriesDir,
+				})
+			}
+		}
+
+		err = strcut_json.ToFile(seasonInfosFileName, seasonInfos)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// GetMovieInfoAndSeasonInfoV2 只把第一级目录的信息给缓存下来，比如 x:\电影\壮志凌云\壮志凌云.mp4 或者是连续剧的 x:\连续剧\绝命毒师 根目录
+func (d *Downloader) GetMovieInfoAndSeasonInfoV2() ([]backend2.MovieInfoV2, []backend2.SeasonInfoV2, error) {
+	// 需要把本实例中的缓存 map 转换到 Web 传递的结构体中
+	d.cacheLocker.Lock()
+	defer d.cacheLocker.Unlock()
+
+	// 缓存下来
+	cacheCenterFolder, err := pkg.GetRootCacheCenterFolder()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	movieInfosFileName := filepath.Join(cacheCenterFolder, "movie_main_list.json")
+	seasonInfosFileName := filepath.Join(cacheCenterFolder, "season_main_list.json")
+
+	movieInfos := make([]backend2.MovieInfoV2, 0)
+	seasonInfos := make([]backend2.SeasonInfoV2, 0)
+
+	if my_util.IsFile(movieInfosFileName) == true {
+		err = strcut_json.ToStruct(movieInfosFileName, &movieInfos)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	if my_util.IsFile(seasonInfosFileName) == true {
+		err = strcut_json.ToStruct(seasonInfosFileName, &seasonInfos)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return movieInfos, seasonInfos, nil
 }
 
 type MovieInfo struct {

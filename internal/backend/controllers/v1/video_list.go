@@ -10,6 +10,8 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
 
+	vsh "github.com/allanpk716/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
 	"github.com/gin-gonic/gin"
@@ -186,4 +188,63 @@ func (cb *ControllerBase) VideoListHandler(c *gin.Context) {
 		MovieInfos:  outMovieInfos,
 		SeasonInfos: outSeasonInfo,
 	})
+}
+
+func (cb *ControllerBase) RefreshMainList(c *gin.Context) {
+
+	var err error
+	defer func() {
+		// 统一的异常处理
+		cb.ErrorProcess(c, "RefreshMainList", err)
+	}()
+
+	if cb.videoScanAndRefreshHelperLocker.Lock() == false {
+		// 已经在执行，跳过
+		c.JSON(http.StatusOK, backend2.ReplyRefreshVideoList{
+			Status: "running"})
+		return
+	}
+	cb.videoScanAndRefreshHelperIsRunning = true
+
+	go func() {
+
+		startT := time.Now()
+		cb.log.Infoln("------------------------------------")
+		cb.log.Infoln("Video Scan Started By webui...")
+
+		pathUrlMap := cb.GetPathUrlMap()
+		cb.log.Infoln("---------------------------------")
+		cb.log.Infoln("GetPathUrlMap")
+		for s, s2 := range pathUrlMap {
+			cb.log.Infoln("pathUrlMap", s, s2)
+		}
+		cb.log.Infoln("---------------------------------")
+
+		defer func() {
+			cb.videoScanAndRefreshHelperIsRunning = false
+			cb.videoScanAndRefreshHelperLocker.Unlock()
+			cb.log.Infoln("Video Scan Finished By webui, cost:", time.Since(startT).Minutes(), "min")
+			cb.log.Infoln("------------------------------------")
+		}()
+
+		var err2 error
+		cb.videoScanAndRefreshHelperErrMessage = ""
+		var mainList *vsh.NormalScanVideoResult
+		mainList, err2 = cb.videoListHelper.RefreshMainList()
+		if err2 != nil {
+			cb.log.Errorln("RefreshMainList", err2)
+			cb.videoScanAndRefreshHelperErrMessage = err2.Error()
+			return
+		}
+		err2 = cb.cronHelper.Downloader.SetMovieAndSeasonInfoV2(mainList)
+		if err2 != nil {
+			cb.log.Errorln("SetMovieAndSeasonInfoV2", err2)
+			cb.videoScanAndRefreshHelperErrMessage = err2.Error()
+			return
+		}
+	}()
+
+	c.JSON(http.StatusOK, backend2.ReplyRefreshVideoList{
+		Status: "running"})
+	return
 }

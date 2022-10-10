@@ -3,6 +3,8 @@ package v1
 import (
 	"net/http"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/video_list_helper"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/lock"
@@ -18,6 +20,7 @@ type ControllerBase struct {
 	cronHelper                          *cron_helper.CronHelper
 	pathUrlMap                          map[string]string
 	videoScanAndRefreshHelper           *video_scan_and_refresh_helper.VideoScanAndRefreshHelper
+	videoListHelper                     *video_list_helper.VideoListHelper
 	videoScanAndRefreshHelperIsRunning  bool
 	videoScanAndRefreshHelperLocker     lock.Lock
 	videoScanAndRefreshHelperErrMessage string
@@ -33,6 +36,7 @@ func NewControllerBase(log *logrus.Logger, cronHelper *cron_helper.CronHelper, r
 		videoScanAndRefreshHelper: video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
 			sub_formatter.GetSubFormatter(log, cronHelper.Settings.AdvancedSettings.SubNameFormatter),
 			cronHelper.FileDownloader, nil),
+		videoListHelper:                 video_list_helper.NewVideoListHelper(log, cronHelper.Settings),
 		videoScanAndRefreshHelperLocker: lock.NewLock(),
 		restartSignal:                   restartSignal,
 	}

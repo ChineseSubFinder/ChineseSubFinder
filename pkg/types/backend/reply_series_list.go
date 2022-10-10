@@ -16,3 +16,8 @@ type OneVideoInfo struct {
 	SubFPathList             []string `json:"sub_f_path_list"`
 	MediaServerInsideVideoID string   `json:"media_server_inside_video_id"`
 }
+
+type SeasonInfoV2 struct {
+	Name        string `json:"name"`
+	RootDirPath string `json:"root_dir_path"` // x:\连续剧\绝命毒师
+}

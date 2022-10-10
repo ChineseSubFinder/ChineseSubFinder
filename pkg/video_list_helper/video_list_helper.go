@@ -16,6 +16,13 @@ type VideoListHelper struct {
 	log      *logrus.Logger     // 日志实例
 }
 
+func NewVideoListHelper(log *logrus.Logger, settings *settings.Settings) *VideoListHelper {
+	return &VideoListHelper{
+		settings: settings,
+		log:      log,
+	}
+}
+
 // RefreshMainList 获取到电影、连续剧一级目录信息，不包含 Season 及其以下信息
 // 只给出 Movie 的FullPath，Series 的 RootDirPath
 func (v *VideoListHelper) RefreshMainList() (*vsh.NormalScanVideoResult, error) {
