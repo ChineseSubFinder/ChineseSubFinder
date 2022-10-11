@@ -265,7 +265,7 @@ func (d *Downloader) queueDownloaderLocal() {
 			d.log.Errorln(err)
 		}
 		// 刷新视频的缓存结构
-		d.UpdateInfo(oneJob)
+		//d.UpdateInfo(oneJob)
 
 		break
 	case p := <-panicChan:
