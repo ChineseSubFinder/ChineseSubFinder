@@ -5,7 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
 )
 
@@ -26,10 +27,10 @@ func testUnArchive(t *testing.T, testRootDir string, missionName string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if my_util.IsFile(filepath.Join(desPath, subASS)) == false {
+	if pkg.IsFile(filepath.Join(desPath, subASS)) == false {
 		t.Fatal(missionName, " unArchive failed")
 	}
-	if my_util.IsFile(filepath.Join(desPath, subSRT)) == false {
+	if pkg.IsFile(filepath.Join(desPath, subSRT)) == false {
 		t.Fatal(missionName, " unArchive failed")
 	}
 }

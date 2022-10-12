@@ -1,7 +1,6 @@
 package settings
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -26,11 +25,11 @@ type Settings struct {
 }
 
 // GetSettings 获取 Settings 的实例
-func GetSettings(reloadSettings ...bool) *Settings {
+func GetSettings(configRootDirFPath string, reloadSettings ...bool) *Settings {
 	if _settings == nil {
 
 		_settingsOnce.Do(func() {
-			_settings = NewSettings()
+			_settings = NewSettings(configRootDirFPath)
 			if isFile(_settings.configFPath) == false {
 				// 配置文件不存在，新建一个空白的
 				err := _settings.Save()
@@ -69,9 +68,9 @@ func SetFullNewSettings(inSettings *Settings) error {
 	return _settings.Save()
 }
 
-func NewSettings() *Settings {
+func NewSettings(configRootDirFPath string) *Settings {
 
-	nowConfigFPath := filepath.Join(pkg.ConfigRootDirFPath(), configName)
+	nowConfigFPath := filepath.Join(configRootDirFPath, configName)
 
 	return &Settings{
 		configFPath:           nowConfigFPath,

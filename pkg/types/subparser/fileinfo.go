@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
-
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 )
 
 type FileInfo struct {
@@ -43,7 +43,7 @@ func (f *FileInfo) SaveTranslated(desSubFileFPath string) error {
 		allString += oneDialogueString + "\n"
 	}
 
-	return my_util.WriteFile(desSubFileFPath, []byte(allString))
+	return pkg.WriteFile(desSubFileFPath, []byte(allString))
 }
 
 // GetSourceTranslateString 获取翻以前的字符串，会移除 \N 这样的信息，替换为空格
@@ -138,14 +138,14 @@ func (f *FileInfo) changeOneDialoguesFramerateRatio(oneDialogues []OneDialogue, 
 
 		timeStart := oneDialogues[i].GetStartTime()
 		timeEnd := oneDialogues[i].GetEndTime()
-		timeStartNumber := my_util.Time2SecondNumber(timeStart)
-		timeEndNumber := my_util.Time2SecondNumber(timeEnd)
+		timeStartNumber := pkg.Time2SecondNumber(timeStart)
+		timeEndNumber := pkg.Time2SecondNumber(timeEnd)
 
-		scaleTimeStart := my_util.TimeNumber2Time(timeStartNumber * framerateRatio)
-		scaleTimeEnd := my_util.TimeNumber2Time(timeEndNumber * framerateRatio)
+		scaleTimeStart := pkg.TimeNumber2Time(timeStartNumber * framerateRatio)
+		scaleTimeEnd := pkg.TimeNumber2Time(timeEndNumber * framerateRatio)
 
-		oneDialogues[i].StartTime = my_util.Time2SubTimeString(scaleTimeStart, timeFormat)
-		oneDialogues[i].EndTime = my_util.Time2SubTimeString(scaleTimeEnd, timeFormat)
+		oneDialogues[i].StartTime = pkg.Time2SubTimeString(scaleTimeStart, timeFormat)
+		oneDialogues[i].EndTime = pkg.Time2SubTimeString(scaleTimeEnd, timeFormat)
 	}
 }
 
@@ -154,14 +154,14 @@ func (f *FileInfo) changeOneDialogueExsFramerateRatio(oneDialogues []OneDialogue
 
 		timeStart := oneDialogues[i].GetStartTime()
 		timeEnd := oneDialogues[i].GetEndTime()
-		timeStartNumber := my_util.Time2SecondNumber(timeStart)
-		timeEndNumber := my_util.Time2SecondNumber(timeEnd)
+		timeStartNumber := pkg.Time2SecondNumber(timeStart)
+		timeEndNumber := pkg.Time2SecondNumber(timeEnd)
 
-		scaleTimeStart := my_util.TimeNumber2Time(timeStartNumber * framerateRatio)
-		scaleTimeEnd := my_util.TimeNumber2Time(timeEndNumber * framerateRatio)
+		scaleTimeStart := pkg.TimeNumber2Time(timeStartNumber * framerateRatio)
+		scaleTimeEnd := pkg.TimeNumber2Time(timeEndNumber * framerateRatio)
 
-		oneDialogues[i].StartTime = my_util.Time2SubTimeString(scaleTimeStart, timeFormat)
-		oneDialogues[i].EndTime = my_util.Time2SubTimeString(scaleTimeEnd, timeFormat)
+		oneDialogues[i].StartTime = pkg.Time2SubTimeString(scaleTimeStart, timeFormat)
+		oneDialogues[i].EndTime = pkg.Time2SubTimeString(scaleTimeEnd, timeFormat)
 	}
 }
 
@@ -170,10 +170,10 @@ func (f FileInfo) GetStartTime() time.Time {
 	startTime := math.MaxFloat64
 	for i := 0; i < len(f.Dialogues); i++ {
 		// 找到最小的开始时间
-		tmpNowStartTimeNumber := my_util.Time2SecondNumber(f.Dialogues[i].GetStartTime())
+		tmpNowStartTimeNumber := pkg.Time2SecondNumber(f.Dialogues[i].GetStartTime())
 		startTime = math.Min(startTime, tmpNowStartTimeNumber)
 	}
-	return my_util.TimeNumber2Time(startTime)
+	return pkg.TimeNumber2Time(startTime)
 }
 
 // GetEndTime 获取的是从 Dialogues 得到的
@@ -181,16 +181,16 @@ func (f FileInfo) GetEndTime() time.Time {
 	endTime := -math.MaxFloat64
 	for i := 0; i < len(f.Dialogues); i++ {
 		// 找到最大的结束时间
-		tmpNowEndTimeNumber := my_util.Time2SecondNumber(f.Dialogues[i].GetEndTime())
+		tmpNowEndTimeNumber := pkg.Time2SecondNumber(f.Dialogues[i].GetEndTime())
 		endTime = math.Max(endTime, tmpNowEndTimeNumber)
 	}
-	return my_util.TimeNumber2Time(endTime)
+	return pkg.TimeNumber2Time(endTime)
 }
 
 // GetNumFrames 获取这个字幕的时间 Frame 数量
 func (f FileInfo) GetNumFrames() int {
 
-	return int(math.Abs((my_util.Time2SecondNumber(f.GetEndTime()) - my_util.Time2SecondNumber(f.GetStartTime())) * 100))
+	return int(math.Abs((pkg.Time2SecondNumber(f.GetEndTime()) - pkg.Time2SecondNumber(f.GetStartTime())) * 100))
 }
 
 // OneDialogue 一句对话
@@ -209,7 +209,7 @@ func NewOneDialogue() OneDialogue {
 }
 
 func (o OneDialogue) GetStartTime() time.Time {
-	srcTimeStartNow, err := my_util.ParseTime(o.StartTime)
+	srcTimeStartNow, err := pkg.ParseTime(o.StartTime)
 	if err != nil {
 		return time.Time{}
 	}
@@ -217,7 +217,7 @@ func (o OneDialogue) GetStartTime() time.Time {
 }
 
 func (o OneDialogue) GetEndTime() time.Time {
-	srcTimeEndNow, err := my_util.ParseTime(o.EndTime)
+	srcTimeEndNow, err := pkg.ParseTime(o.EndTime)
 	if err != nil {
 		return time.Time{}
 	}
@@ -236,15 +236,15 @@ func (d OneDialogueByStartTime) Swap(i, j int) {
 
 func (d OneDialogueByStartTime) Less(i, j int) bool {
 
-	subStartTimeI, err := my_util.ParseTime(d[i].StartTime)
+	subStartTimeI, err := pkg.ParseTime(d[i].StartTime)
 	if err != nil {
 		return false
 	}
-	subStartTimeJ, err := my_util.ParseTime(d[j].StartTime)
+	subStartTimeJ, err := pkg.ParseTime(d[j].StartTime)
 	if err != nil {
 		return false
 	}
-	return my_util.Time2SecondNumber(subStartTimeI) < my_util.Time2SecondNumber(subStartTimeJ)
+	return pkg.Time2SecondNumber(subStartTimeI) < pkg.Time2SecondNumber(subStartTimeJ)
 }
 
 // OneDialogueEx 一句对话，这里会把一句话中支持的 中、英、韩、日 四国语言给分离出来
@@ -258,7 +258,7 @@ type OneDialogueEx struct {
 }
 
 func (o OneDialogueEx) GetStartTime() time.Time {
-	srcTimeStartNow, err := my_util.ParseTime(o.StartTime)
+	srcTimeStartNow, err := pkg.ParseTime(o.StartTime)
 	if err != nil {
 		return time.Time{}
 	}
@@ -266,7 +266,7 @@ func (o OneDialogueEx) GetStartTime() time.Time {
 }
 
 func (o OneDialogueEx) GetEndTime() time.Time {
-	srcTimeEndNow, err := my_util.ParseTime(o.EndTime)
+	srcTimeEndNow, err := pkg.ParseTime(o.EndTime)
 	if err != nil {
 		return time.Time{}
 	}
@@ -285,15 +285,15 @@ func (d OneDialogueByStartTimeEx) Swap(i, j int) {
 
 func (d OneDialogueByStartTimeEx) Less(i, j int) bool {
 
-	subStartTimeI, err := my_util.ParseTime(d[i].StartTime)
+	subStartTimeI, err := pkg.ParseTime(d[i].StartTime)
 	if err != nil {
 		return false
 	}
-	subStartTimeJ, err := my_util.ParseTime(d[j].StartTime)
+	subStartTimeJ, err := pkg.ParseTime(d[j].StartTime)
 	if err != nil {
 		return false
 	}
-	return my_util.Time2SecondNumber(subStartTimeI) < my_util.Time2SecondNumber(subStartTimeJ)
+	return pkg.Time2SecondNumber(subStartTimeI) < pkg.Time2SecondNumber(subStartTimeJ)
 }
 
 const (

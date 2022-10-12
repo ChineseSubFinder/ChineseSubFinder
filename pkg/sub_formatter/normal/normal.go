@@ -5,13 +5,14 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	language2 "github.com/allanpk716/ChineseSubFinder/pkg/types/language"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
 	"github.com/sirupsen/logrus"
@@ -84,7 +85,7 @@ func (f Formatter) IsMatchThisFormat(subName string) (bool, string, string, lang
 	// 目前倾向于这里用后面的逻辑
 	subLang = language.ISOString2SupportLang(subLangStr)
 	// 这里可能是拿到的是文件的全路径，那么就可以读取文件内容去判断文件的语言
-	if my_util.IsFile(subName) == true {
+	if pkg.IsFile(subName) == true {
 		bok, fileInfo, err := f.subParser.DetermineFileTypeFromFile(subName)
 		if err != nil || bok == false {
 			// add original Dir to fileNameWithOutExt to ensure file can be reached

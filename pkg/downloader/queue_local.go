@@ -7,7 +7,6 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/task_queue"
 	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	taskQueue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
@@ -22,7 +21,7 @@ func (d *Downloader) queueDownloaderLocal() {
 	defer func() {
 		if p := recover(); p != nil {
 			d.log.Errorln("Downloader.QueueDownloader() panic")
-			my_util.PrintPanicStack(d.log)
+			pkg.PrintPanicStack(d.log)
 		}
 		d.downloaderLock.Unlock()
 		d.log.Debugln("Download.QueueDownloader() End")
@@ -86,7 +85,7 @@ func (d *Downloader) queueDownloaderLocal() {
 	// 这个视频文件不存在了
 	{
 		isBlue, _, _ := decode.IsFakeBDMVWorked(oneJob.VideoFPath)
-		if isBlue == false && my_util.IsFile(oneJob.VideoFPath) == false {
+		if isBlue == false && pkg.IsFile(oneJob.VideoFPath) == false {
 			// 不是蓝光，那么就判断文件是否存在，不存在，那么就标记 ignore
 			bok, err = d.downloadQueue.Del(oneJob.Id)
 			if err != nil {
@@ -173,7 +172,7 @@ func (d *Downloader) queueDownloaderLocal() {
 					needMarkSkip = true
 				} else {
 					// 需要下载的 Eps 是否与 Normal 判断这个连续剧中有那些剧集需要下载的，情况符合。通过下载的时间来判断
-					epsKey := my_util.GetEpisodeKeyName(oneJob.Season, oneJob.Episode)
+					epsKey := pkg.GetEpisodeKeyName(oneJob.Season, oneJob.Episode)
 					_, found := seriesInfo.NeedDlEpsKeyList[epsKey]
 					if found == false {
 						// 需要跳过
@@ -240,7 +239,7 @@ func (d *Downloader) queueDownloaderLocal() {
 			}
 
 			if pkg.LiteMode() == false {
-				my_util.CloseChrome(d.log)
+				pkg.CloseChrome(d.log)
 			}
 		}()
 

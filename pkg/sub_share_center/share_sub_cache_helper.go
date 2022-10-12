@@ -6,7 +6,6 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -31,7 +30,7 @@ func CopySub2Cache(log *logrus.Logger, orgSubFileFPath, imdbID string, year int,
 	}
 
 	desSubFileFPath := filepath.Join(nowFolderDir, imdbID, filepath.Base(orgSubFileFPath))
-	err = my_util.CopyFile(orgSubFileFPath, desSubFileFPath)
+	err = pkg.CopyFile(orgSubFileFPath, desSubFileFPath)
 	if err != nil {
 		log.Errorln("CheckOrgSubFileExistAndCopy2Cache.CopyFile", err)
 		return false, ""

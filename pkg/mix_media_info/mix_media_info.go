@@ -4,9 +4,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"gorm.io/gorm"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
@@ -167,7 +167,7 @@ func KeyWordSelect(mediaInfo *models.MediaInfo, videoFPath string, isMovie bool,
 		if err != nil {
 			return "", err
 		}
-		keyWord += " " + my_util.GetEpisodeKeyName(epsVideoNfoInfo.Season, epsVideoNfoInfo.Episode, true)
+		keyWord += " " + pkg.GetEpisodeKeyName(epsVideoNfoInfo.Season, epsVideoNfoInfo.Episode, true)
 	}
 
 	return keyWord, nil

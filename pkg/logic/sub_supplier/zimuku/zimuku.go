@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/search"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
@@ -26,7 +28,6 @@ import (
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
@@ -108,7 +109,7 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 	}
 	// 需要查询今天的限额
 	count, err := s.fileDownloader.CacheCenter.DailyDownloadCountGet(s.GetSupplierName(),
-		my_util.GetPublicIP(s.log, s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
+		pkg.GetPublicIP(s.log, s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "DailyDownloadCountGet", err)
 		return true
@@ -189,9 +190,9 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 			是不是有点绕···
 		*/
 		findSeasonFirstEpsIMDBId := ""
-		videoList, err := my_util.SearchMatchedVideoFile(s.log, seriesInfo.DirPath)
+		videoList, err := search.MatchedVideoFile(s.log, seriesInfo.DirPath)
 		if err != nil {
-			s.log.Errorln("GetSubListFromFile4Series.SearchMatchedVideoFile, Season:", value, "Error:", err)
+			s.log.Errorln("GetSubListFromFile4Series.MatchedVideoFile, Season:", value, "Error:", err)
 			continue
 		}
 		for _, oneVideoFPath := range videoList {
@@ -323,7 +324,7 @@ func (s *Supplier) getSubListFromMovie(browser *rod.Browser, fileFPath string) (
 		}
 	}
 	// 如果没有，那么就用文件名查找
-	searchKeyword := my_util.VideoNameSearchKeywordMaker(s.log, imdbInfo.Title, imdbInfo.Year)
+	searchKeyword := search.VideoNameSearchKeywordMaker(s.log, imdbInfo.Title, imdbInfo.Year)
 
 	s.log.Debugln(s.GetSupplierName(), fileFPath, "VideoNameSearchKeywordMaker Keyword:", searchKeyword)
 
@@ -388,7 +389,7 @@ func (s *Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, Al
 		}
 		subInfo.Season = season
 		subInfo.Episode = episode
-		epsKey := my_util.GetEpisodeKeyName(season, episode)
+		epsKey := pkg.GetEpisodeKeyName(season, episode)
 		_, ok := allSubDict[epsKey]
 		if ok == false {
 			// 初始化
@@ -551,7 +552,7 @@ func (s *Supplier) step1(browser *rod.Browser, filmDetailPageUrl string) (SubRes
 	var subResult SubResult
 	subResult.SubInfos = SubInfos{}
 
-	filmDetailPageUrl = my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, filmDetailPageUrl)
+	filmDetailPageUrl = pkg.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, filmDetailPageUrl)
 
 	result, page, err := rod_helper.HttpGetFromBrowser(browser, filmDetailPageUrl, s.tt)
 	if err != nil {
@@ -652,7 +653,7 @@ func (s *Supplier) step2(browser *rod.Browser, subInfo *SubInfo) error {
 			notify_center.Notify.Add("zimuku_step2", err.Error())
 		}
 	}()
-	detailUrl := my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, subInfo.DetailUrl)
+	detailUrl := pkg.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, subInfo.DetailUrl)
 	result, page, err := rod_helper.HttpGetFromBrowser(browser, detailUrl, s.tt)
 	if err != nil {
 		return err
@@ -683,7 +684,7 @@ func (s *Supplier) DownFile(browser *rod.Browser, subDownloadPageUrl string, Top
 			notify_center.Notify.Add("zimuku_DownFile", err.Error())
 		}
 	}()
-	subDownloadPageFullUrl := my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, subDownloadPageUrl)
+	subDownloadPageFullUrl := pkg.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.Zimuku.RootUrl, subDownloadPageUrl)
 	result, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageFullUrl, s.tt)
 	if err != nil {
 		return nil, err

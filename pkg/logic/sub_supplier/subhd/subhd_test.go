@@ -15,7 +15,6 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/something_static"
@@ -25,7 +24,7 @@ import (
 var authKey random_auth_key.AuthKey
 
 func defInstance() {
-	my_util.ReadCustomAuthFile(log_helper.GetLogger4Tester())
+	pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester())
 	authKey = random_auth_key.AuthKey{
 		BaseKey:  pkg.BaseKey(),
 		AESKey16: pkg.AESKey16(),
@@ -48,7 +47,7 @@ func TestSupplier_GetSubListFromFile(t *testing.T) {
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	movie1 := filepath.Join(rootDir, "zimuku", "movies", "消失爱人 (2016)", "消失爱人 (2016) 720p AAC.rmvb")
 
-	subhd := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester()), authKey))
+	subhd := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(pkg.ConfigRootDirFPath()), log_helper.GetLogger4Tester()), authKey))
 	outList, err := subhd.getSubListFromFile4Movie(movie1)
 	if err != nil {
 		t.Error(err)
@@ -90,7 +89,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester()), authKey))
+	s := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(pkg.ConfigRootDirFPath()), log_helper.GetLogger4Tester()), authKey))
 	outList, err := s.GetSubListFromFile4Series(seriesInfo)
 	if err != nil {
 		t.Fatal(err)
@@ -112,7 +111,7 @@ func TestSupplier_getSubListFromKeyword4Movie(t *testing.T) {
 	//imdbID := "tt3626476" // Vacation Friends (2021)
 	getCode()
 	defInstance()
-	subhd := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester()), authKey))
+	subhd := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(pkg.ConfigRootDirFPath()), log_helper.GetLogger4Tester()), authKey))
 	subInfos, err := subhd.getSubListFromKeyword4Movie(imdbID)
 	if err != nil {
 		t.Fatal(err)
@@ -124,7 +123,7 @@ func TestSupplier_getSubListFromKeyword4Movie(t *testing.T) {
 
 func getCode() {
 
-	if my_util.ReadCustomAuthFile(log_helper.GetLogger4Tester()) == false {
+	if pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester()) == false {
 		println("read auth file failed")
 		return
 	}

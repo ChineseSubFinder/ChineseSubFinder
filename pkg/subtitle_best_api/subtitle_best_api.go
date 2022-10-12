@@ -20,7 +20,6 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 )
@@ -48,7 +47,7 @@ func (s *SubtitleBestApi) CheckAlive(proxySettings ...*settings.ProxySettings) e
 	}
 
 	postUrl := webUrlBase + "/v1/subhd-code"
-	httpClient, err := my_util.NewHttpClient(proxySettings...)
+	httpClient, err := pkg.NewHttpClient(proxySettings...)
 	if err != nil {
 		return err
 	}
@@ -80,7 +79,7 @@ func (s *SubtitleBestApi) GetCode() (string, error) {
 	}
 
 	postUrl := webUrlBase + "/v1/subhd-code"
-	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return "", err
 	}
@@ -133,7 +132,7 @@ func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string) (*MediaInfo
 	}
 
 	postUrl := webUrlBase + "/v1/media-info"
-	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +171,7 @@ func (s *SubtitleBestApi) AskFroUpload(subSha256 string, IsMovie, trusted bool, 
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/ask-for-upload"
-	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +233,7 @@ func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRo
 	}
 
 	postUrl := webUrlBase + "/v1/upload-sub"
-	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +245,7 @@ func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRo
 
 	// 从相对路径转换为绝对路径
 	subFileFPath := filepath.Join(subSaveRootDirPath, videoSubInfo.StoreRPath)
-	if my_util.IsFile(subFileFPath) == false {
+	if pkg.IsFile(subFileFPath) == false {
 		return nil, errors.New(fmt.Sprintf("sub file not exist, %s", subFileFPath))
 	}
 	file, err := os.Open(subFileFPath)
@@ -319,7 +318,7 @@ func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVide
 	}
 
 	postUrl := webUrlBase + "/v1/upload-sub"
-	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -331,7 +330,7 @@ func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVide
 
 	// 从相对路径转换为绝对路径
 	subFileFPath := filepath.Join(subSaveRootDirPath, lowTrustVideoSubInfo.StoreRPath)
-	if my_util.IsFile(subFileFPath) == false {
+	if pkg.IsFile(subFileFPath) == false {
 		return nil, errors.New(fmt.Sprintf("sub file not exist, %s", subFileFPath))
 	}
 	file, err := os.Open(subFileFPath)
@@ -408,7 +407,7 @@ func (s *SubtitleBestApi) AskFindSub(VideoFeature, ImdbId, TmdbId, Season, Episo
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/ask-find-sub"
-	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -453,7 +452,7 @@ func (s *SubtitleBestApi) FindSub(VideoFeature, ImdbId, TmdbId, Season, Episode,
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/find-sub"
-	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -498,7 +497,7 @@ func (s *SubtitleBestApi) AskDownloadSub(SubSha256, DownloadToken, ApiKey string
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/ask-for-download"
-	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -540,7 +539,7 @@ func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, download
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/download-sub"
-	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -558,7 +557,7 @@ func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, download
 		postData["api_key"] = ApiKey
 	}
 
-	if my_util.IsFile(downloadFileDesFPath) == true {
+	if pkg.IsFile(downloadFileDesFPath) == true {
 		err = os.Remove(downloadFileDesFPath)
 		if err != nil {
 			return nil, errors.New("remove file error: " + err.Error())
@@ -613,7 +612,7 @@ func (s *SubtitleBestApi) ConvertId(id, source, videoType string) (*IdConvertRep
 	}
 
 	postUrl := webUrlBase + "/v1/id-convert"
-	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -658,7 +657,7 @@ func (s *SubtitleBestApi) FeedBack(id, version, MediaServer string, EnableShare,
 	}
 
 	postUrl := webUrlBase + "/v1/feedback"
-	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -705,7 +704,7 @@ func (s *SubtitleBestApi) AskDownloadTask(id string) (*AskDownloadTaskReply, err
 	}
 
 	postUrl := webUrlBase + "/v1/ask-download-task"
-	httpClient, err := my_util.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(s.proxySettings)
 	if err != nil {
 		return nil, err
 	}

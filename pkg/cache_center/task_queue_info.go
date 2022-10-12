@@ -8,7 +8,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 )
 
 func (c *CacheCenter) TaskQueueClear() error {
@@ -29,7 +28,7 @@ func (c *CacheCenter) TaskQueueSave(taskPriority int, taskQueueBytes []byte) err
 	c.db.Where("priority = ?", taskPriority).Find(&taskQueues)
 	// 写入到本地存储
 	saveFPath := filepath.Join(c.taskQueueSaveRootPath, fmt.Sprintf("%d", taskPriority)+".tq")
-	err := my_util.WriteFile(saveFPath, taskQueueBytes)
+	err := pkg.WriteFile(saveFPath, taskQueueBytes)
 	if err != nil {
 		return err
 	}
@@ -65,7 +64,7 @@ func (c *CacheCenter) TaskQueueRead() (map[int][]byte, error) {
 	for _, taskQueue := range taskQueues {
 
 		oneTaskQueueFPath := filepath.Join(c.taskQueueSaveRootPath, taskQueue.RelPath)
-		if my_util.IsFile(oneTaskQueueFPath) == false {
+		if pkg.IsFile(oneTaskQueueFPath) == false {
 			continue
 		}
 		bytes, err := os.ReadFile(oneTaskQueueFPath)

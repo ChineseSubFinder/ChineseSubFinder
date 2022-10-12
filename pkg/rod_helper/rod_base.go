@@ -16,7 +16,6 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/regex_things"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_useragent"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/go-rod/rod"
@@ -63,12 +62,12 @@ func NewBrowserBase(log *logrus.Logger, localChromeFPath, httpProxyURL string, l
 	})
 
 	// 随机的 rod 子文件夹名称
-	nowUserData := filepath.Join(pkg.DefRodTmpRootFolder(), my_util.RandStringBytesMaskImprSrcSB(20))
+	nowUserData := filepath.Join(pkg.DefRodTmpRootFolder(), pkg.RandStringBytesMaskImprSrcSB(20))
 	var browser *rod.Browser
 
 	if localChromeFPath != "" {
 		// 如果有指定的 chrome 路径，则使用指定的 chrome 路径
-		if my_util.IsFile(localChromeFPath) == false {
+		if pkg.IsFile(localChromeFPath) == false {
 			log.Errorln(errors.New("localChromeFPath is not a file, localChromePath:" + localChromeFPath))
 			panic(errors.New("localChromeFPath is not a file, localChromePath:" + localChromeFPath))
 		}
@@ -402,7 +401,7 @@ func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration,
 	if len(debugMode) > 0 && debugMode[0] == true {
 		//time.Sleep(my_util.RandomSecondDuration(0, 1))
 	} else {
-		time.Sleep(my_util.RandomSecondDuration(2, 5))
+		time.Sleep(pkg.RandomSecondDuration(2, 5))
 	}
 
 	if strings.Contains(strings.ToLower(pageString), "<title>403 forbidden</title>") == true {

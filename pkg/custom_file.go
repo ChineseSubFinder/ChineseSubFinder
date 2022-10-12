@@ -1,11 +1,9 @@
-package my_util
+package pkg
 
 import (
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/sirupsen/logrus"
 )
@@ -50,9 +48,9 @@ func ReadCustomAuthFile(log *logrus.Logger) bool {
 			return false
 		}
 
-		pkg.SetBaseKey(authStings[0])
-		pkg.SetAESKey16(authStings[1])
-		pkg.SetAESIv16(authStings[2])
+		SetBaseKey(authStings[0])
+		SetAESKey16(authStings[1])
+		SetAESIv16(authStings[2])
 
 		log.Infoln("Use CustomAuth")
 		return true

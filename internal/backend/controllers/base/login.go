@@ -3,10 +3,11 @@ package base
 import (
 	"net/http"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/gin-gonic/gin"
 )
@@ -37,7 +38,7 @@ func (cb ControllerBase) LoginHandler(c *gin.Context) {
 		return
 	} else {
 		// 用户账号密码匹配
-		nowAccessToken := my_util.GenerateAccessToken()
+		nowAccessToken := pkg.GenerateAccessToken()
 		common.SetAccessToken(nowAccessToken)
 		c.JSON(http.StatusOK, backend2.ReplyLogin{AccessToken: nowAccessToken,
 			Settings: *settings.GetSettings().GetNoPasswordSettings()})

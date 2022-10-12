@@ -5,12 +5,13 @@ import (
 	"math"
 	"os"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/ffmpeg_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_timeline_fixer"
@@ -303,7 +304,7 @@ func (s SubTimelineFixerHelperEx) IsMatchBySubFile(ffmpegInfo *ffmpeg_helper.FFM
 		return false, nil, nil
 	}
 
-	targetSubEndTime := my_util.Time2SecondNumber(srcBase.GetEndTime())
+	targetSubEndTime := pkg.Time2SecondNumber(srcBase.GetEndTime())
 
 	matchResult := &MatchResult{
 		VideoDuration:          ffmpegInfo.Duration,
@@ -341,7 +342,7 @@ func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileI
 		修复的字幕先存放到缓存目录，然后需要把原有的字幕进行“备份”，改名，然后再替换过来
 	*/
 	subFileName := desSubSaveFPath + sub_timeline_fixer.TmpExt
-	if my_util.IsFile(subFileName) == true {
+	if pkg.IsFile(subFileName) == true {
 		err := os.Remove(subFileName)
 		if err != nil {
 			return err
@@ -352,7 +353,7 @@ func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileI
 		return err
 	}
 
-	if my_util.IsFile(desSubSaveFPath+sub_timeline_fixer.BackUpExt) == true {
+	if pkg.IsFile(desSubSaveFPath+sub_timeline_fixer.BackUpExt) == true {
 		err = os.Remove(desSubSaveFPath + sub_timeline_fixer.BackUpExt)
 		if err != nil {
 			return err

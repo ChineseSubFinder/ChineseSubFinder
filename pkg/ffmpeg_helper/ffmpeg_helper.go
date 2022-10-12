@@ -16,7 +16,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
 	"github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
@@ -103,7 +102,7 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType Export
 	// 判断这个视频是否已经导出过内置的字幕和音频文件了
 	if ffMPEGInfo.IsExported(exportType) == false {
 		// 说明缓存不存在，需要导出，这里需要注意，如果导出失败了，这个文件夹要清理掉
-		if my_util.IsDir(nowCacheFolderPath) == true {
+		if pkg.IsDir(nowCacheFolderPath) == true {
 			// 如果存在则，先清空一个这个文件夹
 			err = pkg.ClearFolder(nowCacheFolderPath)
 			if err != nil {
@@ -209,7 +208,7 @@ func (f *FFMPEGHelper) ExportAudioAndSubArgsByTimeRange(audioFullPath, subFullPa
 	var outSubFullPath = filepath.Join(filepath.Dir(audioFullPath), outSubName)
 
 	// 导出音频
-	if my_util.IsFile(outAudioFullPath) == true {
+	if pkg.IsFile(outAudioFullPath) == true {
 		err := os.Remove(outAudioFullPath)
 		if err != nil {
 			return "", "", "", err
@@ -221,7 +220,7 @@ func (f *FFMPEGHelper) ExportAudioAndSubArgsByTimeRange(audioFullPath, subFullPa
 		return "", "", execFFMPEG, err
 	}
 	// 导出字幕
-	if my_util.IsFile(outSubFullPath) == true {
+	if pkg.IsFile(outSubFullPath) == true {
 		err := os.Remove(outSubFullPath)
 		if err != nil {
 			return "", "", "", err
@@ -251,7 +250,7 @@ func (f *FFMPEGHelper) ExportSubArgsByTimeRange(subFullPath, outName string, sta
 	var outSubFullPath = filepath.Join(filepath.Dir(subFullPath), outSubName)
 
 	// 导出字幕
-	if my_util.IsFile(outSubFullPath) == true {
+	if pkg.IsFile(outSubFullPath) == true {
 		err := os.Remove(outSubFullPath)
 		if err != nil {
 			return "", "", err

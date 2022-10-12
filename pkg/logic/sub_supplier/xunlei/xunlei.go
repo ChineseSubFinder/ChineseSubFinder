@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
@@ -16,7 +18,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
@@ -115,7 +116,7 @@ func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, erro
 
 	s.log.Debugln(s.GetSupplierName(), filePath, "Start...")
 
-	if my_util.IsFile(filePath) == false {
+	if pkg.IsFile(filePath) == false {
 		// 这里传入的可能是蓝光结构的伪造存在的视频文件，需要检查一次这个文件是否存在
 		bok, _, _ := decode.IsFakeBDMVWorked(filePath)
 		if bok == false {
@@ -191,7 +192,7 @@ func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, erro
 func (s *Supplier) getSubInfos(filePath, cid string) (SublistSliceXunLei, error) {
 	var jsonList SublistSliceXunLei
 
-	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		return jsonList, err
 	}

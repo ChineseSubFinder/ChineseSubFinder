@@ -5,10 +5,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/something_static"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -34,7 +35,7 @@ func GitProcess(log *logrus.Logger, config config.Config, enString string) error
 
 	var r *git.Repository
 	var w *git.Worktree
-	if my_util.IsDir(config.CloneProjectDesSaveDir) == true {
+	if pkg.IsDir(config.CloneProjectDesSaveDir) == true {
 		// 需要 pull
 		log.Infoln("Pull Start...")
 		r, err = git.PlainOpen(config.CloneProjectDesSaveDir)

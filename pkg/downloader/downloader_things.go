@@ -15,7 +15,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/change_file_encode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/chs_cht_changer"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	subcommon "github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
 )
@@ -131,7 +130,7 @@ func (d *Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSu
 	var fullSeasonSubDict = make(map[string][]string)
 
 	for _, season := range seriesInfo.SeasonDict {
-		seasonKey := my_util.GetEpisodeKeyName(season, 0)
+		seasonKey := pkg.GetEpisodeKeyName(season, 0)
 		subs, ok := organizeSubFiles[seasonKey]
 		if ok == false {
 			continue
@@ -148,7 +147,7 @@ func (d *Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSu
 			}
 
 			newSubFullPath := filepath.Join(newSeasonSubRootPath, subFileName)
-			err = my_util.CopyFile(sub, newSubFullPath)
+			err = pkg.CopyFile(sub, newSubFullPath)
 			if err != nil {
 				d.log.Errorln("saveFullSeasonSub.CopyFile", subFileName, err)
 				continue
@@ -159,7 +158,7 @@ func (d *Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSu
 				return nil
 			}
 			// 把整季的字幕缓存位置也提供出去，如果之前没有下载到的，这里返回出来的可以补上
-			seasonEpsKey := my_util.GetEpisodeKeyName(gusSeason, gusEpisode)
+			seasonEpsKey := pkg.GetEpisodeKeyName(gusSeason, gusEpisode)
 			_, ok := fullSeasonSubDict[seasonEpsKey]
 			if ok == false {
 				// 初始化
@@ -181,7 +180,7 @@ func (d *Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFi
 	desSubFullPath := filepath.Join(videoRootPath, subNewName)
 	if setDefault == true {
 		// 先判断没有 default 的字幕是否存在了，在的话，先删除，然后再写入
-		if my_util.IsFile(desSubFullPath) == true {
+		if pkg.IsFile(desSubFullPath) == true {
 			_ = os.Remove(desSubFullPath)
 		}
 		desSubFullPath = filepath.Join(videoRootPath, subNewNameWithDefault)
@@ -189,14 +188,14 @@ func (d *Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFi
 
 	if skipExistFile == true {
 		// 需要判断文件是否存在在，有则跳过
-		if my_util.IsFile(desSubFullPath) == true {
+		if pkg.IsFile(desSubFullPath) == true {
 			d.log.Infoln("OrgSubName:", finalSubFile.Name)
 			d.log.Infoln("Sub Skip DownAt:", desSubFullPath)
 			return nil
 		}
 	}
 	// 最后写入字幕
-	err := my_util.WriteFile(desSubFullPath, finalSubFile.Data)
+	err := pkg.WriteFile(desSubFullPath, finalSubFile.Data)
 	if err != nil {
 		return err
 	}

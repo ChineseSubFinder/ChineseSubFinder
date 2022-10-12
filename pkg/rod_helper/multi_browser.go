@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/sirupsen/logrus"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	"github.com/sirupsen/logrus"
 
 	"github.com/go-rod/rod"
 )
@@ -41,7 +41,7 @@ func NewMultiBrowser(browserOptions *BrowserOptions) *Browser {
 		return nil
 	}
 	// 尝试从本地的 XrayPoolUrl 获取 代理信息
-	httpClient, err := my_util.NewHttpClient()
+	httpClient, err := pkg.NewHttpClient()
 	if err != nil {
 		browserOptions.Log.Error(errors.New("NewHttpClient error:" + err.Error()))
 		return nil

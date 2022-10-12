@@ -1,9 +1,10 @@
 package zimuku
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"path/filepath"
 	"testing"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/rod_helper"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/series_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
@@ -21,7 +21,7 @@ import (
 func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 
 	defInstance()
-	browser, err := rod_helper.NewBrowserBase(log_helper.GetLogger4Tester(), "", "", true, settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	browser, err := rod_helper.NewBrowserBase(log_helper.GetLogger4Tester(), "", "", true, settings.NewSettings(pkg.ConfigRootDirFPath()).AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,8 +43,8 @@ func TestSupplier_GetSubListFromKeyword(t *testing.T) {
 
 func TestSupplier_GetSubListFromFile(t *testing.T) {
 
-	opt := rod_helper.NewBrowserOptions(log_helper.GetLogger4Tester(), true, settings.NewSettings())
-	opt.SetPreLoadUrl(settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	opt := rod_helper.NewBrowserOptions(log_helper.GetLogger4Tester(), true, settings.NewSettings(pkg.ConfigRootDirFPath()))
+	opt.SetPreLoadUrl(settings.NewSettings(pkg.ConfigRootDirFPath()).AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	browser, err := rod_helper.NewBrowserEx(opt)
 	if err != nil {
 		t.Fatal(err)
@@ -121,8 +121,8 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 
 func TestSupplier_getSubListFromKeyword(t *testing.T) {
 
-	opt := rod_helper.NewBrowserOptions(log_helper.GetLogger4Tester(), true, settings.NewSettings())
-	opt.SetPreLoadUrl(settings.NewSettings().AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
+	opt := rod_helper.NewBrowserOptions(log_helper.GetLogger4Tester(), true, settings.NewSettings(pkg.ConfigRootDirFPath()))
+	opt.SetPreLoadUrl(settings.NewSettings(pkg.ConfigRootDirFPath()).AdvancedSettings.SuppliersSettings.Zimuku.RootUrl)
 	browser, err := rod_helper.NewBrowserEx(opt)
 	if err != nil {
 		t.Fatal(err)
@@ -176,7 +176,7 @@ var zimukuInstance *Supplier
 
 func defInstance() {
 
-	my_util.ReadCustomAuthFile(log_helper.GetLogger4Tester())
+	pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester())
 
 	authKey := random_auth_key.AuthKey{
 		BaseKey:  pkg.BaseKey(),

@@ -4,9 +4,12 @@ import (
 	"errors"
 	"os"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/search"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	movieHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/movie_helper"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/series_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/old"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
 	"github.com/sirupsen/logrus"
@@ -85,12 +88,12 @@ func (h HotFix001) fixMovie(movieRootDir string) (OutStruct001, error) {
 	outStruct := OutStruct001{}
 	outStruct.RenamedFiles = make([]string, 0)
 	outStruct.ErrFiles = make([]string, 0)
-	if my_util.IsDir(movieRootDir) == false {
+	if pkg.IsDir(movieRootDir) == false {
 		return outStruct, errors.New("movieRootDir path not exist: " + movieRootDir)
 	}
 	// 先找出有那些电影文件夹和连续剧文件夹
 	var movieFullPathList = make([]string, 0)
-	movieFullPathList, err = my_util.SearchMatchedVideoFile(h.log, movieRootDir)
+	movieFullPathList, err = search.MatchedVideoFile(h.log, movieRootDir)
 	if err != nil {
 		return outStruct, err
 	}
@@ -124,7 +127,7 @@ func (h HotFix001) fixSeries(seriesRootDir string) (OutStruct001, error) {
 	outStruct := OutStruct001{}
 	outStruct.RenamedFiles = make([]string, 0)
 	outStruct.ErrFiles = make([]string, 0)
-	if my_util.IsDir(seriesRootDir) == false {
+	if pkg.IsDir(seriesRootDir) == false {
 		return outStruct, errors.New("seriesRootDir path not exist: " + seriesRootDir)
 	}
 	// 先找出有那些电影文件夹和连续剧文件夹

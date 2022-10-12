@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -482,46 +481,6 @@ func ClearIdleSubFixCacheFolder(l *logrus.Logger, rootSubFixCacheFolder string, 
 	}
 
 	return nil
-}
-
-// CopyFile copies a single file from src to dst
-func CopyFile(src, dst string) error {
-	var err error
-	var srcFd *os.File
-	var dstFd *os.File
-	var srcInfo os.FileInfo
-
-	if srcFd, err = os.Open(src); err != nil {
-		return err
-	}
-	defer func() {
-		_ = srcFd.Close()
-	}()
-
-	if dstFd, err = os.Create(dst); err != nil {
-		return err
-	}
-	defer func() {
-		_ = dstFd.Close()
-	}()
-
-	if _, err = io.Copy(dstFd, srcFd); err != nil {
-		return err
-	}
-	if srcInfo, err = os.Stat(src); err != nil {
-		return err
-	}
-	return os.Chmod(dst, srcInfo.Mode())
-}
-
-func Time2SecondNumber(inTime time.Time) float64 {
-	outSecond := 0.0
-	outSecond += float64(inTime.Hour() * 60 * 60)
-	outSecond += float64(inTime.Minute() * 60)
-	outSecond += float64(inTime.Second())
-	outSecond += float64(inTime.Nanosecond()) / 1000 / 1000 / 1000
-
-	return outSecond
 }
 
 // 缓存文件的位置信息，都是在程序的根目录下的 cache 中

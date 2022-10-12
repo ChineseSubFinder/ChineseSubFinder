@@ -11,7 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/bodgit/sevenzip"
 	"github.com/mholt/archiver/v3"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -189,7 +190,7 @@ func processOneFile(f archiver.File, notUTF8 bool, desRootPath string) error {
 		//读取到最终的缓冲区中
 		chunk = append(chunk, buf[:n]...)
 	}
-	err := my_util.WriteFile(filepath.Join(desRootPath, decodeName), chunk)
+	err := pkg.WriteFile(filepath.Join(desRootPath, decodeName), chunk)
 	if err != nil {
 		return err
 	}
@@ -227,7 +228,7 @@ func un7zOneFile(file *sevenzip.File, desRootPath string) error {
 	}
 	decodeName := file.Name
 	decodeName = filepath.Base(decodeName)
-	err = my_util.WriteFile(filepath.Join(desRootPath, decodeName), data)
+	err = pkg.WriteFile(filepath.Join(desRootPath, decodeName), data)
 	if err != nil {
 		return err
 	}

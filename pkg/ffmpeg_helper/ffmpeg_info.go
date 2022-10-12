@@ -1,14 +1,14 @@
 package ffmpeg_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
 	"github.com/sirupsen/logrus"
@@ -55,18 +55,18 @@ func (f *FFMPEGInfo) IsExported(exportType ExportType) bool {
 		// 函数执行完毕，再进行 check，是否需要删除 exportedMakeFileName 这个文件
 		if bProcessDone == false {
 			// 失败就需要删除这个 exportedMakeFileName 文件
-			if my_util.IsFile(tmpNowExportedMaskFile) == true {
+			if pkg.IsFile(tmpNowExportedMaskFile) == true {
 				_ = os.Remove(tmpNowExportedMaskFile)
 			}
 		}
 	}()
 
 	// 首先存储的缓存目录要存在
-	if my_util.IsDir(nowCacheFolder) == false {
+	if pkg.IsDir(nowCacheFolder) == false {
 		return bProcessDone
 	}
 
-	if my_util.IsFile(tmpNowExportedMaskFile) == false {
+	if pkg.IsFile(tmpNowExportedMaskFile) == false {
 		return bProcessDone
 	}
 
@@ -109,7 +109,7 @@ func (f FFMPEGInfo) CreateExportedMask() error {
 	if err != nil {
 		return err
 	}
-	if my_util.IsFile(maskFileFPath) == false {
+	if pkg.IsFile(maskFileFPath) == false {
 		create, err := os.Create(maskFileFPath)
 		if err != nil {
 			return err
@@ -138,7 +138,7 @@ func (f *FFMPEGInfo) isAudioExported(nowCacheFolder string) bool {
 	for index, audioInfo := range f.AudioInfoList {
 
 		audioFPath := filepath.Join(nowCacheFolder, audioInfo.GetName()+extPCM)
-		if my_util.IsFile(audioFPath) == true {
+		if pkg.IsFile(audioFPath) == true {
 
 			f.AudioInfoList[index].FullPath = audioFPath
 
@@ -166,13 +166,13 @@ func (f *FFMPEGInfo) isSubExported(nowCacheFolder string) bool {
 	for index, subtitleInfo := range f.SubtitleInfoList {
 
 		subSrtFPath := filepath.Join(nowCacheFolder, subtitleInfo.GetName()+common.SubExtSRT)
-		if my_util.IsFile(subSrtFPath) == false {
+		if pkg.IsFile(subSrtFPath) == false {
 			return false
 		} else {
 			f.SubtitleInfoList[index].FullPath = subSrtFPath
 		}
 		subASSFPath := filepath.Join(nowCacheFolder, subtitleInfo.GetName()+common.SubExtASS)
-		if my_util.IsFile(subASSFPath) == false {
+		if pkg.IsFile(subASSFPath) == false {
 			return false
 		} else {
 			f.SubtitleInfoList[index].FullPath = subASSFPath

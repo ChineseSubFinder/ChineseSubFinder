@@ -3,7 +3,8 @@ package TestCode
 import (
 	"fmt"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	tmdb "github.com/cyruzin/golang-tmdb"
 )
@@ -28,7 +29,7 @@ func imdb2tmdb() {
 		"", "",
 	)
 
-	restyClient, err := my_util.NewHttpClient(proxySettings)
+	restyClient, err := pkg.NewHttpClient(proxySettings)
 
 	tmdbClient.SetClientConfig(*restyClient.GetClient())
 

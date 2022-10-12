@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 )
 
 func TestCheckSpeFile(t *testing.T) {
@@ -31,7 +31,7 @@ func TestCheckSpeFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got == false || my_util.IsFile(getSpeFileName()) == true {
+	if got == false || pkg.IsFile(getSpeFileName()) == true {
 		t.Fatal("CheckSpeFile fatal")
 	}
 }

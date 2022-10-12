@@ -10,7 +10,6 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -64,7 +63,7 @@ func (h HotFix005) process() (bool, error) {
 	}
 	for _, info := range videoInfos {
 		delFileFPath := filepath.Join(shareRootDir, info.StoreRPath)
-		if my_util.IsFile(delFileFPath) == true {
+		if pkg.IsFile(delFileFPath) == true {
 			err = os.Remove(delFileFPath)
 			if err != nil {
 				h.log.Errorln("Remove file:", delFileFPath, " error:", err.Error())
@@ -87,7 +86,7 @@ func (h HotFix005) process() (bool, error) {
 	}
 	for _, info := range lowTrustVideoInfos {
 		delFileFPath := filepath.Join(shareRootDir, info.StoreRPath)
-		if my_util.IsFile(delFileFPath) == true {
+		if pkg.IsFile(delFileFPath) == true {
 			err = os.Remove(delFileFPath)
 			if err != nil {
 				h.log.Errorln("Remove file:", delFileFPath, " error:", err.Error())

@@ -21,8 +21,6 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/subtitle_best_api"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
-
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_file_hash"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/mix_media_info"
@@ -172,7 +170,7 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 	}
 
 	// 标记本次请求的归属性
-	randomAuthToken := my_util.RandStringBytesMaskImprSrcSB(10)
+	randomAuthToken := pkg.RandStringBytesMaskImprSrcSB(10)
 	var bestOneSub subtitle_best_api.Subtitle
 	var queueIsFull bool
 	var waitTime int64

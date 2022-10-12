@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/strcut_json"
 )
 
@@ -53,7 +55,7 @@ func TestNewSettings(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	outSettings := NewSettings()
+	outSettings := NewSettings(pkg.ConfigRootDirFPath())
 	err = strcut_json.ToStruct(fileName, &outSettings)
 	if err != nil {
 		t.Fatal(err)

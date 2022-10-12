@@ -2,7 +2,7 @@ package dao
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 )
 
@@ -19,7 +19,7 @@ func UpdateInfo(version string, settings *settings.Settings) *models.Info {
 	if len(infos) == 0 {
 		// 不存在则新增
 		saveInfo := &models.Info{
-			Id:           my_util.RandStringBytesMaskImprSrcSB(64),
+			Id:           pkg.RandStringBytesMaskImprSrcSB(64),
 			MediaServer:  mediaServerName,
 			Version:      version,
 			EnableShare:  settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled,

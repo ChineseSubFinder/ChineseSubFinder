@@ -5,6 +5,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/search"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/emby"
@@ -17,7 +21,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
@@ -44,7 +47,7 @@ func readSeriesInfo(log *logrus.Logger, seriesDir string, need2AnalyzeSub bool, 
 
 	subParserHub := sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log))
 	// 先搜索这个目录下，所有符合条件的视频
-	matchedVideoFile, err := my_util.SearchMatchedVideoFile(log, seriesDir)
+	matchedVideoFile, err := search.MatchedVideoFile(log, seriesDir)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -76,7 +79,7 @@ func readSeriesInfo(log *logrus.Logger, seriesDir string, need2AnalyzeSub bool, 
 			if subParserHub.IsSubHasChinese(subParserFileInfo) == false {
 				continue
 			}
-			epsKey := my_util.GetEpisodeKeyName(epsVideoNfoInfo.Season, epsVideoNfoInfo.Episode)
+			epsKey := pkg.GetEpisodeKeyName(epsVideoNfoInfo.Season, epsVideoNfoInfo.Episode)
 			oneFileSubInfo := series.SubInfo{
 				Title:        epsVideoNfoInfo.Title,
 				Season:       epsVideoNfoInfo.Season,
@@ -111,7 +114,7 @@ func ReadSeriesInfoFromDir(log *logrus.Logger,
 		return nil, err
 	}
 	// 搜索所有的视频
-	videoFiles, err := my_util.SearchMatchedVideoFile(log, seriesDir)
+	videoFiles, err := search.MatchedVideoFile(log, seriesDir)
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +264,7 @@ func GetSeriesListFromDirs(log *logrus.Logger, dirs []string) (*treemap.Map, err
 func GetSeriesList(log *logrus.Logger, dir string) ([]string, error) {
 
 	// 需要把所有 tvshow.nfo 搜索出来，那么这些文件对应的目录就是目标连续剧的目录
-	tvNFOs, err := my_util.SearchTVNfo(log, dir)
+	tvNFOs, err := search.TVNfo(log, dir)
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +286,7 @@ func whichSeasonEpsNeedDownloadSub(log *logrus.Logger, seriesInfo *series.Series
 	if forcedScanAndDownloadSub == true {
 		for _, epsInfo := range seriesInfo.EpList {
 			// 添加
-			epsKey := my_util.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
+			epsKey := pkg.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
 			needDlSubEpsList[epsKey] = epsInfo
 			needDlSeasonList[epsInfo.Season] = epsInfo.Season
 		}
@@ -309,7 +312,7 @@ func whichSeasonEpsNeedDownloadSub(log *logrus.Logger, seriesInfo *series.Series
 
 		if len(epsInfo.SubAlreadyDownloadedList) < 1 || baseTime.AddDate(0, 0, ExpirationTime).After(currentTime) == true {
 			// 添加
-			epsKey := my_util.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
+			epsKey := pkg.GetEpisodeKeyName(epsInfo.Season, epsInfo.Episode)
 			needDlSubEpsList[epsKey] = epsInfo
 			needDlSeasonList[epsInfo.Season] = epsInfo.Season
 		} else {
@@ -404,7 +407,7 @@ func getEpsInfoAndSubDic(log *logrus.Logger,
 		}
 	}
 
-	epsKey := my_util.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
+	epsKey := pkg.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
 	_, ok := EpisodeDict[epsKey]
 	if ok == false {
 		// 初始化

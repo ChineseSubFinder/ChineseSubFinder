@@ -10,7 +10,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -46,7 +45,7 @@ func DeleteDbFile() error {
 	// 如果是 Linux 则在 /config 目录下
 	nowDbFileName := getDbName()
 
-	if my_util.IsFile(nowDbFileName) == true {
+	if pkg.IsFile(nowDbFileName) == true {
 		return os.Remove(nowDbFileName)
 	}
 	return nil
@@ -59,7 +58,7 @@ func InitDb() error {
 	nowDbFileName := getDbName()
 
 	dbDir := filepath.Dir(nowDbFileName)
-	if my_util.IsDir(dbDir) == false {
+	if pkg.IsDir(dbDir) == false {
 		_ = os.MkdirAll(dbDir, os.ModePerm)
 	}
 	db, err = gorm.Open(sqlite.Open(nowDbFileName), &gorm.Config{})

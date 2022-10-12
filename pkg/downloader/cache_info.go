@@ -9,7 +9,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
 	vsh "github.com/allanpk716/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/strcut_json"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
 )
@@ -235,14 +234,14 @@ func (d *Downloader) loadVideoListCache() error {
 	movieInfos := make([]backend2.MovieInfo, 0)
 	seasonInfos := make([]backend2.SeasonInfo, 0)
 
-	if my_util.IsFile(movieInfosFileName) == true {
+	if pkg.IsFile(movieInfosFileName) == true {
 		err = strcut_json.ToStruct(movieInfosFileName, &movieInfos)
 		if err != nil {
 			return err
 		}
 	}
 
-	if my_util.IsFile(seasonInfosFileName) == true {
+	if pkg.IsFile(seasonInfosFileName) == true {
 		err = strcut_json.ToStruct(seasonInfosFileName, &seasonInfos)
 		if err != nil {
 			return err
@@ -333,14 +332,14 @@ func (d *Downloader) GetMovieInfoAndSeasonInfoV2() ([]backend2.MovieInfoV2, []ba
 	movieInfos := make([]backend2.MovieInfoV2, 0)
 	seasonInfos := make([]backend2.SeasonInfoV2, 0)
 
-	if my_util.IsFile(movieInfosFileName) == true {
+	if pkg.IsFile(movieInfosFileName) == true {
 		err = strcut_json.ToStruct(movieInfosFileName, &movieInfos)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	if my_util.IsFile(seasonInfosFileName) == true {
+	if pkg.IsFile(seasonInfosFileName) == true {
 		err = strcut_json.ToStruct(seasonInfosFileName, &seasonInfos)
 		if err != nil {
 			return nil, nil, err

@@ -8,14 +8,12 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
-
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
 )
 
 func TestSubtitleBestApi_GetMediaInfo(t *testing.T) {
 
-	my_util.ReadCustomAuthFile(log_helper.GetLogger4Tester())
+	pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester())
 	bapi := NewSubtitleBestApi(
 		log_helper.GetLogger4Tester(),
 		random_auth_key.AuthKey{
@@ -30,7 +28,7 @@ func TestSubtitleBestApi_GetMediaInfo(t *testing.T) {
 	}
 	println(downloadTaskReply.Status, downloadTaskReply.Message)
 
-	feedReply, err := bapi.FeedBack(my_util.RandStringBytesMaskImprSrcSB(64), "1.0.0", "None", true, true)
+	feedReply, err := bapi.FeedBack(pkg.RandStringBytesMaskImprSrcSB(64), "1.0.0", "None", true, true)
 	if err != nil {
 		t.Fatal(err)
 	}

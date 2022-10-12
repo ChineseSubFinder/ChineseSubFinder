@@ -3,11 +3,12 @@ package video_list_helper
 import (
 	"sync"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/search"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	vsh "github.com/allanpk716/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
 
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/series_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -46,7 +47,7 @@ func (v *VideoListHelper) RefreshMainList() (*vsh.NormalScanVideoResult, error) 
 		}()
 		// --------------------------------------------------
 		// 电影
-		normalScanResult.MoviesDirMap, errMovie = my_util.SearchMatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
+		normalScanResult.MoviesDirMap, errMovie = search.MatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
 	}()
 	wg.Add(1)
 	go func() {

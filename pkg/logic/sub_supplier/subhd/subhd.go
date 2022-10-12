@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/search"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
@@ -28,7 +30,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Tnze/go.num/v2/zh"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
@@ -106,7 +107,7 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 
 	// 需要查询今天的限额
 	count, err := s.fileDownloader.CacheCenter.DailyDownloadCountGet(s.GetSupplierName(),
-		my_util.GetPublicIP(s.log, s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
+		pkg.GetPublicIP(s.log, s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "DailyDownloadCountGet", err)
 		return true
@@ -275,7 +276,7 @@ func (s *Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo
 		return nil, err
 	}
 	// 如果没有，那么就用文件名查找
-	searchKeyword := my_util.VideoNameSearchKeywordMaker(s.log, keyWord, imdbInfo.Year)
+	searchKeyword := search.VideoNameSearchKeywordMaker(s.log, keyWord, imdbInfo.Year)
 	subInfoList, err = s.getSubListFromKeyword4Movie(searchKeyword)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "keyword:", searchKeyword)
@@ -290,7 +291,7 @@ func (s *Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo
 			return nil, err
 		}
 		// 如果没有，那么就用文件名查找
-		searchKeyword = my_util.VideoNameSearchKeywordMaker(s.log, keyWord, imdbInfo.Year)
+		searchKeyword = search.VideoNameSearchKeywordMaker(s.log, keyWord, imdbInfo.Year)
 		subInfoList, err = s.getSubListFromKeyword4Movie(searchKeyword)
 		if err != nil {
 			s.log.Errorln(s.GetSupplierName(), "keyword:", searchKeyword)
@@ -358,7 +359,7 @@ func (s *Supplier) whichEpisodeNeedDownloadSub(seriesInfo *series.SeriesInfo, al
 		}
 		subInfo.Season = season
 		subInfo.Episode = episode
-		epsKey := my_util.GetEpisodeKeyName(season, episode)
+		epsKey := pkg.GetEpisodeKeyName(season, episode)
 		_, ok := allSubDict[epsKey]
 		if ok == false {
 			// 初始化
@@ -477,7 +478,7 @@ func (s *Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSe
 			notify_center.Notify.Add("subhd_step1", err.Error())
 		}
 	}()
-	detailPageUrl = my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, detailPageUrl)
+	detailPageUrl = pkg.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, detailPageUrl)
 	result, page, err := rod_helper.HttpGetFromBrowser(browser, detailPageUrl, s.tt)
 	if err != nil {
 		return nil, err
@@ -547,7 +548,7 @@ func (s *Supplier) DownFile(browser *rod.Browser, subDownloadPageUrl string, Top
 			notify_center.Notify.Add("subhd_DownFile", err.Error())
 		}
 	}()
-	subDownloadPageFullUrl := my_util.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, subDownloadPageUrl)
+	subDownloadPageFullUrl := pkg.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, subDownloadPageUrl)
 
 	_, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageFullUrl, s.tt)
 	if err != nil {
@@ -712,7 +713,7 @@ func (s *Supplier) passWaterWall(page *rod.Page) {
 	shadowbg := slideBgEl.MustResource()
 	// 取得原始圖像
 	src := slideBgEl.MustProperty("src")
-	fullbg, _, err := my_util.DownFile(s.log, strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
+	fullbg, _, err := pkg.DownFile(s.log, strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
 	if err != nil {
 		s.log.Errorln("passWaterWall.DownFile", err)
 		return

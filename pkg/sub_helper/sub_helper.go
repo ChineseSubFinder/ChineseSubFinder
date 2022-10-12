@@ -19,7 +19,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/filter"
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/regex_things"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/pkg/vad"
@@ -46,13 +45,13 @@ func OrganizeDlSubFiles(log *logrus.Logger, tmpFolderName string, subInfos []sup
 	for i := range subInfos {
 		// 先存下来，保存是时候需要前缀，前缀就是从那个网站下载来的
 		nowFileSaveFullPath := filepath.Join(tmpFolderFullPath, GetFrontNameAndOrgName(log, &subInfos[i]))
-		err = my_util.WriteFile(nowFileSaveFullPath, subInfos[i].Data)
+		err = pkg.WriteFile(nowFileSaveFullPath, subInfos[i].Data)
 		if err != nil {
 			log.Errorln("getFrontNameAndOrgName - WriteFile", nowFileSaveFullPath, "FromWhere Name TopN", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)
 			continue
 		}
 		nowExt := strings.ToLower(subInfos[i].Ext)
-		epsKey := my_util.GetEpisodeKeyName(subInfos[i].Season, subInfos[i].Episode)
+		epsKey := pkg.GetEpisodeKeyName(subInfos[i].Season, subInfos[i].Episode)
 		_, ok := siteSubInfoDict[epsKey]
 		if ok == false {
 			// 不存在则实例化
@@ -105,7 +104,7 @@ func OrganizeDlSubFiles(log *logrus.Logger, tmpFolderName string, subInfos []sup
 					}
 					// 加入缓存列表
 					// 根据当前字幕的信息来构建 key
-					SEPKey := my_util.GetEpisodeKeyName(nowSeason, nowEps)
+					SEPKey := pkg.GetEpisodeKeyName(nowSeason, nowEps)
 					_, ok = siteSubInfoDict[SEPKey]
 					if ok == false {
 						siteSubInfoDict[SEPKey] = make([]string, 0)
@@ -216,12 +215,12 @@ func GetFrontNameAndOrgName(log *logrus.Logger, info *supplier.SubInfo) string {
 	if err != nil {
 		log.Warnln("", err)
 		// 替换特殊字符
-		infoName = my_util.ReplaceSpecString(info.Name, "x")
+		infoName = pkg.ReplaceSpecString(info.Name, "x")
 	} else {
 		infoName = fileName.Title + "_S" + strconv.Itoa(fileName.Season) + "E" + strconv.Itoa(fileName.Episode) + filepath.Ext(info.Name)
 	}
 	if len(infoName) < 1 {
-		infoName = my_util.RandStringBytesMaskImprSrcSB(10) + filepath.Ext(info.Name)
+		infoName = pkg.RandStringBytesMaskImprSrcSB(10) + filepath.Ext(info.Name)
 	}
 	info.Name = infoName
 
@@ -244,7 +243,7 @@ func SearchMatchedSubFileByDir(log *logrus.Logger, dir string) ([]string, error)
 	}
 	for _, curFile := range files {
 		fullPath := dir + pathSep + curFile.Name()
-		if my_util.IsDir(fullPath) == true {
+		if pkg.IsDir(fullPath) == true {
 			// 需要排除 Sub_S1E0、Sub_S2E0 这样的整季的字幕文件夹，这里仅仅是缓存，不会被加载的
 			matched := regex_things.RegOneSeasonSubFolderNameMatch.FindAllStringSubmatch(curFile.Name(), -1)
 			if matched != nil && len(matched) > 0 {
@@ -439,12 +438,12 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 	srcOneSubUnit := NewSubUnit()
 
 	// 最后一个对话的结束时间
-	lastDialogueExTimeEnd, err := my_util.ParseTime(nowDialogue[len(nowDialogue)-1].EndTime)
+	lastDialogueExTimeEnd, err := pkg.ParseTime(nowDialogue[len(nowDialogue)-1].EndTime)
 	if err != nil {
 		return nil, err
 	}
 	// 相当于总时长
-	fullDuration := my_util.Time2SecondNumber(lastDialogueExTimeEnd)
+	fullDuration := pkg.Time2SecondNumber(lastDialogueExTimeEnd)
 	// 最低的起始时间，因为可能需要裁剪范围
 	startRangeTimeMin := fullDuration * SkipFrontAndEndPer
 	endRangeTimeMax := fullDuration * (1.0 - SkipFrontAndEndPer)
@@ -454,16 +453,16 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 
 	for i := 0; i < len(nowDialogue); i++ {
 
-		oneDialogueExTimeStart, err := my_util.ParseTime(nowDialogue[i].StartTime)
+		oneDialogueExTimeStart, err := pkg.ParseTime(nowDialogue[i].StartTime)
 		if err != nil {
 			return nil, err
 		}
-		oneDialogueExTimeEnd, err := my_util.ParseTime(nowDialogue[i].EndTime)
+		oneDialogueExTimeEnd, err := pkg.ParseTime(nowDialogue[i].EndTime)
 		if err != nil {
 			return nil, err
 		}
 
-		oneStart := my_util.Time2SecondNumber(oneDialogueExTimeStart)
+		oneStart := pkg.Time2SecondNumber(oneDialogueExTimeStart)
 		if SkipFrontAndEndPer > 0 {
 			if fullDuration*SkipFrontAndEndPer > oneStart || fullDuration*(1.0-SkipFrontAndEndPer) < oneStart {
 				continue
@@ -474,11 +473,11 @@ func GetVADInfoFeatureFromSubNeedOffsetTimeWillInsert(fileInfo *subparser.FileIn
 			continue
 		}
 		// 如果当前的这一句话，为空，或者进过正则表达式剔除特殊字符后为空，则跳过
-		if my_util.ReplaceSpecString(nowDialogue[i].Lines[0], "") == "" {
+		if pkg.ReplaceSpecString(nowDialogue[i].Lines[0], "") == "" {
 			continue
 		}
 		// 如果当前的这一句话，为空，或者进过正则表达式剔除特殊字符后为空，则跳过
-		if my_util.ReplaceSpecString(fileInfo.GetDialogueExContent(i), "") == "" {
+		if pkg.ReplaceSpecString(fileInfo.GetDialogueExContent(i), "") == "" {
 			continue
 		}
 		// 低于 5句对白，则添加
@@ -526,8 +525,8 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 		因为 VAD 的窗口是 10ms，那么需要多每一句话按 10 ms 的单位进行取整
 		每一句话开始、结束的时间，需要向下取整
 	*/
-	subStartTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(fileInfo.GetStartTime()))
-	subEndTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(fileInfo.GetEndTime()))
+	subStartTimeFloor := pkg.MakeFloor10msMultipleFromFloat(pkg.Time2SecondNumber(fileInfo.GetStartTime()))
+	subEndTimeFloor := pkg.MakeFloor10msMultipleFromFloat(pkg.Time2SecondNumber(fileInfo.GetEndTime()))
 	// 如果想要从 0 时间点开始算，那么 subStartTimeFloor 这个值就需要重置到0
 	subStartTimeFloor = 0
 	subFullSecondTimeFloor := subEndTimeFloor - subStartTimeFloor
@@ -552,22 +551,22 @@ func GetVADInfoFeatureFromSubNew(fileInfo *subparser.FileInfo, SkipFrontAndEndPe
 			continue
 		}
 		// 如果当前的这一句话，为空，或者进过正则表达式剔除特殊字符后为空，则跳过
-		if my_util.ReplaceSpecString(dialogue.Lines[0], "") == "" {
+		if pkg.ReplaceSpecString(dialogue.Lines[0], "") == "" {
 			continue
 		}
 		// 字幕的开始时间
-		oneDialogueStartTime, err := my_util.ParseTime(dialogue.StartTime)
+		oneDialogueStartTime, err := pkg.ParseTime(dialogue.StartTime)
 		if err != nil {
 			return nil, err
 		}
 		// 字幕的结束时间
-		oneDialogueEndTime, err := my_util.ParseTime(dialogue.EndTime)
+		oneDialogueEndTime, err := pkg.ParseTime(dialogue.EndTime)
 		if err != nil {
 			return nil, err
 		}
 		// 字幕的时长，对时间进行向下取整
-		oneDialogueStartTimeFloor := my_util.MakeCeil10msMultipleFromFloat(my_util.Time2SecondNumber(oneDialogueStartTime))
-		oneDialogueEndTimeFloor := my_util.MakeFloor10msMultipleFromFloat(my_util.Time2SecondNumber(oneDialogueEndTime))
+		oneDialogueStartTimeFloor := pkg.MakeCeil10msMultipleFromFloat(pkg.Time2SecondNumber(oneDialogueStartTime))
+		oneDialogueEndTimeFloor := pkg.MakeFloor10msMultipleFromFloat(pkg.Time2SecondNumber(oneDialogueEndTime))
 		// 得到一句对白的时长
 		changeVADStartIndex := int(oneDialogueStartTimeFloor * 100)
 		changeVADEndIndex := int(oneDialogueEndTimeFloor * 100)

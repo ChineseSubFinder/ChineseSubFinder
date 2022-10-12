@@ -3,7 +3,7 @@ package video_list_helper
 import (
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 )
 
 // GetMoviePoster 获取电影的海报，如果为空就是没有找到
@@ -24,32 +24,32 @@ func (v *VideoListHelper) GetMoviePoster(movieFPath string) string {
 		movieName := filepath.Base(movieFPath)
 		// 1. poster.ext
 		posterFPath := filepath.Join(movieRootDir, "poster"+ext)
-		if my_util.IsFile(posterFPath) {
+		if pkg.IsFile(posterFPath) {
 			return posterFPath
 		}
 		// 2. movie.ext
 		posterFPath = filepath.Join(movieRootDir, "movie"+ext)
-		if my_util.IsFile(posterFPath) {
+		if pkg.IsFile(posterFPath) {
 			return posterFPath
 		}
 		// 3. folder.ext
 		posterFPath = filepath.Join(movieRootDir, "folder"+ext)
-		if my_util.IsFile(posterFPath) {
+		if pkg.IsFile(posterFPath) {
 			return posterFPath
 		}
 		// 4. <movie filename>-poster.ext
 		posterFPath = filepath.Join(movieRootDir, movieName+"-poster"+ext)
-		if my_util.IsFile(posterFPath) {
+		if pkg.IsFile(posterFPath) {
 			return posterFPath
 		}
 		// 5. <movie filename>.ext
 		posterFPath = filepath.Join(movieRootDir, movieName+ext)
-		if my_util.IsFile(posterFPath) {
+		if pkg.IsFile(posterFPath) {
 			return posterFPath
 		}
 		// 6. cover.ext
 		posterFPath = filepath.Join(movieRootDir, "cover"+ext)
-		if my_util.IsFile(posterFPath) {
+		if pkg.IsFile(posterFPath) {
 			return posterFPath
 		}
 	}
@@ -72,12 +72,12 @@ func (v *VideoListHelper) GetSeriesPoster(seriesDir string) string {
 	for _, ext := range extList {
 		// 1. poster.ext
 		posterFPath := filepath.Join(seriesDir, "poster"+ext)
-		if my_util.IsFile(posterFPath) {
+		if pkg.IsFile(posterFPath) {
 			return posterFPath
 		}
 		// 2. folder.ext
 		posterFPath = filepath.Join(seriesDir, "folder"+ext)
-		if my_util.IsFile(posterFPath) {
+		if pkg.IsFile(posterFPath) {
 			return posterFPath
 		}
 	}

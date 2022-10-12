@@ -12,7 +12,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend"
 	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/robfig/cron/v3"
@@ -24,7 +23,7 @@ func newLog() *logrus.Logger {
 	// --------------------------------------------------
 	// 之前是读取配置文件，现在改为，读取当前目录下，是否有一个特殊的文件，有则启动 Debug 日志级别
 	// 那么怎么写入这个文件，就靠额外的逻辑控制了
-	if my_util.IsFile(filepath.Join(pkg.ConfigRootDirFPath(), log_helper.DebugFileName)) == true {
+	if pkg.IsFile(filepath.Join(pkg.ConfigRootDirFPath(), log_helper.DebugFileName)) == true {
 		level = logrus.DebugLevel
 	} else {
 		level = logrus.InfoLevel
@@ -107,7 +106,7 @@ func Process(proxySettings *settings.ProxySettings) error {
 
 	loggerBase.Infoln("-----------------------------------------")
 
-	if my_util.ReadCustomAuthFile(loggerBase) == false {
+	if pkg.ReadCustomAuthFile(loggerBase) == false {
 		return fmt.Errorf("ReadCustomAuthFile failed")
 	}
 	AuthKey := random_auth_key.AuthKey{
@@ -135,7 +134,7 @@ func Process(proxySettings *settings.ProxySettings) error {
 	nowTT := time.Now()
 	nowTime := nowTT.Format("2006-01-02")
 	nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
-	httpClient, err := my_util.NewHttpClient(proxySettings)
+	httpClient, err := pkg.NewHttpClient(proxySettings)
 	if err != nil {
 		return err
 	}

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	TTaskqueue "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
@@ -13,7 +15,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -34,7 +35,7 @@ func (cb *ControllerBase) AddJobHandler(c *gin.Context) {
 	if videoListAdd.IsBluray == false {
 		// 非蓝光的才需要检测这个文件存在
 		// 这里视频文件得要存在
-		if my_util.IsFile(videoListAdd.PhysicalVideoFileFullPath) == false {
+		if pkg.IsFile(videoListAdd.PhysicalVideoFileFullPath) == false {
 
 			c.JSON(http.StatusOK, backend2.ReplyJobThings{
 				Message: "physical video file not found",
@@ -131,7 +132,7 @@ func (cb *ControllerBase) AddVideoPlayedInfoHandler(c *gin.Context) {
 		return
 	}
 	// 这里视频文件得要存在
-	if my_util.IsFile(videoPlayedInfo.PhysicalVideoFileFullPath) == false {
+	if pkg.IsFile(videoPlayedInfo.PhysicalVideoFileFullPath) == false {
 
 		c.JSON(http.StatusOK, backend2.ReplyJobThings{
 			Message: "physical video file not found",
@@ -141,7 +142,7 @@ func (cb *ControllerBase) AddVideoPlayedInfoHandler(c *gin.Context) {
 	// 查询字幕是否存在
 	videoDirFPath := filepath.Dir(videoPlayedInfo.PhysicalVideoFileFullPath)
 	subFileFullPath := filepath.Join(videoDirFPath, videoPlayedInfo.SubName)
-	if my_util.IsFile(subFileFullPath) == false {
+	if pkg.IsFile(subFileFullPath) == false {
 
 		c.JSON(http.StatusOK, backend2.ReplyJobThings{
 			Message: "sub file not found",
@@ -183,7 +184,7 @@ func (cb *ControllerBase) DelVideoPlayedInfoHandler(c *gin.Context) {
 		return
 	}
 	// 这里视频文件得要存在
-	if my_util.IsFile(videoPlayedInfo.PhysicalVideoFileFullPath) == false {
+	if pkg.IsFile(videoPlayedInfo.PhysicalVideoFileFullPath) == false {
 
 		c.JSON(http.StatusOK, backend2.ReplyJobThings{
 			Message: "physical video file not found",

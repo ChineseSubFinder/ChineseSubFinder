@@ -1,4 +1,4 @@
-package my_util
+package search
 
 import (
 	"io/fs"
@@ -6,6 +6,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+
+	PTN "github.com/middelink/go-parse-torrent-name"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
 
@@ -32,20 +38,20 @@ func VideoNameSearchKeywordMaker(l *logrus.Logger, title string, year string) st
 	return searchKeyword
 }
 
-// SearchMatchedVideoFileFromDirs 搜索符合后缀名的视频文件
-func SearchMatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) (*treemap.Map, error) {
+// MatchedVideoFileFromDirs 搜索符合后缀名的视频文件
+func MatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) (*treemap.Map, error) {
 
 	defer func() {
-		l.Infoln("SearchMatchedVideoFileFromDirs End")
+		l.Infoln("MatchedVideoFileFromDirs End")
 		l.Infoln(" --------------------------------------------------")
 	}()
 	l.Infoln(" --------------------------------------------------")
-	l.Infoln("SearchMatchedVideoFileFromDirs Start...")
+	l.Infoln("MatchedVideoFileFromDirs Start...")
 
 	var fileFullPathMap = treemap.NewWithStringComparator()
 	for _, dir := range dirs {
 
-		matchedVideoFile, err := SearchMatchedVideoFile(l, dir)
+		matchedVideoFile, err := MatchedVideoFile(l, dir)
 		if err != nil {
 			return nil, err
 		}
@@ -73,8 +79,8 @@ func SearchMatchedVideoFileFromDirs(l *logrus.Logger, dirs []string) (*treemap.M
 	return fileFullPathMap, nil
 }
 
-// SearchMatchedVideoFile 搜索符合后缀名的视频文件，现在也会把 BDMV 的文件搜索出来，但是这个并不是一个视频文件，需要在后续特殊处理
-func SearchMatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
+// MatchedVideoFile 搜索符合后缀名的视频文件，现在也会把 BDMV 的文件搜索出来，但是这个并不是一个视频文件，需要在后续特殊处理
+func MatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 
 	var fileFullPathList = make([]string, 0)
 	pathSep := string(os.PathSeparator)
@@ -86,25 +92,25 @@ func SearchMatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 		fullPath := dir + pathSep + curFile.Name()
 		if curFile.IsDir() {
 			// 内层的错误就无视了
-			oneList, _ := SearchMatchedVideoFile(l, fullPath)
+			oneList, _ := MatchedVideoFile(l, fullPath)
 			if oneList != nil {
 				fileFullPathList = append(fileFullPathList, oneList...)
 			}
 		} else {
 			// 这里就是文件了
-			bok, fakeBDMVVideoFile := FileNameIsBDMV(fullPath)
+			bok, fakeBDMVVideoFile := pkg.FileNameIsBDMV(fullPath)
 			if bok == true {
 				// 这类文件后续的扫描字幕操作需要额外的处理
 				fileFullPathList = append(fileFullPathList, fakeBDMVVideoFile)
 				continue
 			}
-			if IsWantedVideoExtDef(curFile.Name()) == false {
+			if pkg.IsWantedVideoExtDef(curFile.Name()) == false {
 				// 不是期望的视频后缀名则跳过
 				continue
 			} else {
 				// 这里还有一种情况，就是蓝光， BDMV 下面会有一个 STREAM 文件夹，里面很多 m2ts 的视频组成
 				if filepath.Base(filepath.Dir(fullPath)) == "STREAM" {
-					l.Debugln("SearchMatchedVideoFile, Skip BDMV.STREAM:", fullPath)
+					l.Debugln("MatchedVideoFile, Skip BDMV.STREAM:", fullPath)
 					continue
 				}
 
@@ -119,7 +125,7 @@ func SearchMatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 	return fileFullPathList, nil
 }
 
-func SearchTVNfo(l *logrus.Logger, dir string) ([]string, error) {
+func TVNfo(l *logrus.Logger, dir string) ([]string, error) {
 
 	var fileFullPathList = make([]string, 0)
 	pathSep := string(os.PathSeparator)
@@ -131,7 +137,7 @@ func SearchTVNfo(l *logrus.Logger, dir string) ([]string, error) {
 		fullPath := dir + pathSep + curFile.Name()
 		if curFile.IsDir() {
 			// 内层的错误就无视了
-			oneList, _ := SearchTVNfo(l, fullPath)
+			oneList, _ := TVNfo(l, fullPath)
 			if oneList != nil {
 				fileFullPathList = append(fileFullPathList, oneList...)
 			}
@@ -151,41 +157,94 @@ func SearchTVNfo(l *logrus.Logger, dir string) ([]string, error) {
 	return fileFullPathList, nil
 }
 
-// SearchSeriesAllEpsAndSubtitles 遍历这个连续剧目录下的所有视频文件，以及这个视频文件对应的字幕文件
-func SearchSeriesAllEpsAndSubtitles(l *logrus.Logger, dir string) {
+// SeriesAllEpsAndSubtitles 遍历这个连续剧目录下的所有视频文件，以及这个视频文件对应的字幕文件
+func SeriesAllEpsAndSubtitles(l *logrus.Logger, dir string) (*backend.SeasonInfo, error) {
 
+	seasonInfo := backend.SeasonInfo{
+		Name:          filepath.Base(dir),
+		RootDirPath:   dir,
+		OneVideoInfos: make([]backend.OneVideoInfo, 0),
+	}
 	pathVideoMap := make(map[string][]string, 0)
 	pathSubsMap := make(map[string][]string, 0)
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+
 		if err != nil {
 			return err
 		}
 		if d.IsDir() == true {
+			// 跳过文件夹
 			return nil
 		}
-		if IsWantedVideoExtDef(filepath.Ext(d.Name())) == true {
+
+		if filter.SkipFileInfo(l, d) == true {
+			return nil
+		}
+
+		if pkg.IsWantedVideoExtDef(filepath.Ext(d.Name())) == true {
 			// 如果是符合视频的后缀名，那么就缓存起来
-			_, found := pathVideoMap[path]
+			tmpDir := filepath.Dir(path)
+			_, found := pathVideoMap[tmpDir]
 			if found == false {
-				pathVideoMap[path] = make([]string, 0)
+				pathVideoMap[tmpDir] = make([]string, 0)
 			}
-			pathVideoMap[path] = append(pathVideoMap[path], path)
+			pathVideoMap[tmpDir] = append(pathVideoMap[tmpDir], path)
 			return nil
 		}
 
 		if sub_parser_hub.IsSubExtWanted(filepath.Ext(d.Name())) == true {
 			// 如果是符合字幕的后缀名，那么就缓存起来
-			_, found := pathSubsMap[path]
+			tmpDir := filepath.Dir(path)
+			_, found := pathSubsMap[tmpDir]
 			if found == false {
-				pathSubsMap[path] = make([]string, 0)
+				pathSubsMap[tmpDir] = make([]string, 0)
 			}
-			pathSubsMap[path] = append(pathSubsMap[path], path)
+			pathSubsMap[tmpDir] = append(pathSubsMap[tmpDir], path)
 			return nil
 		}
 
 		return nil
 	})
 	if err != nil {
-		return
+		return nil, err
 	}
+	// 交叉比对，找到对应的字幕
+	for pathKey, videos := range pathVideoMap {
+
+		nowPathSubs, found := pathSubsMap[pathKey]
+		if found == false {
+			// 没有找到对应的字幕
+			continue
+		}
+		for _, oneVideo := range videos {
+
+			videoName := strings.ReplaceAll(filepath.Base(oneVideo), filepath.Ext(oneVideo), "")
+			parse, err := PTN.Parse(oneVideo)
+			if err != nil {
+				l.Errorln("SeriesAllEpsAndSubtitles.PTN.Parse", err)
+				continue
+			}
+			nowOneVideoInfo := backend.OneVideoInfo{
+				Name:         filepath.Base(oneVideo),
+				VideoFPath:   oneVideo,
+				Season:       parse.Season,
+				Episode:      parse.Episode,
+				SubFPathList: make([]string, 0),
+				SubUrlList:   make([]string, 0),
+			}
+			// 解析这个视频的 SxxExx 信息
+			for _, oneSub := range nowPathSubs {
+
+				if strings.HasPrefix(filepath.Base(oneSub), videoName) == false {
+					continue
+				}
+				// 找到了对应的字幕
+				nowOneVideoInfo.SubFPathList = append(nowOneVideoInfo.SubFPathList, oneSub)
+			}
+
+			seasonInfo.OneVideoInfos = append(seasonInfo.OneVideoInfos, nowOneVideoInfo)
+		}
+	}
+
+	return &seasonInfo, nil
 }

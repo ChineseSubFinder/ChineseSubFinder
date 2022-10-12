@@ -3,10 +3,11 @@ package base
 import (
 	"net/http"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/emby_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/gin-gonic/gin"
 )
@@ -24,7 +25,7 @@ func (cb *ControllerBase) CheckPathHandler(c *gin.Context) {
 		return
 	}
 
-	if my_util.IsDir(reqCheckPath.Path) == true {
+	if pkg.IsDir(reqCheckPath.Path) == true {
 		c.JSON(http.StatusOK, backend2.ReplyCheckPath{
 			Valid: true,
 		})

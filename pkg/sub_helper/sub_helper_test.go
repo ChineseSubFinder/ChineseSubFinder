@@ -2,14 +2,14 @@ package sub_helper
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"path/filepath"
 	"testing"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
 	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
 )
@@ -26,7 +26,7 @@ func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = my_util.CopyDir(testRootDir, desSeasonFullPath)
+	err = pkg.CopyDir(testRootDir, desSeasonFullPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func TestDeleteOneSeasonSubCacheFolder(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if my_util.IsDir(desSeasonFullPath) == true {
+	if pkg.IsDir(desSeasonFullPath) == true {
 		t.Fatal("Sub_S1E0 not delete")
 	}
 }

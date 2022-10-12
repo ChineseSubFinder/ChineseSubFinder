@@ -3,6 +3,7 @@ package sub_timeline_fixer
 import (
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"os"
 	"sort"
 	"strings"
@@ -11,7 +12,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/gss"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/vad"
 	"github.com/huandu/go-clone"
@@ -200,11 +200,11 @@ func (p Pipeline) FixSubFileTimeline(infoSrc, scaledInfoSrc *subparser.FileInfo,
 	contentReplaceOffsetAll := -1
 	for index, scaledSrcOneDialogue := range scaledInfoSrc.Dialogues {
 
-		timeStart, err := my_util.ParseTime(scaledSrcOneDialogue.StartTime)
+		timeStart, err := pkg.ParseTime(scaledSrcOneDialogue.StartTime)
 		if err != nil {
 			return "", err
 		}
-		timeEnd, err := my_util.ParseTime(scaledSrcOneDialogue.EndTime)
+		timeEnd, err := pkg.ParseTime(scaledSrcOneDialogue.EndTime)
 		if err != nil {
 			return "", err
 		}
@@ -232,7 +232,7 @@ func (p Pipeline) FixSubFileTimeline(infoSrc, scaledInfoSrc *subparser.FileInfo,
 			continue
 		}
 		contentReplaceOffsetAll += contentReplaceOffsetNow
-		fixContent = fixContent[:contentReplaceOffsetAll] + strings.Replace(fixContent[contentReplaceOffsetAll:], orgStartTimeString, my_util.Time2SubTimeString(fixTimeStart, timeFormat), 1)
+		fixContent = fixContent[:contentReplaceOffsetAll] + strings.Replace(fixContent[contentReplaceOffsetAll:], orgStartTimeString, pkg.Time2SubTimeString(fixTimeStart, timeFormat), 1)
 
 		// contentReplaceOffsetAll 为 -1 的时候那么第一次搜索得到的就一定是可以替换的
 		if contentReplaceOffsetAll == -1 {
@@ -244,7 +244,7 @@ func (p Pipeline) FixSubFileTimeline(infoSrc, scaledInfoSrc *subparser.FileInfo,
 			continue
 		}
 		contentReplaceOffsetAll += contentReplaceOffsetNow
-		fixContent = fixContent[:contentReplaceOffsetAll] + strings.Replace(fixContent[contentReplaceOffsetAll:], orgEndTimeString, my_util.Time2SubTimeString(fixTimeEnd, timeFormat), 1)
+		fixContent = fixContent[:contentReplaceOffsetAll] + strings.Replace(fixContent[contentReplaceOffsetAll:], orgEndTimeString, pkg.Time2SubTimeString(fixTimeEnd, timeFormat), 1)
 	}
 
 	dstFile, err := os.Create(desSaveSubFileFullPath)

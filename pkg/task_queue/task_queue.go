@@ -14,7 +14,6 @@ import (
 	task_queue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/emirpasic/gods/sets/treeset"
@@ -292,7 +291,7 @@ func (t *TaskQueue) del(jobId string) (bool, error) {
 	// 删除任务的时候也需要删除对应的日志
 	pathRoot := filepath.Join(pkg.ConfigRootDirFPath(), "Logs")
 	fileFPath := filepath.Join(pathRoot, common.OnceLogPrefix+jobId+".log")
-	if my_util.IsFile(fileFPath) == true {
+	if pkg.IsFile(fileFPath) == true {
 		err = os.Remove(fileFPath)
 		if err != nil {
 			t.log.Errorln("del job", jobId, "logfile,error:", err)

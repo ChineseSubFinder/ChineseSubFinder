@@ -14,7 +14,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	task_queue3 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	task_queue2 "github.com/allanpk716/ChineseSubFinder/pkg/task_queue"
 	"github.com/gin-gonic/gin"
 )
@@ -107,7 +106,7 @@ func (cb *ControllerBase) JobLogHandler(c *gin.Context) {
 
 	pathRoot := filepath.Join(pkg.ConfigRootDirFPath(), "Logs")
 	fileFPath := filepath.Join(pathRoot, common.OnceLogPrefix+reqJobLog.Id+".log")
-	if my_util.IsFile(fileFPath) == true {
+	if pkg.IsFile(fileFPath) == true {
 		// 存在
 		// 一行一行的读取文件
 		var fi *os.File

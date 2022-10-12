@@ -1,11 +1,14 @@
 package video_scan_and_refresh_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/search"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/path_helper"
 
@@ -32,7 +35,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
 	"github.com/allanpk716/ChineseSubFinder/pkg/mix_media_info"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sort_things"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_file_hash"
@@ -202,7 +204,7 @@ func (v *VideoScanAndRefreshHelper) ScanNormalMovieAndSeries() (*ScanVideoResult
 		// --------------------------------------------------
 		// 电影
 		// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
-		normalScanResult.MoviesDirMap, errMovie = my_util.SearchMatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
+		normalScanResult.MoviesDirMap, errMovie = search.MatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
 	}()
 	wg.Add(1)
 	go func() {
@@ -372,7 +374,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 			subSha256Map := make(map[string]string)
 			for _, orgSubFPath := range chineseSubFitVideoNameFullPathList {
 				// 计算需要插入字幕的 sha256
-				saveSHA256String, err := my_util.GetFileSHA256String(orgSubFPath)
+				saveSHA256String, err := pkg.GetFileSHA256String(orgSubFPath)
 				if err != nil {
 					v.log.Warningln("scanLowVideoSubInfo.GetFileSHA256String", orgSubFPath, err)
 					continue
@@ -433,7 +435,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 						continue
 					}
 					// 计算需要插入字幕的 sha256
-					saveSHA256String, err := my_util.GetFileSHA256String(orgSubFPath)
+					saveSHA256String, err := pkg.GetFileSHA256String(orgSubFPath)
 					if err != nil {
 						v.log.Warningln("scanLowVideoSubInfo.GetFileSHA256String", orgSubFPath, err)
 						continue
@@ -457,7 +459,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 func (v *VideoScanAndRefreshHelper) addLowVideoSubInfo(isMovie bool, Season, Eps int, orgSubFPath string, mixMediaInfo *models.MediaInfo, shareRootDir string, fileHash string) {
 
 	// 计算需要插入字幕的 sha256
-	saveSHA256String, err := my_util.GetFileSHA256String(orgSubFPath)
+	saveSHA256String, err := pkg.GetFileSHA256String(orgSubFPath)
 	if err != nil {
 		v.log.Warningln("scanLowVideoSubInfo.GetFileSHA256String", orgSubFPath, err)
 		return

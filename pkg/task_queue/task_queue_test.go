@@ -2,13 +2,14 @@ package task_queue
 
 import (
 	"fmt"
+	"testing"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	task_queue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
-	"testing"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 )
 
@@ -26,7 +27,7 @@ func TestTaskQueue_AddAndGetAndDel(t *testing.T) {
 		taskQueue.Close()
 	}()
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
+		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, pkg.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}
@@ -78,7 +79,7 @@ func TestTaskQueue_AddAndClear(t *testing.T) {
 
 	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, settings.GetSettings(), log_helper.GetLogger4Tester()))
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
+		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, pkg.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}
@@ -106,7 +107,7 @@ func TestTaskQueue_Update(t *testing.T) {
 
 	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, settings.GetSettings(), log_helper.GetLogger4Tester()))
 	for i := taskPriorityCount; i >= 0; i-- {
-		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, my_util.RandStringBytesMaskImprSrcSB(10), i))
+		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, pkg.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
 			t.Fatal("TestTaskQueue.Add", err)
 		}

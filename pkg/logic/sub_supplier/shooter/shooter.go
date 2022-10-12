@@ -9,13 +9,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/sirupsen/logrus"
@@ -109,7 +110,7 @@ func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, erro
 	var outSubInfoList []supplier.SubInfo
 	var jsonList []SublistShooter
 
-	if my_util.IsFile(filePath) == false {
+	if pkg.IsFile(filePath) == false {
 		// 这里传入的可能是蓝光结构的伪造存在的视频文件，需要检查一次这个文件是否存在
 		bok, _, _ := decode.IsFakeBDMVWorked(filePath)
 		if bok == false {
@@ -164,7 +165,7 @@ func (s *Supplier) getSubInfos(fileHash, fileName, qLan string) ([]SublistShoote
 
 	var jsonList []SublistShooter
 
-	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}

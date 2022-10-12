@@ -8,11 +8,12 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -21,18 +22,18 @@ func WriteFile(CloneProjectDesSaveDir, enString, nowTime, nowTimeFileNamePrix st
 	saveFileFPath := filepath.Join(CloneProjectDesSaveDir, nowTimeFileNamePrix+common.StaticFileName00)
 	saveFileFPathWait := filepath.Join(CloneProjectDesSaveDir, nowTimeFileNamePrix+common.StaticFileName00+waitExt)
 
-	if my_util.IsFile(saveFileFPath) == true {
+	if pkg.IsFile(saveFileFPath) == true {
 		// 目标文件存在，则需要判断准备写入覆盖的文件是否与当前存在的文件 SHA1 的值是一样的，一样就跳过后续的操作
 		// 写入等待替换的文件
 		err := writeFile(saveFileFPathWait, enString, nowTime)
 		if err != nil {
 			return false, err
 		}
-		orgFileSHA1, err := my_util.GetFileSHA1(saveFileFPath)
+		orgFileSHA1, err := pkg.GetFileSHA1(saveFileFPath)
 		if err != nil {
 			return false, err
 		}
-		waitFileSHA1, err := my_util.GetFileSHA1(saveFileFPathWait)
+		waitFileSHA1, err := pkg.GetFileSHA1(saveFileFPathWait)
 		if err != nil {
 			return false, err
 		}
@@ -95,7 +96,7 @@ func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string, fileDownloader
 
 func getCodeFromWeb(l *logrus.Logger, desUrl string) (string, string, error) {
 
-	fileBytes, _, err := my_util.DownFile(l, desUrl)
+	fileBytes, _, err := pkg.DownFile(l, desUrl)
 	if err != nil {
 		return "", "", err
 	}

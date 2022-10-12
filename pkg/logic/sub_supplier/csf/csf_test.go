@@ -9,7 +9,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/series_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 )
@@ -68,7 +67,7 @@ var csfInstance *Supplier
 
 func defInstance() {
 
-	my_util.ReadCustomAuthFile(log_helper.GetLogger4Tester())
+	pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester())
 
 	authKey := random_auth_key.AuthKey{
 		BaseKey:  pkg.BaseKey(),

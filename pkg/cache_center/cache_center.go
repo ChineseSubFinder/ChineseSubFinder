@@ -9,7 +9,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
@@ -82,7 +81,7 @@ func DelDb(cacheName string) {
 		return
 	}
 	dbFPath := filepath.Join(centerFolder, cacheName+"_"+dbFileName)
-	if my_util.IsFile(dbFPath) == true {
+	if pkg.IsFile(dbFPath) == true {
 		err = os.Remove(dbFPath)
 		if err != nil {
 			return

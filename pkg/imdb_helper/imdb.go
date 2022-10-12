@@ -17,7 +17,6 @@ import (
 	"github.com/StalkR/imdb"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types"
@@ -216,7 +215,7 @@ func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoNfoInfo, _proxySetti
 // getVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
 func getVideoInfoFromIMDBWeb(videoNfoInfo types.VideoNfoInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
 
-	client, err := my_util.NewHttpClient(_proxySettings...)
+	client, err := pkg.NewHttpClient(_proxySettings...)
 	if err != nil {
 		return nil, err
 	}

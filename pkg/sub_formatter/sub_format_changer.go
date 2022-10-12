@@ -7,6 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/search"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
 	interCommon "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
@@ -15,7 +19,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	movieHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/movie_helper"
 	seriesHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/series_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/emby"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/normal"
@@ -84,12 +87,12 @@ func (s *SubFormatChanger) AutoDetectThenChangeTo(desFormatter common.FormatterN
 func (s *SubFormatChanger) autoDetectMovieThenChangeTo(outStruct *RenameResults, desFormatter common.FormatterName, movieRootDir string) error {
 
 	var err error
-	if my_util.IsDir(movieRootDir) == false {
+	if pkg.IsDir(movieRootDir) == false {
 		return errors.New("movieRootDir path not exist: " + movieRootDir)
 	}
 	// 先找出有那些电影文件夹和连续剧文件夹
 	var movieFullPathList = make([]string, 0)
-	movieFullPathList, err = my_util.SearchMatchedVideoFile(s.log, movieRootDir)
+	movieFullPathList, err = search.MatchedVideoFile(s.log, movieRootDir)
 	// fmt.Println("No. of Movies: ", len(movieFullPathList), "  dir:  ", s.movieRootDir)
 	if err != nil {
 		return err
@@ -98,7 +101,7 @@ func (s *SubFormatChanger) autoDetectMovieThenChangeTo(outStruct *RenameResults,
 	for _, one := range movieFullPathList {
 
 		// 需要判断这个视频根目录是否有 .ignore 文件，有也跳过
-		if my_util.IsFile(filepath.Join(filepath.Dir(one), interCommon.Ignore)) == true {
+		if pkg.IsFile(filepath.Join(filepath.Dir(one), interCommon.Ignore)) == true {
 			s.log.Infoln("Found", interCommon.Ignore, "Skip", one)
 			// 跳过下载字幕
 			continue
@@ -122,7 +125,7 @@ func (s *SubFormatChanger) autoDetectMovieThenChangeTo(outStruct *RenameResults,
 func (s *SubFormatChanger) autoDetectMSeriesThenChangeTo(outStruct *RenameResults, desFormatter common.FormatterName, seriesRootDir string) error {
 
 	var err error
-	if my_util.IsDir(seriesRootDir) == false {
+	if pkg.IsDir(seriesRootDir) == false {
 		return errors.New("seriesRootDir path not exist: " + seriesRootDir)
 	}
 	// 先找出有那些电影文件夹和连续剧文件夹
@@ -135,7 +138,7 @@ func (s *SubFormatChanger) autoDetectMSeriesThenChangeTo(outStruct *RenameResult
 	for _, oneSeriesDir := range seriesDirList {
 
 		// 需要判断这个视频根目录是否有 .ignore 文件，有也跳过
-		if my_util.IsFile(filepath.Join(oneSeriesDir, interCommon.Ignore)) == true {
+		if pkg.IsFile(filepath.Join(oneSeriesDir, interCommon.Ignore)) == true {
 			s.log.Infoln("Found", interCommon.Ignore, "Skip", oneSeriesDir)
 			// 跳过下载字幕
 			continue
@@ -204,11 +207,11 @@ func (s *SubFormatChanger) autoDetectAndChange(outStruct *RenameResults, fitSubN
 		// 确认改格式
 		err := os.Rename(fitSubName, newSubFileName)
 		if err != nil {
-			tmpName := my_util.FixWindowPathBackSlash(fitSubName)
+			tmpName := pkg.FixWindowPathBackSlash(fitSubName)
 			outStruct.ErrFiles[tmpName] += 1
 			continue
 		} else {
-			tmpName := my_util.FixWindowPathBackSlash(newSubFileName)
+			tmpName := pkg.FixWindowPathBackSlash(newSubFileName)
 			outStruct.RenamedFiles[tmpName] += 1
 		}
 	}

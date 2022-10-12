@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	taskQueue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/series_helper"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/task_queue"
 	"golang.org/x/net/context"
@@ -180,7 +181,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 				close(panicChan)
 			}()
 			// 匹配对应的 Eps 去处理
-			seasonEpsKey := my_util.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
+			seasonEpsKey := pkg.GetEpisodeKeyName(episodeInfo.Season, episodeInfo.Episode)
 			if fullSeasonSubDict[seasonEpsKey] == nil || len(fullSeasonSubDict[seasonEpsKey]) < 1 {
 				d.log.Infoln("seriesDlFunc.saveFullSeasonSub, no sub found, Skip", seasonEpsKey)
 				done <- nil

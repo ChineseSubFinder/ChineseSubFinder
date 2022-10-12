@@ -23,7 +23,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_file_hash"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/emby"
@@ -152,7 +151,7 @@ func (s *ScanPlayedVideoSubInfo) Clear() {
 
 			// 转换到绝对路径
 			cacheSubFPath := filepath.Join(s.shareRootDir, oneSubInfo.StoreRPath)
-			if my_util.IsFile(cacheSubFPath) == false {
+			if pkg.IsFile(cacheSubFPath) == false {
 				// 如果文件不存在，那么就删除之前的关联
 				// 关联删除了，但是不会删除这些对象，所以后续还需要再次删除
 				s.delSubInfo(&info, &oneSubInfo)
@@ -351,7 +350,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	s.log.Infoln(index, orgSubFPath)
 
-	if my_util.IsFile(orgSubFPath) == false {
+	if pkg.IsFile(orgSubFPath) == false {
 
 		s.log.Errorln("Skip", orgSubFPath, "not exist")
 		return
@@ -413,7 +412,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	s.log.Debugln("3-2")
 
 	// 当前扫描到的找个字幕的 sha256 是否已经存在与缓存中了
-	tmpSHA256String, err := my_util.GetFileSHA256String(orgSubFPath)
+	tmpSHA256String, err := pkg.GetFileSHA256String(orgSubFPath)
 	if err != nil {
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "orgSubFPath.GetFileSHA256String", videoFPath, err)
 		return
@@ -467,7 +466,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 	s.log.Debugln(8)
 
 	// 计算需要插入字幕的 sha256
-	saveSHA256String, err := my_util.GetFileSHA256String(subCacheFPath)
+	saveSHA256String, err := pkg.GetFileSHA256String(subCacheFPath)
 	if err != nil {
 		s.log.Warningln("ScanPlayedVideoSubInfo.Scan", videoTypes, "GetFileSHA256String", videoFPath, err)
 		return

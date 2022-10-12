@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/rod_helper"
 	"github.com/nfnt/resize"
 )
@@ -51,7 +52,7 @@ func SimulationTest() {
 	shadowbg := iframe.MustElement("#slideBg").MustResource()
 	//取得原始圖像
 	src := iframe.MustElement("#slideBg").MustProperty("src")
-	fullbg, fileName, err := my_util.DownFile(log_helper.GetLogger4Tester(), strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
+	fullbg, fileName, err := pkg.DownFile(log_helper.GetLogger4Tester(), strings.Replace(src.String(), "img_index=1", "img_index=0", 1))
 	if err != nil {
 		return
 	}

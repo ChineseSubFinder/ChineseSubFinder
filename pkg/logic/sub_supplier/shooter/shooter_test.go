@@ -9,7 +9,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
@@ -17,7 +16,7 @@ import (
 
 func TestNewSupplier(t *testing.T) {
 
-	my_util.ReadCustomAuthFile(log_helper.GetLogger4Tester())
+	pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester())
 	authKey := random_auth_key.AuthKey{
 		BaseKey:  pkg.BaseKey(),
 		AESKey16: pkg.AESKey16(),
@@ -41,7 +40,7 @@ func TestNewSupplier(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shooter := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(), log_helper.GetLogger4Tester()), authKey))
+	shooter := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", settings.NewSettings(pkg.ConfigRootDirFPath()), log_helper.GetLogger4Tester()), authKey))
 	outList, err := shooter.getSubListFromFile(gVideoFPath)
 	if err != nil {
 		t.Error(err)

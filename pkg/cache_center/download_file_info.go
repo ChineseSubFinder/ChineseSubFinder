@@ -7,10 +7,11 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 )
 
 func (c *CacheCenter) DownloadFileAdd(subInfo *supplier.SubInfo) error {
@@ -37,7 +38,7 @@ func (c *CacheCenter) DownloadFileAdd(subInfo *supplier.SubInfo) error {
 	// 保存到本地文件
 	todayString := time.Now().Format("2006-01-02")
 	saveFPath := filepath.Join(c.downloadFileSaveRootPath, todayString, subInfo.GetUID())
-	err = my_util.WriteFile(saveFPath, b)
+	err = pkg.WriteFile(saveFPath, b)
 	if err != nil {
 		return err
 	}
@@ -69,7 +70,7 @@ func (c *CacheCenter) DownloadFileGet(fileUrlUID string) (bool, *supplier.SubInf
 	}
 
 	localFileFPath := filepath.Join(c.downloadFileSaveRootPath, dfs[0].RelPath)
-	if my_util.IsFile(localFileFPath) == false {
+	if pkg.IsFile(localFileFPath) == false {
 		return false, nil, nil
 	}
 

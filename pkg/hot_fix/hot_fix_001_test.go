@@ -4,8 +4,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
 )
 
@@ -42,7 +43,7 @@ func TestHotFix001_Process(t *testing.T) {
 	// 检查修复的结果是否符合预期
 	var newSubFileNameMap = make(map[string]int)
 	for i, s := range outStruct.RenamedFiles {
-		if my_util.IsFile(s) == false {
+		if pkg.IsFile(s) == false {
 			t.Fatal("renamed file not found:", s)
 		}
 		newSubFileNameMap[filepath.Base(s)] = i

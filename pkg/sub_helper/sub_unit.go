@@ -7,7 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/vad"
 )
 
@@ -44,12 +45,12 @@ func (s *SubUnit) Add(oneSubStartTime, oneSubEndTime time.Time) {
 		s.firstAdd = true
 	}
 
-	s.offsetEndTime = oneSubEndTime.Add(-my_util.Time2Duration(s.baseTime))
+	s.offsetEndTime = oneSubEndTime.Add(-pkg.Time2Duration(s.baseTime))
 
 	// 添加 Start
-	s.VADList = append(s.VADList, *vad.NewVADInfoBase(true, time.Duration((my_util.Time2SecondNumber(oneSubStartTime))*math.Pow10(9))))
+	s.VADList = append(s.VADList, *vad.NewVADInfoBase(true, time.Duration((pkg.Time2SecondNumber(oneSubStartTime))*math.Pow10(9))))
 	// 添加 End
-	s.VADList = append(s.VADList, *vad.NewVADInfoBase(false, time.Duration((my_util.Time2SecondNumber(oneSubEndTime))*math.Pow10(9))))
+	s.VADList = append(s.VADList, *vad.NewVADInfoBase(false, time.Duration((pkg.Time2SecondNumber(oneSubEndTime))*math.Pow10(9))))
 
 	s.subCount++
 }
@@ -72,7 +73,7 @@ func (s *SubUnit) AddAndInsert(oneSubStartTime, oneSubEndTime time.Time) {
 	// 不是第一次添加，那么就需要把两句对白中间间隔的 active == false 的插入，插入间隙
 	if len(s.VADList) > 0 {
 		nowStartTime := s.RealTimeToOffsetTime(oneSubStartTime)
-		nowStartOffsetTime := my_util.Time2SecondNumber(nowStartTime)
+		nowStartOffsetTime := pkg.Time2SecondNumber(nowStartTime)
 		nowEndOffsetTime := s.GetEndTimeNumber(false)
 
 		needAddRange := nowStartOffsetTime - nowEndOffsetTime
@@ -99,18 +100,18 @@ func (s *SubUnit) AddAndInsert(oneSubStartTime, oneSubEndTime time.Time) {
 		s.firstAdd = true
 	}
 
-	s.offsetEndTime = oneSubEndTime.Add(-my_util.Time2Duration(s.baseTime))
+	s.offsetEndTime = oneSubEndTime.Add(-pkg.Time2Duration(s.baseTime))
 
 	nowStartTime := s.RealTimeToOffsetTime(oneSubStartTime)
 	nowEndTime := s.RealTimeToOffsetTime(oneSubEndTime)
 
-	nowStartOffsetTime := my_util.Time2SecondNumber(nowStartTime)
-	nowEndOffsetTime := my_util.Time2SecondNumber(nowEndTime)
+	nowStartOffsetTime := pkg.Time2SecondNumber(nowStartTime)
+	nowEndOffsetTime := pkg.Time2SecondNumber(nowEndTime)
 
 	needAddRange := nowEndOffsetTime - nowStartOffsetTime
 
 	for i := 0.0; i < needAddRange; {
-		s.VADList = append(s.VADList, *vad.NewVADInfoBase(true, time.Duration((my_util.Time2SecondNumber(oneSubStartTime)+i)*math.Pow10(9))))
+		s.VADList = append(s.VADList, *vad.NewVADInfoBase(true, time.Duration((pkg.Time2SecondNumber(oneSubStartTime)+i)*math.Pow10(9))))
 		i += perWindows
 	}
 
@@ -176,13 +177,13 @@ func (s *SubUnit) GetVADFloatSlice() []float64 {
 
 // GetStartTimeNumber 获取这个单元的起始时间，单位是秒
 func (s SubUnit) GetStartTimeNumber(realOrOffsetTime bool) float64 {
-	return my_util.Time2SecondNumber(s.GetStartTime(realOrOffsetTime))
+	return pkg.Time2SecondNumber(s.GetStartTime(realOrOffsetTime))
 }
 
 // GetStartTime 获取这个单元的起始时间
 func (s SubUnit) GetStartTime(realOrOffsetTime bool) time.Time {
 	if realOrOffsetTime == true {
-		return s.offsetStartTime.Add(my_util.Time2Duration(s.baseTime))
+		return s.offsetStartTime.Add(pkg.Time2Duration(s.baseTime))
 	} else {
 		return s.offsetStartTime
 	}
@@ -191,13 +192,13 @@ func (s SubUnit) GetStartTime(realOrOffsetTime bool) time.Time {
 // GetEndTimeNumber 获取这个单元的结束时间，单位是秒
 func (s SubUnit) GetEndTimeNumber(realOrOffsetTime bool) float64 {
 
-	return my_util.Time2SecondNumber(s.GetEndTime(realOrOffsetTime))
+	return pkg.Time2SecondNumber(s.GetEndTime(realOrOffsetTime))
 }
 
 // GetEndTime 获取这个单元的起始时间
 func (s SubUnit) GetEndTime(realOrOffsetTime bool) time.Time {
 	if realOrOffsetTime == true {
-		return s.offsetEndTime.Add(my_util.Time2Duration(s.baseTime))
+		return s.offsetEndTime.Add(pkg.Time2Duration(s.baseTime))
 	} else {
 		return s.offsetEndTime
 	}
@@ -213,7 +214,7 @@ func (s SubUnit) GetIndexTime(index int, realOrOffsetTime bool) (bool, time.Time
 	if realOrOffsetTime == true {
 		return true, time.Time{}.Add(s.VADList[index].Time)
 	} else {
-		return true, time.Time{}.Add(s.VADList[index].Time).Add(-my_util.Time2Duration(s.baseTime))
+		return true, time.Time{}.Add(s.VADList[index].Time).Add(-pkg.Time2Duration(s.baseTime))
 	}
 }
 
@@ -225,7 +226,7 @@ func (s SubUnit) GetIndexTimeNumber(index int, realOrOffsetTime bool) (bool, flo
 		return false, 0
 	}
 
-	return true, my_util.Time2SecondNumber(outTime)
+	return true, pkg.Time2SecondNumber(outTime)
 }
 
 // GetTimelineRange 开始到结束的时间长度，单位是秒
@@ -235,7 +236,7 @@ func (s SubUnit) GetTimelineRange() float64 {
 
 // GetOffsetTimeNumber 偏移时间，单位是秒
 func (s SubUnit) GetOffsetTimeNumber() float64 {
-	return my_util.Time2SecondNumber(s.baseTime)
+	return pkg.Time2SecondNumber(s.baseTime)
 }
 
 // GetFFMPEGCutRangeString 这里会生成导出 FFMPEG 的参数字段，起始时间和结束的时间长度
@@ -275,7 +276,7 @@ func (s SubUnit) GetExpandRangeIndex(expandTimeRange float64) (int, int) {
 		subTime := time.Duration(expandTimeRange) * time.Second
 		tmpStartTime := startTime.Add(-subTime)
 		// 需要从秒换算到偏移的 OffsetIndex 数值，一共多少份
-		tmpStartTimeIndex = int(my_util.Time2SecondNumber(tmpStartTime) / perWindows)
+		tmpStartTimeIndex = int(pkg.Time2SecondNumber(tmpStartTime) / perWindows)
 	}
 	// 结束时间 -> OffsetIndex
 	// 向右移动的时候，总长度是未知的，所以返回的值需要在外部重新 Check 是否会越界
@@ -283,14 +284,14 @@ func (s SubUnit) GetExpandRangeIndex(expandTimeRange float64) (int, int) {
 	subTime := time.Duration(expandTimeRange) * time.Second
 	tmpEndTime := endTime.Add(subTime)
 	// 需要从秒换算到偏移的 OffsetIndex 数值，一共多少份
-	tmpEndTimeIndex = int(my_util.Time2SecondNumber(tmpEndTime) / perWindows)
+	tmpEndTimeIndex = int(pkg.Time2SecondNumber(tmpEndTime) / perWindows)
 
 	return tmpStartTimeIndex, tmpEndTimeIndex
 }
 
 // RealTimeToOffsetTime 真实时间转偏移时间
 func (s SubUnit) RealTimeToOffsetTime(realTime time.Time) time.Time {
-	dd := my_util.Time2Duration(s.baseTime)
+	dd := pkg.Time2Duration(s.baseTime)
 	return realTime.Add(-dd)
 }
 

@@ -14,6 +14,7 @@ type OneVideoInfo struct {
 	Season                   int      `json:"season"`
 	Episode                  int      `json:"episode"`
 	SubFPathList             []string `json:"sub_f_path_list"`
+	SubUrlList               []string `json:"sub_url_list"`
 	MediaServerInsideVideoID string   `json:"media_server_inside_video_id"`
 }
 

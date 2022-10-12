@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	emby2 "github.com/allanpk716/ChineseSubFinder/pkg/types/emby"
@@ -15,7 +17,6 @@ import (
 
 	embyHelper "github.com/allanpk716/ChineseSubFinder/pkg/emby_api"
 	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/path_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sort_things"
@@ -1043,7 +1044,7 @@ func (em *EmbyHelper) CheckPath(pathType string) ([]string, error) {
 
 		for _, info := range filterMovieList {
 
-			if my_util.IsFile(info.PhysicalVideoFileFullPath) == true {
+			if pkg.IsFile(info.PhysicalVideoFileFullPath) == true {
 				outList = append(outList, info.PhysicalVideoFileFullPath)
 				outCount++
 				if outCount > 5 {
@@ -1060,7 +1061,7 @@ func (em *EmbyHelper) CheckPath(pathType string) ([]string, error) {
 
 		for _, info := range filterSeriesList {
 
-			if my_util.IsFile(info.PhysicalVideoFileFullPath) == true {
+			if pkg.IsFile(info.PhysicalVideoFileFullPath) == true {
 				outList = append(outList, info.PhysicalVideoFileFullPath)
 				outCount++
 				if outCount > 5 {

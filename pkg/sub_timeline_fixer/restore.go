@@ -5,7 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -42,7 +43,7 @@ func Restore(log *logrus.Logger, movieDirs, seriesDirs []string) (int, error) {
 	for index, oneBkFile := range allBkFilesPath {
 
 		fixedFileName := strings.ReplaceAll(oneBkFile, BackUpExt, "")
-		if my_util.IsFile(fixedFileName) == true {
+		if pkg.IsFile(fixedFileName) == true {
 			err := os.Remove(fixedFileName)
 			if err != nil {
 				return 0, err

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
@@ -16,7 +18,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_timeline_fixer"
 	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	subCommon "github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/task_queue"
@@ -104,7 +105,7 @@ func (d *Downloader) SupplierCheck() {
 	defer func() {
 		if p := recover(); p != nil {
 			d.log.Errorln("Downloader.SupplierCheck() panic")
-			my_util.PrintPanicStack(d.log)
+			pkg.PrintPanicStack(d.log)
 		}
 		d.downloaderLock.Unlock()
 

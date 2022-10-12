@@ -17,7 +17,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/something_static"
@@ -192,14 +191,14 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 		p.log.Warningln("SeriesPaths not set, len == 0")
 	}
 	for i, path := range p.settings.CommonSettings.MoviePaths {
-		if my_util.IsDir(path) == false {
+		if pkg.IsDir(path) == false {
 			p.log.Errorln("MovieFolder not found Index", i, "--", path)
 		} else {
 			p.log.Infoln("MovieFolder Index", i, "--", path)
 		}
 	}
 	for i, path := range p.settings.CommonSettings.SeriesPaths {
-		if my_util.IsDir(path) == false {
+		if pkg.IsDir(path) == false {
 			p.log.Errorln("SeriesPaths not found Index", i, "--", path)
 		} else {
 			p.log.Infoln("SeriesPaths Index", i, "--", path)

@@ -6,10 +6,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/regex_things"
 	"github.com/sirupsen/logrus"
 )
@@ -71,7 +72,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 	countLineFeed := 0
 	for _, oneDialogue := range orgDialogues {
 
-		if len(oneDialogue.Lines) == 0 || my_util.ReplaceSpecString(oneDialogue.Lines[0], "") == "" {
+		if len(oneDialogue.Lines) == 0 || pkg.ReplaceSpecString(oneDialogue.Lines[0], "") == "" {
 			continue
 		}
 		ol := oneDialogue
@@ -82,7 +83,7 @@ func (p Parser) DetermineFileTypeFromBytes(inBytes []byte, nowExt string) (bool,
 			fixedLine = regex_things.ReMatchBrace.ReplaceAllString(line, "")
 			fixedLine = regex_things.ReMatchBracket.ReplaceAllString(fixedLine, "")
 			fixedLine = strings.ReplaceAll(fixedLine, `\N`, "")
-			if my_util.ReplaceSpecString(fixedLine, "") == "" {
+			if pkg.ReplaceSpecString(fixedLine, "") == "" {
 				ol.Lines[i] = ""
 				break
 			} else {
@@ -136,7 +137,7 @@ func (p Parser) parseContent(inBytes []byte) []subparser.OneDialogue {
 	filterLines := make([]string, 0)
 	for _, line := range lines {
 		// 如果当前的这一句话，为空，或者进过正则表达式剔除特殊字符后为空，则跳过
-		if my_util.ReplaceSpecString(line, "") == "" {
+		if pkg.ReplaceSpecString(line, "") == "" {
 			continue
 		}
 		filterLines = append(filterLines, line)
@@ -166,7 +167,7 @@ func (p Parser) parseContent(inBytes []byte) []subparser.OneDialogue {
 
 		if steps == 0 {
 			// 匹配对白的索引
-			line = my_util.ReplaceSpecString(line, "")
+			line = pkg.ReplaceSpecString(line, "")
 			dialogueIndex, err := strconv.Atoi(line)
 			if err != nil {
 				newOneDialogueFun()

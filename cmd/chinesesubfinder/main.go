@@ -23,7 +23,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/sirupsen/logrus"
 )
@@ -33,7 +32,7 @@ func newLog() *logrus.Logger {
 	// --------------------------------------------------
 	// 之前是读取配置文件，现在改为，读取当前目录下，是否有一个特殊的文件，有则启动 Debug 日志级别
 	// 那么怎么写入这个文件，就靠额外的逻辑控制了
-	if my_util.IsFile(filepath.Join(pkg.ConfigRootDirFPath(), log_helper.DebugFileName)) == true {
+	if pkg.IsFile(filepath.Join(pkg.ConfigRootDirFPath(), log_helper.DebugFileName)) == true {
 		level = logrus.DebugLevel
 	} else {
 		level = logrus.InfoLevel
@@ -67,13 +66,13 @@ func init() {
 	loggerBase.Infoln("ChineseSubFinder Version:", AppVersion)
 	pkg.SetAppVersion(AppVersion)
 	pkg.SetExtEnCode(ExtEnCode)
-	if my_util.ReadCustomAuthFile(loggerBase) == false {
+	if pkg.ReadCustomAuthFile(loggerBase) == false {
 		pkg.SetBaseKey(BaseKey)
 		pkg.SetAESKey16(AESKey16)
 		pkg.SetAESIv16(AESIv16)
 	}
 	// --------------------------------------------------
-	if my_util.OSCheck() == false {
+	if pkg.OSCheck() == false {
 		loggerBase.Panicln(`You should search runtime.GOOS in the project, Implement unimplemented function`)
 	}
 	// --------------------------------------------------
@@ -104,7 +103,7 @@ func main() {
 
 		loggerBase.Infoln("SetLinuxConfigPathInSelfPath:", pkg.LinuxConfigPathInSelfPath())
 
-		if my_util.IsDir(pkg.LinuxConfigPathInSelfPath()) == false {
+		if pkg.IsDir(pkg.LinuxConfigPathInSelfPath()) == false {
 			// 如果设置了这个路径，但是不存在则会崩溃
 			loggerBase.Panicln("LinuxConfigPathInSelfPath", pkg.LinuxConfigPathInSelfPath(), "is not dir")
 		}
@@ -176,7 +175,7 @@ func main() {
 		}()
 	}
 
-	nowPort := my_util.ReadCustomPortFile(loggerBase)
+	nowPort := pkg.ReadCustomPortFile(loggerBase)
 	loggerBase.Infoln(fmt.Sprintf("WebUI will listen at 0.0.0.0:%d", nowPort))
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
 	restartSignal := make(chan interface{}, 1)

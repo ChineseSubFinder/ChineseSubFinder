@@ -22,7 +22,6 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/mix_media_info"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/sirupsen/logrus"
@@ -288,7 +287,7 @@ func (s *Supplier) getSubByKeyWord(keyword string) (*SearchSubResult, error) {
 
 	s.log.Infoln("Search KeyWord:", keyword)
 	tt := url.QueryEscape(keyword)
-	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +340,7 @@ func (s *Supplier) getSubDetail(subID int) (OneSubDetail, error) {
 
 	var subDetail OneSubDetail
 
-	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		return subDetail, err
 	}
@@ -380,7 +379,7 @@ func (s *Supplier) getUserInfo() (UserInfo, error) {
 
 	var userInfo UserInfo
 
-	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		return userInfo, err
 	}

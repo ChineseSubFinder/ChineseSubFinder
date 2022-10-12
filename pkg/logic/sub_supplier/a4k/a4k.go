@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
@@ -22,7 +24,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/my_util"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/sirupsen/logrus"
 )
@@ -55,7 +56,7 @@ func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, i
 
 	// 计算当前时间
 	startT := time.Now()
-	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive.NewHttpClient", err)
 		return false, 0
@@ -286,7 +287,7 @@ func (s *Supplier) listPageItems(keyword string, pageIndex int, isMovie bool) (s
 		time.Sleep(time.Second * 10)
 	}()
 	searchResultItems = make([]SearchResultItem, 0)
-	httpClient, err := my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		err = errors.New("NewHttpClient error:" + err.Error())
 		return
@@ -389,7 +390,7 @@ func (s *Supplier) downloadSub(videoFileName, downloadPageUrl string, season, ep
 	}()
 
 	var httpClient *resty.Client
-	httpClient, err = my_util.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err = pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		err = errors.New("NewHttpClient error:" + err.Error())
 		return
