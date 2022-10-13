@@ -48,6 +48,7 @@ func newLog() *logrus.Logger {
 }
 
 func init() {
+	settings.SetConfigRootPath(pkg.ConfigRootDirFPath())
 	// 要先进行 flag 的读取，并且写入全局变量中，否则后续的逻辑由于顺序问题故障
 	flag.Parse()
 	pkg.SetLinuxConfigPathInSelfPath(*setLinuxConfigPathInSelfPathFlag)

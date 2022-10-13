@@ -5,6 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/search"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/path_helper"
 	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	vsh "github.com/allanpk716/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
@@ -154,4 +158,87 @@ func (cb *ControllerBase) SeriesPoster(c *gin.Context) {
 	c.JSON(http.StatusOK, backend2.PosterInfo{
 		Url: posterUrl,
 	})
+}
+
+// OneMovieSubs 由一部电影去搜索其当前目录下的对应字幕
+func (cb *ControllerBase) OneMovieSubs(c *gin.Context) {
+
+	var err error
+	defer func() {
+		// 统一的异常处理
+		cb.ErrorProcess(c, "OneMovieSubs", err)
+	}()
+
+	movieInfo := backend2.MovieInfoV2{}
+	err = c.ShouldBindJSON(&movieInfo)
+	if err != nil {
+		return
+	}
+
+	// 然后还需要将这个全路径信息转换为 静态文件服务器对应的路径返回给前端
+	desUrl, found := cb.GetPathUrlMap()[movieInfo.MainRootDirFPath]
+	if found == false {
+		// 没有找到对应的 URL
+		errMessage := fmt.Sprintf("OneMovieSubs.GetPathUrlMap can not find url for path %s", movieInfo.MainRootDirFPath)
+		cb.log.Warningln(errMessage)
+		err = errors.New(errMessage)
+		return
+	}
+
+	matchedSubs, err := sub_helper.SearchMatchedSubFileByOneVideo(cb.log, movieInfo.VideoFPath)
+	if err != nil {
+		cb.log.Errorln("OneMovieSubs.SearchMatchedSubFileByOneVideo", err)
+		return
+	}
+
+	movieSubsInfo := backend2.MovieSubsInfo{
+		SubUrlList: make([]string, 0),
+	}
+	// 将匹配到的字幕文件转换为 URL
+	for _, sub := range matchedSubs {
+		subUrl := path_helper.ChangePhysicalPathToSharePath(sub, movieInfo.MainRootDirFPath, desUrl)
+		movieSubsInfo.SubUrlList = append(movieSubsInfo.SubUrlList, subUrl)
+	}
+
+	c.JSON(http.StatusOK, movieSubsInfo)
+}
+
+func (cb *ControllerBase) OneSeriesSubs(c *gin.Context) {
+
+	var err error
+	defer func() {
+		// 统一的异常处理
+		cb.ErrorProcess(c, "OneSeriesSubs", err)
+	}()
+
+	seriesInfo := backend2.SeasonInfoV2{}
+	err = c.ShouldBindJSON(&seriesInfo)
+	if err != nil {
+		return
+	}
+
+	// 然后还需要将这个全路径信息转换为 静态文件服务器对应的路径返回给前端
+	desUrl, found := cb.GetPathUrlMap()[seriesInfo.MainRootDirFPath]
+	if found == false {
+		// 没有找到对应的 URL
+		errMessage := fmt.Sprintf("OneSeriesSubs.GetPathUrlMap can not find url for path %s", seriesInfo.MainRootDirFPath)
+		cb.log.Warningln(errMessage)
+		err = errors.New(errMessage)
+		return
+	}
+
+	seasonInfo, err := search.SeriesAllEpsAndSubtitles(cb.log, seriesInfo.RootDirPath)
+	if err != nil {
+		cb.log.Errorln("OneSeriesSubs.SeriesAllEpsAndSubtitles", err)
+		return
+	}
+
+	for i, videoInfo := range seasonInfo.OneVideoInfos {
+		for _, subFPath := range videoInfo.SubFPathList {
+			subUrl := path_helper.ChangePhysicalPathToSharePath(subFPath, seriesInfo.MainRootDirFPath, desUrl)
+			seasonInfo.OneVideoInfos[i].SubUrlList = append(seasonInfo.OneVideoInfos[i].SubUrlList, subUrl)
+		}
+	}
+
+	c.JSON(http.StatusOK, seasonInfo)
 }

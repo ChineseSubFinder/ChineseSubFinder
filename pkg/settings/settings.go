@@ -25,11 +25,15 @@ type Settings struct {
 }
 
 // GetSettings 获取 Settings 的实例
-func GetSettings(configRootDirFPath string, reloadSettings ...bool) *Settings {
+func GetSettings(reloadSettings ...bool) *Settings {
 	if _settings == nil {
 
 		_settingsOnce.Do(func() {
-			_settings = NewSettings(configRootDirFPath)
+
+			if _configRootPath == "" {
+				panic("请先调用 SetConfigRootPath 设置配置文件的根目录")
+			}
+			_settings = NewSettings(_configRootPath)
 			if isFile(_settings.configFPath) == false {
 				// 配置文件不存在，新建一个空白的
 				err := _settings.Save()
@@ -66,6 +70,10 @@ func SetFullNewSettings(inSettings *Settings) error {
 	_settings.configFPath = nowConfigFPath
 
 	return _settings.Save()
+}
+
+func SetConfigRootPath(configRootPath string) {
+	_configRootPath = configRootPath
 }
 
 func NewSettings(configRootDirFPath string) *Settings {
@@ -171,8 +179,9 @@ func removeSuffixAddressSlash(orgAddressUrlString string) string {
 }
 
 var (
-	_settings     *Settings
-	_settingsOnce sync.Once
+	_settings       *Settings
+	_settingsOnce   sync.Once
+	_configRootPath string
 )
 
 const (

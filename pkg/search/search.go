@@ -157,7 +157,7 @@ func TVNfo(l *logrus.Logger, dir string) ([]string, error) {
 	return fileFullPathList, nil
 }
 
-// SeriesAllEpsAndSubtitles 遍历这个连续剧目录下的所有视频文件，以及这个视频文件对应的字幕文件
+// SeriesAllEpsAndSubtitles 遍历这个连续剧目录下的所有视频文件，以及这个视频文件对应的字幕文件，这里无法转换给出静态文件服务器的路径，需要额外再对回去到的信息进行处理
 func SeriesAllEpsAndSubtitles(l *logrus.Logger, dir string) (*backend.SeasonInfo, error) {
 
 	seasonInfo := backend.SeasonInfo{
@@ -181,7 +181,7 @@ func SeriesAllEpsAndSubtitles(l *logrus.Logger, dir string) (*backend.SeasonInfo
 			return nil
 		}
 
-		if pkg.IsWantedVideoExtDef(filepath.Ext(d.Name())) == true {
+		if pkg.IsWantedVideoExtDef(d.Name()) == true {
 			// 如果是符合视频的后缀名，那么就缓存起来
 			tmpDir := filepath.Dir(path)
 			_, found := pathVideoMap[tmpDir]
@@ -192,7 +192,7 @@ func SeriesAllEpsAndSubtitles(l *logrus.Logger, dir string) (*backend.SeasonInfo
 			return nil
 		}
 
-		if sub_parser_hub.IsSubExtWanted(filepath.Ext(d.Name())) == true {
+		if sub_parser_hub.IsSubExtWanted(d.Name()) == true {
 			// 如果是符合字幕的后缀名，那么就缓存起来
 			tmpDir := filepath.Dir(path)
 			_, found := pathSubsMap[tmpDir]
