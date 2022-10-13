@@ -302,7 +302,7 @@ func (em *EmbyApi) UpdateVideoSubList(id string) error {
 			"Recursive": "true",
 			"api_key":   em.embyConfig.APIKey,
 		}).
-		Post(em.embyConfig.AddressUrl + "/Items/" + id + "/Refresh")
+		Post(em.embyConfig.AddressUrl + "/emby/Items/" + id + "/Refresh")
 	if err != nil {
 		return err
 	}
