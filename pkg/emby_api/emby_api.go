@@ -299,9 +299,10 @@ func (em *EmbyApi) UpdateVideoSubList(id string) error {
 
 	_, err := em.client.R().
 		SetQueryParams(map[string]string{
-			"api_key": em.embyConfig.APIKey,
+			"Recursive": "true",
+			"api_key":   em.embyConfig.APIKey,
 		}).
-		Post(em.embyConfig.AddressUrl + "/emby/Items/" + id + "/Refresh")
+		Post(em.embyConfig.AddressUrl + "/Items/" + id + "/Refresh")
 	if err != nil {
 		return err
 	}
