@@ -242,3 +242,5 @@ func (cb *ControllerBase) OneSeriesSubs(c *gin.Context) {
 
 	c.JSON(http.StatusOK, seasonInfo)
 }
+
+// v.refreshEmbySubList() 可以使用这个方案去刷新最近视频的字幕列表，最近的多少条可以 V 来设置
