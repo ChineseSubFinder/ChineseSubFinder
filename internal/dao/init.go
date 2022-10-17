@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"sync"
 
+	"gorm.io/gorm/logger"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
@@ -65,6 +67,8 @@ func InitDb() error {
 	if err != nil {
 		return errors.New(fmt.Sprintf("failed to connect database, %s", err.Error()))
 	}
+	// 降低 gorm 的日志级别
+	db.Logger = logger.Default.LogMode(logger.Silent)
 	// 迁移 schema
 	err = db.AutoMigrate(&models.HotFix{}, &models.SubFormatRec{},
 		&models.IMDBInfo{}, &models.VideoSubInfo{},
