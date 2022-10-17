@@ -79,6 +79,13 @@ func init() {
 	// --------------------------------------------------
 	// 初始化设备的信息
 	dao.UpdateInfo(AppVersion, settings.GetSettings())
+
+	// 砍掉，启动就进行扫描的逻辑
+	settings.GetSettings().CommonSettings.RunScanAtStartUp = false
+	err := settings.GetSettings().Save()
+	if err != nil {
+		loggerBase.Panicln("settings.GetSettings().Save() err:", err)
+	}
 }
 
 func main() {
@@ -118,7 +125,7 @@ func main() {
 		common.SetApiToken("")
 	}
 	// 是否开启开发模式，跳过某些流程
-	settings.GetSettings().SpeedDevMode = true
+	settings.GetSettings().SpeedDevMode = false
 	if settings.GetSettings().SpeedDevMode == true {
 		loggerBase.Infoln("Speed Dev Mode is On")
 		pkg.SetLiteMode(true)

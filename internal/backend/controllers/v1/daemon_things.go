@@ -5,7 +5,6 @@ import (
 
 	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,7 +17,8 @@ func (cb *ControllerBase) DaemonStartHandler(c *gin.Context) {
 
 	if cb.cronHelper.CronHelperRunning() == false {
 		go func() {
-			cb.cronHelper.Start(settings.GetSettings(true).CommonSettings.RunScanAtStartUp)
+			// 砍掉，启动就进行扫描的逻辑
+			cb.cronHelper.Start(false)
 		}()
 	}
 
