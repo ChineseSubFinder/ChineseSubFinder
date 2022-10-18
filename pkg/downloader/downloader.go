@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/scan_logic"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
@@ -40,6 +42,7 @@ type Downloader struct {
 	downloaderLock           sync.Mutex                                   // 取消执行 task control 的 Lock
 	downloadQueue            *task_queue.TaskQueue                        // 需要下载的视频的队列
 	embyHelper               *embyHelper.EmbyHelper                       // Emby 的实例
+	ScanLogic                *scan_logic.ScanLogic                        // 是否扫描逻辑
 
 	cacheLocker   sync.Mutex
 	movieInfoMap  map[string]MovieInfo  // 给 Web 界面使用的，Key: VideoFPath
@@ -87,6 +90,8 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	if downloader.settings.EmbySettings.Enable == true {
 		downloader.embyHelper = embyHelper.NewEmbyHelper(downloader.log, downloader.settings)
 	}
+
+	downloader.ScanLogic = scan_logic.NewScanLogic(downloader.log)
 
 	downloader.movieInfoMap = make(map[string]MovieInfo)
 	downloader.seasonInfoMap = make(map[string]SeasonInfo)

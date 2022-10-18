@@ -3,7 +3,12 @@ package v1
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"time"
+
+	PTN "github.com/middelink/go-parse-torrent-name"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/models"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/search"
 
@@ -241,6 +246,65 @@ func (cb *ControllerBase) OneSeriesSubs(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, seasonInfo)
+}
+
+// ScanSkipInfo 设置或者获取跳过扫描信息的状态
+func (cb *ControllerBase) ScanSkipInfo(c *gin.Context) {
+	var err error
+	defer func() {
+		// 统一的异常处理
+		cb.ErrorProcess(c, "ScanSkipInfo", err)
+	}()
+
+	switch c.Request.Method {
+	case "POST":
+		{
+			// 查询
+			videoSkipInfo := backend2.ReqVideoSkipInfo{}
+			err = c.ShouldBindJSON(&videoSkipInfo)
+			if err != nil {
+				return
+			}
+			isSkip := cb.cronHelper.Downloader.ScanLogic.Get(videoSkipInfo.VideoType, videoSkipInfo.PhysicalVideoFileFullPath)
+			c.JSON(http.StatusOK, backend2.ReplyVideoSkipInfo{
+				IsSkip: isSkip,
+			})
+			return
+		}
+	case "PUT":
+		{
+			// 设置
+			videoSkipInfo := backend2.ReqVideoSkipInfo{}
+			err = c.ShouldBindJSON(&videoSkipInfo)
+			if err != nil {
+				return
+			}
+
+			var skipInfo *models.SkipScanInfo
+			if videoSkipInfo.VideoType == 0 {
+				// 电影
+				skipInfo = models.NewSkipScanInfoByMovie(videoSkipInfo.PhysicalVideoFileFullPath, videoSkipInfo.IsSkip)
+			} else {
+				// 电视剧
+				var parse *PTN.TorrentInfo
+				parse, err = PTN.Parse(videoSkipInfo.PhysicalVideoFileFullPath)
+				if err != nil {
+					cb.log.Errorln("SetScanSkipInfo.PTN.Parse", err)
+					return
+				}
+				dirFPath := filepath.Dir(filepath.Dir(videoSkipInfo.PhysicalVideoFileFullPath))
+				skipInfo = models.NewSkipScanInfoBySeries(dirFPath, parse.Season, parse.Episode, videoSkipInfo.IsSkip)
+			}
+
+			cb.cronHelper.Downloader.ScanLogic.Set(skipInfo)
+
+			c.JSON(http.StatusOK, backend2.ReplyCommon{
+				Message: "ok"})
+			return
+		}
+	default:
+		c.JSON(http.StatusNoContent, backend2.ReplyCommon{Message: "ScanSkipInfo Request.Method Error"})
+	}
 }
 
 // v.refreshEmbySubList() 可以使用这个方案去刷新最近视频的字幕列表，最近的多少条可以 V 来设置

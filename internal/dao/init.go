@@ -76,6 +76,7 @@ func InitDb() error {
 		&models.MediaInfo{},
 		&models.LowVideoSubInfo{},
 		&models.Info{},
+		&models.SkipScanInfo{},
 	)
 	if err != nil {
 		return errors.New(fmt.Sprintf("db AutoMigrate error, %s", err.Error()))
