@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/scan_logic"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/search"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg"
@@ -87,7 +89,7 @@ func NewVideoScanAndRefreshHelper(inSubFormatter ifaces.ISubFormatter, fileDownl
 	return &v
 }
 
-func (v *VideoScanAndRefreshHelper) Start() error {
+func (v *VideoScanAndRefreshHelper) Start(scanLogic *scan_logic.ScanLogic) error {
 
 	v.locker.Lock()
 	if v.running == true {
@@ -124,7 +126,7 @@ func (v *VideoScanAndRefreshHelper) Start() error {
 		return err
 	}
 	// 过滤出需要下载的视频有那些，并放入队列中
-	err = v.FilterMovieAndSeriesNeedDownload(scanResult)
+	err = v.FilterMovieAndSeriesNeedDownload(scanResult, scanLogic)
 	if err != nil {
 		v.log.Errorln("FilterMovieAndSeriesNeedDownload", err)
 		return err
@@ -302,10 +304,10 @@ func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *Scan
 }
 
 // FilterMovieAndSeriesNeedDownload 过滤出需要下载字幕的视频，比如是否跳过中文的剧集，是否超过3个月的下载时间，丢入队列中
-func (v *VideoScanAndRefreshHelper) FilterMovieAndSeriesNeedDownload(scanVideoResult *ScanVideoResult) error {
+func (v *VideoScanAndRefreshHelper) FilterMovieAndSeriesNeedDownload(scanVideoResult *ScanVideoResult, scanLogic *scan_logic.ScanLogic) error {
 
 	if scanVideoResult.Normal != nil && v.settings.EmbySettings.Enable == false {
-		err := v.filterMovieAndSeriesNeedDownloadNormal(scanVideoResult.Normal)
+		err := v.filterMovieAndSeriesNeedDownloadNormal(scanVideoResult.Normal, scanLogic)
 		if err != nil {
 			return err
 		}
@@ -316,7 +318,7 @@ func (v *VideoScanAndRefreshHelper) FilterMovieAndSeriesNeedDownload(scanVideoRe
 		// 先获取缓存的 Emby 视频信息，有那些已经在这次扫描的时候播放过了
 
 		// 然后才是过滤有哪些需要下载的
-		err := v.filterMovieAndSeriesNeedDownloadEmby(scanVideoResult.Emby)
+		err := v.filterMovieAndSeriesNeedDownloadEmby(scanVideoResult.Emby, scanLogic)
 		if err != nil {
 			return err
 		}
@@ -1112,7 +1114,7 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 	return nil
 }
 
-func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(normal *NormalScanVideoResult) error {
+func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(normal *NormalScanVideoResult, scanLogic *scan_logic.ScanLogic) error {
 	// ----------------------------------------
 	// Normal 过滤，电影
 	movieProcess := func(ctx context.Context, inData interface{}) error {
@@ -1142,6 +1144,12 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 
 		//oneMovieDirRootPath := movieDirRootPath.(string)
 		for i, oneMovieFPath := range movieFPath.([]string) {
+
+			// 判断是否需要跳过
+			if scanLogic.Get(0, oneMovieFPath) == true {
+				v.log.Debugln("filterMovieAndSeriesNeedDownloadNormal.Movie", oneMovieFPath, "skip")
+				continue
+			}
 			// 放入队列
 			err := v.taskControl.Invoke(&task_control.TaskData{
 				Index: i,
@@ -1178,6 +1186,13 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 		}
 
 		for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
+
+			// 判断是否需要跳过
+			if scanLogic.Get(1, episodeInfo.FileFullPath) == true {
+				v.log.Debugln("filterMovieAndSeriesNeedDownloadNormal.Series", episodeInfo.FileFullPath, "skip")
+				continue
+			}
+
 			// 放入队列
 			oneJob := task_queue2.NewOneJob(
 				common2.Series, episodeInfo.FileFullPath, task_queue.DefaultTaskPriorityLevel,
@@ -1226,7 +1241,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 	return nil
 }
 
-func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *EmbyScanVideoResult) error {
+func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *EmbyScanVideoResult, scanLogic *scan_logic.ScanLogic) error {
 
 	playedVideoIdMap := make(map[string]bool)
 	if v.settings.EmbySettings.SkipWatched == true {
@@ -1235,6 +1250,13 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 	// ----------------------------------------
 	// Emby 过滤，电影
 	for _, oneMovieMixInfo := range emby.MovieSubNeedDlEmbyMixInfoList {
+
+		// 判断是否需要跳过
+		if scanLogic.Get(0, oneMovieMixInfo.PhysicalVideoFileFullPath) == true {
+			v.log.Debugln("filterMovieAndSeriesNeedDownloadEmby.Movie", oneMovieMixInfo.PhysicalVideoFileFullPath, "skip")
+			continue
+		}
+
 		// 放入队列
 		if v.subSupplierHub.MovieNeedDlSub(oneMovieMixInfo.PhysicalVideoFileFullPath, v.NeedForcedScanAndDownSub) == false {
 			continue
@@ -1277,6 +1299,13 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 
 		// 只需要从一集取信息即可
 		for _, mixInfo := range embyMixInfos {
+
+			// 判断是否需要跳过
+			if scanLogic.Get(0, mixInfo.PhysicalVideoFileFullPath) == true {
+				v.log.Debugln("filterMovieAndSeriesNeedDownloadEmby.Series", mixInfo.PhysicalVideoFileFullPath, "skip")
+				continue
+			}
+
 			// 在 GetRecentlyAddVideoListWithNoChineseSubtitle 的时候就进行了筛选，所以这里就直接加入队列了
 			// 放入队列
 			oneJob := task_queue2.NewOneJob(

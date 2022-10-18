@@ -38,7 +38,7 @@ func (s *ScanLogic) Set(skipInfo *models.SkipScanInfo) {
 	dao.GetDb().Save(skipInfo)
 }
 
-// Get 获取跳过扫描的信息设置，带有缓存
+// Get 是否跳过，获取跳过扫描的信息设置，带有缓存。电影就是具体的视频文件全路径，连续剧就是具体一集视频文件的全路径
 func (s *ScanLogic) Get(videoType int, videoPath string) bool {
 
 	var uid string

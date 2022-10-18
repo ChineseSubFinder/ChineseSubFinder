@@ -317,7 +317,7 @@ func (ch *CronHelper) scanVideoProcessAdd2DownloadQueue() {
 	// ----------------------------------------------------------------------------------------
 	// ----------------------------------------------------------------------------------------
 	// 扫描有那些视频需要下载字幕，放入队列中，然后会有下载者去这个队列取出来进行下载
-	err := ch.videoScanAndRefreshHelper.Start()
+	err := ch.videoScanAndRefreshHelper.Start(ch.Downloader.ScanLogic)
 	if err != nil {
 		ch.log.Errorln(err)
 		return
