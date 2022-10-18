@@ -42,6 +42,32 @@ func (d *Downloader) queueDownloaderLocal() {
 		return
 	}
 	// --------------------------------------------------
+	{
+		// 需要判断这个任务是否需要跳过，但是如果这个任务的优先级很高，那么就不跳过
+		if oneJob.TaskPriority > task_queue.HighTaskPriorityLevel {
+			// 说明优先级不高，需要进行判断
+			videoType := 0
+			if oneJob.VideoType == common2.Series {
+				videoType = 1
+			}
+			if d.ScanLogic.Get(videoType, oneJob.VideoFPath) == true {
+				// 需要标记忽略
+				oneJob.JobStatus = taskQueue2.Ignore
+				bok, err = d.downloadQueue.Update(oneJob)
+				if err != nil {
+					d.log.Errorln("d.downloadQueue.Update()", err)
+					return
+				}
+				if bok == false {
+					d.log.Errorln("d.downloadQueue.Update() Failed")
+					return
+				}
+				d.log.Infoln("Download Queue Update Job Status To Ignore (Manual Settings Ignore), VideoFPath:", oneJob.VideoFPath)
+				return
+			}
+		}
+	}
+	// --------------------------------------------------
 	// 这个任务如果是 series 那么需要考虑是否原始存入的信息是缺失的，需要补全
 	{
 		if oneJob.VideoType == common2.Series && (oneJob.SeriesRootDirPath == "" || oneJob.Season <= 0 || oneJob.Episode <= 0) {
