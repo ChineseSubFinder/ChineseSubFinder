@@ -307,4 +307,20 @@ func (cb *ControllerBase) ScanSkipInfo(c *gin.Context) {
 	}
 }
 
-// v.refreshEmbySubList() 可以使用这个方案去刷新最近视频的字幕列表，最近的多少条可以 V 来设置
+// RefreshMediaServerSubList 刷新媒体服务器的字幕列表
+func (cb *ControllerBase) RefreshMediaServerSubList(c *gin.Context) {
+	var err error
+	defer func() {
+		// 统一的异常处理
+		cb.ErrorProcess(c, "RefreshMediaServerSubList", err)
+	}()
+
+	err = cb.videoScanAndRefreshHelper.RefreshMediaServerSubList()
+	if err != nil {
+		cb.log.Errorln("RefreshMediaServerSubList", err)
+		return
+	}
+
+	c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "ok"})
+	return
+}

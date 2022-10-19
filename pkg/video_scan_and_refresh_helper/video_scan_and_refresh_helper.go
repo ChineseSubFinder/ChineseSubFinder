@@ -327,6 +327,37 @@ func (v *VideoScanAndRefreshHelper) FilterMovieAndSeriesNeedDownload(scanVideoRe
 	return nil
 }
 
+// RefreshMediaServerSubList 刷新媒体服务器的字幕列表
+func (v *VideoScanAndRefreshHelper) RefreshMediaServerSubList() error {
+
+	if v.settings.EmbySettings.Enable == false {
+		return nil
+	}
+	v.log.Infoln("Refresh Media Server Sub List...")
+	defer func() {
+		v.log.Infoln("Refresh Media Server Sub List End")
+	}()
+
+	v.log.Infoln("tmpSetting.EmbySettings.MaxRequestVideoNumber = 1000000")
+	// 如果是强制，那么就临时修改 Setting 的 Emby MaxRequestVideoNumber 参数为 1000000
+	//tmpSetting := clone.Clone(v.settings).(*settings.Settings)
+	v.embyHelper = embyHelper.NewEmbyHelper(v.log, v.settings)
+	v.embyHelper.SetMaxRequestVideoNumber(common2.EmbyApiGetItemsLimitMax)
+	v.embyHelper.SetSkipWatched(false)
+	var err error
+	if v.embyHelper != nil {
+		// TODO 如果后续支持了 Jellyfin、Plex 那么这里需要额外正在对应的扫描逻辑
+		// Emby 情况，从 Emby 获取视频信息
+		err = v.refreshEmbySubList()
+		if err != nil {
+			v.log.Errorln("refreshEmbySubList", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
 // scanLowVideoSubInfo 扫描低可信度的字幕信息
 func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVideoResult) {
 
