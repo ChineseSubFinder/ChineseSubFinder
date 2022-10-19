@@ -110,33 +110,6 @@
 
       <q-separator spaced inset></q-separator>
 
-      <!--        <q-item>-->
-      <!--          <q-item-section>-->
-      <!--            <q-item-label>并发数</q-item-label>-->
-      <!--          </q-item-section>-->
-      <!--          <q-item-section avatar>-->
-      <!--            <q-input-->
-      <!--              v-model.number="form.threads"-->
-      <!--              standout-->
-      <!--              dense-->
-      <!--              :rules="[(val) => !!val || '不能为空', (val) => /^\d+$/.test(val) || '必须是整数']"-->
-      <!--            />-->
-      <!--          </q-item-section>-->
-      <!--        </q-item>-->
-
-      <!--        <q-separator spaced inset></q-separator>-->
-
-      <q-item tag="label" v-ripple>
-        <q-item-section>
-          <q-item-label>程序启动立即开启扫描</q-item-label>
-        </q-item-section>
-        <q-item-section avatar>
-          <q-toggle v-model="form.run_scan_at_start_up" />
-        </q-item-section>
-      </q-item>
-
-      <q-separator spaced inset></q-separator>
-
       <q-item>
         <q-item-section class="items-start" top>
           <q-item-label>电影的目录</q-item-label>
