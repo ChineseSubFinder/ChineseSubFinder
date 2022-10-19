@@ -93,7 +93,8 @@ func InitRouter(
 		GroupV1.POST("/video/list/one_series_subs", cbV1.OneSeriesSubs)
 		GroupV1.POST("/video/list/scan_skip_info", cbV1.ScanSkipInfo)
 		GroupV1.PUT("/video/list/scan_skip_info", cbV1.ScanSkipInfo)
-		GroupV1.PUT("/video/list/refresh_media_server_sub_list", cbV1.RefreshMediaServerSubList)
+
+		GroupV1.POST("/subtitles/refresh_media_server_sub_list", cbV1.RefreshMediaServerSubList)
 	}
 
 	GroupAPIV1 := router.Group("/api/v1")
