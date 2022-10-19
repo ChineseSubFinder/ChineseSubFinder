@@ -80,9 +80,9 @@ func InitRouter(
 		GroupV1.POST("/jobs/change-job-status", cbV1.ChangeJobStatusHandler)
 		GroupV1.POST("/jobs/log", cbV1.JobLogHandler)
 
-		GroupV1.POST("/video/list/refresh", cbV1.RefreshVideoListHandler)
+		//GroupV1.POST("/video/list/refresh", cbV1.RefreshVideoListHandler)
 		GroupV1.GET("/video/list/refresh-status", cbV1.RefreshVideoListStatusHandler)
-		GroupV1.GET("/video/list", cbV1.VideoListHandler)
+		//GroupV1.GET("/video/list", cbV1.VideoListHandler)
 		GroupV1.POST("/video/list/add", cbV1.VideoListAddHandler)
 
 		GroupV1.POST("/video/list/refresh_main_list", cbV1.RefreshMainList)
