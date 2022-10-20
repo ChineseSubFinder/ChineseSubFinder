@@ -8,25 +8,28 @@
 </template>
 
 <script setup>
-import {useLibrary} from 'pages/library/useLibrary';
-import {useQuasar} from 'quasar';
+import { useLibrary } from 'pages/library/useLibrary';
+import { useQuasar } from 'quasar';
 
 const $q = useQuasar();
 
+// TODO 这里的useLibrary有BUG，与列表外边不是同一个composable，所以无法更新列表
 const { refreshLibrary, refreshCacheLoading } = useLibrary();
 
 const confirm = () => {
   $q.dialog({
     title: '更新缓存',
-    message: '刷新缓存并不会自动提交下载字幕的任务，仅仅是方便手动选择一个视频去下载字幕。这个是一个长耗时任务，请在有手动的需求下操作。暂时不支持动态更新缓存，需要手动执行完整的缓存刷新操作。',
+    message:
+      '刷新缓存并不会自动提交下载字幕的任务，仅仅是方便手动选择一个视频去下载字幕。这个是一个长耗时任务，请在有手动的需求下操作。暂时不支持动态更新缓存，需要手动执行完整的缓存刷新操作。',
     persistent: true,
     ok: '确定',
     cancel: '取消',
-  }).onOk(() => {
-    refreshLibrary();
-  }).onCancel(() => {
-    // console.log('>>>> Cancel')
   })
-}
-
+    .onOk(() => {
+      refreshLibrary();
+    })
+    .onCancel(() => {
+      // console.log('>>>> Cancel')
+    });
+};
 </script>

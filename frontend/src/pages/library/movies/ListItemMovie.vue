@@ -1,8 +1,10 @@
 <template>
   <q-card flat square>
     <div class="area-cover q-mb-sm relative-position">
+      <div v-if="!posterInfo?.url" style="width: 160px; height: 200px"></div>
       <q-img
-        :src="data.cover"
+        v-else
+        :src="getUrl(posterInfo.url)"
         class="content-width bg-grey-2"
         no-spinner
         style="width: 160px; height: 200px"
@@ -24,30 +26,54 @@
       <div class="text-grey">1970-01-01</div>
       <q-space />
       <div>
-        <q-btn v-if="hasSubtitle" color="black" round flat dense icon="closed_caption" @click.stop title="已有字幕">
-          <q-popup-proxy>
-            <q-list dense>
-              <q-item v-for="(item, index) in data.sub_f_path_list" :key="item">
-                <q-item-section side>{{ index + 1 }}.</q-item-section>
+        <!--        <q-btn v-if="hasSubtitle" color="black"-->
+        <!--               round flat dense icon="closed_caption" @click.stop title="已有字幕">-->
+        <!--          <q-popup-proxy>-->
+        <!--            <q-list dense>-->
+        <!--              <q-item v-for="(item, index) in data.sub_f_path_list" :key="item">-->
+        <!--                <q-item-section side>{{ index + 1 }}.</q-item-section>-->
 
-                <q-item-section class="overflow-hidden ellipsis" :title="item.split(/\/|\\/).pop()">
-                  <a class="text-primary" :href="getUrl(item)" target="_blank">{{ item.split(/\/|\\/).pop() }}</a>
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-popup-proxy>
-        </q-btn>
-        <q-btn v-else color="grey" round flat dense icon="closed_caption" @click.stop title="没有字幕" />
+        <!--                <q-item-section class="overflow-hidden ellipsis" :title="item.split(/\/|\\/).pop()">-->
+        <!--                  <a class="text-primary" :href="getUrl(item)"-->
+        <!--                     target="_blank">{{ item.split(/\/|\\/).pop() }}</a>-->
+        <!--                </q-item-section>-->
+        <!--              </q-item>-->
+        <!--            </q-list>-->
+        <!--          </q-popup-proxy>-->
+        <!--        </q-btn>-->
+        <!--        <q-btn v-else color="grey" round flat dense icon="closed_caption" @click.stop title="没有字幕" />-->
+        <q-btn
+          v-if="isSkipped"
+          color="grey"
+          round
+          flat
+          dense
+          icon="schedule"
+          @click.stop
+          title="取消忽略"
+          @click="handleIgnore"
+        />
+        <q-btn
+          v-else
+          color="black"
+          round
+          flat
+          dense
+          icon="schedule"
+          @click.stop
+          title="在任务中忽略该视频"
+          @click="handleIgnore"
+        />
       </div>
     </div>
   </q-card>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { onMounted, ref } from 'vue';
 import LibraryApi from 'src/api/LibraryApi';
 import { SystemMessage } from 'src/utils/Message';
-import { VIDEO_TYPE_MOVIE } from 'src/constants/SettingConstants';
+import { VIDEO_TYPE_MOVIE, VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
 import { useQuasar } from 'quasar';
 import { getUrl } from 'pages/library/useLibrary';
 
@@ -57,7 +83,49 @@ const props = defineProps({
 
 const $q = useQuasar();
 
-const hasSubtitle = computed(() => props.data.sub_f_path_list.length > 0);
+const posterInfo = ref(null);
+const isSkipped = ref(null);
+
+const getPosterInfo = async () => {
+  const [res] = await LibraryApi.getMoviePoster({
+    name: props.data.name,
+    main_root_dir_f_path: props.data.main_root_dir_f_path,
+    video_f_path: props.data.video_f_path,
+  });
+  posterInfo.value = res;
+};
+
+const getIsSkipped = async () => {
+  const [res] = await LibraryApi.getSkipInfo({
+    video_type: VIDEO_TYPE_TV,
+    physical_video_file_full_path: props.data.video_f_path,
+    is_bluray: false,
+    is_skip: true,
+  });
+  isSkipped.value = res.is_skip;
+};
+
+const handleIgnore = async () => {
+  $q.dialog({
+    title: '提示',
+    message: `确定要在任务中${isSkipped.value ? '取消' : ''}忽略该视频吗？`,
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    const [res] = await LibraryApi.setSkipInfo({
+      video_type: VIDEO_TYPE_TV,
+      physical_video_file_full_path: props.data.video_f_path,
+      is_bluray: false,
+      is_skip: !isSkipped.value,
+    });
+    if (res) {
+      SystemMessage.success('操作成功');
+      getIsSkipped();
+    }
+  });
+};
+
+// const hasSubtitle = computed(() => props.data.sub_f_path_list.length > 0);
 
 const downloadSubtitle = async () => {
   $q.dialog({
@@ -88,6 +156,11 @@ const downloadSubtitle = async () => {
     }
   });
 };
+
+onMounted(() => {
+  getPosterInfo();
+  getIsSkipped();
+});
 </script>
 
 <style lang="scss" scoped>
