@@ -266,7 +266,7 @@ func GetRootCacheCenterFolder() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, CacheCenterFloder)
+	nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, CacheCenterFolder)
 	err = os.MkdirAll(nowProcessRoot, os.ModePerm)
 	if err != nil {
 		return "", err
@@ -341,6 +341,57 @@ func ClearShareSubFolderByYearAndName(year int, name string) error {
 	}
 
 	return ClearFolder(filepath.Join(nowTmpFolder, name))
+}
+
+// --------------------------------------------------------------
+// Manual Subtitle Upload
+// --------------------------------------------------------------
+
+// GetManualSubUploadCacheFolder 手动上传字幕的缓存文件夹
+func GetManualSubUploadCacheFolder() (string, error) {
+
+	nowProcessRoot, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	nowProcessRoot = filepath.Join(nowProcessRoot, cacheRootFolderName, ManualSubUploadCacheFolder)
+	err = os.MkdirAll(nowProcessRoot, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+	return nowProcessRoot, err
+}
+
+// ClearManualSubUploadCacheFolder 清理手动上传字幕的缓存文件夹
+func ClearManualSubUploadCacheFolder() error {
+
+	nowTmpFolder, err := GetManualSubUploadCacheFolder()
+	if err != nil {
+		return err
+	}
+
+	pathSep := string(os.PathSeparator)
+	files, err := os.ReadDir(nowTmpFolder)
+	if err != nil {
+		return err
+	}
+	for _, curFile := range files {
+		fullPath := nowTmpFolder + pathSep + curFile.Name()
+		if curFile.IsDir() {
+			err = os.RemoveAll(fullPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			// 这里就是文件了
+			err = os.Remove(fullPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // --------------------------------------------------------------
@@ -485,14 +536,15 @@ func ClearIdleSubFixCacheFolder(l *logrus.Logger, rootSubFixCacheFolder string, 
 
 // 缓存文件的位置信息，都是在程序的根目录下的 cache 中
 const (
-	cacheRootFolderName = "cache"             // 缓存文件夹总名称
-	TmpFolder           = "tmp"               // 临时缓存的文件夹
-	RodCacheFolder      = "rod"               // rod 的缓存目录
-	PluginFolder        = "Plugin"            // 插件的目录
-	DebugFolder         = "CSF-DebugThings"   // 调试相关的文件夹
-	SubFixCacheFolder   = "CSF-SubFixCache"   // 字幕时间校正的缓存文件夹，一般可以不清理
-	ShareSubFileCache   = "CSF-ShareSubCache" // 字幕共享的缓存目录，不建议删除
-	CacheCenterFloder   = "CSF-CacheCenter"   // 下载缓存、队列缓存、下载次数缓存的文件夹
+	cacheRootFolderName        = "cache"                    // 缓存文件夹总名称
+	TmpFolder                  = "tmp"                      // 临时缓存的文件夹
+	RodCacheFolder             = "rod"                      // rod 的缓存目录
+	PluginFolder               = "Plugin"                   // 插件的目录
+	DebugFolder                = "CSF-DebugThings"          // 调试相关的文件夹
+	SubFixCacheFolder          = "CSF-SubFixCache"          // 字幕时间校正的缓存文件夹，一般可以不清理
+	ShareSubFileCache          = "CSF-ShareSubCache"        // 字幕共享的缓存目录，不建议删除
+	CacheCenterFolder          = "CSF-CacheCenter"          // 下载缓存、队列缓存、下载次数缓存的文件夹
+	ManualSubUploadCacheFolder = "CSF-ManualSubUploadCache" // 手动上传字幕的缓存文件夹
 )
 
 const (

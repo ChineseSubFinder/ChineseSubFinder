@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	"github.com/gin-gonic/gin"
 )
@@ -37,19 +39,29 @@ func (cb *ControllerBase) ManualUploadSubtitle(c *gin.Context) {
 	videoFPath, ok := c.GetPostForm("video_f_path")
 	if ok == false {
 		err = fmt.Errorf("GetPostForm video_f_path failed")
+		cb.log.Errorln(err)
 		return
 	}
 	file, err := c.FormFile("file")
 	if err != nil {
-		cb.log.Errorln("ManualUploadSubtitle.FormFile", err)
+		err = fmt.Errorf("FormFile failed, err: %v", err)
+		cb.log.Errorln(err)
 		return
 	}
-	basePath := "./upload/"
-	filename := basePath + filepath.Base(file.Filename)
-	if err := c.SaveUploadedFile(file, filename); err != nil {
-		c.String(http.StatusBadRequest, fmt.Sprintf("upload file err: %s", err.Error()))
+	basePath, err := pkg.GetManualSubUploadCacheFolder()
+	if err != nil {
+		err = fmt.Errorf("GetManualSubUploadCacheFolder failed, err: %v", err)
+		cb.log.Errorln(err)
 		return
 	}
+	filename := filepath.Join(basePath, filepath.Base(file.Filename))
+	if err = c.SaveUploadedFile(file, filename); err != nil {
+		err = fmt.Errorf("SaveUploadedFile failed, err: %v", err)
+		cb.log.Errorln(err)
+		return
+	}
+
+	println("videoFPath", videoFPath)
 
 	c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "ok"})
 	return
