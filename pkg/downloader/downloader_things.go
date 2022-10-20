@@ -3,7 +3,6 @@ package downloader
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg"
@@ -12,8 +11,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/change_file_encode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/chs_cht_changer"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	subcommon "github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
@@ -73,7 +70,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 			bSetDefault = false
 		}
 		// 找到了，写入文件
-		err = d.writeSubFile2VideoPath(oneVideoFullPath, *finalSubFile, "", bSetDefault, false)
+		err = d.SaveSubHelper.WriteSubFile2VideoPath(oneVideoFullPath, *finalSubFile, "", bSetDefault, false)
 		if err != nil {
 			return errors.New(fmt.Sprintf("SaveMultiSub: %v, writeSubFile2VideoPath, Error: %v ", d.settings.AdvancedSettings.SaveMultiSub, err))
 		}
@@ -98,7 +95,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 				if i == 0 {
 					setDefault = true
 				}
-				err = d.writeSubFile2VideoPath(oneVideoFullPath, file, siteNames[i], setDefault, false)
+				err = d.SaveSubHelper.WriteSubFile2VideoPath(oneVideoFullPath, file, siteNames[i], setDefault, false)
 				if err != nil {
 					return errors.New(fmt.Sprintf("SaveMultiSub: %v, writeSubFile2VideoPath, Error: %v ", d.settings.AdvancedSettings.SaveMultiSub, err))
 				}
@@ -112,7 +109,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 				那么就比较麻烦，干脆，normal 的命名格式化实例，就不设置 default 了，forced 不想用，因为可能会跟你手动选择的字幕冲突（下次观看的时候，理论上也可能不会）
 			*/
 			for i := len(finalSubFiles) - 1; i > -1; i-- {
-				err = d.writeSubFile2VideoPath(oneVideoFullPath, finalSubFiles[i], siteNames[i], false, false)
+				err = d.SaveSubHelper.WriteSubFile2VideoPath(oneVideoFullPath, finalSubFiles[i], siteNames[i], false, false)
 				if err != nil {
 					return errors.New(fmt.Sprintf("SaveMultiSub: %v, writeSubFile2VideoPath, Error: %v ", d.settings.AdvancedSettings.SaveMultiSub, err))
 				}
@@ -169,70 +166,4 @@ func (d *Downloader) saveFullSeasonSub(seriesInfo *series.SeriesInfo, organizeSu
 	}
 
 	return fullSeasonSubDict
-}
-
-// 在前面需要进行语言的筛选、排序，这里仅仅是存储， extraSubPreName 这里传递是字幕的网站，有就认为是多字幕的存储。空就是单字幕，单字幕就可以setDefault
-func (d *Downloader) writeSubFile2VideoPath(videoFileFullPath string, finalSubFile subparser.FileInfo, extraSubPreName string, setDefault bool, skipExistFile bool) error {
-	defer d.log.Infoln("----------------------------------")
-	videoRootPath := filepath.Dir(videoFileFullPath)
-	subNewName, subNewNameWithDefault, _ := d.subFormatter.GenerateMixSubName(videoFileFullPath, finalSubFile.Ext, finalSubFile.Lang, extraSubPreName)
-
-	desSubFullPath := filepath.Join(videoRootPath, subNewName)
-	if setDefault == true {
-		// 先判断没有 default 的字幕是否存在了，在的话，先删除，然后再写入
-		if pkg.IsFile(desSubFullPath) == true {
-			_ = os.Remove(desSubFullPath)
-		}
-		desSubFullPath = filepath.Join(videoRootPath, subNewNameWithDefault)
-	}
-
-	if skipExistFile == true {
-		// 需要判断文件是否存在在，有则跳过
-		if pkg.IsFile(desSubFullPath) == true {
-			d.log.Infoln("OrgSubName:", finalSubFile.Name)
-			d.log.Infoln("Sub Skip DownAt:", desSubFullPath)
-			return nil
-		}
-	}
-	// 最后写入字幕
-	err := pkg.WriteFile(desSubFullPath, finalSubFile.Data)
-	if err != nil {
-		return err
-	}
-	d.log.Infoln("----------------------------------")
-	d.log.Infoln("OrgSubName:", finalSubFile.Name)
-	d.log.Infoln("SubDownAt:", desSubFullPath)
-
-	// 然后还需要判断是否需要校正字幕的时间轴
-	if d.settings.AdvancedSettings.FixTimeLine == true {
-		err = d.subTimelineFixerHelperEx.Process(videoFileFullPath, desSubFullPath)
-		if err != nil {
-			return err
-		}
-	}
-	// 判断是否需要转换字幕的编码
-	if d.settings.ExperimentalFunction.AutoChangeSubEncode.Enable == true {
-		d.log.Infoln("----------------------------------")
-		d.log.Infoln("change_file_encode to", d.settings.ExperimentalFunction.AutoChangeSubEncode.GetDesEncodeType())
-		err = change_file_encode.Process(desSubFullPath, d.settings.ExperimentalFunction.AutoChangeSubEncode.DesEncodeType)
-		if err != nil {
-			return err
-		}
-	}
-
-	// 判断是否需要进行简繁互转
-	// 一定得是 UTF-8 才能够执行简繁转换
-	// 测试了先转 UTF-8 进行简繁转换然后再转 GBK，有些时候会出错，所以还是不支持这样先
-	if d.settings.ExperimentalFunction.AutoChangeSubEncode.Enable == true &&
-		d.settings.ExperimentalFunction.AutoChangeSubEncode.DesEncodeType == 0 &&
-		d.settings.ExperimentalFunction.ChsChtChanger.Enable == true {
-		d.log.Infoln("----------------------------------")
-		d.log.Infoln("chs_cht_changer to", d.settings.ExperimentalFunction.ChsChtChanger.GetDesChineseLanguageTypeString())
-		err = chs_cht_changer.Process(desSubFullPath, d.settings.ExperimentalFunction.ChsChtChanger.DesChineseLanguageType)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

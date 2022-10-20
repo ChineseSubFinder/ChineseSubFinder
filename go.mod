@@ -12,7 +12,7 @@ require (
 	github.com/baabaaox/go-webrtcvad v1.0.1
 	github.com/beevik/etree v1.1.0
 	github.com/bodgit/sevenzip v1.1.0
-	github.com/emirpasic/gods v1.12.0
+	github.com/emirpasic/gods v1.18.1
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.7

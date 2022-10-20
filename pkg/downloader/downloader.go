@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/manual_upload_sub_2_local"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/save_sub_helper"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/scan_logic"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg"
@@ -34,15 +38,17 @@ type Downloader struct {
 	fileDownloader           *file_downloader.FileDownloader
 	ctx                      context.Context
 	cancel                   context.CancelFunc
-	subSupplierHub           *subSupplier.SubSupplierHub                  // 字幕提供源的集合，这个需要定时进行扫描，这些字幕源是否有效，以及下载验证码信息
-	mk                       *markSystem.MarkingSystem                    // MarkingSystem，字幕的评价系统
-	subFormatter             ifaces.ISubFormatter                         // 字幕格式化命名的实现
-	subNameFormatter         subCommon.FormatterName                      // 从 inSubFormatter 推断出来
-	subTimelineFixerHelperEx *sub_timeline_fixer.SubTimelineFixerHelperEx // 字幕时间轴校正
-	downloaderLock           sync.Mutex                                   // 取消执行 task control 的 Lock
-	downloadQueue            *task_queue.TaskQueue                        // 需要下载的视频的队列
-	embyHelper               *embyHelper.EmbyHelper                       // Emby 的实例
-	ScanLogic                *scan_logic.ScanLogic                        // 是否扫描逻辑
+	subSupplierHub           *subSupplier.SubSupplierHub                      // 字幕提供源的集合，这个需要定时进行扫描，这些字幕源是否有效，以及下载验证码信息
+	mk                       *markSystem.MarkingSystem                        // MarkingSystem，字幕的评价系统
+	subFormatter             ifaces.ISubFormatter                             // 字幕格式化命名的实现
+	subNameFormatter         subCommon.FormatterName                          // 从 inSubFormatter 推断出来
+	subTimelineFixerHelperEx *sub_timeline_fixer.SubTimelineFixerHelperEx     // 字幕时间轴校正
+	downloaderLock           sync.Mutex                                       // 取消执行 task control 的 Lock
+	downloadQueue            *task_queue.TaskQueue                            // 需要下载的视频的队列
+	embyHelper               *embyHelper.EmbyHelper                           // Emby 的实例
+	ScanLogic                *scan_logic.ScanLogic                            // 是否扫描逻辑
+	SaveSubHelper            *save_sub_helper.SaveSubHelper                   // 保存字幕的逻辑
+	ManualUploadSub2Local    *manual_upload_sub_2_local.ManualUploadSub2Local // 手动上传字幕到本地
 
 	cacheLocker   sync.Mutex
 	movieInfoMap  map[string]MovieInfo  // 给 Web 界面使用的，Key: VideoFPath
@@ -92,6 +98,13 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	}
 
 	downloader.ScanLogic = scan_logic.NewScanLogic(downloader.log)
+
+	downloader.SaveSubHelper = save_sub_helper.NewSaveSubHelper(
+		downloader.log,
+		downloader.settings, downloader.subFormatter,
+		downloader.subTimelineFixerHelperEx)
+
+	downloader.ManualUploadSub2Local = manual_upload_sub_2_local.NewManualUploadSub2Local(downloader.log, downloader.SaveSubHelper)
 
 	downloader.movieInfoMap = make(map[string]MovieInfo)
 	downloader.seasonInfoMap = make(map[string]SeasonInfo)
