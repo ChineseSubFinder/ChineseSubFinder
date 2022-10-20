@@ -29,12 +29,12 @@ func (cb *ControllerBase) RefreshMediaServerSubList(c *gin.Context) {
 	return
 }
 
-// ManualUploadSubtitle 人工上传字幕
-func (cb *ControllerBase) ManualUploadSubtitle(c *gin.Context) {
+// ManualUploadSubtitle2Local 人工上传字幕
+func (cb *ControllerBase) ManualUploadSubtitle2Local(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理
-		cb.ErrorProcess(c, "ManualUploadSubtitle", err)
+		cb.ErrorProcess(c, "ManualUploadSubtitle2Local", err)
 	}()
 	videoFPath, ok := c.GetPostForm("video_f_path")
 	if ok == false {

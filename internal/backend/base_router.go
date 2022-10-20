@@ -95,7 +95,7 @@ func InitRouter(
 		GroupV1.PUT("/video/list/scan_skip_info", cbV1.ScanSkipInfo)
 
 		GroupV1.POST("/subtitles/refresh_media_server_sub_list", cbV1.RefreshMediaServerSubList)
-		GroupV1.POST("/subtitles/upload", cbV1.ManualUploadSubtitle)
+		GroupV1.POST("/subtitles/manual_upload_2_local", cbV1.ManualUploadSubtitle2Local)
 	}
 
 	GroupAPIV1 := router.Group("/api/v1")
