@@ -1,8 +1,9 @@
 package manual_upload_sub_2_local
 
 import (
-	"github.com/pkg/errors"
 	"sync"
+
+	"github.com/pkg/errors"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/save_sub_helper"
 	subCommon "github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
@@ -66,6 +67,10 @@ func (m *ManualUploadSub2Local) IsJobInQueue(job *Job) bool {
 	defer func() {
 		m.addLocker.Unlock()
 	}()
+
+	if job == nil || job.VideoFPath == "" {
+		return false
+	}
 	if m.jobSet.Contains(job.VideoFPath) == true {
 		// 已经在队列中了
 		return true
@@ -191,4 +196,8 @@ func (m *ManualUploadSub2Local) processSub(job *Job) error {
 type Job struct {
 	VideoFPath string
 	SubFPath   string
+}
+
+type Reply struct {
+	Jobs []*Job `json:"jobs"`
 }

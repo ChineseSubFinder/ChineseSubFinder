@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"strconv"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/manual_upload_sub_2_local"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
@@ -29,7 +32,7 @@ func (cb *ControllerBase) RefreshMediaServerSubList(c *gin.Context) {
 	return
 }
 
-// ManualUploadSubtitle2Local 人工上传字幕
+// ManualUploadSubtitle2Local 人工上传字幕到本地
 func (cb *ControllerBase) ManualUploadSubtitle2Local(c *gin.Context) {
 	var err error
 	defer func() {
@@ -61,8 +64,42 @@ func (cb *ControllerBase) ManualUploadSubtitle2Local(c *gin.Context) {
 		return
 	}
 
-	println("videoFPath", videoFPath)
+	cb.cronHelper.Downloader.ManualUploadSub2Local.Add(&manual_upload_sub_2_local.Job{
+		VideoFPath: videoFPath,
+		SubFPath:   filename,
+	})
 
 	c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "ok"})
+	return
+}
+
+// ListManualUploadSubtitle2LocalJob 列举人工上传字幕到本地的任务列表
+func (cb *ControllerBase) ListManualUploadSubtitle2LocalJob(c *gin.Context) {
+	var err error
+	defer func() {
+		// 统一的异常处理
+		cb.ErrorProcess(c, "ListManualUploadSubtitle2LocalJob", err)
+	}()
+
+	listJob := cb.cronHelper.Downloader.ManualUploadSub2Local.ListJob()
+	c.JSON(http.StatusOK, manual_upload_sub_2_local.Reply{
+		Jobs: listJob,
+	})
+	return
+}
+
+// IsManualUploadSubtitle2LocalJobInQueue 人工上传字幕到本地的任务是否在列表中，或者说是在执行中
+func (cb *ControllerBase) IsManualUploadSubtitle2LocalJobInQueue(c *gin.Context) {
+	var err error
+	defer func() {
+		// 统一的异常处理
+		cb.ErrorProcess(c, "IsManualUploadSubtitle2LocalJobInQueue", err)
+	}()
+
+	found := cb.cronHelper.Downloader.ManualUploadSub2Local.IsJobInQueue(&manual_upload_sub_2_local.Job{
+		VideoFPath: c.Query("video_f_path"),
+	})
+
+	c.JSON(http.StatusOK, backend2.ReplyCommon{Message: strconv.FormatBool(found)})
 	return
 }
