@@ -75,7 +75,7 @@ func (m *ManualUploadSub2Local) IsJobInQueue(job *Job) bool {
 			return false
 		}
 		// 还有一种可能，任务从队列拿出来了，正在处理，那么在外部开来也还是在队列中的
-		if m.workingJob.VideoFPath == job.VideoFPath && m.workingJob.SubFPath == job.SubFPath {
+		if m.workingJob.VideoFPath == job.VideoFPath {
 			return true
 		}
 	}
