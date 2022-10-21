@@ -1,11 +1,8 @@
 package manual_upload_sub_2_local
 
 import (
-	"sync"
-
-	cb "github.com/emirpasic/gods/queues/circularbuffer"
-
 	"github.com/pkg/errors"
+	"sync"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/save_sub_helper"
 	subCommon "github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
@@ -32,20 +29,19 @@ type ManualUploadSub2Local struct {
 	addOneSignal     chan interface{}
 	addLocker        sync.Mutex
 	subParserHub     *sub_parser_hub.SubParserHub
-	workingJob       string // 正在操作的任务的路径
-	jobStatusQueue   *cb.Queue
+	workingJob       *Job // 正在操作的任务的路径
 }
 
 func NewManualUploadSub2Local(log *logrus.Logger, saveSubHelper *save_sub_helper.SaveSubHelper) *ManualUploadSub2Local {
 
 	m := &ManualUploadSub2Local{
-		log:            log,
-		saveSubHelper:  saveSubHelper,
-		processQueue:   llq.New(),
-		addOneSignal:   make(chan interface{}, 1),
-		subParserHub:   sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log)),
-		workingJob:     "",
-		jobStatusQueue: cb.New(100),
+		log:           log,
+		saveSubHelper: saveSubHelper,
+		processQueue:  llq.New(),
+		jobSet:        hashset.New(),
+		addOneSignal:  make(chan interface{}, 1),
+		subParserHub:  sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log)),
+		workingJob:    nil,
 	}
 
 	// 这里就不单独弄一个 settings.SubNameFormatter 字段来传递值了，因为 inSubFormatter 就已经知道是什么 formatter 了
@@ -74,15 +70,20 @@ func (m *ManualUploadSub2Local) IsJobInQueue(job *Job) bool {
 		// 已经在队列中了
 		return true
 	} else {
+
+		if m.workingJob == nil {
+			return false
+		}
 		// 还有一种可能，任务从队列拿出来了，正在处理，那么在外部开来也还是在队列中的
-		if m.workingJob == job.VideoFPath {
+		if m.workingJob.VideoFPath == job.VideoFPath && m.workingJob.SubFPath == job.SubFPath {
 			return true
 		}
 	}
 	return false
 }
 
-func (m *ManualUploadSub2Local) Add(job *Job) string {
+// Add 添加任务
+func (m *ManualUploadSub2Local) Add(job *Job) {
 
 	m.addLocker.Lock()
 	defer func() {
@@ -91,17 +92,31 @@ func (m *ManualUploadSub2Local) Add(job *Job) string {
 
 	if m.jobSet.Contains(job.VideoFPath) == true {
 		// 已经在队列中了
-		return ""
+		return
 	}
-
-	//randomKey := pkg.RandStringBytesMaskImprSrcSB(10)
-
 	m.processQueue.Enqueue(job)
 	m.jobSet.Add(job.VideoFPath)
 	// 通知有新任务了
 	m.addOneSignal <- struct{}{}
 
-	return ""
+	return
+}
+
+// ListJob 任务列表
+func (m *ManualUploadSub2Local) ListJob() []*Job {
+
+	m.addLocker.Lock()
+	defer func() {
+		m.addLocker.Unlock()
+	}()
+	ret := make([]*Job, 0)
+	for _, v := range m.processQueue.Values() {
+		ret = append(ret, v.(*Job))
+	}
+	if m.workingJob != nil {
+		ret = append(ret, m.workingJob)
+	}
+	return ret
 }
 
 func (m *ManualUploadSub2Local) dealers() {
@@ -121,7 +136,7 @@ func (m *ManualUploadSub2Local) dealers() {
 	// 移除这个任务
 	m.jobSet.Remove(job.(*Job).VideoFPath)
 	// 标记这个正在处理
-	m.workingJob = job.(*Job).VideoFPath
+	m.workingJob = job.(*Job)
 	m.addLocker.Unlock()
 	// 具体处理这个任务
 	err := m.processSub(job.(*Job))
@@ -135,7 +150,7 @@ func (m *ManualUploadSub2Local) processSub(job *Job) error {
 	defer func() {
 		// 任务处理完了
 		m.addLocker.Lock()
-		m.workingJob = ""
+		m.workingJob = nil
 		m.addLocker.Unlock()
 	}()
 
