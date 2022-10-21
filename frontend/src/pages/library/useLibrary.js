@@ -19,14 +19,12 @@ export const useLibrary = () => {
   const movies = computed(() =>
     originMovies.value.map((movie) => ({
       ...movie,
-      cover: `${getUrl(movie.dir_root_url)}/${coverRule.value}`,
     }))
   );
 
   const tvs = computed(() =>
     originTvs.value.map((tv) => ({
       ...tv,
-      cover: `${getUrl(tv.dir_root_url)}/${coverRule.value}`,
     }))
   );
 
@@ -42,8 +40,8 @@ export const useLibrary = () => {
     if (err !== null) {
       SystemMessage.error(err.message);
     } else {
-      originMovies.value = res.movie_infos;
-      originTvs.value = res.season_infos;
+      originMovies.value = res.movie_infos_v2;
+      originTvs.value = res.season_infos_v2;
     }
   };
 
@@ -60,7 +58,7 @@ export const useLibrary = () => {
       await until(libraryRefreshStatus).toBe('stopped');
       clearInterval(getRefreshStatusTimer);
       getRefreshStatusTimer = null;
-      getLibraryList();
+      await getLibraryList();
       SystemMessage.success('更新成功');
     }
     refreshCacheLoading.value = false;
