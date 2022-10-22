@@ -13,14 +13,14 @@ import (
 )
 
 type Dealers struct {
-	log             *logrus.Logger
+	Logger          *logrus.Logger
 	settings        *settings.Settings
 	SubtitleBestApi *subtitle_best_api.SubtitleBestApi
 	tmdbHelper      *tmdb_api.TmdbApi
 }
 
 func NewDealers(log *logrus.Logger, settings *settings.Settings, subtitleBestApi *subtitle_best_api.SubtitleBestApi) *Dealers {
-	return &Dealers{log: log, settings: settings, SubtitleBestApi: subtitleBestApi}
+	return &Dealers{Logger: log, settings: settings, SubtitleBestApi: subtitleBestApi}
 }
 
 func (d *Dealers) SetTmdbHelperInstance(tmdbHelper *tmdb_api.TmdbApi) {
@@ -122,7 +122,7 @@ func (d *Dealers) getMediaInfoFromSubtitleBestApi(id, source, videoType string) 
 		}
 		if mediaInfoReply.Status == 2 {
 			// 说明进入了查询队列，可以等 30s 以上再次查询
-			d.log.Infoln("query queue, sleep 30s")
+			d.Logger.Infoln("query queue, sleep 30s")
 			time.Sleep(30 * time.Second)
 
 		} else if mediaInfoReply.Status == 1 {

@@ -158,7 +158,7 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 		err = errors.New(fmt.Sprintf("%s.Calculate %s %s", s.GetSupplierName(), videoFPath, err))
 		return
 	}
-	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.log, s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
+	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("%s.GetMixMediaInfo %s %s", s.GetSupplierName(), videoFPath, err))
 		return

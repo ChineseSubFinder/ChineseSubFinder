@@ -154,7 +154,7 @@ func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool) ([]suppli
 	s.log.Debugln(s.GetSupplierName(), videoFPath, "Start...")
 
 	outSubInfoList := make([]supplier.SubInfo, 0)
-	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.log, s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
+	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), videoFPath, "GetMixMediaInfo", err)
 		return nil, err

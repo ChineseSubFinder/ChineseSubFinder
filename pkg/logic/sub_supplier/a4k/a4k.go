@@ -112,7 +112,7 @@ func (s *Supplier) GetSubListFromFile4Movie(videoFPath string) ([]supplier.SubIn
 
 	outSubInfos := make([]supplier.SubInfo, 0)
 
-	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.log, s.fileDownloader.MediaInfoDealers,
+	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers,
 		videoFPath, true, s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "GetMixMediaInfo", err)
@@ -175,7 +175,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 	// 这里拿到的 seriesInfo ，里面包含了，需要下载字幕的 Eps 信息
 	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 
-		mediaInfo, err := mix_media_info.GetMixMediaInfo(s.log, s.fileDownloader.MediaInfoDealers,
+		mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers,
 			episodeInfo.FileFullPath, false, s.settings.AdvancedSettings.ProxySettings)
 		if err != nil {
 			s.log.Errorln(s.GetSupplierName(), "GetMixMediaInfo", err)
