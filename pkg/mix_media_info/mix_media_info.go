@@ -2,7 +2,8 @@ package mix_media_info
 
 import (
 	"errors"
-	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
@@ -14,12 +15,11 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/pkg/subtitle_best_api"
 	"github.com/sirupsen/logrus"
 )
 
 func GetMixMediaInfo(log *logrus.Logger,
-	SubtitleBestApi *subtitle_best_api.SubtitleBestApi,
+	dealers *media_info_dealers.Dealers,
 	videoFPath string, isMovie bool, _proxySettings *settings.ProxySettings) (*models.MediaInfo, error) {
 
 	imdbInfo, err := imdb_helper.GetIMDBInfoFromVideoFile(log, videoFPath, isMovie, _proxySettings)
@@ -37,7 +37,7 @@ func GetMixMediaInfo(log *logrus.Logger,
 	if imdbInfo.TmdbId == "" {
 		// 需要去 web 查询
 		source = "imdb"
-		return GetMediaInfoAndSave(log, SubtitleBestApi, imdbInfo, imdbInfo.IMDBID, source, videoType)
+		return GetMediaInfoAndSave(dealers, imdbInfo, imdbInfo.IMDBID, source, videoType)
 	} else {
 		// 已经存在，从本地拿去信息
 		// 首先从数据库中查找是否存在这个 IMDB 信息，如果不存在再使用 Web 查找，且写入数据库
@@ -51,62 +51,15 @@ func GetMixMediaInfo(log *logrus.Logger,
 		} else {
 			// 没有找到本地缓存的 TMDB ID 信息，需要去 web 查询
 			source = "imdb"
-			return GetMediaInfoAndSave(log, SubtitleBestApi, imdbInfo, imdbInfo.IMDBID, source, videoType)
+			return GetMediaInfoAndSave(dealers, imdbInfo, imdbInfo.IMDBID, source, videoType)
 		}
 	}
-}
-
-func getMediaInfoEx(log *logrus.Logger, SubtitleBestApi *subtitle_best_api.SubtitleBestApi, id, source, videoType string) (*models.MediaInfo, error) {
-
-	var mediaInfo *models.MediaInfo
-	queryCount := 0
-	for {
-		queryCount++
-		mediaInfoReply, err := SubtitleBestApi.GetMediaInfo(id, source, videoType)
-		if err != nil {
-			return nil, err
-		}
-		if mediaInfoReply.Status == 2 {
-			// 说明进入了查询队列，可以等 30s 以上再次查询
-			log.Infoln("query queue, sleep 30s")
-			time.Sleep(30 * time.Second)
-
-		} else if mediaInfoReply.Status == 1 {
-
-			imdbId := ""
-			if source == "imdb" {
-				imdbId = id
-			} else if source == "tmdb" {
-				imdbId = ""
-			}
-
-			// 说明查询成功
-			mediaInfo = &models.MediaInfo{
-				TmdbId:           mediaInfoReply.TMDBId,
-				ImdbId:           imdbId,
-				OriginalTitle:    mediaInfoReply.OriginalTitle,
-				OriginalLanguage: mediaInfoReply.OriginalLanguage,
-				TitleEn:          mediaInfoReply.TitleEN,
-				TitleCn:          mediaInfoReply.TitleCN,
-				Year:             mediaInfoReply.Year,
-			}
-		} else {
-			// 说明查询失败
-			return nil, errors.New("SubtitleBestApi.GetMediaInfo failed, Message: " + mediaInfoReply.Message)
-		}
-
-		if queryCount > 9 {
-			break
-		}
-	}
-
-	return mediaInfo, nil
 }
 
 // GetMediaInfoAndSave 通过 IMDB ID 查询媒体信息，并保存到数据库，IMDB 和 MediaInfo 都会进行保存 // source，options=imdb|tmdb  videoType，options=movie|series
-func GetMediaInfoAndSave(log *logrus.Logger, SubtitleBestApi *subtitle_best_api.SubtitleBestApi, imdbInfo *models.IMDBInfo, id, source, videoType string) (*models.MediaInfo, error) {
+func GetMediaInfoAndSave(dealers *media_info_dealers.Dealers, imdbInfo *models.IMDBInfo, id, source, videoType string) (*models.MediaInfo, error) {
 
-	mediaInfo, err := getMediaInfoEx(log, SubtitleBestApi, id, source, videoType)
+	mediaInfo, err := dealers.GetMediaInfo(id, source, videoType)
 	if err != nil {
 		return nil, err
 	}

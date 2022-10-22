@@ -380,7 +380,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 
 			v.log.Infoln("--------------------------------------------------------------------------------")
 			v.log.Infoln("scanLowVideoSubInfo.MovieHasChineseSub", videoIndex, videoFPath)
-			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.log, v.fileDownloader.SubtitleBestApi, videoFPath, true, v.settings.AdvancedSettings.ProxySettings)
+			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.log, v.fileDownloader.MediaInfoDealers, videoFPath, true, v.settings.AdvancedSettings.ProxySettings)
 			if err != nil {
 				v.log.Warningln("scanLowVideoSubInfo.GetMixMediaInfo", videoFPath, err)
 				continue
@@ -440,7 +440,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 				continue
 			}
 
-			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.log, v.fileDownloader.SubtitleBestApi, seriesInfo.EpList[0].FileFullPath, false, v.settings.AdvancedSettings.ProxySettings)
+			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.log, v.fileDownloader.MediaInfoDealers, seriesInfo.EpList[0].FileFullPath, false, v.settings.AdvancedSettings.ProxySettings)
 			if err != nil {
 				v.log.Warningln("scanLowVideoSubInfo.GetMixMediaInfo", seriesInfo.EpList[0].FileFullPath, err)
 				continue

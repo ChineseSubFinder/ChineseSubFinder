@@ -3,11 +3,12 @@ package cron_helper
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/common"
 
@@ -55,7 +56,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 	if imdbInfos[0].TmdbId == "" {
 
 		// 需要先对这个字幕的 IMDB ID 转 TMDB ID 信息进行查询，得到 TMDB ID 和 Year (2019 2022)
-		finalQueryIMDBInfo, err = mix_media_info.GetMediaInfoAndSave(ch.log, ch.FileDownloader.SubtitleBestApi, &imdbInfos[0], imdbInfos[0].IMDBID, "imdb", videoType)
+		finalQueryIMDBInfo, err = mix_media_info.GetMediaInfoAndSave(ch.FileDownloader.MediaInfoDealers, &imdbInfos[0], imdbInfos[0].IMDBID, "imdb", videoType)
 		if err != nil {
 			ch.log.Errorln(errors.New("GetMediaInfoAndSave error:" + err.Error()))
 			return
@@ -65,7 +66,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 		var mediaInfos []models.MediaInfo
 		dao.GetDb().Where("tmdb_id = ?", imdbInfos[0].TmdbId).Find(&mediaInfos)
 		if len(mediaInfos) < 1 {
-			finalQueryIMDBInfo, err = mix_media_info.GetMediaInfoAndSave(ch.log, ch.FileDownloader.SubtitleBestApi, &imdbInfos[0], imdbInfos[0].IMDBID, "imdb", videoType)
+			finalQueryIMDBInfo, err = mix_media_info.GetMediaInfoAndSave(ch.FileDownloader.MediaInfoDealers, &imdbInfos[0], imdbInfos[0].IMDBID, "imdb", videoType)
 			if err != nil {
 				ch.log.Errorln(errors.New("GetMediaInfoAndSave error:" + err.Error()))
 				return
@@ -97,7 +98,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 
 	ch.log.Infoln("AskFroUpload", notUploadedVideoSubInfos[0].SubName)
 	// 问询这个字幕是否上传过了，如果没有就需要进入上传的队列
-	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(
+	askForUploadReply, err := ch.FileDownloader.MediaInfoDealers.SubtitleBestApi.AskFroUpload(
 		notUploadedVideoSubInfos[0].SHA256,
 		notUploadedVideoSubInfos[0].IsMovie,
 		true,
@@ -163,7 +164,7 @@ func (ch *CronHelper) uploadPlayedVideoSub() {
 			return
 		}
 		ch.log.Infoln("UploadSub", notUploadedVideoSubInfos[0].SubName)
-		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()))
+		uploadSubReply, err := ch.FileDownloader.MediaInfoDealers.SubtitleBestApi.UploadSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()))
 		if err != nil {
 			ch.log.Errorln("UploadSub error:", err.Error())
 
@@ -250,7 +251,7 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 	if imdbInfos[0].TmdbId == "" {
 
 		// 需要先对这个字幕的 IMDB ID 转 TMDB ID 信息进行查询，得到 TMDB ID 和 Year (2019 2022)
-		finalQueryIMDBInfo, err = mix_media_info.GetMediaInfoAndSave(ch.log, ch.FileDownloader.SubtitleBestApi, &imdbInfos[0], imdbInfos[0].IMDBID, "imdb", videoType)
+		finalQueryIMDBInfo, err = mix_media_info.GetMediaInfoAndSave(ch.FileDownloader.MediaInfoDealers, &imdbInfos[0], imdbInfos[0].IMDBID, "imdb", videoType)
 		if err != nil {
 			ch.log.Errorln(errors.New("GetMediaInfoAndSave error:" + err.Error()))
 			return
@@ -260,7 +261,7 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 		var mediaInfos []models.MediaInfo
 		dao.GetDb().Where("tmdb_id = ?", imdbInfos[0].TmdbId).Find(&mediaInfos)
 		if len(mediaInfos) < 1 {
-			finalQueryIMDBInfo, err = mix_media_info.GetMediaInfoAndSave(ch.log, ch.FileDownloader.SubtitleBestApi, &imdbInfos[0], imdbInfos[0].IMDBID, "imdb", videoType)
+			finalQueryIMDBInfo, err = mix_media_info.GetMediaInfoAndSave(ch.FileDownloader.MediaInfoDealers, &imdbInfos[0], imdbInfos[0].IMDBID, "imdb", videoType)
 			if err != nil {
 				ch.log.Errorln(errors.New("GetMediaInfoAndSave error:" + err.Error()))
 				return
@@ -292,7 +293,7 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 
 	ch.log.Infoln("AskFroUpload", notUploadedVideoSubInfos[0].SubName)
 	// 问询这个字幕是否上传过了，如果没有就需要进入上传的队列
-	askForUploadReply, err := ch.FileDownloader.SubtitleBestApi.AskFroUpload(
+	askForUploadReply, err := ch.FileDownloader.MediaInfoDealers.SubtitleBestApi.AskFroUpload(
 		notUploadedVideoSubInfos[0].SHA256,
 		notUploadedVideoSubInfos[0].IsMovie,
 		false,
@@ -358,7 +359,7 @@ func (ch *CronHelper) uploadLowTrustVideoSub() {
 			return
 		}
 		ch.log.Infoln("UploadSub", notUploadedVideoSubInfos[0].SubName)
-		uploadSubReply, err := ch.FileDownloader.SubtitleBestApi.UploadLowTrustSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()), "")
+		uploadSubReply, err := ch.FileDownloader.MediaInfoDealers.SubtitleBestApi.UploadLowTrustSub(&notUploadedVideoSubInfos[0], shareRootDir, finalQueryIMDBInfo.TmdbId, strconv.Itoa(releaseTime.Year()), "")
 		if err != nil {
 			ch.log.Errorln("UploadLowTrustSub error:", err.Error())
 

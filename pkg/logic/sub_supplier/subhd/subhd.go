@@ -151,7 +151,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 		_ = browser.Close()
 	}()
 
-	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.log, s.fileDownloader.SubtitleBestApi,
+	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.log, s.fileDownloader.MediaInfoDealers,
 		seriesInfo.EpList[0].FileFullPath, false,
 		s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
@@ -262,7 +262,7 @@ func (s *Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo
 		}
 	}
 	s.log.Infoln(s.GetSupplierName(), filePath, "No subtitle found", "KeyWord:", imdbInfo.ImdbId)
-	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.log, s.fileDownloader.SubtitleBestApi,
+	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.log, s.fileDownloader.MediaInfoDealers,
 		filePath, true,
 		s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {

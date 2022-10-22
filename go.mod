@@ -69,7 +69,7 @@ require (
 require (
 	github.com/allanpk716/is_running_in_docker v0.0.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
-	github.com/cyruzin/golang-tmdb v1.4.3
+	github.com/cyruzin/golang-tmdb v1.4.4
 	github.com/elazarl/goproxy v0.0.0-20220417044921-416226498f94
 	github.com/longbridgeapp/opencc v0.1.7
 	github.com/pkg/errors v0.9.1

@@ -399,8 +399,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 			videoType = "series"
 		}
 		_, err = mix_media_info.GetMediaInfoAndSave(
-			s.log,
-			s.fileDownloader.SubtitleBestApi,
+			s.fileDownloader.MediaInfoDealers,
 			imdbInfo,
 			imdbInfo.IMDBID, "imdb", videoType)
 		if err != nil {

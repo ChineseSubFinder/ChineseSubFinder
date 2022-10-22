@@ -250,7 +250,7 @@ func (ch *CronHelper) scanPlayedVideoSub() {
 
 	ch.log.Infoln("Update Info...")
 	nowInfo := dao.UpdateInfo(pkg.AppVersion(), ch.Settings)
-	_, err := ch.FileDownloader.SubtitleBestApi.FeedBack(
+	_, err := ch.FileDownloader.MediaInfoDealers.SubtitleBestApi.FeedBack(
 		nowInfo.Id,
 		nowInfo.Version, nowInfo.MediaServer,
 		nowInfo.EnableShare, nowInfo.EnableApiKey)

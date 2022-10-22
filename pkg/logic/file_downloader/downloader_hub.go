@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
@@ -24,20 +26,20 @@ import (
 )
 
 type FileDownloader struct {
-	Settings        *settings.Settings
-	Log             *logrus.Logger
-	CacheCenter     *cache_center.CacheCenter
-	SubParserHub    *sub_parser_hub.SubParserHub
-	SubtitleBestApi *subtitle_best_api.SubtitleBestApi
+	Settings         *settings.Settings
+	Log              *logrus.Logger
+	CacheCenter      *cache_center.CacheCenter
+	SubParserHub     *sub_parser_hub.SubParserHub
+	MediaInfoDealers *media_info_dealers.Dealers
 }
 
 func NewFileDownloader(cacheCenter *cache_center.CacheCenter, authKey random_auth_key.AuthKey) *FileDownloader {
 
 	f := FileDownloader{Settings: cacheCenter.Settings,
-		Log:             cacheCenter.Log,
-		CacheCenter:     cacheCenter,
-		SubParserHub:    sub_parser_hub.NewSubParserHub(cacheCenter.Log, ass.NewParser(cacheCenter.Log), srt.NewParser(cacheCenter.Log)),
-		SubtitleBestApi: subtitle_best_api.NewSubtitleBestApi(cacheCenter.Log, authKey, cacheCenter.Settings.AdvancedSettings.ProxySettings),
+		Log:              cacheCenter.Log,
+		CacheCenter:      cacheCenter,
+		SubParserHub:     sub_parser_hub.NewSubParserHub(cacheCenter.Log, ass.NewParser(cacheCenter.Log), srt.NewParser(cacheCenter.Log)),
+		MediaInfoDealers: media_info_dealers.NewDealers(cacheCenter.Log, cacheCenter.Settings, subtitle_best_api.NewSubtitleBestApi(cacheCenter.Log, authKey, cacheCenter.Settings.AdvancedSettings.ProxySettings)),
 	}
 	return &f
 }
