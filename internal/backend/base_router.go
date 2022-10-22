@@ -26,7 +26,10 @@ func InitRouter(
 	// 设置 TMDB API 的本地 Client，用户自己的 API Key
 	var err error
 	var tmdbApi *tmdb_api.TmdbApi
-	if settings.AdvancedSettings.TmdbApiSettings.Enable == true && settings.AdvancedSettings.TmdbApiSettings.ApiKey != "" {
+	if settings.AdvancedSettings.TmdbApiSettings != nil &&
+		settings.AdvancedSettings.TmdbApiSettings.Enable == true &&
+		settings.AdvancedSettings.TmdbApiSettings.ApiKey != "" {
+		
 		tmdbApi, err = tmdb_api.NewTmdbHelper(cronHelper.Logger, settings.AdvancedSettings.TmdbApiSettings.ApiKey, settings.AdvancedSettings.ProxySettings)
 		if err != nil {
 			cronHelper.Logger.Panicln("NewTmdbHelper", err)
