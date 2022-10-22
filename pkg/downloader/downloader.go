@@ -104,7 +104,7 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 		downloader.settings, downloader.subFormatter,
 		downloader.subTimelineFixerHelperEx)
 
-	downloader.ManualUploadSub2Local = manual_upload_sub_2_local.NewManualUploadSub2Local(downloader.log, downloader.SaveSubHelper)
+	downloader.ManualUploadSub2Local = manual_upload_sub_2_local.NewManualUploadSub2Local(downloader.log, downloader.SaveSubHelper, downloader.ScanLogic)
 
 	downloader.movieInfoMap = make(map[string]MovieInfo)
 	downloader.seasonInfoMap = make(map[string]SeasonInfo)

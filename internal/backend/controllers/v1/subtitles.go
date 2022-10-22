@@ -96,8 +96,14 @@ func (cb *ControllerBase) IsManualUploadSubtitle2LocalJobInQueue(c *gin.Context)
 		cb.ErrorProcess(c, "IsManualUploadSubtitle2LocalJobInQueue", err)
 	}()
 
+	job := manual_upload_sub_2_local.Job{}
+	err = c.ShouldBindJSON(&job)
+	if err != nil {
+		return
+	}
+
 	found := cb.cronHelper.Downloader.ManualUploadSub2Local.IsJobInQueue(&manual_upload_sub_2_local.Job{
-		VideoFPath: c.Query("video_f_path"),
+		VideoFPath: job.VideoFPath,
 	})
 
 	c.JSON(http.StatusOK, backend2.ReplyCommon{Message: strconv.FormatBool(found)})

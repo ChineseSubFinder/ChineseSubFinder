@@ -1,7 +1,12 @@
 package manual_upload_sub_2_local
 
 import (
+	"path/filepath"
 	"sync"
+
+	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/allanpk716/ChineseSubFinder/pkg/scan_logic"
+	PTN "github.com/middelink/go-parse-torrent-name"
 
 	"github.com/pkg/errors"
 
@@ -24,6 +29,7 @@ import (
 type ManualUploadSub2Local struct {
 	log              *logrus.Logger
 	saveSubHelper    *save_sub_helper.SaveSubHelper // 保存字幕的逻辑
+	scanLogic        *scan_logic.ScanLogic          // 是否扫描逻辑
 	subNameFormatter subCommon.FormatterName        // 从 inSubFormatter 推断出来
 	processQueue     *llq.Queue
 	jobSet           *hashset.Set
@@ -33,11 +39,12 @@ type ManualUploadSub2Local struct {
 	workingJob       *Job // 正在操作的任务的路径
 }
 
-func NewManualUploadSub2Local(log *logrus.Logger, saveSubHelper *save_sub_helper.SaveSubHelper) *ManualUploadSub2Local {
+func NewManualUploadSub2Local(log *logrus.Logger, saveSubHelper *save_sub_helper.SaveSubHelper, scanLogic *scan_logic.ScanLogic) *ManualUploadSub2Local {
 
 	m := &ManualUploadSub2Local{
 		log:           log,
 		saveSubHelper: saveSubHelper,
+		scanLogic:     scanLogic,
 		processQueue:  llq.New(),
 		jobSet:        hashset.New(),
 		addOneSignal:  make(chan interface{}, 1),
@@ -176,26 +183,41 @@ func (m *ManualUploadSub2Local) processSub(job *Job) error {
 		err = errors.New("DetermineFileTypeFromFile," + job.SubFPath + ",not support SubType")
 		return err
 	}
+
+	var skipInfo *models.SkipScanInfo
 	if m.subNameFormatter == subCommon.Emby {
 		err = m.saveSubHelper.WriteSubFile2VideoPath(job.VideoFPath, *subFileInfo, "manual", true, false)
 		if err != nil {
 			err = errors.New("WriteSubFile2VideoPath," + job.VideoFPath + "," + err.Error())
 			return err
 		}
+		// 默认设置这个视频“跳过”（跳过扫描和下载字幕）属性
+		skipInfo = models.NewSkipScanInfoByMovie(job.VideoFPath, true)
 	} else {
 		err = m.saveSubHelper.WriteSubFile2VideoPath(job.VideoFPath, *subFileInfo, "manual", false, false)
 		if err != nil {
 			err = errors.New("WriteSubFile2VideoPath," + job.VideoFPath + "," + err.Error())
 			return err
 		}
+		// 默认设置这个视频“跳过”（跳过扫描和下载字幕）属性
+		var parse *PTN.TorrentInfo
+		parse, err = PTN.Parse(job.VideoFPath)
+		if err != nil {
+			err = errors.New("processSub.PTN.Parse:" + err.Error())
+			return err
+		}
+		dirFPath := filepath.Dir(filepath.Dir(job.VideoFPath))
+		skipInfo = models.NewSkipScanInfoBySeries(dirFPath, parse.Season, parse.Episode, true)
 	}
+
+	m.scanLogic.Set(skipInfo)
 
 	return nil
 }
 
 type Job struct {
-	VideoFPath string
-	SubFPath   string
+	VideoFPath string `json:"video_f_path"`
+	SubFPath   string `json:"sub_f_path"`
 }
 
 type Reply struct {
