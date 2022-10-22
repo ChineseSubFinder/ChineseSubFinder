@@ -57,7 +57,7 @@ func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, i
 
 	// 计算当前时间
 	startT := time.Now()
-	err := s.fileDownloader.SubtitleBestApi.CheckAlive(proxySettings...)
+	err := s.fileDownloader.MediaInfoDealers.SubtitleBestApi.CheckAlive(proxySettings...)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
 		s.isAlive = false
@@ -227,7 +227,7 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 			sleepCounter++
 		}
 		// 直接查询
-		findSubReply, err := s.fileDownloader.SubtitleBestApi.FindSub(fileHash, mediaInfo.ImdbId, mediaInfo.TmdbId, strconv.Itoa(Season), strconv.Itoa(Episode), randomAuthToken, "")
+		findSubReply, err := s.fileDownloader.MediaInfoDealers.SubtitleBestApi.FindSub(fileHash, mediaInfo.ImdbId, mediaInfo.TmdbId, strconv.Itoa(Season), strconv.Itoa(Episode), randomAuthToken, "")
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("FindSub Error: %s", err.Error()))
 		}
@@ -307,7 +307,7 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 	}
 	// 直接下载，这里需要再前面的过程中搞清楚这个字幕是什么后缀名，然后写入到缓存目录中
 
-	downloadSubReply, err := s.fileDownloader.SubtitleBestApi.DownloadSub(bestOneSub.SubSha256, randomAuthToken, "", desSubSaveFPath)
+	downloadSubReply, err := s.fileDownloader.MediaInfoDealers.SubtitleBestApi.DownloadSub(bestOneSub.SubSha256, randomAuthToken, "", desSubSaveFPath)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("DownloadSub Error: %s", err.Error()))
 	}
@@ -364,7 +364,7 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 func (s *Supplier) askFindSubProcess(VideoFeature, ImdbId, TmdbId string, Season, Episode int, FindSubToken, ApiKey string) (bestOneSub subtitle_best_api.Subtitle, queueIsFull bool, waitTime int64, err error) {
 
 	// 开始排队查询
-	askFindSubReply, err := s.fileDownloader.SubtitleBestApi.AskFindSub(VideoFeature, ImdbId, TmdbId, strconv.Itoa(Season), strconv.Itoa(Episode), FindSubToken, ApiKey)
+	askFindSubReply, err := s.fileDownloader.MediaInfoDealers.SubtitleBestApi.AskFindSub(VideoFeature, ImdbId, TmdbId, strconv.Itoa(Season), strconv.Itoa(Episode), FindSubToken, ApiKey)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("AskFindSub Error: %s", err.Error()))
 		return
@@ -406,7 +406,7 @@ func (s *Supplier) askFindSubProcess(VideoFeature, ImdbId, TmdbId string, Season
 // askDownloadSubProcess 下载排队
 func (s *Supplier) askDownloadSubProcess(SubSha256, DownloadSubToken, ApiKey string) (queueIsFull bool, waitTime int64, err error) {
 
-	askDownloadSubReply, err := s.fileDownloader.SubtitleBestApi.AskDownloadSub(SubSha256, DownloadSubToken, ApiKey)
+	askDownloadSubReply, err := s.fileDownloader.MediaInfoDealers.SubtitleBestApi.AskDownloadSub(SubSha256, DownloadSubToken, ApiKey)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("AskDownloadSub Error: %s", err.Error()))
 		return

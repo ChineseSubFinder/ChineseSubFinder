@@ -85,7 +85,7 @@ func writeFile(saveFileFPath, enString, nowTime string) error {
 
 func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string, fileDownloader *file_downloader.FileDownloader) (string, string, error) {
 
-	getCode, err := fileDownloader.SubtitleBestApi.GetCode()
+	getCode, err := fileDownloader.MediaInfoDealers.SubtitleBestApi.GetCode()
 	if err != nil {
 		l.Errorln("SubtitleBestApi.GetCode", err)
 		return "", "", errors.New(fmt.Sprintf("get code from web failed, %v \n", err.Error()))
