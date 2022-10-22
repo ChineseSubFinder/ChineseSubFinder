@@ -269,7 +269,7 @@ func (d *Downloader) SetMovieAndSeasonInfoV2(mainList *vsh.NormalScanVideoResult
 	movieInfosFileName := filepath.Join(cacheCenterFolder, "movie_main_list.json")
 	seasonInfosFileName := filepath.Join(cacheCenterFolder, "season_main_list.json")
 
-	if mainList != nil && mainList.MoviesDirMap != nil && mainList.MoviesDirMap.Size() > 0 {
+	if mainList != nil && mainList.MoviesDirMap != nil {
 
 		mainList.MoviesDirMap.Any(func(movieDirRootPath interface{}, moviesFPath interface{}) bool {
 
@@ -290,7 +290,7 @@ func (d *Downloader) SetMovieAndSeasonInfoV2(mainList *vsh.NormalScanVideoResult
 		}
 	}
 
-	if mainList != nil && mainList.SeriesDirMap != nil && mainList.SeriesDirMap.Size() > 0 {
+	if mainList != nil && mainList.SeriesDirMap != nil {
 
 		mainList.SeriesDirMap.Any(func(seriesRootPathName interface{}, seriesNames interface{}) bool {
 
