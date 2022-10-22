@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/allanpk716/ChineseSubFinder/pkg/tmdb_api"
 
-	"github.com/sirupsen/logrus"
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 
 	"github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/base"
 	v1 "github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/v1"
@@ -16,15 +16,31 @@ import (
 )
 
 func InitRouter(
-	log *logrus.Logger,
 	settings *settings.Settings, // 设置实例
 	router *gin.Engine,
 	cronHelper *cron_helper.CronHelper,
 	restartSignal chan interface{},
 ) (*base.ControllerBase, *v1.ControllerBase) {
 
-	cbBase := base.NewControllerBase(log, restartSignal)
-	cbV1 := v1.NewControllerBase(log, cronHelper, restartSignal)
+	// ----------------------------------------------
+	// 设置 TMDB API 的本地 Client，用户自己的 API Key
+	var err error
+	var tmdbApi *tmdb_api.TmdbApi
+	if settings.AdvancedSettings.TmdbApiSettings.Enable == true && settings.AdvancedSettings.TmdbApiSettings.ApiKey != "" {
+		tmdbApi, err = tmdb_api.NewTmdbHelper(cronHelper.Logger, settings.AdvancedSettings.TmdbApiSettings.ApiKey, settings.AdvancedSettings.ProxySettings)
+		if err != nil {
+			cronHelper.Logger.Panicln("NewTmdbHelper", err)
+		}
+		if tmdbApi.Alive() == false {
+			// 如果 tmdbApi 不可用，那么就不使用
+			cronHelper.Logger.Errorln("tmdbApi.Alive() == false")
+			tmdbApi = nil
+		}
+	}
+	cronHelper.FileDownloader.MediaInfoDealers.SetTmdbHelperInstance(tmdbApi)
+	// ----------------------------------------------
+	cbBase := base.NewControllerBase(cronHelper.FileDownloader, restartSignal)
+	cbV1 := v1.NewControllerBase(cronHelper, restartSignal)
 	// --------------------------------------------------
 	// 静态文件服务器
 	// 添加电影的

@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (cb ControllerBase) LoginHandler(c *gin.Context) {
+func (cb *ControllerBase) LoginHandler(c *gin.Context) {
 
 	var err error
 	defer func() {

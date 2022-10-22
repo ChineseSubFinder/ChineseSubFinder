@@ -51,7 +51,7 @@ func (b *BackEnd) start() {
 	engine := gin.Default()
 	// 默认所有都通过
 	engine.Use(cors.Default())
-	cbBase, v1Router := InitRouter(b.logger, b.settings, engine, b.cronHelper, b.restartSignal)
+	cbBase, v1Router := InitRouter(b.settings, engine, b.cronHelper, b.restartSignal)
 
 	engine.GET("/", func(c *gin.Context) {
 		c.Header("content-type", "text/html;charset=utf-8")

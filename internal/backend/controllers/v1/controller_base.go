@@ -27,16 +27,16 @@ type ControllerBase struct {
 	restartSignal                       chan interface{}
 }
 
-func NewControllerBase(log *logrus.Logger, cronHelper *cron_helper.CronHelper, restartSignal chan interface{}) *ControllerBase {
+func NewControllerBase(cronHelper *cron_helper.CronHelper, restartSignal chan interface{}) *ControllerBase {
 	cb := &ControllerBase{
-		log:        log,
+		log:        cronHelper.Logger,
 		cronHelper: cronHelper,
 		pathUrlMap: make(map[string]string),
 		// 这里因为不进行任务的添加，仅仅是扫描，所以 downloadQueue 可以为 nil
 		videoScanAndRefreshHelper: video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
-			sub_formatter.GetSubFormatter(log, cronHelper.Settings.AdvancedSettings.SubNameFormatter),
+			sub_formatter.GetSubFormatter(cronHelper.Logger, cronHelper.Settings.AdvancedSettings.SubNameFormatter),
 			cronHelper.FileDownloader, nil),
-		videoListHelper:                 video_list_helper.NewVideoListHelper(log, cronHelper.Settings),
+		videoListHelper:                 video_list_helper.NewVideoListHelper(cronHelper.Logger, cronHelper.Settings),
 		videoScanAndRefreshHelperLocker: lock.NewLock(),
 		restartSignal:                   restartSignal,
 	}

@@ -30,11 +30,23 @@ func NewTmdbHelper(l *logrus.Logger, apiKey string, _proxySettings ...*settings.
 		return nil, err
 	}
 	tmdbClient.SetClientConfig(*restyClient.GetClient())
+	tmdbClient.SetClientAutoRetry()
 	return &TmdbApi{
 		l:          l,
 		apiKey:     apiKey,
 		tmdbClient: tmdbClient,
 	}, nil
+}
+
+func (t *TmdbApi) Alive() bool {
+
+	details, err := t.tmdbClient.GetAccountDetails()
+	if err != nil {
+		t.l.Errorln("GetAccountDetails", err)
+		return false
+	}
+	t.l.Infoln("GetAccountDetails UserName:", details.Username)
+	return true
 }
 
 // GetInfo 获取视频的信息 idType: imdb_id or tmdb_id
@@ -144,7 +156,7 @@ func (t *TmdbApi) GetInfo(iD string, idType string, isMovieOrSeries, isQueryEnOr
 	return outFindByID, nil
 }
 
-func (t TmdbApi) CovertId(iD string, idType string, isMovieOrSeries bool) (convertIdResult *ConvertIdResult, err error) {
+func (t *TmdbApi) CovertId(iD string, idType string, isMovieOrSeries bool) (convertIdResult *ConvertIdResult, err error) {
 
 	if idType == ImdbID {
 		return nil, fmt.Errorf("imdb id type is not supported")

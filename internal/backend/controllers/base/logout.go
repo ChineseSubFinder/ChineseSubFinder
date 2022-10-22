@@ -1,14 +1,15 @@
 package base
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	"net/http"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/common"
 	"github.com/gin-gonic/gin"
 )
 
-func (cb ControllerBase) LogoutHandler(c *gin.Context) {
+func (cb *ControllerBase) LogoutHandler(c *gin.Context) {
 
 	// 注销
 	common.SetAccessToken("")

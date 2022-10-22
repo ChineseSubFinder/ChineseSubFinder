@@ -85,7 +85,6 @@ func (p *ProxySettings) GetLocalHttpProxyUrl() string {
 
 func (p *ProxySettings) CloseLocalHttpProxyServer() error {
 	defer func() {
-		println("CloseLocalHttpProxyServer Done")
 		p.locker.Unlock()
 	}()
 	p.locker.Lock()
@@ -98,5 +97,6 @@ func (p *ProxySettings) CloseLocalHttpProxyServer() error {
 		return nil
 	}
 
+	println("CloseLocalHttpProxyServer Done")
 	return p.localHttpProxyServer.Stop()
 }

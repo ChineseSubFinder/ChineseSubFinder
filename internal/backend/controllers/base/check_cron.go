@@ -8,7 +8,7 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-func (cb ControllerBase) CheckCronHandler(c *gin.Context) {
+func (cb *ControllerBase) CheckCronHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理

@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (cb ControllerBase) CheckEmbySettingsHandler(c *gin.Context) {
+func (cb *ControllerBase) CheckEmbySettingsHandler(c *gin.Context) {
 	var err error
 	defer func() {
 		// 统一的异常处理

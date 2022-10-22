@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (cb ControllerBase) ChangePwdHandler(c *gin.Context) {
+func (cb *ControllerBase) ChangePwdHandler(c *gin.Context) {
 
 	var err error
 	defer func() {

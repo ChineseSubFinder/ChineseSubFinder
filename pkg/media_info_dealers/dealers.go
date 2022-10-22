@@ -29,7 +29,7 @@ func (d *Dealers) SetTmdbHelperInstance(tmdbHelper *tmdb_api.TmdbApi) {
 
 func (d *Dealers) GetMediaInfo(id, source, videoType string) (*models.MediaInfo, error) {
 
-	if d.settings.AdvancedSettings.TmdbApiSettings.Enable == true && d.settings.AdvancedSettings.TmdbApiSettings.ApiKey != "" {
+	if d.tmdbHelper != nil && d.settings.AdvancedSettings.TmdbApiSettings.Enable == true && d.settings.AdvancedSettings.TmdbApiSettings.ApiKey != "" {
 		// 优先使用用户自己的 tmdb api
 		return d.getMediaInfoFromSelfApi(id, source, videoType)
 	} else {
