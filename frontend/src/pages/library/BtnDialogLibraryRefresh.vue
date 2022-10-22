@@ -8,13 +8,10 @@
 </template>
 
 <script setup>
-import { useLibrary } from 'pages/library/useLibrary';
+import { refreshCacheLoading, refreshLibrary } from 'pages/library/useLibrary';
 import { useQuasar } from 'quasar';
 
 const $q = useQuasar();
-
-// TODO 这里的useLibrary有BUG，与列表外边不是同一个composable，所以无法更新列表
-const { refreshLibrary, refreshCacheLoading } = useLibrary();
 
 const confirm = () => {
   $q.dialog({

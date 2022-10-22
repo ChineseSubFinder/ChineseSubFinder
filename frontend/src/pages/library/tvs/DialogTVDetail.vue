@@ -4,93 +4,111 @@
   </span>
 
   <q-dialog v-model="visible">
-    <q-card style="width: 600px">
+    <q-card style="width: 800px; max-width: 800px">
       <q-card-section>
         <div class="text-h6">{{ data.name }} 剧集列表</div>
       </q-card-section>
 
-      <q-card-section class="row items-center q-ml-md q-py-none">
-        <q-checkbox
-          :model-value="selectAllValue"
-          indeterminate-value="maybe"
-          @click="handleSelectAll"
-          title="全选/反选"
+      <q-tabs v-model="tab" dense active-color="primary" indicator-color="primary" align="justify" narrow-indicator>
+        <q-tab
+          v-for="item in categoryVideos"
+          :key="item.season"
+          :name="item.season"
+          :label="`第${item.season}季`"
+          style="max-width: 150px"
         />
+      </q-tabs>
 
-        <q-btn
-          class="btn-download"
-          color="primary"
-          label="下载选中"
-          flat
-          :disable="selection.length === 0"
-          @click="downloadSelection"
-        ></q-btn>
-      </q-card-section>
-
-      <q-separator class="q-my-sm" />
+      <q-separator />
 
       <q-card-section style="max-height: 40vh; overflow: auto">
-        <q-list dense>
-          <q-item v-for="item in sortedVideos" :key="item.name">
-            <q-item-section side top>
-              <q-checkbox v-model="selection" :val="item" />
-            </q-item-section>
-            <q-item-section>第 {{ item.season }} 季 {{ pandStart2(item.episode) }} 集</q-item-section>
-            <q-item-section side>
-              <q-btn
-                v-if="item.sub_f_path_list.length"
-                color="black"
-                round
-                flat
-                dense
-                icon="closed_caption"
-                @click.stop
-                title="已有字幕"
-              >
-                <q-popup-proxy anchor="top right">
-                  <q-list dense>
-                    <q-item v-for="(item1, index) in item.sub_f_path_list" :key="item1">
-                      <q-item-section side>{{ index + 1 }}.</q-item-section>
+        <div class="row items-center q-ml-md q-py-none">
+          <q-checkbox
+            :model-value="selectAllValue"
+            indeterminate-value="maybe"
+            @click="handleSelectAll"
+            title="全选/反选"
+          />
 
-                      <q-item-section class="overflow-hidden ellipsis" :title="item1.split(/\/|\\/).pop()">
-                        <a class="text-primary" :href="getUrl(item1)" target="_blank">{{
-                          item1.split(/\/|\\/).pop()
-                        }}</a>
-                      </q-item-section>
-                    </q-item>
-                  </q-list>
-                </q-popup-proxy>
-              </q-btn>
-              <q-btn v-else color="grey" round flat dense icon="closed_caption" @click.stop title="没有字幕" />
-            </q-item-section>
+          <q-btn
+            class="btn-download"
+            color="primary"
+            label="下载选中"
+            flat
+            :disable="selection.length === 0"
+            @click="downloadSelection"
+          ></q-btn>
+        </div>
 
-            <q-item-section side>
-              <q-btn
-                class="btn-download"
-                color="primary"
-                round
-                flat
-                dense
-                icon="download_for_offline"
-                title="下载字幕"
-                @click="downloadSubtitle(item)"
-              ></q-btn>
-            </q-item-section>
-          </q-item>
-        </q-list>
+        <q-tab-panels v-model="tab" animated>
+          <q-tab-panel v-for="{ season, episodes } in categoryVideos" :key="season" :name="season" style="padding: 0">
+            <q-list dense>
+              <q-item v-for="item in episodes" :key="item.name">
+                <q-item-section side top>
+                  <q-checkbox v-model="selection" :val="item" />
+                </q-item-section>
+                <q-item-section>第 {{ pandStart2(item.episode) }} 集</q-item-section>
+                <q-item-section side>
+                  <btn-upload-subtitle :data="item" />
+                </q-item-section>
+                <q-item-section side>
+                  <q-btn
+                    v-if="item.sub_f_path_list.length"
+                    color="black"
+                    round
+                    flat
+                    dense
+                    icon="closed_caption"
+                    @click.stop
+                    title="已有字幕"
+                  >
+                    <q-popup-proxy anchor="top right">
+                      <q-list dense>
+                        <q-item v-for="(item1, index) in item.sub_f_path_list" :key="item1">
+                          <q-item-section side>{{ index + 1 }}.</q-item-section>
+
+                          <q-item-section class="overflow-hidden ellipsis" :title="item1.split(/\/|\\/).pop()">
+                            <a class="text-primary" :href="getUrl(item1)" target="_blank">{{
+                              item1.split(/\/|\\/).pop()
+                            }}</a>
+                          </q-item-section>
+                        </q-item>
+                      </q-list>
+                    </q-popup-proxy>
+                  </q-btn>
+                  <q-btn v-else color="grey" round flat dense icon="closed_caption" @click.stop title="没有字幕" />
+                </q-item-section>
+
+                <q-item-section side>
+                  <q-btn
+                    class="btn-download"
+                    color="primary"
+                    round
+                    flat
+                    dense
+                    icon="download_for_offline"
+                    title="下载字幕"
+                    @click="downloadSubtitle(item)"
+                  ></q-btn>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-tab-panel>
+        </q-tab-panels>
       </q-card-section>
     </q-card>
   </q-dialog>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import LibraryApi from 'src/api/LibraryApi';
 import { SystemMessage } from 'src/utils/Message';
 import { VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
 import config from 'src/config';
 import { useQuasar } from 'quasar';
 import { useSelection } from 'src/composables/useSelection';
+import BtnUploadSubtitle from 'pages/library/tvs/BtnUploadSubtitle';
 
 const props = defineProps({
   data: Object,
@@ -98,26 +116,42 @@ const props = defineProps({
 
 const $q = useQuasar();
 
-// 按季度、剧集排序
-const sortedVideos = computed(() =>
-  [...props.data.one_video_info].sort((a, b) => {
-    if (a.season > b.season) {
-      return 1;
+const categoryVideos = computed(() => {
+  // [{season: episodes: []}]
+  const result = [];
+  props.data?.one_video_info.forEach((item) => {
+    const { season } = item;
+    const index = result.findIndex((e) => e.season === season);
+    if (index === -1) {
+      result.push({
+        season,
+        episodes: [item],
+      });
+    } else {
+      result[index].episodes.push(item);
     }
-    if (a.season < b.season) {
-      return -1;
-    }
-    if (a.episode > b.episode) {
-      return 1;
-    }
-    if (a.episode < b.episode) {
-      return -1;
-    }
-    return 0;
-  })
-);
+  });
+  result.sort((a, b) => a.season - b.season);
+  result.forEach((item) => {
+    item.episodes.sort((a, b) => a.episode - b.episode);
+  });
+  return result;
+});
 
-const { selectAllValue, handleSelectAll, selection } = useSelection(sortedVideos);
+const tab = ref(null);
+
+watch(categoryVideos, () => {
+  if (categoryVideos.value.length) {
+    tab.value = categoryVideos.value[0].season;
+  }
+});
+
+const currentTabEpisodes = computed(() => categoryVideos.value.find((e) => e.season === tab.value)?.episodes ?? []);
+
+const { selectAllValue, handleSelectAll, selection } = useSelection(currentTabEpisodes);
+watch(tab, () => {
+  selection.value = [];
+});
 
 const pandStart2 = (num) => {
   if (num < 10) {

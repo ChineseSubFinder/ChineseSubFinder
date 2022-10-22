@@ -26,22 +26,20 @@
       <div class="text-grey">1970-01-01</div>
       <q-space />
       <div>
-        <!--        <q-btn v-if="hasSubtitle" color="black"-->
-        <!--               round flat dense icon="closed_caption" @click.stop title="已有字幕">-->
-        <!--          <q-popup-proxy>-->
-        <!--            <q-list dense>-->
-        <!--              <q-item v-for="(item, index) in data.sub_f_path_list" :key="item">-->
-        <!--                <q-item-section side>{{ index + 1 }}.</q-item-section>-->
+        <q-btn v-if="hasSubtitle" color="black" round flat dense icon="closed_caption" @click.stop title="已有字幕">
+          <q-popup-proxy>
+            <q-list dense>
+              <q-item v-for="(item, index) in detialInfo.sub_url_list" :key="item">
+                <q-item-section side>{{ index + 1 }}.</q-item-section>
 
-        <!--                <q-item-section class="overflow-hidden ellipsis" :title="item.split(/\/|\\/).pop()">-->
-        <!--                  <a class="text-primary" :href="getUrl(item)"-->
-        <!--                     target="_blank">{{ item.split(/\/|\\/).pop() }}</a>-->
-        <!--                </q-item-section>-->
-        <!--              </q-item>-->
-        <!--            </q-list>-->
-        <!--          </q-popup-proxy>-->
-        <!--        </q-btn>-->
-        <!--        <q-btn v-else color="grey" round flat dense icon="closed_caption" @click.stop title="没有字幕" />-->
+                <q-item-section class="overflow-hidden ellipsis" :title="item.split(/\/|\\/).pop()">
+                  <a class="text-primary" :href="getUrl(item)" target="_blank">{{ item.split(/\/|\\/).pop() }}</a>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-popup-proxy>
+        </q-btn>
+        <q-btn v-else color="grey" round flat dense icon="closed_caption" @click.stop title="没有字幕" />
         <q-btn
           v-if="isSkipped"
           color="grey"
@@ -70,10 +68,10 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import LibraryApi from 'src/api/LibraryApi';
 import { SystemMessage } from 'src/utils/Message';
-import { VIDEO_TYPE_MOVIE, VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
+import { VIDEO_TYPE_MOVIE } from 'src/constants/SettingConstants';
 import { useQuasar } from 'quasar';
 import { getUrl } from 'pages/library/useLibrary';
 
@@ -84,6 +82,7 @@ const props = defineProps({
 const $q = useQuasar();
 
 const posterInfo = ref(null);
+const detialInfo = ref(null);
 const isSkipped = ref(null);
 
 const getPosterInfo = async () => {
@@ -95,9 +94,18 @@ const getPosterInfo = async () => {
   posterInfo.value = res;
 };
 
+const getDetailInfo = async () => {
+  const [res] = await LibraryApi.getMovieDetail({
+    name: props.data.name,
+    main_root_dir_f_path: props.data.main_root_dir_f_path,
+    video_f_path: props.data.video_f_path,
+  });
+  detialInfo.value = res;
+};
+
 const getIsSkipped = async () => {
   const [res] = await LibraryApi.getSkipInfo({
-    video_type: VIDEO_TYPE_TV,
+    video_type: VIDEO_TYPE_MOVIE,
     physical_video_file_full_path: props.data.video_f_path,
     is_bluray: false,
     is_skip: true,
@@ -113,7 +121,7 @@ const handleIgnore = async () => {
     persistent: true,
   }).onOk(async () => {
     const [res] = await LibraryApi.setSkipInfo({
-      video_type: VIDEO_TYPE_TV,
+      video_type: VIDEO_TYPE_MOVIE,
       physical_video_file_full_path: props.data.video_f_path,
       is_bluray: false,
       is_skip: !isSkipped.value,
@@ -125,7 +133,7 @@ const handleIgnore = async () => {
   });
 };
 
-// const hasSubtitle = computed(() => props.data.sub_f_path_list.length > 0);
+const hasSubtitle = computed(() => detialInfo.value?.sub_url_list.length > 0);
 
 const downloadSubtitle = async () => {
   $q.dialog({
@@ -160,6 +168,7 @@ const downloadSubtitle = async () => {
 onMounted(() => {
   getPosterInfo();
   getIsSkipped();
+  getDetailInfo();
 });
 </script>
 

@@ -16,26 +16,26 @@
       <div class="text-grey">1970-01-01</div>
       <q-space />
       <div>
-        <!--        <dialog-t-v-detail :data="data">-->
-        <!--          <q-btn-->
-        <!--            v-if="hasSubtitleVideoCount > 0"-->
-        <!--            color="black"-->
-        <!--            flat-->
-        <!--            dense-->
-        <!--            icon="closed_caption"-->
-        <!--            :label="`${hasSubtitleVideoCount}/${data.one_video_info.length}`"-->
-        <!--            title="已有字幕"-->
-        <!--          />-->
-        <!--          <q-btn v-else color="grey" round flat dense icon="closed_caption" title="没有字幕" />-->
-        <!--        </dialog-t-v-detail>-->
+        <dialog-t-v-detail :data="detailInfo">
+          <q-btn
+            v-if="hasSubtitleVideoCount > 0"
+            color="black"
+            flat
+            dense
+            icon="closed_caption"
+            :label="`${hasSubtitleVideoCount}/${detailInfo.one_video_info.length}`"
+            title="已有字幕"
+          />
+          <q-btn v-else color="grey" round flat dense icon="closed_caption" title="没有字幕" />
+        </dialog-t-v-detail>
       </div>
     </div>
   </q-card>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
-// import DialogTVDetail from 'pages/library/tvs/DialogTVDetail';
+import { computed, onMounted, ref } from 'vue';
+import DialogTVDetail from 'pages/library/tvs/DialogTVDetail';
 import LibraryApi from 'src/api/LibraryApi';
 import { getUrl } from 'pages/library/useLibrary';
 import { VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
@@ -45,6 +45,7 @@ const props = defineProps({
 });
 
 const posterInfo = ref(null);
+const detailInfo = ref(null);
 const isSkipped = ref(null);
 
 const getPosterInfo = async () => {
@@ -54,6 +55,15 @@ const getPosterInfo = async () => {
     root_dir_path: props.data.root_dir_path,
   });
   posterInfo.value = res;
+};
+
+const getDetailInfo = async () => {
+  const [res] = await LibraryApi.getTvDetail({
+    name: props.data.name,
+    main_root_dir_f_path: props.data.main_root_dir_f_path,
+    root_dir_path: props.data.root_dir_path,
+  });
+  detailInfo.value = res;
 };
 
 const getIsSkipped = async () => {
@@ -66,13 +76,14 @@ const getIsSkipped = async () => {
   isSkipped.value = res.is_skip;
 };
 
-// const hasSubtitleVideoCount = computed(
-//   () => props.data.one_video_info.filter((e) => e.sub_f_path_list.length > 0).length
-// );
+const hasSubtitleVideoCount = computed(
+  () => detailInfo.value?.one_video_info.filter((e) => e.sub_f_path_list.length > 0).length
+);
 
 onMounted(() => {
   getPosterInfo();
   getIsSkipped();
+  getDetailInfo();
 });
 </script>
 
