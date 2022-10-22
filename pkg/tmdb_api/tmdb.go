@@ -40,12 +40,14 @@ func NewTmdbHelper(l *logrus.Logger, apiKey string, _proxySettings ...*settings.
 
 func (t *TmdbApi) Alive() bool {
 
-	details, err := t.tmdbClient.GetAccountDetails()
+	options := make(map[string]string)
+	options["language"] = "en-US"
+	searchMulti, err := t.tmdbClient.GetSearchMulti("Dexter", options)
 	if err != nil {
-		t.l.Errorln("GetAccountDetails", err)
+		t.l.Errorln("GetSearchMulti", err)
 		return false
 	}
-	t.l.Infoln("GetAccountDetails UserName:", details.Username)
+	t.l.Infoln("GetSearchMulti TotalResults:", searchMulti.TotalResults)
 	return true
 }
 
@@ -207,4 +209,8 @@ type ConvertIdResult struct {
 	ImdbID string `json:"imdb_id"`
 	TmdbID string `json:"tmdb_id"`
 	TvdbID string `json:"tvdb_id"`
+}
+
+type Req struct {
+	ApiKey string `json:"api_key"`
 }

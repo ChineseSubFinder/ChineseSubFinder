@@ -29,7 +29,7 @@ func InitRouter(
 	if settings.AdvancedSettings.TmdbApiSettings != nil &&
 		settings.AdvancedSettings.TmdbApiSettings.Enable == true &&
 		settings.AdvancedSettings.TmdbApiSettings.ApiKey != "" {
-		
+
 		tmdbApi, err = tmdb_api.NewTmdbHelper(cronHelper.Logger, settings.AdvancedSettings.TmdbApiSettings.ApiKey, settings.AdvancedSettings.ProxySettings)
 		if err != nil {
 			cronHelper.Logger.Panicln("NewTmdbHelper", err)
@@ -82,6 +82,8 @@ func InitRouter(
 	router.GET("/def-settings", cbBase.DefSettingsHandler)
 
 	router.POST("/check-emby-settings", cbBase.CheckEmbySettingsHandler)
+
+	router.POST("/check-tmdb-api-settings", cbBase.CheckTmdbApiHandler)
 
 	// v1路由: /v1/xxx
 	GroupV1 := router.Group("/" + cbV1.GetVersion())
