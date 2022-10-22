@@ -159,14 +159,14 @@ func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, videoNfoInfo types.VideoNfo
 }
 
 // IsChineseVideo 从 imdbID 去查询判断是否是中文视频
-func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoNfoInfo, _proxySettings *settings.ProxySettings) (bool, *models.IMDBInfo, error) {
+func IsChineseVideo(log *logrus.Logger, videoNfoInfo types.VideoNfoInfo, _proxySettings *settings.ProxySettings) (bool, *models.IMDBInfo, error) {
 
 	const chName0 = "chinese"
 	const chName1 = "mandarin"
 
 	log.Debugln("IsChineseVideo", 0)
 
-	localIMDBInfo, err := GetIMDBInfoFromVideoNfoInfo(log, imdbInfo, _proxySettings)
+	localIMDBInfo, err := GetIMDBInfoFromVideoNfoInfo(log, videoNfoInfo, _proxySettings)
 	if err != nil {
 		return false, nil, err
 	}
@@ -174,9 +174,9 @@ func IsChineseVideo(log *logrus.Logger, imdbInfo types.VideoNfoInfo, _proxySetti
 		// 需要去外网获去补全信息，然后更新本地的信息
 		log.Debugln("IsChineseVideo", 1)
 
-		t, err := getVideoInfoFromIMDBWeb(imdbInfo, _proxySettings)
+		t, err := getVideoInfoFromIMDBWeb(videoNfoInfo, _proxySettings)
 		if err != nil {
-			log.Errorln("IsChineseVideo.getVideoInfoFromIMDBWeb,", imdbInfo.Title, err)
+			log.Errorln("IsChineseVideo.getVideoInfoFromIMDBWeb,", videoNfoInfo.Title, err)
 			return false, nil, err
 		}
 

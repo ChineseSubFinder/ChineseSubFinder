@@ -1098,16 +1098,16 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 		seriesInputData := taskData.DataEx.(TaskInputData)
 		v.log.Infoln("updateLocalVideoCacheInfo", seriesInputData.Index, seriesInputData.InputPath)
 
-		videoInfo, err := decode.GetVideoNfoInfo4SeriesDir(seriesInputData.InputPath)
+		videoNfoInfo, err := decode.GetVideoNfoInfo4SeriesDir(seriesInputData.InputPath)
 		if err != nil {
 			v.log.Warningln("GetVideoNfoInfo4SeriesDir", seriesInputData.InputPath, err)
 			return err
 		}
 
 		// 获取 IMDB 信息
-		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.log, videoInfo, v.settings.AdvancedSettings.ProxySettings)
+		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.log, videoNfoInfo, v.settings.AdvancedSettings.ProxySettings)
 		if err != nil {
-			v.log.Warningln("GetIMDBInfoFromVideoNfoInfo,IMDB:", videoInfo.ImdbId, seriesInputData.InputPath, err)
+			v.log.Warningln("GetIMDBInfoFromVideoNfoInfo,IMDB:", videoNfoInfo.ImdbId, seriesInputData.InputPath, err)
 			return err
 		}
 		if (seriesInputData.InputPath != "" && localIMDBInfo.RootDirPath != seriesInputData.InputPath) || localIMDBInfo.IsMovie != false {
