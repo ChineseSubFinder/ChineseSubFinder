@@ -66,7 +66,7 @@ func (cb *ControllerBase) CheckEmbyPathHandler(c *gin.Context) {
 		emSettings.SeriesPathsMapping[reqCheckPath.CFSMediaPath] = reqCheckPath.EmbyMediaPath
 	}
 
-	emHelper := emby_helper.NewEmbyHelper(cb.fileDownloader.Log, &settings.Settings{EmbySettings: &emSettings})
+	emHelper := emby_helper.NewEmbyHelper(cb.fileDownloader.MediaInfoDealers, &settings.Settings{EmbySettings: &emSettings})
 
 	outList, err := emHelper.CheckPath(reqCheckPath.PathType)
 	if err != nil {

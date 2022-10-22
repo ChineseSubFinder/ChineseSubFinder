@@ -27,6 +27,33 @@ func (d *Dealers) SetTmdbHelperInstance(tmdbHelper *tmdb_api.TmdbApi) {
 	d.tmdbHelper = tmdbHelper
 }
 
+// ConvertId 目前仅仅支持 TMDB ID 转 IMDB ID
+func (d *Dealers) ConvertId(iD string, idType string, isMovieOrSeries bool) (convertIdResult *tmdb_api.ConvertIdResult, err error) {
+
+	if d.tmdbHelper != nil && d.settings.AdvancedSettings.TmdbApiSettings.Enable == true && d.settings.AdvancedSettings.TmdbApiSettings.ApiKey != "" {
+		// 优先使用用户自己的 tmdb api
+		return d.tmdbHelper.ConvertId(iD, idType, isMovieOrSeries)
+	} else {
+		// 使用默认的公用服务器 tmdb api
+		videoType := ""
+		if isMovieOrSeries == true {
+			videoType = "movie"
+		} else {
+			videoType = "series"
+		}
+		idConvertReply, err := d.SubtitleBestApi.ConvertId(iD, idType, videoType)
+		if err != nil {
+			return nil, err
+		}
+
+		return &tmdb_api.ConvertIdResult{
+			ImdbID: idConvertReply.IMDBId,
+			TmdbID: iD,
+			TvdbID: idConvertReply.TVDBId,
+		}, nil
+	}
+}
+
 func (d *Dealers) GetMediaInfo(id, source, videoType string) (*models.MediaInfo, error) {
 
 	if d.tmdbHelper != nil && d.settings.AdvancedSettings.TmdbApiSettings.Enable == true && d.settings.AdvancedSettings.TmdbApiSettings.ApiKey != "" {

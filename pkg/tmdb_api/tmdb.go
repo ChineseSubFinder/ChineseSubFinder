@@ -156,7 +156,8 @@ func (t *TmdbApi) GetInfo(iD string, idType string, isMovieOrSeries, isQueryEnOr
 	return outFindByID, nil
 }
 
-func (t *TmdbApi) CovertId(iD string, idType string, isMovieOrSeries bool) (convertIdResult *ConvertIdResult, err error) {
+// ConvertId 目前仅仅支持 TMDB ID 转 IMDB ID
+func (t *TmdbApi) ConvertId(iD string, idType string, isMovieOrSeries bool) (convertIdResult *ConvertIdResult, err error) {
 
 	if idType == ImdbID {
 		return nil, fmt.Errorf("imdb id type is not supported")
@@ -193,7 +194,7 @@ func (t *TmdbApi) CovertId(iD string, idType string, isMovieOrSeries bool) (conv
 			return convertIdResult, nil
 		}
 	} else {
-		return nil, fmt.Errorf("id type is not supported")
+		return nil, fmt.Errorf("id type is not supported: " + idType)
 	}
 }
 

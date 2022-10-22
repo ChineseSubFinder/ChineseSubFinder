@@ -94,7 +94,7 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	downloader.ctx, downloader.cancel = context.WithCancel(context.Background())
 	// 用于字幕下载后的刷新
 	if downloader.settings.EmbySettings.Enable == true {
-		downloader.embyHelper = embyHelper.NewEmbyHelper(downloader.log, downloader.settings)
+		downloader.embyHelper = embyHelper.NewEmbyHelper(downloader.fileDownloader.MediaInfoDealers, downloader.settings)
 	}
 
 	downloader.ScanLogic = scan_logic.NewScanLogic(downloader.log)

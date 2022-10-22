@@ -169,7 +169,7 @@ func (d *Downloader) queueDownloaderLocal() {
 		if oneJob.TaskPriority > task_queue.HighTaskPriorityLevel {
 			// 优先级大于 3，那么就不是很急的任务，才需要判断
 			if oneJob.VideoType == common2.Movie {
-				if d.subSupplierHub.MovieNeedDlSub(oneJob.VideoFPath, false) == false {
+				if d.subSupplierHub.MovieNeedDlSub(d.fileDownloader.MediaInfoDealers, oneJob.VideoFPath, false) == false {
 					// 需要标记忽略
 					oneJob.JobStatus = taskQueue2.Ignore
 					bok, err = d.downloadQueue.Update(oneJob)
@@ -186,7 +186,9 @@ func (d *Downloader) queueDownloaderLocal() {
 				}
 			} else if oneJob.VideoType == common2.Series {
 
-				bNeedDlSub, seriesInfo, err := d.subSupplierHub.SeriesNeedDlSub(oneJob.SeriesRootDirPath,
+				bNeedDlSub, seriesInfo, err := d.subSupplierHub.SeriesNeedDlSub(
+					d.fileDownloader.MediaInfoDealers,
+					oneJob.SeriesRootDirPath,
 					false, false)
 				if err != nil {
 					d.log.Errorln("SeriesNeedDlSub", err)

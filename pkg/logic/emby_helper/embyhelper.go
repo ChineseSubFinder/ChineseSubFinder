@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/types"
@@ -30,13 +32,14 @@ type EmbyHelper struct {
 	EmbyApi  *embyHelper.EmbyApi
 	log      *logrus.Logger
 	settings *settings.Settings
+	dealers  *media_info_dealers.Dealers
 	timeOut  time.Duration
 	listLock sync.Mutex
 }
 
-func NewEmbyHelper(_log *logrus.Logger, _settings *settings.Settings) *EmbyHelper {
-	em := EmbyHelper{log: _log, settings: _settings}
-	em.EmbyApi = embyHelper.NewEmbyApi(_log, _settings.EmbySettings)
+func NewEmbyHelper(dealers *media_info_dealers.Dealers, _settings *settings.Settings) *EmbyHelper {
+	em := EmbyHelper{log: dealers.Logger, settings: _settings, dealers: dealers}
+	em.EmbyApi = embyHelper.NewEmbyApi(dealers.Logger, _settings.EmbySettings)
 	em.timeOut = 60 * time.Second
 	return &em
 }
@@ -501,7 +504,7 @@ func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby2.Emby
 
 	// 获取 IMDB 信息
 	imdbInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(
-		em.log,
+		em.dealers,
 		types.VideoNfoInfo{
 			ImdbId: mixInfo.IMDBId,
 			TmdbId: mixInfo.TMDBId,

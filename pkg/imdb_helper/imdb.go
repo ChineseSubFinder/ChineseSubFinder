@@ -4,15 +4,11 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-
-	"github.com/allanpk716/ChineseSubFinder/pkg/subtitle_best_api"
-
-	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
 
 	"github.com/StalkR/imdb"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
@@ -20,13 +16,10 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types"
-	"github.com/sirupsen/logrus"
 )
 
 // GetIMDBInfoFromVideoFile 先从本地拿缓存，如果没有就从 Web 获取
-func GetIMDBInfoFromVideoFile(log *logrus.Logger, videoFPath string, isMovie bool, _proxySettings *settings.ProxySettings) (*models.IMDBInfo, error) {
-
-	getReady(log, _proxySettings)
+func GetIMDBInfoFromVideoFile(dealers *media_info_dealers.Dealers, videoFPath string, isMovie bool, _proxySettings *settings.ProxySettings) (*models.IMDBInfo, error) {
 
 	var err error
 	var videoNfoInfo types.VideoNfoInfo
@@ -37,12 +30,12 @@ func GetIMDBInfoFromVideoFile(log *logrus.Logger, videoFPath string, isMovie boo
 	}
 	if err != nil {
 		// 如果找不到当前电影的 IMDB Info 本地文件，那么就跳过
-		log.Warningln("getSubListFromFile", videoFPath, err)
+		dealers.Logger.Warningln("getSubListFromFile", videoFPath, err)
 		return nil, err
 	}
-	imdbInfo, err := GetIMDBInfoFromVideoNfoInfo(log, videoNfoInfo, _proxySettings)
+	imdbInfo, err := GetIMDBInfoFromVideoNfoInfo(dealers, videoNfoInfo, _proxySettings)
 	if err != nil {
-		log.Warningln("GetIMDBInfoFromVideoNfoInfo", videoFPath, err)
+		dealers.Logger.Warningln("GetIMDBInfoFromVideoNfoInfo", videoFPath, err)
 		return nil, err
 	}
 	if len(imdbInfo.Description) <= 0 {
@@ -53,7 +46,7 @@ func GetIMDBInfoFromVideoFile(log *logrus.Logger, videoFPath string, isMovie boo
 		}
 		t, err := getVideoInfoFromIMDBWeb(videoNfoInfo, _proxySettings)
 		if err != nil {
-			log.Errorln("getVideoInfoFromIMDBWeb,", videoNfoInfo.Title, err)
+			dealers.Logger.Errorln("getVideoInfoFromIMDBWeb,", videoNfoInfo.Title, err)
 			return nil, err
 		}
 		imdbInfo.Year = t.Year
@@ -68,9 +61,8 @@ func GetIMDBInfoFromVideoFile(log *logrus.Logger, videoFPath string, isMovie boo
 }
 
 // GetIMDBInfoFromVideoNfoInfo 从本地获取 IMDB 信息，注意，如果需要跳过，那么返回 Error == common.SkipCreateInDB
-func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, videoNfoInfo types.VideoNfoInfo, _proxySettings *settings.ProxySettings) (*models.IMDBInfo, error) {
+func GetIMDBInfoFromVideoNfoInfo(dealers *media_info_dealers.Dealers, videoNfoInfo types.VideoNfoInfo, _proxySettings *settings.ProxySettings) (*models.IMDBInfo, error) {
 
-	getReady(log, _proxySettings)
 	/*
 		这里需要注意一个细节，之前理想情况下是从 Web 获取完整的 IMDB Info 回来，放入本地存储
 		获取的时候如果本地有就拿本地的，没有则从 Web 获取，然后写入本地存储
@@ -81,8 +73,8 @@ func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, videoNfoInfo types.VideoNfo
 		3. 因为现在默认是不跳过中文视频扫描的，所以如果开启后，则会再判断的时候访问外网获取，然后写入本地，过程会比较慢
 		4. 同时，再发送字幕和 IMDB Info 到服务器的时候，也需要判断是否 IMDB Info 信息是否齐全，否则就需要从外网获取齐全后再上传
 	*/
-	log.Debugln("GetIMDBInfoFromVideoNfoInfo", "IMDBID:", videoNfoInfo.ImdbId, "TMDBID:", videoNfoInfo.TmdbId, videoNfoInfo.Title, videoNfoInfo.Season, videoNfoInfo.Episode)
-	log.Debugln("GetIMDBInfoFromVideoNfoInfo", 0)
+	dealers.Logger.Debugln("GetIMDBInfoFromVideoNfoInfo", "IMDBID:", videoNfoInfo.ImdbId, "TMDBID:", videoNfoInfo.TmdbId, videoNfoInfo.Title, videoNfoInfo.Season, videoNfoInfo.Episode)
+	dealers.Logger.Debugln("GetIMDBInfoFromVideoNfoInfo", 0)
 
 	if videoNfoInfo.ImdbId != "" {
 		// 优先从 IMDB ID 去查找本地的信息
@@ -93,21 +85,21 @@ func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, videoNfoInfo types.VideoNfo
 			Preload("VideoSubInfos").
 			Limit(1).Where(&models.IMDBInfo{IMDBID: videoNfoInfo.ImdbId}).Find(&imdbInfos)
 
-		log.Debugln("GetIMDBInfoFromVideoNfoInfo", 1)
+		dealers.Logger.Debugln("GetIMDBInfoFromVideoNfoInfo", 1)
 
 		if len(imdbInfos) <= 0 {
 			// 没有找到，新增，存储本地，但是信息肯定是不完整的，需要在判断是否是中文的时候再次去外网获取补全信息
-			log.Debugln("GetIMDBInfoFromVideoNfoInfo", 2)
+			dealers.Logger.Debugln("GetIMDBInfoFromVideoNfoInfo", 2)
 			// 存入数据库
 			nowIMDBInfo := models.NewIMDBInfo(videoNfoInfo.ImdbId, "", 0, "", []string{}, []string{})
 			dao.GetDb().Create(nowIMDBInfo)
 
-			log.Debugln("GetIMDBInfoFromVideoNfoInfo", 3)
+			dealers.Logger.Debugln("GetIMDBInfoFromVideoNfoInfo", 3)
 
 			return nowIMDBInfo, nil
 		} else {
 
-			log.Debugln("GetIMDBInfoFromVideoNfoInfo", 4)
+			dealers.Logger.Debugln("GetIMDBInfoFromVideoNfoInfo", 4)
 			// 找到
 			return &imdbInfos[0], nil
 		}
@@ -119,7 +111,7 @@ func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, videoNfoInfo types.VideoNfo
 			Preload("VideoSubInfos").
 			Limit(1).Where(&models.IMDBInfo{TmdbId: videoNfoInfo.TmdbId}).Find(&imdbInfos)
 
-		log.Debugln("GetIMDBInfoFromVideoNfoInfo", 1)
+		dealers.Logger.Debugln("GetIMDBInfoFromVideoNfoInfo", 1)
 
 		if len(imdbInfos) <= 0 {
 			// 没有找到那么就从 Web 端获取 imdb id 信息
@@ -127,60 +119,54 @@ func GetIMDBInfoFromVideoNfoInfo(log *logrus.Logger, videoNfoInfo types.VideoNfo
 			// 如果找到多个，那么就应该删除这些，因为这些都是重复的，然后再次从 Web 去获取 imdb id 信息
 			dao.GetDb().Where(&models.IMDBInfo{TmdbId: videoNfoInfo.TmdbId}).Delete(&models.IMDBInfo{})
 		} else {
-			log.Debugln("GetIMDBInfoFromVideoNfoInfo", 4)
+			dealers.Logger.Debugln("GetIMDBInfoFromVideoNfoInfo", 4)
 			// 找到
 			return &imdbInfos[0], nil
 		}
 		// 确定需要从 Web 端获取 imdb id 信息
-		log.Debugln("GetIMDBInfoFromVideoNfoInfo", 2)
-		videoType := ""
-		if videoNfoInfo.IsMovie == true {
-			videoType = "movie"
-		} else {
-			videoType = "series"
-		}
+		dealers.Logger.Debugln("GetIMDBInfoFromVideoNfoInfo", 2)
 		// 联网查询
-		idConvertReply, err := subtitleBestApi.ConvertId(videoNfoInfo.TmdbId, "tmdb", videoType)
+		idConvertReply, err := dealers.ConvertId(videoNfoInfo.TmdbId, "tmdb", videoNfoInfo.IsMovie)
 		if err != nil {
 			return nil, err
 		}
-		log.Debugln("GetIMDBInfoFromVideoNfoInfo", 3)
+		dealers.Logger.Debugln("GetIMDBInfoFromVideoNfoInfo", 3)
 		// 存入数据库
-		nowIMDBInfo := models.NewIMDBInfo(idConvertReply.IMDBId, "", 0, "", []string{}, []string{})
+		nowIMDBInfo := models.NewIMDBInfo(idConvertReply.ImdbID, "", 0, "", []string{}, []string{})
 		dao.GetDb().Create(nowIMDBInfo)
-		log.Debugln("GetIMDBInfoFromVideoNfoInfo", 4)
+		dealers.Logger.Debugln("GetIMDBInfoFromVideoNfoInfo", 4)
 		return nowIMDBInfo, nil
 
 	} else {
 		// 都没有，那么就报错
-		log.Debugln("GetIMDBInfoFromVideoNfoInfo IMDB TMDB ID is empty")
+		dealers.Logger.Debugln("GetIMDBInfoFromVideoNfoInfo IMDB TMDB ID is empty")
 		return nil, errors.New("IMDB TMDB ID is empty")
 	}
 }
 
 // IsChineseVideo 从 imdbID 去查询判断是否是中文视频
-func IsChineseVideo(log *logrus.Logger, videoNfoInfo types.VideoNfoInfo, _proxySettings *settings.ProxySettings) (bool, *models.IMDBInfo, error) {
+func IsChineseVideo(dealers *media_info_dealers.Dealers, videoNfoInfo types.VideoNfoInfo, _proxySettings *settings.ProxySettings) (bool, *models.IMDBInfo, error) {
 
 	const chName0 = "chinese"
 	const chName1 = "mandarin"
 
-	log.Debugln("IsChineseVideo", 0)
+	dealers.Logger.Debugln("IsChineseVideo", 0)
 
-	localIMDBInfo, err := GetIMDBInfoFromVideoNfoInfo(log, videoNfoInfo, _proxySettings)
+	localIMDBInfo, err := GetIMDBInfoFromVideoNfoInfo(dealers, videoNfoInfo, _proxySettings)
 	if err != nil {
 		return false, nil, err
 	}
 	if len(localIMDBInfo.Description) <= 0 {
 		// 需要去外网获去补全信息，然后更新本地的信息
-		log.Debugln("IsChineseVideo", 1)
+		dealers.Logger.Debugln("IsChineseVideo", 1)
 
 		t, err := getVideoInfoFromIMDBWeb(videoNfoInfo, _proxySettings)
 		if err != nil {
-			log.Errorln("IsChineseVideo.getVideoInfoFromIMDBWeb,", videoNfoInfo.Title, err)
+			dealers.Logger.Errorln("IsChineseVideo.getVideoInfoFromIMDBWeb,", videoNfoInfo.Title, err)
 			return false, nil, err
 		}
 
-		log.Debugln("IsChineseVideo", 2)
+		dealers.Logger.Debugln("IsChineseVideo", 2)
 		localIMDBInfo.Year = t.Year
 		localIMDBInfo.Name = t.Name
 		localIMDBInfo.Year = t.Year
@@ -188,11 +174,11 @@ func IsChineseVideo(log *logrus.Logger, videoNfoInfo types.VideoNfoInfo, _proxyS
 		localIMDBInfo.Description = t.Description
 		localIMDBInfo.Languages = t.Languages
 
-		log.Debugln("IsChineseVideo", 3)
+		dealers.Logger.Debugln("IsChineseVideo", 3)
 
 		dao.GetDb().Save(localIMDBInfo)
 
-		log.Debugln("IsChineseVideo", 4)
+		dealers.Logger.Debugln("IsChineseVideo", 4)
 	}
 
 	if len(localIMDBInfo.Languages) < 1 {
@@ -201,7 +187,7 @@ func IsChineseVideo(log *logrus.Logger, videoNfoInfo types.VideoNfoInfo, _proxyS
 
 	firstLangLowCase := strings.ToLower(localIMDBInfo.Languages[0])
 
-	log.Debugln("IsChineseVideo", 5)
+	dealers.Logger.Debugln("IsChineseVideo", 5)
 
 	// 判断第一语言是否是中文
 	switch firstLangLowCase {
@@ -238,22 +224,3 @@ func getVideoInfoFromIMDBWeb(videoNfoInfo types.VideoNfoInfo, _proxySettings ...
 
 	return t, nil
 }
-
-func getReady(log *logrus.Logger, proxySettings *settings.ProxySettings) {
-
-	locker.Lock()
-	if randomAuthKey == nil {
-		randomAuthKey = &random_auth_key.AuthKey{
-			BaseKey:  pkg.BaseKey(),
-			AESKey16: pkg.AESKey16(),
-			AESIv16:  pkg.AESIv16(),
-		}
-
-		subtitleBestApi = subtitle_best_api.NewSubtitleBestApi(log, *randomAuthKey, proxySettings)
-	}
-	locker.Unlock()
-}
-
-var locker sync.Mutex
-var randomAuthKey *random_auth_key.AuthKey
-var subtitleBestApi *subtitle_best_api.SubtitleBestApi

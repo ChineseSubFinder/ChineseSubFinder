@@ -81,7 +81,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	epsMap[job.Season] = []int{job.Episode}
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
 	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(
-		d.log, job.SeriesRootDirPath,
+		d.fileDownloader.MediaInfoDealers, job.SeriesRootDirPath,
 		d.settings.AdvancedSettings.TaskQueue.ExpirationTime,
 		false,
 		false,

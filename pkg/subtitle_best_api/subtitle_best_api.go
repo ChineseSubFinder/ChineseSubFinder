@@ -599,6 +599,7 @@ func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, download
 	return &downloadReply, nil
 }
 
+// ConvertId 目前仅仅支持 TMDB ID 转 IMDB ID
 func (s *SubtitleBestApi) ConvertId(id, source, videoType string) (*IdConvertReply, error) {
 
 	if s.authKey.BaseKey == random_auth_key.BaseKey || s.authKey.AESKey16 == random_auth_key.AESKey16 || s.authKey.AESIv16 == random_auth_key.AESIv16 {

@@ -21,7 +21,7 @@ func GetMixMediaInfo(
 	dealers *media_info_dealers.Dealers,
 	videoFPath string, isMovie bool, _proxySettings *settings.ProxySettings) (*models.MediaInfo, error) {
 
-	imdbInfo, err := imdb_helper.GetIMDBInfoFromVideoFile(dealers.Logger, videoFPath, isMovie, _proxySettings)
+	imdbInfo, err := imdb_helper.GetIMDBInfoFromVideoFile(dealers, videoFPath, isMovie, _proxySettings)
 	if err != nil {
 		return nil, err
 	}

@@ -266,12 +266,12 @@ func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *Scan
 			v.log.Infoln("Forced Scan And DownSub, tmpSetting.EmbySettings.MaxRequestVideoNumber = 1000000")
 			// 如果是强制，那么就临时修改 Setting 的 Emby MaxRequestVideoNumber 参数为 1000000
 			//tmpSetting := clone.Clone(v.settings).(*settings.Settings)
-			v.embyHelper = embyHelper.NewEmbyHelper(v.log, v.settings)
+			v.embyHelper = embyHelper.NewEmbyHelper(v.fileDownloader.MediaInfoDealers, v.settings)
 			v.embyHelper.SetMaxRequestVideoNumber(common2.EmbyApiGetItemsLimitMax)
 			v.embyHelper.SetSkipWatched(false)
 		} else {
 			v.log.Infoln("Not Forced Scan And DownSub")
-			v.embyHelper = embyHelper.NewEmbyHelper(v.log, v.settings)
+			v.embyHelper = embyHelper.NewEmbyHelper(v.fileDownloader.MediaInfoDealers, v.settings)
 		}
 	}
 	var err error
@@ -341,7 +341,7 @@ func (v *VideoScanAndRefreshHelper) RefreshMediaServerSubList() error {
 	v.log.Infoln("tmpSetting.EmbySettings.MaxRequestVideoNumber = 1000000")
 	// 如果是强制，那么就临时修改 Setting 的 Emby MaxRequestVideoNumber 参数为 1000000
 	//tmpSetting := clone.Clone(v.settings).(*settings.Settings)
-	v.embyHelper = embyHelper.NewEmbyHelper(v.log, v.settings)
+	v.embyHelper = embyHelper.NewEmbyHelper(v.fileDownloader.MediaInfoDealers, v.settings)
 	v.embyHelper.SetMaxRequestVideoNumber(common2.EmbyApiGetItemsLimitMax)
 	v.embyHelper.SetSkipWatched(false)
 	var err error
@@ -430,7 +430,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 		seriesDirRootFPathLisst := seriesFPath.([]string)
 		for seriesDirIndex, seriesDirRootFPath := range seriesDirRootFPathLisst {
 
-			seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(v.log, seriesDirRootFPath, 90, true, true, v.settings.AdvancedSettings.ProxySettings)
+			seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(v.fileDownloader.MediaInfoDealers, seriesDirRootFPath, 90, true, true, v.settings.AdvancedSettings.ProxySettings)
 			if err != nil {
 				v.log.Warningln("scanLowVideoSubInfo.ReadSeriesInfoFromDir", seriesDirRootFPath, err)
 				return false
@@ -685,7 +685,9 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListNormal(normal *NormalScan
 		}
 		v.processLocker.Unlock()
 
-		bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(oneSeriesRootDir,
+		bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(
+			v.fileDownloader.MediaInfoDealers,
+			oneSeriesRootDir,
 			v.NeedForcedScanAndDownSub, false)
 		if err != nil {
 			v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub", err)
@@ -1051,7 +1053,7 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 			return err
 		}
 		// 获取 IMDB 信息
-		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.log, videoImdbInfo, v.settings.AdvancedSettings.ProxySettings)
+		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.fileDownloader.MediaInfoDealers, videoImdbInfo, v.settings.AdvancedSettings.ProxySettings)
 		if err != nil {
 			v.log.Warningln("GetIMDBInfoFromVideoNfoInfo,IMDB:", videoImdbInfo.ImdbId, movieInputData.InputPath, err)
 			return err
@@ -1105,7 +1107,7 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 		}
 
 		// 获取 IMDB 信息
-		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.log, videoNfoInfo, v.settings.AdvancedSettings.ProxySettings)
+		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.fileDownloader.MediaInfoDealers, videoNfoInfo, v.settings.AdvancedSettings.ProxySettings)
 		if err != nil {
 			v.log.Warningln("GetIMDBInfoFromVideoNfoInfo,IMDB:", videoNfoInfo.ImdbId, seriesInputData.InputPath, err)
 			return err
@@ -1152,7 +1154,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 
 		taskData := inData.(*task_control.TaskData)
 		movieInputData := taskData.DataEx.(TaskInputData)
-		if v.subSupplierHub.MovieNeedDlSub(movieInputData.InputPath, v.NeedForcedScanAndDownSub) == false {
+		if v.subSupplierHub.MovieNeedDlSub(v.fileDownloader.MediaInfoDealers, movieInputData.InputPath, v.NeedForcedScanAndDownSub) == false {
 			return nil
 		}
 		bok, err := v.downloadQueue.Add(*task_queue2.NewOneJob(
@@ -1206,7 +1208,9 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 		taskData := inData.(*task_control.TaskData)
 		seriesInputData := taskData.DataEx.(TaskInputData)
 		// 因为可能回去 Web 获取 IMDB 信息，所以这里的错误不返回
-		bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(seriesInputData.InputPath,
+		bNeedDlSub, seriesInfo, err := v.subSupplierHub.SeriesNeedDlSub(
+			v.fileDownloader.MediaInfoDealers,
+			seriesInputData.InputPath,
 			v.NeedForcedScanAndDownSub, false)
 		if err != nil {
 			v.log.Errorln("filterMovieAndSeriesNeedDownloadNormal.SeriesNeedDlSub", err)
@@ -1289,7 +1293,7 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *E
 		}
 
 		// 放入队列
-		if v.subSupplierHub.MovieNeedDlSub(oneMovieMixInfo.PhysicalVideoFileFullPath, v.NeedForcedScanAndDownSub) == false {
+		if v.subSupplierHub.MovieNeedDlSub(v.fileDownloader.MediaInfoDealers, oneMovieMixInfo.PhysicalVideoFileFullPath, v.NeedForcedScanAndDownSub) == false {
 			continue
 		}
 		nowOneJob := task_queue2.NewOneJob(

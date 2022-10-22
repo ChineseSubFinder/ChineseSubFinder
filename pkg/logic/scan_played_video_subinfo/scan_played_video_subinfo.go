@@ -72,7 +72,7 @@ func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings,
 	if scanPlayedVideoSubInfo.settings.EmbySettings.Enable == true && scanPlayedVideoSubInfo.settings.EmbySettings.AddressUrl != "" &&
 		scanPlayedVideoSubInfo.settings.EmbySettings.APIKey != "" {
 
-		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(log, scanPlayedVideoSubInfo.settings)
+		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(fileDownloader.MediaInfoDealers, scanPlayedVideoSubInfo.settings)
 		scanPlayedVideoSubInfo.embyHelper.SetMaxRequestVideoNumber(common2.EmbyApiGetItemsLimitMax)
 	}
 
@@ -360,7 +360,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	// 通过视频的绝对路径，从本地的视频文件对应的 nfo 获取到这个视频的 IMDB ID,
 	var err error
-	imdbInfoFromVideoFile, err := imdb_helper.GetIMDBInfoFromVideoFile(s.log, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
+	imdbInfoFromVideoFile, err := imdb_helper.GetIMDBInfoFromVideoFile(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
 	if err != nil {
 		s.log.Errorln("GetIMDBInfoFromVideoFile", err)
 		return
