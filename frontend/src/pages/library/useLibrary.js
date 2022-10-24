@@ -4,6 +4,7 @@ import { SystemMessage } from 'src/utils/Message';
 import { until } from '@vueuse/core';
 import config from 'src/config';
 import { LocalStorage } from 'quasar';
+import { useSettings } from 'pages/settings/useSettings';
 
 export const getUrl = (basePath) => config.BACKEND_URL + basePath.split(/\/|\\/).join('/');
 
@@ -73,6 +74,8 @@ export const getSubtitleUploadList = async () => {
 };
 
 export const useLibrary = () => {
+  useSettings();
+
   const getSubtitleUploadListTimer = setInterval(() => {
     getSubtitleUploadList();
   }, 5000);
