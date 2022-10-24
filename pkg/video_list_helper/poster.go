@@ -64,6 +64,8 @@ func (v *VideoListHelper) GetSeriesPoster(seriesDir string) string {
 		连续剧的
 		1. poster.ext
 		2. folder.ext
+		Emby 的
+		3. fanart.ext
 		Season的
 		1. seasonXX-poster.ext
 		2. <season folder>/seasonXX.ext
@@ -78,6 +80,11 @@ func (v *VideoListHelper) GetSeriesPoster(seriesDir string) string {
 		}
 		// 2. folder.ext
 		posterFPath = filepath.Join(seriesDir, "folder"+ext)
+		if pkg.IsFile(posterFPath) {
+			return posterFPath
+		}
+		// 3. fanart.ext
+		posterFPath = filepath.Join(seriesDir, "fanart"+ext)
 		if pkg.IsFile(posterFPath) {
 			return posterFPath
 		}
