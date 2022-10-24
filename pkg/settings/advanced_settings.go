@@ -7,7 +7,7 @@ import (
 
 type AdvancedSettings struct {
 	ProxySettings              *ProxySettings     `json:"proxy_settings"`
-	TmdbApiSettings            *TmdbApiSettings   `json:"tmdb_api_settings"`
+	TmdbApiSettings            TmdbApiSettings    `json:"tmdb_api_settings"`
 	DebugMode                  bool               `json:"debug_mode"`                     // 是否开启调试模式，这个是写入一个特殊的文件来开启日志的 Debug 输出
 	SaveFullSeasonTmpSubtitles bool               `json:"save_full_season_tmp_subtitles"` // 保存整季的缓存字幕
 	SubTypePriority            int                `json:"sub_type_priority"`              // 字幕下载的优先级，0 是自动，1 是 srt 优先，2 是 ass/ssa 优先
@@ -25,7 +25,7 @@ type AdvancedSettings struct {
 func NewAdvancedSettings() *AdvancedSettings {
 	return &AdvancedSettings{
 		ProxySettings:     NewProxySettings(false, "http", local_http_proxy_server.LocalHttpProxyPort, "127.0.0.1", "10809", "", ""),
-		TmdbApiSettings:   NewTmdbApiSettings(false, ""),
+		TmdbApiSettings:   *NewTmdbApiSettings(false, ""),
 		CustomVideoExts:   make([]string, 0),
 		Topic:             common.DownloadSubsPerSite,
 		SuppliersSettings: NewSuppliersSettings(),
