@@ -12,5 +12,7 @@ class CommonAPi extends BaseApi {
   checkEmbyPath = (data) => this.http('/check-emby-path', data, 'POST');
 
   checkEmbyServer = (data) => this.http('/check-emby-settings', data, 'POST');
+
+  checkTmdbApiKey = (data) => this.http('/check-tmdb-api-settings', data, 'POST');
 }
 export default new CommonAPi();

@@ -155,10 +155,17 @@
         <q-item-section>
           <q-item-label class="q-mb-sm">字幕源设置</q-item-label>
           <div class="text-warning">
-<!--            eslint-disable-next-line max-len-->
-            如果你使用的是 <a href="https://github.com/allanpk716/ChineseSubFinder/tree/master/docker#%E9%95%9C%E5%83%8F%E6%A0%87%E7%AD%BE%E8%AF%B4%E6%98%8E" target="_blank" class="text-negative">lite轻量模式的Docker镜像</a> ，这个镜像去除了chome及其依赖，
+            <!--            eslint-disable max-len-->
+            如果你使用的是
+            <a
+              href="https://github.com/allanpk716/ChineseSubFinder/tree/master/docker#%E9%95%9C%E5%83%8F%E6%A0%87%E7%AD%BE%E8%AF%B4%E6%98%8E"
+              target="_blank"
+              class="text-negative"
+              >lite轻量模式的Docker镜像</a
+            >
+            ，这个镜像去除了chome及其依赖，
             <span class="text-negative">不支持从 subhd、zimuku 下载字幕</span>，其他字幕源不受影响。
-            <br/>针对少了两个字幕来源的问题，建议开启实验室->共享字幕功能，可在一定程度上缓解下载字幕难的问题
+            <br />针对少了两个字幕来源的问题，建议开启实验室->共享字幕功能，可在一定程度上缓解下载字幕难的问题
           </div>
           <q-item v-for="item in form.suppliers_settings" :key="item" clickable>
             <q-item-section avatar class="text-bold" style="width: 120px">
@@ -168,15 +175,10 @@
               <q-item-label :lines="1">
                 {{ item.root_url }}
               </q-item-label>
-              <q-item-label style="font-size: 90%">
-                每日下载次数限制：{{ item.daily_download_limit }}
-              </q-item-label>
+              <q-item-label style="font-size: 90%"> 每日下载次数限制：{{ item.daily_download_limit }} </q-item-label>
             </q-item-section>
             <q-item-section side>
-              <edit-sub-source-btn-dialog
-                :data="item"
-                @update="(data) => handleSubSourceUpdate(item, data)"
-              />
+              <edit-sub-source-btn-dialog :data="item" @update="(data) => handleSubSourceUpdate(item, data)" />
             </q-item-section>
           </q-item>
         </q-item-section>
@@ -334,6 +336,41 @@
           <q-toggle v-model="form.fix_time_line" />
         </q-item-section>
       </q-item>
+
+      <q-separator spaced inset></q-separator>
+
+      <q-item tag="label" v-ripple>
+        <q-item-section>
+          <q-item-label>启用TMDB API</q-item-label>
+          <!--          <q-item-label caption>支持HTTP代理</q-item-label>-->
+        </q-item-section>
+        <q-item-section avatar top>
+          <q-toggle v-model="form.tmdb_api_settings.enable" />
+        </q-item-section>
+      </q-item>
+
+      <template v-if="form.tmdb_api_settings.enable">
+        <q-item>
+          <div class="text-warning">* 国内访问TMDB API可能需要代理</div>
+        </q-item>
+        <q-item class="q-mt-md" dense>
+          <q-item-section>
+            <q-item-label>APIKey</q-item-label>
+          </q-item-section>
+          <q-item-section avatar>
+            <q-input
+              v-model="form.tmdb_api_settings.api_key"
+              standout
+              dense
+              label="填写TMDB ApiKey"
+              :rules="[(val) => (form.tmdb_api_settings.enable && !!val) || '不能为空']"
+            />
+          </q-item-section>
+        </q-item>
+        <q-item>
+          <btn-check-tmdb-api />
+        </q-item>
+      </template>
     </q-list>
   </div>
 </template>
@@ -350,6 +387,7 @@ import { formModel } from 'pages/settings/useSettings';
 import { toRefs } from '@vueuse/core';
 import ProxyCheckBtn from 'components/ProxyCheckBtn';
 import EditSubSourceBtnDialog from 'pages/settings/EditSubSourceBtnDialog';
+import BtnCheckTmdbApi from 'pages/settings/BtnCheckTmdbApi';
 
 const subNameFormatDescMap = {
   [SUB_NAME_FORMAT_NORMAL]: '兼容性更好，AAA.zh.ass or AAA.zh.default.ass。',
