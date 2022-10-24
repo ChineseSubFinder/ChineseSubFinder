@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/strcut_json"
-	"github.com/huandu/go-clone"
 )
 
 type Settings struct {
@@ -77,6 +76,7 @@ func SetFullNewSettings(inSettings *Settings) error {
 	return _settings.Save()
 }
 
+// SetConfigRootPath 需要先设置这个信息再调用 GetSettings
 func SetConfigRootPath(configRootPath string) {
 	_configRootPath = configRootPath
 }
@@ -126,8 +126,14 @@ func (s *Settings) Save() error {
 
 func (s *Settings) GetNoPasswordSettings() *Settings {
 
-	_ = s.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
-	nowSettings := clone.Clone(s).(*Settings)
+	nowSettings := NewSettings(_configRootPath)
+	err := nowSettings.Read()
+	if err != nil {
+		panic("Can't Read Config File:" + configName + " Error: " + err.Error())
+	}
+	// 需要关闭本地代理的实例，否则无法进行 clone 操作
+	//_ = s.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
+	//nowSettings := clone.Clone(s).(*Settings)
 	nowSettings.UserInfo.Password = noPassword4Show
 	return nowSettings
 }

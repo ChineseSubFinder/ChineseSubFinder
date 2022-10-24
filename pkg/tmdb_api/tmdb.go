@@ -2,18 +2,19 @@ package tmdb_api
 
 import (
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"strconv"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	tmdb "github.com/cyruzin/golang-tmdb"
 	"github.com/sirupsen/logrus"
 )
 
 type TmdbApi struct {
-	l          *logrus.Logger
-	apiKey     string
-	tmdbClient *tmdb.Client
+	l             *logrus.Logger
+	apiKey        string
+	tmdbClient    *tmdb.Client
+	proxySettings *settings.ProxySettings
 }
 
 func NewTmdbHelper(l *logrus.Logger, apiKey string, _proxySettings ...*settings.ProxySettings) (*TmdbApi, error) {
@@ -23,19 +24,19 @@ func NewTmdbHelper(l *logrus.Logger, apiKey string, _proxySettings ...*settings.
 		err = fmt.Errorf("error initializing tmdb client: %s", err)
 		return nil, err
 	}
-	// 获取 http client 实例
-	restyClient, err := pkg.NewHttpClient(_proxySettings...)
-	if err != nil {
-		err = fmt.Errorf("error initializing resty client: %s", err)
-		return nil, err
+
+	var nowProxy *settings.ProxySettings
+	if _proxySettings != nil && len(_proxySettings) > 0 {
+		nowProxy = _proxySettings[0]
 	}
-	tmdbClient.SetClientConfig(*restyClient.GetClient())
-	tmdbClient.SetClientAutoRetry()
-	return &TmdbApi{
-		l:          l,
-		apiKey:     apiKey,
-		tmdbClient: tmdbClient,
-	}, nil
+	t := TmdbApi{
+		l:             l,
+		apiKey:        apiKey,
+		tmdbClient:    tmdbClient,
+		proxySettings: nowProxy,
+	}
+	t.setClientConfig()
+	return &t, nil
 }
 
 func (t *TmdbApi) Alive() bool {
@@ -47,7 +48,7 @@ func (t *TmdbApi) Alive() bool {
 		t.l.Errorln("GetSearchMulti", err)
 		return false
 	}
-	t.l.Infoln("GetSearchMulti TotalResults:", searchMulti.TotalResults)
+	t.l.Infoln("Tmdb Api is Alive", searchMulti.TotalResults)
 	return true
 }
 
@@ -198,6 +199,17 @@ func (t *TmdbApi) ConvertId(iD string, idType string, isMovieOrSeries bool) (con
 	} else {
 		return nil, fmt.Errorf("id type is not supported: " + idType)
 	}
+}
+
+func (t *TmdbApi) setClientConfig() {
+	// 获取 http client 实例
+	restyClient, err := pkg.NewHttpClient(t.proxySettings)
+	if err != nil {
+		err = fmt.Errorf("error initializing resty client: %s", err)
+		return
+	}
+	t.tmdbClient.SetClientConfig(*restyClient.GetClient())
+	t.tmdbClient.SetClientAutoRetry()
 }
 
 const (

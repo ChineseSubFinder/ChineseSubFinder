@@ -44,6 +44,7 @@ func (d *Downloader) queueDownloaderLocal() {
 	// --------------------------------------------------
 	{
 		// 需要判断这个任务是否需要跳过，但是如果这个任务的优先级很高，那么就不跳过
+		// 正常任务是 5，插队任务是3，一次性任务是 0.
 		if oneJob.TaskPriority > task_queue.HighTaskPriorityLevel {
 			// 说明优先级不高，需要进行判断
 			videoType := 0
