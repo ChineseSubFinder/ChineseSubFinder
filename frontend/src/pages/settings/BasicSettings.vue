@@ -115,7 +115,17 @@
           <q-item-label>电影的目录</q-item-label>
         </q-item-section>
         <q-item-section avatar>
-          <template v-for="(item, i) in form.movie_paths" :key="i">
+          <q-btn
+            v-if="!form.movie_paths?.length"
+            icon="add"
+            color="primary"
+            dense
+            rounded
+            size="xs"
+            title="新增"
+            @click="form.movie_paths.push('')"
+          ></q-btn>
+          <template v-else v-for="(item, i) in form.movie_paths" :key="i">
             <div class="row items-center q-gutter-x-md">
               <q-input
                 v-model="form.movie_paths[i]"
@@ -158,7 +168,17 @@
           <q-item-label>连续剧的目录</q-item-label>
         </q-item-section>
         <q-item-section avatar>
-          <template v-for="(item, i) in form.series_paths" :key="i">
+          <q-btn
+            v-if="!form.series_paths?.length"
+            icon="add"
+            color="primary"
+            dense
+            rounded
+            size="xs"
+            title="新增"
+            @click="form.series_paths.push('')"
+          ></q-btn>
+          <template v-else v-for="(item, i) in form.series_paths" :key="i">
             <div class="row items-center q-gutter-md">
               <q-input
                 v-model="form.series_paths[i]"
