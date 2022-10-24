@@ -113,6 +113,9 @@ func (d *Dealers) getMediaInfoFromSelfApi(id, source, videoType string) (*models
 	Year := ""
 	if isMovieOrSeries == true {
 		// 电影
+		if len(findByIDEn.MovieResults) < 1 {
+			return nil, errors.New("not found movie info from tmdb")
+		}
 		tmdbID = findByIDEn.MovieResults[0].ID
 		OriginalTitle = findByIDEn.MovieResults[0].OriginalTitle
 		OriginalLanguage = findByIDEn.MovieResults[0].OriginalLanguage
@@ -122,6 +125,9 @@ func (d *Dealers) getMediaInfoFromSelfApi(id, source, videoType string) (*models
 
 	} else {
 		// 电视剧
+		if len(findByIDEn.TvResults) < 1 {
+			return nil, errors.New("not found series info from tmdb")
+		}
 		tmdbID = findByIDEn.TvResults[0].ID
 		OriginalTitle = findByIDEn.TvResults[0].OriginalName
 		OriginalLanguage = findByIDEn.TvResults[0].OriginalLanguage
