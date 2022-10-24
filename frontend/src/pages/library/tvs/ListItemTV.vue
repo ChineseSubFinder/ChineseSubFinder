@@ -13,7 +13,6 @@
     </div>
     <div class="content-width text-ellipsis-line-2" :title="data.name">{{ data.name }}</div>
     <div class="row items-center">
-      <div class="text-grey">1970-01-01</div>
       <q-space />
       <div>
         <dialog-t-v-detail :data="detailInfo">
@@ -34,10 +33,10 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import DialogTVDetail from 'pages/library/tvs/DialogTVDetail';
 import LibraryApi from 'src/api/LibraryApi';
-import { getUrl } from 'pages/library/useLibrary';
+import { getUrl, subtitleUploadList } from 'pages/library/useLibrary';
 import { VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
 
 const props = defineProps({
@@ -79,6 +78,16 @@ const getIsSkipped = async () => {
 const hasSubtitleVideoCount = computed(
   () => detailInfo.value?.one_video_info.filter((e) => e.sub_f_path_list.length > 0).length
 );
+
+watch(subtitleUploadList, (val, oldValue) => {
+  // 上传字幕列表当前文件有变化时刷新
+  if (
+    detailInfo.value?.one_video_info.some((e) => oldValue.map((f) => f.video_f_path).includes(e.video_f_path)) &&
+    !detailInfo.value?.one_video_info.some((e) => val.map((f) => f.video_f_path).includes(e.video_f_path))
+  ) {
+    getDetailInfo();
+  }
+});
 
 onMounted(() => {
   getPosterInfo();

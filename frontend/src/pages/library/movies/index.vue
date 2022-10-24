@@ -2,24 +2,8 @@
   <q-page class="q-pa-lg">
     <div class="row q-gutter-md">
       <btn-dialog-library-refresh />
-      <btn-dialog-cover-setting />
 
       <q-space />
-
-      <q-select
-        v-model="filterForm.hasSubtitle"
-        dense
-        outlined
-        :options="[
-          { label: '有字幕', value: true },
-          { label: '无字幕', value: false },
-        ]"
-        label="有无字幕"
-        clearable
-        emit-value
-        map-options
-        style="width: 200px"
-      />
 
       <q-input v-model="filterForm.search" outlined dense label="输入关键字搜索">
         <template #append>
@@ -31,7 +15,7 @@
     <q-separator class="q-my-md" />
 
     <div v-if="movies.length" class="row q-gutter-x-md q-gutter-y-lg">
-      <q-intersection v-for="item in filteredMovies" :key="item.name" style="width: 160px; height: 280px">
+      <q-intersection v-for="item in filteredMovies" once :key="item.name" style="width: 160px; height: 280px">
         <list-item-movie :data="item" />
       </q-intersection>
     </div>
@@ -43,7 +27,6 @@
 import { useLibrary } from 'pages/library/useLibrary';
 import { computed, reactive } from 'vue';
 import BtnDialogLibraryRefresh from 'pages/library/BtnDialogLibraryRefresh';
-import BtnDialogCoverSetting from 'pages/library/BtnDialogCoverSetting';
 import ListItemMovie from './ListItemMovie';
 
 const filterForm = reactive({

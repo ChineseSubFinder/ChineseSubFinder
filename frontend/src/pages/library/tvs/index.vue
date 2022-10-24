@@ -2,25 +2,8 @@
   <q-page class="q-pa-lg">
     <div class="row q-gutter-md">
       <btn-dialog-library-refresh />
-      <btn-dialog-cover-setting />
 
       <q-space />
-
-      <q-select
-        v-model="filterForm.hasSubtitle"
-        dense
-        outlined
-        :options="[
-          { label: '无字幕', value: 1 },
-          { label: '部分有字幕', value: 2 },
-          { label: '全部有字幕', value: 3 },
-        ]"
-        label="有无字幕"
-        clearable
-        map-options
-        emit-value
-        style="width: 160px"
-      />
 
       <q-input v-model="filterForm.search" outlined dense label="输入关键字搜索">
         <template #append>
@@ -32,7 +15,7 @@
     <q-separator class="q-my-md" />
 
     <div v-if="tvs.length" class="row q-gutter-x-md q-gutter-y-lg">
-      <q-intersection v-for="item in filteredTvs" :key="item.name" style="width: 160px; height: 280px">
+      <q-intersection v-for="item in filteredTvs" :key="item.name" style="width: 160px; height: 280px" once>
         <list-item-t-v :data="item" />
       </q-intersection>
     </div>
@@ -45,7 +28,6 @@ import { useLibrary } from 'pages/library/useLibrary';
 import { computed, reactive } from 'vue';
 import ListItemTV from 'pages/library/tvs/ListItemTV';
 import BtnDialogLibraryRefresh from 'pages/library/BtnDialogLibraryRefresh';
-import BtnDialogCoverSetting from 'pages/library/BtnDialogCoverSetting';
 
 const filterForm = reactive({
   hasSubtitle: null,
