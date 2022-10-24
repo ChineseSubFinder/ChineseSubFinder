@@ -89,20 +89,6 @@ func (v *VideoListHelper) GetSeriesPoster(seriesDir string) string {
 			return posterFPath
 		}
 	}
-	//files, err := filepath.Glob(filepath.Join(seriesDir, "season*-poster.jpg"))
-	//if err != nil {
-	//	return nil, err
-	//}
-	//println(files)
-	// 获取每一季的封面
-	//dirEntry, err := os.ReadDir(seriesDir)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//for _, fi := range dirEntry {
-	//	lowerName := strings.ToLower(fi.Name())
-	//
-	//}
 
 	return ""
 }
