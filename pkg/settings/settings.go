@@ -35,8 +35,13 @@ func GetSettings(reloadSettings ...bool) *Settings {
 			}
 			_settings = NewSettings(_configRootPath)
 			if isFile(_settings.configFPath) == false {
+
+				err := os.MkdirAll(filepath.Dir(_settings.configFPath), os.ModePerm)
+				if err != nil {
+					panic("创建配置文件目录失败，" + err.Error())
+				}
 				// 配置文件不存在，新建一个空白的
-				err := _settings.Save()
+				err = _settings.Save()
 				if err != nil {
 					panic("Can't Save Config File:" + configName + " Error: " + err.Error())
 				}
