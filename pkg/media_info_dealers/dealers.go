@@ -75,6 +75,11 @@ func (d *Dealers) getMediaInfoFromSelfApi(id, source, videoType string) (*models
 	if source == "imdb" {
 		idType = tmdb_api.ImdbID
 		imdbId = id
+		if videoType == "movie" {
+			isMovieOrSeries = true
+		} else {
+			isMovieOrSeries = false
+		}
 	} else if source == "tmdb" {
 
 		if videoType == "movie" {
