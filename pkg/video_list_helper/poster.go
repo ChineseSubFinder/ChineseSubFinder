@@ -22,6 +22,7 @@ func (v *VideoListHelper) GetMoviePoster(movieFPath string) string {
 
 		movieRootDir := filepath.Dir(movieFPath)
 		movieName := filepath.Base(movieFPath)
+		movieNameWithoutExt := movieName[:len(movieName)-len(filepath.Ext(movieName))]
 		// 1. poster.ext
 		posterFPath := filepath.Join(movieRootDir, "poster"+ext)
 		if pkg.IsFile(posterFPath) {
@@ -38,12 +39,12 @@ func (v *VideoListHelper) GetMoviePoster(movieFPath string) string {
 			return posterFPath
 		}
 		// 4. <movie filename>-poster.ext
-		posterFPath = filepath.Join(movieRootDir, movieName+"-poster"+ext)
+		posterFPath = filepath.Join(movieRootDir, movieNameWithoutExt+"-poster"+ext)
 		if pkg.IsFile(posterFPath) {
 			return posterFPath
 		}
 		// 5. <movie filename>.ext
-		posterFPath = filepath.Join(movieRootDir, movieName+ext)
+		posterFPath = filepath.Join(movieRootDir, movieNameWithoutExt+ext)
 		if pkg.IsFile(posterFPath) {
 			return posterFPath
 		}
