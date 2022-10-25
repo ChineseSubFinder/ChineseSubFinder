@@ -1,16 +1,16 @@
 package cache_center
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
 	"testing"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 )
 
 func TestCacheCenter_DownloadFileAdd(t *testing.T) {
-	cc := NewCacheCenter("testFile", settings.GetSettings(), log_helper.GetLogger4Tester())
+	cc := NewCacheCenter("testFile", log_helper.GetLogger4Tester())
 
 	subInfo := supplier.NewSubInfo(
 		"test",

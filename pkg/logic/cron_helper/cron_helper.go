@@ -5,6 +5,7 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/scan_played_video_subinfo"
+	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 
 	//"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_job"
 	"sync"
@@ -29,7 +30,6 @@ type CronHelper struct {
 	videoScanAndRefreshHelper     *video_scan_and_refresh_helper.VideoScanAndRefreshHelper // 视频扫描和刷新的帮助类
 	cronLock                      sync.Mutex                                               // 锁
 	c                             *cron.Cron                                               // 定时器实例
-	Settings                      *settings.Settings                                       // 设置实例
 	Logger                        *logrus.Logger                                           // 日志实例
 	entryIDScanVideoProcess       cron.EntryID
 	entryIDSupplierCheck          cron.EntryID
@@ -43,7 +43,6 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 	ch := CronHelper{
 		FileDownloader: fileDownloader,
 		Logger:         fileDownloader.Log,
-		Settings:       fileDownloader.Settings,
 		// 实例化下载队列
 		DownloadQueue: task_queue.NewTaskQueue(fileDownloader.CacheCenter),
 	}
@@ -51,21 +50,21 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 	var err error
 	// ----------------------------------------------
 	// 扫描已播放
-	ch.scanPlayedVideoSubInfo, err = scan_played_video_subinfo.NewScanPlayedVideoSubInfo(ch.Logger, ch.Settings, fileDownloader)
+	ch.scanPlayedVideoSubInfo, err = scan_played_video_subinfo.NewScanPlayedVideoSubInfo(ch.Logger, fileDownloader)
 	if err != nil {
 		ch.Logger.Panicln(err)
 	}
 	// ----------------------------------------------
 	// 字幕扫描器
 	ch.videoScanAndRefreshHelper = video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
-		sub_formatter.GetSubFormatter(ch.Logger, ch.Settings.AdvancedSettings.SubNameFormatter),
+		sub_formatter.GetSubFormatter(ch.Logger, settings.Get().AdvancedSettings.SubNameFormatter),
 		ch.FileDownloader,
 		ch.DownloadQueue)
 
 	// ----------------------------------------------
 	// 初始化下载者，里面的两个 func 需要使用定时器启动 SupplierCheck QueueDownloader
 	ch.Downloader = downloader.NewDownloader(
-		sub_formatter.GetSubFormatter(ch.Logger, ch.Settings.AdvancedSettings.SubNameFormatter),
+		sub_formatter.GetSubFormatter(ch.Logger, settings.Get().AdvancedSettings.SubNameFormatter),
 		ch.FileDownloader, ch.DownloadQueue)
 
 	// 强制进行一次字幕源有效性检查
@@ -91,11 +90,11 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	ch.cronLock.Unlock()
 	// ----------------------------------------------
 	// 判断扫描任务的时间间隔是否符合要求，不符合则重写默认值
-	_, err := cron.ParseStandard(ch.Settings.CommonSettings.ScanInterval)
+	_, err := cron.ParseStandard(settings.Get().CommonSettings.ScanInterval)
 	if err != nil {
 		ch.Logger.Warningln("CommonSettings.ScanInterval format error, after v0.25.x , need reset this at WebUI")
 		// 如果解析错误了，就需要重新赋值默认值过来，然后保存
-		nowSettings := ch.Settings
+		nowSettings := settings.Get()
 		nowSettings.CommonSettings.ScanInterval = settings.NewCommonSettings().ScanInterval
 		err = settings.SetFullNewSettings(nowSettings)
 		if err != nil {
@@ -107,9 +106,9 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	ch.c = cron.New(cron.WithChain(cron.DelayIfStillRunning(cron.DefaultLogger)))
 	{
 		// 测试部分定时器代码，提前运行
-		if ch.Settings.SpeedDevMode == true {
+		if settings.Get().SpeedDevMode == true {
 
-			//pj := pre_job.NewPreJob(ch.Settings, ch.Logger)
+			//pj := pre_job.NewPreJob(settings.Get(), ch.Logger)
 			//err = pj.HotFix().Wait()
 			//if err != nil {
 			//	ch.Logger.Errorln(err)
@@ -125,7 +124,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 
 	// 定时器
 	// 这个暂时无法被取消执行
-	ch.entryIDScanVideoProcess, err = ch.c.AddFunc(ch.Settings.CommonSettings.ScanInterval, ch.scanVideoProcessAdd2DownloadQueue)
+	ch.entryIDScanVideoProcess, err = ch.c.AddFunc(settings.Get().CommonSettings.ScanInterval, ch.scanVideoProcessAdd2DownloadQueue)
 	if err != nil {
 		ch.Logger.Panicln("CronHelper scanVideoProcessAdd2DownloadQueue, scanVideoProcessAdd2DownloadQueue Cron entryID:", ch.entryIDScanVideoProcess, "Error:", err)
 	}
@@ -145,10 +144,10 @@ func (ch *CronHelper) Start(runImmediately bool) {
 		ch.Logger.Panicln("CronHelper QueueDownloader, scanPlayedVideoSub Cron entryID:", ch.entryIDScanPlayedVideoSubInfo, "Error:", err)
 	}
 	// 字幕的上传逻辑
-	if ch.Settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
+	if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
 
 		intervalNowTask := "@every 10s"
-		if ch.Settings.SpeedDevMode == true {
+		if settings.Get().SpeedDevMode == true {
 			intervalNowTask = "@every 1s"
 		}
 		ch.entryIDUploadPlayedVideoSub, err = ch.c.AddFunc(intervalNowTask, ch.uploadVideoSub)
@@ -166,7 +165,7 @@ func (ch *CronHelper) Start(runImmediately bool) {
 			//----------------------------------------------
 			// 没有停止，那么继续扫描
 			ch.Logger.Infoln("First Time scanVideoProcessAdd2DownloadQueue Start")
-			if ch.Settings.SpeedDevMode == false {
+			if settings.Get().SpeedDevMode == false {
 				ch.scanVideoProcessAdd2DownloadQueue()
 			}
 			ch.Logger.Infoln("First Time scanVideoProcessAdd2DownloadQueue End")
@@ -249,7 +248,7 @@ func (ch *CronHelper) Stop() {
 func (ch *CronHelper) scanPlayedVideoSub() {
 
 	ch.Logger.Infoln("Update Info...")
-	nowInfo := dao.UpdateInfo(pkg.AppVersion(), ch.Settings)
+	nowInfo := dao.UpdateInfo(pkg.AppVersion(), settings.Get())
 	_, err := ch.FileDownloader.MediaInfoDealers.SubtitleBestApi.FeedBack(
 		nowInfo.Id,
 		nowInfo.Version, nowInfo.MediaServer,
@@ -266,7 +265,7 @@ func (ch *CronHelper) scanPlayedVideoSub() {
 		ch.Logger.Infoln("scanPlayedVideoSub End, Cost:", time.Since(startT).Minutes(), "min")
 		ch.Logger.Infoln("------------------------------------------------------")
 	}()
-	bok, err := ch.scanPlayedVideoSubInfo.GetPlayedItemsSubtitle()
+	bok, err := ch.scanPlayedVideoSubInfo.GetPlayedItemsSubtitle(settings.Get().EmbySettings, common.EmbyApiGetItemsLimitMax)
 	if err != nil {
 		ch.Logger.Errorln(err)
 	}

@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
@@ -23,11 +25,11 @@ func (c *CacheCenter) DownloadFileAdd(subInfo *supplier.SubInfo) error {
 	}
 
 	// 只支持秒或者小时为单位
-	tmpTTL := time.Duration(c.Settings.AdvancedSettings.DownloadFileCache.TTL) * time.Second
-	if c.Settings.AdvancedSettings.DownloadFileCache.Unit == "hour" {
-		tmpTTL = time.Duration(c.Settings.AdvancedSettings.DownloadFileCache.TTL) * time.Hour
+	tmpTTL := time.Duration(settings.Get().AdvancedSettings.DownloadFileCache.TTL) * time.Second
+	if settings.Get().AdvancedSettings.DownloadFileCache.Unit == "hour" {
+		tmpTTL = time.Duration(settings.Get().AdvancedSettings.DownloadFileCache.TTL) * time.Hour
 	} else {
-		tmpTTL = time.Duration(c.Settings.AdvancedSettings.DownloadFileCache.TTL) * time.Second
+		tmpTTL = time.Duration(settings.Get().AdvancedSettings.DownloadFileCache.TTL) * time.Second
 	}
 
 	b, err := json.Marshal(subInfo)

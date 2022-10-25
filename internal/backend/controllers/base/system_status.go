@@ -22,7 +22,7 @@ func (cb *ControllerBase) SystemStatusHandler(c *gin.Context) {
 	}()
 
 	isSetup := false
-	if settings.GetSettings().UserInfo.Username != "" && settings.GetSettings().UserInfo.Password != "" {
+	if settings.Get().UserInfo.Username != "" && settings.Get().UserInfo.Password != "" {
 		// 进行过 setup 了，那么就可以 Login 的流程
 		isSetup = true
 	}

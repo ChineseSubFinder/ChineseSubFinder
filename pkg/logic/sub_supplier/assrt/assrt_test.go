@@ -10,7 +10,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 )
 
 var assrtInstance *Supplier
@@ -26,7 +25,7 @@ func defInstance() {
 	}
 
 	assrtInstance = NewSupplier(file_downloader.NewFileDownloader(
-		cache_center.NewCacheCenter("test", settings.GetSettings(), log_helper.GetLogger4Tester()), authKey))
+		cache_center.NewCacheCenter("test", log_helper.GetLogger4Tester()), authKey))
 }
 
 func TestSupplier_getSubListFromFile(t *testing.T) {

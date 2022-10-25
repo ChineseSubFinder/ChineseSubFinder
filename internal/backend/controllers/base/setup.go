@@ -23,7 +23,7 @@ func (cb *ControllerBase) SetupHandler(c *gin.Context) {
 	}
 	// 只有当用户不存在的时候才能够执行初始化操作
 	found := false
-	if settings.GetSettings().UserInfo.Username != "" && settings.GetSettings().UserInfo.Password != "" {
+	if settings.Get().UserInfo.Username != "" && settings.Get().UserInfo.Password != "" {
 		found = true
 	}
 

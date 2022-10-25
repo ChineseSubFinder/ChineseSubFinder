@@ -53,7 +53,6 @@ import (
 )
 
 type VideoScanAndRefreshHelper struct {
-	settings                 *settings.Settings              // 设置的实例
 	log                      *logrus.Logger                  // 日志实例
 	fileDownloader           *file_downloader.FileDownloader // 文件下载器
 	NeedForcedScanAndDownSub bool                            // 将会强制扫描所有的视频，下载字幕，替换已经存在的字幕，不进行时间段和已存在则跳过的判断。且不会进过 Emby API 的逻辑，智能进行强制去以本程序的方式去扫描。
@@ -71,7 +70,7 @@ type VideoScanAndRefreshHelper struct {
 }
 
 func NewVideoScanAndRefreshHelper(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_downloader.FileDownloader, downloadQueue *task_queue.TaskQueue) *VideoScanAndRefreshHelper {
-	v := VideoScanAndRefreshHelper{settings: fileDownloader.Settings, log: fileDownloader.Log, downloadQueue: downloadQueue,
+	v := VideoScanAndRefreshHelper{log: fileDownloader.Log, downloadQueue: downloadQueue,
 		subSupplierHub: subSupplier.NewSubSupplierHub(
 			xunlei.NewSupplier(fileDownloader),
 		),
@@ -82,7 +81,7 @@ func NewVideoScanAndRefreshHelper(inSubFormatter ifaces.ISubFormatter, fileDownl
 	}
 
 	var err error
-	v.taskControl, err = task_control.NewTaskControl(fileDownloader.Settings.CommonSettings.Threads, v.log)
+	v.taskControl, err = task_control.NewTaskControl(settings.Get().CommonSettings.Threads, v.log)
 	if err != nil {
 		fileDownloader.Log.Panicln(err)
 	}
@@ -131,7 +130,7 @@ func (v *VideoScanAndRefreshHelper) Start(scanLogic *scan_logic.ScanLogic) error
 		v.log.Errorln("FilterMovieAndSeriesNeedDownload", err)
 		return err
 	}
-	if v.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
+	if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
 		v.log.Infoln("ShareSubEnabled is true, will scan share sub")
 		// 根据上面得到的 scanResult 的 Normal 部分进行字幕的扫描，也存入到 VideoSubInfo 中，但是需要标记这个是低可信度的
 		v.scanLowVideoSubInfo(scanResult)
@@ -206,7 +205,7 @@ func (v *VideoScanAndRefreshHelper) ScanNormalMovieAndSeries() (*ScanVideoResult
 		// --------------------------------------------------
 		// 电影
 		// 没有填写 emby_helper api 的信息，那么就走常规的全文件扫描流程
-		normalScanResult.MoviesDirMap, errMovie = search.MatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
+		normalScanResult.MoviesDirMap, errMovie = search.MatchedVideoFileFromDirs(v.log, settings.Get().CommonSettings.MoviePaths)
 	}()
 	wg.Add(1)
 	go func() {
@@ -217,7 +216,7 @@ func (v *VideoScanAndRefreshHelper) ScanNormalMovieAndSeries() (*ScanVideoResult
 		// --------------------------------------------------
 		// 连续剧
 		// 遍历连续剧总目录下的第一层目录
-		normalScanResult.SeriesDirMap, errSeries = seriesHelper.GetSeriesListFromDirs(v.log, v.settings.CommonSettings.SeriesPaths)
+		normalScanResult.SeriesDirMap, errSeries = seriesHelper.GetSeriesListFromDirs(v.log, settings.Get().CommonSettings.SeriesPaths)
 		// ------------------------------------------------------------------------------
 		// 输出调试信息，有那些连续剧文件夹名称
 		if normalScanResult.SeriesDirMap == nil {
@@ -256,7 +255,7 @@ func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *Scan
 	}()
 	v.log.Infoln("ScanEmbyMovieAndSeries Start...")
 
-	if v.settings.EmbySettings.Enable == false {
+	if settings.Get().EmbySettings.Enable == false {
 		v.embyHelper = nil
 		v.log.Infoln("EmbyHelper == nil")
 	} else {
@@ -265,13 +264,10 @@ func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *Scan
 
 			v.log.Infoln("Forced Scan And DownSub, tmpSetting.EmbySettings.MaxRequestVideoNumber = 1000000")
 			// 如果是强制，那么就临时修改 Setting 的 Emby MaxRequestVideoNumber 参数为 1000000
-			//tmpSetting := clone.Clone(v.settings).(*settings.Settings)
-			v.embyHelper = embyHelper.NewEmbyHelper(v.fileDownloader.MediaInfoDealers, v.settings)
-			v.embyHelper.SetMaxRequestVideoNumber(common2.EmbyApiGetItemsLimitMax)
-			v.embyHelper.SetSkipWatched(false)
+			v.embyHelper = embyHelper.NewEmbyHelper(v.fileDownloader.MediaInfoDealers)
 		} else {
 			v.log.Infoln("Not Forced Scan And DownSub")
-			v.embyHelper = embyHelper.NewEmbyHelper(v.fileDownloader.MediaInfoDealers, v.settings)
+			v.embyHelper = embyHelper.NewEmbyHelper(v.fileDownloader.MediaInfoDealers)
 		}
 	}
 	var err error
@@ -284,7 +280,7 @@ func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *Scan
 		embyScanResult := EmbyScanVideoResult{}
 		v.log.Infoln("Movie Sub Dl From Emby API...")
 		// Emby 情况，从 Emby 获取视频信息
-		err = v.refreshEmbySubList()
+		err = v.refreshEmbySubList(settings.Get().EmbySettings, false, common2.EmbyApiGetItemsLimitMax)
 		if err != nil {
 			v.log.Errorln("refreshEmbySubList", err)
 			return err
@@ -306,14 +302,14 @@ func (v *VideoScanAndRefreshHelper) ScanEmbyMovieAndSeries(scanVideoResult *Scan
 // FilterMovieAndSeriesNeedDownload 过滤出需要下载字幕的视频，比如是否跳过中文的剧集，是否超过3个月的下载时间，丢入队列中
 func (v *VideoScanAndRefreshHelper) FilterMovieAndSeriesNeedDownload(scanVideoResult *ScanVideoResult, scanLogic *scan_logic.ScanLogic) error {
 
-	if scanVideoResult.Normal != nil && v.settings.EmbySettings.Enable == false {
+	if scanVideoResult.Normal != nil && settings.Get().EmbySettings.Enable == false {
 		err := v.filterMovieAndSeriesNeedDownloadNormal(scanVideoResult.Normal, scanLogic)
 		if err != nil {
 			return err
 		}
 	}
 
-	if scanVideoResult.Emby != nil && v.settings.EmbySettings.Enable == true {
+	if scanVideoResult.Emby != nil && settings.Get().EmbySettings.Enable == true {
 
 		// 先获取缓存的 Emby 视频信息，有那些已经在这次扫描的时候播放过了
 
@@ -330,7 +326,7 @@ func (v *VideoScanAndRefreshHelper) FilterMovieAndSeriesNeedDownload(scanVideoRe
 // RefreshMediaServerSubList 刷新媒体服务器的字幕列表
 func (v *VideoScanAndRefreshHelper) RefreshMediaServerSubList() error {
 
-	if v.settings.EmbySettings.Enable == false {
+	if settings.Get().EmbySettings.Enable == false {
 		return nil
 	}
 	v.log.Infoln("Refresh Media Server Sub List...")
@@ -340,15 +336,12 @@ func (v *VideoScanAndRefreshHelper) RefreshMediaServerSubList() error {
 
 	v.log.Infoln("tmpSetting.EmbySettings.MaxRequestVideoNumber = 1000000")
 	// 如果是强制，那么就临时修改 Setting 的 Emby MaxRequestVideoNumber 参数为 1000000
-	//tmpSetting := clone.Clone(v.settings).(*settings.Settings)
-	v.embyHelper = embyHelper.NewEmbyHelper(v.fileDownloader.MediaInfoDealers, v.settings)
-	v.embyHelper.SetMaxRequestVideoNumber(common2.EmbyApiGetItemsLimitMax)
-	v.embyHelper.SetSkipWatched(false)
+	v.embyHelper = embyHelper.NewEmbyHelper(v.fileDownloader.MediaInfoDealers)
 	var err error
 	if v.embyHelper != nil {
 		// TODO 如果后续支持了 Jellyfin、Plex 那么这里需要额外正在对应的扫描逻辑
 		// Emby 情况，从 Emby 获取视频信息
-		err = v.refreshEmbySubList()
+		err = v.refreshEmbySubList(settings.Get().EmbySettings, false, common2.EmbyApiGetItemsLimitMax)
 		if err != nil {
 			v.log.Errorln("refreshEmbySubList", err)
 			return err
@@ -380,7 +373,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 
 			v.log.Infoln("--------------------------------------------------------------------------------")
 			v.log.Infoln("scanLowVideoSubInfo.MovieHasChineseSub", videoIndex, videoFPath)
-			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.fileDownloader.MediaInfoDealers, videoFPath, true, v.settings.AdvancedSettings.ProxySettings)
+			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.fileDownloader.MediaInfoDealers, videoFPath, true, settings.Get().AdvancedSettings.ProxySettings)
 			if err != nil {
 				v.log.Warningln("scanLowVideoSubInfo.GetMixMediaInfo", videoFPath, err)
 				continue
@@ -430,7 +423,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 		seriesDirRootFPathLisst := seriesFPath.([]string)
 		for seriesDirIndex, seriesDirRootFPath := range seriesDirRootFPathLisst {
 
-			seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(v.fileDownloader.MediaInfoDealers, seriesDirRootFPath, 90, true, true, v.settings.AdvancedSettings.ProxySettings)
+			seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(v.fileDownloader.MediaInfoDealers, seriesDirRootFPath, 90, true, true, settings.Get().AdvancedSettings.ProxySettings)
 			if err != nil {
 				v.log.Warningln("scanLowVideoSubInfo.ReadSeriesInfoFromDir", seriesDirRootFPath, err)
 				return false
@@ -440,7 +433,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 				continue
 			}
 
-			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.fileDownloader.MediaInfoDealers, seriesInfo.EpList[0].FileFullPath, false, v.settings.AdvancedSettings.ProxySettings)
+			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.fileDownloader.MediaInfoDealers, seriesInfo.EpList[0].FileFullPath, false, settings.Get().AdvancedSettings.ProxySettings)
 			if err != nil {
 				v.log.Warningln("scanLowVideoSubInfo.GetMixMediaInfo", seriesInfo.EpList[0].FileFullPath, err)
 				continue
@@ -572,11 +565,11 @@ func (v *VideoScanAndRefreshHelper) ScrabbleUpVideoList(scanVideoResult *ScanVid
 		scanVideoResult = nil
 	}()
 
-	if scanVideoResult.Normal != nil && v.settings.EmbySettings.Enable == false {
+	if scanVideoResult.Normal != nil && settings.Get().EmbySettings.Enable == false {
 		return v.scrabbleUpVideoListNormal(scanVideoResult.Normal, pathUrlMap)
 	}
 
-	if scanVideoResult.Emby != nil && v.settings.EmbySettings.Enable == true {
+	if scanVideoResult.Emby != nil && settings.Get().EmbySettings.Enable == true {
 		return v.scrabbleUpVideoListEmby(scanVideoResult.Emby, pathUrlMap)
 	}
 
@@ -780,8 +773,8 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 		return movieInfos, seasonInfos
 	}
 	// 排序得到匹配上的路径，最长的那个
-	sortMoviePaths := sort_things.SortStringSliceByLength(v.settings.CommonSettings.MoviePaths)
-	sortSeriesPaths := sort_things.SortStringSliceByLength(v.settings.CommonSettings.SeriesPaths)
+	sortMoviePaths := sort_things.SortStringSliceByLength(settings.Get().CommonSettings.MoviePaths)
+	sortSeriesPaths := sort_things.SortStringSliceByLength(settings.Get().CommonSettings.SeriesPaths)
 	// ----------------------------------------
 	// Emby 过滤，电影
 
@@ -1009,7 +1002,7 @@ func (v *VideoScanAndRefreshHelper) scrabbleUpVideoListEmby(emby *EmbyScanVideoR
 	return movieInfos, seasonInfos
 }
 
-func (v *VideoScanAndRefreshHelper) refreshEmbySubList() error {
+func (v *VideoScanAndRefreshHelper) refreshEmbySubList(embySettings *settings.EmbySettings, SkipWatched bool, maxRequestVideoNumber int) error {
 
 	if v.embyHelper == nil {
 		return nil
@@ -1025,7 +1018,7 @@ func (v *VideoScanAndRefreshHelper) refreshEmbySubList() error {
 	}()
 	v.log.Infoln("Refresh Emby Sub List Start...")
 	//------------------------------------------------------
-	bRefresh, err := v.embyHelper.RefreshEmbySubList()
+	bRefresh, err := v.embyHelper.RefreshEmbySubList(embySettings, SkipWatched, maxRequestVideoNumber)
 	if err != nil {
 		return err
 	}
@@ -1053,7 +1046,7 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 			return err
 		}
 		// 获取 IMDB 信息
-		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.fileDownloader.MediaInfoDealers, videoImdbInfo, v.settings.AdvancedSettings.ProxySettings)
+		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.fileDownloader.MediaInfoDealers, videoImdbInfo, settings.Get().AdvancedSettings.ProxySettings)
 		if err != nil {
 			v.log.Warningln("GetIMDBInfoFromVideoNfoInfo,IMDB:", videoImdbInfo.ImdbId, movieInputData.InputPath, err)
 			return err
@@ -1107,7 +1100,7 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 		}
 
 		// 获取 IMDB 信息
-		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.fileDownloader.MediaInfoDealers, videoNfoInfo, v.settings.AdvancedSettings.ProxySettings)
+		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.fileDownloader.MediaInfoDealers, videoNfoInfo, settings.Get().AdvancedSettings.ProxySettings)
 		if err != nil {
 			v.log.Warningln("GetIMDBInfoFromVideoNfoInfo,IMDB:", videoNfoInfo.ImdbId, seriesInputData.InputPath, err)
 			return err
@@ -1279,8 +1272,8 @@ func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadNormal(norma
 func (v *VideoScanAndRefreshHelper) filterMovieAndSeriesNeedDownloadEmby(emby *EmbyScanVideoResult, scanLogic *scan_logic.ScanLogic) error {
 
 	playedVideoIdMap := make(map[string]bool)
-	if v.settings.EmbySettings.SkipWatched == true {
-		playedVideoIdMap = v.embyHelper.GetVideoIDPlayedMap()
+	if settings.Get().EmbySettings.SkipWatched == true {
+		playedVideoIdMap = v.embyHelper.GetVideoIDPlayedMap(settings.Get().EmbySettings, settings.Get().EmbySettings.MaxRequestVideoNumber)
 	}
 	// ----------------------------------------
 	// Emby 过滤，电影
@@ -1400,7 +1393,7 @@ func (v *VideoScanAndRefreshHelper) getUpdateVideoListFromEmby() ([]emby.EmbyMix
 	var err error
 	var movieList []emby.EmbyMixInfo
 	var seriesSubNeedDlMap map[string][]emby.EmbyMixInfo //  多个需要搜索字幕的连续剧目录，连续剧文件夹名称 -- 每一集的 EmbyMixInfo List
-	movieList, seriesSubNeedDlMap, err = v.embyHelper.GetRecentlyAddVideoListWithNoChineseSubtitle(v.NeedForcedScanAndDownSub)
+	movieList, seriesSubNeedDlMap, err = v.embyHelper.GetRecentlyAddVideoListWithNoChineseSubtitle(settings.Get().EmbySettings, v.NeedForcedScanAndDownSub)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1425,7 +1418,7 @@ func (v *VideoScanAndRefreshHelper) RestoreFixTimelineBK() error {
 	defer v.log.Infoln("End Restore Fix Timeline BK")
 	v.log.Infoln("Start Restore Fix Timeline BK...")
 	//------------------------------------------------------
-	_, err := subTimelineFixerPKG.Restore(v.log, v.settings.CommonSettings.MoviePaths, v.settings.CommonSettings.SeriesPaths)
+	_, err := subTimelineFixerPKG.Restore(v.log, settings.Get().CommonSettings.MoviePaths, settings.Get().CommonSettings.SeriesPaths)
 	if err != nil {
 		return err
 	}

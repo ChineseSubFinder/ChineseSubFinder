@@ -25,14 +25,14 @@ func (cb *ControllerBase) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {
+	if settings.Get().UserInfo.Username == "" || settings.Get().UserInfo.Password == "" {
 		// 配置文件中的账号和密码任意一个未空，提示用户需要进行 setup 流程
 		c.JSON(http.StatusNoContent, backend2.ReplyCommon{Message: "You need do `Setup`"})
 		return
 	}
 
-	if settings.GetSettings().UserInfo.Username != nowUserInfo.Username ||
-		settings.GetSettings().UserInfo.Password != nowUserInfo.Password {
+	if settings.Get().UserInfo.Username != nowUserInfo.Username ||
+		settings.Get().UserInfo.Password != nowUserInfo.Password {
 		// 账号密码不匹配
 		c.JSON(http.StatusBadRequest, backend2.ReplyCommon{Message: "Username or Password Error"})
 		return
@@ -41,7 +41,7 @@ func (cb *ControllerBase) LoginHandler(c *gin.Context) {
 		nowAccessToken := pkg.GenerateAccessToken()
 		common.SetAccessToken(nowAccessToken)
 		c.JSON(http.StatusOK, backend2.ReplyLogin{AccessToken: nowAccessToken,
-			Settings: *settings.GetSettings().GetNoPasswordSettings()})
+			Settings: *settings.Get().GetNoPasswordSettings()})
 		return
 	}
 }

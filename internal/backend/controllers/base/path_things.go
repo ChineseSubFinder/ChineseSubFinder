@@ -66,9 +66,8 @@ func (cb *ControllerBase) CheckEmbyPathHandler(c *gin.Context) {
 		emSettings.SeriesPathsMapping[reqCheckPath.CFSMediaPath] = reqCheckPath.EmbyMediaPath
 	}
 
-	emHelper := emby_helper.NewEmbyHelper(cb.fileDownloader.MediaInfoDealers, &settings.Settings{EmbySettings: &emSettings})
-
-	outList, err := emHelper.CheckPath(reqCheckPath.PathType)
+	emHelper := emby_helper.NewEmbyHelper(cb.fileDownloader.MediaInfoDealers)
+	outList, err := emHelper.CheckPath(&emSettings, reqCheckPath.PathType, emSettings.MaxRequestVideoNumber)
 	if err != nil {
 		return
 	}

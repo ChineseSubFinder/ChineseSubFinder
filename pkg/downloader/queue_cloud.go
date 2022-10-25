@@ -2,12 +2,13 @@ package downloader
 
 import (
 	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 )
 
 func (d *Downloader) queueDownloaderCloud() {
 
 	if pkg.LiteMode() == true ||
-		d.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == false ||
+		settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == false ||
 		d.needSkipCloudTask == true {
 		// Lite 版本无法执行复杂的任务，因为没有浏览器
 		// 如果没有开启共享字幕也不会触发获取云端任务的逻辑
@@ -15,7 +16,7 @@ func (d *Downloader) queueDownloaderCloud() {
 	}
 
 	// 查询云端是否有任务
-	//nowInfo := dao.UpdateInfo(global_value.AppVersion(), d.settings)
+	//nowInfo := dao.UpdateInfo(global_value.AppVersion(), settings.Get())
 	//askDownloadTaskReply, err := d.fileDownloader.SubtitleBestApi.AskDownloadTask(nowInfo.Id)
 	//if err != nil {
 	//	d.log.Errorf("queueDownloaderCloud AskDownloadTask error: %v", err)

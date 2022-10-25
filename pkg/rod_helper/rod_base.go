@@ -416,7 +416,7 @@ func HttpGetFromBrowser(browser *rod.Browser, inputUrl string, tt time.Duration,
 
 // ReloadBrowser 提前把浏览器下载好
 func ReloadBrowser(log *logrus.Logger) {
-	newBrowser, err := NewBrowserEx(NewBrowserOptions(log, true, settings.GetSettings()))
+	newBrowser, err := NewBrowserEx(NewBrowserOptions(log, true, settings.Get()))
 	if err != nil {
 		return
 	}

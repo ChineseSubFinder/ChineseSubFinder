@@ -28,7 +28,6 @@ import (
 )
 
 type Supplier struct {
-	settings          *settings.Settings
 	log               *logrus.Logger
 	fileDownloader    *file_downloader.FileDownloader
 	topic             int
@@ -44,9 +43,8 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	sup.topic = common2.DownloadSubsPerSite
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
-	sup.settings = fileDownloader.Settings
-	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
-		sup.topic = sup.settings.AdvancedSettings.Topic
+	if settings.Get().AdvancedSettings.Topic > 0 && settings.Get().AdvancedSettings.Topic != sup.topic {
+		sup.topic = settings.Get().AdvancedSettings.Topic
 	}
 
 	sup.theSearchInterval = 20 * time.Second
@@ -57,7 +55,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, int64) {
 
 	// 如果没有设置这个 API 接口，那么就任务是不可用的
-	if s.settings.SubtitleSources.AssrtSettings.Token == "" {
+	if settings.Get().SubtitleSources.AssrtSettings.Token == "" {
 		s.isAlive = false
 		return false, 0
 	}
@@ -82,7 +80,7 @@ func (s *Supplier) IsAlive() bool {
 
 func (s *Supplier) OverDailyDownloadLimit() bool {
 
-	if s.settings.AdvancedSettings.SuppliersSettings.Assrt.DailyDownloadLimit == 0 {
+	if settings.Get().AdvancedSettings.SuppliersSettings.Assrt.DailyDownloadLimit == 0 {
 		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit is 0, will Skip Download")
 		return true
 	}
@@ -96,7 +94,7 @@ func (s *Supplier) GetLogger() *logrus.Logger {
 }
 
 func (s *Supplier) GetSettings() *settings.Settings {
-	return s.settings
+	return settings.Get()
 }
 
 func (s *Supplier) GetSupplierName() string {
@@ -106,11 +104,11 @@ func (s *Supplier) GetSupplierName() string {
 func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 
 	outSubInfos := make([]supplier.SubInfo, 0)
-	if s.settings.SubtitleSources.AssrtSettings.Enabled == false {
+	if settings.Get().SubtitleSources.AssrtSettings.Enabled == false {
 		return outSubInfos, nil
 	}
 
-	if s.settings.SubtitleSources.AssrtSettings.Token == "" {
+	if settings.Get().SubtitleSources.AssrtSettings.Token == "" {
 		return nil, errors.New("Token is empty")
 	}
 
@@ -120,11 +118,11 @@ func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo
 func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 
 	outSubInfos := make([]supplier.SubInfo, 0)
-	if s.settings.SubtitleSources.AssrtSettings.Enabled == false {
+	if settings.Get().SubtitleSources.AssrtSettings.Enabled == false {
 		return outSubInfos, nil
 	}
 
-	if s.settings.SubtitleSources.AssrtSettings.Token == "" {
+	if settings.Get().SubtitleSources.AssrtSettings.Token == "" {
 		return nil, errors.New("Token is empty")
 	}
 
@@ -134,11 +132,11 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 func (s *Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 
 	outSubInfos := make([]supplier.SubInfo, 0)
-	if s.settings.SubtitleSources.AssrtSettings.Enabled == false {
+	if settings.Get().SubtitleSources.AssrtSettings.Enabled == false {
 		return outSubInfos, nil
 	}
 
-	if s.settings.SubtitleSources.AssrtSettings.Token == "" {
+	if settings.Get().SubtitleSources.AssrtSettings.Token == "" {
 		return nil, errors.New("Token is empty")
 	}
 
@@ -154,7 +152,7 @@ func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool) ([]suppli
 	s.log.Debugln(s.GetSupplierName(), videoFPath, "Start...")
 
 	outSubInfoList := make([]supplier.SubInfo, 0)
-	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
+	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), videoFPath, "GetMixMediaInfo", err)
 		return nil, err
@@ -287,16 +285,16 @@ func (s *Supplier) getSubByKeyWord(keyword string) (*SearchSubResult, error) {
 
 	s.log.Infoln("Search KeyWord:", keyword)
 	tt := url.QueryEscape(keyword)
-	httpClient, err := pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}
 	var errKnow error
 	resp, err := httpClient.R().
-		Get(s.settings.AdvancedSettings.SuppliersSettings.Assrt.RootUrl +
+		Get(settings.Get().AdvancedSettings.SuppliersSettings.Assrt.RootUrl +
 			"/sub/search?q=" + tt +
 			"&cnt=15&pos=0" +
-			"&token=" + s.settings.SubtitleSources.AssrtSettings.Token)
+			"&token=" + settings.Get().SubtitleSources.AssrtSettings.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -340,17 +338,17 @@ func (s *Supplier) getSubDetail(subID int) (OneSubDetail, error) {
 
 	var subDetail OneSubDetail
 
-	httpClient, err := pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return subDetail, err
 	}
 	resp, err := httpClient.R().
 		SetQueryParams(map[string]string{
-			"token": s.settings.SubtitleSources.AssrtSettings.Token,
+			"token": settings.Get().SubtitleSources.AssrtSettings.Token,
 			"id":    strconv.Itoa(subID),
 		}).
 		SetResult(&subDetail).
-		Get(s.settings.AdvancedSettings.SuppliersSettings.Assrt.RootUrl + "/sub/detail")
+		Get(settings.Get().AdvancedSettings.SuppliersSettings.Assrt.RootUrl + "/sub/detail")
 	if err != nil {
 		if resp != nil {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", subID, err.Error())
@@ -379,16 +377,16 @@ func (s *Supplier) getUserInfo() (UserInfo, error) {
 
 	var userInfo UserInfo
 
-	httpClient, err := pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return userInfo, err
 	}
 	resp, err := httpClient.R().
 		SetQueryParams(map[string]string{
-			"token": s.settings.SubtitleSources.AssrtSettings.Token,
+			"token": settings.Get().SubtitleSources.AssrtSettings.Token,
 		}).
 		SetResult(&userInfo).
-		Get(s.settings.AdvancedSettings.SuppliersSettings.Assrt.RootUrl + "/user/quota")
+		Get(settings.Get().AdvancedSettings.SuppliersSettings.Assrt.RootUrl + "/user/quota")
 	if err != nil {
 		if resp != nil {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", err.Error())

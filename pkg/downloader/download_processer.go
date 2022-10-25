@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	taskQueue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
@@ -47,16 +49,16 @@ func (d *Downloader) movieDlFunc(ctx context.Context, job taskQueue2.OneJob, dow
 	d.downloadQueue.AutoDetectUpdateJobStatus(job, nil)
 
 	// TODO 刷新字幕，这里是 Emby 的，如果是其他的，需要再对接对应的媒体服务器
-	if d.settings.EmbySettings.Enable == true && d.embyHelper != nil && job.MediaServerInsideVideoID != "" {
+	if settings.Get().EmbySettings.Enable == true && d.embyHelper != nil && job.MediaServerInsideVideoID != "" {
 
 		d.log.Infoln("字幕下载完毕，尝试刷新 Emby 中对应字幕", job.VideoFPath, job.MediaServerInsideVideoID)
-		err = d.embyHelper.EmbyApi.UpdateVideoSubList(job.MediaServerInsideVideoID)
+		err = d.embyHelper.EmbyApi.UpdateVideoSubList(settings.Get().EmbySettings, job.MediaServerInsideVideoID)
 		if err != nil {
 			d.log.Errorln("UpdateVideoSubList", job.VideoFPath, job.MediaServerInsideVideoID, "Error:", err)
 			return err
 		}
 	} else {
-		if d.settings.EmbySettings.Enable == false {
+		if settings.Get().EmbySettings.Enable == false {
 			d.log.Infoln("字幕下载完毕，尝试刷新 Emby 中对应字幕", job.VideoFPath, "Skip, because Emby enable is false")
 		} else if d.embyHelper == nil {
 			d.log.Infoln("字幕下载完毕，尝试刷新 Emby 中对应字幕", job.VideoFPath, "Skip, because EmbyHelper is nil")
@@ -82,10 +84,10 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	// 这里拿到了这一部连续剧的所有的剧集信息，以及所有下载到的字幕信息
 	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(
 		d.fileDownloader.MediaInfoDealers, job.SeriesRootDirPath,
-		d.settings.AdvancedSettings.TaskQueue.ExpirationTime,
+		settings.Get().AdvancedSettings.TaskQueue.ExpirationTime,
 		false,
 		false,
-		d.settings.AdvancedSettings.ProxySettings,
+		settings.Get().AdvancedSettings.ProxySettings,
 		epsMap)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("seriesDlFunc.ReadSeriesInfoFromDir, Error: %v", err))
@@ -213,7 +215,7 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 		}
 	}
 	// 是否清理全季的缓存字幕文件夹
-	if d.settings.AdvancedSettings.SaveFullSeasonTmpSubtitles == false {
+	if settings.Get().AdvancedSettings.SaveFullSeasonTmpSubtitles == false {
 		err = sub_helper.DeleteOneSeasonSubCacheFolder(seriesInfo.DirPath)
 		if err != nil {
 			d.log.Errorln("seriesDlFunc.DeleteOneSeasonSubCacheFolder", err)
@@ -228,11 +230,11 @@ func (d *Downloader) seriesDlFunc(ctx context.Context, job taskQueue2.OneJob, do
 	// 哪怕有一个写入到本地成功了，也无需对本次任务报错
 	d.downloadQueue.AutoDetectUpdateJobStatus(job, nil)
 	// TODO 刷新字幕，这里是 Emby 的，如果是其他的，需要再对接对应的媒体服务器
-	if d.settings.EmbySettings.Enable == true && d.embyHelper != nil {
+	if settings.Get().EmbySettings.Enable == true && d.embyHelper != nil {
 
 		if job.MediaServerInsideVideoID != "" {
 			d.log.Infoln("字幕下载完毕，尝试刷新 Emby 中对应字幕", job.SeriesRootDirPath, job.MediaServerInsideVideoID, job.Season, job.Episode)
-			err = d.embyHelper.EmbyApi.UpdateVideoSubList(job.MediaServerInsideVideoID)
+			err = d.embyHelper.EmbyApi.UpdateVideoSubList(settings.Get().EmbySettings, job.MediaServerInsideVideoID)
 			if err != nil {
 				d.log.Errorln("UpdateVideoSubList", job.SeriesRootDirPath, job.MediaServerInsideVideoID, job.Season, job.Episode, "Error:", err)
 				return err

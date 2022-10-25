@@ -25,10 +25,8 @@ import (
 )
 
 type PreDownloadProcess struct {
-	stageName string
-	gError    error
-
-	settings       *settings.Settings
+	stageName      string
+	gError         error
 	log            *logrus.Logger
 	fileDownloader *file_downloader.FileDownloader
 	SubSupplierHub *subSupplier.SubSupplierHub
@@ -39,7 +37,6 @@ func NewPreDownloadProcess(_fileDownloader *file_downloader.FileDownloader) *Pre
 	preDownloadProcess := PreDownloadProcess{
 		fileDownloader: _fileDownloader,
 		log:            _fileDownloader.Log,
-		settings:       _fileDownloader.Settings,
 	}
 	return &preDownloadProcess
 }
@@ -58,7 +55,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 
 	// ------------------------------------------------------------------------
 	// 初始化通知缓存模块
-	notify_center.Notify = notify_center.NewNotifyCenter(p.log, p.settings.DeveloperSettings.BarkServerAddress)
+	notify_center.Notify = notify_center.NewNotifyCenter(p.log, settings.Get().DeveloperSettings.BarkServerAddress)
 	// 清理通知中心
 	notify_center.Notify.Clear()
 	// ------------------------------------------------------------------------
@@ -98,7 +95,7 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 	}
 	// ------------------------------------------------------------------------
 	// 构建每个字幕站点下载者的实例
-	if p.settings.SpeedDevMode == true {
+	if settings.Get().SpeedDevMode == true {
 
 		p.SubSupplierHub = subSupplier.NewSubSupplierHub(
 			//csf.NewSupplier(p.fileDownloader),
@@ -113,13 +110,13 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 			a4k.NewSupplier(p.fileDownloader),
 		)
 
-		if p.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
+		if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
 			// 如果开启了分享字幕功能，那么就可以开启这个功能
 			p.SubSupplierHub.AddSubSupplier(csf.NewSupplier(p.fileDownloader))
 		}
 
-		if p.settings.SubtitleSources.AssrtSettings.Enabled == true &&
-			p.settings.SubtitleSources.AssrtSettings.Token != "" {
+		if settings.Get().SubtitleSources.AssrtSettings.Enabled == true &&
+			settings.Get().SubtitleSources.AssrtSettings.Token != "" {
 			// 如果开启了 ASSRt 字幕源，则需要新增
 			p.SubSupplierHub.AddSubSupplier(assrt.NewSupplier(p.fileDownloader))
 		}
@@ -158,7 +155,7 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 	p.log.Infoln("PreDownloadProcess.Check() Start...")
 	// ------------------------------------------------------------------------
 	// 是否启用代理
-	if p.settings.AdvancedSettings.ProxySettings.UseProxy == false {
+	if settings.Get().AdvancedSettings.ProxySettings.UseProxy == false {
 
 		p.log.Infoln("UseHttpProxy = false")
 		// 如果不使用代理，那么默认需要检测 baidu 的连通性，不通过也继续
@@ -170,9 +167,9 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 		}
 	} else {
 
-		p.log.Infoln("UseHttpProxy By:", p.settings.AdvancedSettings.ProxySettings.UseWhichProxyProtocol)
+		p.log.Infoln("UseHttpProxy By:", settings.Get().AdvancedSettings.ProxySettings.UseWhichProxyProtocol)
 		// 如果使用了代理，那么默认需要检测 google 的连通性，不通过也继续
-		proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.GoogleUrl, p.settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl())
+		proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.GoogleUrl, settings.Get().AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl())
 		if err != nil {
 			p.log.Errorln(errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.GoogleUrl + ", " + err.Error()))
 		} else {
@@ -184,20 +181,20 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 	p.SubSupplierHub.CheckSubSiteStatus()
 	// ------------------------------------------------------------------------
 	// 判断文件夹是否存在
-	if len(p.settings.CommonSettings.MoviePaths) < 1 {
+	if len(settings.Get().CommonSettings.MoviePaths) < 1 {
 		p.log.Warningln("MoviePaths not set, len == 0")
 	}
-	if len(p.settings.CommonSettings.SeriesPaths) < 1 {
+	if len(settings.Get().CommonSettings.SeriesPaths) < 1 {
 		p.log.Warningln("SeriesPaths not set, len == 0")
 	}
-	for i, path := range p.settings.CommonSettings.MoviePaths {
+	for i, path := range settings.Get().CommonSettings.MoviePaths {
 		if pkg.IsDir(path) == false {
 			p.log.Errorln("MovieFolder not found Index", i, "--", path)
 		} else {
 			p.log.Infoln("MovieFolder Index", i, "--", path)
 		}
 	}
-	for i, path := range p.settings.CommonSettings.SeriesPaths {
+	for i, path := range settings.Get().CommonSettings.SeriesPaths {
 		if pkg.IsDir(path) == false {
 			p.log.Errorln("SeriesPaths not found Index", i, "--", path)
 		} else {

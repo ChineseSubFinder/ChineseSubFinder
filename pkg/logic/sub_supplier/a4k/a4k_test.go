@@ -55,7 +55,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")
 	// 读取本地的视频和字幕信息
 	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(log_helper.GetLogger4Tester(), ser,
-		90, false, false, settings.GetSettings().AdvancedSettings.ProxySettings, epsMap)
+		90, false, false, settings.Get().AdvancedSettings.ProxySettings, epsMap)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,9 +93,9 @@ func defInstance() {
 		AESIv16:  pkg.AESIv16(),
 	}
 
-	nowSettings := settings.GetSettings()
+	nowSettings := settings.Get()
 	nowSettings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled = true
 
 	a4kInstance = NewSupplier(file_downloader.NewFileDownloader(
-		cache_center.NewCacheCenter("test", nowSettings, log_helper.GetLogger4Tester()), authKey))
+		cache_center.NewCacheCenter("test", log_helper.GetLogger4Tester()), authKey))
 }

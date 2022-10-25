@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
@@ -133,7 +134,7 @@ func (d *Downloader) queueDownloaderLocal() {
 		isPlayed := false
 		if d.embyHelper != nil {
 			// 在拿出来后，如果是有内部媒体服务器媒体 ID 的，那么就去查询是否已经观看过了
-			isPlayed, err = d.embyHelper.IsVideoPlayed(oneJob.MediaServerInsideVideoID)
+			isPlayed, err = d.embyHelper.IsVideoPlayed(settings.Get().EmbySettings, oneJob.MediaServerInsideVideoID)
 			if err != nil {
 				d.log.Errorln("d.embyHelper.IsVideoPlayed()", oneJob.VideoFPath, err)
 				return

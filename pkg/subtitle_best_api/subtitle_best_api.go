@@ -28,15 +28,13 @@ type SubtitleBestApi struct {
 	log           *logrus.Logger
 	authKey       random_auth_key.AuthKey
 	randomAuthKey *random_auth_key.RandomAuthKey
-	proxySettings *settings.ProxySettings
 }
 
-func NewSubtitleBestApi(log *logrus.Logger, inAuthKey random_auth_key.AuthKey, proxySettings *settings.ProxySettings) *SubtitleBestApi {
+func NewSubtitleBestApi(log *logrus.Logger, inAuthKey random_auth_key.AuthKey) *SubtitleBestApi {
 	return &SubtitleBestApi{
 		log:           log,
 		randomAuthKey: random_auth_key.NewRandomAuthKey(5, inAuthKey),
 		authKey:       inAuthKey,
-		proxySettings: proxySettings,
 	}
 }
 
@@ -79,7 +77,7 @@ func (s *SubtitleBestApi) GetCode() (string, error) {
 	}
 
 	postUrl := webUrlBase + "/v1/subhd-code"
-	httpClient, err := pkg.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return "", err
 	}
@@ -132,7 +130,7 @@ func (s *SubtitleBestApi) GetMediaInfo(id, source, videoType string) (*MediaInfo
 	}
 
 	postUrl := webUrlBase + "/v1/media-info"
-	httpClient, err := pkg.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +169,7 @@ func (s *SubtitleBestApi) AskFroUpload(subSha256 string, IsMovie, trusted bool, 
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/ask-for-upload"
-	httpClient, err := pkg.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +231,7 @@ func (s *SubtitleBestApi) UploadSub(videoSubInfo *models.VideoSubInfo, subSaveRo
 	}
 
 	postUrl := webUrlBase + "/v1/upload-sub"
-	httpClient, err := pkg.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +316,7 @@ func (s *SubtitleBestApi) UploadLowTrustSub(lowTrustVideoSubInfo *models.LowVide
 	}
 
 	postUrl := webUrlBase + "/v1/upload-sub"
-	httpClient, err := pkg.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -407,7 +405,7 @@ func (s *SubtitleBestApi) AskFindSub(VideoFeature, ImdbId, TmdbId, Season, Episo
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/ask-find-sub"
-	httpClient, err := pkg.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -452,7 +450,7 @@ func (s *SubtitleBestApi) FindSub(VideoFeature, ImdbId, TmdbId, Season, Episode,
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/find-sub"
-	httpClient, err := pkg.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -497,7 +495,7 @@ func (s *SubtitleBestApi) AskDownloadSub(SubSha256, DownloadToken, ApiKey string
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/ask-for-download"
-	httpClient, err := pkg.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -539,7 +537,7 @@ func (s *SubtitleBestApi) DownloadSub(SubSha256, DownloadToken, ApiKey, download
 		return nil, errors.New("auth key is not set")
 	}
 	postUrl := webUrlBase + "/v1/download-sub"
-	httpClient, err := pkg.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -613,7 +611,7 @@ func (s *SubtitleBestApi) ConvertId(id, source, videoType string) (*IdConvertRep
 	}
 
 	postUrl := webUrlBase + "/v1/id-convert"
-	httpClient, err := pkg.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -658,7 +656,7 @@ func (s *SubtitleBestApi) FeedBack(id, version, MediaServer string, EnableShare,
 	}
 
 	postUrl := webUrlBase + "/v1/feedback"
-	httpClient, err := pkg.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}
@@ -705,7 +703,7 @@ func (s *SubtitleBestApi) AskDownloadTask(id string) (*AskDownloadTaskReply, err
 	}
 
 	postUrl := webUrlBase + "/v1/ask-download-task"
-	httpClient, err := pkg.NewHttpClient(s.proxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return nil, err
 	}

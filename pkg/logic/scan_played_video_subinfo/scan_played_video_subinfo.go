@@ -34,15 +34,12 @@ import (
 )
 
 type ScanPlayedVideoSubInfo struct {
-	settings       *settings.Settings
 	log            *logrus.Logger
 	fileDownloader *file_downloader.FileDownloader
-
-	embyHelper *embyHelper.EmbyHelper
-
-	taskControl  *task_control.TaskControl
-	canceled     bool
-	canceledLock sync.Mutex
+	embyHelper     *embyHelper.EmbyHelper
+	taskControl    *task_control.TaskControl
+	canceled       bool
+	canceledLock   sync.Mutex
 
 	movieSubMap  map[string]string
 	seriesSubMap map[string]string
@@ -55,7 +52,7 @@ type ScanPlayedVideoSubInfo struct {
 	cacheImdbInfoCacheLocker sync.Mutex
 }
 
-func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings, fileDownloader *file_downloader.FileDownloader) (*ScanPlayedVideoSubInfo, error) {
+func NewScanPlayedVideoSubInfo(log *logrus.Logger, fileDownloader *file_downloader.FileDownloader) (*ScanPlayedVideoSubInfo, error) {
 	var err error
 	var scanPlayedVideoSubInfo ScanPlayedVideoSubInfo
 	scanPlayedVideoSubInfo.log = log
@@ -63,21 +60,19 @@ func NewScanPlayedVideoSubInfo(log *logrus.Logger, _settings *settings.Settings,
 	scanPlayedVideoSubInfo.fileDownloader = fileDownloader
 	// 参入设置信息
 	// 最大获取的视频数目设置到 100W
-	scanPlayedVideoSubInfo.settings = _settings
-	//scanPlayedVideoSubInfo.settings = clone.Clone(_settings).(*settings.Settings)
-	//scanPlayedVideoSubInfo.settings.EmbySettings.MaxRequestVideoNumber = 1000000
+	//settings.Get() = clone.Clone(_settings).(*settings.Settings)
+	//settings.Get().EmbySettings.MaxRequestVideoNumber = 1000000
 	// 检测是否某些参数超出范围
-	scanPlayedVideoSubInfo.settings.Check()
+	settings.Get().Check()
 	// 初始化 Emby API 接口
-	if scanPlayedVideoSubInfo.settings.EmbySettings.Enable == true && scanPlayedVideoSubInfo.settings.EmbySettings.AddressUrl != "" &&
-		scanPlayedVideoSubInfo.settings.EmbySettings.APIKey != "" {
+	if settings.Get().EmbySettings.Enable == true && settings.Get().EmbySettings.AddressUrl != "" &&
+		settings.Get().EmbySettings.APIKey != "" {
 
-		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(fileDownloader.MediaInfoDealers, scanPlayedVideoSubInfo.settings)
-		scanPlayedVideoSubInfo.embyHelper.SetMaxRequestVideoNumber(common2.EmbyApiGetItemsLimitMax)
+		scanPlayedVideoSubInfo.embyHelper = embyHelper.NewEmbyHelper(fileDownloader.MediaInfoDealers)
 	}
 
 	// 初始化任务控制
-	scanPlayedVideoSubInfo.taskControl, err = task_control.NewTaskControl(scanPlayedVideoSubInfo.settings.CommonSettings.Threads, log)
+	scanPlayedVideoSubInfo.taskControl, err = task_control.NewTaskControl(settings.Get().CommonSettings.Threads, log)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +103,7 @@ func (s *ScanPlayedVideoSubInfo) Cancel() {
 	s.taskControl.Release()
 }
 
-func (s *ScanPlayedVideoSubInfo) GetPlayedItemsSubtitle() (bool, error) {
+func (s *ScanPlayedVideoSubInfo) GetPlayedItemsSubtitle(embySettings *settings.EmbySettings, maxRequestVideoNumber int) (bool, error) {
 
 	var err error
 	// 是否是通过 emby_helper api 获取的列表
@@ -118,7 +113,7 @@ func (s *ScanPlayedVideoSubInfo) GetPlayedItemsSubtitle() (bool, error) {
 		return false, nil
 	}
 
-	s.movieSubMap, s.seriesSubMap, err = s.embyHelper.GetPlayedItemsSubtitle()
+	s.movieSubMap, s.seriesSubMap, err = s.embyHelper.GetPlayedItemsSubtitle(embySettings, maxRequestVideoNumber)
 	if err != nil {
 		return false, err
 	}
@@ -250,7 +245,7 @@ func (s *ScanPlayedVideoSubInfo) Scan() error {
 
 				bFoundMovie := false
 				bFoundSeries := false
-				for _, moviePath := range s.settings.CommonSettings.MoviePaths {
+				for _, moviePath := range settings.Get().CommonSettings.MoviePaths {
 					// 先判断类型是否是 Movie
 					if strings.HasPrefix(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, moviePath) == true {
 						bFoundMovie = true
@@ -258,7 +253,7 @@ func (s *ScanPlayedVideoSubInfo) Scan() error {
 					}
 				}
 				if bFoundMovie == false {
-					for _, seriesPath := range s.settings.CommonSettings.SeriesPaths {
+					for _, seriesPath := range settings.Get().CommonSettings.SeriesPaths {
 						// 判断是否是 Series
 						if strings.HasPrefix(thirdPartSetVideoPlayedInfo.PhysicalVideoFileFullPath, seriesPath) == true {
 							bFoundSeries = true
@@ -360,7 +355,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	// 通过视频的绝对路径，从本地的视频文件对应的 nfo 获取到这个视频的 IMDB ID,
 	var err error
-	imdbInfoFromVideoFile, err := imdb_helper.GetIMDBInfoFromVideoFile(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
+	imdbInfoFromVideoFile, err := imdb_helper.GetIMDBInfoFromVideoFile(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		s.log.Errorln("GetIMDBInfoFromVideoFile", err)
 		return

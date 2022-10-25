@@ -93,7 +93,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 		90,
 		false,
 		false,
-		settings.GetSettings().AdvancedSettings.ProxySettings,
+		settings.Get().AdvancedSettings.ProxySettings,
 		epsMap)
 	if err != nil {
 		t.Fatal(err)
@@ -185,5 +185,5 @@ func defInstance() {
 	}
 
 	zimukuInstance = NewSupplier(file_downloader.NewFileDownloader(
-		cache_center.NewCacheCenter("test", settings.GetSettings(), log_helper.GetLogger4Tester()), authKey))
+		cache_center.NewCacheCenter("test", log_helper.GetLogger4Tester()), authKey))
 }

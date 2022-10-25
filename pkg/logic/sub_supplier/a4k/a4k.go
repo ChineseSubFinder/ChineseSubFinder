@@ -29,7 +29,6 @@ import (
 )
 
 type Supplier struct {
-	settings       *settings.Settings
 	log            *logrus.Logger
 	fileDownloader *file_downloader.FileDownloader
 	topic          int
@@ -44,9 +43,8 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	sup.topic = common2.DownloadSubsPerSite
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
-	sup.settings = fileDownloader.Settings
-	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
-		sup.topic = sup.settings.AdvancedSettings.Topic
+	if settings.Get().AdvancedSettings.Topic > 0 && settings.Get().AdvancedSettings.Topic != sup.topic {
+		sup.topic = settings.Get().AdvancedSettings.Topic
 	}
 
 	return &sup
@@ -56,12 +54,12 @@ func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, i
 
 	// 计算当前时间
 	startT := time.Now()
-	httpClient, err := pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive.NewHttpClient", err)
 		return false, 0
 	}
-	searPageUrl := fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.A4k.RootUrl)
+	searPageUrl := fmt.Sprintf(settings.Get().AdvancedSettings.SuppliersSettings.A4k.RootUrl)
 	resp, err := httpClient.R().Get(searPageUrl)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive.Get", err)
@@ -81,7 +79,7 @@ func (s *Supplier) IsAlive() bool {
 
 func (s *Supplier) OverDailyDownloadLimit() bool {
 
-	if s.settings.AdvancedSettings.SuppliersSettings.A4k.DailyDownloadLimit == 0 {
+	if settings.Get().AdvancedSettings.SuppliersSettings.A4k.DailyDownloadLimit == 0 {
 		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit is 0, will Skip Download")
 		return true
 	}
@@ -95,7 +93,7 @@ func (s *Supplier) GetLogger() *logrus.Logger {
 }
 
 func (s *Supplier) GetSettings() *settings.Settings {
-	return s.settings
+	return settings.Get()
 }
 
 func (s *Supplier) GetSupplierName() string {
@@ -113,7 +111,7 @@ func (s *Supplier) GetSubListFromFile4Movie(videoFPath string) ([]supplier.SubIn
 	outSubInfos := make([]supplier.SubInfo, 0)
 
 	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers,
-		videoFPath, true, s.settings.AdvancedSettings.ProxySettings)
+		videoFPath, true, settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "GetMixMediaInfo", err)
 		return nil, err
@@ -144,7 +142,7 @@ func (s *Supplier) GetSubListFromFile4Movie(videoFPath string) ([]supplier.SubIn
 	downloadCounter := 0
 	for _, searchResultItem := range searchResultItems {
 
-		downloadPageUrl := s.settings.AdvancedSettings.SuppliersSettings.A4k.RootUrl + searchResultItem.RUrl
+		downloadPageUrl := settings.Get().AdvancedSettings.SuppliersSettings.A4k.RootUrl + searchResultItem.RUrl
 		subInfo, err := s.downloadSub(videoFPath, downloadPageUrl, 0, 0)
 		if err != nil {
 			s.log.Errorln(s.GetSupplierName(), "downloadSub", err)
@@ -176,7 +174,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 
 		mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers,
-			episodeInfo.FileFullPath, false, s.settings.AdvancedSettings.ProxySettings)
+			episodeInfo.FileFullPath, false, settings.Get().AdvancedSettings.ProxySettings)
 		if err != nil {
 			s.log.Errorln(s.GetSupplierName(), "GetMixMediaInfo", err)
 			return nil, err
@@ -222,7 +220,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 			} else if episodeInfo.Season == searchResultItem.Season && searchResultItem.IsFullSeason == true {
 				// Season 匹配上，Eps 为 0 则下载，全季
 			}
-			downloadPageUrl := s.settings.AdvancedSettings.SuppliersSettings.A4k.RootUrl + searchResultItem.RUrl
+			downloadPageUrl := settings.Get().AdvancedSettings.SuppliersSettings.A4k.RootUrl + searchResultItem.RUrl
 			// 注意这里传入的 Season Episode 是这个字幕下载时候解析出来的信息
 			subInfo, err := s.downloadSub(episodeInfo.FileFullPath, downloadPageUrl, searchResultItem.Season, searchResultItem.Episode)
 			if err != nil {
@@ -287,13 +285,13 @@ func (s *Supplier) listPageItems(keyword string, pageIndex int, isMovie bool) (s
 		time.Sleep(time.Second * 10)
 	}()
 	searchResultItems = make([]SearchResultItem, 0)
-	httpClient, err := pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		err = errors.New("NewHttpClient error:" + err.Error())
 		return
 	}
 	// 先对第一页进行分析
-	searPageUrl := fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.A4k.RootUrl+"/search?term=%s&page=%d", url.QueryEscape(keyword), pageIndex)
+	searPageUrl := fmt.Sprintf(settings.Get().AdvancedSettings.SuppliersSettings.A4k.RootUrl+"/search?term=%s&page=%d", url.QueryEscape(keyword), pageIndex)
 	resp, err := httpClient.R().Get(searPageUrl)
 	if err != nil {
 		err = errors.New("http get error:" + err.Error())
@@ -390,7 +388,7 @@ func (s *Supplier) downloadSub(videoFileName, downloadPageUrl string, season, ep
 	}()
 
 	var httpClient *resty.Client
-	httpClient, err = pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err = pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		err = errors.New("NewHttpClient error:" + err.Error())
 		return
@@ -420,7 +418,7 @@ func (s *Supplier) downloadSub(videoFileName, downloadPageUrl string, season, ep
 		return
 	}
 	// 开始下载
-	downloadFileUrl := s.settings.AdvancedSettings.SuppliersSettings.A4k.RootUrl + downloadBtHrefUrl
+	downloadFileUrl := settings.Get().AdvancedSettings.SuppliersSettings.A4k.RootUrl + downloadBtHrefUrl
 	subInfo, err = s.fileDownloader.GetA4k(s.GetSupplierName(), 0, season, eps, videoFileName, downloadFileUrl)
 	if err != nil {
 		err = errors.New("fileDownloader.Get error:" + err.Error())

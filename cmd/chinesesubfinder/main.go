@@ -41,7 +41,7 @@ func newLog() *logrus.Logger {
 		log_helper.LogNameChineseSubFinder,
 		pkg.ConfigRootDirFPath(),
 		level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour,
-		settings.GetSettings().ExperimentalFunction.ExtendLog)
+		settings.Get().ExperimentalFunction.ExtendLog)
 	logger.AddHook(log_helper.NewLoggerHub())
 
 	return logger
@@ -78,13 +78,13 @@ func init() {
 	}
 	// --------------------------------------------------
 	// 初始化设备的信息
-	dao.UpdateInfo(AppVersion, settings.GetSettings())
+	dao.UpdateInfo(AppVersion, settings.Get())
 
 	// 砍掉，启动就进行扫描的逻辑
-	settings.GetSettings().CommonSettings.RunScanAtStartUp = false
-	err := settings.GetSettings().Save()
+	settings.Get().CommonSettings.RunScanAtStartUp = false
+	err := settings.Get().Save()
 	if err != nil {
-		loggerBase.Panicln("settings.GetSettings().Save() err:", err)
+		loggerBase.Panicln("settings.Get().Save() err:", err)
 	}
 }
 
@@ -92,7 +92,7 @@ func main() {
 
 	// ------------------------------------------------------------------------
 	// 如果是 Debug 模式，那么就需要写入特殊文件
-	if settings.GetSettings().AdvancedSettings.DebugMode == true {
+	if settings.Get().AdvancedSettings.DebugMode == true {
 		err := log_helper.WriteDebugFile()
 		if err != nil {
 			loggerBase.Errorln("log_helper.WriteDebugFile " + err.Error())
@@ -119,20 +119,20 @@ func main() {
 
 	// ------------------------------------------------------------------------
 	// 设置接口的 API TOKEN
-	if settings.GetSettings().ExperimentalFunction.ApiKeySettings.Enabled == true {
-		common.SetApiToken(settings.GetSettings().ExperimentalFunction.ApiKeySettings.Key)
+	if settings.Get().ExperimentalFunction.ApiKeySettings.Enabled == true {
+		common.SetApiToken(settings.Get().ExperimentalFunction.ApiKeySettings.Key)
 	} else {
 		common.SetApiToken("")
 	}
 	// 是否开启开发模式，跳过某些流程
-	settings.GetSettings().SpeedDevMode = true
-	if settings.GetSettings().SpeedDevMode == true {
+	settings.Get().SpeedDevMode = true
+	if settings.Get().SpeedDevMode == true {
 		loggerBase.Infoln("Speed Dev Mode is On")
 		pkg.SetLiteMode(true)
 	} else {
 		loggerBase.Infoln("Speed Dev Mode is Off")
 	}
-	if settings.GetSettings().AdvancedSettings.DebugMode == true {
+	if settings.Get().AdvancedSettings.DebugMode == true {
 		// 如果是 DebugMode 那么开启性能监控
 		go func() {
 			// 开启pprof，监听请求
@@ -144,8 +144,8 @@ func main() {
 	}
 	// ------------------------------------------------------------------------
 	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
-	if settings.GetSettings().SpeedDevMode == false {
-		pj := pre_job.NewPreJob(settings.GetSettings(), loggerBase)
+	if settings.Get().SpeedDevMode == false {
+		pj := pre_job.NewPreJob(settings.Get(), loggerBase)
 
 		if pkg.LiteMode() == true {
 			// 不启用 Chrome 相关操作
@@ -164,7 +164,7 @@ func main() {
 	}
 	// ----------------------------------------------
 	fileDownloader := file_downloader.NewFileDownloader(
-		cache_center.NewCacheCenter("local_task_queue", settings.GetSettings(), loggerBase),
+		cache_center.NewCacheCenter("local_task_queue", loggerBase),
 		random_auth_key.AuthKey{
 			BaseKey:  pkg.BaseKey(),
 			AESKey16: pkg.AESKey16(),
@@ -172,14 +172,14 @@ func main() {
 		})
 	// ----------------------------------------------
 	cronHelper := cron_helper.NewCronHelper(fileDownloader)
-	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {
+	if settings.Get().UserInfo.Username == "" || settings.Get().UserInfo.Password == "" {
 		// 如果没有完成，那么就不开启
 		loggerBase.Infoln("Need do Setup")
 	} else {
 		// 是否完成了 Setup，如果完成了，那么就开启第一次的扫描
 		go func() {
 			loggerBase.Infoln("Setup is Done")
-			cronHelper.Start(settings.GetSettings().CommonSettings.RunScanAtStartUp)
+			cronHelper.Start(settings.Get().CommonSettings.RunScanAtStartUp)
 		}()
 	}
 
@@ -188,7 +188,7 @@ func main() {
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
 	restartSignal := make(chan interface{}, 1)
 	defer close(restartSignal)
-	bend := backend.NewBackEnd(loggerBase, settings.GetSettings(), cronHelper, nowPort, restartSignal)
+	bend := backend.NewBackEnd(loggerBase, settings.Get(), cronHelper, nowPort, restartSignal)
 	go bend.Restart()
 	restartSignal <- 1
 	// 阻塞

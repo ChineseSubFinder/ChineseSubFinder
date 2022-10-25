@@ -7,6 +7,7 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
@@ -29,7 +30,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 	videoFileName := filepath.Base(oneVideoFullPath)
 	// -------------------------------------------------
 	// 调试缓存，把下载好的字幕写到对应的视频目录下，方便调试
-	if d.settings.AdvancedSettings.DebugMode == true {
+	if settings.Get().AdvancedSettings.DebugMode == true {
 
 		err = pkg.CopyFiles2DebugFolder([]string{videoFileName}, organizeSubFiles)
 		if err != nil {
@@ -50,7 +51,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 		// 找个错误可以忍
 		d.log.Errorln("SearchVideoMatchSubFileAndRemoveExtMark,", oneVideoFullPath, err)
 	}
-	if d.settings.AdvancedSettings.SaveMultiSub == false {
+	if settings.Get().AdvancedSettings.SaveMultiSub == false {
 		// 选择最优的一个字幕
 		var finalSubFile *subparser.FileInfo
 		finalSubFile = d.mk.SelectOneSubFile(organizeSubFiles)
@@ -72,7 +73,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 		// 找到了，写入文件
 		err = d.SaveSubHelper.WriteSubFile2VideoPath(oneVideoFullPath, *finalSubFile, "", bSetDefault, false)
 		if err != nil {
-			return errors.New(fmt.Sprintf("SaveMultiSub: %v, writeSubFile2VideoPath, Error: %v ", d.settings.AdvancedSettings.SaveMultiSub, err))
+			return errors.New(fmt.Sprintf("SaveMultiSub: %v, writeSubFile2VideoPath, Error: %v ", settings.Get().AdvancedSettings.SaveMultiSub, err))
 		}
 	} else {
 		// 每个网站 Top1 的字幕
@@ -97,7 +98,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 				}
 				err = d.SaveSubHelper.WriteSubFile2VideoPath(oneVideoFullPath, file, siteNames[i], setDefault, false)
 				if err != nil {
-					return errors.New(fmt.Sprintf("SaveMultiSub: %v, writeSubFile2VideoPath, Error: %v ", d.settings.AdvancedSettings.SaveMultiSub, err))
+					return errors.New(fmt.Sprintf("SaveMultiSub: %v, writeSubFile2VideoPath, Error: %v ", settings.Get().AdvancedSettings.SaveMultiSub, err))
 				}
 			}
 		} else {
@@ -111,7 +112,7 @@ func (d *Downloader) oneVideoSelectBestSub(oneVideoFullPath string, organizeSubF
 			for i := len(finalSubFiles) - 1; i > -1; i-- {
 				err = d.SaveSubHelper.WriteSubFile2VideoPath(oneVideoFullPath, finalSubFiles[i], siteNames[i], false, false)
 				if err != nil {
-					return errors.New(fmt.Sprintf("SaveMultiSub: %v, writeSubFile2VideoPath, Error: %v ", d.settings.AdvancedSettings.SaveMultiSub, err))
+					return errors.New(fmt.Sprintf("SaveMultiSub: %v, writeSubFile2VideoPath, Error: %v ", settings.Get().AdvancedSettings.SaveMultiSub, err))
 				}
 			}
 		}

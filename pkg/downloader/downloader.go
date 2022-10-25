@@ -33,7 +33,6 @@ import (
 
 // Downloader 实例化一次用一次，不要反复的使用，很多临时标志位需要清理。
 type Downloader struct {
-	settings                 *settings.Settings
 	log                      *logrus.Logger
 	fileDownloader           *file_downloader.FileDownloader
 	ctx                      context.Context
@@ -65,9 +64,8 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	downloader.fileDownloader = fileDownloader
 	downloader.log = fileDownloader.Log
 	// 参入设置信息
-	downloader.settings = fileDownloader.Settings
 	// 检测是否某些参数超出范围
-	downloader.settings.Check()
+	settings.Get().Check()
 	// 这里就不单独弄一个 settings.SubNameFormatter 字段来传递值了，因为 inSubFormatter 就已经知道是什么 formatter 了
 	downloader.subNameFormatter = subCommon.FormatterName(downloader.subFormatter.GetFormatterFormatterName())
 
@@ -80,12 +78,12 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	sitesSequence = append(sitesSequence, common2.SubSiteA4K)
 	sitesSequence = append(sitesSequence, common2.SubSiteShooter)
 	sitesSequence = append(sitesSequence, common2.SubSiteXunLei)
-	downloader.mk = markSystem.NewMarkingSystem(downloader.log, sitesSequence, downloader.settings.AdvancedSettings.SubTypePriority)
+	downloader.mk = markSystem.NewMarkingSystem(downloader.log, sitesSequence, settings.Get().AdvancedSettings.SubTypePriority)
 
 	// 初始化，字幕校正的实例
-	downloader.subTimelineFixerHelperEx = sub_timeline_fixer.NewSubTimelineFixerHelperEx(downloader.log, *downloader.settings.TimelineFixerSettings)
+	downloader.subTimelineFixerHelperEx = sub_timeline_fixer.NewSubTimelineFixerHelperEx(downloader.log, *settings.Get().TimelineFixerSettings)
 
-	if downloader.settings.AdvancedSettings.FixTimeLine == true {
+	if settings.Get().AdvancedSettings.FixTimeLine == true {
 		downloader.subTimelineFixerHelperEx.Check()
 	}
 	// 任务队列
@@ -93,15 +91,15 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 	// 单个任务的超时设置
 	downloader.ctx, downloader.cancel = context.WithCancel(context.Background())
 	// 用于字幕下载后的刷新
-	if downloader.settings.EmbySettings.Enable == true {
-		downloader.embyHelper = embyHelper.NewEmbyHelper(downloader.fileDownloader.MediaInfoDealers, downloader.settings)
+	if settings.Get().EmbySettings.Enable == true {
+		downloader.embyHelper = embyHelper.NewEmbyHelper(downloader.fileDownloader.MediaInfoDealers)
 	}
 
 	downloader.ScanLogic = scan_logic.NewScanLogic(downloader.log)
 
 	downloader.SaveSubHelper = save_sub_helper.NewSaveSubHelper(
 		downloader.log,
-		downloader.settings, downloader.subFormatter,
+		downloader.subFormatter,
 		downloader.subTimelineFixerHelperEx)
 
 	downloader.ManualUploadSub2Local = manual_upload_sub_2_local.NewManualUploadSub2Local(downloader.log, downloader.SaveSubHelper, downloader.ScanLogic)
@@ -150,7 +148,7 @@ func (d *Downloader) SupplierCheck() {
 	// 下载前的初始化
 	d.log.Infoln("PreDownloadProcess.Init().Check().Wait()...")
 
-	if d.settings.SpeedDevMode == true {
+	if settings.Get().SpeedDevMode == true {
 		// 这里是调试使用的，指定了只用一个字幕源
 		//subSupplierHub := subSupplier.NewSubSupplierHub(csf.NewSupplier(d.fileDownloader))
 		subSupplierHub := subSupplier.NewSubSupplierHub(assrt.NewSupplier(d.fileDownloader))

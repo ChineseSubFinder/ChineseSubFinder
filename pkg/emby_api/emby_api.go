@@ -16,44 +16,23 @@ import (
 )
 
 type EmbyApi struct {
-	log                   *logrus.Logger
-	embyConfig            *settings.EmbySettings
-	maxRequestVideoNumber int
-	skipWatched           bool
-	timeOut               time.Duration
-	client                *resty.Client
+	log     *logrus.Logger
+	timeOut time.Duration
 }
 
-func NewEmbyApi(log *logrus.Logger, embyConfig *settings.EmbySettings) *EmbyApi {
+func NewEmbyApi(log *logrus.Logger) *EmbyApi {
 	em := EmbyApi{}
 	em.log = log
-	em.embyConfig = embyConfig
 	// 检查是否超过范围
-	em.embyConfig.Check()
+	settings.Get().Check()
 	// 强制设置
 	em.timeOut = 5 * 60 * time.Second
-	em.maxRequestVideoNumber = embyConfig.MaxRequestVideoNumber
-	em.skipWatched = embyConfig.SkipWatched
-	// 见 https://github.com/allanpk716/ChineseSubFinder/issues/140
-	em.client = resty.New().SetTransport(&http.Transport{
-		DisableKeepAlives:   true,
-		MaxIdleConns:        100,
-		MaxIdleConnsPerHost: 100,
-	}).RemoveProxy().SetTimeout(em.timeOut)
 	return &em
 }
 
-func (em *EmbyApi) SetMaxRequestVideoNumber(maxValue int) {
-	em.maxRequestVideoNumber = maxValue
-}
-
-func (em *EmbyApi) SetSkipWatched(skip bool) {
-	em.skipWatched = skip
-}
-
 // RefreshRecentlyVideoInfo 字幕下载完毕一次，就可以触发一次这个。并发 6 线程去刷新
-func (em *EmbyApi) RefreshRecentlyVideoInfo() error {
-	items, err := em.GetRecentlyItems()
+func (em *EmbyApi) RefreshRecentlyVideoInfo(embySettings *settings.EmbySettings, SkipWatched bool, maxRequestVideoNumber int) error {
+	items, err := em.GetRecentlyItems(embySettings, SkipWatched, maxRequestVideoNumber)
 	if err != nil {
 		return err
 	}
@@ -62,9 +41,9 @@ func (em *EmbyApi) RefreshRecentlyVideoInfo() error {
 
 	updateFunc := func(i interface{}) error {
 		tmpId := i.(string)
-		return em.UpdateVideoSubList(tmpId)
+		return em.UpdateVideoSubList(embySettings, tmpId)
 	}
-	p, err := ants.NewPoolWithFunc(em.embyConfig.Threads, func(inData interface{}) {
+	p, err := ants.NewPoolWithFunc(embySettings.Threads, func(inData interface{}) {
 		data := inData.(InputData)
 		defer data.Wg.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), em.timeOut)
@@ -116,15 +95,15 @@ func (em *EmbyApi) RefreshRecentlyVideoInfo() error {
 	return nil
 }
 
-func (em *EmbyApi) GetRecentItemsByUserID(userId string) (emby.EmbyRecentlyItems, error) {
+func (em *EmbyApi) GetRecentItemsByUserID(embySettings *settings.EmbySettings, userId string, maxRequestVideoNumber int) (emby.EmbyRecentlyItems, error) {
 
 	var tmpRecItems emby.EmbyRecentlyItems
 	// 获取指定用户的视频列表
-	_, err := em.client.R().
+	_, err := em.createClient().R().
 		SetQueryParams(map[string]string{
-			"api_key":          em.embyConfig.APIKey,
+			"api_key":          embySettings.APIKey,
 			"IsUnaired":        "false",
-			"Limit":            fmt.Sprintf("%d", em.maxRequestVideoNumber),
+			"Limit":            fmt.Sprintf("%d", maxRequestVideoNumber),
 			"Recursive":        "true",
 			"SortOrder":        "Descending",
 			"IncludeItemTypes": "Episode,Movie",
@@ -132,7 +111,7 @@ func (em *EmbyApi) GetRecentItemsByUserID(userId string) (emby.EmbyRecentlyItems
 			"SortBy":           "DateCreated",
 		}).
 		SetResult(&tmpRecItems).
-		Get(em.embyConfig.AddressUrl + "/emby/Users/" + userId + "/Items")
+		Get(embySettings.AddressUrl + "/emby/Users/" + userId + "/Items")
 	if err != nil {
 		return emby.EmbyRecentlyItems{}, err
 	}
@@ -142,22 +121,22 @@ func (em *EmbyApi) GetRecentItemsByUserID(userId string) (emby.EmbyRecentlyItems
 
 // GetRecentlyItems 获取近期的视频(根据 SkipWatched 的情况，如果不跳过，那么就是获取所有用户的列表，如果是跳过，那么就会单独读取每个用户的再交叉判断)
 // 在 API 调试界面 -- ItemsService
-func (em *EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
+func (em *EmbyApi) GetRecentlyItems(embySettings *settings.EmbySettings, SkipWatched bool, maxRequestVideoNumber int) (emby.EmbyRecentlyItems, error) {
 
 	var recItems emby.EmbyRecentlyItems
 	recItems.Items = make([]emby.EmbyRecentlyItem, 0)
 	var recItemMap = make(map[string]emby.EmbyRecentlyItem)
 	var recItemExsitMap = make(map[string]emby.EmbyRecentlyItem)
 	var err error
-	if em.skipWatched == false {
+	if SkipWatched == false {
 		em.log.Debugln("Emby Setting SkipWatched = false")
 
 		// 默认是不指定某一个User的视频列表
-		_, err = em.client.R().
+		_, err = em.createClient().R().
 			SetQueryParams(map[string]string{
-				"api_key":          em.embyConfig.APIKey,
+				"api_key":          embySettings.APIKey,
 				"IsUnaired":        "false",
-				"Limit":            fmt.Sprintf("%d", em.maxRequestVideoNumber),
+				"Limit":            fmt.Sprintf("%d", maxRequestVideoNumber),
 				"Recursive":        "true",
 				"SortOrder":        "Descending",
 				"IncludeItemTypes": "Episode,Movie",
@@ -165,7 +144,7 @@ func (em *EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 				"SortBy":           "DateCreated",
 			}).
 			SetResult(&recItems).
-			Get(em.embyConfig.AddressUrl + "/emby/Items")
+			Get(embySettings.AddressUrl + "/emby/Items")
 
 		if err != nil {
 			return emby.EmbyRecentlyItems{}, err
@@ -174,14 +153,14 @@ func (em *EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 		em.log.Debugln("Emby Setting SkipWatched = true")
 
 		var userIds emby.EmbyUsers
-		userIds, err = em.GetUserIdList()
+		userIds, err = em.GetUserIdList(embySettings)
 		if err != nil {
 			return emby.EmbyRecentlyItems{}, err
 		}
 
 		for _, item := range userIds.Items {
 
-			tmpRecItems, err := em.GetRecentItemsByUserID(item.Id)
+			tmpRecItems, err := em.GetRecentItemsByUserID(embySettings, item.Id, maxRequestVideoNumber)
 			if err != nil {
 				return emby.EmbyRecentlyItems{}, err
 			}
@@ -224,14 +203,15 @@ func (em *EmbyApi) GetRecentlyItems() (emby.EmbyRecentlyItems, error) {
 }
 
 // GetUserIdList 获取所有的 UserId
-func (em *EmbyApi) GetUserIdList() (emby.EmbyUsers, error) {
+func (em *EmbyApi) GetUserIdList(embySettings *settings.EmbySettings) (emby.EmbyUsers, error) {
 	var recItems emby.EmbyUsers
-	_, err := em.client.R().
+
+	_, err := em.createClient().R().
 		SetQueryParams(map[string]string{
-			"api_key": em.embyConfig.APIKey,
+			"api_key": embySettings.APIKey,
 		}).
 		SetResult(&recItems).
-		Get(em.embyConfig.AddressUrl + "/emby/Users/Query")
+		Get(embySettings.AddressUrl + "/emby/Users/Query")
 
 	if err != nil {
 		return emby.EmbyUsers{}, err
@@ -240,16 +220,16 @@ func (em *EmbyApi) GetUserIdList() (emby.EmbyUsers, error) {
 }
 
 // GetItemAncestors 获取父级信息，在 API 调试界面 -- LibraryService
-func (em *EmbyApi) GetItemAncestors(id string) ([]emby.EmbyItemsAncestors, error) {
+func (em *EmbyApi) GetItemAncestors(embySettings *settings.EmbySettings, id string) ([]emby.EmbyItemsAncestors, error) {
 
 	var recItems []emby.EmbyItemsAncestors
 
-	_, err := em.client.R().
+	_, err := em.createClient().R().
 		SetQueryParams(map[string]string{
-			"api_key": em.embyConfig.APIKey,
+			"api_key": embySettings.APIKey,
 		}).
 		SetResult(&recItems).
-		Get(em.embyConfig.AddressUrl + "/emby/Items/" + id + "/Ancestors")
+		Get(embySettings.AddressUrl + "/emby/Items/" + id + "/Ancestors")
 	if err != nil {
 		return nil, err
 	}
@@ -259,16 +239,16 @@ func (em *EmbyApi) GetItemAncestors(id string) ([]emby.EmbyItemsAncestors, error
 
 // GetItemVideoInfo 在 API 调试界面 -- UserLibraryService，如果是电影，那么是可以从 ProviderIds 得到 IMDB ID 的
 // 如果是连续剧，那么不能使用一集的ID取获取，需要是这个剧集的 ID，注意一季的ID也是不行的
-func (em *EmbyApi) GetItemVideoInfo(id string) (emby.EmbyVideoInfo, error) {
+func (em *EmbyApi) GetItemVideoInfo(embySettings *settings.EmbySettings, id string) (emby.EmbyVideoInfo, error) {
 
 	var recItem emby.EmbyVideoInfo
 
-	_, err := em.client.R().
+	_, err := em.createClient().R().
 		SetQueryParams(map[string]string{
-			"api_key": em.embyConfig.APIKey,
+			"api_key": embySettings.APIKey,
 		}).
 		SetResult(&recItem).
-		Get(em.embyConfig.AddressUrl + "/emby/LiveTv/Programs/" + id)
+		Get(embySettings.AddressUrl + "/emby/LiveTv/Programs/" + id)
 	if err != nil {
 		return emby.EmbyVideoInfo{}, err
 	}
@@ -277,16 +257,16 @@ func (em *EmbyApi) GetItemVideoInfo(id string) (emby.EmbyVideoInfo, error) {
 }
 
 // GetItemVideoInfoByUserId 可以拿到这个视频的选择字幕Index，配合 GetItemVideoInfo 使用。 在 API 调试界面 -- UserLibraryService
-func (em *EmbyApi) GetItemVideoInfoByUserId(userId, videoId string) (emby.EmbyVideoInfoByUserId, error) {
+func (em *EmbyApi) GetItemVideoInfoByUserId(embySettings *settings.EmbySettings, userId, videoId string) (emby.EmbyVideoInfoByUserId, error) {
 
 	var recItem emby.EmbyVideoInfoByUserId
 
-	_, err := em.client.R().
+	_, err := em.createClient().R().
 		SetQueryParams(map[string]string{
-			"api_key": em.embyConfig.APIKey,
+			"api_key": embySettings.APIKey,
 		}).
 		SetResult(&recItem).
-		Get(em.embyConfig.AddressUrl + "/emby/Users/" + userId + "/Items/" + videoId)
+		Get(embySettings.AddressUrl + "/emby/Users/" + userId + "/Items/" + videoId)
 	if err != nil {
 		return emby.EmbyVideoInfoByUserId{}, err
 	}
@@ -295,14 +275,14 @@ func (em *EmbyApi) GetItemVideoInfoByUserId(userId, videoId string) (emby.EmbyVi
 }
 
 // UpdateVideoSubList 更新字幕列表， 在 API 调试界面 -- ItemRefreshService
-func (em *EmbyApi) UpdateVideoSubList(id string) error {
+func (em *EmbyApi) UpdateVideoSubList(embySettings *settings.EmbySettings, id string) error {
 
-	_, err := em.client.R().
+	_, err := em.createClient().R().
 		SetQueryParams(map[string]string{
 			"Recursive": "true",
-			"api_key":   em.embyConfig.APIKey,
+			"api_key":   embySettings.APIKey,
 		}).
-		Post(em.embyConfig.AddressUrl + "/emby/Items/" + id + "/Refresh")
+		Post(embySettings.AddressUrl + "/emby/Items/" + id + "/Refresh")
 	if err != nil {
 		return err
 	}
@@ -311,15 +291,25 @@ func (em *EmbyApi) UpdateVideoSubList(id string) error {
 }
 
 // GetSubFileData 下载字幕 subExt -> .ass or .srt , 在 API 调试界面 -- SubtitleService
-func (em *EmbyApi) GetSubFileData(videoId, mediaSourceId, subIndex, subExt string) (string, error) {
+func (em *EmbyApi) GetSubFileData(embySettings *settings.EmbySettings, videoId, mediaSourceId, subIndex, subExt string) (string, error) {
 
-	response, err := em.client.R().
-		Get(em.embyConfig.AddressUrl + "/emby/Videos/" + videoId + "/" + mediaSourceId + "/Subtitles/" + subIndex + "/Stream" + subExt)
+	response, err := em.createClient().R().
+		Get(embySettings.AddressUrl + "/emby/Videos/" + videoId + "/" + mediaSourceId + "/Subtitles/" + subIndex + "/Stream" + subExt)
 	if err != nil {
 		return "", err
 	}
 
 	return response.String(), nil
+}
+
+func (em *EmbyApi) createClient() *resty.Client {
+	// 见 https://github.com/allanpk716/ChineseSubFinder/issues/140
+	client := resty.New().SetTransport(&http.Transport{
+		DisableKeepAlives:   true,
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 100,
+	}).RemoveProxy().SetTimeout(em.timeOut)
+	return client
 }
 
 type InputData struct {

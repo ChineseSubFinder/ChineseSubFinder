@@ -10,7 +10,6 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 )
 
 const taskQueueName = "testQueue"
@@ -22,7 +21,7 @@ func TestTaskQueue_AddAndGetAndDel(t *testing.T) {
 	}()
 	cache_center.DelDb(taskQueueName)
 
-	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, settings.GetSettings(), log_helper.GetLogger4Tester()))
+	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, log_helper.GetLogger4Tester()))
 	defer func() {
 		taskQueue.Close()
 	}()
@@ -77,7 +76,7 @@ func TestTaskQueue_AddAndClear(t *testing.T) {
 	}()
 	cache_center.DelDb(taskQueueName)
 
-	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, settings.GetSettings(), log_helper.GetLogger4Tester()))
+	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, log_helper.GetLogger4Tester()))
 	for i := taskPriorityCount; i >= 0; i-- {
 		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, pkg.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
@@ -105,7 +104,7 @@ func TestTaskQueue_Update(t *testing.T) {
 	}()
 	cache_center.DelDb(taskQueueName)
 
-	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, settings.GetSettings(), log_helper.GetLogger4Tester()))
+	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, log_helper.GetLogger4Tester()))
 	for i := taskPriorityCount; i >= 0; i-- {
 		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, pkg.RandStringBytesMaskImprSrcSB(10), i))
 		if err != nil {
@@ -168,7 +167,7 @@ func TestTaskQueue_UpdateAdGetOneWaiting(t *testing.T) {
 	}()
 	cache_center.DelDb(taskQueueName)
 
-	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, settings.GetSettings(), log_helper.GetLogger4Tester()))
+	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, log_helper.GetLogger4Tester()))
 	for i := taskPriorityCount; i >= 0; i-- {
 		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, fmt.Sprintf("%d", i), i))
 		if err != nil {
@@ -220,7 +219,7 @@ func TestTaskQueue_UpdatePriority(t *testing.T) {
 	}()
 	cache_center.DelDb(taskQueueName)
 
-	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, settings.GetSettings(), log_helper.GetLogger4Tester()))
+	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, log_helper.GetLogger4Tester()))
 	for i := taskPriorityCount; i >= 0; i-- {
 		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, fmt.Sprintf("%d", i), i))
 		if err != nil {
@@ -284,7 +283,7 @@ func TestTaskQueue_AddAndGetOneJob(t *testing.T) {
 	}()
 	cache_center.DelDb(taskQueueName)
 
-	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, settings.GetSettings(), log_helper.GetLogger4Tester()))
+	taskQueue := NewTaskQueue(cache_center.NewCacheCenter(taskQueueName, log_helper.GetLogger4Tester()))
 
 	for i := taskPriorityCount; i >= 0; i-- {
 		bok, err := taskQueue.Add(*task_queue2.NewOneJob(common.Movie, fmt.Sprintf("%d", i), DefaultTaskPriorityLevel))

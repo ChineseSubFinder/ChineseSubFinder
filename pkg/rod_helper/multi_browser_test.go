@@ -10,7 +10,7 @@ import (
 
 func TestNewMultiBrowser(t *testing.T) {
 
-	browserOptions := NewBrowserOptions(log_helper.GetLogger4Tester(), true, settings.GetSettings())
+	browserOptions := NewBrowserOptions(log_helper.GetLogger4Tester(), true, settings.Get())
 	browserOptions.SetXrayPoolUrl("127.0.0.1")
 	browserOptions.SetXrayPoolPort("19035")
 	b := NewMultiBrowser(browserOptions)

@@ -75,9 +75,9 @@ func defInstance() {
 		AESIv16:  pkg.AESIv16(),
 	}
 
-	nowSettings := settings.GetSettings()
+	nowSettings := settings.Get()
 	nowSettings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled = true
 
 	csfInstance = NewSupplier(file_downloader.NewFileDownloader(
-		cache_center.NewCacheCenter("test", nowSettings, log_helper.GetLogger4Tester()), authKey))
+		cache_center.NewCacheCenter("test", log_helper.GetLogger4Tester()), authKey))
 }

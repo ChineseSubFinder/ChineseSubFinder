@@ -20,7 +20,7 @@ func TestSubtitleBestApi_GetMediaInfo(t *testing.T) {
 			BaseKey:  pkg.BaseKey(),
 			AESKey16: pkg.AESKey16(),
 			AESIv16:  pkg.AESIv16(),
-		}, settings.GetSettings().AdvancedSettings.ProxySettings)
+		}, settings.Get().AdvancedSettings.ProxySettings)
 
 	downloadTaskReply, err := bapi.AskDownloadTask("123")
 	if err != nil {

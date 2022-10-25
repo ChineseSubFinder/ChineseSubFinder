@@ -23,8 +23,12 @@ type Settings struct {
 	ExperimentalFunction  *ExperimentalFunction  `json:"experimental_function"`
 }
 
-// GetSettings 获取 Settings 的实例
-func GetSettings(reloadSettings ...bool) *Settings {
+// Get 获取 Settings 的实例
+func Get(reloadSettings ...bool) *Settings {
+
+	_settingsLocker.Lock()
+	defer _settingsLocker.Unlock()
+
 	if _settings == nil {
 
 		_settingsOnce.Do(func() {
@@ -46,7 +50,7 @@ func GetSettings(reloadSettings ...bool) *Settings {
 				}
 			} else {
 				// 读取存在的文件
-				err := _settings.Read()
+				err := _settings.read()
 				if err != nil {
 					panic("Can't Read Config File:" + configName + " Error: " + err.Error())
 				}
@@ -55,7 +59,7 @@ func GetSettings(reloadSettings ...bool) *Settings {
 		// 是否需要重新读取配置信息，这个可能在每次保存配置文件后需要操作
 		if len(reloadSettings) >= 1 {
 			if reloadSettings[0] == true {
-				err := _settings.Read()
+				err := _settings.read()
 				if err != nil {
 					panic("Can't Read Config File:" + configName + " Error: " + err.Error())
 				}
@@ -69,6 +73,14 @@ func GetSettings(reloadSettings ...bool) *Settings {
 // SetFullNewSettings 从 Web 端传入新的 Settings 完整设置
 func SetFullNewSettings(inSettings *Settings) error {
 
+	_settingsLocker.Lock()
+	defer _settingsLocker.Unlock()
+
+	// 保存前进行本地代理的关闭
+	err := _settings.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
+	if err != nil {
+		return err
+	}
 	nowConfigFPath := _settings.configFPath
 	_settings = inSettings
 	_settings.configFPath = nowConfigFPath
@@ -76,7 +88,7 @@ func SetFullNewSettings(inSettings *Settings) error {
 	return _settings.Save()
 }
 
-// SetConfigRootPath 需要先设置这个信息再调用 GetSettings
+// SetConfigRootPath 需要先设置这个信息再调用 Get
 func SetConfigRootPath(configRootPath string) {
 	_configRootPath = configRootPath
 }
@@ -98,7 +110,7 @@ func NewSettings(configRootDirFPath string) *Settings {
 	}
 }
 
-func (s *Settings) Read() error {
+func (s *Settings) read() error {
 
 	// 需要检查 url 是否正确
 	newEmbyAddressUrl := removeSuffixAddressSlash(s.EmbySettings.AddressUrl)
@@ -106,9 +118,18 @@ func (s *Settings) Read() error {
 	if err != nil {
 		return err
 	}
+	// 因为是重新加载配置文件信息，所以需要考虑提前关闭之前开启的本地代理
+	err = s.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
+	if err != nil {
+		return err
+	}
+	err = strcut_json.ToStruct(s.configFPath, s)
+	if err != nil {
+		return err
+	}
 	s.EmbySettings.AddressUrl = newEmbyAddressUrl
 
-	return strcut_json.ToStruct(s.configFPath, s)
+	return nil
 }
 
 func (s *Settings) Save() error {
@@ -116,6 +137,10 @@ func (s *Settings) Save() error {
 	// 需要检查 url 是否正确
 	newEmbyAddressUrl := removeSuffixAddressSlash(s.EmbySettings.AddressUrl)
 	_, err := url.Parse(newEmbyAddressUrl)
+	if err != nil {
+		return err
+	}
+	err = s.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
 	if err != nil {
 		return err
 	}
@@ -127,7 +152,7 @@ func (s *Settings) Save() error {
 func (s *Settings) GetNoPasswordSettings() *Settings {
 
 	nowSettings := NewSettings(_configRootPath)
-	err := nowSettings.Read()
+	err := nowSettings.read()
 	if err != nil {
 		panic("Can't Read Config File:" + configName + " Error: " + err.Error())
 	}
@@ -191,6 +216,7 @@ func removeSuffixAddressSlash(orgAddressUrlString string) string {
 
 var (
 	_settings       *Settings
+	_settingsLocker sync.Mutex
 	_settingsOnce   sync.Once
 	_configRootPath string
 )

@@ -3,6 +3,8 @@ package base
 import (
 	"net/http"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/tmdb_api"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	"github.com/gin-gonic/gin"
@@ -26,7 +28,7 @@ func (cb *ControllerBase) CheckTmdbApiHandler(c *gin.Context) {
 	}
 	tmdbApi, err := tmdb_api.NewTmdbHelper(cb.fileDownloader.Log,
 		req.ApiKey,
-		cb.fileDownloader.Settings.AdvancedSettings.ProxySettings)
+		settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		cb.fileDownloader.Log.Errorln("NewTmdbHelper", err)
 		return

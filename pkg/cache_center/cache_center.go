@@ -9,14 +9,12 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 type CacheCenter struct {
-	Settings                 *settings.Settings
 	Log                      *logrus.Logger
 	centerFolder             string
 	downloadFileSaveRootPath string
@@ -27,10 +25,9 @@ type CacheCenter struct {
 	locker                   sync.Mutex
 }
 
-func NewCacheCenter(cacheName string, Settings *settings.Settings, Log *logrus.Logger) *CacheCenter {
+func NewCacheCenter(cacheName string, Log *logrus.Logger) *CacheCenter {
 
 	c := CacheCenter{}
-	c.Settings = Settings
 	c.Log = Log
 	var err error
 	c.centerFolder, err = pkg.GetRootCacheCenterFolder()

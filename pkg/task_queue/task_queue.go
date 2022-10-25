@@ -22,7 +22,6 @@ import (
 
 type TaskQueue struct {
 	queueName           string                    // 队列的名称
-	settings            *settings.Settings        // 设置
 	log                 *logrus.Logger            // 日志
 	center              *cache_center.CacheCenter // 缓存中心
 	taskPriorityMapList []*treemap.Map            // 这里有 0-10 个优先级划分的存储 List，每Add一个数据的时候需要切换到这个 List 中去 save
@@ -34,7 +33,6 @@ type TaskQueue struct {
 func NewTaskQueue(center *cache_center.CacheCenter) *TaskQueue {
 
 	tq := &TaskQueue{queueName: center.GetName(),
-		settings:            center.Settings,
 		log:                 center.Log,
 		center:              center,
 		taskPriorityMapList: make([]*treemap.Map, 0),
@@ -212,7 +210,7 @@ func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue2.OneJob, inErr e
 		oneJob.DownloadTimes += 1
 	} else {
 		// 超过了时间限制，默认是 90 天, A.Before(B) : A < B == true
-		if (time.Time)(oneJob.AddedTime).AddDate(0, 0, t.settings.AdvancedSettings.TaskQueue.ExpirationTime).Before(time.Now()) == true {
+		if (time.Time)(oneJob.AddedTime).AddDate(0, 0, settings.Get().AdvancedSettings.TaskQueue.ExpirationTime).Before(time.Now()) == true {
 			// 超过 90 天了
 			oneJob.JobStatus = task_queue2.Failed
 		} else {
@@ -223,7 +221,7 @@ func (t *TaskQueue) AutoDetectUpdateJobStatus(oneJob task_queue2.OneJob, inErr e
 				oneJob.RetryTimes = 0
 				oneJob.TaskPriority = FirstRetryTaskPriorityLevel
 			} else {
-				if oneJob.RetryTimes > t.settings.AdvancedSettings.TaskQueue.MaxRetryTimes {
+				if oneJob.RetryTimes > settings.Get().AdvancedSettings.TaskQueue.MaxRetryTimes {
 					// 超过重试次数会进行一次降级，然后重置这个次数
 					oneJob.RetryTimes = 0
 					oneJob = t.degrade(oneJob)

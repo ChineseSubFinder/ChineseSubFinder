@@ -30,7 +30,6 @@ import (
 )
 
 type Supplier struct {
-	settings       *settings.Settings
 	log            *logrus.Logger
 	fileDownloader *file_downloader.FileDownloader
 	topic          int
@@ -45,9 +44,8 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	sup.topic = common2.DownloadSubsPerSite
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
-	sup.settings = fileDownloader.Settings
-	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
-		sup.topic = sup.settings.AdvancedSettings.Topic
+	if settings.Get().AdvancedSettings.Topic > 0 && settings.Get().AdvancedSettings.Topic != sup.topic {
+		sup.topic = settings.Get().AdvancedSettings.Topic
 	}
 
 	return &sup
@@ -73,7 +71,7 @@ func (s *Supplier) IsAlive() bool {
 
 func (s *Supplier) OverDailyDownloadLimit() bool {
 
-	if s.settings.AdvancedSettings.SuppliersSettings.ChineseSubFinder.DailyDownloadLimit == 0 {
+	if settings.Get().AdvancedSettings.SuppliersSettings.ChineseSubFinder.DailyDownloadLimit == 0 {
 		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit is 0, will Skip Download")
 		return true
 	}
@@ -87,7 +85,7 @@ func (s *Supplier) GetLogger() *logrus.Logger {
 }
 
 func (s *Supplier) GetSettings() *settings.Settings {
-	return s.settings
+	return settings.Get()
 }
 
 func (s *Supplier) GetSupplierName() string {
@@ -97,7 +95,7 @@ func (s *Supplier) GetSupplierName() string {
 func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo, error) {
 
 	outSubInfos := make([]supplier.SubInfo, 0)
-	if s.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == false {
+	if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == false {
 		return outSubInfos, nil
 	}
 
@@ -107,7 +105,7 @@ func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo
 func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 
 	outSubInfos := make([]supplier.SubInfo, 0)
-	if s.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == false {
+	if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == false {
 		return outSubInfos, nil
 	}
 
@@ -127,7 +125,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 func (s *Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]supplier.SubInfo, error) {
 
 	outSubInfos := make([]supplier.SubInfo, 0)
-	if s.settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == false {
+	if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == false {
 		return outSubInfos, nil
 	}
 
@@ -158,7 +156,7 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 		err = errors.New(fmt.Sprintf("%s.Calculate %s %s", s.GetSupplierName(), videoFPath, err))
 		return
 	}
-	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, s.settings.AdvancedSettings.ProxySettings)
+	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("%s.GetMixMediaInfo %s %s", s.GetSupplierName(), videoFPath, err))
 		return

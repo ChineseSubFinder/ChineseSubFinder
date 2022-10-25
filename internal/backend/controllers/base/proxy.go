@@ -3,6 +3,8 @@ package base
 import (
 	"net/http"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/a4k"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
@@ -35,15 +37,15 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 	}
 
 	// 先尝试关闭之前的本地 http 代理
-	err = cb.fileDownloader.Settings.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
+	err = settings.Get().AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
 	if err != nil {
 		return
 	}
 	// 备份一份
-	bkProxySettings := cb.fileDownloader.Settings.AdvancedSettings.ProxySettings.CopyOne()
+	bkProxySettings := settings.Get().AdvancedSettings.ProxySettings.CopyOne()
 	// 赋值 Web 传递过来的需要测试的代理参数
-	cb.fileDownloader.Settings.AdvancedSettings.ProxySettings = &checkProxy.ProxySettings
-	cb.fileDownloader.Settings.AdvancedSettings.ProxySettings.UseProxy = true
+	settings.Get().AdvancedSettings.ProxySettings = &checkProxy.ProxySettings
+	settings.Get().AdvancedSettings.ProxySettings.UseProxy = true
 
 	// 使用提交过来的这个代理地址，测试多个字幕网站的可用性
 	subSupplierHub := subSupplier.NewSubSupplierHub(
@@ -55,18 +57,18 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 		a4k.NewSupplier(cb.fileDownloader),
 	)
 
-	if cb.fileDownloader.Settings.SubtitleSources.AssrtSettings.Enabled == true &&
-		cb.fileDownloader.Settings.SubtitleSources.AssrtSettings.Token != "" {
+	if settings.Get().SubtitleSources.AssrtSettings.Enabled == true &&
+		settings.Get().SubtitleSources.AssrtSettings.Token != "" {
 		// 如果开启了 ASSRt 字幕源，则需要测试 ASSRt 的代理
 		subSupplierHub.AddSubSupplier(assrt.NewSupplier(cb.fileDownloader))
 	}
 
-	if cb.fileDownloader.Settings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
+	if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
 		// 如果开启了分享字幕功能，那么就可以开启这个功能
 		subSupplierHub.AddSubSupplier(csf.NewSupplier(cb.fileDownloader))
 	}
 
-	outStatus := subSupplierHub.CheckSubSiteStatus(cb.fileDownloader.Settings.AdvancedSettings.ProxySettings)
+	outStatus := subSupplierHub.CheckSubSiteStatus(settings.Get().AdvancedSettings.ProxySettings)
 
 	defer func() {
 		// 还原
@@ -74,9 +76,9 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 		if err != nil {
 			return
 		}
-		cb.fileDownloader.Settings.AdvancedSettings.ProxySettings = bkProxySettings
+		settings.Get().AdvancedSettings.ProxySettings = bkProxySettings
 		cb.proxyCheckLocker.Unlock()
-		err = cb.fileDownloader.Settings.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
+		err = settings.Get().AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
 		if err != nil {
 			return
 		}

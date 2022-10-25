@@ -24,19 +24,19 @@ func (cb *ControllerBase) ChangePwdHandler(c *gin.Context) {
 		return
 	}
 
-	if settings.GetSettings().UserInfo.Username == "" || settings.GetSettings().UserInfo.Password == "" {
+	if settings.Get().UserInfo.Username == "" || settings.Get().UserInfo.Password == "" {
 		// 配置文件中的账号和密码任意一个未空，提示用户需要进行 setup 流程
 		c.JSON(http.StatusNoContent, backend2.ReplyCommon{Message: "You need do `Setup`"})
 		return
 	}
 
-	if settings.GetSettings().UserInfo.Password != changePwd.OrgPwd {
+	if settings.Get().UserInfo.Password != changePwd.OrgPwd {
 		// 原始的密码不对
 		c.JSON(http.StatusNoContent, backend2.ReplyCommon{Message: "Org Password Error"})
 	} else {
 		// 同意修改密码
-		settings.GetSettings().UserInfo.Password = changePwd.NewPwd
-		err = settings.GetSettings().Save()
+		settings.Get().UserInfo.Password = changePwd.NewPwd
+		err = settings.Get().Save()
 		if err != nil {
 			return
 		}

@@ -25,7 +25,6 @@ import (
 )
 
 type Supplier struct {
-	settings       *settings.Settings
 	log            *logrus.Logger
 	fileDownloader *file_downloader.FileDownloader
 	topic          int
@@ -40,9 +39,8 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	sup.topic = common.DownloadSubsPerSite
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
-	sup.settings = fileDownloader.Settings
-	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
-		sup.topic = sup.settings.AdvancedSettings.Topic
+	if settings.Get().AdvancedSettings.Topic > 0 && settings.Get().AdvancedSettings.Topic != sup.topic {
+		sup.topic = settings.Get().AdvancedSettings.Topic
 	}
 
 	return &sup
@@ -75,7 +73,7 @@ func (s *Supplier) IsAlive() bool {
 
 func (s *Supplier) OverDailyDownloadLimit() bool {
 
-	if s.settings.AdvancedSettings.SuppliersSettings.Xunlei.DailyDownloadLimit == 0 {
+	if settings.Get().AdvancedSettings.SuppliersSettings.Xunlei.DailyDownloadLimit == 0 {
 		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit is 0, will Skip Download")
 		return true
 	}
@@ -89,7 +87,7 @@ func (s *Supplier) GetLogger() *logrus.Logger {
 }
 
 func (s *Supplier) GetSettings() *settings.Settings {
-	return s.settings
+	return settings.Get()
 }
 
 func (s *Supplier) GetSupplierName() string {
@@ -192,13 +190,13 @@ func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, erro
 func (s *Supplier) getSubInfos(filePath, cid string) (SublistSliceXunLei, error) {
 	var jsonList SublistSliceXunLei
 
-	httpClient, err := pkg.NewHttpClient(s.settings.AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		return jsonList, err
 	}
 	resp, err := httpClient.R().
 		SetResult(&jsonList).
-		Get(fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.Xunlei.RootUrl, cid))
+		Get(fmt.Sprintf(settings.Get().AdvancedSettings.SuppliersSettings.Xunlei.RootUrl, cid))
 	if err != nil {
 		if resp != nil {
 			s.log.Errorln(s.GetSupplierName(), "NewHttpClient:", filePath, err.Error())

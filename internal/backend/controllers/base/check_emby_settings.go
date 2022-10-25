@@ -32,8 +32,8 @@ func (cb *ControllerBase) CheckEmbySettingsHandler(c *gin.Context) {
 		SeriesPathsMapping:    make(map[string]string, 0),
 	}
 
-	emHelper := emby_helper.NewEmbyHelper(cb.fileDownloader.MediaInfoDealers, &settings.Settings{EmbySettings: &emSettings})
-	userList, err := emHelper.EmbyApi.GetUserIdList()
+	emHelper := emby_helper.NewEmbyHelper(cb.fileDownloader.MediaInfoDealers)
+	userList, err := emHelper.EmbyApi.GetUserIdList(&emSettings)
 	if err != nil {
 		return
 	}
