@@ -1,0 +1,57 @@
+<template>
+  <q-btn v-if="isSkipped" color="warning" round flat dense icon="lock" @click.stop title="取消忽略" @click="skip" />
+  <q-btn v-else color="grey" round flat dense icon="lock" @click.stop title="点击忽略该视频的字幕下载" @click="skip" />
+</template>
+
+<script setup>
+import LibraryApi from 'src/api/LibraryApi';
+import { SystemMessage } from 'src/utils/Message';
+import { useQuasar } from 'quasar';
+import { onMounted, ref } from 'vue';
+import useEventBus from 'src/composables/use-event-bus';
+
+const props = defineProps({
+  path: String,
+  videoType: Number,
+});
+
+const $q = useQuasar();
+
+const isSkipped = ref(null);
+
+const getIsSkipped = async () => {
+  const [res] = await LibraryApi.getSkipInfo({
+    video_type: props.videoType,
+    physical_video_file_full_path: props.path,
+    is_bluray: false,
+    is_skip: true,
+  });
+  isSkipped.value = res.is_skip;
+};
+
+const skip = async () => {
+  $q.dialog({
+    title: '提示',
+    message: `确定要在任务中${isSkipped.value ? '取消' : ''}忽略该视频吗？`,
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    const [res] = await LibraryApi.setSkipInfo({
+      video_type: props.videoType,
+      physical_video_file_full_path: props.path,
+      is_bluray: false,
+      is_skip: !isSkipped.value,
+    });
+    if (res) {
+      SystemMessage.success('操作成功');
+      getIsSkipped();
+    }
+  });
+};
+
+useEventBus(`refresh-skip-status-${props.path}`, getIsSkipped);
+
+onMounted(() => {
+  getIsSkipped();
+});
+</script>

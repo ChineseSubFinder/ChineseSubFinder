@@ -1,5 +1,5 @@
 <template>
-  <q-btn label="更新缓存" color="primary" icon="cached" @click="confirm" :loading="refreshCacheLoading">
+  <q-btn label="更新缓存" color="primary" icon="refresh" @click="confirm" :loading="refreshCacheLoading">
     <template v-slot:loading>
       <q-spinner-hourglass class="on-left" />
       更新缓存中...

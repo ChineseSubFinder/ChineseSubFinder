@@ -38,6 +38,24 @@
             :disable="selection.length === 0"
             @click="downloadSelection"
           ></q-btn>
+
+          <q-btn
+            class="btn-download"
+            color="primary"
+            label="忽略选中"
+            flat
+            :disable="selection.length === 0"
+            @click="skipAll(true)"
+          ></q-btn>
+
+          <q-btn
+            class="btn-download"
+            color="primary"
+            label="取消忽略"
+            flat
+            :disable="selection.length === 0"
+            @click="skipAll(false)"
+          ></q-btn>
         </div>
 
         <q-tab-panels v-model="tab" animated>
@@ -49,7 +67,10 @@
                 </q-item-section>
                 <q-item-section>第 {{ pandStart2(item.episode) }} 集</q-item-section>
                 <q-item-section side>
-                  <btn-upload-subtitle :data="item" />
+                  <btn-upload-subtitle :path="item.video_f_path" />
+                </q-item-section>
+                <q-item-section side>
+                  <btn-ignore-video :path="item.video_f_path" :video-type="VIDEO_TYPE_TV" />
                 </q-item-section>
                 <q-item-section side>
                   <q-btn
@@ -87,7 +108,7 @@
                     flat
                     dense
                     icon="download_for_offline"
-                    title="下载字幕"
+                    title="添加到下载队列"
                     @click="downloadSubtitle(item)"
                   ></q-btn>
                 </q-item-section>
@@ -108,7 +129,9 @@ import { VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
 import config from 'src/config';
 import { useQuasar } from 'quasar';
 import { useSelection } from 'src/composables/useSelection';
-import BtnUploadSubtitle from 'pages/library/tvs/BtnUploadSubtitle';
+import BtnIgnoreVideo from 'pages/library/BtnIgnoreVideo';
+import eventBus from 'vue3-eventbus';
+import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
 
 const props = defineProps({
   data: Object,
@@ -173,8 +196,8 @@ const downloadSubtitle = async (items) => {
       model: 3,
       type: 'radio',
       items: [
-        { label: '正常任务', value: 3 },
-        { label: '一次性任务（下载后设置这个任务的状态为"忽略"）', value: 0 },
+        { label: '插队任务', value: 3 },
+        { label: '一次性任务（执行成功后忽略该任务）', value: 0 },
       ],
     },
     cancel: true,
@@ -202,6 +225,39 @@ const downloadSubtitle = async (items) => {
 
     const msg = `成功添加 ${successCount} 个任务到下载队列${errorCount ? `，失败 ${errorCount} 个` : ''}`;
 
+    SystemMessage.success(msg);
+  });
+};
+
+const skipAll = async (isSkip) => {
+  $q.dialog({
+    title: `${isSkip ? '忽略' : '取消忽略'}全部视频`,
+    message: `确定要${isSkip ? '忽略' : '取消忽略'}全部视频吗？`,
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    const promises = selection.value.map(async (item) => {
+      const [, err] = await LibraryApi.setSkipInfo({
+        video_type: VIDEO_TYPE_TV,
+        physical_video_file_full_path: item.video_f_path,
+        is_bluray: false,
+        is_skip: isSkip,
+      });
+      if (err !== null) {
+        return Promise.reject(err);
+      }
+      eventBus.emit(`refresh-skip-status-${item.video_f_path}`);
+      return Promise.resolve();
+    });
+
+    const result = await Promise.allSettled(promises);
+
+    const successCount = result.filter((item) => item.status === 'fulfilled').length;
+    const errorCount = result.filter((item) => item.status === 'rejected').length;
+
+    const msg = `成功${isSkip ? '忽略' : '取消忽略'} ${successCount} 个视频${
+      errorCount ? `，失败 ${errorCount} 个` : ''
+    }`;
     SystemMessage.success(msg);
   });
 };

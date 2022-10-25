@@ -4,6 +4,7 @@ import { SystemMessage } from 'src/utils/Message';
 import { until } from '@vueuse/core';
 import config from 'src/config';
 import { LocalStorage } from 'quasar';
+import { useSettings } from 'pages/settings/useSettings';
 
 export const getUrl = (basePath) => config.BACKEND_URL + basePath.split(/\/|\\/).join('/');
 
@@ -23,9 +24,10 @@ const tvs = computed(() =>
     ...tv,
   }))
 );
-export const refreshCacheLoading = ref(false);
 export const libraryRefreshStatus = ref(null);
 export const subtitleUploadList = ref([]);
+
+export const refreshCacheLoading = computed(() => libraryRefreshStatus.value === 'running');
 
 let getRefreshStatusTimer = null;
 
@@ -44,23 +46,26 @@ export const getLibraryList = async () => {
   }
 };
 
+export const checkLibraryRefreshStatus = async () => {
+  libraryRefreshStatus.value = null;
+  await getLibraryRefreshStatus();
+  getRefreshStatusTimer = setInterval(() => {
+    getLibraryRefreshStatus();
+  }, 1000);
+  await until(libraryRefreshStatus).toBe('stopped');
+  clearInterval(getRefreshStatusTimer);
+  getRefreshStatusTimer = null;
+  await getLibraryList();
+};
+
 export const refreshLibrary = async () => {
-  refreshCacheLoading.value = true;
   const [, err] = await LibraryApi.refreshLibrary();
   if (err !== null) {
     SystemMessage.error(err.message);
   } else {
-    libraryRefreshStatus.value = null;
-    getRefreshStatusTimer = setInterval(() => {
-      getLibraryRefreshStatus();
-    }, 1000);
-    await until(libraryRefreshStatus).toBe('stopped');
-    clearInterval(getRefreshStatusTimer);
-    getRefreshStatusTimer = null;
-    await getLibraryList();
-    SystemMessage.success('更新成功');
+    await checkLibraryRefreshStatus();
+    SystemMessage.success('更新缓存成功');
   }
-  refreshCacheLoading.value = false;
 };
 
 export const getSubtitleUploadList = async () => {
@@ -69,6 +74,8 @@ export const getSubtitleUploadList = async () => {
 };
 
 export const useLibrary = () => {
+  useSettings();
+
   const getSubtitleUploadListTimer = setInterval(() => {
     getSubtitleUploadList();
   }, 5000);
@@ -77,6 +84,7 @@ export const useLibrary = () => {
     getLibraryList();
     getLibraryRefreshStatus();
     getSubtitleUploadList();
+    checkLibraryRefreshStatus();
   });
 
   onBeforeUnmount(() => {

@@ -10,21 +10,9 @@
         style="width: 160px; height: 200px"
         fit="cover"
       />
-      <q-btn
-        class="btn-download absolute-bottom-right"
-        color="primary"
-        round
-        flat
-        dense
-        icon="download_for_offline"
-        title="下载字幕"
-        @click="downloadSubtitle"
-      ></q-btn>
     </div>
     <div class="content-width text-ellipsis-line-2" :title="data.name">{{ data.name }}</div>
     <div class="row items-center">
-      <div class="text-grey">1970-01-01</div>
-      <q-space />
       <div>
         <q-btn v-if="hasSubtitle" color="black" round flat dense icon="closed_caption" @click.stop title="已有字幕">
           <q-popup-proxy>
@@ -40,40 +28,39 @@
           </q-popup-proxy>
         </q-btn>
         <q-btn v-else color="grey" round flat dense icon="closed_caption" @click.stop title="没有字幕" />
-        <q-btn
-          v-if="isSkipped"
-          color="grey"
-          round
-          flat
-          dense
-          icon="schedule"
-          @click.stop
-          title="取消忽略"
-          @click="handleIgnore"
-        />
-        <q-btn
-          v-else
-          color="black"
-          round
-          flat
-          dense
-          icon="schedule"
-          @click.stop
-          title="在任务中忽略该视频"
-          @click="handleIgnore"
-        />
+      </div>
+
+      <q-space />
+
+      <btn-upload-subtitle :path="data.video_f_path" dense />
+
+      <q-btn
+        class="btn-download"
+        color="primary"
+        round
+        flat
+        dense
+        icon="download_for_offline"
+        title="下载字幕"
+        @click="downloadSubtitle"
+      ></q-btn>
+
+      <div>
+        <btn-ignore-video :path="props.data.video_f_path" :video-type="VIDEO_TYPE_MOVIE" />
       </div>
     </div>
   </q-card>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import LibraryApi from 'src/api/LibraryApi';
 import { SystemMessage } from 'src/utils/Message';
 import { VIDEO_TYPE_MOVIE } from 'src/constants/SettingConstants';
 import { useQuasar } from 'quasar';
-import { getUrl } from 'pages/library/useLibrary';
+import { getUrl, subtitleUploadList } from 'pages/library/useLibrary';
+import BtnIgnoreVideo from 'pages/library/BtnIgnoreVideo';
+import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
 
 const props = defineProps({
   data: Object,
@@ -83,7 +70,6 @@ const $q = useQuasar();
 
 const posterInfo = ref(null);
 const detialInfo = ref(null);
-const isSkipped = ref(null);
 
 const getPosterInfo = async () => {
   const [res] = await LibraryApi.getMoviePoster({
@@ -103,36 +89,6 @@ const getDetailInfo = async () => {
   detialInfo.value = res;
 };
 
-const getIsSkipped = async () => {
-  const [res] = await LibraryApi.getSkipInfo({
-    video_type: VIDEO_TYPE_MOVIE,
-    physical_video_file_full_path: props.data.video_f_path,
-    is_bluray: false,
-    is_skip: true,
-  });
-  isSkipped.value = res.is_skip;
-};
-
-const handleIgnore = async () => {
-  $q.dialog({
-    title: '提示',
-    message: `确定要在任务中${isSkipped.value ? '取消' : ''}忽略该视频吗？`,
-    cancel: true,
-    persistent: true,
-  }).onOk(async () => {
-    const [res] = await LibraryApi.setSkipInfo({
-      video_type: VIDEO_TYPE_MOVIE,
-      physical_video_file_full_path: props.data.video_f_path,
-      is_bluray: false,
-      is_skip: !isSkipped.value,
-    });
-    if (res) {
-      SystemMessage.success('操作成功');
-      getIsSkipped();
-    }
-  });
-};
-
 const hasSubtitle = computed(() => detialInfo.value?.sub_url_list.length > 0);
 
 const downloadSubtitle = async () => {
@@ -143,8 +99,8 @@ const downloadSubtitle = async () => {
       model: 3,
       type: 'radio',
       items: [
-        { label: '正常任务', value: 3 },
-        { label: '一次性任务（下载后设置这个任务的状态为"忽略"）', value: 0 },
+        { label: '插队任务', value: 3 },
+        { label: '一次性任务（执行成功后忽略该任务）', value: 0 },
       ],
     },
     cancel: true,
@@ -165,9 +121,20 @@ const downloadSubtitle = async () => {
   });
 };
 
+watch(subtitleUploadList, (val, oldVal) => {
+  // 上传字幕列表当前文件有变化时刷新
+  if (
+    (val.find((e) => e.video_f_path === props.data.video_f_path) &&
+      !oldVal.find((e) => e.video_f_path === props.data.video_f_path)) ||
+    (!val.find((e) => e.video_f_path === props.data.video_f_path) &&
+      oldVal.find((e) => e.video_f_path === props.data.video_f_path))
+  ) {
+    getDetailInfo();
+  }
+});
+
 onMounted(() => {
   getPosterInfo();
-  getIsSkipped();
   getDetailInfo();
 });
 </script>
@@ -183,12 +150,6 @@ onMounted(() => {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-}
-
-.btn-download {
-  //display: none;
-  opacity: 0;
-  transition: all 0.6s ease;
 }
 
 .area-cover:hover {

@@ -31,6 +31,7 @@
     "quasar": "^2.0.0-beta.1",
     "util": "^0.12.4",
     "vue": "^3.2.22",
+    "vue3-eventbus": "^2.0.0",
     "vuex": "^4.0.2"
   },
   "devDependencies": {
