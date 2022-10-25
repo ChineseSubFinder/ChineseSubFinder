@@ -243,6 +243,9 @@ func (cb *ControllerBase) OneSeriesSubs(c *gin.Context) {
 			subUrl := path_helper.ChangePhysicalPathToSharePath(subFPath, seriesInfo.MainRootDirFPath, desUrl)
 			seasonInfo.OneVideoInfos[i].SubUrlList = append(seasonInfo.OneVideoInfos[i].SubUrlList, subUrl)
 		}
+
+		videoUrl := path_helper.ChangePhysicalPathToSharePath(videoInfo.VideoFPath, seriesInfo.MainRootDirFPath, desUrl)
+		seasonInfo.OneVideoInfos[i].VideoUrl = videoUrl
 	}
 
 	c.JSON(http.StatusOK, seasonInfo)

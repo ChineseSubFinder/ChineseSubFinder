@@ -211,11 +211,11 @@ func SeriesAllEpsAndSubtitles(l *logrus.Logger, dir string) (*backend.SeasonInfo
 	// 交叉比对，找到对应的字幕
 	for pathKey, videos := range pathVideoMap {
 
-		nowPathSubs, found := pathSubsMap[pathKey]
-		if found == false {
-			// 没有找到对应的字幕
-			continue
-		}
+		nowPathSubs, _ := pathSubsMap[pathKey]
+		//if found == false {
+		//	// 没有找到对应的字幕
+		//	continue
+		//}
 		for _, oneVideo := range videos {
 
 			videoName := strings.ReplaceAll(filepath.Base(oneVideo), filepath.Ext(oneVideo), "")
