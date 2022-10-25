@@ -107,13 +107,13 @@ func NewSettings(configRootDirFPath string) *Settings {
 
 func (s *Settings) read() error {
 
-	// 需要检查 url 是否正确
-	newEmbyAddressUrl := removeSuffixAddressSlash(s.EmbySettings.AddressUrl)
-	_, err := url.Parse(newEmbyAddressUrl)
+	err := strcut_json.ToStruct(s.configFPath, s)
 	if err != nil {
 		return err
 	}
-	err = strcut_json.ToStruct(s.configFPath, s)
+	// 需要检查 url 是否正确
+	newEmbyAddressUrl := removeSuffixAddressSlash(s.EmbySettings.AddressUrl)
+	_, err = url.Parse(newEmbyAddressUrl)
 	if err != nil {
 		return err
 	}
