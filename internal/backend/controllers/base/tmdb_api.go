@@ -31,6 +31,16 @@ func (cb *ControllerBase) CheckTmdbApiHandler(c *gin.Context) {
 	bkProxySettings := settings.Get().AdvancedSettings.ProxySettings.CopyOne()
 	// 赋值 Web 传递过来的需要测试的代理参数
 	settings.Get().AdvancedSettings.ProxySettings = &req.ProxySettings
+	defer func() {
+		// 还原
+		settings.Get().AdvancedSettings.ProxySettings = bkProxySettings
+		err = local_http_proxy_server.SetProxyInfo(settings.Get().AdvancedSettings.ProxySettings.GetInfos())
+		if err != nil {
+			return
+		}
+		// 启动代理
+		local_http_proxy_server.GetProxyUrl()
+	}()
 	// 设置代理
 	err = local_http_proxy_server.SetProxyInfo(settings.Get().AdvancedSettings.ProxySettings.GetInfos())
 	if err != nil {
@@ -44,20 +54,9 @@ func (cb *ControllerBase) CheckTmdbApiHandler(c *gin.Context) {
 		cb.fileDownloader.Log.Errorln("NewTmdbHelper", err)
 		return
 	}
-
-	defer func() {
-		// 还原
-		settings.Get().AdvancedSettings.ProxySettings = bkProxySettings
-		cb.proxyCheckLocker.Unlock()
-		err = local_http_proxy_server.SetProxyInfo(settings.Get().AdvancedSettings.ProxySettings.GetInfos())
-		if err != nil {
-			return
-		}
-		// 启动代理
-		local_http_proxy_server.GetProxyUrl()
-	}()
-
-	if tmdbApi.Alive() == false {
+	aliveStatus := tmdbApi.Alive()
+	// 返回结果
+	if aliveStatus == false {
 		cb.fileDownloader.Log.Errorln("tmdbApi.Alive() == false")
 		c.JSON(http.StatusOK, backend.ReplyCommon{Message: "false"})
 		return

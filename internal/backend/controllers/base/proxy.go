@@ -32,6 +32,10 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 		return
 	}
 
+	defer func() {
+		cb.proxyCheckLocker.Unlock()
+	}()
+
 	checkProxy := backend.ReqCheckProxy{}
 	err = c.ShouldBindJSON(&checkProxy)
 	if err != nil {
@@ -42,6 +46,18 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 	// 赋值 Web 传递过来的需要测试的代理参数
 	settings.Get().AdvancedSettings.ProxySettings = &checkProxy.ProxySettings
 	settings.Get().AdvancedSettings.ProxySettings.UseProxy = true
+
+	defer func() {
+		// 还原
+		settings.Get().AdvancedSettings.ProxySettings = bkProxySettings
+		err = local_http_proxy_server.SetProxyInfo(settings.Get().AdvancedSettings.ProxySettings.GetInfos())
+		if err != nil {
+			return
+		}
+		// 启动代理
+		local_http_proxy_server.GetProxyUrl()
+	}()
+
 	// 设置代理
 	err = local_http_proxy_server.SetProxyInfo(settings.Get().AdvancedSettings.ProxySettings.GetInfos())
 	if err != nil {
@@ -70,17 +86,5 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 
 	outStatus := subSupplierHub.CheckSubSiteStatus()
 
-	defer func() {
-		// 还原
-		settings.Get().AdvancedSettings.ProxySettings = bkProxySettings
-		cb.proxyCheckLocker.Unlock()
-		err = local_http_proxy_server.SetProxyInfo(settings.Get().AdvancedSettings.ProxySettings.GetInfos())
-		if err != nil {
-			return
-		}
-		local_http_proxy_server.GetProxyUrl()
-	}()
-
 	c.JSON(http.StatusOK, outStatus)
-
 }

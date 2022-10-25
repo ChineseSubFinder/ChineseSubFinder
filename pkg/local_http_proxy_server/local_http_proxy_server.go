@@ -43,6 +43,14 @@ func GetProxyUrl() string {
 	defer locker.Unlock()
 
 	if useProxy == false {
+
+		if localHttpProxyServer != nil && localHttpProxyServer.IsRunning() == true {
+			// 需要关闭代理
+			err := localHttpProxyServer.Stop()
+			if err != nil {
+				println("localHttpProxyServer.Stop() Error:", err.Error())
+			}
+		}
 		return ""
 	}
 
