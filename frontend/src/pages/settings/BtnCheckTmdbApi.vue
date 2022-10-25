@@ -12,7 +12,9 @@ const loading = ref(false);
 
 const check = async () => {
   loading.value = true;
+  console.log(formModel);
   const [res, err] = await CommonApi.checkTmdbApiKey({
+    proxy_settings: formModel.advanced_settings.proxy_settings,
     api_key: formModel.advanced_settings.tmdb_api_settings.api_key,
   });
   if (err !== null) {
