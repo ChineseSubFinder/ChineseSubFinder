@@ -7,7 +7,6 @@ const MESSAGE_DURATION = 500;
 
 export const SystemMessage = {
   success(message, options = {}) {
-    console.log(options);
     Notify.create({
       message,
       icon: 'check_circle',

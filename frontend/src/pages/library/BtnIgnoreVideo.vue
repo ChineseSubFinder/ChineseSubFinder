@@ -1,6 +1,26 @@
 <template>
-  <q-btn v-if="isSkipped" color="warning" round flat dense icon="lock" @click.stop title="取消忽略" @click="skip" />
-  <q-btn v-else color="grey" round flat dense icon="lock" @click.stop title="点击忽略该视频的字幕下载" @click="skip" />
+  <q-btn
+    v-if="isSkipped"
+    color="warning"
+    round
+    flat
+    dense
+    icon="lock"
+    @click.stop
+    title="当前视频已锁定，不进行字幕下载"
+    @click="skip"
+  />
+  <q-btn
+    v-else
+    color="grey"
+    round
+    flat
+    dense
+    icon="lock"
+    @click.stop
+    title="点击锁定视频，不进行字幕下载"
+    @click="skip"
+  />
 </template>
 
 <script setup>
