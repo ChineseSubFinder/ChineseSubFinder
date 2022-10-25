@@ -50,7 +50,9 @@ const upload = async () => {
   formData.append('file', uploadFile.value[0]);
   isInQueue.value = true;
   await LibraryApi.uploadSubtitle(formData);
-  SystemMessage.success('字幕上传成功');
+  SystemMessage.success('字幕上传成功。如果设置开启了“自动校正时间轴”，处理需要一些时间，请耐心等待', {
+    timeout: 3000,
+  });
   await getSubtitleUploadList();
   eventBus.emit('subtitle-uploaded');
 };

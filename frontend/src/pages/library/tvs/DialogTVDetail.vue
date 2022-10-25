@@ -42,7 +42,8 @@
           <q-btn
             class="btn-download"
             color="primary"
-            label="忽略选中"
+            icon="lock"
+            title="锁定选中视频，不进行字幕下载"
             flat
             :disable="selection.length === 0"
             @click="skipAll(true)"
@@ -51,7 +52,8 @@
           <q-btn
             class="btn-download"
             color="primary"
-            label="取消忽略"
+            icon="lock_open"
+            title="解锁选中视频"
             flat
             :disable="selection.length === 0"
             @click="skipAll(false)"
@@ -231,8 +233,8 @@ const downloadSubtitle = async (items) => {
 
 const skipAll = async (isSkip) => {
   $q.dialog({
-    title: `${isSkip ? '忽略' : '取消忽略'}全部视频`,
-    message: `确定要${isSkip ? '忽略' : '取消忽略'}全部视频吗？`,
+    title: `${isSkip ? '锁定' : '解锁'}选中视频`,
+    message: `确定要${isSkip ? '锁定' : '解锁'}选中视频吗？`,
     cancel: true,
     persistent: true,
   }).onOk(async () => {
@@ -255,9 +257,7 @@ const skipAll = async (isSkip) => {
     const successCount = result.filter((item) => item.status === 'fulfilled').length;
     const errorCount = result.filter((item) => item.status === 'rejected').length;
 
-    const msg = `成功${isSkip ? '忽略' : '取消忽略'} ${successCount} 个视频${
-      errorCount ? `，失败 ${errorCount} 个` : ''
-    }`;
+    const msg = `成功${isSkip ? '锁定' : '解锁'} ${successCount} 个视频${errorCount ? `，失败 ${errorCount} 个` : ''}`;
     SystemMessage.success(msg);
   });
 };

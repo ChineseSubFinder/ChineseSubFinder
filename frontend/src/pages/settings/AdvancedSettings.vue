@@ -355,9 +355,6 @@
         </q-item>
         <q-item class="q-mt-md" dense>
           <q-item-section>
-            <q-item-label>APIKey</q-item-label>
-          </q-item-section>
-          <q-item-section avatar>
             <q-input
               v-model="form.tmdb_api_settings.api_key"
               standout

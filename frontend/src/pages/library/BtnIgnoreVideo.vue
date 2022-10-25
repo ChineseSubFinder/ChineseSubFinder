@@ -32,7 +32,7 @@ const getIsSkipped = async () => {
 const skip = async () => {
   $q.dialog({
     title: '提示',
-    message: `确定要在任务中${isSkipped.value ? '取消' : ''}忽略该视频吗？`,
+    message: isSkipped.value ? '确定要解锁该视频吗？' : `确定要锁定该视频，不进行字幕下载吗？`,
     cancel: true,
     persistent: true,
   }).onOk(async () => {

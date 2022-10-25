@@ -6,7 +6,8 @@ import { Notify } from 'quasar';
 const MESSAGE_DURATION = 500;
 
 export const SystemMessage = {
-  success(message, ...options) {
+  success(message, options = {}) {
+    console.log(options);
     Notify.create({
       message,
       icon: 'check_circle',
@@ -17,7 +18,7 @@ export const SystemMessage = {
     });
   },
 
-  warn(message, ...options) {
+  warn(message, options = {}) {
     Notify.create({
       message,
       icon: 'warning',
@@ -28,7 +29,7 @@ export const SystemMessage = {
     });
   },
 
-  info(message, ...options) {
+  info(message, options = {}) {
     Notify.create({
       message,
       icon: 'info',
@@ -39,7 +40,7 @@ export const SystemMessage = {
     });
   },
 
-  error(message, ...options) {
+  error(message, options = {}) {
     Notify.create({
       message,
       icon: 'error',
