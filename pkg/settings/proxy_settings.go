@@ -1,12 +1,5 @@
 package settings
 
-import (
-	"fmt"
-	"sync"
-
-	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
-)
-
 type ProxySettings struct {
 	UseProxy                 bool   `json:"use_proxy"`                                    // 是否使用代理
 	UseWhichProxyProtocol    string `json:"use_which_proxy_protocol"`                     // 是使用 socks5 还是 http 代理
@@ -17,9 +10,6 @@ type ProxySettings struct {
 	InputProxyUsername       string `json:"input_proxy_username"`                         // 输入的代理用户名
 	InputProxyPassword       string `json:"input_proxy_password"`                         // 输入的代理密码
 	Referer                  string `json:"-"`                                            // 可能下载文件的时候需要设置
-
-	localHttpProxyServer *local_http_proxy_server.LocalHttpProxyServer // 本地代理服务器
-	locker               sync.Mutex
 }
 
 func NewProxySettings(useProxy bool, useWhichProxyProtocol string,
@@ -45,25 +35,10 @@ func (p *ProxySettings) CopyOne() *ProxySettings {
 		p.UseProxy, p.UseWhichProxyProtocol, p.LocalHttpProxyServerPort,
 		p.InputProxyAddress, p.InputProxyPort,
 		p.InputProxyUsername, p.InputProxyPassword)
-	nowSettings.localHttpProxyServer = p.localHttpProxyServer
 	return nowSettings
 }
 
-func (p *ProxySettings) GetLocalHttpProxyUrl() string {
-	defer p.locker.Unlock()
-	p.locker.Lock()
-
-	if p.UseProxy == false {
-		return ""
-	}
-
-	if p.localHttpProxyServer == nil {
-		p.localHttpProxyServer = local_http_proxy_server.NewLocalHttpProxyServer()
-	}
-
-	if p.localHttpProxyServer.IsRunning() == true {
-		return p.localHttpProxyServer.LocalHttpProxyUrl
-	}
+func (p *ProxySettings) GetInfos() (bool, []string, string) {
 
 	inputInfo := []string{
 		p.UseWhichProxyProtocol,
@@ -74,29 +49,5 @@ func (p *ProxySettings) GetLocalHttpProxyUrl() string {
 		inputInfo = append(inputInfo, p.InputProxyUsername, p.InputProxyPassword)
 	}
 
-	localHttpProxyUrl, err := p.localHttpProxyServer.Start(inputInfo, p.LocalHttpProxyServerPort)
-	if err != nil {
-		panic(fmt.Sprintln("start local http proxy server error:", err))
-		return ""
-	}
-
-	return localHttpProxyUrl
-}
-
-func (p *ProxySettings) CloseLocalHttpProxyServer() error {
-	defer func() {
-		p.locker.Unlock()
-	}()
-	p.locker.Lock()
-
-	if p.localHttpProxyServer == nil {
-		return nil
-	}
-
-	if p.localHttpProxyServer.IsRunning() == false {
-		return nil
-	}
-
-	println("CloseLocalHttpProxyServer Done")
-	return p.localHttpProxyServer.Stop()
+	return p.UseProxy, inputInfo, p.LocalHttpProxyServerPort
 }

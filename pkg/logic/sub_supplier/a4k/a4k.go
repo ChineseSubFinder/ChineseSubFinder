@@ -31,7 +31,6 @@ import (
 type Supplier struct {
 	log            *logrus.Logger
 	fileDownloader *file_downloader.FileDownloader
-	topic          int
 	isAlive        bool
 }
 
@@ -40,21 +39,20 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	sup := Supplier{}
 	sup.log = fileDownloader.Log
 	sup.fileDownloader = fileDownloader
-	sup.topic = common2.DownloadSubsPerSite
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
-	if settings.Get().AdvancedSettings.Topic > 0 && settings.Get().AdvancedSettings.Topic != sup.topic {
-		sup.topic = settings.Get().AdvancedSettings.Topic
+	if settings.Get().AdvancedSettings.Topic != common2.DownloadSubsPerSite {
+		settings.Get().AdvancedSettings.Topic = common2.DownloadSubsPerSite
 	}
 
 	return &sup
 }
 
-func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, int64) {
+func (s *Supplier) CheckAlive() (bool, int64) {
 
 	// 计算当前时间
 	startT := time.Now()
-	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient()
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive.NewHttpClient", err)
 		return false, 0
@@ -92,10 +90,6 @@ func (s *Supplier) GetLogger() *logrus.Logger {
 	return s.log
 }
 
-func (s *Supplier) GetSettings() *settings.Settings {
-	return settings.Get()
-}
-
 func (s *Supplier) GetSupplierName() string {
 	return common2.SubSiteA4K
 }
@@ -111,7 +105,7 @@ func (s *Supplier) GetSubListFromFile4Movie(videoFPath string) ([]supplier.SubIn
 	outSubInfos := make([]supplier.SubInfo, 0)
 
 	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers,
-		videoFPath, true, settings.Get().AdvancedSettings.ProxySettings)
+		videoFPath, true)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "GetMixMediaInfo", err)
 		return nil, err
@@ -152,7 +146,7 @@ func (s *Supplier) GetSubListFromFile4Movie(videoFPath string) ([]supplier.SubIn
 		outSubInfos = append(outSubInfos, *subInfo)
 		downloadCounter++
 
-		if downloadCounter >= s.topic {
+		if downloadCounter >= settings.Get().AdvancedSettings.Topic {
 			break
 		}
 	}
@@ -174,7 +168,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 	for _, episodeInfo := range seriesInfo.NeedDlEpsKeyList {
 
 		mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers,
-			episodeInfo.FileFullPath, false, settings.Get().AdvancedSettings.ProxySettings)
+			episodeInfo.FileFullPath, false)
 		if err != nil {
 			s.log.Errorln(s.GetSupplierName(), "GetMixMediaInfo", err)
 			return nil, err
@@ -285,7 +279,7 @@ func (s *Supplier) listPageItems(keyword string, pageIndex int, isMovie bool) (s
 		time.Sleep(time.Second * 10)
 	}()
 	searchResultItems = make([]SearchResultItem, 0)
-	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient()
 	if err != nil {
 		err = errors.New("NewHttpClient error:" + err.Error())
 		return
@@ -388,7 +382,7 @@ func (s *Supplier) downloadSub(videoFileName, downloadPageUrl string, season, ep
 	}()
 
 	var httpClient *resty.Client
-	httpClient, err = pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
+	httpClient, err = pkg.NewHttpClient()
 	if err != nil {
 		err = errors.New("NewHttpClient error:" + err.Error())
 		return

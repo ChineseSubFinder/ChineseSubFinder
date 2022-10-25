@@ -22,7 +22,6 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
 	"github.com/emirpasic/gods/maps/treemap"
@@ -30,9 +29,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func readSeriesInfo(dealers *media_info_dealers.Dealers, seriesDir string, need2AnalyzeSub bool, _proxySettings *settings.ProxySettings) (*series.SeriesInfo, map[string][]series.SubInfo, error) {
+func readSeriesInfo(dealers *media_info_dealers.Dealers, seriesDir string, need2AnalyzeSub bool) (*series.SeriesInfo, map[string][]series.SubInfo, error) {
 
-	seriesInfo, err := GetSeriesInfoFromDir(dealers, seriesDir, _proxySettings)
+	seriesInfo, err := GetSeriesInfoFromDir(dealers, seriesDir)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -107,10 +106,9 @@ func ReadSeriesInfoFromDir(dealers *media_info_dealers.Dealers,
 	ExpirationTime int,
 	forcedScanAndDownloadSub bool,
 	need2AnalyzeSub bool,
-	_proxySettings *settings.ProxySettings,
 	epsMap ...map[int][]int) (*series.SeriesInfo, error) {
 
-	seriesInfo, SubDict, err := readSeriesInfo(dealers, seriesDir, need2AnalyzeSub, _proxySettings)
+	seriesInfo, SubDict, err := readSeriesInfo(dealers, seriesDir, need2AnalyzeSub)
 	if err != nil {
 		return nil, err
 	}
@@ -136,9 +134,9 @@ func ReadSeriesInfoFromDir(dealers *media_info_dealers.Dealers,
 }
 
 // ReadSeriesInfoFromEmby 将 Emby API 读取到的数据进行转换到通用的结构中，需要填充那些剧集需要下载，这样要的是一个连续剧的，不是所有的传入(只有那些 Eps 需要下载字幕的 NeedDlEpsKeyList)
-func ReadSeriesInfoFromEmby(dealers *media_info_dealers.Dealers, seriesDir string, seriesVideoList []emby.EmbyMixInfo, ExpirationTime int, forcedScanAndDownloadSub bool, need2AnalyzeSub bool, _proxySettings *settings.ProxySettings) (*series.SeriesInfo, error) {
+func ReadSeriesInfoFromEmby(dealers *media_info_dealers.Dealers, seriesDir string, seriesVideoList []emby.EmbyMixInfo, ExpirationTime int, forcedScanAndDownloadSub bool, need2AnalyzeSub bool) (*series.SeriesInfo, error) {
 
-	seriesInfo, SubDict, err := readSeriesInfo(dealers, seriesDir, need2AnalyzeSub, _proxySettings)
+	seriesInfo, SubDict, err := readSeriesInfo(dealers, seriesDir, need2AnalyzeSub)
 	if err != nil {
 		return nil, err
 	}
@@ -159,14 +157,14 @@ func ReadSeriesInfoFromEmby(dealers *media_info_dealers.Dealers, seriesDir strin
 }
 
 // SkipChineseSeries 跳过中文连续剧
-func SkipChineseSeries(dealers *media_info_dealers.Dealers, seriesRootPath string, _proxySettings *settings.ProxySettings) (bool, *models.IMDBInfo, error) {
+func SkipChineseSeries(dealers *media_info_dealers.Dealers, seriesRootPath string) (bool, *models.IMDBInfo, error) {
 
 	imdbInfo, err := decode.GetVideoNfoInfo4SeriesDir(seriesRootPath)
 	if err != nil {
 		return false, nil, err
 	}
 
-	isChineseVideo, t, err := imdb_helper.IsChineseVideo(dealers, imdbInfo, _proxySettings)
+	isChineseVideo, t, err := imdb_helper.IsChineseVideo(dealers, imdbInfo)
 	if err != nil {
 		return false, nil, err
 	}
@@ -327,7 +325,7 @@ func whichSeasonEpsNeedDownloadSub(logger *logrus.Logger, seriesInfo *series.Ser
 	return needDlSubEpsList, needDlSeasonList
 }
 
-func GetSeriesInfoFromDir(dealers *media_info_dealers.Dealers, seriesDir string, _proxySettings *settings.ProxySettings) (*series.SeriesInfo, error) {
+func GetSeriesInfoFromDir(dealers *media_info_dealers.Dealers, seriesDir string) (*series.SeriesInfo, error) {
 	seriesInfo := series.SeriesInfo{}
 	// 只考虑 IMDB 去查询，文件名目前发现可能会跟电影重复，导致很麻烦，本来也有前置要求要削刮器处理的
 	videoInfo, err := decode.GetVideoNfoInfo4SeriesDir(seriesDir)
@@ -335,7 +333,7 @@ func GetSeriesInfoFromDir(dealers *media_info_dealers.Dealers, seriesDir string,
 		return nil, err
 	}
 
-	imdbInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(dealers, videoInfo, _proxySettings)
+	imdbInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(dealers, videoInfo)
 	if err != nil {
 		return nil, err
 	}

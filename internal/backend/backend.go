@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 
 	"github.com/allanpk716/ChineseSubFinder/frontend/dist"
@@ -21,7 +22,6 @@ import (
 
 type BackEnd struct {
 	logger        *logrus.Logger
-	settings      *settings.Settings
 	cronHelper    *cron_helper.CronHelper
 	httpPort      int
 	running       bool
@@ -30,8 +30,8 @@ type BackEnd struct {
 	restartSignal chan interface{}
 }
 
-func NewBackEnd(logger *logrus.Logger, settings *settings.Settings, cronHelper *cron_helper.CronHelper, httpPort int, restartSignal chan interface{}) *BackEnd {
-	return &BackEnd{logger: logger, settings: settings, cronHelper: cronHelper, httpPort: httpPort, restartSignal: restartSignal}
+func NewBackEnd(logger *logrus.Logger, cronHelper *cron_helper.CronHelper, httpPort int, restartSignal chan interface{}) *BackEnd {
+	return &BackEnd{logger: logger, cronHelper: cronHelper, httpPort: httpPort, restartSignal: restartSignal}
 }
 
 func (b *BackEnd) start() {
@@ -44,14 +44,20 @@ func (b *BackEnd) start() {
 		return
 	}
 	b.running = true
-
+	// ----------------------------------------
+	// 设置代理
+	err := local_http_proxy_server.SetProxyInfo(settings.Get().AdvancedSettings.ProxySettings.GetInfos())
+	if err != nil {
+		b.logger.Errorln("Set Local Http Proxy Server Error:", err)
+		return
+	}
+	// -----------------------------------------
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = ioutil.Discard
-
 	engine := gin.Default()
 	// 默认所有都通过
 	engine.Use(cors.Default())
-	cbBase, v1Router := InitRouter(b.settings, engine, b.cronHelper, b.restartSignal)
+	cbBase, v1Router := InitRouter(engine, b.cronHelper, b.restartSignal)
 
 	engine.GET("/", func(c *gin.Context) {
 		c.Header("content-type", "text/html;charset=utf-8")

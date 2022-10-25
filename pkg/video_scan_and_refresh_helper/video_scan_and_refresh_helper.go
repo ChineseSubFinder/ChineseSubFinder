@@ -373,7 +373,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 
 			v.log.Infoln("--------------------------------------------------------------------------------")
 			v.log.Infoln("scanLowVideoSubInfo.MovieHasChineseSub", videoIndex, videoFPath)
-			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.fileDownloader.MediaInfoDealers, videoFPath, true, settings.Get().AdvancedSettings.ProxySettings)
+			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.fileDownloader.MediaInfoDealers, videoFPath, true)
 			if err != nil {
 				v.log.Warningln("scanLowVideoSubInfo.GetMixMediaInfo", videoFPath, err)
 				continue
@@ -423,7 +423,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 		seriesDirRootFPathLisst := seriesFPath.([]string)
 		for seriesDirIndex, seriesDirRootFPath := range seriesDirRootFPathLisst {
 
-			seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(v.fileDownloader.MediaInfoDealers, seriesDirRootFPath, 90, true, true, settings.Get().AdvancedSettings.ProxySettings)
+			seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(v.fileDownloader.MediaInfoDealers, seriesDirRootFPath, 90, true, true)
 			if err != nil {
 				v.log.Warningln("scanLowVideoSubInfo.ReadSeriesInfoFromDir", seriesDirRootFPath, err)
 				return false
@@ -433,7 +433,7 @@ func (v *VideoScanAndRefreshHelper) scanLowVideoSubInfo(scanVideoResult *ScanVid
 				continue
 			}
 
-			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.fileDownloader.MediaInfoDealers, seriesInfo.EpList[0].FileFullPath, false, settings.Get().AdvancedSettings.ProxySettings)
+			mixMediaInfo, err := mix_media_info.GetMixMediaInfo(v.fileDownloader.MediaInfoDealers, seriesInfo.EpList[0].FileFullPath, false)
 			if err != nil {
 				v.log.Warningln("scanLowVideoSubInfo.GetMixMediaInfo", seriesInfo.EpList[0].FileFullPath, err)
 				continue
@@ -1046,7 +1046,7 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 			return err
 		}
 		// 获取 IMDB 信息
-		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.fileDownloader.MediaInfoDealers, videoImdbInfo, settings.Get().AdvancedSettings.ProxySettings)
+		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.fileDownloader.MediaInfoDealers, videoImdbInfo)
 		if err != nil {
 			v.log.Warningln("GetIMDBInfoFromVideoNfoInfo,IMDB:", videoImdbInfo.ImdbId, movieInputData.InputPath, err)
 			return err
@@ -1100,7 +1100,7 @@ func (v *VideoScanAndRefreshHelper) updateLocalVideoCacheInfo(scanVideoResult *S
 		}
 
 		// 获取 IMDB 信息
-		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.fileDownloader.MediaInfoDealers, videoNfoInfo, settings.Get().AdvancedSettings.ProxySettings)
+		localIMDBInfo, err := imdb_helper.GetIMDBInfoFromVideoNfoInfo(v.fileDownloader.MediaInfoDealers, videoNfoInfo)
 		if err != nil {
 			v.log.Warningln("GetIMDBInfoFromVideoNfoInfo,IMDB:", videoNfoInfo.ImdbId, seriesInputData.InputPath, err)
 			return err

@@ -19,14 +19,12 @@ import (
 )
 
 type SubSupplierHub struct {
-	settings  *settings.Settings
 	log       *logrus.Logger
 	Suppliers []ifaces.ISupplier
 }
 
 func NewSubSupplierHub(one ifaces.ISupplier, _inSupplier ...ifaces.ISupplier) *SubSupplierHub {
 	s := SubSupplierHub{}
-	s.settings = one.GetSettings()
 	s.log = one.GetLogger()
 	s.Suppliers = make([]ifaces.ISupplier, 0)
 	s.Suppliers = append(s.Suppliers, one)
@@ -63,10 +61,10 @@ func (d *SubSupplierHub) MovieNeedDlSub(dealers *media_info_dealers.Dealers, vid
 	}
 
 	var err error
-	if d.settings.AdvancedSettings.ScanLogic.SkipChineseMovie == true {
+	if settings.Get().AdvancedSettings.ScanLogic.SkipChineseMovie == true {
 		var skip bool
 		// 跳过中文的电影，不是一定要跳过的
-		skip, err = movieHelper.SkipChineseMovie(dealers, videoFullPath, d.settings.AdvancedSettings.ProxySettings)
+		skip, err = movieHelper.SkipChineseMovie(dealers, videoFullPath)
 		if err != nil {
 			d.log.Warnln("SkipChineseMovie", videoFullPath, err)
 		}
@@ -80,7 +78,7 @@ func (d *SubSupplierHub) MovieNeedDlSub(dealers *media_info_dealers.Dealers, vid
 		// 强制下载字幕
 		needDlSub = true
 	} else {
-		needDlSub, err = movieHelper.MovieNeedDlSub(d.log, videoFullPath, d.settings.AdvancedSettings.TaskQueue.ExpirationTime)
+		needDlSub, err = movieHelper.MovieNeedDlSub(d.log, videoFullPath, settings.Get().AdvancedSettings.TaskQueue.ExpirationTime)
 		if err != nil {
 			d.log.Errorln(errors.Newf("MovieNeedDlSub %v %v", videoFullPath, err))
 			return false
@@ -94,11 +92,11 @@ func (d *SubSupplierHub) MovieNeedDlSub(dealers *media_info_dealers.Dealers, vid
 func (d *SubSupplierHub) SeriesNeedDlSub(dealers *media_info_dealers.Dealers, seriesRootPath string, forcedScanAndDownloadSub bool, need2AnalyzeSub bool) (bool, *series.SeriesInfo, error) {
 
 	if forcedScanAndDownloadSub == false {
-		if d.settings.AdvancedSettings.ScanLogic.SkipChineseSeries == true {
+		if settings.Get().AdvancedSettings.ScanLogic.SkipChineseSeries == true {
 			var skip bool
 			var err error
 			// 跳过中文的电影，不是一定要跳过的
-			skip, _, err = seriesHelper.SkipChineseSeries(dealers, seriesRootPath, d.settings.AdvancedSettings.ProxySettings)
+			skip, _, err = seriesHelper.SkipChineseSeries(dealers, seriesRootPath)
 			if err != nil {
 				d.log.Warnln("SkipChineseMovie", seriesRootPath, err)
 			}
@@ -110,10 +108,9 @@ func (d *SubSupplierHub) SeriesNeedDlSub(dealers *media_info_dealers.Dealers, se
 
 	// 读取本地的视频和字幕信息
 	seriesInfo, err := seriesHelper.ReadSeriesInfoFromDir(dealers, seriesRootPath,
-		d.settings.AdvancedSettings.TaskQueue.ExpirationTime,
+		settings.Get().AdvancedSettings.TaskQueue.ExpirationTime,
 		forcedScanAndDownloadSub,
-		need2AnalyzeSub,
-		d.settings.AdvancedSettings.ProxySettings)
+		need2AnalyzeSub)
 	if err != nil {
 		return false, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesRootPath, err)
 	}
@@ -128,7 +125,7 @@ func (d *SubSupplierHub) SeriesNeedDlSubFromEmby(dealers *media_info_dealers.Dea
 		var skip bool
 		var err error
 		// 跳过中文的电影，不是一定要跳过的
-		skip, _, err = seriesHelper.SkipChineseSeries(dealers, seriesRootPath, d.settings.AdvancedSettings.ProxySettings)
+		skip, _, err = seriesHelper.SkipChineseSeries(dealers, seriesRootPath)
 		if err != nil {
 			d.log.Warnln("SkipChineseMovie", seriesRootPath, err)
 		}
@@ -137,7 +134,7 @@ func (d *SubSupplierHub) SeriesNeedDlSubFromEmby(dealers *media_info_dealers.Dea
 		}
 	}
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := seriesHelper.ReadSeriesInfoFromEmby(dealers, seriesRootPath, seriesVideoList, ExpirationTime, forcedScanAndDownloadSub, false, d.settings.AdvancedSettings.ProxySettings)
+	seriesInfo, err := seriesHelper.ReadSeriesInfoFromEmby(dealers, seriesRootPath, seriesVideoList, ExpirationTime, forcedScanAndDownloadSub, false)
 	if err != nil {
 		return false, nil, errors.Newf("ReadSeriesInfoFromDir %v %v", seriesRootPath, err)
 	}
@@ -183,7 +180,7 @@ func (d *SubSupplierHub) DownloadSub4Series(seriesDirPath string, seriesInfo *se
 }
 
 // CheckSubSiteStatus 检测多个字幕提供的网站是否是有效的，是否下载次数超限
-func (d *SubSupplierHub) CheckSubSiteStatus(proxySettings ...*settings.ProxySettings) backend.ReplyCheckStatus {
+func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 
 	outStatus := backend.ReplyCheckStatus{
 		SubSiteStatus: make([]backend.SiteStatus, 0),
@@ -192,7 +189,7 @@ func (d *SubSupplierHub) CheckSubSiteStatus(proxySettings ...*settings.ProxySett
 	// 测试提供字幕的网站是有效的
 	d.log.Infoln("Check Sub Supplier Start...")
 	for _, supplier := range d.Suppliers {
-		bAlive, speed := supplier.CheckAlive(proxySettings...)
+		bAlive, speed := supplier.CheckAlive()
 		if bAlive == false {
 			d.log.Warningln(supplier.GetSupplierName(), "Check Alive = false")
 		} else {

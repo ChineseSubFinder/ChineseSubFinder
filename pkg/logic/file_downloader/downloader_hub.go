@@ -66,13 +66,13 @@ func (f *FileDownloader) Get(supplierName string, topN int64, videoFileName stri
 	}
 	// 如果不存在那么就先下载，然后再存入缓存中
 	if found == false {
-		fileData, downloadFileName, err := pkg.DownFile(f.Log, fileDownloadUrl, settings.Get().AdvancedSettings.ProxySettings)
+		fileData, downloadFileName, err := pkg.DownFile(f.Log, fileDownloadUrl)
 		if err != nil {
 			return nil, err
 		}
 		// 下载成功需要统计到今天的次数中
 		_, err = f.CacheCenter.DailyDownloadCountAdd(supplierName,
-			pkg.GetPublicIP(f.Log, settings.Get().AdvancedSettings.TaskQueue, settings.Get().AdvancedSettings.ProxySettings))
+			pkg.GetPublicIP(f.Log, settings.Get().AdvancedSettings.TaskQueue))
 		if err != nil {
 			f.Log.Warningln(supplierName, "FileDownloader.Get.DailyDownloadCountAdd", err)
 		}
@@ -116,13 +116,13 @@ func (f *FileDownloader) GetA4k(supplierName string, topN int64, season, eps int
 	}
 	// 如果不存在那么就先下载，然后再存入缓存中
 	if found == false {
-		fileData, downloadFileName, err := pkg.DownFile(f.Log, fileDownloadUrl, settings.Get().AdvancedSettings.ProxySettings)
+		fileData, downloadFileName, err := pkg.DownFile(f.Log, fileDownloadUrl)
 		if err != nil {
 			return nil, err
 		}
 		// 下载成功需要统计到今天的次数中
 		_, err = f.CacheCenter.DailyDownloadCountAdd(supplierName,
-			pkg.GetPublicIP(f.Log, settings.Get().AdvancedSettings.TaskQueue, settings.Get().AdvancedSettings.ProxySettings))
+			pkg.GetPublicIP(f.Log, settings.Get().AdvancedSettings.TaskQueue))
 		if err != nil {
 			f.Log.Warningln(supplierName, "FileDownloader.Get.DailyDownloadCountAdd", err)
 		}
@@ -169,7 +169,7 @@ func (f *FileDownloader) GetEx(supplierName string, browser *rod.Browser, subDow
 		}
 		// 下载成功需要统计到今天的次数中
 		_, err = f.CacheCenter.DailyDownloadCountAdd(supplierName,
-			pkg.GetPublicIP(f.Log, settings.Get().AdvancedSettings.TaskQueue, settings.Get().AdvancedSettings.ProxySettings))
+			pkg.GetPublicIP(f.Log, settings.Get().AdvancedSettings.TaskQueue))
 		if err != nil {
 			f.Log.Warningln(supplierName, "FileDownloader.GetEx.DailyDownloadCountAdd", err)
 		}

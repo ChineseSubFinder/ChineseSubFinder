@@ -3,12 +3,13 @@ package pre_job
 import (
 	"errors"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types"
 	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/hot_fix"
 	"github.com/allanpk716/ChineseSubFinder/pkg/rod_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
 	"github.com/sirupsen/logrus"
@@ -17,13 +18,11 @@ import (
 type PreJob struct {
 	stageName string
 	gError    error
-
-	sets *settings.Settings
-	log  *logrus.Logger
+	log       *logrus.Logger
 }
 
-func NewPreJob(sets *settings.Settings, log *logrus.Logger) *PreJob {
-	return &PreJob{sets: sets, log: log}
+func NewPreJob(log *logrus.Logger) *PreJob {
+	return &PreJob{log: log}
 }
 
 func (p *PreJob) HotFix() *PreJob {
@@ -42,8 +41,8 @@ func (p *PreJob) HotFix() *PreJob {
 	// 开始修复
 	p.log.Infoln(common2.NotifyStringTellUserWait)
 	err := hot_fix.HotFixProcess(p.log, types.HotFixParam{
-		MovieRootDirs:  p.sets.CommonSettings.MoviePaths,
-		SeriesRootDirs: p.sets.CommonSettings.SeriesPaths,
+		MovieRootDirs:  settings.Get().CommonSettings.MoviePaths,
+		SeriesRootDirs: settings.Get().CommonSettings.SeriesPaths,
 	})
 	if err != nil {
 		p.log.Errorln("hot_fix.HotFixProcess()", err)
@@ -73,9 +72,9 @@ func (p *PreJob) ChangeSubNameFormat() *PreJob {
 	*/
 	p.log.Infoln(common2.NotifyStringTellUserWait)
 	renameResults, err := sub_formatter.SubFormatChangerProcess(p.log,
-		p.sets.CommonSettings.MoviePaths,
-		p.sets.CommonSettings.SeriesPaths,
-		common.FormatterName(p.sets.AdvancedSettings.SubNameFormatter))
+		settings.Get().CommonSettings.MoviePaths,
+		settings.Get().CommonSettings.SeriesPaths,
+		common.FormatterName(settings.Get().AdvancedSettings.SubNameFormatter))
 	// 出错的文件有哪一些
 	for s, i := range renameResults.ErrFiles {
 		p.log.Errorln("reformat ErrFile:"+s, i)

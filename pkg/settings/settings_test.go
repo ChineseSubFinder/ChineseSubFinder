@@ -25,8 +25,8 @@ func TestNewSettings(t *testing.T) {
 		},
 		AdvancedSettings: &AdvancedSettings{
 			ProxySettings: &ProxySettings{
-				UseHttpProxy:     true,
-				HttpProxyAddress: "123",
+				UseProxy:                 true,
+				LocalHttpProxyServerPort: "123",
 			},
 			DebugMode:                  true,
 			SaveFullSeasonTmpSubtitles: true,

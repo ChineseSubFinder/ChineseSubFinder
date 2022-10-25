@@ -16,7 +16,6 @@ import (
 )
 
 func InitRouter(
-	settings *settings.Settings, // 设置实例
 	router *gin.Engine,
 	cronHelper *cron_helper.CronHelper,
 	restartSignal chan interface{},
@@ -26,10 +25,10 @@ func InitRouter(
 	// 设置 TMDB API 的本地 Client，用户自己的 API Key
 	var err error
 	var tmdbApi *tmdb_api.TmdbApi
-	if settings.AdvancedSettings.TmdbApiSettings.Enable == true &&
-		settings.AdvancedSettings.TmdbApiSettings.ApiKey != "" {
+	if settings.Get().AdvancedSettings.TmdbApiSettings.Enable == true &&
+		settings.Get().AdvancedSettings.TmdbApiSettings.ApiKey != "" {
 
-		tmdbApi, err = tmdb_api.NewTmdbHelper(cronHelper.Logger, settings.AdvancedSettings.TmdbApiSettings.ApiKey, settings.AdvancedSettings.ProxySettings)
+		tmdbApi, err = tmdb_api.NewTmdbHelper(cronHelper.Logger, settings.Get().AdvancedSettings.TmdbApiSettings.ApiKey)
 		if err != nil {
 			cronHelper.Logger.Panicln("NewTmdbHelper", err)
 		}
@@ -46,14 +45,14 @@ func InitRouter(
 	// --------------------------------------------------
 	// 静态文件服务器
 	// 添加电影的
-	for i, path := range settings.CommonSettings.MoviePaths {
+	for i, path := range settings.Get().CommonSettings.MoviePaths {
 
 		nowUrl := "/movie_dir_" + fmt.Sprintf("%d", i)
 		cbV1.SetPathUrlMapItem(path, nowUrl)
 		router.StaticFS(nowUrl, http.Dir(path))
 	}
 	// 添加连续剧的
-	for i, path := range settings.CommonSettings.SeriesPaths {
+	for i, path := range settings.Get().CommonSettings.SeriesPaths {
 
 		nowUrl := "/series_dir_" + fmt.Sprintf("%d", i)
 		cbV1.SetPathUrlMapItem(path, nowUrl)

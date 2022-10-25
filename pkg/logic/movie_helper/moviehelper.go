@@ -17,7 +17,6 @@ import (
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
 	"github.com/jinzhu/now"
@@ -124,13 +123,13 @@ func MovieHasChineseSub(logger *logrus.Logger, videoFilePath string) (bool, []st
 }
 
 // SkipChineseMovie 跳过中文的电影
-func SkipChineseMovie(dealers *media_info_dealers.Dealers, videoFullPath string, _proxySettings *settings.ProxySettings) (bool, error) {
+func SkipChineseMovie(dealers *media_info_dealers.Dealers, videoFullPath string) (bool, error) {
 
 	imdbInfo, err := decode.GetVideoNfoInfo4Movie(videoFullPath)
 	if err != nil {
 		return false, err
 	}
-	isChineseVideo, _, err := imdb_helper.IsChineseVideo(dealers, imdbInfo, _proxySettings)
+	isChineseVideo, _, err := imdb_helper.IsChineseVideo(dealers, imdbInfo)
 	if err != nil {
 		return false, err
 	}

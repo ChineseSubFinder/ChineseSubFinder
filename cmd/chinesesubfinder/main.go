@@ -145,7 +145,7 @@ func main() {
 	// ------------------------------------------------------------------------
 	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
 	if settings.Get().SpeedDevMode == false {
-		pj := pre_job.NewPreJob(settings.Get(), loggerBase)
+		pj := pre_job.NewPreJob(loggerBase)
 
 		if pkg.LiteMode() == true {
 			// 不启用 Chrome 相关操作
@@ -188,7 +188,7 @@ func main() {
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
 	restartSignal := make(chan interface{}, 1)
 	defer close(restartSignal)
-	bend := backend.NewBackEnd(loggerBase, settings.Get(), cronHelper, nowPort, restartSignal)
+	bend := backend.NewBackEnd(loggerBase, cronHelper, nowPort, restartSignal)
 	go bend.Restart()
 	restartSignal <- 1
 	// 阻塞

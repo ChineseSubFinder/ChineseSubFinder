@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/search"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg"
@@ -41,12 +43,9 @@ import (
 )
 
 type Supplier struct {
-	settings       *settings.Settings
 	log            *logrus.Logger
 	fileDownloader *file_downloader.FileDownloader
-	topic          int
 	tt             time.Duration
-	debugMode      bool
 	isAlive        bool
 }
 
@@ -55,28 +54,26 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	sup := Supplier{}
 	sup.log = fileDownloader.Log
 	sup.fileDownloader = fileDownloader
-	sup.topic = common.DownloadSubsPerSite
 
-	sup.settings = fileDownloader.Settings
-	if sup.settings.AdvancedSettings.Topic > 0 && sup.settings.AdvancedSettings.Topic != sup.topic {
-		sup.topic = sup.settings.AdvancedSettings.Topic
+	if settings.Get().AdvancedSettings.Topic != common.DownloadSubsPerSite {
+		settings.Get().AdvancedSettings.Topic = common.DownloadSubsPerSite
 	}
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
 	// 默认超时是 2 * 60s，如果是调试模式则是 5 min
 	sup.tt = common.BrowserTimeOut
-	sup.debugMode = sup.settings.AdvancedSettings.DebugMode
-	if sup.debugMode == true {
+	if settings.Get().AdvancedSettings.DebugMode == true {
 		sup.tt = common.OneMovieProcessTimeOut
 	}
 
 	return &sup
 }
 
-func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, int64) {
+func (s *Supplier) CheckAlive() (bool, int64) {
 
-	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl,
-		s.settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl())
+	proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(
+		settings.Get().AdvancedSettings.SuppliersSettings.SubHD.RootUrl,
+		local_http_proxy_server.GetProxyUrl())
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
 		s.isAlive = false
@@ -100,35 +97,31 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 
 	return true
 
-	if s.settings.AdvancedSettings.SuppliersSettings.SubHD.DailyDownloadLimit == 0 {
+	if settings.Get().AdvancedSettings.SuppliersSettings.SubHD.DailyDownloadLimit == 0 {
 		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit is 0, will Skip Download")
 		return true
 	}
 
 	// 需要查询今天的限额
 	count, err := s.fileDownloader.CacheCenter.DailyDownloadCountGet(s.GetSupplierName(),
-		pkg.GetPublicIP(s.log, s.settings.AdvancedSettings.TaskQueue, s.settings.AdvancedSettings.ProxySettings))
+		pkg.GetPublicIP(s.log, settings.Get().AdvancedSettings.TaskQueue))
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "DailyDownloadCountGet", err)
 		return true
 	}
-	if count >= s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit {
+	if count >= settings.Get().AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit {
 		// 超限了
-		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.AdvancedSettings.SuppliersSettings.SubHD.DailyDownloadLimit, "Now Is:", count)
+		s.log.Warningln(s.GetSupplierName(), "DailyDownloadLimit:", settings.Get().AdvancedSettings.SuppliersSettings.SubHD.DailyDownloadLimit, "Now Is:", count)
 		return true
 	} else {
 		// 没有超限
-		s.log.Infoln(s.GetSupplierName(), "DailyDownloadLimit:", s.settings.AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit, "Now Is:", count)
+		s.log.Infoln(s.GetSupplierName(), "DailyDownloadLimit:", settings.Get().AdvancedSettings.SuppliersSettings.Zimuku.DailyDownloadLimit, "Now Is:", count)
 		return false
 	}
 }
 
 func (s *Supplier) GetLogger() *logrus.Logger {
 	return s.log
-}
-
-func (s *Supplier) GetSettings() *settings.Settings {
-	return s.settings
 }
 
 func (s *Supplier) GetSupplierName() string {
@@ -143,7 +136,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(rod_helper.NewBrowserOptions(s.log, true, s.settings))
+	browser, err := rod_helper.NewBrowserEx(rod_helper.NewBrowserOptions(s.log, true, settings.Get()))
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +146,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 
 	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers,
 		seriesInfo.EpList[0].FileFullPath, false,
-		s.settings.AdvancedSettings.ProxySettings)
+		settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), seriesInfo.EpList[0].FileFullPath, "GetMixMediaInfo", err)
 		return nil, err
@@ -264,7 +257,7 @@ func (s *Supplier) getSubListFromFile4Movie(filePath string) ([]supplier.SubInfo
 	s.log.Infoln(s.GetSupplierName(), filePath, "No subtitle found", "KeyWord:", imdbInfo.ImdbId)
 	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers,
 		filePath, true,
-		s.settings.AdvancedSettings.ProxySettings)
+		settings.Get().AdvancedSettings.ProxySettings)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), filePath, "GetMixMediaInfo", err)
 		return nil, err
@@ -310,7 +303,7 @@ func (s *Supplier) getSubListFromKeyword4Movie(keyword string) ([]supplier.SubIn
 	s.log.Infoln("Search Keyword:", keyword)
 	var browser *rod.Browser
 	// TODO 是用本地的 Browser 还是远程的，推荐是远程的
-	browser, err := rod_helper.NewBrowserEx(rod_helper.NewBrowserOptions(s.log, true, s.settings))
+	browser, err := rod_helper.NewBrowserEx(rod_helper.NewBrowserOptions(s.log, true, settings.Get()))
 	if err != nil {
 		return nil, err
 	}
@@ -410,7 +403,7 @@ func (s *Supplier) step0(browser *rod.Browser, keyword string) (string, error) {
 		}
 	}()
 
-	result, page, err := rod_helper.HttpGetFromBrowser(browser, fmt.Sprintf(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl+common.SubSubHDSearchUrl, url.QueryEscape(keyword)), s.tt)
+	result, page, err := rod_helper.HttpGetFromBrowser(browser, fmt.Sprintf(settings.Get().AdvancedSettings.SuppliersSettings.SubHD.RootUrl+common.SubSubHDSearchUrl, url.QueryEscape(keyword)), s.tt)
 	if err != nil {
 		return "", err
 	}
@@ -478,7 +471,7 @@ func (s *Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSe
 			notify_center.Notify.Add("subhd_step1", err.Error())
 		}
 	}()
-	detailPageUrl = pkg.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, detailPageUrl)
+	detailPageUrl = pkg.AddBaseUrl(settings.Get().AdvancedSettings.SuppliersSettings.SubHD.RootUrl, detailPageUrl)
 	result, page, err := rod_helper.HttpGetFromBrowser(browser, detailPageUrl, s.tt)
 	if err != nil {
 		return nil, err
@@ -521,7 +514,7 @@ func (s *Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSe
 
 		listItem := HdListItem{}
 		listItem.Url = downUrl
-		listItem.BaseUrl = s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl
+		listItem.BaseUrl = settings.Get().AdvancedSettings.SuppliersSettings.SubHD.RootUrl
 		listItem.Title = title
 		listItem.DownCount = downCount
 
@@ -529,7 +522,7 @@ func (s *Supplier) step1(browser *rod.Browser, detailPageUrl string, isMovieOrSe
 		// 连续剧，需要多个
 		if isMovieOrSeries == true {
 
-			if len(lists) >= s.topic {
+			if len(lists) >= settings.Get().AdvancedSettings.Topic {
 				return false
 			}
 		}
@@ -548,7 +541,7 @@ func (s *Supplier) DownFile(browser *rod.Browser, subDownloadPageUrl string, Top
 			notify_center.Notify.Add("subhd_DownFile", err.Error())
 		}
 	}()
-	subDownloadPageFullUrl := pkg.AddBaseUrl(s.settings.AdvancedSettings.SuppliersSettings.SubHD.RootUrl, subDownloadPageUrl)
+	subDownloadPageFullUrl := pkg.AddBaseUrl(settings.Get().AdvancedSettings.SuppliersSettings.SubHD.RootUrl, subDownloadPageUrl)
 
 	_, page, err := rod_helper.HttpGetFromBrowser(browser, subDownloadPageFullUrl, s.tt)
 	if err != nil {
@@ -783,7 +776,7 @@ search:
 	//鬆開滑鼠左鍵, 拖动完毕
 	mouse.MustUp("left")
 
-	if s.debugMode == true {
+	if settings.Get().AdvancedSettings.DebugMode == true {
 		//截圖保存
 		page.MustScreenshot(pkg.DefDebugFolder(), "result.png")
 	}

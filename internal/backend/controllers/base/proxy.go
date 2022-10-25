@@ -3,6 +3,8 @@ package base
 import (
 	"net/http"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/a4k"
@@ -35,18 +37,16 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 	if err != nil {
 		return
 	}
-
-	// 先尝试关闭之前的本地 http 代理
-	err = settings.Get().AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
-	if err != nil {
-		return
-	}
 	// 备份一份
 	bkProxySettings := settings.Get().AdvancedSettings.ProxySettings.CopyOne()
 	// 赋值 Web 传递过来的需要测试的代理参数
 	settings.Get().AdvancedSettings.ProxySettings = &checkProxy.ProxySettings
 	settings.Get().AdvancedSettings.ProxySettings.UseProxy = true
-
+	// 设置代理
+	err = local_http_proxy_server.SetProxyInfo(settings.Get().AdvancedSettings.ProxySettings.GetInfos())
+	if err != nil {
+		return
+	}
 	// 使用提交过来的这个代理地址，测试多个字幕网站的可用性
 	subSupplierHub := subSupplier.NewSubSupplierHub(
 		// 这里无需传递下载字幕的缓存实例
@@ -68,20 +68,17 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 		subSupplierHub.AddSubSupplier(csf.NewSupplier(cb.fileDownloader))
 	}
 
-	outStatus := subSupplierHub.CheckSubSiteStatus(settings.Get().AdvancedSettings.ProxySettings)
+	outStatus := subSupplierHub.CheckSubSiteStatus()
 
 	defer func() {
 		// 还原
-		err = checkProxy.ProxySettings.CloseLocalHttpProxyServer()
-		if err != nil {
-			return
-		}
 		settings.Get().AdvancedSettings.ProxySettings = bkProxySettings
 		cb.proxyCheckLocker.Unlock()
-		err = settings.Get().AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
+		err = local_http_proxy_server.SetProxyInfo(settings.Get().AdvancedSettings.ProxySettings.GetInfos())
 		if err != nil {
 			return
 		}
+		local_http_proxy_server.GetProxyUrl()
 	}()
 
 	c.JSON(http.StatusOK, outStatus)

@@ -30,7 +30,6 @@ import (
 type Supplier struct {
 	log               *logrus.Logger
 	fileDownloader    *file_downloader.FileDownloader
-	topic             int
 	isAlive           bool
 	theSearchInterval time.Duration
 }
@@ -40,11 +39,10 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	sup := Supplier{}
 	sup.log = fileDownloader.Log
 	sup.fileDownloader = fileDownloader
-	sup.topic = common2.DownloadSubsPerSite
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
-	if settings.Get().AdvancedSettings.Topic > 0 && settings.Get().AdvancedSettings.Topic != sup.topic {
-		sup.topic = settings.Get().AdvancedSettings.Topic
+	if settings.Get().AdvancedSettings.Topic != common2.DownloadSubsPerSite {
+		settings.Get().AdvancedSettings.Topic = common2.DownloadSubsPerSite
 	}
 
 	sup.theSearchInterval = 20 * time.Second
@@ -52,7 +50,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	return &sup
 }
 
-func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, int64) {
+func (s *Supplier) CheckAlive() (bool, int64) {
 
 	// 如果没有设置这个 API 接口，那么就任务是不可用的
 	if settings.Get().SubtitleSources.AssrtSettings.Token == "" {
@@ -91,10 +89,6 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 
 func (s *Supplier) GetLogger() *logrus.Logger {
 	return s.log
-}
-
-func (s *Supplier) GetSettings() *settings.Settings {
-	return settings.Get()
 }
 
 func (s *Supplier) GetSupplierName() string {
@@ -152,7 +146,7 @@ func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool) ([]suppli
 	s.log.Debugln(s.GetSupplierName(), videoFPath, "Start...")
 
 	outSubInfoList := make([]supplier.SubInfo, 0)
-	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, settings.Get().AdvancedSettings.ProxySettings)
+	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie)
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), videoFPath, "GetMixMediaInfo", err)
 		return nil, err
@@ -213,7 +207,7 @@ func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool) ([]suppli
 
 		outSubInfoList = append(outSubInfoList, *subInfo)
 		// 如果够了那么多个字幕就返回
-		if len(outSubInfoList) >= s.topic {
+		if len(outSubInfoList) >= settings.Get().AdvancedSettings.Topic {
 			return outSubInfoList, nil
 		}
 	}
@@ -285,7 +279,7 @@ func (s *Supplier) getSubByKeyWord(keyword string) (*SearchSubResult, error) {
 
 	s.log.Infoln("Search KeyWord:", keyword)
 	tt := url.QueryEscape(keyword)
-	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient()
 	if err != nil {
 		return nil, err
 	}
@@ -338,7 +332,7 @@ func (s *Supplier) getSubDetail(subID int) (OneSubDetail, error) {
 
 	var subDetail OneSubDetail
 
-	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient()
 	if err != nil {
 		return subDetail, err
 	}
@@ -377,7 +371,7 @@ func (s *Supplier) getUserInfo() (UserInfo, error) {
 
 	var userInfo UserInfo
 
-	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient()
 	if err != nil {
 		return userInfo, err
 	}

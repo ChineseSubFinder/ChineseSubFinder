@@ -46,7 +46,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	return &sup
 }
 
-func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, int64) {
+func (s *Supplier) CheckAlive() (bool, int64) {
 
 	// 计算当前时间
 	startT := time.Now()
@@ -84,10 +84,6 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 
 func (s *Supplier) GetLogger() *logrus.Logger {
 	return s.log
-}
-
-func (s *Supplier) GetSettings() *settings.Settings {
-	return settings.Get()
 }
 
 func (s *Supplier) GetSupplierName() string {
@@ -190,7 +186,7 @@ func (s *Supplier) getSubListFromFile(filePath string) ([]supplier.SubInfo, erro
 func (s *Supplier) getSubInfos(filePath, cid string) (SublistSliceXunLei, error) {
 	var jsonList SublistSliceXunLei
 
-	httpClient, err := pkg.NewHttpClient(settings.Get().AdvancedSettings.ProxySettings)
+	httpClient, err := pkg.NewHttpClient()
 	if err != nil {
 		return jsonList, err
 	}

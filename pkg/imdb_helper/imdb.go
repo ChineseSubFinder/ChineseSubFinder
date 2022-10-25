@@ -14,12 +14,11 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
 	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types"
 )
 
 // GetIMDBInfoFromVideoFile 先从本地拿缓存，如果没有就从 Web 获取
-func GetIMDBInfoFromVideoFile(dealers *media_info_dealers.Dealers, videoFPath string, isMovie bool, _proxySettings *settings.ProxySettings) (*models.IMDBInfo, error) {
+func GetIMDBInfoFromVideoFile(dealers *media_info_dealers.Dealers, videoFPath string, isMovie bool) (*models.IMDBInfo, error) {
 
 	var err error
 	var videoNfoInfo types.VideoNfoInfo
@@ -33,7 +32,7 @@ func GetIMDBInfoFromVideoFile(dealers *media_info_dealers.Dealers, videoFPath st
 		dealers.Logger.Warningln("getSubListFromFile", videoFPath, err)
 		return nil, err
 	}
-	imdbInfo, err := GetIMDBInfoFromVideoNfoInfo(dealers, videoNfoInfo, _proxySettings)
+	imdbInfo, err := GetIMDBInfoFromVideoNfoInfo(dealers, videoNfoInfo)
 	if err != nil {
 		dealers.Logger.Warningln("GetIMDBInfoFromVideoNfoInfo", videoFPath, err)
 		return nil, err
@@ -44,7 +43,7 @@ func GetIMDBInfoFromVideoFile(dealers *media_info_dealers.Dealers, videoFPath st
 			// 可能本地没有获取到 IMDB ID 信息，那么从上面的 GetIMDBInfoFromVideoNfoInfo 可以从 TMDB ID 获取到 IMDB ID，那么需要传递下去
 			videoNfoInfo.ImdbId = imdbInfo.IMDBID
 		}
-		t, err := getVideoInfoFromIMDBWeb(videoNfoInfo, _proxySettings)
+		t, err := getVideoInfoFromIMDBWeb(videoNfoInfo)
 		if err != nil {
 			dealers.Logger.Errorln("getVideoInfoFromIMDBWeb,", videoNfoInfo.Title, err)
 			return nil, err
@@ -61,7 +60,7 @@ func GetIMDBInfoFromVideoFile(dealers *media_info_dealers.Dealers, videoFPath st
 }
 
 // GetIMDBInfoFromVideoNfoInfo 从本地获取 IMDB 信息，注意，如果需要跳过，那么返回 Error == common.SkipCreateInDB
-func GetIMDBInfoFromVideoNfoInfo(dealers *media_info_dealers.Dealers, videoNfoInfo types.VideoNfoInfo, _proxySettings *settings.ProxySettings) (*models.IMDBInfo, error) {
+func GetIMDBInfoFromVideoNfoInfo(dealers *media_info_dealers.Dealers, videoNfoInfo types.VideoNfoInfo) (*models.IMDBInfo, error) {
 
 	/*
 		这里需要注意一个细节，之前理想情况下是从 Web 获取完整的 IMDB Info 回来，放入本地存储
@@ -145,14 +144,14 @@ func GetIMDBInfoFromVideoNfoInfo(dealers *media_info_dealers.Dealers, videoNfoIn
 }
 
 // IsChineseVideo 从 imdbID 去查询判断是否是中文视频
-func IsChineseVideo(dealers *media_info_dealers.Dealers, videoNfoInfo types.VideoNfoInfo, _proxySettings *settings.ProxySettings) (bool, *models.IMDBInfo, error) {
+func IsChineseVideo(dealers *media_info_dealers.Dealers, videoNfoInfo types.VideoNfoInfo) (bool, *models.IMDBInfo, error) {
 
 	const chName0 = "chinese"
 	const chName1 = "mandarin"
 
 	dealers.Logger.Debugln("IsChineseVideo", 0)
 
-	localIMDBInfo, err := GetIMDBInfoFromVideoNfoInfo(dealers, videoNfoInfo, _proxySettings)
+	localIMDBInfo, err := GetIMDBInfoFromVideoNfoInfo(dealers, videoNfoInfo)
 	if err != nil {
 		return false, nil, err
 	}
@@ -160,7 +159,7 @@ func IsChineseVideo(dealers *media_info_dealers.Dealers, videoNfoInfo types.Vide
 		// 需要去外网获去补全信息，然后更新本地的信息
 		dealers.Logger.Debugln("IsChineseVideo", 1)
 
-		t, err := getVideoInfoFromIMDBWeb(videoNfoInfo, _proxySettings)
+		t, err := getVideoInfoFromIMDBWeb(videoNfoInfo)
 		if err != nil {
 			dealers.Logger.Errorln("IsChineseVideo.getVideoInfoFromIMDBWeb,", videoNfoInfo.Title, err)
 			return false, nil, err
@@ -199,9 +198,9 @@ func IsChineseVideo(dealers *media_info_dealers.Dealers, videoNfoInfo types.Vide
 }
 
 // getVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
-func getVideoInfoFromIMDBWeb(videoNfoInfo types.VideoNfoInfo, _proxySettings ...*settings.ProxySettings) (*imdb.Title, error) {
+func getVideoInfoFromIMDBWeb(videoNfoInfo types.VideoNfoInfo) (*imdb.Title, error) {
 
-	client, err := pkg.NewHttpClient(_proxySettings...)
+	client, err := pkg.NewHttpClient()
 	if err != nil {
 		return nil, err
 	}

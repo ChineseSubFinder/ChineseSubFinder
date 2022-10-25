@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/regex_things"
@@ -34,16 +36,11 @@ import (
 )
 
 // NewHttpClient 新建一个 resty 的对象
-func NewHttpClient(_proxySettings ...*settings.ProxySettings) (*resty.Client, error) {
+func NewHttpClient(referer ...string) (*resty.Client, error) {
 	//const defUserAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"
 	//const defUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41"
 
-	var proxySettings *settings.ProxySettings
 	var UserAgent, Referer string
-
-	if len(_proxySettings) > 0 {
-		proxySettings = _proxySettings[0]
-	}
 	// ------------------------------------------------
 	// 随机的 Browser
 	UserAgent = browser.Random()
@@ -57,10 +54,8 @@ func NewHttpClient(_proxySettings ...*settings.ProxySettings) (*resty.Client, er
 	httpClient.SetRetryCount(1)
 	// ------------------------------------------------
 	// 设置 Referer
-	if len(_proxySettings) > 0 {
-		if len(proxySettings.Referer) > 0 {
-			Referer = proxySettings.Referer
-		}
+	if len(referer) > 0 {
+		Referer = referer[0]
 		if len(Referer) > 0 {
 			httpClient.SetHeader("Referer", Referer)
 		}
@@ -75,14 +70,8 @@ func NewHttpClient(_proxySettings ...*settings.ProxySettings) (*resty.Client, er
 	// 不要求安全链接
 	httpClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 	// ------------------------------------------------
-	if len(_proxySettings) == 0 ||
-		(proxySettings != nil && proxySettings.UseProxy == false) {
-		// 无需设置代理
-		return httpClient, nil
-	}
-	// ------------------------------------------------
 	// http 代理
-	HttpProxyAddress := proxySettings.GetLocalHttpProxyUrl()
+	HttpProxyAddress := local_http_proxy_server.GetProxyUrl()
 	if HttpProxyAddress != "" {
 		httpClient.SetProxy(HttpProxyAddress)
 	} else {
@@ -92,10 +81,10 @@ func NewHttpClient(_proxySettings ...*settings.ProxySettings) (*resty.Client, er
 	return httpClient, nil
 }
 
-func getPublicIP(inputSite string, _proxySettings ...*settings.ProxySettings) string {
+func getPublicIP(inputSite string) string {
 
 	var client *resty.Client
-	client, err := NewHttpClient(_proxySettings...)
+	client, err := NewHttpClient()
 	if err != nil {
 		return ""
 	}
@@ -106,7 +95,7 @@ func getPublicIP(inputSite string, _proxySettings ...*settings.ProxySettings) st
 	return response.String()
 }
 
-func GetPublicIP(log *logrus.Logger, queue *settings.TaskQueue, _proxySettings ...*settings.ProxySettings) string {
+func GetPublicIP(log *logrus.Logger, queue *settings.TaskQueue) string {
 
 	defPublicIPSites := []string{
 		"https://myip.biturl.top/",
@@ -130,7 +119,7 @@ func GetPublicIP(log *logrus.Logger, queue *settings.TaskQueue, _proxySettings .
 
 	for i, publicIPSite := range customPublicIPSites {
 		log.Debugln("[GetPublicIP]", i, publicIPSite)
-		publicIP := getPublicIP(publicIPSite, _proxySettings...)
+		publicIP := getPublicIP(publicIPSite)
 
 		matcheds := regex_things.ReMatchIP.FindAllString(publicIP, -1)
 
@@ -144,11 +133,11 @@ func GetPublicIP(log *logrus.Logger, queue *settings.TaskQueue, _proxySettings .
 }
 
 // DownFile 从指定的 url 下载文件
-func DownFile(l *logrus.Logger, urlStr string, _proxySettings ...*settings.ProxySettings) ([]byte, string, error) {
+func DownFile(l *logrus.Logger, urlStr string) ([]byte, string, error) {
 
 	var err error
 	var httpClient *resty.Client
-	httpClient, err = NewHttpClient(_proxySettings...)
+	httpClient, err = NewHttpClient()
 	if err != nil {
 		return nil, "", err
 	}

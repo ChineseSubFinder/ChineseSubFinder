@@ -3,6 +3,7 @@ package pre_download_process
 import (
 	"errors"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
 	"time"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg"
@@ -169,7 +170,7 @@ func (p *PreDownloadProcess) Check() *PreDownloadProcess {
 
 		p.log.Infoln("UseHttpProxy By:", settings.Get().AdvancedSettings.ProxySettings.UseWhichProxyProtocol)
 		// 如果使用了代理，那么默认需要检测 google 的连通性，不通过也继续
-		proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.GoogleUrl, settings.Get().AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl())
+		proxyStatus, proxySpeed, err := url_connectedness_helper.UrlConnectednessTest(url_connectedness_helper.GoogleUrl, local_http_proxy_server.GetProxyUrl())
 		if err != nil {
 			p.log.Errorln(errors.New("UrlConnectednessTest Target Site " + url_connectedness_helper.GoogleUrl + ", " + err.Error()))
 		} else {

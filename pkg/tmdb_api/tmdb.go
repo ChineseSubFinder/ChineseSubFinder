@@ -2,22 +2,23 @@ package tmdb_api
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"strconv"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	tmdb "github.com/cyruzin/golang-tmdb"
 	"github.com/sirupsen/logrus"
 )
 
 type TmdbApi struct {
-	l             *logrus.Logger
-	apiKey        string
-	tmdbClient    *tmdb.Client
-	proxySettings *settings.ProxySettings
+	l          *logrus.Logger
+	apiKey     string
+	tmdbClient *tmdb.Client
 }
 
-func NewTmdbHelper(l *logrus.Logger, apiKey string, _proxySettings ...*settings.ProxySettings) (*TmdbApi, error) {
+func NewTmdbHelper(l *logrus.Logger, apiKey string) (*TmdbApi, error) {
 
 	tmdbClient, err := tmdb.Init(apiKey)
 	if err != nil {
@@ -25,15 +26,10 @@ func NewTmdbHelper(l *logrus.Logger, apiKey string, _proxySettings ...*settings.
 		return nil, err
 	}
 
-	var nowProxy *settings.ProxySettings
-	if _proxySettings != nil && len(_proxySettings) > 0 {
-		nowProxy = _proxySettings[0]
-	}
 	t := TmdbApi{
-		l:             l,
-		apiKey:        apiKey,
-		tmdbClient:    tmdbClient,
-		proxySettings: nowProxy,
+		l:          l,
+		apiKey:     apiKey,
+		tmdbClient: tmdbClient,
 	}
 	t.setClientConfig()
 	return &t, nil
@@ -203,7 +199,7 @@ func (t *TmdbApi) ConvertId(iD string, idType string, isMovieOrSeries bool) (con
 
 func (t *TmdbApi) setClientConfig() {
 	// 获取 http client 实例
-	restyClient, err := pkg.NewHttpClient(t.proxySettings)
+	restyClient, err := pkg.NewHttpClient()
 	if err != nil {
 		err = fmt.Errorf("error initializing resty client: %s", err)
 		return
@@ -224,5 +220,6 @@ type ConvertIdResult struct {
 }
 
 type Req struct {
-	ApiKey string `json:"api_key"`
+	ProxySettings settings.ProxySettings `json:"proxy_settings"  binding:"required"`
+	ApiKey        string                 `json:"api_key"`
 }

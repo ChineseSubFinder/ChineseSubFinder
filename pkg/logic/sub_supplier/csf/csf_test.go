@@ -3,6 +3,9 @@ package csf
 import (
 	"testing"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
+	"github.com/allanpk716/ChineseSubFinder/pkg/subtitle_best_api"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
@@ -42,7 +45,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	//ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")
 	ser := "X:\\连续剧\\Tokyo Vice"
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(log_helper.GetLogger4Tester(),
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(dealers,
 		ser,
 		90,
 		false,
@@ -63,7 +66,10 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	}
 }
 
-var csfInstance *Supplier
+var (
+	csfInstance *Supplier
+	dealers     *media_info_dealers.Dealers
+)
 
 func defInstance() {
 
@@ -80,4 +86,7 @@ func defInstance() {
 
 	csfInstance = NewSupplier(file_downloader.NewFileDownloader(
 		cache_center.NewCacheCenter("test", log_helper.GetLogger4Tester()), authKey))
+
+	dealers = media_info_dealers.NewDealers(log_helper.GetLogger4Tester(),
+		subtitle_best_api.NewSubtitleBestApi(log_helper.GetLogger4Tester(), authKey))
 }

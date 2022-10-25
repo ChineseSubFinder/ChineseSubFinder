@@ -13,14 +13,12 @@ import (
 )
 
 type VideoListHelper struct {
-	settings *settings.Settings // 设置的实例
-	log      *logrus.Logger     // 日志实例
+	log *logrus.Logger // 日志实例
 }
 
-func NewVideoListHelper(log *logrus.Logger, settings *settings.Settings) *VideoListHelper {
+func NewVideoListHelper(log *logrus.Logger) *VideoListHelper {
 	return &VideoListHelper{
-		settings: settings,
-		log:      log,
+		log: log,
 	}
 }
 
@@ -47,7 +45,7 @@ func (v *VideoListHelper) RefreshMainList() (*vsh.NormalScanVideoResult, error) 
 		}()
 		// --------------------------------------------------
 		// 电影
-		normalScanResult.MoviesDirMap, errMovie = search.MatchedVideoFileFromDirs(v.log, v.settings.CommonSettings.MoviePaths)
+		normalScanResult.MoviesDirMap, errMovie = search.MatchedVideoFileFromDirs(v.log, settings.Get().CommonSettings.MoviePaths)
 	}()
 	wg.Add(1)
 	go func() {
@@ -58,7 +56,7 @@ func (v *VideoListHelper) RefreshMainList() (*vsh.NormalScanVideoResult, error) 
 		// --------------------------------------------------
 		// 连续剧
 		// 遍历连续剧总目录下的第一层目录
-		normalScanResult.SeriesDirMap, errSeries = seriesHelper.GetSeriesListFromDirs(v.log, v.settings.CommonSettings.SeriesPaths)
+		normalScanResult.SeriesDirMap, errSeries = seriesHelper.GetSeriesListFromDirs(v.log, settings.Get().CommonSettings.SeriesPaths)
 		// ------------------------------------------------------------------------------
 		// 输出调试信息，有那些连续剧文件夹名称
 		if normalScanResult.SeriesDirMap == nil {

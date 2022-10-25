@@ -32,7 +32,6 @@ import (
 type Supplier struct {
 	log            *logrus.Logger
 	fileDownloader *file_downloader.FileDownloader
-	topic          int
 	isAlive        bool
 }
 
@@ -41,21 +40,19 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	sup := Supplier{}
 	sup.log = fileDownloader.Log
 	sup.fileDownloader = fileDownloader
-	sup.topic = common2.DownloadSubsPerSite
 	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
 
-	if settings.Get().AdvancedSettings.Topic > 0 && settings.Get().AdvancedSettings.Topic != sup.topic {
-		sup.topic = settings.Get().AdvancedSettings.Topic
+	if settings.Get().AdvancedSettings.Topic != common2.DownloadSubsPerSite {
+		settings.Get().AdvancedSettings.Topic = common2.DownloadSubsPerSite
 	}
 
 	return &sup
 }
 
-func (s *Supplier) CheckAlive(proxySettings ...*settings.ProxySettings) (bool, int64) {
-
+func (s *Supplier) CheckAlive() (bool, int64) {
 	// 计算当前时间
 	startT := time.Now()
-	err := s.fileDownloader.MediaInfoDealers.SubtitleBestApi.CheckAlive(proxySettings...)
+	err := s.fileDownloader.MediaInfoDealers.SubtitleBestApi.CheckAlive()
 	if err != nil {
 		s.log.Errorln(s.GetSupplierName(), "CheckAlive", "Error", err)
 		s.isAlive = false
@@ -82,10 +79,6 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 
 func (s *Supplier) GetLogger() *logrus.Logger {
 	return s.log
-}
-
-func (s *Supplier) GetSettings() *settings.Settings {
-	return settings.Get()
 }
 
 func (s *Supplier) GetSupplierName() string {
@@ -156,7 +149,7 @@ func (s *Supplier) findAndDownload(videoFPath string, isMovie bool, Season, Epis
 		err = errors.New(fmt.Sprintf("%s.Calculate %s %s", s.GetSupplierName(), videoFPath, err))
 		return
 	}
-	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, settings.Get().AdvancedSettings.ProxySettings)
+	mediaInfo, err := mix_media_info.GetMixMediaInfo(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("%s.GetMixMediaInfo %s %s", s.GetSupplierName(), videoFPath, err))
 		return

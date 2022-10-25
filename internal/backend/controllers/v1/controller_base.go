@@ -38,7 +38,7 @@ func NewControllerBase(cronHelper *cron_helper.CronHelper, restartSignal chan in
 		videoScanAndRefreshHelper: video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
 			sub_formatter.GetSubFormatter(cronHelper.Logger, settings.Get().AdvancedSettings.SubNameFormatter),
 			cronHelper.FileDownloader, nil),
-		videoListHelper:                 video_list_helper.NewVideoListHelper(cronHelper.Logger, settings.Get()),
+		videoListHelper:                 video_list_helper.NewVideoListHelper(cronHelper.Logger),
 		videoScanAndRefreshHelperLocker: lock.NewLock(),
 		restartSignal:                   restartSignal,
 	}

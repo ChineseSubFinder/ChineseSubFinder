@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
+	"github.com/allanpk716/ChineseSubFinder/pkg/subtitle_best_api"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	commonValue "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
@@ -20,7 +23,10 @@ import (
 	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
 )
 
-var authKey random_auth_key.AuthKey
+var (
+	authKey random_auth_key.AuthKey
+	dealers *media_info_dealers.Dealers
+)
 
 func defInstance() {
 	pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester())
@@ -29,6 +35,8 @@ func defInstance() {
 		AESKey16: pkg.AESKey16(),
 		AESIv16:  pkg.AESIv16(),
 	}
+	dealers = media_info_dealers.NewDealers(log_helper.GetLogger4Tester(),
+		subtitle_best_api.NewSubtitleBestApi(log_helper.GetLogger4Tester(), authKey))
 }
 
 // 无需关注这个测试用例，这个方案暂时弃用
@@ -84,7 +92,7 @@ func TestSupplier_GetSubListFromFile4Series(t *testing.T) {
 	rootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_spplier"}, 5, true)
 	ser := filepath.Join(rootDir, "zimuku", "series", "黄石 (2018)")
 	// 读取本地的视频和字幕信息
-	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(log_helper.GetLogger4Tester(), ser, 90, false, false, epsMap)
+	seriesInfo, err := series_helper.ReadSeriesInfoFromDir(dealers, ser, 90, false, false, epsMap)
 	if err != nil {
 		t.Fatal(err)
 	}

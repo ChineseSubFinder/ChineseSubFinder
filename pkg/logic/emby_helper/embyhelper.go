@@ -508,8 +508,7 @@ func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby2.Emby
 		types.VideoNfoInfo{
 			ImdbId: mixInfo.IMDBId,
 			TmdbId: mixInfo.TMDBId,
-		},
-		settings.Get().AdvancedSettings.ProxySettings)
+		})
 	if err != nil {
 
 		em.log.Errorln("autoFindMappingPathWithMixInfoByIMDBId.GetIMDBInfoFromVideoNfoInfo", err)

@@ -58,10 +58,6 @@ func NewScanPlayedVideoSubInfo(log *logrus.Logger, fileDownloader *file_download
 	scanPlayedVideoSubInfo.log = log
 	// 下载实例
 	scanPlayedVideoSubInfo.fileDownloader = fileDownloader
-	// 参入设置信息
-	// 最大获取的视频数目设置到 100W
-	//settings.Get() = clone.Clone(_settings).(*settings.Settings)
-	//settings.Get().EmbySettings.MaxRequestVideoNumber = 1000000
 	// 检测是否某些参数超出范围
 	settings.Get().Check()
 	// 初始化 Emby API 接口
@@ -355,7 +351,7 @@ func (s *ScanPlayedVideoSubInfo) dealOneVideo(index int, videoFPath, orgSubFPath
 
 	// 通过视频的绝对路径，从本地的视频文件对应的 nfo 获取到这个视频的 IMDB ID,
 	var err error
-	imdbInfoFromVideoFile, err := imdb_helper.GetIMDBInfoFromVideoFile(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie, settings.Get().AdvancedSettings.ProxySettings)
+	imdbInfoFromVideoFile, err := imdb_helper.GetIMDBInfoFromVideoFile(s.fileDownloader.MediaInfoDealers, videoFPath, isMovie)
 	if err != nil {
 		s.log.Errorln("GetIMDBInfoFromVideoFile", err)
 		return

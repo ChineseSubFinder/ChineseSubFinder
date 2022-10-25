@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/regex_things"
@@ -36,11 +38,11 @@ func NewBrowserEx(rodOptions *BrowserOptions) (*rod.Browser, error) {
 		}
 		return NewBrowserBase(rodOptions.Log,
 			localChromeFPath,
-			rodOptions.Settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
+			local_http_proxy_server.GetProxyUrl(),
 			rodOptions.LoadAdblock,
 			rodOptions.PreLoadUrl())
 	} else {
-		return NewBrowserBaseFromDocker(rodOptions.Settings.AdvancedSettings.ProxySettings.GetLocalHttpProxyUrl(),
+		return NewBrowserBaseFromDocker(local_http_proxy_server.GetProxyUrl(),
 			rodOptions.Settings.ExperimentalFunction.RemoteChromeSettings.RemoteDockerURL,
 			rodOptions.Settings.ExperimentalFunction.RemoteChromeSettings.RemoteAdblockPath,
 			rodOptions.Settings.ExperimentalFunction.RemoteChromeSettings.ReMoteUserDataDir,

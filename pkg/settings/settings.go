@@ -76,11 +76,6 @@ func SetFullNewSettings(inSettings *Settings) error {
 	_settingsLocker.Lock()
 	defer _settingsLocker.Unlock()
 
-	// 保存前进行本地代理的关闭
-	err := _settings.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
-	if err != nil {
-		return err
-	}
 	nowConfigFPath := _settings.configFPath
 	_settings = inSettings
 	_settings.configFPath = nowConfigFPath
@@ -118,11 +113,6 @@ func (s *Settings) read() error {
 	if err != nil {
 		return err
 	}
-	// 因为是重新加载配置文件信息，所以需要考虑提前关闭之前开启的本地代理
-	err = s.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
-	if err != nil {
-		return err
-	}
 	err = strcut_json.ToStruct(s.configFPath, s)
 	if err != nil {
 		return err
@@ -137,10 +127,6 @@ func (s *Settings) Save() error {
 	// 需要检查 url 是否正确
 	newEmbyAddressUrl := removeSuffixAddressSlash(s.EmbySettings.AddressUrl)
 	_, err := url.Parse(newEmbyAddressUrl)
-	if err != nil {
-		return err
-	}
-	err = s.AdvancedSettings.ProxySettings.CloseLocalHttpProxyServer()
 	if err != nil {
 		return err
 	}

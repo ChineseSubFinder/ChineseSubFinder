@@ -4,9 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
 )
 
@@ -35,27 +33,27 @@ func TestGetRestOfDaySec(t *testing.T) {
 
 func TestGetPublicIP(t *testing.T) {
 
-	got := GetPublicIP(log_helper.GetLogger4Tester(), settings.NewTaskQueue())
-	println("NoProxy:", got)
-
-	sock5ProxySettings := settings.NewProxySettings(true, "socks5", local_http_proxy_server.LocalHttpProxyPort,
-		"127.0.0.1", "10808", "", "")
-
-	got = GetPublicIP(log_helper.GetLogger4Tester(), settings.NewTaskQueue(), sock5ProxySettings)
-	println("UseProxy socks5:", got)
-	err := sock5ProxySettings.CloseLocalHttpProxyServer()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	httpProxySettings := settings.NewProxySettings(true, "http", local_http_proxy_server.LocalHttpProxyPort,
-		"127.0.0.1", "10809", "", "")
-	got = GetPublicIP(log_helper.GetLogger4Tester(), settings.NewTaskQueue(), httpProxySettings)
-	println("UseProxy http:", got)
-	err = httpProxySettings.CloseLocalHttpProxyServer()
-	if err != nil {
-		t.Fatal(err)
-	}
+	//got := GetPublicIP(log_helper.GetLogger4Tester(), settings.NewTaskQueue())
+	//println("NoProxy:", got)
+	//
+	//sock5ProxySettings := settings.NewProxySettings(true, "socks5", local_http_proxy_server.LocalHttpProxyPort,
+	//	"127.0.0.1", "10808", "", "")
+	//
+	//got = GetPublicIP(log_helper.GetLogger4Tester(), settings.NewTaskQueue(), sock5ProxySettings)
+	//println("UseProxy socks5:", got)
+	//err := sock5ProxySettings.CloseLocalHttpProxyServer()
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//
+	//httpProxySettings := settings.NewProxySettings(true, "http", local_http_proxy_server.LocalHttpProxyPort,
+	//	"127.0.0.1", "10809", "", "")
+	//got = GetPublicIP(log_helper.GetLogger4Tester(), settings.NewTaskQueue(), httpProxySettings)
+	//println("UseProxy http:", got)
+	//err = httpProxySettings.CloseLocalHttpProxyServer()
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
 }
 
 func TestSortByModTime(t *testing.T) {

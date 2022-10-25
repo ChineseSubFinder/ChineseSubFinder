@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/elazarl/goproxy"
@@ -13,9 +14,58 @@ import (
 	"golang.org/x/net/proxy"
 )
 
+// SetProxyInfo 设置代理信息，设置之前会停止现在运行的代理
+func SetProxyInfo(UseProxy bool, iInfos []string, iLocalPort string) error {
+
+	locker.Lock()
+	defer locker.Unlock()
+
+	useProxy = UseProxy
+
+	if localHttpProxyServer != nil && localHttpProxyServer.IsRunning() == true {
+		// 需要关闭代理
+		err := localHttpProxyServer.Stop()
+		if err != nil {
+			return err
+		}
+	}
+
+	proxyInfos = iInfos
+	localHttpProxyServerPort = iLocalPort
+
+	return nil
+}
+
+// GetProxyUrl 获取代理地址，同时启动实例
+func GetProxyUrl() string {
+
+	locker.Lock()
+	defer locker.Unlock()
+
+	if useProxy == false {
+		return ""
+	}
+
+	if localHttpProxyServer == nil {
+		localHttpProxyServer = NewLocalHttpProxyServer()
+	}
+	if localHttpProxyServer.IsRunning() == true {
+		return localHttpProxyServer.LocalHttpProxyUrl
+	}
+
+	localHttpProxyUrl, err := localHttpProxyServer.Start(proxyInfos, localHttpProxyServerPort)
+	if err != nil {
+		panic(fmt.Sprintln("start local http proxy server error:", err))
+		return ""
+	}
+
+	return localHttpProxyUrl
+}
+
 // LocalHttpProxyServer see https://github.com/go-rod/rod/issues/305
 type LocalHttpProxyServer struct {
 	srv                      *http.Server
+	locker                   sync.Mutex
 	isRunning                bool
 	LocalHttpProxyServerPort string // 本地开启的 Http 代理服务器端口
 	LocalHttpProxyUrl        string // 本地开启的 Http 代理服务器地址包含端口
@@ -73,21 +123,30 @@ func (l *LocalHttpProxyServer) Start(settings []string, localHttpProxyServerPort
 		}))
 
 		l.srv = &http.Server{Addr: ":" + l.LocalHttpProxyServerPort, Handler: middleProxy}
+		l.locker.Lock()
 		l.isRunning = true
+		l.locker.Unlock()
 		go func() {
 
 			println("Try Start Local Proxy Server at :", l.LocalHttpProxyServerPort)
 
 			if err := l.srv.ListenAndServe(); err != http.ErrServerClosed {
-				panic(fmt.Sprintln("ListenAndServe() http proxy:", err))
+				println(fmt.Sprintln("ListenAndServe() http proxy:", err))
 			}
+			l.locker.Lock()
+			l.srv = nil
+			l.isRunning = false
+			l.LocalHttpProxyUrl = ""
+			l.locker.Unlock()
 
 			println("http proxy closed")
 		}()
 
 		time.Sleep(3 * time.Second)
 
+		l.locker.Lock()
 		l.LocalHttpProxyUrl = "http://127.0.0.1:" + l.LocalHttpProxyServerPort
+		l.locker.Unlock()
 
 		return l.LocalHttpProxyUrl, nil
 
@@ -128,20 +187,30 @@ func (l *LocalHttpProxyServer) Start(settings []string, localHttpProxyServerPort
 		}))
 
 		l.srv = &http.Server{Addr: ":" + l.LocalHttpProxyServerPort, Handler: middleProxy}
+		l.locker.Lock()
 		l.isRunning = true
+		l.locker.Unlock()
 		go func() {
 
 			println("Try Start Local Proxy Server at :", l.LocalHttpProxyServerPort)
 			if err := l.srv.ListenAndServe(); err != http.ErrServerClosed {
-				panic(fmt.Sprintln("ListenAndServe() socks5 proxy:", err))
+				println(fmt.Sprintln("ListenAndServe() socks5 proxy:", err))
 			}
+
+			l.locker.Lock()
+			l.srv = nil
+			l.isRunning = false
+			l.LocalHttpProxyUrl = ""
+			l.locker.Lock()
 
 			println("socks5 proxy closed")
 		}()
 
 		time.Sleep(3 * time.Second)
 
+		l.locker.Lock()
 		l.LocalHttpProxyUrl = "http://127.0.0.1:" + l.LocalHttpProxyServerPort
+		l.locker.Unlock()
 
 		return l.LocalHttpProxyUrl, nil
 	}
@@ -156,18 +225,30 @@ func (l *LocalHttpProxyServer) Stop() error {
 		}
 	}
 
-	l.srv = nil
-	l.isRunning = false
+	//
+	//l.isRunning = false
+	l.locker.Lock()
 	l.LocalHttpProxyUrl = ""
-
+	l.locker.Unlock()
 	return nil
 }
 
 func (l *LocalHttpProxyServer) IsRunning() bool {
+
+	l.locker.Lock()
+	defer l.locker.Unlock()
 	return l.isRunning
 }
 
 const (
 	LocalHttpProxyPort = "19036"
 	ProxyAuthHeader    = "Proxy-Authorization"
+)
+
+var (
+	locker                   sync.Mutex
+	localHttpProxyServer     *LocalHttpProxyServer
+	useProxy                 bool
+	proxyInfos               = make([]string, 0)
+	localHttpProxyServerPort string
 )
