@@ -36,7 +36,7 @@ func NewFFMPEGHelper(log *logrus.Logger) *FFMPEGHelper {
 }
 
 // Version 获取版本信息，如果不存在 FFMPEG 和 ffprobe 则报错
-func (f FFMPEGHelper) Version() (string, error) {
+func (f *FFMPEGHelper) Version() (string, error) {
 
 	outMsg0, err := f.getVersion("ffmpeg")
 	if err != nil {
@@ -263,6 +263,61 @@ func (f *FFMPEGHelper) ExportSubArgsByTimeRange(subFullPath, outName string, sta
 	}
 
 	return outSubFullPath, "", nil
+}
+
+// ExportVideoHLSAndSubByTimeRange 导出指定的时间轴的视频HLS和字幕，然后从 outDirPath 中获取 outputlist.m3u8 和字幕的文件
+func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath, subFullPath, startTimeString, timeLength, segmentTime, outDirPath string) error {
+
+	// 导出视频
+	if pkg.IsFile(videoFullPath) == false {
+		return errors.New("video file not exist, maybe is bluray file, so not support yet")
+	}
+
+	fileName := filepath.Base(videoFullPath)
+	frontName := strings.ReplaceAll(fileName, filepath.Ext(fileName), "")
+
+	if pkg.IsDir(outDirPath) == true {
+		err := os.RemoveAll(outDirPath)
+		if err != nil {
+			return err
+		}
+	}
+	err := os.MkdirAll(outDirPath, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	//// 先剪切
+	//videoExt := filepath.Ext(fileName)
+	//cutOffVideoFPath := filepath.Join(outDirPath, frontName+"_cut"+videoExt)
+	//args := f.getVideoExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, cutOffVideoFPath)
+	//execFFMPEG, err := f.execFFMPEG(args)
+	//if err != nil {
+	//	return errors.New(execFFMPEG + err.Error())
+	//}
+	//// 转换 HLS
+	//args = f.getVideo2HLSArgs(cutOffVideoFPath, segmentTime, outDirPath)
+	//execFFMPEG, err = f.execFFMPEG(args)
+	//if err != nil {
+	//	return errors.New(execFFMPEG + err.Error())
+	//}
+
+	args := f.getVideoHLSExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, segmentTime, outDirPath)
+	execFFMPEG, err := f.execFFMPEG(args)
+	if err != nil {
+		return errors.New(execFFMPEG + err.Error())
+	}
+
+	// 导出字幕
+	nowSubExt := filepath.Ext(subFullPath)
+	outSubFileFPath := filepath.Join(outDirPath, frontName+nowSubExt)
+	args = f.getSubExportArgsByTimeRange(subFullPath, startTimeString, timeLength, outSubFileFPath)
+	execFFMPEG, err = f.execFFMPEG(args)
+	if err != nil {
+		return errors.New(execFFMPEG + err.Error())
+	}
+
+	return nil
 }
 
 // parseJsonString2GetFFProbeInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引
@@ -534,6 +589,88 @@ func (f *FFMPEGHelper) getAudioAndSubExportArgs(videoFileFullPath string, ffmpeg
 	return audioArgs, subArgs
 }
 
+// getVideoExportArgsByTimeRange 导出某个时间范围内的视频 startTimeString 00:1:27 timeLeng 向后多少秒
+func (f *FFMPEGHelper) getVideoExportArgsByTimeRange(videoFullPath string, startTimeString, timeLeng, outVideiFullPath string) []string {
+
+	/*
+		这个是用 to 到那个时间点
+		ffmpeg.exe -i '.\Chainsaw Man - S01E02 - ARRIVAL IN TOKYO HDTV-1080p.mp4' -ss 00:00:00 -to 00:05:00  -c:v copy -c:a copy wawa.mp4
+		这个是向后多少秒
+		ffmpeg.exe -i '.\Chainsaw Man - S01E02 - ARRIVAL IN TOKYO HDTV-1080p.mp4' -ss 00:00:00 -t 300  -c:v copy -c:a copy wawa.mp4
+	*/
+	videoArgs := make([]string, 0)
+	videoArgs = append(videoArgs, "-i")
+	videoArgs = append(videoArgs, videoFullPath)
+	videoArgs = append(videoArgs, "-ss")
+	videoArgs = append(videoArgs, startTimeString)
+	videoArgs = append(videoArgs, "-t")
+	videoArgs = append(videoArgs, timeLeng)
+	videoArgs = append(videoArgs, "-c:v")
+	videoArgs = append(videoArgs, "copy")
+	videoArgs = append(videoArgs, "-c:a")
+	videoArgs = append(videoArgs, "copy")
+	videoArgs = append(videoArgs, outVideiFullPath)
+
+	return videoArgs
+}
+
+// getVideoHLSExportArgsByTimeRange 导出某个时间范围内的视频的 HLS 信息 startTimeString 00:1:27 timeLeng 向后多少秒
+func (f *FFMPEGHelper) getVideoHLSExportArgsByTimeRange(videoFullPath string, startTimeString, timeLeng, sgmentTime, outVideiDirPath string) []string {
+
+	/*
+		ffmpeg.exe -i '111.mp4' -ss 00:00:00 -to 00:05:00  -c:v copy -c:a copy -f segment -segment_time 10 -segment_list outputlist.m3u8 -segment_format mpegts output%03d.ts
+	*/
+
+	videoArgs := make([]string, 0)
+	videoArgs = append(videoArgs, "-i")
+	videoArgs = append(videoArgs, videoFullPath)
+	videoArgs = append(videoArgs, "-ss")
+	videoArgs = append(videoArgs, startTimeString)
+	videoArgs = append(videoArgs, "-t")
+	videoArgs = append(videoArgs, timeLeng)
+	videoArgs = append(videoArgs, "-c:v")
+	videoArgs = append(videoArgs, "copy")
+	videoArgs = append(videoArgs, "-c:a")
+	videoArgs = append(videoArgs, "copy")
+	videoArgs = append(videoArgs, "-f")
+	videoArgs = append(videoArgs, "segment")
+	videoArgs = append(videoArgs, "-segment_time")
+	videoArgs = append(videoArgs, sgmentTime)
+	videoArgs = append(videoArgs, "-segment_list")
+	videoArgs = append(videoArgs, filepath.Join(outVideiDirPath, "outputlist.m3u8"))
+	videoArgs = append(videoArgs, "-segment_format")
+	videoArgs = append(videoArgs, "mpegts")
+	videoArgs = append(videoArgs, filepath.Join(outVideiDirPath, "output%03d.ts"))
+
+	return videoArgs
+}
+
+func (f *FFMPEGHelper) getVideo2HLSArgs(videoFullPath, segmentTime, outVideoDirPath string) []string {
+
+	/*
+		ffmpeg.exe -i '111.mp4' -c copy -map 0 -f segment -segment_list playlist.m3u8 -segment_time 10 -segment_format mpegts output%03d.ts
+	*/
+
+	videoArgs := make([]string, 0)
+	videoArgs = append(videoArgs, "-i")
+	videoArgs = append(videoArgs, videoFullPath)
+	videoArgs = append(videoArgs, "-c")
+	videoArgs = append(videoArgs, "copy")
+	videoArgs = append(videoArgs, "-map")
+	videoArgs = append(videoArgs, "0")
+	videoArgs = append(videoArgs, "-f")
+	videoArgs = append(videoArgs, "segment")
+	videoArgs = append(videoArgs, "-segment_list")
+	videoArgs = append(videoArgs, filepath.Join(outVideoDirPath, "playlist.m3u8"))
+	videoArgs = append(videoArgs, "-segment_time")
+	videoArgs = append(videoArgs, segmentTime)
+	videoArgs = append(videoArgs, "-segment_format")
+	videoArgs = append(videoArgs, "mpegts")
+	videoArgs = append(videoArgs, filepath.Join(outVideoDirPath, "output%03d.ts"))
+
+	return videoArgs
+}
+
 // getAudioAndSubExportArgsByTimeRange 导出某个时间范围内的音频和字幕文件文件 startTimeString 00:1:27 timeLeng 向后多少秒
 func (f *FFMPEGHelper) getAudioExportArgsByTimeRange(audioFullPath string, startTimeString, timeLeng, outAudioFullPath string) []string {
 
@@ -614,7 +751,7 @@ func (f *FFMPEGHelper) addAudioMapArg(subArgs *[]string, index int, audioSaveFul
 	*subArgs = append(*subArgs, audioSaveFullPath)
 }
 
-func (f FFMPEGHelper) getVersion(exeName string) (string, error) {
+func (f *FFMPEGHelper) getVersion(exeName string) (string, error) {
 	const args = "-version"
 	cmdArgs := strings.Fields(args)
 	cmd := exec.Command(exeName, cmdArgs...)
@@ -635,7 +772,7 @@ func (f FFMPEGHelper) getVersion(exeName string) (string, error) {
 }
 
 // isSupportSubCodecName 是否是 FFMPEG 支持的 CodecName
-func (f FFMPEGHelper) isSupportSubCodecName(name string) bool {
+func (f *FFMPEGHelper) isSupportSubCodecName(name string) bool {
 	switch name {
 	case Subtitle_StreamCodec_subrip,
 		Subtitle_StreamCodec_ass,
@@ -647,7 +784,7 @@ func (f FFMPEGHelper) isSupportSubCodecName(name string) bool {
 	}
 }
 
-func (f FFMPEGHelper) getVideoDuration(videoFileFullPath string) float64 {
+func (f *FFMPEGHelper) getVideoDuration(videoFileFullPath string) float64 {
 
 	const args = "-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 -i"
 	cmdArgs := strings.Fields(args)

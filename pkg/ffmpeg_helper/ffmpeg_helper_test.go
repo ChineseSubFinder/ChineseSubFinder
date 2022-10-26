@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
 )
 
@@ -16,7 +18,7 @@ func TestGetFFMPEGInfo(t *testing.T) {
 	// http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4
 	videoFile := unit_test_helper.GetTestDataResourceRootPath([]string{"ffmpeg", "org"}, 4, false)
 	videoFile = filepath.Join(videoFile, "sampleVideo.mp4")
-	f := NewFFMPEGHelper()
+	f := NewFFMPEGHelper(log_helper.GetLogger4Tester())
 	bok, ffmpegInfo, err := f.GetFFMPEGInfo(videoFile, Audio)
 	if err != nil {
 		t.Fatal(err)
@@ -60,7 +62,7 @@ func TestParseJsonString2GetFFMPEGInfo(t *testing.T) {
 			want: true, subsFilter: 2, audiosFilter: 1, subsFull: 2, audiosFull: 3},
 	}
 
-	f := NewFFMPEGHelper()
+	f := NewFFMPEGHelper(log_helper.GetLogger4Tester())
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -93,7 +95,7 @@ func TestExportAudioArgsByTimeRange(t *testing.T) {
 	startTimeString := "0:0:27"
 	timeLeng := "28.2"
 
-	f := NewFFMPEGHelper()
+	f := NewFFMPEGHelper(log_helper.GetLogger4Tester())
 
 	_, _, timeRange, err := f.ExportAudioAndSubArgsByTimeRange(audioFullPath, subFullPath, startTimeString, timeLeng)
 	if err != nil {
@@ -107,7 +109,7 @@ func TestGetAudioInfo(t *testing.T) {
 	testDataPath := unit_test_helper.GetTestDataResourceRootPath([]string{"ffmpeg", "org"}, 4, false)
 	audioFullPath := filepath.Join(testDataPath, "sampleAudio.wav")
 
-	f := NewFFMPEGHelper()
+	f := NewFFMPEGHelper(log_helper.GetLogger4Tester())
 	bok, duration, err := f.GetAudioDurationInfo(audioFullPath)
 	if err != nil || bok == false {
 		t.Fatal(err)
@@ -124,4 +126,16 @@ func TestVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("\n\nGet ffmpeg/ffprobe version\n")
+}
+
+func TestExportVideoHLSAndSubByTimeRange(t *testing.T) {
+
+	outDirPath := "C:\\Tmp\\media\\test\\hls"
+	videoFPath := "C:\\Tmp\\media\\test\\Chainsaw Man - S01E02 - ARRIVAL IN TOKYO HDTV-1080p.mp4"
+	subFPath := "C:\\Tmp\\media\\test\\Chainsaw Man - S01E02 - ARRIVAL IN TOKYO HDTV-1080p.chinese(简,csf).default.srt"
+	f := NewFFMPEGHelper(log_helper.GetLogger4Tester())
+	err := f.ExportVideoHLSAndSubByTimeRange(videoFPath, subFPath, "0:0:0", "0:5:0", "10", outDirPath)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
