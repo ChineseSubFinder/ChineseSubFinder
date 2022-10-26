@@ -287,14 +287,14 @@ func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath, subFullPat
 		return err
 	}
 
-	//// 先剪切
-	//videoExt := filepath.Ext(fileName)
-	//cutOffVideoFPath := filepath.Join(outDirPath, frontName+"_cut"+videoExt)
-	//args := f.getVideoExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, cutOffVideoFPath)
-	//execFFMPEG, err := f.execFFMPEG(args)
-	//if err != nil {
-	//	return errors.New(execFFMPEG + err.Error())
-	//}
+	// 先剪切
+	videoExt := filepath.Ext(fileName)
+	cutOffVideoFPath := filepath.Join(outDirPath, frontName+"_cut"+videoExt)
+	args := f.getVideoExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, cutOffVideoFPath)
+	execFFMPEG, err := f.execFFMPEG(args)
+	if err != nil {
+		return errors.New(execFFMPEG + err.Error())
+	}
 	//// 转换 HLS
 	//args = f.getVideo2HLSArgs(cutOffVideoFPath, segmentTime, outDirPath)
 	//execFFMPEG, err = f.execFFMPEG(args)
@@ -302,8 +302,8 @@ func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath, subFullPat
 	//	return errors.New(execFFMPEG + err.Error())
 	//}
 
-	args := f.getVideoHLSExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, segmentTime, outDirPath)
-	execFFMPEG, err := f.execFFMPEG(args)
+	args = f.getVideoHLSExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, segmentTime, outDirPath)
+	execFFMPEG, err = f.execFFMPEG(args)
 	if err != nil {
 		return errors.New(execFFMPEG + err.Error())
 	}
@@ -599,16 +599,29 @@ func (f *FFMPEGHelper) getVideoExportArgsByTimeRange(videoFullPath string, start
 		ffmpeg.exe -i '.\Chainsaw Man - S01E02 - ARRIVAL IN TOKYO HDTV-1080p.mp4' -ss 00:00:00 -t 300  -c:v copy -c:a copy wawa.mp4
 	*/
 	videoArgs := make([]string, 0)
-	videoArgs = append(videoArgs, "-i")
-	videoArgs = append(videoArgs, videoFullPath)
 	videoArgs = append(videoArgs, "-ss")
 	videoArgs = append(videoArgs, startTimeString)
 	videoArgs = append(videoArgs, "-t")
 	videoArgs = append(videoArgs, timeLeng)
+	//// 字符串转 int
+	//nowTimeLenStr := timeLeng
+	//timeLenInt, err := strconv.Atoi(timeLeng)
+	//if err == nil {
+	//	nowTimeLenStr = fmt.Sprintf("%d", timeLenInt+2)
+	//}
+	//videoArgs = append(videoArgs, nowTimeLenStr) // 多加 2 s
+
+	videoArgs = append(videoArgs, "-accurate_seek")
+
+	videoArgs = append(videoArgs, "-i")
+	videoArgs = append(videoArgs, videoFullPath)
+
 	videoArgs = append(videoArgs, "-c:v")
 	videoArgs = append(videoArgs, "copy")
 	videoArgs = append(videoArgs, "-c:a")
 	videoArgs = append(videoArgs, "copy")
+	//videoArgs = append(videoArgs, "-avoid_negative_ts")
+	//videoArgs = append(videoArgs, "1")
 	videoArgs = append(videoArgs, outVideiFullPath)
 
 	return videoArgs
@@ -622,12 +635,23 @@ func (f *FFMPEGHelper) getVideoHLSExportArgsByTimeRange(videoFullPath string, st
 	*/
 
 	videoArgs := make([]string, 0)
-	videoArgs = append(videoArgs, "-i")
-	videoArgs = append(videoArgs, videoFullPath)
+
 	videoArgs = append(videoArgs, "-ss")
 	videoArgs = append(videoArgs, startTimeString)
 	videoArgs = append(videoArgs, "-t")
 	videoArgs = append(videoArgs, timeLeng)
+	//// 字符串转 int
+	//nowTimeLenStr := timeLeng
+	//timeLenInt, err := strconv.Atoi(timeLeng)
+	//if err == nil {
+	//	nowTimeLenStr = fmt.Sprintf("%d", timeLenInt+2)
+	//}
+	//videoArgs = append(videoArgs, nowTimeLenStr) // 多加 2 s
+
+	videoArgs = append(videoArgs, "-accurate_seek")
+	videoArgs = append(videoArgs, "-i")
+	videoArgs = append(videoArgs, videoFullPath)
+
 	videoArgs = append(videoArgs, "-c:v")
 	videoArgs = append(videoArgs, "copy")
 	videoArgs = append(videoArgs, "-c:a")
@@ -717,12 +741,16 @@ func (f *FFMPEGHelper) getSubExportArgsByTimeRange(subFullPath string, startTime
 		ffmpeg.exe -i aa.srt -ss 00:1:27 -t 28 bb.srt
 	*/
 	var subArgs = make([]string, 0)
-	subArgs = append(subArgs, "-i")
-	subArgs = append(subArgs, subFullPath)
+
 	subArgs = append(subArgs, "-ss")
 	subArgs = append(subArgs, startTimeString)
 	subArgs = append(subArgs, "-t")
 	subArgs = append(subArgs, timeLength)
+
+	subArgs = append(subArgs, "-accurate_seek")
+	subArgs = append(subArgs, "-i")
+	subArgs = append(subArgs, subFullPath)
+
 	subArgs = append(subArgs, outSubFullPath)
 
 	return subArgs

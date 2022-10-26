@@ -134,7 +134,7 @@ func TestExportVideoHLSAndSubByTimeRange(t *testing.T) {
 	videoFPath := "C:\\Tmp\\media\\test\\Chainsaw Man - S01E02 - ARRIVAL IN TOKYO HDTV-1080p.mp4"
 	subFPath := "C:\\Tmp\\media\\test\\Chainsaw Man - S01E02 - ARRIVAL IN TOKYO HDTV-1080p.chinese(简,csf).default.srt"
 	f := NewFFMPEGHelper(log_helper.GetLogger4Tester())
-	err := f.ExportVideoHLSAndSubByTimeRange(videoFPath, subFPath, "0:0:0", "0:5:0", "10", outDirPath)
+	err := f.ExportVideoHLSAndSubByTimeRange(videoFPath, subFPath, "0:0:0", "300", "10", outDirPath)
 	if err != nil {
 		t.Fatal(err)
 	}
