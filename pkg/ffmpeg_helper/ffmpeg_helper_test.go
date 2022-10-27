@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
@@ -132,10 +134,17 @@ func TestExportVideoHLSAndSubByTimeRange(t *testing.T) {
 
 	outDirPath := "C:\\Tmp\\media\\test\\hls"
 	videoFPath := "C:\\Tmp\\media\\test\\Chainsaw Man - S01E02 - ARRIVAL IN TOKYO HDTV-1080p.mp4"
-	subFPath := "C:\\Tmp\\media\\test\\Chainsaw Man - S01E02 - ARRIVAL IN TOKYO HDTV-1080p.chinese(简,csf).default.srt"
+	//subFPath := "C:\\Tmp\\media\\test\\Chainsaw Man - S01E02 - ARRIVAL IN TOKYO HDTV-1080p.chinese(简,csf).default.srt"
+	subFPath := "C:\\Tmp\\media\\test\\Three Thousand Years of Longing (2022) WEBDL-1080p.chinese(简英,assrt).ass"
 	f := NewFFMPEGHelper(log_helper.GetLogger4Tester())
-	err := f.ExportVideoHLSAndSubByTimeRange(videoFPath, subFPath, "0:0:0", "300", "5.000", outDirPath)
+	m3u8, sub, err := f.ExportVideoHLSAndSubByTimeRange(videoFPath, subFPath, "10", "300", "5.000", outDirPath)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if pkg.IsFile(filepath.Join(outDirPath, m3u8)) == false {
+		t.Fatal("m3u8 file not found")
+	}
+	if pkg.IsFile(filepath.Join(outDirPath, sub)) == false {
+		t.Fatal("sub file not found")
 	}
 }

@@ -266,25 +266,30 @@ func (f *FFMPEGHelper) ExportSubArgsByTimeRange(subFullPath, outName string, sta
 }
 
 // ExportVideoHLSAndSubByTimeRange 导出指定的时间轴的视频HLS和字幕，然后从 outDirPath 中获取 outputlist.m3u8 和字幕的文件
-func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath, subFullPath, startTimeString, timeLength, segmentTime, outDirPath string) error {
+func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath, subFullPath, startTimeString, timeLength, segmentTime, outDirPath string) (string, string, error) {
 
 	// 导出视频
 	if pkg.IsFile(videoFullPath) == false {
-		return errors.New("video file not exist, maybe is bluray file, so not support yet")
+		return "", "", errors.New("video file not exist, maybe is bluray file, so not support yet")
+	}
+
+	if pkg.IsFile(subFullPath) == false {
+		return "", "", errors.New("sub file not exist")
 	}
 
 	fileName := filepath.Base(videoFullPath)
 	frontName := strings.ReplaceAll(fileName, filepath.Ext(fileName), "")
 
-	if pkg.IsDir(outDirPath) == true {
-		err := os.RemoveAll(outDirPath)
+	outDirSubPath := filepath.Join(outDirPath, frontName, startTimeString+"-"+timeLength)
+	if pkg.IsDir(outDirSubPath) == true {
+		err := os.RemoveAll(outDirSubPath)
 		if err != nil {
-			return err
+			return "", "", err
 		}
 	}
-	err := os.MkdirAll(outDirPath, os.ModePerm)
+	err := os.MkdirAll(outDirSubPath, os.ModePerm)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	//// 先剪切
@@ -303,22 +308,44 @@ func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath, subFullPat
 	//}
 
 	// 直接导出
-	args := f.getVideoHLSExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, segmentTime, outDirPath)
+	args := f.getVideoHLSExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, segmentTime, outDirSubPath)
 	execFFMPEG, err := f.execFFMPEG(args)
 	if err != nil {
-		return errors.New(execFFMPEG + err.Error())
+		return "", "", errors.New(execFFMPEG + err.Error())
 	}
 
 	// 导出字幕
-	nowSubExt := filepath.Ext(subFullPath)
-	outSubFileFPath := filepath.Join(outDirPath, frontName+nowSubExt)
-	args = f.getSubExportArgsByTimeRange(subFullPath, startTimeString, timeLength, outSubFileFPath)
+	tmpSubFPath := subFullPath
+	nowSubExt := filepath.Ext(tmpSubFPath)
+
+	if strings.ToLower(nowSubExt) != common.SubExtSRT {
+		// 这里需要优先判断字幕是否是 SRT，如果是 ASS 的，那么需要转换一次才行
+		middleSubFPath := filepath.Join(outDirSubPath, frontName+"_middle"+common.SubExtSRT)
+		args = f.getSubASS2SRTArgs(tmpSubFPath, middleSubFPath)
+		execFFMPEG, err = f.execFFMPEG(args)
+		if err != nil {
+			return "", "", errors.New(execFFMPEG + err.Error())
+		}
+		tmpSubFPath = middleSubFPath
+	}
+	outSubFileFPath := filepath.Join(outDirSubPath, frontName+common.SubExtSRT)
+	args = f.getSubExportArgsByTimeRange(tmpSubFPath, startTimeString, timeLength, outSubFileFPath)
 	execFFMPEG, err = f.execFFMPEG(args)
 	if err != nil {
-		return errors.New(execFFMPEG + err.Error())
+		return "", "", errors.New(execFFMPEG + err.Error())
+	}
+	// 字幕的相对位置
+	subRelPath, err := filepath.Rel(outDirPath, outSubFileFPath)
+	if err != nil {
+		return "", "", err
+	}
+	// outputlist.m3u8 的相对位置
+	outputListRelPath, err := filepath.Rel(outDirPath, filepath.Join(outDirSubPath, "outputlist.m3u8"))
+	if err != nil {
+		return "", "", err
 	}
 
-	return nil
+	return outputListRelPath, subRelPath, nil
 }
 
 // parseJsonString2GetFFProbeInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引
@@ -738,15 +765,26 @@ func (f *FFMPEGHelper) getSubExportArgsByTimeRange(subFullPath string, startTime
 	*/
 	var subArgs = make([]string, 0)
 
+	subArgs = append(subArgs, "-i")
+	subArgs = append(subArgs, subFullPath)
+
 	subArgs = append(subArgs, "-ss")
 	subArgs = append(subArgs, startTimeString)
 	subArgs = append(subArgs, "-t")
 	subArgs = append(subArgs, timeLength)
 
-	subArgs = append(subArgs, "-accurate_seek")
+	subArgs = append(subArgs, outSubFullPath)
+
+	return subArgs
+}
+
+// getSubASS2SRTArgs 从 ASS 字幕 转到 SRT 字幕
+func (f *FFMPEGHelper) getSubASS2SRTArgs(subFullPath, outSubFullPath string) []string {
+
+	var subArgs = make([]string, 0)
+	// 指定读取的音频文件编码格式
 	subArgs = append(subArgs, "-i")
 	subArgs = append(subArgs, subFullPath)
-
 	subArgs = append(subArgs, outSubFullPath)
 
 	return subArgs
