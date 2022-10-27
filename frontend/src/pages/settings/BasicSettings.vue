@@ -224,7 +224,7 @@ import { ref, watch } from 'vue';
 
 const { common_settings: form } = toRefs(formModel);
 
-const NO_SCAN_CRON_RULE = '0 0 0 1 1 1 2077';
+const NO_SCAN_CRON_RULE = '0 0 31 2 0';
 
 const scanCronString0 = ref('');
 const scanCronString1 = ref([]);
