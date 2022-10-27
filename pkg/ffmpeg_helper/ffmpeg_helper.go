@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
@@ -270,7 +272,14 @@ func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath, subFullPat
 
 	// 导出视频
 	if pkg.IsFile(videoFullPath) == false {
-		return "", "", errors.New("video file not exist, maybe is bluray file, so not support yet")
+
+		bok, _, steamDirPath := decode.IsFakeBDMVWorked(videoFullPath)
+		if bok == true {
+			// 需要从 steamDirPath 搜索最大的一个文件出来
+			videoFullPath = pkg.GetMaxSizeFile(steamDirPath)
+		} else {
+			return "", "", errors.New("video file not found")
+		}
 	}
 
 	if pkg.IsFile(subFullPath) == false {

@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math"
 	"net/http"
 	"net/url"
@@ -708,6 +709,24 @@ func PrintPanicStack(log *logrus.Logger) {
 	var buf [4096]byte
 	n := runtime.Stack(buf[:], false)
 	log.Errorln(fmt.Sprintf("%s", buf[:n]))
+}
+
+func GetMaxSizeFile(path string) string {
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return ""
+	}
+	var maxFile os.FileInfo
+	for _, file := range files {
+		if maxFile == nil {
+			maxFile = file
+		} else {
+			if file.Size() > maxFile.Size() {
+				maxFile = file
+			}
+		}
+	}
+	return filepath.Join(path, maxFile.Name())
 }
 
 var (

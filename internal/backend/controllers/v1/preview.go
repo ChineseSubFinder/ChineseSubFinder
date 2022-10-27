@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/preview_queue"
@@ -24,6 +26,18 @@ func (cb *ControllerBase) PreviewAdd(c *gin.Context) {
 	err = c.ShouldBindJSON(&job)
 	if err != nil {
 		return
+	}
+
+	// 暂时不支持蓝光的预览
+	if pkg.IsFile(job.VideoFPath) == false {
+		bok, _, _ := decode.IsFakeBDMVWorked(job.VideoFPath)
+		if bok == true {
+			c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "not support blu-ray preview"})
+			return
+		} else {
+			c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "video file not found"})
+			return
+		}
 	}
 
 	cb.cronHelper.Downloader.PreviewQueue.Add(&job)
