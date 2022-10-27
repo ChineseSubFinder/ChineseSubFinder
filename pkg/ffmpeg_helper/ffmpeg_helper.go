@@ -603,14 +603,8 @@ func (f *FFMPEGHelper) getVideoExportArgsByTimeRange(videoFullPath string, start
 	videoArgs = append(videoArgs, startTimeString)
 	videoArgs = append(videoArgs, "-t")
 	videoArgs = append(videoArgs, timeLeng)
-	//// 字符串转 int
-	//nowTimeLenStr := timeLeng
-	//timeLenInt, err := strconv.Atoi(timeLeng)
-	//if err == nil {
-	//	nowTimeLenStr = fmt.Sprintf("%d", timeLenInt+2)
-	//}
-	//videoArgs = append(videoArgs, nowTimeLenStr) // 多加 2 s
 
+	// 解决开头黑屏问题
 	videoArgs = append(videoArgs, "-accurate_seek")
 
 	videoArgs = append(videoArgs, "-i")
@@ -620,8 +614,7 @@ func (f *FFMPEGHelper) getVideoExportArgsByTimeRange(videoFullPath string, start
 	videoArgs = append(videoArgs, "copy")
 	videoArgs = append(videoArgs, "-c:a")
 	videoArgs = append(videoArgs, "copy")
-	//videoArgs = append(videoArgs, "-avoid_negative_ts")
-	//videoArgs = append(videoArgs, "1")
+
 	videoArgs = append(videoArgs, outVideiFullPath)
 
 	return videoArgs
@@ -640,17 +633,14 @@ func (f *FFMPEGHelper) getVideoHLSExportArgsByTimeRange(videoFullPath string, st
 	videoArgs = append(videoArgs, startTimeString)
 	videoArgs = append(videoArgs, "-t")
 	videoArgs = append(videoArgs, timeLeng)
-	//// 字符串转 int
-	//nowTimeLenStr := timeLeng
-	//timeLenInt, err := strconv.Atoi(timeLeng)
-	//if err == nil {
-	//	nowTimeLenStr = fmt.Sprintf("%d", timeLenInt+2)
-	//}
-	//videoArgs = append(videoArgs, nowTimeLenStr) // 多加 2 s
-
+	// 解决开头黑屏问题
 	videoArgs = append(videoArgs, "-accurate_seek")
+
 	videoArgs = append(videoArgs, "-i")
 	videoArgs = append(videoArgs, videoFullPath)
+
+	videoArgs = append(videoArgs, "-force_key_frames")
+	videoArgs = append(videoArgs, "\"expr:gte(t,n_forced*"+sgmentTime+")\"")
 
 	videoArgs = append(videoArgs, "-c:v")
 	videoArgs = append(videoArgs, "copy")
@@ -678,10 +668,15 @@ func (f *FFMPEGHelper) getVideo2HLSArgs(videoFullPath, segmentTime, outVideoDirP
 	videoArgs := make([]string, 0)
 	videoArgs = append(videoArgs, "-i")
 	videoArgs = append(videoArgs, videoFullPath)
-	videoArgs = append(videoArgs, "-c")
+
+	videoArgs = append(videoArgs, "-force_key_frames")
+	videoArgs = append(videoArgs, "\"expr:gte(t,n_forced*"+segmentTime+")\"")
+
+	videoArgs = append(videoArgs, "-c:v")
 	videoArgs = append(videoArgs, "copy")
-	videoArgs = append(videoArgs, "-map")
-	videoArgs = append(videoArgs, "0")
+	videoArgs = append(videoArgs, "-c:a")
+	videoArgs = append(videoArgs, "copy")
+
 	videoArgs = append(videoArgs, "-f")
 	videoArgs = append(videoArgs, "segment")
 	videoArgs = append(videoArgs, "-segment_list")
