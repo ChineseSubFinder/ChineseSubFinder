@@ -17,5 +17,6 @@ type MovieInfoV2 struct {
 }
 
 type MovieSubsInfo struct {
-	SubUrlList []string `json:"sub_url_list"`
+	SubUrlList   []string `json:"sub_url_list"`
+	SubFPathList []string `json:"sub_f_path_list"`
 }

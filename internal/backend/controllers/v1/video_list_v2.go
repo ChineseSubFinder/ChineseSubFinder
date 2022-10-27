@@ -203,6 +203,7 @@ func (cb *ControllerBase) OneMovieSubs(c *gin.Context) {
 	for _, sub := range matchedSubs {
 		subUrl := path_helper.ChangePhysicalPathToSharePath(sub, movieInfo.MainRootDirFPath, desUrl)
 		movieSubsInfo.SubUrlList = append(movieSubsInfo.SubUrlList, subUrl)
+		movieSubsInfo.SubFPathList = append(movieSubsInfo.SubFPathList, sub)
 	}
 
 	c.JSON(http.StatusOK, movieSubsInfo)
