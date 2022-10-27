@@ -126,6 +126,10 @@ func main() {
 	}
 	// 是否开启开发模式，跳过某些流程
 	settings.Get().SpeedDevMode = false
+	err := settings.Get().Save()
+	if err != nil {
+		loggerBase.Panicln("settings.Get().Save() err:", err)
+	}
 	if settings.Get().SpeedDevMode == true {
 		loggerBase.Infoln("Speed Dev Mode is On")
 		pkg.SetLiteMode(true)
