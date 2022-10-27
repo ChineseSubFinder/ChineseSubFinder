@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 
@@ -68,6 +70,13 @@ func (b *BackEnd) start() {
 	engine.StaticFS(dist.SpaFolderFonts, dist.Assets(dist.SpaFolderName+dist.SpaFolderFonts, dist.SpaFonts))
 	engine.StaticFS(dist.SpaFolderIcons, dist.Assets(dist.SpaFolderName+dist.SpaFolderIcons, dist.SpaIcons))
 	engine.StaticFS(dist.SpaFolderImages, dist.Assets(dist.SpaFolderName+dist.SpaFolderImages, dist.SpaImages))
+	// 用于预览视频和字幕的静态文件服务
+	previewCacheFolder, err := pkg.GetVideoAndSubPreviewCacheFolder()
+	if err != nil {
+		b.logger.Errorln("GetVideoAndSubPreviewCacheFolder Error:", err)
+		return
+	}
+	engine.StaticFS("/static/preview", http.Dir(previewCacheFolder))
 
 	engine.Any("/api", func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/")

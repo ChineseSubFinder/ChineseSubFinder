@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg/preview_queue"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/manual_upload_sub_2_local"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/save_sub_helper"
@@ -48,6 +50,7 @@ type Downloader struct {
 	ScanLogic                *scan_logic.ScanLogic                            // 是否扫描逻辑
 	SaveSubHelper            *save_sub_helper.SaveSubHelper                   // 保存字幕的逻辑
 	ManualUploadSub2Local    *manual_upload_sub_2_local.ManualUploadSub2Local // 手动上传字幕到本地
+	PreviewQueue             *preview_queue.PreviewQueue                      // 预览队列
 
 	cacheLocker   sync.Mutex
 	movieInfoMap  map[string]MovieInfo  // 给 Web 界面使用的，Key: VideoFPath
@@ -103,6 +106,7 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 		downloader.subTimelineFixerHelperEx)
 
 	downloader.ManualUploadSub2Local = manual_upload_sub_2_local.NewManualUploadSub2Local(downloader.log, downloader.SaveSubHelper, downloader.ScanLogic)
+	downloader.PreviewQueue = preview_queue.NewPreviewQueue(downloader.log)
 
 	downloader.movieInfoMap = make(map[string]MovieInfo)
 	downloader.seasonInfoMap = make(map[string]SeasonInfo)
