@@ -101,9 +101,15 @@ func (cb *ControllerBase) PreviewCleanUp(c *gin.Context) {
 		cb.ErrorProcess(c, "PreviewCleanUp", err)
 	}()
 
+	if len(cb.cronHelper.Downloader.PreviewQueue.ListJob()) > 0 {
+		c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "false"})
+		return
+	}
+
 	err = pkg.ClearVideoAndSubPreviewCacheFolder()
 	if err != nil {
 		return
 	}
-	c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "ok"})
+	c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "true"})
+	return
 }
