@@ -287,14 +287,14 @@ func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath, subFullPat
 		return err
 	}
 
-	// 先剪切
-	videoExt := filepath.Ext(fileName)
-	cutOffVideoFPath := filepath.Join(outDirPath, frontName+"_cut"+videoExt)
-	args := f.getVideoExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, cutOffVideoFPath)
-	execFFMPEG, err := f.execFFMPEG(args)
-	if err != nil {
-		return errors.New(execFFMPEG + err.Error())
-	}
+	//// 先剪切
+	//videoExt := filepath.Ext(fileName)
+	//cutOffVideoFPath := filepath.Join(outDirPath, frontName+"_cut"+videoExt)
+	//args := f.getVideoExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, cutOffVideoFPath)
+	//execFFMPEG, err := f.execFFMPEG(args)
+	//if err != nil {
+	//	return errors.New(execFFMPEG + err.Error())
+	//}
 	//// 转换 HLS
 	//args = f.getVideo2HLSArgs(cutOffVideoFPath, segmentTime, outDirPath)
 	//execFFMPEG, err = f.execFFMPEG(args)
@@ -302,8 +302,9 @@ func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath, subFullPat
 	//	return errors.New(execFFMPEG + err.Error())
 	//}
 
-	args = f.getVideoHLSExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, segmentTime, outDirPath)
-	execFFMPEG, err = f.execFFMPEG(args)
+	// 直接导出
+	args := f.getVideoHLSExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, segmentTime, outDirPath)
+	execFFMPEG, err := f.execFFMPEG(args)
 	if err != nil {
 		return errors.New(execFFMPEG + err.Error())
 	}
