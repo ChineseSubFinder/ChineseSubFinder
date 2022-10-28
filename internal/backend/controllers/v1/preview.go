@@ -118,14 +118,14 @@ func (cb *ControllerBase) PreviewGetExportInfo(c *gin.Context) {
 		return
 	}
 
-	m3u8, subPath, err := cb.cronHelper.Downloader.PreviewQueue.GetVideoHLSAndSubByTimeRangeExportPathInfo(job.VideoFPath, job.SubFPath, job.StartTime, job.EndTime)
+	m3u8, subPaths, err := cb.cronHelper.Downloader.PreviewQueue.GetVideoHLSAndSubByTimeRangeExportPathInfo(job.VideoFPath, job.SubFPaths, job.StartTime, job.EndTime)
 	if err != nil {
 		return
 	}
 
 	c.JSON(http.StatusOK, preview_queue.Job{
 		VideoFPath: m3u8,
-		SubFPath:   subPath,
+		SubFPaths:  subPaths,
 	})
 	return
 }

@@ -2,6 +2,7 @@ package preview_queue
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -52,34 +53,47 @@ func NewPreviewQueue(log *logrus.Logger) *PreviewQueue {
 }
 
 // GetVideoHLSAndSubByTimeRangeExportPathInfo 获取视频的HLS和字幕的导出路径信息
-func (p *PreviewQueue) GetVideoHLSAndSubByTimeRangeExportPathInfo(videoFullPath, subFullPath, startTimeString, timeLength string) (string, string, error) {
+func (p *PreviewQueue) GetVideoHLSAndSubByTimeRangeExportPathInfo(videoFullPath string, subFullPaths []string, startTimeString, timeLength string) (string, []string, error) {
 	// 导出视频
 	if pkg.IsFile(videoFullPath) == false {
-		return "", "", errors.New("video file not exist, maybe is bluray file, so not support yet")
+		return "", nil, errors.New("video file not exist, maybe is bluray file, so not support yet")
 	}
-	if pkg.IsFile(subFullPath) == false {
-		return "", "", errors.New("sub file not exist")
+
+	for _, subFullPath := range subFullPaths {
+		if pkg.IsFile(subFullPath) == false {
+			return "", nil, errors.New("sub file not exist:" + subFullPath)
+		}
 	}
+
 	outDirPath, err := pkg.GetVideoAndSubPreviewCacheFolder()
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 	fileName := filepath.Base(videoFullPath)
 	frontName := strings.ReplaceAll(fileName, filepath.Ext(fileName), "")
 	outDirSubPath := filepath.Join(outDirPath, frontName, startTimeString+"-"+timeLength)
-	outSubFileFPath := filepath.Join(outDirSubPath, frontName+common.SubExtSRT)
+
 	// 字幕的相对位置
-	subRelPath, err := filepath.Rel(outDirPath, outSubFileFPath)
-	if err != nil {
-		return "", "", err
+	outSubFPaths := make([]string, 0)
+	for i := 0; i < len(subFullPaths); i++ {
+
+		outSubFileFPath := filepath.Join(outDirSubPath, fmt.Sprintf(frontName+"_%d"+common.SubExtSRT, i))
+
+		var subRelPath string
+		subRelPath, err = filepath.Rel(outDirPath, outSubFileFPath)
+		if err != nil {
+			return "", nil, err
+		}
+		outSubFPaths = append(outSubFPaths, subRelPath)
 	}
+
 	// outputlist.m3u8 的相对位置
 	outputListRelPath, err := filepath.Rel(outDirPath, filepath.Join(outDirSubPath, "outputlist.m3u8"))
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 
-	return outputListRelPath, subRelPath, nil
+	return outputListRelPath, outSubFPaths, nil
 }
 
 // IsJobInQueue 是否正在队列中排队，或者正在被处理
@@ -204,7 +218,7 @@ func (p *PreviewQueue) processSub(job *Job) error {
 		return err
 	}
 	// 具体处理这个任务，这个任务在加入队列之前就可以预测将要存放在哪，以及名称是什么
-	m3u8FPath, subFPath, err := p.ffmpegHelper.ExportVideoHLSAndSubByTimeRange(job.VideoFPath, job.SubFPath, job.StartTime, job.EndTime, segmentTime, nowOutRootDirPath)
+	m3u8FPath, subFPath, err := p.ffmpegHelper.ExportVideoHLSAndSubByTimeRange(job.VideoFPath, job.SubFPaths, job.StartTime, job.EndTime, segmentTime, nowOutRootDirPath)
 	if err != nil {
 		return err
 	}
@@ -215,10 +229,10 @@ func (p *PreviewQueue) processSub(job *Job) error {
 }
 
 type Job struct {
-	VideoFPath string `json:"video_f_path"`
-	SubFPath   string `json:"sub_f_path"`
-	StartTime  string `json:"start_time"`
-	EndTime    string `json:"end_time"`
+	VideoFPath string   `json:"video_f_path"`
+	SubFPaths  []string `json:"sub_f_paths"`
+	StartTime  string   `json:"start_time"`
+	EndTime    string   `json:"end_time"`
 }
 
 type Reply struct {

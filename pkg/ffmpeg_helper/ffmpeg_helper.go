@@ -268,7 +268,7 @@ func (f *FFMPEGHelper) ExportSubArgsByTimeRange(subFullPath, outName string, sta
 }
 
 // ExportVideoHLSAndSubByTimeRange 导出指定的时间轴的视频HLS和字幕，然后从 outDirPath 中获取 outputlist.m3u8 和字幕的文件
-func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath, subFullPath, startTimeString, timeLength, segmentTime, outDirPath string) (string, string, error) {
+func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath string, subFullPaths []string, startTimeString, timeLength, segmentTime, outDirPath string) (string, []string, error) {
 
 	// 导出视频
 	if pkg.IsFile(videoFullPath) == false {
@@ -278,12 +278,14 @@ func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath, subFullPat
 			// 需要从 steamDirPath 搜索最大的一个文件出来
 			videoFullPath = pkg.GetMaxSizeFile(steamDirPath)
 		} else {
-			return "", "", errors.New("video file not found")
+			return "", nil, errors.New("video file not found")
 		}
 	}
 
-	if pkg.IsFile(subFullPath) == false {
-		return "", "", errors.New("sub file not exist")
+	for _, subFullPath := range subFullPaths {
+		if pkg.IsFile(subFullPath) == false {
+			return "", nil, errors.New("sub file not exist:" + subFullPath)
+		}
 	}
 
 	fileName := filepath.Base(videoFullPath)
@@ -293,21 +295,21 @@ func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath, subFullPat
 	if pkg.IsDir(outDirSubPath) == true {
 		err := os.RemoveAll(outDirSubPath)
 		if err != nil {
-			return "", "", err
+			return "", nil, err
 		}
 	}
 	err := os.MkdirAll(outDirSubPath, os.ModePerm)
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 
-	//// 先剪切
+	// 先剪切
 	//videoExt := filepath.Ext(fileName)
 	//cutOffVideoFPath := filepath.Join(outDirPath, frontName+"_cut"+videoExt)
 	//args := f.getVideoExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, cutOffVideoFPath)
 	//execFFMPEG, err := f.execFFMPEG(args)
 	//if err != nil {
-	//	return errors.New(execFFMPEG + err.Error())
+	//	return "", nil, errors.New(execFFMPEG + err.Error())
 	//}
 	//// 转换 HLS
 	//args = f.getVideo2HLSArgs(cutOffVideoFPath, segmentTime, outDirPath)
@@ -317,44 +319,50 @@ func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath, subFullPat
 	//}
 
 	// 直接导出
-	args := f.getVideoHLSExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, segmentTime, outDirSubPath)
-	execFFMPEG, err := f.execFFMPEG(args)
+	args = f.getVideoHLSExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, segmentTime, outDirSubPath)
+	execFFMPEG, err = f.execFFMPEG(args)
 	if err != nil {
-		return "", "", errors.New(execFFMPEG + err.Error())
+		return "", nil, errors.New(execFFMPEG + err.Error())
 	}
 
 	// 导出字幕
-	tmpSubFPath := subFullPath
-	nowSubExt := filepath.Ext(tmpSubFPath)
+	outSubFPaths := make([]string, 0)
+	for i, subFullPath := range subFullPaths {
 
-	if strings.ToLower(nowSubExt) != common.SubExtSRT {
-		// 这里需要优先判断字幕是否是 SRT，如果是 ASS 的，那么需要转换一次才行
-		middleSubFPath := filepath.Join(outDirSubPath, frontName+"_middle"+common.SubExtSRT)
-		args = f.getSubASS2SRTArgs(tmpSubFPath, middleSubFPath)
+		tmpSubFPath := subFullPath
+		nowSubExt := filepath.Ext(tmpSubFPath)
+
+		if strings.ToLower(nowSubExt) != common.SubExtSRT {
+			// 这里需要优先判断字幕是否是 SRT，如果是 ASS 的，那么需要转换一次才行
+			middleSubFPath := filepath.Join(outDirSubPath, fmt.Sprintf(frontName+"_middle_%d"+common.SubExtSRT, i))
+			args = f.getSubASS2SRTArgs(tmpSubFPath, middleSubFPath)
+			execFFMPEG, err = f.execFFMPEG(args)
+			if err != nil {
+				return "", nil, errors.New(execFFMPEG + err.Error())
+			}
+			tmpSubFPath = middleSubFPath
+		}
+		outSubFileFPath := filepath.Join(outDirSubPath, fmt.Sprintf(frontName+"_%d"+common.SubExtSRT, i))
+		args = f.getSubExportArgsByTimeRange(tmpSubFPath, startTimeString, timeLength, outSubFileFPath)
 		execFFMPEG, err = f.execFFMPEG(args)
 		if err != nil {
-			return "", "", errors.New(execFFMPEG + err.Error())
+			return "", nil, errors.New(execFFMPEG + err.Error())
 		}
-		tmpSubFPath = middleSubFPath
+		// 字幕的相对位置
+		subRelPath, err := filepath.Rel(outDirPath, outSubFileFPath)
+		if err != nil {
+			return "", nil, err
+		}
+		outSubFPaths = append(outSubFPaths, subRelPath)
 	}
-	outSubFileFPath := filepath.Join(outDirSubPath, frontName+common.SubExtSRT)
-	args = f.getSubExportArgsByTimeRange(tmpSubFPath, startTimeString, timeLength, outSubFileFPath)
-	execFFMPEG, err = f.execFFMPEG(args)
-	if err != nil {
-		return "", "", errors.New(execFFMPEG + err.Error())
-	}
-	// 字幕的相对位置
-	subRelPath, err := filepath.Rel(outDirPath, outSubFileFPath)
-	if err != nil {
-		return "", "", err
-	}
+
 	// outputlist.m3u8 的相对位置
 	outputListRelPath, err := filepath.Rel(outDirPath, filepath.Join(outDirSubPath, "outputlist.m3u8"))
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 
-	return outputListRelPath, subRelPath, nil
+	return outputListRelPath, outSubFPaths, nil
 }
 
 // parseJsonString2GetFFProbeInfo 使用 ffprobe 获取视频的 stream 信息，从中解析出字幕和音频的索引
@@ -636,6 +644,7 @@ func (f *FFMPEGHelper) getVideoExportArgsByTimeRange(videoFullPath string, start
 		ffmpeg.exe -i '.\Chainsaw Man - S01E02 - ARRIVAL IN TOKYO HDTV-1080p.mp4' -ss 00:00:00 -t 300  -c:v copy -c:a copy wawa.mp4
 	*/
 	videoArgs := make([]string, 0)
+	videoArgs = append(videoArgs, "-y")
 	videoArgs = append(videoArgs, "-ss")
 	videoArgs = append(videoArgs, startTimeString)
 	videoArgs = append(videoArgs, "-t")
@@ -646,6 +655,21 @@ func (f *FFMPEGHelper) getVideoExportArgsByTimeRange(videoFullPath string, start
 
 	videoArgs = append(videoArgs, "-i")
 	videoArgs = append(videoArgs, videoFullPath)
+
+	//videoArgs = append(videoArgs, "-s")
+	//videoArgs = append(videoArgs, "640x480")
+	//videoArgs = append(videoArgs, "-vframes")
+	//videoArgs = append(videoArgs, "90")
+	//videoArgs = append(videoArgs, "-r")
+	//videoArgs = append(videoArgs, "29.97")
+	//videoArgs = append(videoArgs, "-c:v")
+	//videoArgs = append(videoArgs, "h264")
+	//videoArgs = append(videoArgs, "-b:v")
+	//videoArgs = append(videoArgs, "500k")
+	//videoArgs = append(videoArgs, "-b:a")
+	//videoArgs = append(videoArgs, "48k")
+	//videoArgs = append(videoArgs, "-ac")
+	//videoArgs = append(videoArgs, "2")
 
 	videoArgs = append(videoArgs, "-c:v")
 	videoArgs = append(videoArgs, "copy")
@@ -676,13 +700,36 @@ func (f *FFMPEGHelper) getVideoHLSExportArgsByTimeRange(videoFullPath string, st
 	videoArgs = append(videoArgs, "-i")
 	videoArgs = append(videoArgs, videoFullPath)
 
+	// 限制线程数
+	videoArgs = append(videoArgs, "-threads")
+	videoArgs = append(videoArgs, "2")
+	// 约束强制贞切割?
 	videoArgs = append(videoArgs, "-force_key_frames")
 	videoArgs = append(videoArgs, "\"expr:gte(t,n_forced*"+sgmentTime+")\"")
-
+	// 原编码格式
 	videoArgs = append(videoArgs, "-c:v")
 	videoArgs = append(videoArgs, "copy")
 	videoArgs = append(videoArgs, "-c:a")
 	videoArgs = append(videoArgs, "copy")
+	// 转码为 h264
+	//videoArgs = append(videoArgs, "-vcodec")
+	//videoArgs = append(videoArgs, "h264")
+	// -s 640x480 -vframes 90 -r 29.97 -c:v h264 -b:v 500k -b:a 48k -ac 2
+	//videoArgs = append(videoArgs, "-s")
+	//videoArgs = append(videoArgs, "640x480")
+	//videoArgs = append(videoArgs, "-vframes")
+	//videoArgs = append(videoArgs, "90")
+	//videoArgs = append(videoArgs, "-r")
+	//videoArgs = append(videoArgs, "29.97")
+	//videoArgs = append(videoArgs, "-c:v")
+	//videoArgs = append(videoArgs, "h264")
+	//videoArgs = append(videoArgs, "-b:v")
+	//videoArgs = append(videoArgs, "500k")
+	//videoArgs = append(videoArgs, "-b:a")
+	//videoArgs = append(videoArgs, "48k")
+	//videoArgs = append(videoArgs, "-ac")
+	//videoArgs = append(videoArgs, "2")
+
 	videoArgs = append(videoArgs, "-f")
 	videoArgs = append(videoArgs, "segment")
 	videoArgs = append(videoArgs, "-segment_time")
