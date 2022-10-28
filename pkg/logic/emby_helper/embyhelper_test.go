@@ -3,39 +3,25 @@ package emby_helper
 import (
 	"testing"
 
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
+	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
+	"github.com/allanpk716/ChineseSubFinder/pkg/subtitle_best_api"
+
+	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 )
-
-var ec = settings.EmbySettings{
-	AddressUrl:            "http://192.168.50.252:8096",
-	APIKey:                "xxxxx",
-	MaxRequestVideoNumber: 100,
-	MoviePathsMapping: map[string]string{
-		"X:\\电影": "/mnt/share1/电影",
-	},
-	SeriesPathsMapping: map[string]string{
-		"X:\\连续剧": "/mnt/share1/连续剧",
-	},
-}
 
 // TODO 暂不方便在其他环境进行单元测试
 func TestEmbyHelper_GetRecentlyAddVideoList(t *testing.T) {
 
-	//embyConfig := settings.NewEmbySettings()
-	//embyConfig.Enable = true
-	//embyConfig.AddressUrl = "http://192.168.50.252:8096"
-	//embyConfig.APIKey = "1"
-	//embyConfig.SkipWatched = false
-	//embyConfig.MaxRequestVideoNumber = 1000
-	//embyConfig.MoviePathsMapping["X:\\电影"] = "/mnt/share1/电影"
-	//embyConfig.MoviePathsMapping["X:\\连续剧"] = "/mnt/share1/连续剧"
+	//defInstance()
 	//
-	//em := NewEmbyHelper(*embyConfig)
-	//movieList, seriesList, err := em.GetRecentlyAddVideoListWithNoChineseSubtitle()
+	//em := NewEmbyHelper(dealers)
+	//movieList, seriesList, err := em.GetRecentlyAddVideoList(&ec, false, 1000000)
 	//if err != nil {
 	//	t.Fatal(err)
 	//}
-
 	//println(len(movieList), len(seriesList))
 }
 
@@ -115,4 +101,40 @@ func TestEmbyHelper_IsVideoPlayed(t *testing.T) {
 	//if played == false {
 	//	t.Fatal("need played")
 	//}
+}
+
+func defInstance() {
+
+	settings.SetConfigRootPath(pkg.ConfigRootDirFPath())
+	pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester())
+
+	authKey := random_auth_key.AuthKey{
+		BaseKey:  pkg.BaseKey(),
+		AESKey16: pkg.AESKey16(),
+		AESIv16:  pkg.AESIv16(),
+	}
+
+	nowSettings := settings.Get()
+	nowSettings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled = true
+
+	dealers = media_info_dealers.NewDealers(log_helper.GetLogger4Tester(),
+		subtitle_best_api.NewSubtitleBestApi(log_helper.GetLogger4Tester(), authKey))
+}
+
+var (
+	dealers *media_info_dealers.Dealers
+)
+
+var ec = settings.EmbySettings{
+	AddressUrl:            "http://192.168.50.252:8096",
+	APIKey:                "xxxxxxx",
+	MaxRequestVideoNumber: 100,
+	MoviePathsMapping: map[string]string{
+		"X:\\电影": "/mnt/share1/电影",
+	},
+	SeriesPathsMapping: map[string]string{
+		"X:\\连续剧": "/mnt/share1/连续剧",
+	},
+	AutoOrManual: true,
+	Threads:      1,
 }
