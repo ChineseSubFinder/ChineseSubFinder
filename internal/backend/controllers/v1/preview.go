@@ -82,6 +82,28 @@ func (cb *ControllerBase) PreviewIsJobInQueue(c *gin.Context) {
 	return
 }
 
+// PreviewJobResult 预览的任务的结果，成功 ok，不存在空，其他是失败
+func (cb *ControllerBase) PreviewJobResult(c *gin.Context) {
+	var err error
+	defer func() {
+		// 统一的异常处理
+		cb.ErrorProcess(c, "PreviewJobResult", err)
+	}()
+
+	job := preview_queue.Job{}
+	err = c.ShouldBindJSON(&job)
+	if err != nil {
+		return
+	}
+
+	result := cb.cronHelper.Downloader.PreviewQueue.JobResult(&preview_queue.Job{
+		VideoFPath: job.VideoFPath,
+	})
+
+	c.JSON(http.StatusOK, backend2.ReplyCommon{Message: result})
+	return
+}
+
 // PreviewGetExportInfo 预览的任务的导出信息
 func (cb *ControllerBase) PreviewGetExportInfo(c *gin.Context) {
 	var err error

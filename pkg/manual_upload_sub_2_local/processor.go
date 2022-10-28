@@ -33,6 +33,7 @@ type ManualUploadSub2Local struct {
 	subNameFormatter subCommon.FormatterName        // 从 inSubFormatter 推断出来
 	processQueue     *llq.Queue
 	jobSet           *hashset.Set
+	jobResultMap     sync.Map
 	addOneSignal     chan interface{}
 	addLocker        sync.Mutex
 	subParserHub     *sub_parser_hub.SubParserHub
@@ -47,6 +48,7 @@ func NewManualUploadSub2Local(log *logrus.Logger, saveSubHelper *save_sub_helper
 		scanLogic:     scanLogic,
 		processQueue:  llq.New(),
 		jobSet:        hashset.New(),
+		jobResultMap:  sync.Map{},
 		addOneSignal:  make(chan interface{}, 1),
 		subParserHub:  sub_parser_hub.NewSubParserHub(log, ass.NewParser(log), srt.NewParser(log)),
 		workingJob:    nil,
@@ -114,6 +116,17 @@ func (m *ManualUploadSub2Local) Add(job *Job) {
 	return
 }
 
+// JobResult 任务结果，如果成功 ok，如果没有就是空，其他就是错误信息
+func (m *ManualUploadSub2Local) JobResult(job *Job) string {
+
+	value, found := m.jobResultMap.LoadAndDelete(job.VideoFPath)
+	if found == false {
+		return ""
+	}
+
+	return value.(string)
+}
+
 // ListJob 任务列表
 func (m *ManualUploadSub2Local) ListJob() []*Job {
 
@@ -159,16 +172,23 @@ func (m *ManualUploadSub2Local) dealers() {
 
 func (m *ManualUploadSub2Local) processSub(job *Job) error {
 
+	var err error
 	defer func() {
 		// 任务处理完了
 		m.addLocker.Lock()
 		m.workingJob = nil
 		m.addLocker.Unlock()
+
+		if err != nil {
+			m.jobResultMap.Store(job.VideoFPath, err.Error())
+		} else {
+			m.jobResultMap.Store(job.VideoFPath, "ok")
+		}
 	}()
 
 	// 不管是不是保存多个字幕，都要先扫描本地的字幕，进行 .Default .Forced 去除
 	// 这个视频的所有字幕，去除 .default .Forced 标记
-	err := sub_helper.SearchVideoMatchSubFileAndRemoveExtMark(m.log, job.VideoFPath)
+	err = sub_helper.SearchVideoMatchSubFileAndRemoveExtMark(m.log, job.VideoFPath)
 	if err != nil {
 		// 找个错误可以忍
 		m.log.Errorln("SearchVideoMatchSubFileAndRemoveExtMark,", job.VideoFPath, err)

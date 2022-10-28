@@ -22,6 +22,7 @@ type PreviewQueue struct {
 	ffmpegHelper *ffmpeg_helper.FFMPEGHelper
 	processQueue *llq.Queue
 	jobSet       *hashset.Set
+	jobResultMap sync.Map
 	addOneSignal chan interface{}
 	addLocker    sync.Mutex
 	workingJob   *Job // 正在操作的任务的路径
@@ -34,6 +35,7 @@ func NewPreviewQueue(log *logrus.Logger) *PreviewQueue {
 		ffmpegHelper: ffmpeg_helper.NewFFMPEGHelper(log),
 		processQueue: llq.New(),
 		jobSet:       hashset.New(),
+		jobResultMap: sync.Map{},
 		addOneSignal: make(chan interface{}, 1),
 		workingJob:   nil,
 	}
@@ -159,6 +161,17 @@ func (p *PreviewQueue) ListJob() []*Job {
 	return ret
 }
 
+// JobResult 任务结果，如果成功 ok，如果没有就是空，其他就是错误信息
+func (p *PreviewQueue) JobResult(job *Job) string {
+
+	value, found := p.jobResultMap.LoadAndDelete(job.VideoFPath)
+	if found == false {
+		return ""
+	}
+
+	return value.(string)
+}
+
 func (p *PreviewQueue) dealers() {
 
 	p.addLocker.Lock()
@@ -187,11 +200,18 @@ func (p *PreviewQueue) dealers() {
 
 func (p *PreviewQueue) processSub(job *Job) error {
 
+	var err error
 	defer func() {
 		// 任务处理完了
 		p.addLocker.Lock()
 		p.workingJob = nil
 		p.addLocker.Unlock()
+
+		if err != nil {
+			p.jobResultMap.Store(job.VideoFPath, err.Error())
+		} else {
+			p.jobResultMap.Store(job.VideoFPath, "ok")
+		}
 	}()
 
 	const segmentTime = "5.000"

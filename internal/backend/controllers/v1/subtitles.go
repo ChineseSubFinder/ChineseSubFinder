@@ -109,3 +109,25 @@ func (cb *ControllerBase) IsManualUploadSubtitle2LocalJobInQueue(c *gin.Context)
 	c.JSON(http.StatusOK, backend2.ReplyCommon{Message: strconv.FormatBool(found)})
 	return
 }
+
+// ManualUploadSubtitleResult 人工上传字幕到本地的任务的结果，成功 ok，不存在空，其他是失败
+func (cb *ControllerBase) ManualUploadSubtitleResult(c *gin.Context) {
+	var err error
+	defer func() {
+		// 统一的异常处理
+		cb.ErrorProcess(c, "ManualUploadSubtitleResult", err)
+	}()
+
+	job := manual_upload_sub_2_local.Job{}
+	err = c.ShouldBindJSON(&job)
+	if err != nil {
+		return
+	}
+
+	result := cb.cronHelper.Downloader.ManualUploadSub2Local.JobResult(&manual_upload_sub_2_local.Job{
+		VideoFPath: job.VideoFPath,
+	})
+
+	c.JSON(http.StatusOK, backend2.ReplyCommon{Message: result})
+	return
+}
