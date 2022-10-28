@@ -2,7 +2,6 @@ package preview_queue
 
 import (
 	"errors"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -58,31 +57,16 @@ func (p *PreviewQueue) GetVideoHLSAndSubByTimeRangeExportPathInfo(videoFullPath,
 	if pkg.IsFile(videoFullPath) == false {
 		return "", "", errors.New("video file not exist, maybe is bluray file, so not support yet")
 	}
-
 	if pkg.IsFile(subFullPath) == false {
 		return "", "", errors.New("sub file not exist")
 	}
-
 	outDirPath, err := pkg.GetVideoAndSubPreviewCacheFolder()
 	if err != nil {
 		return "", "", err
 	}
-
 	fileName := filepath.Base(videoFullPath)
 	frontName := strings.ReplaceAll(fileName, filepath.Ext(fileName), "")
-
 	outDirSubPath := filepath.Join(outDirPath, frontName, startTimeString+"-"+timeLength)
-	if pkg.IsDir(outDirSubPath) == true {
-		err := os.RemoveAll(outDirSubPath)
-		if err != nil {
-			return "", "", err
-		}
-	}
-	err = os.MkdirAll(outDirSubPath, os.ModePerm)
-	if err != nil {
-		return "", "", err
-	}
-
 	outSubFileFPath := filepath.Join(outDirSubPath, frontName+common.SubExtSRT)
 	// 字幕的相对位置
 	subRelPath, err := filepath.Rel(outDirPath, outSubFileFPath)
