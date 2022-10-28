@@ -9,6 +9,7 @@
     flat
     dense
     icon="upload"
+    v-bind="$attrs"
     :label="dense ? '' : '上传本地字幕'"
     @click="handleUploadClick"
     title="上传本地字幕"

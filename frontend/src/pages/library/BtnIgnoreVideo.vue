@@ -9,6 +9,7 @@
     @click.stop
     title="当前视频已锁定，不进行字幕下载"
     @click="skip"
+    v-bind="$attrs"
   />
   <q-btn
     v-else
@@ -20,6 +21,7 @@
     @click.stop
     title="点击锁定视频，不进行字幕下载"
     @click="skip"
+    v-bind="$attrs"
   />
 </template>
 

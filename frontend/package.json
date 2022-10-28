@@ -22,6 +22,8 @@
   "dependencies": {
     "@quasar/extras": "^1.0.0",
     "@vueuse/core": "^4.11.2",
+    "artplayer": "^4.5.8",
+    "hls.js": "^0.14.7",
     "axios": "^0.25.0",
     "core-js": "^3.6.5",
     "dayjs": "^1.10.8",
