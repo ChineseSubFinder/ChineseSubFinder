@@ -13,8 +13,25 @@
     </div>
     <div class="content-width text-ellipsis-line-2" :title="data.name">{{ data.name }}</div>
     <div class="row items-center">
+      <btn-dialog-preview-video
+        v-if="hasSubtitle"
+        size="sm"
+        :sub-list="detialInfo?.sub_f_path_list"
+        :path="data.video_f_path"
+      />
+
       <div>
-        <q-btn v-if="hasSubtitle" color="black" round flat dense icon="closed_caption" @click.stop title="已有字幕">
+        <q-btn
+          v-if="hasSubtitle"
+          size="sm"
+          color="black"
+          round
+          flat
+          dense
+          icon="closed_caption"
+          @click.stop
+          title="已有字幕"
+        >
           <q-popup-proxy>
             <q-list dense>
               <q-item v-for="(item, index) in detialInfo.sub_url_list" :key="item">
@@ -27,12 +44,11 @@
             </q-list>
           </q-popup-proxy>
         </q-btn>
-        <q-btn v-else color="grey" round flat dense icon="closed_caption" @click.stop title="没有字幕" />
+        <q-btn v-else color="grey" size="sm" round flat dense icon="closed_caption" @click.stop title="没有字幕" />
       </div>
-
       <q-space />
 
-      <btn-upload-subtitle :path="data.video_f_path" dense />
+      <btn-upload-subtitle :path="data.video_f_path" dense size="sm" />
 
       <q-btn
         class="btn-download"
@@ -43,10 +59,11 @@
         icon="download_for_offline"
         title="下载字幕"
         @click="downloadSubtitle"
+        size="sm"
       ></q-btn>
 
       <div>
-        <btn-ignore-video :path="props.data.video_f_path" :video-type="VIDEO_TYPE_MOVIE" />
+        <btn-ignore-video :path="props.data.video_f_path" :video-type="VIDEO_TYPE_MOVIE" size="sm" />
       </div>
     </div>
   </q-card>
@@ -61,6 +78,7 @@ import { useQuasar } from 'quasar';
 import { getUrl, subtitleUploadList } from 'pages/library/useLibrary';
 import BtnIgnoreVideo from 'pages/library/BtnIgnoreVideo';
 import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
+import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo';
 
 const props = defineProps({
   data: Object,

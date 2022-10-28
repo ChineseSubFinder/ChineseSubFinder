@@ -68,12 +68,19 @@
                   <q-checkbox v-model="selection" :val="item" />
                 </q-item-section>
                 <q-item-section>第 {{ pandStart2(item.episode) }} 集</q-item-section>
+
+                <q-item-section v-if="item.sub_f_path_list.length" side>
+                  <btn-dialog-preview-video :sub-list="item.sub_f_path_list" :path="item.video_f_path" />
+                </q-item-section>
+
                 <q-item-section side>
                   <btn-upload-subtitle :path="item.video_f_path" />
                 </q-item-section>
+
                 <q-item-section side>
                   <btn-ignore-video :path="item.video_f_path" :video-type="VIDEO_TYPE_TV" />
                 </q-item-section>
+
                 <q-item-section side>
                   <q-btn
                     v-if="item.sub_f_path_list.length"
@@ -134,6 +141,7 @@ import { useSelection } from 'src/composables/useSelection';
 import BtnIgnoreVideo from 'pages/library/BtnIgnoreVideo';
 import eventBus from 'vue3-eventbus';
 import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
+import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo';
 
 const props = defineProps({
   data: Object,
