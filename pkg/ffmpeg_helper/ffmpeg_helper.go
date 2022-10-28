@@ -319,8 +319,8 @@ func (f *FFMPEGHelper) ExportVideoHLSAndSubByTimeRange(videoFullPath string, sub
 	//}
 
 	// 直接导出
-	args = f.getVideoHLSExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, segmentTime, outDirSubPath)
-	execFFMPEG, err = f.execFFMPEG(args)
+	args := f.getVideoHLSExportArgsByTimeRange(videoFullPath, startTimeString, timeLength, segmentTime, outDirSubPath)
+	execFFMPEG, err := f.execFFMPEG(args)
 	if err != nil {
 		return "", nil, errors.New(execFFMPEG + err.Error())
 	}
