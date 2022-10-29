@@ -82,7 +82,7 @@ const showSelectSubtitleDialog = () => {
 const artOption = computed(() => ({
   autoplay: true,
   autoSize: true,
-  url: `${config.BACKEND_URL}/v1/preview/playlist/${encodeURIComponent(encode(props.path))}`,
+  url: `${config.BACKEND_URL}/v1/preview/playlist/${encode(encodeURIComponent(props.path))}`,
   subtitle: {
     url: getUrl(selectedSub.value),
   },
