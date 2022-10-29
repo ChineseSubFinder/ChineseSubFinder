@@ -44,7 +44,7 @@ func (c *Center) WritePlaylist(urlTemplate string, videoFileFPath string, w io.W
 	t := template.Must(template.New("urlTemplate").Parse(urlTemplate))
 
 	if pkg.IsFile(videoFileFPath) == false {
-		return errors.New("WritePlaylist video file not exist, file = " + videoFileFPath)
+		return errors.New("WritePlaylist video file not exist or it's blu-ray, not support yet, file = " + videoFileFPath)
 	}
 
 	duration := c.ffmpegHelper.GetVideoDuration(videoFileFPath)
