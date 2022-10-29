@@ -13,7 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// PreviewAdd 添加需要预览的任务
+// PreviewAdd 添加需要预览的任务,弃用
 func (cb *ControllerBase) PreviewAdd(c *gin.Context) {
 
 	var err error
@@ -45,7 +45,7 @@ func (cb *ControllerBase) PreviewAdd(c *gin.Context) {
 	return
 }
 
-// PreviewList 列举预览任务
+// PreviewList 列举预览任务,弃用
 func (cb *ControllerBase) PreviewList(c *gin.Context) {
 
 	var err error
@@ -60,7 +60,7 @@ func (cb *ControllerBase) PreviewList(c *gin.Context) {
 	})
 }
 
-// PreviewIsJobInQueue 预览的任务是否在列表中，或者说是在执行中
+// PreviewIsJobInQueue 预览的任务是否在列表中，或者说是在执行中,弃用
 func (cb *ControllerBase) PreviewIsJobInQueue(c *gin.Context) {
 	var err error
 	defer func() {
@@ -82,7 +82,7 @@ func (cb *ControllerBase) PreviewIsJobInQueue(c *gin.Context) {
 	return
 }
 
-// PreviewJobResult 预览的任务的结果，成功 ok，不存在空，其他是失败
+// PreviewJobResult 预览的任务的结果，成功 ok，不存在空，其他是失败,弃用
 func (cb *ControllerBase) PreviewJobResult(c *gin.Context) {
 	var err error
 	defer func() {
@@ -104,7 +104,7 @@ func (cb *ControllerBase) PreviewJobResult(c *gin.Context) {
 	return
 }
 
-// PreviewGetExportInfo 预览的任务的导出信息
+// PreviewGetExportInfo 预览的任务的导出信息,弃用
 func (cb *ControllerBase) PreviewGetExportInfo(c *gin.Context) {
 	var err error
 	defer func() {
