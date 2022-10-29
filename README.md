@@ -164,3 +164,4 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 - [ausaki/subfinder: 字幕查找器](https://github.com/ausaki/subfinder)
 - [golandscape/sat: 高性能简繁体转换](https://github.com/golandscape/sat)
 - [smacke/ffsubsync: Automagically synchronize subtitles with video](https://github.com/smacke/ffsubsync)
+- [shimberger/gohls: A server that exposes a directory for video streaming via web interface](https://github.com/shimberger/gohls)
