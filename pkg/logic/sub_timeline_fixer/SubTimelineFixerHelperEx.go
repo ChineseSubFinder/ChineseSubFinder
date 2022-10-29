@@ -71,12 +71,12 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	var ffmpegInfo *ffmpeg_helper.FFMPEGInfo
 	var err error
 	// 先尝试获取内置字幕的信息
-	bok, ffmpegInfo, err = s.ffmpegHelper.GetFFMPEGInfo(videoFileFullPath, ffmpeg_helper.Subtitle)
+	bok, ffmpegInfo, err = s.ffmpegHelper.ExportFFMPEGInfo(videoFileFullPath, ffmpeg_helper.Subtitle)
 	if err != nil {
 		return err
 	}
 	if bok == false {
-		return errors.New("SubTimelineFixerHelperEx.Process.GetFFMPEGInfo = false Subtitle -- " + videoFileFullPath)
+		return errors.New("SubTimelineFixerHelperEx.Process.ExportFFMPEGInfo = false Subtitle -- " + videoFileFullPath)
 	}
 
 	// 这个需要提前考虑，如果只有一个内置的字幕，且这个字幕的大小小于 2kb，那么认为这个字幕是有问题的，就直接切换到 audio 校正
@@ -95,16 +95,16 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	if ffmpegInfo.SubtitleInfoList == nil || len(ffmpegInfo.SubtitleInfoList) <= 0 || oneSubAndIsError == true {
 
 		if ffmpegInfo.AudioInfoList == nil || len(ffmpegInfo.AudioInfoList) == 0 {
-			return errors.New("SubTimelineFixerHelperEx.Process.GetFFMPEGInfo Can`t Find SubTitle And Audio To Export -- " + videoFileFullPath)
+			return errors.New("SubTimelineFixerHelperEx.Process.ExportFFMPEGInfo Can`t Find SubTitle And Audio To Export -- " + videoFileFullPath)
 		}
 
 		// 如果内置字幕没有，那么就需要尝试获取音频信息
-		bok, ffmpegInfo, err = s.ffmpegHelper.GetFFMPEGInfo(videoFileFullPath, ffmpeg_helper.Audio)
+		bok, ffmpegInfo, err = s.ffmpegHelper.ExportFFMPEGInfo(videoFileFullPath, ffmpeg_helper.Audio)
 		if err != nil {
 			return err
 		}
 		if bok == false {
-			return errors.New("SubTimelineFixerHelperEx.Process.GetFFMPEGInfo = false Audio -- " + videoFileFullPath)
+			return errors.New("SubTimelineFixerHelperEx.Process.ExportFFMPEGInfo = false Audio -- " + videoFileFullPath)
 		}
 
 		// 使用音频进行时间轴的校正
@@ -224,7 +224,7 @@ func (s SubTimelineFixerHelperEx) ProcessByAudioFile(baseAudioFileFPath, srcSubF
 func (s SubTimelineFixerHelperEx) IsVideoCanExportSubtitleAndAudio(videoFileFullPath string) (bool, *ffmpeg_helper.FFMPEGInfo, []vad.VADInfo, *subparser.FileInfo, error) {
 
 	// 先尝试获取内置字幕的信息
-	bok, ffmpegInfo, err := s.ffmpegHelper.GetFFMPEGInfo(videoFileFullPath, ffmpeg_helper.SubtitleAndAudio)
+	bok, ffmpegInfo, err := s.ffmpegHelper.ExportFFMPEGInfo(videoFileFullPath, ffmpeg_helper.SubtitleAndAudio)
 	if err != nil {
 		return false, nil, nil, nil, err
 	}

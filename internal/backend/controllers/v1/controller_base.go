@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"github.com/allanpk716/ChineseSubFinder/pkg/hls_center"
 	"net/http"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
@@ -23,6 +24,7 @@ type ControllerBase struct {
 	pathUrlMap                          map[string]string
 	videoScanAndRefreshHelper           *video_scan_and_refresh_helper.VideoScanAndRefreshHelper
 	videoListHelper                     *video_list_helper.VideoListHelper
+	hslCenter                           *hls_center.Center
 	videoScanAndRefreshHelperIsRunning  bool
 	videoScanAndRefreshHelperLocker     lock.Lock
 	videoScanAndRefreshHelperErrMessage string
@@ -39,6 +41,7 @@ func NewControllerBase(cronHelper *cron_helper.CronHelper, restartSignal chan in
 			sub_formatter.GetSubFormatter(cronHelper.Logger, settings.Get().AdvancedSettings.SubNameFormatter),
 			cronHelper.FileDownloader, nil),
 		videoListHelper:                 video_list_helper.NewVideoListHelper(cronHelper.Logger),
+		hslCenter:                       hls_center.NewCenter(cronHelper.Logger),
 		videoScanAndRefreshHelperLocker: lock.NewLock(),
 		restartSignal:                   restartSignal,
 	}

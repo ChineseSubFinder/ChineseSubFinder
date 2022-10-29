@@ -125,7 +125,7 @@ func main() {
 		common.SetApiToken("")
 	}
 	// 是否开启开发模式，跳过某些流程
-	settings.Get().SpeedDevMode = false
+	settings.Get().SpeedDevMode = true
 	err := settings.Get().Save()
 	if err != nil {
 		loggerBase.Panicln("settings.Get().Save() err:", err)

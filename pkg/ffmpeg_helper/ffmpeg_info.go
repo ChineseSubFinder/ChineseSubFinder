@@ -104,7 +104,7 @@ func (f *FFMPEGInfo) IsExported(exportType ExportType) bool {
 	return bProcessDone
 }
 
-func (f FFMPEGInfo) CreateExportedMask() error {
+func (f *FFMPEGInfo) CreateExportedMask() error {
 	maskFileFPath, err := f.getExportedMaskFileFPath()
 	if err != nil {
 		return err
@@ -120,7 +120,7 @@ func (f FFMPEGInfo) CreateExportedMask() error {
 	return nil
 }
 
-func (f FFMPEGInfo) getExportedMaskFileFPath() (string, error) {
+func (f *FFMPEGInfo) getExportedMaskFileFPath() (string, error) {
 	nowCacheFolder, err := f.GetCacheFolderFPath()
 	if err != nil {
 		return "", err

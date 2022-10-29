@@ -86,6 +86,9 @@ func InitRouter(
 	// v1路由: /v1/xxx
 	GroupV1 := router.Group("/" + cbV1.GetVersion())
 	{
+		GroupV1.GET("/preview/playlist/:videofpathbase64", cbV1.HlsPlaylist)
+		GroupV1.GET("/preview/segments/:resolution/:segment/:videofpathbase64", cbV1.HlsSegment)
+
 		GroupV1.Use(middle.CheckAuth())
 
 		GroupV1.GET("/settings", cbV1.SettingsHandler)
@@ -125,6 +128,7 @@ func InitRouter(
 		GroupV1.POST("/preview/job_result", cbV1.PreviewJobResult)
 		GroupV1.POST("/preview/export_info", cbV1.PreviewGetExportInfo)
 		GroupV1.POST("/preview/clean_up", cbV1.PreviewCleanUp)
+
 	}
 
 	GroupAPIV1 := router.Group("/api/v1")

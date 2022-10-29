@@ -52,10 +52,10 @@ func (f *FFMPEGHelper) Version() (string, error) {
 	return outMsg0 + "\r\n" + outMsg1, nil
 }
 
-// GetFFMPEGInfo 获取 视频的 FFMPEG 信息，包含音频和字幕
+// ExportFFMPEGInfo 获取 视频的 FFMPEG 信息，包含音频和字幕
 // 优先会导出 中、英、日、韩 类型的，字幕如果没有语言类型，则也导出，然后需要额外的字幕语言的判断去辅助标记（读取文件内容）
 // 音频只会导出一个，优先导出 中、英、日、韩 类型的
-func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType ExportType) (bool, *FFMPEGInfo, error) {
+func (f *FFMPEGHelper) ExportFFMPEGInfo(videoFileFullPath string, exportType ExportType) (bool, *FFMPEGInfo, error) {
 
 	const args = "-v error -show_format -show_streams -print_format json"
 	cmdArgs := strings.Fields(args)
@@ -87,7 +87,7 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType Export
 		if bok == false && ffMPEGInfo != nil {
 			err := os.RemoveAll(nowCacheFolderPath)
 			if err != nil {
-				f.log.Errorln("GetFFMPEGInfo - RemoveAll", err.Error())
+				f.log.Errorln("ExportFFMPEGInfo - RemoveAll", err.Error())
 				return
 			}
 		}
@@ -99,7 +99,7 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType Export
 		return false, nil, err
 	}
 
-	ffMPEGInfo.Duration = f.getVideoDuration(videoFileFullPath)
+	ffMPEGInfo.Duration = f.GetVideoDuration(videoFileFullPath)
 
 	// 判断这个视频是否已经导出过内置的字幕和音频文件了
 	if ffMPEGInfo.IsExported(exportType) == false {
@@ -138,7 +138,7 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType Export
 				return true, ffMPEGInfo, nil
 			}
 		} else {
-			f.log.Errorln("GetFFMPEGInfo.getAudioAndSubExportArgs Not Support ExportType")
+			f.log.Errorln("ExportFFMPEGInfo.getAudioAndSubExportArgs Not Support ExportType")
 			return false, nil, nil
 		}
 		// 上面的操作为了就是确保后续的导出不会出问题
@@ -165,8 +165,8 @@ func (f *FFMPEGHelper) GetFFMPEGInfo(videoFileFullPath string, exportType Export
 	return bok, ffMPEGInfo, nil
 }
 
-// GetAudioDurationInfo 获取音频的长度信息
-func (f *FFMPEGHelper) GetAudioDurationInfo(audioFileFullPath string) (bool, float64, error) {
+// ExportAudioDurationInfo 获取音频的长度信息
+func (f *FFMPEGHelper) ExportAudioDurationInfo(audioFileFullPath string) (bool, float64, error) {
 
 	const args = "-v error -show_format -show_streams -print_format json -f s16le -ac 1 -ar 16000"
 	cmdArgs := strings.Fields(args)
@@ -902,7 +902,7 @@ func (f *FFMPEGHelper) isSupportSubCodecName(name string) bool {
 	}
 }
 
-func (f *FFMPEGHelper) getVideoDuration(videoFileFullPath string) float64 {
+func (f *FFMPEGHelper) GetVideoDuration(videoFileFullPath string) float64 {
 
 	const args = "-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 -i"
 	cmdArgs := strings.Fields(args)

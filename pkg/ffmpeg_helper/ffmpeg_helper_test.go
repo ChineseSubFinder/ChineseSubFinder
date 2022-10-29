@@ -22,12 +22,12 @@ func TestGetFFMPEGInfo(t *testing.T) {
 	videoFile := unit_test_helper.GetTestDataResourceRootPath([]string{"ffmpeg", "org"}, 4, false)
 	videoFile = filepath.Join(videoFile, "sampleVideo.mp4")
 	f := NewFFMPEGHelper(log_helper.GetLogger4Tester())
-	bok, ffmpegInfo, err := f.GetFFMPEGInfo(videoFile, Audio)
+	bok, ffmpegInfo, err := f.ExportFFMPEGInfo(videoFile, Audio)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if bok == false {
-		t.Fatal("GetFFMPEGInfo = false")
+		t.Fatal("ExportFFMPEGInfo = false")
 	}
 
 	subArgs, audioArgs := f.getAudioAndSubExportArgs(videoFile, ffmpegInfo)
@@ -113,7 +113,7 @@ func TestGetAudioInfo(t *testing.T) {
 	audioFullPath := filepath.Join(testDataPath, "sampleAudio.wav")
 
 	f := NewFFMPEGHelper(log_helper.GetLogger4Tester())
-	bok, duration, err := f.GetAudioDurationInfo(audioFullPath)
+	bok, duration, err := f.ExportAudioDurationInfo(audioFullPath)
 	if err != nil || bok == false {
 		t.Fatal(err)
 	}
