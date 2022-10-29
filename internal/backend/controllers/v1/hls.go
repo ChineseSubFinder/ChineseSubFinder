@@ -4,6 +4,7 @@ import (
 	b64 "encoding/base64"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"net/url"
 	"strconv"
 )
 
@@ -17,14 +18,20 @@ func (cb *ControllerBase) HlsPlaylist(c *gin.Context) {
 	}()
 
 	videoFPathBase64 := c.Param("videofpathbase64")
-	videoFPath, err := b64.StdEncoding.DecodeString(videoFPathBase64)
+	// base64 解码
+	videoFPathUrlEncodeStr, err := b64.StdEncoding.DecodeString(videoFPathBase64)
+	if err != nil {
+		return
+	}
+	// url 解码
+	videoFPath, err := url.QueryUnescape(string(videoFPathUrlEncodeStr))
 	if err != nil {
 		return
 	}
 
 	// segments/720/0/videofpathbase64
 	template := fmt.Sprintf("/%s/preview/segments/{{.Resolution}}/{{.Segment}}/%v", cb.GetVersion(), videoFPathBase64)
-	err = cb.hslCenter.WritePlaylist(template, string(videoFPath), c.Writer)
+	err = cb.hslCenter.WritePlaylist(template, videoFPath, c.Writer)
 	if err != nil {
 		return
 	}
@@ -42,7 +49,13 @@ func (cb *ControllerBase) HlsSegment(c *gin.Context) {
 	resolution := c.Param("resolution")
 	segment := c.Param("segment")
 	videoFPathBase64 := c.Param("videofpathbase64")
-	videoFPath, err := b64.StdEncoding.DecodeString(videoFPathBase64)
+	// base64 解码
+	videoFPathUrlEncodeStr, err := b64.StdEncoding.DecodeString(videoFPathBase64)
+	if err != nil {
+		return
+	}
+	// url 解码
+	videoFPath, err := url.QueryUnescape(string(videoFPathUrlEncodeStr))
 	if err != nil {
 		return
 	}
@@ -54,7 +67,7 @@ func (cb *ControllerBase) HlsSegment(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	err = cb.hslCenter.WriteSegment(string(videoFPath), segmentInt64, resolutionInt64, c.Writer)
+	err = cb.hslCenter.WriteSegment(videoFPath, segmentInt64, resolutionInt64, c.Writer)
 	if err != nil {
 		return
 	}
