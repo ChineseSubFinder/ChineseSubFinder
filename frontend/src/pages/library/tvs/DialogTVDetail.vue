@@ -70,7 +70,7 @@
                 <q-item-section>第 {{ pandStart2(item.episode) }} 集</q-item-section>
 
                 <q-item-section v-if="item.sub_f_path_list.length" side>
-                  <btn-dialog-preview-video :sub-list="item.sub_f_path_list" :path="item.video_f_path" />
+                  <btn-dialog-preview-video :sub-list="item.sub_url_list" :path="item.video_f_path" />
                 </q-item-section>
 
                 <q-item-section side>

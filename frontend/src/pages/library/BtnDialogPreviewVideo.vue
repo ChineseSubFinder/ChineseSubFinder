@@ -12,27 +12,21 @@
   >
     <q-card class="column">
       <q-bar>
-        <div class="text-bold">字幕预览</div>
+        <div class="text-bold">{{ path.split(/\/|\\/).pop() }}</div>
         <q-space />
         <q-btn dense flat icon="close" v-close-popup title="关闭" />
       </q-bar>
 
-      <q-card-section class="col row items-center justify-center">
-        <div class="row q-pa-md justify-center" v-if="isJobSuccess">
-          <artplayer :option="artOption" style="height: 80vh; width: calc(1920 / 1080 * 80vh)"></artplayer>
-        </div>
-        <div v-else-if="isJobFailed || isJobNotExists" class="column items-center">
-          <div class="text-grey-4" style="font-size: 120px; letter-spacing: 10px">(;-;)</div>
-          <div class="text-negative q-mt-md text-bold">
-            {{ jobResult.message || '未知错误' }}
+      <q-card-section class="col column items-center justify-center no-wrap">
+        <div class="q-pa-md justify-center">
+          <div class="text-bold q-mb-sm cursor-pointer" @click="showSelectSubtitleDialog">
+            字幕：{{ selectedSub?.split(/\/|\\/).pop() }}
           </div>
-          <div class="q-mt-md">
-            <q-btn label="点我重试" @click="preview" outline color="primary" />
-          </div>
-        </div>
-        <div v-else class="column items-center">
-          <q-spinner-cube size="xl" color="primary" />
-          <div class="q-mt-sm text-grey-8">视频转码中...</div>
+          <artplayer
+            :option="artOption"
+            style="height: 80vh; width: calc(1920 / 1080 * 80vh)"
+            @get-instance="handleGetArtInstance"
+          ></artplayer>
         </div>
       </q-card-section>
     </q-card>
@@ -42,20 +36,15 @@
 <script setup>
 import { computed, ref } from 'vue';
 import Hls from 'hls.js';
+import { encode } from 'js-base64';
 import LibraryApi from 'src/api/LibraryApi';
-import { SystemMessage } from 'src/utils/Message';
-import useInterval from 'src/composables/useInterval';
-import { until } from '@vueuse/core';
 import Artplayer from 'components/Artplayer';
 import config from 'src/config';
 import { useQuasar } from 'quasar';
+import { getUrl } from 'pages/library/useLibrary';
+import { userState } from 'src/store/userState';
 
 const $q = useQuasar();
-
-const START_TIME = '0';
-const END_TIME = '300';
-
-const getPreviewUrl = (url) => `${config.BACKEND_URL}/static/preview/${url}`;
 
 const props = defineProps({
   path: String,
@@ -66,82 +55,46 @@ const props = defineProps({
 });
 
 const visible = ref(false);
-const loading = ref(false);
-
+const artInstance = ref(null);
 const selectedSub = ref(null);
-const previewInfo = ref(null);
-const jobResult = ref(null);
 
-const isJobSuccess = computed(() => jobResult.value?.message === 'ok');
-const isJobNotExists = computed(() => jobResult.value?.message === '');
-const isJobFailed = computed(() => jobResult.value?.message && !isJobSuccess.value && !isJobNotExists.value);
-
-const submitForm = computed(() => ({
-  video_f_path: props.path,
-  sub_f_path: selectedSub.value,
-  start_time: START_TIME,
-  end_time: END_TIME,
-}));
-
-const getIsInQueue = async () => {
-  const [res] = await LibraryApi.checkIsPreviewInQueue(submitForm.value);
-
-  return res?.message === 'true';
+const handleGetArtInstance = (instance) => {
+  artInstance.value = instance;
 };
 
-const { resetInterval: startCheckQueue, stopInterval: stopCheckQueue } = useInterval(
-  async () => {
-    loading.value = await getIsInQueue();
-  },
-  5000,
-  false
-);
-
-const checkQueue = async () => {
-  loading.value = true;
-  startCheckQueue();
-  await until(loading).toBe(false);
-  stopCheckQueue();
-};
-
-const getPreviewInfo = async () => {
-  const [res, err1] = await LibraryApi.getPreviewDistInfo(submitForm.value);
-  if (err1 !== null) {
-    SystemMessage.error(err1.message);
-  } else {
-    previewInfo.value = res;
-  }
-};
-
-const preview = async () => {
-  previewInfo.value = null;
-  const isInQueue = await getIsInQueue();
-  if (!isInQueue) {
-    jobResult.value = null;
-    const [, err] = await LibraryApi.addPreviewJob(submitForm.value);
-    if (err !== null) {
-      SystemMessage.error(err.message);
-    } else {
-      // 等待预览任务完成
-      await checkQueue();
-      const [res1] = await LibraryApi.getPreviewJobResult(submitForm.value);
-      jobResult.value = res1;
-    }
-  }
-  loading.value = false;
+const showSelectSubtitleDialog = () => {
+  $q.dialog({
+    title: '选择字幕',
+    style: 'width: 800px',
+    options: {
+      type: 'radio',
+      model: selectedSub.value,
+      items: props.subList.map((e) => ({ label: e, value: e })),
+    },
+    cancel: true,
+    persistent: true,
+  }).onOk(async (data) => {
+    selectedSub.value = data;
+    artInstance.value.subtitle.switch(getUrl(data));
+  });
 };
 
 const artOption = computed(() => ({
   autoplay: true,
   autoSize: true,
-  url: getPreviewUrl(previewInfo.value.video_f_path),
+  url: `${config.BACKEND_URL}/v1/preview/playlist/${encode(props.path)}`,
   subtitle: {
-    url: getPreviewUrl(previewInfo.value.sub_f_path),
+    url: getUrl(selectedSub.value),
   },
+  type: 'm3u8',
   customType: {
     m3u8(video, url) {
       if (Hls.isSupported()) {
         const hls = new Hls();
+        hls.config.xhrSetup = (xhr) => {
+          const { accessToken } = userState;
+          xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+        };
         hls.loadSource(url);
         hls.attachMedia(video);
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -166,21 +119,7 @@ const artOption = computed(() => ({
               color: 'red',
             },
             click() {
-              $q.dialog({
-                title: '选择字幕',
-                style: 'width: 800px',
-                options: {
-                  type: 'radio',
-                  model: selectedSub.value,
-                  items: props.subList.map((e) => ({ label: e, value: e })),
-                },
-                cancel: true,
-                persistent: true,
-              }).onOk((data) => {
-                selectedSub.value = data;
-                getPreviewInfo();
-                preview();
-              });
+              showSelectSubtitleDialog();
             },
             mounted() {
               // console.log('自定义按钮挂载完成1');
@@ -189,17 +128,11 @@ const artOption = computed(() => ({
         ],
 }));
 
-const handleBeforeShow = () => {
-  loading.value = true;
+const handleBeforeShow = async () => {
   selectedSub.value = props.subList?.[0];
-  getPreviewInfo();
-  preview();
 };
 
 const handleBeforeHide = () => {
-  stopCheckQueue();
-  previewInfo.value = null;
-  jobResult.value = null;
   LibraryApi.cleanAllPreviewJobData();
 };
 </script>

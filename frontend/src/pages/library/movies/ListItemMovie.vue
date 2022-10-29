@@ -16,7 +16,7 @@
       <btn-dialog-preview-video
         v-if="hasSubtitle"
         size="sm"
-        :sub-list="detialInfo?.sub_f_path_list"
+        :sub-list="detialInfo?.sub_url_list"
         :path="data.video_f_path"
       />
 
@@ -37,7 +37,7 @@
               <q-item v-for="(item, index) in detialInfo.sub_url_list" :key="item">
                 <q-item-section side>{{ index + 1 }}.</q-item-section>
 
-                <q-item-section class="overflow-hidden ellipsis" :title="item.split(/\/|\\/).pop()">
+                <q-item-section class="overflow-hidden ellipsis" :title="item.split`(/\/|\\/)`.pop()">
                   <a class="text-primary" :href="getUrl(item)" target="_blank">{{ item.split(/\/|\\/).pop() }}</a>
                 </q-item-section>
               </q-item>
