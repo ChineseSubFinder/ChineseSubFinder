@@ -3,7 +3,11 @@ package v1
 import (
 	b64 "encoding/base64"
 	"fmt"
+	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
+	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"net/url"
 	"strconv"
 )
@@ -27,6 +31,18 @@ func (cb *ControllerBase) HlsPlaylist(c *gin.Context) {
 	videoFPath, err := url.QueryUnescape(string(videoFPathUrlEncodeStr))
 	if err != nil {
 		return
+	}
+
+	// 暂时不支持蓝光的预览
+	if pkg.IsFile(videoFPath) == false {
+		bok, _, _ := decode.IsFakeBDMVWorked(videoFPath)
+		if bok == true {
+			c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "not support blu-ray preview"})
+			return
+		} else {
+			c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "video file not found"})
+			return
+		}
 	}
 
 	// segments/720/0/videofpathbase64
