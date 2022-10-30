@@ -17,8 +17,8 @@
         <q-btn dense flat icon="close" v-close-popup title="关闭" />
       </q-bar>
 
-      <q-card-section class="col column items-center justify-center no-wrap">
-        <div class="q-pa-md justify-center">
+      <q-card-section class="col column items-center justify-center no-wrap" v-if="checkResult">
+        <div class="q-pa-md justify-center" v-if="checkResult.message === undefined">
           <div class="text-bold q-mb-sm cursor-pointer" @click="showSelectSubtitleDialog">
             字幕：{{ selectedSub?.split(/\/|\\/).pop() }}
           </div>
@@ -27,6 +27,11 @@
             style="height: 80vh; width: calc(1920 / 1080 * 80vh)"
             @get-instance="handleGetArtInstance"
           ></artplayer>
+        </div>
+
+        <div class="row items-center" v-else>
+          <q-icon name="error" size="4rem" color="red" />
+          <div class="text-h6 text-red">{{ checkResult.message }}</div>
         </div>
       </q-card-section>
     </q-card>
@@ -57,6 +62,7 @@ const props = defineProps({
 const visible = ref(false);
 const artInstance = ref(null);
 const selectedSub = ref(null);
+const checkResult = ref(null);
 
 const handleGetArtInstance = (instance) => {
   artInstance.value = instance;
@@ -130,9 +136,12 @@ const artOption = computed(() => ({
 
 const handleBeforeShow = async () => {
   selectedSub.value = props.subList?.[0];
+  const [res, err] = await LibraryApi.getVideoM3u8(props.path);
+  checkResult.value = res || err;
 };
 
 const handleBeforeHide = () => {
+  checkResult.value = null;
   LibraryApi.cleanAllPreviewJobData();
 };
 </script>

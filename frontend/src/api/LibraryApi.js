@@ -1,3 +1,4 @@
+import { encode } from 'js-base64';
 import BaseApi from './BaseApi';
 
 class LibraryApi extends BaseApi {
@@ -45,5 +46,7 @@ class LibraryApi extends BaseApi {
   getPreviewDistInfo = (data) => this.http(`/v1/preview/export_info`, data, 'POST');
 
   cleanAllPreviewJobData = () => this.http(`/v1/preview/clean_up`, {}, 'POST');
+
+  getVideoM3u8 = (videoPath) => this.http(`/v1/preview/playlist/${encode(encodeURIComponent(videoPath))}`);
 }
 export default new LibraryApi();
