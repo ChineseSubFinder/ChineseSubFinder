@@ -3,8 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
-	_ "net/http/pprof"
 	"path/filepath"
 	"strings"
 	"time"
@@ -135,16 +133,6 @@ func main() {
 		pkg.SetLiteMode(true)
 	} else {
 		loggerBase.Infoln("Speed Dev Mode is Off")
-	}
-	if settings.Get().AdvancedSettings.DebugMode == true {
-		// 如果是 DebugMode 那么开启性能监控
-		go func() {
-			// 开启pprof，监听请求
-			ip := "0.0.0.0:8080"
-			if err := http.ListenAndServe(ip, nil); err != nil {
-				fmt.Printf("start pprof failed on %s\n", ip)
-			}
-		}()
 	}
 	// ------------------------------------------------------------------------
 	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器

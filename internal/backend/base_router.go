@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/arl/statsviz"
+
 	"github.com/allanpk716/ChineseSubFinder/pkg/tmdb_api"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
@@ -57,6 +59,18 @@ func InitRouter(
 		nowUrl := "/series_dir_" + fmt.Sprintf("%d", i)
 		cbV1.SetPathUrlMapItem(path, nowUrl)
 		router.StaticFS(nowUrl, http.Dir(path))
+	}
+	// --------------------------------------------------
+	// 性能监视
+	if settings.Get().AdvancedSettings.DebugMode == true {
+		// 如果是 DebugMode 那么开启性能监控
+		router.GET("/debug/statsviz/*filepath", func(context *gin.Context) {
+			if context.Param("filepath") == "/ws" {
+				statsviz.Ws(context.Writer, context.Request)
+				return
+			}
+			statsviz.IndexAtRoot("/debug/statsviz").ServeHTTP(context.Writer, context.Request)
+		})
 	}
 	// --------------------------------------------------
 	// 基础的路由
