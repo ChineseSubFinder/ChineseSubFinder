@@ -136,6 +136,7 @@ func InitRouter(
 		GroupV1.POST("/preview/clean_up", cbV1.PreviewCleanUp)
 		GroupV1.GET("/preview/playlist/:videofpathbase64", cbV1.HlsPlaylist)
 		GroupV1.GET("/preview/segments/:resolution/:segment/:videofpathbase64", cbV1.HlsSegment)
+		GroupV1.POST("/preview/search_other_web", cbV1.PreviewSearchOtherWeb)
 
 	}
 

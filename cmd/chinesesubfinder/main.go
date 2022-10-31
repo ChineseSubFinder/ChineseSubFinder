@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"path/filepath"
 	"strings"
 	"time"
@@ -176,7 +175,6 @@ func main() {
 	}
 
 	nowPort := pkg.ReadCustomPortFile(loggerBase)
-	loggerBase.Infoln(fmt.Sprintf("WebUI will listen at 0.0.0.0:%d", nowPort))
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
 	restartSignal := make(chan interface{}, 1)
 	defer close(restartSignal)
