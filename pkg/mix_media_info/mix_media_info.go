@@ -19,7 +19,7 @@ import (
 func GetMixMediaInfo(
 	dealers *media_info_dealers.Dealers,
 	videoFPath string, isMovie bool) (*models.MediaInfo, error) {
-
+	// 从本地读取 IMDB ID 信息，找到基本 ID 信息后，也会去 IMDB web 找到对应的额外信息填充
 	imdbInfo, err := imdb_helper.GetIMDBInfoFromVideoFile(dealers, videoFPath, isMovie)
 	if err != nil {
 		return nil, err

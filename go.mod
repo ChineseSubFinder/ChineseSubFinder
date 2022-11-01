@@ -69,6 +69,7 @@ require (
 require (
 	github.com/allanpk716/is_running_in_docker v0.0.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
+	github.com/arl/statsviz v0.5.1
 	github.com/cyruzin/golang-tmdb v1.4.4
 	github.com/elazarl/goproxy v0.0.0-20220417044921-416226498f94
 	github.com/longbridgeapp/opencc v0.1.7
@@ -85,7 +86,6 @@ require (
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/andybalholm/brotli v1.0.0 // indirect
 	github.com/andybalholm/cascadia v1.2.0 // indirect
-	github.com/arl/statsviz v0.5.1 // indirect
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
 	github.com/bodgit/plumbing v1.1.0 // indirect
 	github.com/bodgit/windows v1.0.0 // indirect

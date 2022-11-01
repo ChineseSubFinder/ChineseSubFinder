@@ -32,6 +32,7 @@ func GetIMDBInfoFromVideoFile(dealers *media_info_dealers.Dealers, videoFPath st
 		dealers.Logger.Warningln("getSubListFromFile", videoFPath, err)
 		return nil, err
 	}
+	// 这里一定会保存本地的 IMDB 信息
 	imdbInfo, err := GetIMDBInfoFromVideoNfoInfo(dealers, videoNfoInfo)
 	if err != nil {
 		dealers.Logger.Warningln("GetIMDBInfoFromVideoNfoInfo", videoFPath, err)
