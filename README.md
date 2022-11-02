@@ -109,48 +109,19 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 
 ## 版本
 
-- v0.38.x 修复，一些问题 -- 2022年8月22日
-- v0.37.x 修复，a4k 的搜索失效问题 -- 2022年7月29日
-- v0.36.x 新增，库-电视剧 添加批量加入任务队列功能 -- 2022年7月25日
-- v0.35.x 新增，支持 TMDB ID 转换 IMDB ID（由服务器提供支持，无需用户去填写 TMDB API） -- 2022 年 7月 12 日
-- v0.34.x 新增，暂时下线 subhd 的支持，修复若干 bug -- 2022 年 7月 1 日
-- v0.33.x 新增，Lite Docker 镜像，见 [Docker 部署教程](docker/readme.md) ，新增支持 a4k 字幕源 -- 2022 年 6 月 19 日
-- v0.32.x 修复，若干 bug，上线“共享字幕”下载功能 -- 2022 年 6 月 15 日
-- v0.31.x 修复，若干 bug，调整 docker 镜像制作细节 -- 2022 年 6 月 13 日
-- v0.30.x 新增，“共享字幕”，低可信字幕收集功能 -- 2022 年 6 月 5 日
-- v0.29.x 新增，“共享字幕”，详细见 WebUI “实验室页面”对应设置 -- 2022 年 5 月 29 日
-- v0.28.x 优化，assrt 查询逻辑，对接 TMDB 中文信息查询 -- 2022 年 5 月 27 日
-- v0.27.x 新增，assrt 字幕源，取消 zimuku 支持 -- 2022 年 5 月 19 日
-- v0.26.x 大范围重构，详细教程和更新说明见，[v0.26 教程、更新说明](https://github.com/allanpk716/ChineseSubFinder/tree/docs/DesignFile/v0.26教程) -- 2022 年 5 月 13 日
-- v0.25.x 调整细节，支持 cron 定时、指定时间、自定义 cron 规则，触发下载任务 -- 2022 年 4 月 6 日
-- v0.24.x 调整细节，“实验室”添加远程 Chrome 设置 -- 2022 年 4 月 2 日
-- v0.23.x 调整细节，“实验室”新增，简繁转换功能 -- 2022 年 4 月 1 日
-- v0.22.x 调整细节，[v0.22.x 优化细节](https://github.com/allanpk716/ChineseSubFinder/issues/266) -- 2022 年 3 月 29 日
-- v0.21.x 调整细节，[v0.21.x 优化细节](https://github.com/allanpk716/ChineseSubFinder/issues/240) -- 2022 年 2 月 6 日
-- v0.20.x 重构，大范围重构，新增 Web 设置界面，支持多媒体路径 -- 2022 年 2 月 6 日
-- v0.19.x 调整，[字幕时间轴校正 V2](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3V2.md) 功能，以及若干细节改动 --2021 年 12 月 30 日
-- v0.18.x 新增，[字幕时间轴自动校正 V1](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%AD%97%E5%B9%95%E6%97%B6%E9%97%B4%E8%BD%B4%E6%A0%A1%E6%AD%A3.md)。暂时屏蔽 subhd 下载逻辑 -- 2021 年 10 月 17 日
-- v0.17.x 新增，代理检测模块，程序启动的时候会去 check 代理是否正常 -- 2021 年 9 月 22 日
-- v0.16.x 新增，启动容器/程序时，是否开始搜索并下载选项功能见[讨论](https://github.com/allanpk716/ChineseSubFinder/issues/50) -- 2021 年 9 月 18 日
-- v0.15.x 新增，[强制扫描所有的视频文件下载字幕](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%BC%BA%E5%88%B6%E6%89%AB%E6%8F%8F%E6%89%80%E6%9C%89%E7%9A%84%E8%A7%86%E9%A2%91%E6%96%87%E4%BB%B6%E4%B8%8B%E8%BD%BD%E5%AD%97%E5%B9%95.md)功能，但是依然跳过中文视频。 -- 2021 年 9 月 17 日
-- v0.14.x 修复，subhd 解析问题，新增支持[字幕命名格式转换的功能](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E5%85%B3%E4%BA%8E%E5%AD%97%E5%B9%95%E5%90%8D%E7%A7%B0%E5%91%BD%E5%90%8D%E6%A0%BC%E5%BC%8F%E8%AF%B4%E6%98%8E.md)。 -- 2021 年 9 月 16 日
-- v0.13.x 新增，高级配置，支持 Emby 任意用户看过的视频不下载字幕，修复字幕识别问题。 -- 2021 年 8 月 10 日
-- v0.12.x 重构，调整字幕的命名格式，移除 CGO 依赖。 -- 2021 年 7 月 26 日
-- v0.11.x 新增，Emby API 支持，以及其他细节修复和调整。 -- 2021 年 7 月 14 日
-- v0.10.x 添加额外的超时控制（最长超时时间设置为 20 min），修复特殊的双语字幕内容识别问题。 -- 2021 年 7 月 9 日
-- v0.9.x 新增，subhd zimuku 解析故障的通知接口，给维护人员用，可以尽快去修复解析问题。一般人员无需关心此设置。 -- 2021 年 6 月 25 日
-- v0.8.x 调整，docker 镜像结构 -- 2021 年 6 月 25 日
-- v0.7.x 提高搜索效率 -- 2021 年 6 月 25 日
-- v0.6.x 支持设置字幕格式的优先级 -- 2021 年 6 月 23 日
-- v0.5.x 支持连续剧字幕下载 -- 2021 年 6 月 19 日
-- v0.4.x 支持设置并发数 -- 2021 年 6 月 18 日
-- v0.3.x 支持连续剧字幕下载（连续剧暂时不支持 subhd） -- 2021 年 6 月 17 日
-- v0.2.0 docker 版本支持 subhd 的下载了，镜像体积也变大了 -- 2021 年 6 月 14 日
+请务必使用最新版本，这里忘记（懒得）写更新记录的话，可以去 [Releases](https://github.com/allanpk716/ChineseSubFinder/releases) 查看最新到什么版本了。
+
+> 因为业余时间不多，都是断断续续做的，基本我只能记得最近两个版本的功能···
+
+- v0.42.x 新增，支持手动上传字幕，以及在 Web 界面即可预览字幕效果，重写“库”的刷新逻辑。 -- 2022年10月31日
+- ···
 - 完成初版，仅仅支持电影的字幕下载 -- 2021 年 6 月 13 日
 
 ## TODO
 
 见 [ChineseSubProject](https://github.com/users/allanpk716/projects/2)
+
+> 业余时间有限，没空更新这个 TODO，有什么想要的直接提 issues，或者加 TG 咨询。
 
 ## 感谢
 
