@@ -41,11 +41,13 @@
       style="background: #111729"
       content-class="bg-white"
     >
-      <div class="text-h5 q-py-sm q-px-md" style="height: 65px">
-        <div>ChineseSubFinder</div>
-        <div class="text-body2">
-          {{ systemState.systemInfo?.version }}
-          <!--          <version-update-item />-->
+      <div class="text-h5 q-py-sm q-px-md">
+        <div class="text-center">
+          <img src="icons/logo.png" alt="" style="filter: invert(100%); height: 60px" />
+        </div>
+        <div class="q-mt-sm text-center relative-position">
+          <q-badge align="top">{{ systemState.systemInfo?.version }}</q-badge>
+          ChineseSubFinder
         </div>
       </div>
       <q-list>
