@@ -45,10 +45,12 @@ func newLog() *logrus.Logger {
 }
 
 func init() {
-	settings.SetConfigRootPath(pkg.ConfigRootDirFPath())
+
 	// 要先进行 flag 的读取，并且写入全局变量中，否则后续的逻辑由于顺序问题故障
 	flag.Parse()
 	pkg.SetLinuxConfigPathInSelfPath(*setLinuxConfigPathInSelfPathFlag)
+	// 需要进行 settings 的初始化，指定初始化的目录
+	settings.SetConfigRootPath(pkg.ConfigRootDirFPath())
 	// 第一次运行需要清理、读取一次
 	log_helper.CleanAndLoadOnceLogs()
 	loggerBase = newLog()
