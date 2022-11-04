@@ -26,7 +26,7 @@ func (d *Dealers) SetTmdbHelperInstance(tmdbHelper *tmdb_api.TmdbApi) {
 	d.tmdbHelper = tmdbHelper
 }
 
-// ConvertId 目前仅仅支持 TMDB ID 转 IMDB ID
+// ConvertId 目前仅仅支持 TMDB ID 转 IMDB ID， iD：TMDB ID，idType：tmdb
 func (d *Dealers) ConvertId(iD string, idType string, isMovieOrSeries bool) (convertIdResult *tmdb_api.ConvertIdResult, err error) {
 
 	if d.tmdbHelper != nil && settings.Get().AdvancedSettings.TmdbApiSettings.Enable == true && settings.Get().AdvancedSettings.TmdbApiSettings.ApiKey != "" {
