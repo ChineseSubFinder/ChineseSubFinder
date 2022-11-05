@@ -13,7 +13,7 @@
       <q-card-section>
         <q-list separator>
           <q-item v-for="url in searchInfo?.search_url" :key="url">
-            <q-item-section top side style="width: 200px">
+            <q-item-section top side style="width: 200px" class="text-bold text-black">
               {{ getDomain(url) }}
             </q-item-section>
             <q-item-section>
