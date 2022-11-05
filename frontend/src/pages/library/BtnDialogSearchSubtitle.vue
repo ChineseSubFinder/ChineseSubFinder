@@ -18,7 +18,13 @@
             </q-item-section>
             <q-item-section>
               <div class="row q-gutter-sm">
-                <a v-for="item in searchInfo?.key_words" :key="item" :href="getSearchUrl(url, item)" target="_blank">
+                <a
+                  v-for="item in searchInfo?.key_words"
+                  :key="item"
+                  :href="getSearchUrl(url, item)"
+                  target="_blank"
+                  style="text-decoration: none"
+                >
                   <q-badge class="cursor-pointer" color="secondary" title="点击跳转到网站搜索">{{ item }}</q-badge>
                 </a>
               </div>
