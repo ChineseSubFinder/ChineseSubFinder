@@ -35,15 +35,17 @@ class LibraryApi extends BaseApi {
 
   getSubTitleQueueList = () => this.http(`/v1/subtitles/list_manual_upload_2_local_job`);
 
-  addPreviewJob = (data) => this.http(`/v1/preview/add`, data, 'POST');
+  // addPreviewJob = (data) => this.http(`/v1/preview/add`, data, 'POST');
+  //
+  // getPreviewJobs = () => this.http(`/v1/preview/list`);
+  //
+  // checkIsPreviewInQueue = (data) => this.http(`/v1/preview/is_in_queue`, data, 'POST');
+  //
+  // getPreviewJobResult = (data) => this.http(`/v1/preview/job_result`, data, 'POST');
+  //
+  // getPreviewDistInfo = (data) => this.http(`/v1/preview/export_info`, data, 'POST');
 
-  getPreviewJobs = () => this.http(`/v1/preview/list`);
-
-  checkIsPreviewInQueue = (data) => this.http(`/v1/preview/is_in_queue`, data, 'POST');
-
-  getPreviewJobResult = (data) => this.http(`/v1/preview/job_result`, data, 'POST');
-
-  getPreviewDistInfo = (data) => this.http(`/v1/preview/export_info`, data, 'POST');
+  getSearchSubtitleInfo = (data) => this.http(`/v1/preview/search_other_web`, data, 'POST');
 
   cleanAllPreviewJobData = () => this.http(`/v1/preview/clean_up`, {}, 'POST');
 

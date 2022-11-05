@@ -46,6 +46,8 @@
         </q-btn>
         <q-btn v-else color="grey" size="sm" round flat dense icon="closed_caption" @click.stop title="没有字幕" />
       </div>
+
+      <btn-dialog-search-subtitle :path="props.data.video_f_path" is-movie />
       <q-space />
 
       <btn-upload-subtitle :path="data.video_f_path" dense size="sm" />
@@ -79,6 +81,7 @@ import { getUrl, subtitleUploadList } from 'pages/library/useLibrary';
 import BtnIgnoreVideo from 'pages/library/BtnIgnoreVideo';
 import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
 import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo';
+import BtnDialogSearchSubtitle from 'pages/library/BtnDialogSearchSubtitle';
 
 const props = defineProps({
   data: Object,

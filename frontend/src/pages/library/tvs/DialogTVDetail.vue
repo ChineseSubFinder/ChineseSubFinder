@@ -110,6 +110,10 @@
                 </q-item-section>
 
                 <q-item-section side>
+                  <btn-dialog-search-subtitle size="md" round :path="item.video_f_path" />
+                </q-item-section>
+
+                <q-item-section side>
                   <q-btn
                     class="btn-download"
                     color="primary"
@@ -142,6 +146,7 @@ import BtnIgnoreVideo from 'pages/library/BtnIgnoreVideo';
 import eventBus from 'vue3-eventbus';
 import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
 import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo';
+import BtnDialogSearchSubtitle from 'pages/library/BtnDialogSearchSubtitle';
 
 const props = defineProps({
   data: Object,
