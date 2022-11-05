@@ -10,7 +10,7 @@
 
       <q-separator />
 
-      <q-card-section>
+      <q-card-section v-if="searchInfo">
         <q-list separator>
           <q-item v-for="url in searchInfo?.search_url" :key="url">
             <q-item-section top side style="width: 200px" class="text-bold text-black">
@@ -31,6 +31,11 @@
             </q-item-section>
           </q-item>
         </q-list>
+      </q-card-section>
+      <q-card-section v-else>
+        <div class="row items-center justify-center" style="height: 200px">
+          <q-spinner size="30px" />
+        </div>
       </q-card-section>
     </q-card>
   </q-dialog>
