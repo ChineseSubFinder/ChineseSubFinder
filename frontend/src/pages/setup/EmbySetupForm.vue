@@ -63,5 +63,5 @@
 </template>
 
 <script setup>
-import { setupState } from 'pages/setup/useSetup';
+import { setupState } from 'pages/setup/use-setup';
 </script>

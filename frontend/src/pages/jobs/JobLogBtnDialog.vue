@@ -19,7 +19,7 @@
 <script setup>
 import JobApi from 'src/api/JobApi';
 import { ref } from 'vue';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 import LogViewerRaw from 'components/LogViewerRaw';
 
 const props = defineProps({

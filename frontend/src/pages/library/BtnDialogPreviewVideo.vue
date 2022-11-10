@@ -46,7 +46,7 @@ import LibraryApi from 'src/api/LibraryApi';
 import Artplayer from 'components/Artplayer';
 import config from 'src/config';
 import { useQuasar } from 'quasar';
-import { getUrl } from 'pages/library/useLibrary';
+import { getUrl } from 'pages/library/use-library';
 import { userState } from 'src/store/userState';
 
 const $q = useQuasar();

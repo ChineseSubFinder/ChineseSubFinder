@@ -18,7 +18,7 @@
           class="col-11"
           filled
           v-model="setupState.form.movieFolder[i]"
-          :label="`电影目录${i > 0 ? i+1 : ''}`"
+          :label="`电影目录${i > 0 ? i + 1 : ''}`"
           hint="输入需要扫描的电影文件夹目录"
           lazy-rules
           :rules="[(val) => (val && val.length > 0) || '不能为空', validateRemotePath]"
@@ -54,7 +54,7 @@
           class="col-11"
           filled
           v-model="setupState.form.seriesFolder[i]"
-          :label="`连续剧目录${i > 0 ? i+1 : ''}`"
+          :label="`连续剧目录${i > 0 ? i + 1 : ''}`"
           hint="输入需要扫描的连续剧文件夹目录"
           lazy-rules
           :rules="[(val) => (val && val.length > 0) || '不能为空', validateRemotePath]"
@@ -71,11 +71,10 @@
         ></q-btn>
       </div>
     </template>
-
   </q-form>
 </template>
 
 <script setup>
-import { validateRemotePath } from 'src/utils/QuasarValidators';
-import {setupState} from 'pages/setup/useSetup';
+import { validateRemotePath } from 'src/utils/quasar-validators';
+import { setupState } from 'pages/setup/use-setup';
 </script>

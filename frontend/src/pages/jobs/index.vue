@@ -20,16 +20,10 @@
           @click="batchUpdatePriority('low')"
         />
 
-        <q-btn
-          :disable="selected.length === 0"
-          size="md"
-          label="修改状态"
-          color="primary"
-          @click="batchUpdateStatus"
-        />
+        <q-btn :disable="selected.length === 0" size="md" label="修改状态" color="primary" @click="batchUpdateStatus" />
       </div>
 
-      <q-space/>
+      <q-space />
 
       <div class="q-gutter-sm row">
         <q-select
@@ -66,7 +60,7 @@
       </div>
     </div>
 
-    <q-separator class="q-mt-md"/>
+    <q-separator class="q-mt-md" />
 
     <q-table
       :columns="columns"
@@ -77,7 +71,6 @@
       class="sticky-column-table"
       :pagination="{ rowsPerPage: 20 }"
     >
-
       <template v-slot:body-cell-jobStatus="{ row }">
         <q-td>
           <span
@@ -106,7 +99,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import JobApi from 'src/api/JobApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 import { VIDEO_TYPE_NAME_MAP } from 'src/constants/SettingConstants';
 import {
   JOB_STATUS_COLOR_MAP,
@@ -302,7 +295,7 @@ onMounted(() => {
 <style lang="scss">
 .sticky-column-table {
   thead tr:last-child th:last-child {
-    background-color: #fff
+    background-color: #fff;
   }
 
   td:last-child {
@@ -320,5 +313,4 @@ onMounted(() => {
     //border-left: 1px solid $grey-3;
   }
 }
-
 </style>

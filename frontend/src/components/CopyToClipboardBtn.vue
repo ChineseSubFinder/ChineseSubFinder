@@ -4,7 +4,7 @@
 
 <script setup>
 import { copyToClipboard } from 'quasar';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 
 const props = defineProps({
   text: String,

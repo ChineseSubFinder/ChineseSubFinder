@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 import { LocalStorage } from 'quasar';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 import { onBeforeUnmount, onMounted } from 'vue';
 
 class WSManager extends EventEmitter {

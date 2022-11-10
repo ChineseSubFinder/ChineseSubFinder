@@ -27,7 +27,7 @@
 
 <script setup>
 import LibraryApi from 'src/api/LibraryApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 import { useQuasar } from 'quasar';
 import { onMounted, ref } from 'vue';
 import useEventBus from 'src/composables/use-event-bus';

@@ -10,5 +10,5 @@
 </template>
 
 <script setup>
-import { gotoGithubIssuePage } from 'src/utils/CommonUtils';
+import { gotoGithubIssuePage } from 'src/utils/common';
 </script>

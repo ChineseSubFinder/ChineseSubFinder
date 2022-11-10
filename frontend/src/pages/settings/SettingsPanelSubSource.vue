@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import { formModel } from 'pages/settings/useSettings';
+import { formModel } from 'pages/settings/use-settings';
 import { toRefs } from '@vueuse/core';
 
 const { subtitle_sources: form } = toRefs(formModel);

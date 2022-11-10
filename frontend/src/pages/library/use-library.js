@@ -1,10 +1,10 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import LibraryApi from 'src/api/LibraryApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 import { until } from '@vueuse/core';
 import config from 'src/config';
 import { LocalStorage } from 'quasar';
-import { useSettings } from 'pages/settings/useSettings';
+import { useSettings } from 'pages/settings/use-settings';
 
 export const getUrl = (basePath) => config.BACKEND_URL + basePath.split(/\/|\\/).join('/');
 

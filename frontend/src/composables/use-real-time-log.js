@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { useWebSocketApi } from 'src/composables/useWebSocketApi';
+import { useWebSocketApi } from 'src/composables/use-web-socket-api';
 
 export const useRealTimeLog = () => {
   const logLines = ref([]);

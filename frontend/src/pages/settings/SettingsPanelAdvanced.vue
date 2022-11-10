@@ -380,10 +380,10 @@ import {
   SUB_TYPE_PRIORITY_NAME_MAP,
   PROXY_TYPE_NAME_MAP,
 } from 'src/constants/SettingConstants';
-import { formModel } from 'pages/settings/useSettings';
+import { formModel } from 'pages/settings/use-settings';
 import { toRefs } from '@vueuse/core';
 import ProxyCheckBtn from 'components/ProxyCheckBtn';
-import EditSubSourceBtnDialog from 'pages/settings/EditSubSourceBtnDialog';
+import EditSubSourceBtnDialog from 'pages/settings/BtnDialogEditSubSource';
 import BtnCheckTmdbApi from 'pages/settings/BtnCheckTmdbApi';
 
 const subNameFormatDescMap = {

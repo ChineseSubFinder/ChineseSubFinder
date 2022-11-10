@@ -48,18 +48,18 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import CommonApi from 'src/api/CommonApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 import AdminAccountForm from 'pages/setup/AdminAccountForm';
 import ScanFolderForm from 'pages/setup/ScanFolderForm';
 import { templateRef } from '@vueuse/core';
 import SelectMediaServerForm from 'pages/setup/SelectMediaServerForm';
-import { setupState, useSetup } from 'pages/setup/useSetup';
+import { setupState, useSetup } from 'pages/setup/use-setup';
 import EmbySetupForm from 'pages/setup/EmbySetupForm';
 import LoginBgArea from 'pages/access/login/LoginBgArea';
-import { deepCopy } from 'src/utils/CommonUtils';
+import { deepCopy } from 'src/utils/common';
 import { getInfo, isRunningInDocker } from 'src/store/systemState';
 import { SUB_NAME_FORMAT_NORMAL } from 'src/constants/SettingConstants';
-import { useAppStatusLoading } from 'src/composables/useAppStatusLoading';
+import { useAppStatusLoading } from 'src/composables/use-app-status-loading';
 import { Dialog } from 'quasar';
 
 useSetup();

@@ -20,9 +20,9 @@
 
 <script setup>
 import { ref, watch, watchEffect } from 'vue';
-import { getSubtitleUploadList, subtitleUploadList } from 'pages/library/useLibrary';
+import { getSubtitleUploadList, subtitleUploadList } from 'pages/library/use-library';
 import LibraryApi from 'src/api/LibraryApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 import eventBus from 'vue3-eventbus';
 
 const props = defineProps({

@@ -19,7 +19,7 @@
 import CommonFormDialog from 'components/CommonFormDialog';
 import { reactive, ref } from 'vue';
 import { LocalStorage } from 'quasar';
-import { coverRule } from 'pages/library/useLibrary';
+import { coverRule } from 'pages/library/use-library';
 
 const emit = defineEmits(['update']);
 

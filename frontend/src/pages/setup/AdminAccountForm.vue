@@ -7,9 +7,9 @@
       hint="用户名必须在3-16个字符以内，只能包含字母、数字、下划线"
       lazy-rules
       :rules="[
-                (val) => (val && val.length > 0) || '请输入用户名',
-                (val) => /^[_a-zA-Z0-9]{3,16}$/.test(val) || '用户名必须在3-16个字符以内，只能包含字母、数字、下划线',
-              ]"
+        (val) => (val && val.length > 0) || '请输入用户名',
+        (val) => /^[_a-zA-Z0-9]{3,16}$/.test(val) || '用户名必须在3-16个字符以内，只能包含字母、数字、下划线',
+      ]"
     />
 
     <q-input
@@ -20,10 +20,11 @@
       hint="密码必须在6-30位之间"
       lazy-rules
       :rules="[
-                (val) => (val && val.length > 0) || '请输入密码',
-                (val) => /^([a-z]|[A-Z]|[\d~@#$%\*-\+=:,\\?\[\]\{}]){6,30}$/.test(val)
-                 || '密码必须在6-30位之间，且只能由字母、数字、特殊符号组成',
-              ]"
+        (val) => (val && val.length > 0) || '请输入密码',
+        (val) =>
+          /^([a-z]|[A-Z]|[\d~@#$%\*-\+=:,\\?\[\]\{}]){6,30}$/.test(val) ||
+          '密码必须在6-30位之间，且只能由字母、数字、特殊符号组成',
+      ]"
     />
 
     <q-input
@@ -39,5 +40,5 @@
 </template>
 
 <script setup>
-import {setupState} from 'pages/setup/useSetup';
+import { setupState } from 'pages/setup/use-setup';
 </script>

@@ -10,9 +10,9 @@
 <script setup>
 import { useQuasar } from 'quasar';
 import LibraryApi from 'src/api/LibraryApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 import { computed } from 'vue';
-import { settingsState } from 'pages/settings/useSettings';
+import { settingsState } from 'pages/settings/use-settings';
 
 const $q = useQuasar();
 

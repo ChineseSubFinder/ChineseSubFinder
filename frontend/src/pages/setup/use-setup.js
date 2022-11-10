@@ -1,6 +1,6 @@
 import { onMounted, reactive, watch } from 'vue';
 import CommonApi from 'src/api/CommonApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 
 export const setupState = reactive({
   defaultSettings: null,

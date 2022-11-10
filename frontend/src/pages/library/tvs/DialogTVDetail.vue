@@ -137,11 +137,11 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import LibraryApi from 'src/api/LibraryApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 import { VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
 import config from 'src/config';
 import { useQuasar } from 'quasar';
-import { useSelection } from 'src/composables/useSelection';
+import { useSelection } from 'src/composables/use-selection';
 import BtnIgnoreVideo from 'pages/library/BtnIgnoreVideo';
 import eventBus from 'vue3-eventbus';
 import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';

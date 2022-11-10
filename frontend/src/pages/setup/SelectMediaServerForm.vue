@@ -16,7 +16,7 @@
         </q-item-section>
         <q-item-section>
           <q-item-label>
-            <img src="images/emby-logo.png" style="height: 30px;">
+            <img src="images/emby-logo.png" style="height: 30px" />
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -27,7 +27,7 @@
         </q-item-section>
         <q-item-section>
           <q-item-label>
-            <img src="images/jellyfin-logo.svg" style="height: 30px;">
+            <img src="images/jellyfin-logo.svg" style="height: 30px" />
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -38,15 +38,14 @@
         </q-item-section>
         <q-item-section>
           <q-item-label>
-            <img src="images/plex-logo.svg" style="height: 20px;">
+            <img src="images/plex-logo.svg" style="height: 20px" />
           </q-item-label>
         </q-item-section>
       </q-item>
-
     </q-list>
   </q-form>
 </template>
 
 <script setup>
-import {setupState} from 'pages/setup/useSetup';
+import { setupState } from 'pages/setup/use-setup';
 </script>

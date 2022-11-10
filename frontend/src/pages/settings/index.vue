@@ -72,15 +72,15 @@
 
 <script setup>
 import { computed, ref } from 'vue';
-import BasicSettings from 'pages/settings/BasicSettings';
-import AdvancedSettings from 'pages/settings/AdvancedSettings';
-import EmbySettings from 'pages/settings/EmbySettings';
-import DevelopmentSettings from 'pages/settings/DevelopmentSettings';
-import { settingsState, submitAll, useSettings } from 'pages/settings/useSettings';
+import BasicSettings from 'pages/settings/SettingsPanelBasic';
+import AdvancedSettings from 'pages/settings/SettingsPanelAdvanced';
+import EmbySettings from 'pages/settings/SettingsPanelEmby';
+import DevelopmentSettings from 'pages/settings/SettingsPanelDevelopment';
+import { settingsState, submitAll, useSettings } from 'pages/settings/use-settings';
 import { isJobRunning } from 'src/store/systemState';
-import ExperimentSettings from 'pages/settings/ExperimentSettings';
+import ExperimentSettings from 'pages/settings/SettingsPanelExperiment';
 import FormSubmitArea from 'pages/settings/FormSubmitArea';
-import SubSourceSettings from 'pages/settings/SubSourceSettings';
+import SubSourceSettings from 'pages/settings/SettingsPanelSubSource';
 
 const tab = ref('basic');
 

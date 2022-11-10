@@ -74,10 +74,10 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import LibraryApi from 'src/api/LibraryApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 import { VIDEO_TYPE_MOVIE } from 'src/constants/SettingConstants';
 import { useQuasar } from 'quasar';
-import { getUrl, subtitleUploadList } from 'pages/library/useLibrary';
+import { getUrl, subtitleUploadList } from 'pages/library/use-library';
 import BtnIgnoreVideo from 'pages/library/BtnIgnoreVideo';
 import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
 import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo';

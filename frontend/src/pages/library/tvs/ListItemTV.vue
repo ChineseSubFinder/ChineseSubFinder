@@ -36,7 +36,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import DialogTVDetail from 'pages/library/tvs/DialogTVDetail';
 import LibraryApi from 'src/api/LibraryApi';
-import { getUrl, subtitleUploadList } from 'pages/library/useLibrary';
+import { getUrl, subtitleUploadList } from 'pages/library/use-library';
 import { VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
 
 const props = defineProps({

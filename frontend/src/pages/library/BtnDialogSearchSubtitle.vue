@@ -44,7 +44,7 @@
 <script setup>
 import { ref } from 'vue';
 import LibraryApi from 'src/api/LibraryApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 
 const props = defineProps({
   path: String,

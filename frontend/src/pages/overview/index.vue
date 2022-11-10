@@ -24,7 +24,7 @@ import { getJobsStatus, isJobRunning, systemState } from 'src/store/systemState'
 import { useQuasar } from 'quasar';
 import { onMounted, ref } from 'vue';
 import JobApi from 'src/api/JobApi';
-import { SystemMessage } from 'src/utils/Message';
+import { SystemMessage } from 'src/utils/message';
 
 const $q = useQuasar();
 

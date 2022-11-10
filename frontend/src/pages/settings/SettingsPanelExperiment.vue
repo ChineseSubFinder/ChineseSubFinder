@@ -53,9 +53,7 @@
       <q-item tag="label" v-ripple>
         <q-item-section>
           <q-item-label>共享字幕</q-item-label>
-          <q-item-label caption
-          >上传字幕能够让本程序变得更加好用，发扬共享精神，一起来共享字幕吧！</q-item-label
-          >
+          <q-item-label caption>上传字幕能够让本程序变得更加好用，发扬共享精神，一起来共享字幕吧！</q-item-label>
         </q-item-section>
         <q-item-section avatar top>
           <q-toggle v-model="form.share_sub_settings.share_sub_enabled" />
@@ -219,16 +217,16 @@
 </template>
 
 <script setup>
-import { formModel } from 'pages/settings/useSettings';
+import { formModel } from 'pages/settings/use-settings';
 import { toRefs } from '@vueuse/core';
 import {
   AUTO_CONVERT_LANG_NAME_MAP,
   DESC_ENCODE_TYPE_NAME_MAP,
   DESC_ENCODE_TYPE_UTF8,
 } from 'src/constants/SettingConstants';
-import {computed, watch} from 'vue';
+import { computed, watch } from 'vue';
 import CopyToClipboardBtn from 'components/CopyToClipboardBtn';
-import {useQuasar} from 'quasar';
+import { useQuasar } from 'quasar';
 
 const $q = useQuasar();
 
@@ -254,12 +252,14 @@ const generateApiKey = () => {
   formModel.experimental_function.api_key_settings.key = uuid;
 };
 
-watch(() => formModel.experimental_function.share_sub_settings.share_sub_enabled, (val) => {
-  if (val) {
-    $q.dialog({
-      title: '共享字幕说明',
-      style: 'width: 600px',
-      message: `<b>开启“共享字幕”功能后：</b>
+watch(
+  () => formModel.experimental_function.share_sub_settings.share_sub_enabled,
+  (val) => {
+    if (val) {
+      $q.dialog({
+        title: '共享字幕说明',
+        style: 'width: 600px',
+        message: `<b>开启“共享字幕”功能后：</b>
 <ul>
   <li>本程序会收集、上传 Emby 中已经观看的视频对应的字幕（如果你没有开启 Emby 那么就不会收集这个部分的字幕）
   <li>如果你使用了本程序提供的 Http API 提交了已经观看的视频和字幕信息，本程序也会收集这个部分
@@ -280,15 +280,18 @@ watch(() => formModel.experimental_function.share_sub_settings.share_sub_enabled
 </ul>
 <div style="color: red;">* 开启共享后，需要重启本程序或者docker容器才能生效</div>
 `,
-      persistent: true,
-      html: true,
-      ok: '共享',
-      cancel: '不共享',
-    }).onOk(() => {
-      // 共享字幕
-    }).onCancel(() => {
-      formModel.experimental_function.share_sub_settings.share_sub_enabled = false;
-    })
+        persistent: true,
+        html: true,
+        ok: '共享',
+        cancel: '不共享',
+      })
+        .onOk(() => {
+          // 共享字幕
+        })
+        .onCancel(() => {
+          formModel.experimental_function.share_sub_settings.share_sub_enabled = false;
+        });
+    }
   }
-})
+);
 </script>

@@ -1,5 +1,5 @@
 import { onMounted, ref, watch, computed } from 'vue';
-import { useWebSocketApi } from 'src/composables/useWebSocketApi';
+import { useWebSocketApi } from 'src/composables/use-web-socket-api';
 import { systemState } from 'src/store/systemState';
 
 export const subJobsDetail = ref(null);

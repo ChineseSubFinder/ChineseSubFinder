@@ -25,10 +25,10 @@
 </template>
 
 <script setup>
-import { useLibrary } from 'pages/library/useLibrary';
+import { useLibrary } from 'pages/library/use-library';
 import { computed, reactive } from 'vue';
-import BtnDialogLibraryRefresh from 'pages/library/BtnDialogLibraryRefresh';
-import BtnDialogMediaServerSubtitleRefresh from 'pages/library/BtnDialogMediaServerSubtitleRefresh';
+import BtnDialogLibraryRefresh from 'pages/library/BtnLibraryRefresh';
+import BtnDialogMediaServerSubtitleRefresh from 'pages/library/BtnMediaServerSubtitleRefresh';
 import ListItemMovie from './ListItemMovie';
 
 const filterForm = reactive({

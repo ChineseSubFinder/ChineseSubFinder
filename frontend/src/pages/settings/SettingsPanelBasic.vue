@@ -217,8 +217,8 @@
 </template>
 
 <script setup>
-import { formModel } from 'pages/settings/useSettings';
-import { validateCronTime, validateRemotePath } from 'src/utils/QuasarValidators';
+import { formModel } from 'pages/settings/use-settings';
+import { validateCronTime, validateRemotePath } from 'src/utils/quasar-validators';
 import { toRefs } from '@vueuse/core';
 import { ref, watch } from 'vue';
 

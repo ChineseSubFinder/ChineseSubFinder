@@ -7,7 +7,7 @@
 </template>
 
 <script setup>
-import { resetForm, submitting } from 'pages/settings/useSettings';
-import ExportSettingBtnDialog from 'pages/settings/ExportSettingBtnDialog';
+import { resetForm, submitting } from 'pages/settings/use-settings';
+import ExportSettingBtnDialog from 'pages/settings/BtnDialogExportSetting';
 import { isJobRunning } from 'src/store/systemState';
 </script>

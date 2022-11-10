@@ -28,8 +28,8 @@
 
 <script setup>
 import { computed, ref } from 'vue';
-import { getExportSettings } from 'pages/settings/useSettings';
-import { saveText } from 'src/utils/FileDownload';
+import { getExportSettings } from 'pages/settings/use-settings';
+import { saveText } from 'src/utils/file-download';
 import CopyToClipboardBtn from 'components/CopyToClipboardBtn';
 
 const visible = ref(false);

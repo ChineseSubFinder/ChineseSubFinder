@@ -78,7 +78,7 @@
 </template>
 
 <script setup>
-import { formModel } from 'pages/settings/useSettings';
+import { formModel } from 'pages/settings/use-settings';
 import { toRefs } from '@vueuse/core';
 import BtnCheckEmbyServer from 'pages/settings/BtnCheckEmbyServer';
 

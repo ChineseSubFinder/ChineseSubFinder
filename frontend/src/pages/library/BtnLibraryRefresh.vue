@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-import { refreshCacheLoading, refreshLibrary } from 'pages/library/useLibrary';
+import { refreshCacheLoading, refreshLibrary } from 'pages/library/use-library';
 import { useQuasar } from 'quasar';
 
 const $q = useQuasar();

@@ -1,8 +1,8 @@
 import { reactive, ref, watch } from 'vue';
 import SettingApi from 'src/api/SettingApi';
-import { SystemMessage } from 'src/utils/Message';
-import { deepCopy } from 'src/utils/CommonUtils';
-import { useAppStatusLoading } from 'src/composables/useAppStatusLoading';
+import { SystemMessage } from 'src/utils/message';
+import { deepCopy } from 'src/utils/common';
+import { useAppStatusLoading } from 'src/composables/use-app-status-loading';
 import { isRunningInDocker } from 'src/store/systemState';
 import { Dialog } from 'quasar';
 

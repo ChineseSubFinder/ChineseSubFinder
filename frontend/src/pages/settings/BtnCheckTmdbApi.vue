@@ -5,8 +5,8 @@
 <script setup>
 import { ref } from 'vue';
 import CommonApi from 'src/api/CommonApi';
-import { SystemMessage } from 'src/utils/Message';
-import { formModel } from 'pages/settings/useSettings';
+import { SystemMessage } from 'src/utils/message';
+import { formModel } from 'pages/settings/use-settings';
 
 const loading = ref(false);
 
