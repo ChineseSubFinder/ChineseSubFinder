@@ -1,13 +1,22 @@
 package filter
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 func SkipFileInfo(l *logrus.Logger, curFile os.DirEntry) bool {
+
+	if curFile.IsDir() == true {
+		// 排除缓存文件夹，见 #532
+		if strings.HasPrefix(curFile.Name(), ".@__thumb") == true {
+			l.Debugln("curFile is dir and match `.@__thumb`, skip")
+			return true
+		}
+	}
 
 	// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
 	fi, err := curFile.Info()

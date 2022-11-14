@@ -36,8 +36,6 @@ github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWX
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/StalkR/httpcache v1.0.0 h1:Px+QK86m7FEEvCfpfC+C0sNiUnRrLQyMVVJ6LKiXNvk=
 github.com/StalkR/httpcache v1.0.0/go.mod h1:yvbaYwH6w1USHPqgspMSwumbLwWE+B7jIZgfLYkTw1M=
-github.com/StalkR/imdb v1.0.8 h1:FnmkaTtgTE8nBqnY+9HyLy82HV6KBBRo1gmxhvXPPK8=
-github.com/StalkR/imdb v1.0.8/go.mod h1:nxQmP4/nGtTVICl2+UmwhCnosVwVClmksdyptjE5Lj8=
 github.com/StalkR/imdb v1.0.10 h1:1u2kNUMbaBZ6Fp9klmrFuamrnEDh5c1ggqcjhWm1SZ4=
 github.com/StalkR/imdb v1.0.10/go.mod h1:nxQmP4/nGtTVICl2+UmwhCnosVwVClmksdyptjE5Lj8=
 github.com/Tnze/go.num/v2 v2.0.0-20191006170829-cb483d4c9152 h1:6Ny2zcG2k/0aOE8rLbDdLdPMr0o7lqMfdnYJe6pZj9w=
