@@ -132,7 +132,7 @@ func GetIMDBInfoFromVideoNfoInfo(dealers *media_info_dealers.Dealers, videoNfoIn
 		// 确定需要从 Web 端获取 imdb id 信息
 		dealers.Logger.Debugln("GetIMDBInfoFromVideoNfoInfo", 2)
 		// 联网查询
-		idConvertReply, err := dealers.ConvertId(videoNfoInfo.TmdbId, "tmdb", videoNfoInfo.IsMovie)
+		idConvertReply, err := dealers.ConvertId(videoNfoInfo.TmdbId, "tmdb_id", videoNfoInfo.IsMovie)
 		if err != nil {
 			return nil, err
 		}
