@@ -60,6 +60,7 @@ func getVideoNfoInfoFromMovieXml(movieFilePath string) (types.VideoNfoInfo, erro
 	//if videoInfo.ImdbId != "" {
 	//	return videoInfo, nil
 	//}
+	videoInfo.IsMovie = true
 	return videoInfo, nil
 }
 
@@ -277,11 +278,13 @@ func GetVideoNfoInfo4Movie(movieFileFullPath string) (types.VideoNfoInfo, error)
 		if err != nil {
 			return videoNfoInfo, err
 		}
+		videoNfoInfo.IsMovie = true
 		return videoNfoInfo, nil
 	}
 
 	if nfoFilePath != "" {
 		videoNfoInfo, err = getVideoNfoInfo(nfoFilePath, "movie")
+		videoNfoInfo.IsMovie = true
 		if err != nil {
 			return videoNfoInfo, err
 		} else {
@@ -291,12 +294,14 @@ func GetVideoNfoInfo4Movie(movieFileFullPath string) (types.VideoNfoInfo, error)
 
 	if movieXmlFPath != "" {
 		videoNfoInfo, err = getVideoNfoInfoFromMovieXml(movieXmlFPath)
+		videoNfoInfo.IsMovie = true
 		if err != nil {
 		} else {
 			return videoNfoInfo, nil
 		}
 	}
 
+	videoNfoInfo.IsMovie = true
 	return videoNfoInfo, common.NoMetadataFile
 }
 
@@ -329,7 +334,10 @@ func GetVideoNfoInfo4SeriesDir(seriesDir string) (types.VideoNfoInfo, error) {
 	if nfoFilePath == "" {
 		return imdbInfo, common.NoMetadataFile
 	}
-	return getVideoNfoInfo(nfoFilePath, "tvshow")
+
+	tmp, err := getVideoNfoInfo(nfoFilePath, "tvshow")
+	tmp.IsMovie = false
+	return tmp, err
 }
 
 // GetVideoNfoInfoFromEpisode 从一集获取这个 Series 的 IMDB info
@@ -363,7 +371,10 @@ func GetVideoNfoInfoFromEpisode(oneEpFPath string) (types.VideoNfoInfo, error) {
 		return GetVideoNfoInfo4SeriesDir(seriesDir)
 
 	} else {
-		return getVideoNfoInfo(nfoFilePath, "tvshow")
+
+		tmp, err := getVideoNfoInfo(nfoFilePath, "tvshow")
+		tmp.IsMovie = false
+		return tmp, err
 	}
 }
 
@@ -378,7 +389,9 @@ func GetVideoNfoInfo4OneSeriesEpisode(oneEpFPath string) (types.VideoNfoInfo, er
 	// 全路径
 	EpNfoFPath := filepath.Join(EPdir, EpNfoFileName)
 
-	return getVideoNfoInfo(EpNfoFPath, "episodedetails")
+	tmp, err := getVideoNfoInfo(EpNfoFPath, "episodedetails")
+	tmp.IsMovie = false
+	return tmp, err
 }
 
 // GetSeriesDirRootFPath 从一集的绝对路径推断这个连续剧的根目录绝对路径
@@ -450,6 +463,7 @@ func GetVideoInfoFromFileFullPath(videoFileFullPath string, isMovie bool) (types
 			return types.VideoNfoInfo{}, time.Time{}, err
 		}
 
+		videoNfoInfo.IsMovie = isMovie
 		return videoNfoInfo, fInfo.ModTime(), nil
 
 	} else {
@@ -465,6 +479,8 @@ func GetVideoInfoFromFileFullPath(videoFileFullPath string, isMovie bool) (types
 		if err != nil {
 			return types.VideoNfoInfo{}, time.Time{}, err
 		}
+
+		videoNfoInfo.IsMovie = isMovie
 		return videoNfoInfo, fInfo.ModTime(), nil
 	}
 }

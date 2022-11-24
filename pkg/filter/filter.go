@@ -25,6 +25,7 @@ func SkipFileInfo(l *logrus.Logger, curFile os.DirEntry) bool {
 		return true
 	}
 
+	// 软链接问题 #558
 	if fi.Size() < 1000 {
 		l.Debugln("curFile.Size() < 1000:", curFile.Name())
 		return true

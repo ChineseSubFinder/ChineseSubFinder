@@ -2,18 +2,15 @@ package imdb_helper
 
 import (
 	"errors"
-	"strconv"
+	"github.com/jinzhu/now"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
 	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
 
-	"github.com/StalkR/imdb"
 	"github.com/allanpk716/ChineseSubFinder/internal/dao"
 	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
 	"github.com/allanpk716/ChineseSubFinder/pkg/types"
 )
 
@@ -44,15 +41,24 @@ func GetIMDBInfoFromVideoFile(dealers *media_info_dealers.Dealers, videoFPath st
 			// 可能本地没有获取到 IMDB ID 信息，那么从上面的 GetIMDBInfoFromVideoNfoInfo 可以从 TMDB ID 获取到 IMDB ID，那么需要传递下去
 			videoNfoInfo.ImdbId = imdbInfo.IMDBID
 		}
-		t, err := getVideoInfoFromIMDBWeb(videoNfoInfo)
+		videoType := ""
+		if isMovie == true {
+			videoType = "movie"
+		} else {
+			videoType = "series"
+		}
+		mediaInfo, err := dealers.GetMediaInfo(videoNfoInfo.ImdbId, "imdb", videoType)
 		if err != nil {
-			dealers.Logger.Errorln("getVideoInfoFromIMDBWeb,", videoNfoInfo.Title, err)
 			return nil, err
 		}
-		imdbInfo.Year = t.Year
-		imdbInfo.AKA = t.AKA
-		imdbInfo.Description = t.Description
-		imdbInfo.Languages = t.Languages
+		parseTime, err := now.Parse(mediaInfo.Year)
+		if err != nil {
+			return nil, err
+		}
+		imdbInfo.Year = parseTime.Year()
+		imdbInfo.AKA = []string{mediaInfo.TitleCn, mediaInfo.TitleEn, mediaInfo.OriginalTitle}
+		imdbInfo.Description = mediaInfo.OriginalTitle
+		imdbInfo.Languages = []string{mediaInfo.OriginalLanguage}
 
 		dao.GetDb().Save(imdbInfo)
 	}
@@ -149,6 +155,7 @@ func IsChineseVideo(dealers *media_info_dealers.Dealers, videoNfoInfo types.Vide
 
 	const chName0 = "chinese"
 	const chName1 = "mandarin"
+	const chName2 = "zh"
 
 	dealers.Logger.Debugln("IsChineseVideo", 0)
 
@@ -160,19 +167,33 @@ func IsChineseVideo(dealers *media_info_dealers.Dealers, videoNfoInfo types.Vide
 		// 需要去外网获去补全信息，然后更新本地的信息
 		dealers.Logger.Debugln("IsChineseVideo", 1)
 
-		t, err := getVideoInfoFromIMDBWeb(videoNfoInfo)
+		videoType := ""
+		if videoNfoInfo.IsMovie == true {
+			videoType = "movie"
+		} else {
+			videoType = "series"
+		}
+		mediaInfo, err := dealers.GetMediaInfo(videoNfoInfo.ImdbId, "imdb", videoType)
 		if err != nil {
-			dealers.Logger.Errorln("IsChineseVideo.getVideoInfoFromIMDBWeb,", videoNfoInfo.Title, err)
+			return false, nil, err
+		}
+		parseTime, err := now.Parse(mediaInfo.Year)
+		if err != nil {
 			return false, nil, err
 		}
 
 		dealers.Logger.Debugln("IsChineseVideo", 2)
-		localIMDBInfo.Year = t.Year
-		localIMDBInfo.Name = t.Name
-		localIMDBInfo.Year = t.Year
-		localIMDBInfo.AKA = t.AKA
-		localIMDBInfo.Description = t.Description
-		localIMDBInfo.Languages = t.Languages
+
+		name := mediaInfo.TitleCn
+		if name == "" {
+			name = mediaInfo.OriginalTitle
+		}
+
+		localIMDBInfo.Year = parseTime.Year()
+		localIMDBInfo.Name = name
+		localIMDBInfo.AKA = []string{mediaInfo.TitleCn, mediaInfo.TitleEn, mediaInfo.OriginalTitle}
+		localIMDBInfo.Description = mediaInfo.OriginalTitle
+		localIMDBInfo.Languages = []string{mediaInfo.OriginalLanguage}
 
 		dealers.Logger.Debugln("IsChineseVideo", 3)
 
@@ -191,36 +212,36 @@ func IsChineseVideo(dealers *media_info_dealers.Dealers, videoNfoInfo types.Vide
 
 	// 判断第一语言是否是中文
 	switch firstLangLowCase {
-	case chName0, chName1:
+	case chName0, chName1, chName2:
 		return true, localIMDBInfo, nil
 	default:
 		return false, localIMDBInfo, nil
 	}
 }
 
-// getVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
-func getVideoInfoFromIMDBWeb(videoNfoInfo types.VideoNfoInfo) (*imdb.Title, error) {
-
-	client, err := pkg.NewHttpClient()
-	if err != nil {
-		return nil, err
-	}
-
-	t, err := imdb.NewTitle(client.GetClient(), videoNfoInfo.ImdbId)
-	if err != nil {
-		notify_center.Notify.Add("imdb model - imdb.NewTitle :", err.Error())
-		return nil, err
-	}
-	if t.Year == 0 {
-		// IMDB 信息获取的库(1.0.7)，目前有bug，比如，tt6856242 年份为 0
-		if videoNfoInfo.Year != "" {
-			year, err := strconv.Atoi(videoNfoInfo.Year)
-			if err != nil {
-				return nil, err
-			}
-			t.Year = year
-		}
-	}
-
-	return t, nil
-}
+//// getVideoInfoFromIMDBWeb 从 IMDB 网站 ID 查询影片的信息
+//func getVideoInfoFromIMDBWeb(videoNfoInfo types.VideoNfoInfo) (*imdb.Title, error) {
+//
+//	client, err := pkg.NewHttpClient()
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	t, err := imdb.NewTitle(client.GetClient(), videoNfoInfo.ImdbId)
+//	if err != nil {
+//		notify_center.Notify.Add("imdb model - imdb.NewTitle :", err.Error())
+//		return nil, err
+//	}
+//	if t.Year == 0 {
+//		// IMDB 信息获取的库(1.0.7)，目前有bug，比如，tt6856242 年份为 0
+//		if videoNfoInfo.Year != "" {
+//			year, err := strconv.Atoi(videoNfoInfo.Year)
+//			if err != nil {
+//				return nil, err
+//			}
+//			t.Year = year
+//		}
+//	}
+//
+//	return t, nil
+//}
