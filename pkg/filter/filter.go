@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func SkipFileInfo(l *logrus.Logger, curFile os.DirEntry) bool {
+func SkipFileInfo(l *logrus.Logger, curFile os.DirEntry, fileFullPath string) bool {
 
 	if curFile.IsDir() == true {
 		// 排除缓存文件夹，见 #532
@@ -27,8 +27,23 @@ func SkipFileInfo(l *logrus.Logger, curFile os.DirEntry) bool {
 
 	// 软链接问题 #558
 	if fi.Size() < 1000 {
-		l.Debugln("curFile.Size() < 1000:", curFile.Name())
-		return true
+
+		fileInfo, err := os.Lstat(fileFullPath)
+		if err != nil {
+			l.Errorln("os.Lstat:", fileFullPath, err)
+			return true
+		}
+		if fileInfo.Mode()&os.ModeSymlink != 0 {
+			// 确认是软连接
+			l.Debugln("curFile is symlink,", fileFullPath)
+			//realPath, err := filepath.EvalSymlinks(fileFullPath)
+			//if err == nil {
+			//	fmt.Println("Path:", realPath)
+			//}
+		} else {
+			l.Debugln("curFile.Size() < 1000:", curFile.Name())
+			return true
+		}
 	}
 
 	if fi.Size() == 4096 && strings.HasPrefix(curFile.Name(), "._") == true {

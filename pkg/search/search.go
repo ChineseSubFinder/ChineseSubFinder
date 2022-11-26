@@ -114,7 +114,7 @@ func MatchedVideoFile(l *logrus.Logger, dir string) ([]string, error) {
 					continue
 				}
 
-				if filter.SkipFileInfo(l, curFile) == true {
+				if filter.SkipFileInfo(l, curFile, fullPath) == true {
 					continue
 				}
 
@@ -147,7 +147,7 @@ func TVNfo(l *logrus.Logger, dir string) ([]string, error) {
 				continue
 			} else {
 
-				if filter.SkipFileInfo(l, curFile) == true {
+				if filter.SkipFileInfo(l, curFile, fullPath) == true {
 					continue
 				}
 				fileFullPathList = append(fileFullPathList, fullPath)
@@ -177,7 +177,7 @@ func SeriesAllEpsAndSubtitles(l *logrus.Logger, dir string) (*backend.SeasonInfo
 			return nil
 		}
 
-		if filter.SkipFileInfo(l, d) == true {
+		if filter.SkipFileInfo(l, d, path) == true {
 			return nil
 		}
 

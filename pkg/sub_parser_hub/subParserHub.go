@@ -201,7 +201,7 @@ func SearchMatchedSubFile(log *logrus.Logger, dir string) ([]string, error) {
 			} else {
 
 				// 跳过不符合的文件，比如 MAC OS 下可能有缓存文件，见 #138
-				if filter.SkipFileInfo(log, curFile) == true {
+				if filter.SkipFileInfo(log, curFile, fullPath) == true {
 					continue
 				}
 
