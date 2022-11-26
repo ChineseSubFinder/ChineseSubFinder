@@ -145,15 +145,15 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	}
 	// 字幕的上传逻辑
 	if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
-
-		intervalNowTask := "@every 10s"
-		if settings.Get().SpeedDevMode == true {
-			intervalNowTask = "@every 1s"
-		}
-		ch.entryIDUploadPlayedVideoSub, err = ch.c.AddFunc(intervalNowTask, ch.uploadVideoSub)
-		if err != nil {
-			ch.Logger.Panicln("CronHelper QueueDownloader, uploadVideoSub Cron entryID:", ch.entryIDUploadPlayedVideoSub, "Error:", err)
-		}
+		// 取消上传字幕的逻辑，目前评估的第一阶段已经完成，后续的逻辑需要重新评估
+		//intervalNowTask := "@every 10s"
+		//if settings.Get().SpeedDevMode == true {
+		//	intervalNowTask = "@every 1s"
+		//}
+		//ch.entryIDUploadPlayedVideoSub, err = ch.c.AddFunc(intervalNowTask, ch.uploadVideoSub)
+		//if err != nil {
+		//	ch.Logger.Panicln("CronHelper QueueDownloader, uploadVideoSub Cron entryID:", ch.entryIDUploadPlayedVideoSub, "Error:", err)
+		//}
 	}
 
 	// ----------------------------------------------
