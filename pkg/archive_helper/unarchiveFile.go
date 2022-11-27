@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/allanpk716/ChineseSubFinder/pkg"
 
@@ -101,6 +102,12 @@ func UnArchiveFile(fileFullPath, desRootPath string) error {
 			zfh, ok := f.Header.(zip.FileHeader)
 			if ok {
 				err := processOneFile(f, zfh.NonUTF8, desRootPath)
+				if err != nil {
+					return err
+				}
+			} else {
+				// 需要检测文件名是否是乱码
+				err := processOneFile(f, !utf8.ValidString(f.Name()), desRootPath)
 				if err != nil {
 					return err
 				}
