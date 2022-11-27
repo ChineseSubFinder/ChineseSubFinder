@@ -133,7 +133,7 @@ func (v *VideoScanAndRefreshHelper) Start(scanLogic *scan_logic.ScanLogic) error
 	if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
 		v.log.Infoln("ShareSubEnabled is true, will scan share sub")
 		// 根据上面得到的 scanResult 的 Normal 部分进行字幕的扫描，也存入到 VideoSubInfo 中，但是需要标记这个是低可信度的
-		v.scanLowVideoSubInfo(scanResult)
+		//v.scanLowVideoSubInfo(scanResult)
 	}
 
 	return nil
