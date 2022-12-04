@@ -34,8 +34,14 @@ assignees: ""
 
 > 比如 Docker-Compose 信息，如果是其他方式使用忽略
 
+## 媒体库的树形目录结构
+
+> 截图或者命令输出，注意格式，太乱看不懂
+
 ## 请给出当次问题的完整日志
 
 > 日志在程序的 Logs 目录下，如果你用的是 docker ，那么需要你映射出来。
+
+> 要看什么问题，关键词是什么，时间段是多少，不要让开发者去猜你的问题。
 
 > /volume1/docker/chinesesubfinder/config:/config 下，Logs 中
