@@ -25,6 +25,14 @@ func SkipFileInfo(l *logrus.Logger, curFile os.DirEntry, fileFullPath string) bo
 		return true
 	}
 
+	// 封面缓存文件夹中的文件都要跳过 .@__thumb  #581
+	// 获取这个文件的父级文件夹的名称，然后判断是否是 .@__thumb 开头的
+	parentFolderName := filepath.Base(filepath.Dir(fileFullPath))
+	if strings.HasPrefix(parentFolderName, ".@__thumb") == true {
+		l.Debugln("curFile is in .@__thumb folder, skip")
+		return true
+	}
+
 	// 软链接问题 #558
 	if fi.Size() < 1000 {
 
