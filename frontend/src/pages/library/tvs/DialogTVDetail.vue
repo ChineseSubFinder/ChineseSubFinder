@@ -58,6 +58,10 @@
             :disable="selection.length === 0"
             @click="skipAll(false)"
           ></q-btn>
+
+          <q-space />
+
+          <btn-upload-multiple-for-tv :items="currentTabEpisodes" />
         </div>
 
         <q-tab-panels v-model="tab" animated>
@@ -147,6 +151,7 @@ import eventBus from 'vue3-eventbus';
 import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
 import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo';
 import BtnDialogSearchSubtitle from 'pages/library/BtnDialogSearchSubtitle';
+import BtnUploadMultipleForTv from 'pages/library/tvs/BtnUploadMultipleForTv';
 
 const props = defineProps({
   data: Object,
