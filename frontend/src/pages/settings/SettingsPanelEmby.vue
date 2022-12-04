@@ -22,10 +22,7 @@
               dense
               :rules="[
                 (val) => (form.enable && !!val) || '不能为空',
-                (val) =>
-                  val.match(
-                    /^(http|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?$/
-                  ) || '请输入正确的URL',
+                (val) => val.match(/^https?:\/\/\w+(\.\w+)*(:[0-9]+)?\/?(\/[.\w]*)*$/) || '请输入正确的URL',
               ]"
             />
           </q-item-section>
