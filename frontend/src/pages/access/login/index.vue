@@ -1,6 +1,6 @@
 <template>
-  <div id="q-app">
-    <q-layout view="lHh Lpr fff">
+  <q-layout view="lHh Lpr fff">
+    <q-page-container>
       <q-page class="window-height window-width row justify-center items-center">
         <login-bg-area />
         <q-form @submit="submit" class="column q-pa-lg">
@@ -52,8 +52,8 @@
           </div>
         </q-form>
       </q-page>
-    </q-layout>
-  </div>
+    </q-page-container>
+  </q-layout>
 </template>
 
 <script setup>
