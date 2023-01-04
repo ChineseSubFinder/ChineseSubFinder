@@ -3,7 +3,7 @@ package video_list_helper
 import (
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 )
 
 // GetMoviePoster 获取电影的海报，如果为空就是没有找到

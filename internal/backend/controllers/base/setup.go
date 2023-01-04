@@ -3,9 +3,9 @@ package base
 import (
 	"net/http"
 
-	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	backend2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 	"github.com/gin-gonic/gin"
 )
 

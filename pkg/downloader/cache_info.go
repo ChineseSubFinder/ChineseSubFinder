@@ -3,14 +3,14 @@ package downloader
 import (
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
-	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
-	vsh "github.com/allanpk716/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
+	backend2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/task_queue"
+	vsh "github.com/ChineseSubFinder/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/strcut_json"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/strcut_json"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
 )
 
 func (d *Downloader) SetMovieAndSeasonInfo(movieInfos []backend2.MovieInfo, seasonInfos []backend2.SeasonInfo) {

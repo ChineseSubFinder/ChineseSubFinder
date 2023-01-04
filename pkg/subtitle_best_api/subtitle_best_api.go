@@ -12,15 +12,15 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/common"
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
 )
 
 type SubtitleBestApi struct {

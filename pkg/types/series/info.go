@@ -1,7 +1,7 @@
 package series
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/language"
 	"time"
 )
 

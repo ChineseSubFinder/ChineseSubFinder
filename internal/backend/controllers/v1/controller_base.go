@@ -1,19 +1,19 @@
 package v1
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/hls_center"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/hls_center"
 	"net/http"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/video_list_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/video_list_helper"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/lock"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter"
-	"github.com/allanpk716/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/lock"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/cron_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )

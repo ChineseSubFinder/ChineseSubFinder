@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/common"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/mix_media_info"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/dao"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/mix_media_info"
 	"github.com/jinzhu/now"
 )
 

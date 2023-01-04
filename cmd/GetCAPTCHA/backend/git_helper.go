@@ -5,12 +5,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
 
-	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
-	"github.com/allanpk716/ChineseSubFinder/pkg/something_static"
+	"github.com/ChineseSubFinder/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/something_static"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"

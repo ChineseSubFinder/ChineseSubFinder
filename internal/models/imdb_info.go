@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/language"
 	"github.com/longbridgeapp/opencc"
 )
 

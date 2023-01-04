@@ -1,4 +1,4 @@
-FROM allanpk716/chinesesubfinder-base:latest
+FROM ChineseSubFinder/ChineseSubFinder-base:latest
 ARG VERSION
 ENV TZ=Asia/Shanghai \
     PERMS=true \
@@ -9,7 +9,7 @@ ENV TZ=Asia/Shanghai \
     PS1="\u@\h:\w \$ "
 RUN cd /tmp \
     && arch=$(uname -m | sed -e 's|aarch64|arm64|' -e 's|armv7l|arm|') \
-    && wget -q --no-check-certificate https://github.com/allanpk716/ChineseSubFinder/releases/download/${VERSION}/chinesesubfinder-${VERSION#*v}-Linux-${arch}.tar.gz \
+    && wget -q --no-check-certificate https://github.com/ChineseSubFinder/ChineseSubFinder/releases/download/${VERSION}/chinesesubfinder-${VERSION#*v}-Linux-${arch}.tar.gz \
     && tar xvf chinesesubfinder-${VERSION#*v}-Linux-${arch}.tar.gz \
     && mv chinesesubfinder /usr/local/bin \
     && chmod +x /usr/local/bin/chinesesubfinder \

@@ -3,7 +3,7 @@ package worker
 import (
 	"bytes"
 	"context"
-	"github.com/allanpk716/ChineseSubFinder/pkg/hls_center/cache"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/hls_center/cache"
 	"io"
 	"path/filepath"
 

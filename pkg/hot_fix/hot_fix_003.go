@@ -1,8 +1,8 @@
 package hot_fix
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/dao"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
 	"github.com/sirupsen/logrus"
 )
 

@@ -4,12 +4,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
 	"gorm.io/gorm"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/dao"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
 	"github.com/sirupsen/logrus"
 )
 

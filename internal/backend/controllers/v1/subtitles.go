@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/manual_upload_sub_2_local"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/manual_upload_sub_2_local"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	backend2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 	"github.com/gin-gonic/gin"
 )
 

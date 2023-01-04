@@ -1,7 +1,7 @@
 package video_list_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
 )
 
 // GetMovieSubtitles 获取一部电影的字幕文件列表

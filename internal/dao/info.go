@@ -1,9 +1,9 @@
 package dao
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 )
 
 func UpdateInfo(version string, settings *settings.Settings) *models.Info {

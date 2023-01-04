@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/subparser"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/pkg/regex_things"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/regex_things"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/sirupsen/logrus"
 )

@@ -2,9 +2,9 @@ package ffmpeg_helper
 
 import (
 	"fmt"
-	language2 "github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	language2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/language"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/language"
 )
 
 type SubtitleInfo struct {

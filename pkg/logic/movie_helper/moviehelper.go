@@ -6,19 +6,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/media_info_dealers"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/ifaces"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/supplier"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/ass"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/srt"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/decode"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/imdb_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
 	"github.com/jinzhu/now"
 	"github.com/sirupsen/logrus"
 )

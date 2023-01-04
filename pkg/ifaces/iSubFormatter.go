@@ -1,7 +1,7 @@
 package ifaces
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/language"
 )
 
 // ISubFormatter 如果新增了更多的字幕命名格式化的实现，需要找所有以下 to do 去增加实现

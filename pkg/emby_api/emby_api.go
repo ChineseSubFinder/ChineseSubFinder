@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/emby"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/emby"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 	"github.com/go-resty/resty/v2"
 	"github.com/panjf2000/ants/v2"
 	"github.com/sirupsen/logrus"
@@ -303,7 +303,7 @@ func (em *EmbyApi) GetSubFileData(embySettings *settings.EmbySettings, videoId, 
 }
 
 func (em *EmbyApi) createClient() *resty.Client {
-	// 见 https://github.com/allanpk716/ChineseSubFinder/issues/140
+	// 见 https://github.com/ChineseSubFinder/ChineseSubFinder/issues/140
 	client := resty.New().SetTransport(&http.Transport{
 		DisableKeepAlives:   true,
 		MaxIdleConns:        100,

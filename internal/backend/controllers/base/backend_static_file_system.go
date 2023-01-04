@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"

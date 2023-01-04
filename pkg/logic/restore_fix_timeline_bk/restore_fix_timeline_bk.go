@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 )
 
 // CheckSpeFile 目标是检测特定的文件，找到后，先删除，返回一个标志位用于后面的逻辑

@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/ifaces"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/dao"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
 	"github.com/sirupsen/logrus"
 )
 

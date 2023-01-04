@@ -10,22 +10,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
+	common2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/series"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/subparser"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/supplier"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/subtitle_best_api"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/subtitle_best_api"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_file_hash"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_file_hash"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/mix_media_info"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/mix_media_info"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 	"github.com/sirupsen/logrus"
 )
 

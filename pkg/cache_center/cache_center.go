@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/cache_center/models"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

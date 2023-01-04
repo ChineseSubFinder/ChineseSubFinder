@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/series"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/subparser"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	subcommon "github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/decode"
+	subcommon "github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
 )
 
 // oneVideoSelectBestSub 一个视频，选择最佳的一个字幕（也可以保存所有网站第一个最佳字幕）

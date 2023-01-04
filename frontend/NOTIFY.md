@@ -1,5 +1,5 @@
 - v0.44.x 下线直接从 IMDB 查询的逻辑，替换为 TMDB API ，默认使用公用接口，如果不想排队，请使用自己的 TMDB API Key。
 - v0.45.x 暂时下线“共享字幕”上传字幕的功能，依然可以下载字幕。将上线第二个评估版本。
-- 第一次使用，请务必阅读：[电影和连续剧目录结构示例](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/电影和连续剧目录结构示例.md)、[连续剧目录结构要求](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/连续剧目录结构要求.md)，按要求填写电影和连续剧的目录。
+- 第一次使用，请务必阅读：[电影和连续剧目录结构示例](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/电影和连续剧目录结构示例.md)、[连续剧目录结构要求](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/连续剧目录结构要求.md)，按要求填写电影和连续剧的目录。
 - 公用服务器资源有限，且近期网络抽风，开发者自己也经常上不去···所以，能用自己的 TMDB API 就用自己的哈。
 - 调整，暂时下线 subhd、zimuku 字幕下载功能，再次上线日期待定。

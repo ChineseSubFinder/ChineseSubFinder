@@ -3,15 +3,15 @@ package pre_job
 import (
 	"errors"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types"
-	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types"
+	common2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/hot_fix"
-	"github.com/allanpk716/ChineseSubFinder/pkg/rod_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/hot_fix"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/rod_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter/common"
 	"github.com/sirupsen/logrus"
 )
 

@@ -5,22 +5,22 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/media_info_dealers"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/supplier"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/ass"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/srt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/pkg/subtitle_best_api"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/cache_center"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/subtitle_best_api"
 	"github.com/go-rod/rod"
 	"github.com/sirupsen/logrus"
 )

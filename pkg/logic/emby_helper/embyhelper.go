@@ -8,22 +8,22 @@ import (
 	"sync"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/media_info_dealers"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	emby2 "github.com/allanpk716/ChineseSubFinder/pkg/types/emby"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
+	emby2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/emby"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/language"
 
-	embyHelper "github.com/allanpk716/ChineseSubFinder/pkg/emby_api"
-	"github.com/allanpk716/ChineseSubFinder/pkg/imdb_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/path_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sort_things"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
+	embyHelper "github.com/ChineseSubFinder/ChineseSubFinder/pkg/emby_api"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/imdb_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/path_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sort_things"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
 	"github.com/panjf2000/ants/v2"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -585,7 +585,7 @@ func (em *EmbyHelper) autoFindMappingPathWithMixInfoByIMDBId(mixInfo *emby2.Emby
 func (em *EmbyHelper) findMappingPathWithMixInfo(embySettings *settings.EmbySettings, mixInfo *emby2.EmbyMixInfo, isMovieOrSeries bool) bool {
 
 	defer func() {
-		// 见 https://github.com/allanpk716/ChineseSubFinder/issues/278
+		// 见 https://github.com/ChineseSubFinder/ChineseSubFinder/issues/278
 		// 进行字符串操作的时候，可能会把 smb://123 转义为 smb:/123
 		// 修复了个寂寞，没用，这个逻辑保留，但是没用哈。因为就不支持 SMB 的客户端协议
 		if mixInfo != nil {

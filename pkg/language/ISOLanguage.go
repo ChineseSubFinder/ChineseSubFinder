@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	language2 "github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	language2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/language"
 )
 
 // ISOString2SupportLang 从语言缩写字符串转换为内部的 MyLanguage 类型

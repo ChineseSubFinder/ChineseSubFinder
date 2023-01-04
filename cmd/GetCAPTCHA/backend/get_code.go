@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/rod_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/rod_helper"
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/sirupsen/logrus"
 )

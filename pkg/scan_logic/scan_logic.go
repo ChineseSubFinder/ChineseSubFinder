@@ -7,8 +7,8 @@ import (
 	PTN "github.com/middelink/go-parse-torrent-name"
 	"github.com/sirupsen/logrus"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/dao"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
 )
 
 type ScanLogic struct {

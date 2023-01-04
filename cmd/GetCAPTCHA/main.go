@@ -5,15 +5,15 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
 
-	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend"
-	"github.com/allanpk716/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
-	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/cmd/GetCAPTCHA/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/cmd/GetCAPTCHA/backend/config"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/notify_center"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 )

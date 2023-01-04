@@ -5,30 +5,30 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/preview_queue"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/preview_queue"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/manual_upload_sub_2_local"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/manual_upload_sub_2_local"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/save_sub_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/save_sub_helper"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/scan_logic"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/scan_logic"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
-	embyHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/emby_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
-	markSystem "github.com/allanpk716/ChineseSubFinder/pkg/logic/mark_system"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/pre_download_process"
-	subSupplier "github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_timeline_fixer"
-	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/ifaces"
+	embyHelper "github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/emby_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
+	markSystem "github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/mark_system"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/pre_download_process"
+	subSupplier "github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_timeline_fixer"
+	common2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
-	subCommon "github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/task_queue"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
+	subCommon "github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/task_queue"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 )

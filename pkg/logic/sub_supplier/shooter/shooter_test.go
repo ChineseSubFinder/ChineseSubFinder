@@ -4,13 +4,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
-	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
-	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/cache_center"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/unit_test_helper"
 )
 
 func TestNewSupplier(t *testing.T) {

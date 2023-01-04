@@ -3,7 +3,7 @@ package v1
 import (
 	"net/http"
 
-	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	backend2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 
 	"github.com/gin-gonic/gin"
 )

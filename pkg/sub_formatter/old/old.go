@@ -4,9 +4,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	language2 "github.com/allanpk716/ChineseSubFinder/pkg/types/language"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
+	language2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/subparser"
 )
 
 /*

@@ -3,17 +3,17 @@ package sub_timeline_fixer
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 	"os"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/subparser"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/gss"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/vad"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/gss"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/vad"
 	"github.com/huandu/go-clone"
 )
 

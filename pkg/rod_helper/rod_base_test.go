@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 )

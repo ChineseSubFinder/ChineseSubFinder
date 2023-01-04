@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 )
 
 func TestCheckSpeFile(t *testing.T) {

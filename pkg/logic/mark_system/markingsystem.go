@@ -1,11 +1,11 @@
 package mark_system
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/ass"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/srt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/subparser"
 	"github.com/sirupsen/logrus"
 )
 

@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/subparser"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
 	"github.com/sirupsen/logrus"
 )
 

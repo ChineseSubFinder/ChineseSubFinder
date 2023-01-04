@@ -3,19 +3,19 @@ package base
 import (
 	"net/http"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/local_http_proxy_server"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/a4k"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/a4k"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 
-	subSupplier "github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/csf"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
+	subSupplier "github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/csf"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
 
 	"github.com/gin-gonic/gin"
 )

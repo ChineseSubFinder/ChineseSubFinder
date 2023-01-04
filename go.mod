@@ -1,4 +1,4 @@
-module github.com/allanpk716/ChineseSubFinder
+module github.com/ChineseSubFinder/ChineseSubFinder
 
 go 1.17
 

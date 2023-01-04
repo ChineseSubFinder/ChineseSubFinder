@@ -7,9 +7,9 @@ import (
 	"math"
 	"os"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/decode"
 )
 
 // Calculate 视频文件的唯一ID，支持内程序内的 Fake 蓝光视频文件路径

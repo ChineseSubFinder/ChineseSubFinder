@@ -3,7 +3,7 @@ package emby_api
 import (
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 )
 
 var ec = settings.EmbySettings{

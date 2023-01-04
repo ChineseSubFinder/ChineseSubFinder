@@ -5,13 +5,13 @@ import (
 	"github.com/jinzhu/now"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/media_info_dealers"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/decode"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/dao"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types"
 )
 
 // GetIMDBInfoFromVideoFile 先从本地拿缓存，如果没有就从 Web 获取

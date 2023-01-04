@@ -3,25 +3,25 @@ package pre_download_process
 import (
 	"errors"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/local_http_proxy_server"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	common2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
-	subSupplier "github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/a4k"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/csf"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
+	subSupplier "github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/a4k"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/csf"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/notify_center"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/pkg/something_static"
-	"github.com/allanpk716/ChineseSubFinder/pkg/url_connectedness_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/notify_center"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/something_static"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/url_connectedness_helper"
 	"github.com/sirupsen/logrus"
 )
 

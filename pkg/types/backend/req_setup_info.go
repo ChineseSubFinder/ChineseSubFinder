@@ -1,7 +1,7 @@
 package backend
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 )
 
 type ReqSetupInfo struct {

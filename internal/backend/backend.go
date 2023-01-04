@@ -8,18 +8,18 @@ import (
 	"sync"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/local_http_proxy_server"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 
-	"github.com/allanpk716/ChineseSubFinder/frontend/dist"
+	"github.com/ChineseSubFinder/ChineseSubFinder/frontend/dist"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/cron_helper"
 )
 
 type BackEnd struct {

@@ -4,10 +4,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/language"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/unit_test_helper"
 )
 
 func TestParser_DetermineFileTypeFromFile(t *testing.T) {

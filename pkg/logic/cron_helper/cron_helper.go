@@ -1,21 +1,21 @@
 package cron_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/pkg"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/scan_played_video_subinfo"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/dao"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/scan_played_video_subinfo"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
 
-	//"github.com/allanpk716/ChineseSubFinder/internal/logic/pre_job"
+	//"github.com/ChineseSubFinder/ChineseSubFinder/internal/logic/pre_job"
 	"sync"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/downloader"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter"
-	"github.com/allanpk716/ChineseSubFinder/pkg/task_queue"
-	"github.com/allanpk716/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/downloader"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/task_queue"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 )

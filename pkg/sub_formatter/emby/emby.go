@@ -5,11 +5,11 @@ import (
 	"regexp"
 	"strings"
 
-	language3 "github.com/allanpk716/ChineseSubFinder/pkg/types/language"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+	language3 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/subparser"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/language"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter/common"
 )
 
 type Formatter struct {

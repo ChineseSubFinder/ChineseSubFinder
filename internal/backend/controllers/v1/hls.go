@@ -3,9 +3,9 @@ package v1
 import (
 	b64 "encoding/base64"
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/pkg"
-	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/decode"
+	backend2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/url"

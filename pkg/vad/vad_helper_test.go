@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/unit_test_helper"
 )
 
 func TestGetVADInfo(t *testing.T) {

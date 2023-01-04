@@ -1,10 +1,10 @@
 package task_queue
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 	"time"
 
-	task_queue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
+	task_queue2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/task_queue"
 )
 
 func (t *TaskQueue) BeforeGetOneJob() {

@@ -8,15 +8,15 @@ import (
 
 	PTN "github.com/middelink/go-parse-torrent-name"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/search"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/search"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/path_helper"
-	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
-	vsh "github.com/allanpk716/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/path_helper"
+	backend2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
+	vsh "github.com/ChineseSubFinder/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 )

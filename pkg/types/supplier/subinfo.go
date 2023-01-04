@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/language"
 )
 
 type SubInfo struct {

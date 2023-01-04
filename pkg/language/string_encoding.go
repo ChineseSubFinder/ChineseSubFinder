@@ -3,7 +3,7 @@ package language
 import (
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/charset"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/charset"
 	"github.com/axgle/mahonia"
 	nzlov "github.com/nzlov/chardet"
 	"github.com/sirupsen/logrus"

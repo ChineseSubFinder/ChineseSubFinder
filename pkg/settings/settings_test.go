@@ -4,9 +4,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/strcut_json"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/strcut_json"
 )
 
 func TestNewSettings(t *testing.T) {

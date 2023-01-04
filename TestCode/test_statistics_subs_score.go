@@ -7,25 +7,25 @@ import (
 	"path/filepath"
 	"sync"
 
-	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	common2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/task_control"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/task_control"
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/ffmpeg_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/ffmpeg_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/subparser"
 	"github.com/huandu/go-clone"
 
 	"github.com/xuri/excelize/v2"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_timeline_fixer"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
-	"github.com/allanpk716/ChineseSubFinder/pkg/vad"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/ass"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/srt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_timeline_fixer"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/vad"
 )
 
 func statistics_subs_score_one(baseAudioFileFPath, baseSubFileFPath, srcSubFileFPath string) {

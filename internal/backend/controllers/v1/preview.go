@@ -2,20 +2,20 @@ package v1
 
 import (
 	"fmt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/mix_media_info"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 	"github.com/Tnze/go.num/v2/zh"
-	"github.com/allanpk716/ChineseSubFinder/pkg/mix_media_info"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
 	"github.com/jinzhu/now"
 	PTN "github.com/middelink/go-parse-torrent-name"
 	"net/http"
 	"strconv"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/decode"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/preview_queue"
-	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/preview_queue"
+	backend2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 	"github.com/gin-gonic/gin"
 )
 

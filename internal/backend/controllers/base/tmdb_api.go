@@ -3,11 +3,11 @@ package base
 import (
 	"net/http"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/local_http_proxy_server"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/local_http_proxy_server"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/tmdb_api"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/tmdb_api"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 	"github.com/gin-gonic/gin"
 )
 

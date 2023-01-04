@@ -3,10 +3,10 @@ package v1
 import (
 	"net/http"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 	"github.com/gin-gonic/gin"
 )
 

@@ -4,21 +4,21 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/scan_logic"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/scan_logic"
 	PTN "github.com/middelink/go-parse-torrent-name"
 
 	"github.com/pkg/errors"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/save_sub_helper"
-	subCommon "github.com/allanpk716/ChineseSubFinder/pkg/sub_formatter/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/save_sub_helper"
+	subCommon "github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter/common"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/ass"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/srt"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
 
 	"github.com/sirupsen/logrus"
 

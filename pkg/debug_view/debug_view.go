@@ -2,12 +2,12 @@ package debug_view
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 	"os"
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/vad"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/vad"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
 )

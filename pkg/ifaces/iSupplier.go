@@ -1,8 +1,8 @@
 package ifaces
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/supplier"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/series"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/supplier"
 	"github.com/sirupsen/logrus"
 )
 

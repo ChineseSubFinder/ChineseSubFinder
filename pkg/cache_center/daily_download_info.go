@@ -3,7 +3,7 @@ package cache_center
 import (
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/cache_center/models"
 )
 
 // DailyDownloadCountGet 根据字幕提供者的名称，获取今日下载计数的次数，仅仅统计次数，并不确认是那个视频的字幕下载

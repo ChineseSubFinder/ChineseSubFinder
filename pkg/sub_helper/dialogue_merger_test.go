@@ -1,15 +1,15 @@
 package sub_helper
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/ass"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_parser/srt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/unit_test_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/ass"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/srt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/unit_test_helper"
 
-	// "github.com/allanpk716/ChineseSubFinder/pkg/my_util"
+	// "github.com/ChineseSubFinder/ChineseSubFinder/pkg/my_util"
 	"path/filepath"
 	"testing"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
 )
 
 func Test_isFirstLetterIsEngUpper(t *testing.T) {

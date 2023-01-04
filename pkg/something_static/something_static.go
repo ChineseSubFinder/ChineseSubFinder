@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
 
 	"github.com/sirupsen/logrus"
 )

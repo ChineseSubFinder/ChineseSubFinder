@@ -4,13 +4,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
-	"github.com/allanpk716/ChineseSubFinder/pkg/change_file_encode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/chs_cht_changer"
-	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/sub_timeline_fixer"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/subparser"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/change_file_encode"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/chs_cht_changer"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/ifaces"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_timeline_fixer"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/subparser"
 	"github.com/sirupsen/logrus"
 )
 

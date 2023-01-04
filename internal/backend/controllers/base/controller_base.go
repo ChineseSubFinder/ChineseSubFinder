@@ -3,11 +3,11 @@ package base
 import (
 	"net/http"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/lock"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/lock"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
 	"github.com/gin-gonic/gin"
 )
 

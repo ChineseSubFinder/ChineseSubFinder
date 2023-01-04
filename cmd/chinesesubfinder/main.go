@@ -6,21 +6,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/dao"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/file_downloader"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/pre_job"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/cron_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/pre_job"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/random_auth_key"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/backend"
-	"github.com/allanpk716/ChineseSubFinder/pkg/cache_center"
-	"github.com/allanpk716/ChineseSubFinder/pkg/common"
-	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/cache_center"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/common"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 	"github.com/sirupsen/logrus"
 )
 

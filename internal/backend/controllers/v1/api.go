@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	backend2 "github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	TTaskqueue "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
+	backend2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
+	TTaskqueue "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/task_queue"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
-	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/dao"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/decode"
 	"github.com/gin-gonic/gin"
 )
 

@@ -14,7 +14,7 @@ assignees: ""
 >
 > 在程序运行日志头部或者 Web UI 可以看到
 
-## 你看过[提问前，建议先看这里的排查问题的建议和步骤](https://github.com/allanpk716/ChineseSubFinder/issues/585) 了吗？
+## 你看过[提问前，建议先看这里的排查问题的建议和步骤](https://github.com/ChineseSubFinder/ChineseSubFinder/issues/585) 了吗？
 
 > No?那就先看看。
 

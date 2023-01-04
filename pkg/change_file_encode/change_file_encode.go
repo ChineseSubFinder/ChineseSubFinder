@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/language"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/language"
 )
 
 func Process(srcSubFileFPath string, desCode int) error {

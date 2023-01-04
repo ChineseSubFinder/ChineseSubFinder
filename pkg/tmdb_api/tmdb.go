@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
 	tmdb "github.com/cyruzin/golang-tmdb"
 	"github.com/sirupsen/logrus"

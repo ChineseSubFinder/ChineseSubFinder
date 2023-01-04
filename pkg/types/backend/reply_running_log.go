@@ -1,7 +1,7 @@
 package backend
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/log_hub"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/log_hub"
 )
 
 type ReplyRunningLog struct {

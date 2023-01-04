@@ -6,11 +6,11 @@
 
 ### 推荐的电影目录结构
 
-见 [文档](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E7%94%B5%E5%BD%B1%E7%9A%84%E6%8E%A8%E8%8D%90%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84.md)
+见 [文档](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/%E7%94%B5%E5%BD%B1%E7%9A%84%E6%8E%A8%E8%8D%90%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84.md)
 
 ### 推荐的连续剧目录结构
 
-见 [文档](https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/%E8%BF%9E%E7%BB%AD%E5%89%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E8%A6%81%E6%B1%82.md)
+见 [文档](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/%E8%BF%9E%E7%BB%AD%E5%89%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E8%A6%81%E6%B1%82.md)
 
 ## 镜像标签说明
 
@@ -63,7 +63,7 @@ docker run -d \
     --hostname chinesesubfinder \
     --log-driver "json-file" \
     --log-opt "max-size=100m" `# 限制docker控制台日志大小，可自行调整` \
-    allanpk716/chinesesubfinder
+    ChineseSubFinder/ChineseSubFinder
 
 ## latest-lite标签
 docker run -d \
@@ -80,7 +80,7 @@ docker run -d \
     --hostname chinesesubfinder \
     --log-driver "json-file" \
     --log-opt "max-size=100m" `# 限制docker控制台日志大小，可自行调整` \
-    allanpk716/chinesesubfinder:latest-lite
+    ChineseSubFinder/ChineseSubFinder:latest-lite
 ```
 
 创建好后访问`http://<ip>:19035`来进行下一步设置。
@@ -95,7 +95,7 @@ docker run -d \
 version: "3"
 services:
   chinesesubfinder:
-    image: allanpk716/chinesesubfinder:latest
+    image: ChineseSubFinder/ChineseSubFinder:latest
     volumes:
       - ./config:/config  # 冒号左边请修改为你想在主机上保存配置、日志等文件的路径
       - ./media:/media    # 请修改为你的媒体目录，冒号右边可以改成你方便记忆的目录，多个媒体目录需要分别映射进来
@@ -125,7 +125,7 @@ services:
 version: "3"
 services:
   chinesesubfinder:
-    image: allanpk716/chinesesubfinder:latest-lite
+    image: ChineseSubFinder/ChineseSubFinder:latest-lite
     volumes:
       - ./config:/config  # 冒号左边请修改为你想在主机上保存配置、日志等文件的路径
       - ./media:/media    # 请修改为你的媒体目录，冒号右边可以改成你方便记忆的目录，多个媒体目录需要分别映射进来

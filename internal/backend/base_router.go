@@ -6,14 +6,14 @@ import (
 
 	"github.com/arl/statsviz"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/tmdb_api"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/tmdb_api"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/base"
-	v1 "github.com/allanpk716/ChineseSubFinder/internal/backend/controllers/v1"
-	"github.com/allanpk716/ChineseSubFinder/internal/backend/middle"
-	"github.com/allanpk716/ChineseSubFinder/pkg/logic/cron_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/backend/controllers/base"
+	v1 "github.com/ChineseSubFinder/ChineseSubFinder/internal/backend/controllers/v1"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/backend/middle"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/cron_helper"
 	"github.com/gin-gonic/gin"
 )
 

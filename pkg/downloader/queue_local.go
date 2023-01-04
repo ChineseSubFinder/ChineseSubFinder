@@ -2,15 +2,15 @@ package downloader
 
 import (
 	"fmt"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/task_queue"
-	common2 "github.com/allanpk716/ChineseSubFinder/pkg/types/common"
-	taskQueue2 "github.com/allanpk716/ChineseSubFinder/pkg/types/task_queue"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/decode"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/task_queue"
+	common2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
+	taskQueue2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/task_queue"
 )
 
 func (d *Downloader) queueDownloaderLocal() {

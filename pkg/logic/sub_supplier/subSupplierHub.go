@@ -3,17 +3,17 @@ package sub_supplier
 import (
 	"path/filepath"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/media_info_dealers"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/media_info_dealers"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/ifaces"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/emby"
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/series"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/ifaces"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/emby"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/series"
 
-	movieHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/movie_helper"
-	seriesHelper "github.com/allanpk716/ChineseSubFinder/pkg/logic/series_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_helper"
+	movieHelper "github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/movie_helper"
+	seriesHelper "github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/series_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/errgo.v2/fmt/errors"
 )

@@ -13,7 +13,7 @@ export MUSL=/musl
 
 ## 下载源码并下载go mod
 cd ~/go/src
-curl -sSL https://github.com/allanpk716/ChineseSubFinder/archive/refs/tags/${VERSION}.tar.gz | tar xvz --strip-components 1
+curl -sSL https://github.com/ChineseSubFinder/ChineseSubFinder/archive/refs/tags/${VERSION}.tar.gz | tar xvz --strip-components 1
 npm --prefix frontend ci
 npm --prefix frontend run build
 go mod tidy

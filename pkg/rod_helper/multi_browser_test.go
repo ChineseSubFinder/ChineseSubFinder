@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/log_helper"
-	"github.com/allanpk716/ChineseSubFinder/pkg/settings"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 )
 
 func TestNewMultiBrowser(t *testing.T) {

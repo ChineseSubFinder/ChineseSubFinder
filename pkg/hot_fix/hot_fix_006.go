@@ -1,10 +1,10 @@
 package hot_fix
 
 import (
-	"github.com/allanpk716/ChineseSubFinder/internal/models"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
 	"gorm.io/gorm"
 
-	"github.com/allanpk716/ChineseSubFinder/internal/dao"
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/dao"
 	"github.com/sirupsen/logrus"
 )
 

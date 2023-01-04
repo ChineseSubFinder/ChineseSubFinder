@@ -7,17 +7,17 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/types/backend"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
 
 	PTN "github.com/middelink/go-parse-torrent-name"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/sub_parser_hub"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
 
-	"github.com/allanpk716/ChineseSubFinder/pkg/decode"
-	"github.com/allanpk716/ChineseSubFinder/pkg/filter"
-	"github.com/allanpk716/ChineseSubFinder/pkg/sort_things"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/decode"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/filter"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sort_things"
 	"github.com/emirpasic/gods/maps/treemap"
 	"github.com/sirupsen/logrus"
 )
