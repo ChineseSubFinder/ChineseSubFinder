@@ -79,12 +79,14 @@ const tab = ref('log');
 
 const getLatestVersion = async () => {
   try {
-    const data = await fetch('https://api.github.com/repos/allanpk716/chinesesubfinder/releases/latest').then((res) => {
-      if (res.ok) {
-        return res.json();
+    const data = await fetch('https://api.github.com/repos/ChineseSubFinder/ChineseSubFinder/releases/latest').then(
+      (res) => {
+        if (res.ok) {
+          return res.json();
+        }
+        return Promise.reject(res);
       }
-      return Promise.reject(res);
-    });
+    );
     latestVersion.value = data;
     // 接口请求速率过高有可能403，本地存一份
     LocalStorage.set('latestVersion', data);
