@@ -180,7 +180,7 @@
             本程序提供一些接口给开发者使用，通过API key鉴权，具体参见
             <!-- eslint-disable -->
             <a
-              href="https://github.com/allanpk716/ChineseSubFinder/blob/docs/DesignFile/ApiKey%E8%AE%BE%E8%AE%A1/ApiKey%E8%AE%BE%E8%AE%A1.md"
+              href="https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/ApiKey%E8%AE%BE%E8%AE%A1/ApiKey%E8%AE%BE%E8%AE%A1.md"
               class="text-primary"
               target="_blank"
               >开发文档</a

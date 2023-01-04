@@ -15,7 +15,7 @@
         </version-update-item>
         <q-item
           clickable
-          @click="openPage('https://github.com/allanpk716/ChineseSubFinder/blob/master/docker/readme.md')"
+          @click="openPage('https://github.com/ChineseSubFinder/ChineseSubFinder/blob/master/docker/readme.md')"
         >
           <q-item-section> 帮助文档 </q-item-section>
         </q-item>

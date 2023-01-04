@@ -158,7 +158,7 @@
             <!--            eslint-disable max-len-->
             如果你使用的是
             <a
-              href="https://github.com/allanpk716/ChineseSubFinder/tree/master/docker#%E9%95%9C%E5%83%8F%E6%A0%87%E7%AD%BE%E8%AF%B4%E6%98%8E"
+              href="https://github.com/ChineseSubFinder/ChineseSubFinder/tree/master/docker#%E9%95%9C%E5%83%8F%E6%A0%87%E7%AD%BE%E8%AF%B4%E6%98%8E"
               target="_blank"
               class="text-negative"
               >lite轻量模式的Docker镜像</a

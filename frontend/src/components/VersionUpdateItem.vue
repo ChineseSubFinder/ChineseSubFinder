@@ -47,7 +47,10 @@
             <div>
               参考教程
               <!-- eslint-disable-next-line max-len -->
-              <a href="https://github.com/allanpk716/ChineseSubFinder/blob/master/docker/readme.md" target="_blank">
+              <a
+                href="https://github.com/ChineseSubFinder/ChineseSubFinder/blob/master/docker/readme.md"
+                target="_blank"
+              >
                 Docker部署教程
               </a>
             </div>
