@@ -1,4 +1,4 @@
-FROM ChineseSubFinder/ChineseSubFinder-base:latest
+FROM allanpk716/ChineseSubFinder-base:latest
 ARG VERSION
 ENV TZ=Asia/Shanghai \
     PERMS=true \
