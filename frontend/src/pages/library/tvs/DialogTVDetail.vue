@@ -184,7 +184,7 @@ const categoryVideos = computed(() => {
 const tab = ref(null);
 
 watch(categoryVideos, () => {
-  if (categoryVideos.value.length) {
+  if (categoryVideos.value.length && tab.value === null) {
     tab.value = categoryVideos.value[0].season;
   }
 });
