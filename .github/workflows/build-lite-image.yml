@@ -63,6 +63,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:${{ steps.prepare.outputs.version }}-lite
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:latest-lite
+            ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:latest
 
       - name: Docker Buildx Beta Image
         if: contains(steps.prepare.outputs.version, 'Beta')
@@ -80,3 +81,4 @@ jobs:
             VERSION=${{ steps.prepare.outputs.version }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:${{ steps.prepare.outputs.version }}-lite
+            ${{ secrets.DOCKER_USERNAME }}/chinesesubfinder:${{ steps.prepare.outputs.version }}
