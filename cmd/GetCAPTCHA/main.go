@@ -134,7 +134,7 @@ func Process(proxySettings *settings.ProxySettings) error {
 	nowTT := time.Now()
 	nowTime := nowTT.Format("2006-01-02")
 	nowTimeFileNamePrix := fmt.Sprintf("%d%d%d", nowTT.Year(), nowTT.Month(), nowTT.Day())
-	httpClient, err := pkg.NewHttpClient(proxySettings)
+	httpClient, err := pkg.NewHttpClient("")
 	if err != nil {
 		return err
 	}
