@@ -4,7 +4,6 @@ go 1.17
 
 require (
 	github.com/PuerkitoBio/goquery v1.7.1
-	github.com/StalkR/imdb v1.0.10
 	github.com/Tnze/go.num/v2 v2.0.0-20191006170829-cb483d4c9152
 	github.com/abadojack/whatlanggo v1.0.1
 	github.com/allanpk716/fake-useragent v0.2.1
@@ -21,7 +20,6 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/go-rod/rod v0.106.8
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/uuid v1.3.0
 	github.com/grd/stat v0.0.0-20130623202159-138af3fd5012
 	github.com/huandu/go-clone v1.3.0

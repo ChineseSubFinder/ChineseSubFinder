@@ -9,7 +9,6 @@ import (
 	common2 "github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/hot_fix"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/rod_helper"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter/common"
 	"github.com/sirupsen/logrus"
@@ -85,22 +84,6 @@ func (p *PreJob) ChangeSubNameFormat() *PreJob {
 		return p
 	}
 
-	return p
-}
-
-func (p *PreJob) ReloadBrowser() *PreJob {
-
-	if p.gError != nil {
-		p.log.Infoln("Skip PreJob.ReloadBrowser()")
-		return p
-	}
-	defer func() {
-		p.log.Infoln("PreJob.ReloadBrowser() End")
-	}()
-	p.log.Infoln("PreJob.ReloadBrowser() Start...")
-	// ------------------------------------------------------------------------
-	// ReloadBrowser 提前把浏览器下载好
-	rod_helper.ReloadBrowser(p.log)
 	return p
 }
 
