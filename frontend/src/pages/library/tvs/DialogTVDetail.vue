@@ -1,5 +1,5 @@
 <template>
-  <span @click="visible = true">
+  <span @click.stop="visible = true">
     <slot></slot>
   </span>
 
