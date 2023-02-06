@@ -3,9 +3,9 @@ package random_auth_key
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/wumansgy/goEncrypt/aes"
 
 	"github.com/jinzhu/now"
-	"github.com/wumansgy/goEncrypt"
 )
 
 // RandomAuthKey 伪随机的登录验证 Key
@@ -44,7 +44,7 @@ func (r RandomAuthKey) getAuthKey(hourUnixTime int64) (string, error) {
 	orgString := prefixStr + r.authKey.BaseKey + nowUnixTimeStr + r.authKey.BaseKey[:r.offset]
 	plaintext := []byte(orgString)
 	// 传入明文和自己定义的密钥，密钥为 16 字节 可以自己传入初始化向量,如果不传就使用默认的初始化向量, 16 字节
-	cryptText, err := goEncrypt.AesCbcEncrypt(plaintext, []byte(r.authKey.AESKey16), []byte(r.authKey.AESIv16))
+	cryptText, err := aes.AesCbcEncrypt(plaintext, []byte(r.authKey.AESKey16), []byte(r.authKey.AESIv16))
 	if err != nil {
 		return "", err
 	}
