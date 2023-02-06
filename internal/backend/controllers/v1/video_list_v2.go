@@ -264,43 +264,51 @@ func (cb *ControllerBase) ScanSkipInfo(c *gin.Context) {
 	case "POST":
 		{
 			// 查询
-			videoSkipInfo := backend2.ReqVideoSkipInfo{}
-			err = c.ShouldBindJSON(&videoSkipInfo)
+			videoSkipInfos := backend2.ReqVideoSkipInfos{}
+			err = c.ShouldBindJSON(&videoSkipInfos)
 			if err != nil {
 				return
 			}
-			isSkip := cb.cronHelper.Downloader.ScanLogic.Get(videoSkipInfo.VideoType, videoSkipInfo.PhysicalVideoFileFullPath)
+
+			isSkips := make([]bool, 0)
+			for _, videoSkipInfo := range videoSkipInfos.VideoSkipInfos {
+				isSkip := cb.cronHelper.Downloader.ScanLogic.Get(videoSkipInfo.VideoType, videoSkipInfo.PhysicalVideoFileFullPath)
+				isSkips = append(isSkips, isSkip)
+			}
 			c.JSON(http.StatusOK, backend2.ReplyVideoSkipInfo{
-				IsSkip: isSkip,
+				IsSkips: isSkips,
 			})
 			return
 		}
 	case "PUT":
 		{
 			// 设置
-			videoSkipInfo := backend2.ReqVideoSkipInfo{}
-			err = c.ShouldBindJSON(&videoSkipInfo)
+			videoSkipInfos := backend2.ReqVideoSkipInfos{}
+			err = c.ShouldBindJSON(&videoSkipInfos)
 			if err != nil {
 				return
 			}
 
-			var skipInfo *models.SkipScanInfo
-			if videoSkipInfo.VideoType == 0 {
-				// 电影
-				skipInfo = models.NewSkipScanInfoByMovie(videoSkipInfo.PhysicalVideoFileFullPath, videoSkipInfo.IsSkip)
-			} else {
-				// 电视剧
-				var parse *PTN.TorrentInfo
-				parse, err = PTN.Parse(videoSkipInfo.PhysicalVideoFileFullPath)
-				if err != nil {
-					cb.log.Errorln("SetScanSkipInfo.PTN.Parse", err)
-					return
-				}
-				dirFPath := filepath.Dir(filepath.Dir(videoSkipInfo.PhysicalVideoFileFullPath))
-				skipInfo = models.NewSkipScanInfoBySeries(dirFPath, parse.Season, parse.Episode, videoSkipInfo.IsSkip)
-			}
+			for _, videoSkipInfo := range videoSkipInfos.VideoSkipInfos {
 
-			cb.cronHelper.Downloader.ScanLogic.Set(skipInfo)
+				var skipInfo *models.SkipScanInfo
+				if videoSkipInfo.VideoType == 0 {
+					// 电影
+					skipInfo = models.NewSkipScanInfoByMovie(videoSkipInfo.PhysicalVideoFileFullPath, videoSkipInfo.IsSkip)
+				} else {
+					// 电视剧
+					var parse *PTN.TorrentInfo
+					parse, err = PTN.Parse(videoSkipInfo.PhysicalVideoFileFullPath)
+					if err != nil {
+						cb.log.Errorln("SetScanSkipInfo.PTN.Parse", err)
+						return
+					}
+					dirFPath := filepath.Dir(filepath.Dir(videoSkipInfo.PhysicalVideoFileFullPath))
+					skipInfo = models.NewSkipScanInfoBySeries(dirFPath, parse.Season, parse.Episode, videoSkipInfo.IsSkip)
+				}
+
+				cb.cronHelper.Downloader.ScanLogic.Set(skipInfo)
+			}
 
 			c.JSON(http.StatusOK, backend2.ReplyCommon{
 				Message: "ok"})
