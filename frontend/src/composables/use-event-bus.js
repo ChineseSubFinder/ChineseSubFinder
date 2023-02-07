@@ -6,9 +6,12 @@ import eventBus from 'vue3-eventbus';
 import { onBeforeUnmount } from 'vue';
 
 const useEventBus = (eventName, fn) => {
-  eventBus.on(eventName, fn);
+  const eventBusFn = (...args) => {
+    fn(...args);
+  };
+  eventBus.on(eventName, eventBusFn);
   onBeforeUnmount(() => {
-    eventBus.off(eventName, fn);
+    eventBus.off(eventName, eventBusFn);
   });
 };
 

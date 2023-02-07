@@ -43,12 +43,16 @@ const isSkipped = ref(null);
 
 const getIsSkipped = async () => {
   const [res] = await LibraryApi.getSkipInfo({
-    video_type: props.videoType,
-    physical_video_file_full_path: props.path,
-    is_bluray: false,
-    is_skip: true,
+    video_skip_infos: [
+      {
+        video_type: props.videoType,
+        physical_video_file_full_path: props.path,
+        is_bluray: false,
+        is_skip: true,
+      },
+    ],
   });
-  isSkipped.value = res.is_skip;
+  isSkipped.value = res.is_skips?.[0];
 };
 
 const skip = async () => {
@@ -59,10 +63,14 @@ const skip = async () => {
     persistent: true,
   }).onOk(async () => {
     const [res] = await LibraryApi.setSkipInfo({
-      video_type: props.videoType,
-      physical_video_file_full_path: props.path,
-      is_bluray: false,
-      is_skip: !isSkipped.value,
+      video_skip_infos: [
+        {
+          video_type: props.videoType,
+          physical_video_file_full_path: props.path,
+          is_bluray: false,
+          is_skip: !isSkipped.value,
+        },
+      ],
     });
     if (res) {
       SystemMessage.success('操作成功');
@@ -71,7 +79,13 @@ const skip = async () => {
   });
 };
 
-useEventBus(`refresh-skip-status-${props.path}`, getIsSkipped);
+useEventBus(`refresh-skip-status-${props.path}`, (flag) => {
+  if (flag !== undefined) {
+    isSkipped.value = flag;
+  } else {
+    getIsSkipped();
+  }
+});
 
 onMounted(() => {
   getIsSkipped();
