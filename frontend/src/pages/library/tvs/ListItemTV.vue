@@ -37,7 +37,6 @@ import { computed, onMounted, ref, watch } from 'vue';
 import DialogTVDetail from 'pages/library/tvs/DialogTVDetail';
 import LibraryApi from 'src/api/LibraryApi';
 import { getUrl, subtitleUploadList } from 'pages/library/use-library';
-import { VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
 
 const props = defineProps({
   data: Object,
@@ -45,7 +44,6 @@ const props = defineProps({
 
 const posterInfo = ref(null);
 const detailInfo = ref(null);
-const isSkipped = ref(null);
 
 const getPosterInfo = async () => {
   const [res] = await LibraryApi.getTvPoster({
@@ -65,16 +63,6 @@ const getDetailInfo = async () => {
   detailInfo.value = res;
 };
 
-const getIsSkipped = async () => {
-  const [res] = await LibraryApi.getSkipInfo({
-    video_type: VIDEO_TYPE_TV,
-    physical_video_file_full_path: props.data.video_f_path,
-    is_bluray: false,
-    is_skip: true,
-  });
-  isSkipped.value = res.is_skip;
-};
-
 const hasSubtitleVideoCount = computed(
   () => detailInfo.value?.one_video_info.filter((e) => e.sub_f_path_list.length > 0).length
 );
@@ -91,7 +79,6 @@ watch(subtitleUploadList, (val, oldValue) => {
 
 onMounted(() => {
   getPosterInfo();
-  getIsSkipped();
   getDetailInfo();
 });
 </script>

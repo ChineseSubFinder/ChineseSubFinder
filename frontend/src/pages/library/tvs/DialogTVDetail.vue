@@ -256,27 +256,36 @@ const skipAll = async (isSkip) => {
     cancel: true,
     persistent: true,
   }).onOk(async () => {
-    const promises = selection.value.map(async (item) => {
-      const [, err] = await LibraryApi.setSkipInfo({
+    const [, err] = await LibraryApi.setSkipInfo({
+      video_skip_infos: selection.value.map((item) => ({
         video_type: VIDEO_TYPE_TV,
         physical_video_file_full_path: item.video_f_path,
         is_bluray: false,
         is_skip: isSkip,
-      });
-      if (err !== null) {
-        return Promise.reject(err);
-      }
-      eventBus.emit(`refresh-skip-status-${item.video_f_path}`);
-      return Promise.resolve();
+      })),
+    });
+    if (err !== null) {
+      SystemMessage.error(err.message);
+      return;
+    }
+    const [res, err2] = await LibraryApi.getSkipInfo({
+      video_skip_infos: selection.value.map((item) => ({
+        video_type: VIDEO_TYPE_TV,
+        physical_video_file_full_path: item.video_f_path,
+        is_bluray: false,
+        is_skip: true,
+      })),
+    });
+    if (err2 !== null) {
+      SystemMessage.error(err2.message);
+      return;
+    }
+
+    selection.value.forEach((item, index) => {
+      eventBus.emit(`refresh-skip-status-${item.video_f_path}`, res.is_skips[index]);
     });
 
-    const result = await Promise.allSettled(promises);
-
-    const successCount = result.filter((item) => item.status === 'fulfilled').length;
-    const errorCount = result.filter((item) => item.status === 'rejected').length;
-
-    const msg = `成功${isSkip ? '锁定' : '解锁'} ${successCount} 个视频${errorCount ? `，失败 ${errorCount} 个` : ''}`;
-    SystemMessage.success(msg);
+    SystemMessage.success('操作成功');
   });
 };
 

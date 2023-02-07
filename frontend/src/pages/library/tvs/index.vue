@@ -91,14 +91,6 @@ const toggleSelection = (item) => {
   }
 };
 
-const lockVideo = async (item, lock) =>
-  LibraryApi.setSkipInfo({
-    video_type: VIDEO_TYPE_TV,
-    physical_video_file_full_path: item.video_f_path,
-    is_bluray: false,
-    is_skip: lock,
-  });
-
 const lockTv = async (item, lock) => {
   const [tvInfo] = await LibraryApi.getTvDetail({
     name: item.name,
@@ -106,7 +98,14 @@ const lockTv = async (item, lock) => {
     root_dir_path: item.root_dir_path,
   });
 
-  return Promise.allSettled(tvInfo.one_video_info.map((e) => lockVideo(e, lock)));
+  return LibraryApi.setSkipInfo({
+    video_skip_infos: tvInfo.one_video_info.map((e) => ({
+      video_type: VIDEO_TYPE_TV,
+      physical_video_file_full_path: e.video_f_path,
+      is_bluray: false,
+      is_skip: lock,
+    })),
+  });
 };
 
 const setLock = async (flag) => {
