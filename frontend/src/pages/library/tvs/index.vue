@@ -122,6 +122,8 @@ const setLock = async (flag) => {
     await Promise.allSettled(
       selection.value.map((e) => tvs.value.find((f) => f.root_dir_path === e)).map((e) => lockTv(e, flag))
     );
+    // 取消选中
+    selection.value = [];
     SystemMessage.success('操作成功！');
   });
 };
