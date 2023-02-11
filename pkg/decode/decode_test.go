@@ -77,6 +77,19 @@ func Test_getImdbAndYearNfo(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "tvshow_00 (63).nfo", args: args{
+				nfoFilePath: filepath.Join(unit_test_helper.GetTestDataResourceRootPath([]string{"nfo_files", "tvshow"}, 3, false), "tvshow_00 (63).nfo"),
+				rootKey:     "tvshow",
+			},
+			want: types.VideoNfoInfo{
+				ImdbId:      "tt3581920",
+				TVdbId:      "392256",
+				Title:       "The Last of Us",
+				ReleaseDate: "2023-01-15",
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
