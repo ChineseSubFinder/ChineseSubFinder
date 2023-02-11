@@ -105,7 +105,8 @@ const searchCsf = async () => {
     loading.value = false;
     return;
   }
-  const imdbId = d?.imdb_id;
+  console.log(d);
+  const imdbId = d?.ImdbId;
   await waitRequestReady();
   if (props.isMovie) {
     const [data, err] = await CsfSubtitlesApi.searchMovie({
