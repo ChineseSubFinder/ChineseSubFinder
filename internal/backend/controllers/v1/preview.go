@@ -239,6 +239,33 @@ func (cb *ControllerBase) PreviewSearchOtherWeb(c *gin.Context) {
 	c.JSON(http.StatusOK, searchOtherWebReply)
 }
 
+func (cb *ControllerBase) PreviewVideoFPath2IMDBInfo(c *gin.Context) {
+	var err error
+	defer func() {
+		// 统一的异常处理
+		cb.ErrorProcess(c, "PreviewVideoFPath2IMDBInfo", err)
+	}()
+
+	searchOtherWeb := SearchOtherWebReq{}
+	err = c.ShouldBindJSON(&searchOtherWeb)
+	if err != nil {
+		return
+	}
+
+	if pkg.IsFile(searchOtherWeb.VideoFPath) == false {
+		c.JSON(http.StatusOK, backend2.ReplyCommon{Message: "video file not found"})
+		return
+	}
+
+	mixMediaInfo, err := mix_media_info.GetMixMediaInfo(cb.cronHelper.FileDownloader.MediaInfoDealers,
+		searchOtherWeb.VideoFPath, searchOtherWeb.IsMovie)
+	if err != nil {
+		return
+	}
+
+	c.JSON(http.StatusOK, &mixMediaInfo)
+}
+
 type SearchOtherWebReq struct {
 	VideoFPath string `json:"video_f_path"`
 	IsMovie    bool   `json:"is_movie"`
