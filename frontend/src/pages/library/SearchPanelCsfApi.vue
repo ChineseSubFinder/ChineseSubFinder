@@ -39,7 +39,6 @@ import { LocalStorage } from 'quasar';
 
 const props = defineProps({
   path: String,
-  imdbId: String,
   isMovie: {
     type: Boolean,
     default: false,
@@ -85,6 +84,8 @@ const loading = ref(false);
 const csfSearchResult = ref(null);
 const selectedSubBlob = ref(null);
 const selectedItem = ref(null);
+const imdbId = ref(null);
+
 // blob缓存
 const cacheBlob = new Map();
 const selectedSubUrl = computed(() => {
@@ -105,12 +106,11 @@ const searchCsf = async () => {
     loading.value = false;
     return;
   }
-  console.log(d);
-  const imdbId = d?.ImdbId;
+  imdbId.value = d?.ImdbId;
   await waitRequestReady();
   if (props.isMovie) {
     const [data, err] = await CsfSubtitlesApi.searchMovie({
-      imdb_id: imdbId,
+      imdb_id: imdbId.value,
     });
     if (err !== null) {
       SystemMessage.error(err.message);
@@ -119,7 +119,7 @@ const searchCsf = async () => {
     }
   } else if (!props.searchPackage) {
     const [data, err] = await CsfSubtitlesApi.searchTvEps({
-      imdb_id: imdbId,
+      imdb_id: imdbId.value,
       season: props.season,
       episode: props.episode,
     });
@@ -145,8 +145,8 @@ const fetchSubtitleBlob = async (item) => {
   await waitRequestReady();
 
   const [data, err] = await CsfSubtitlesApi.getDownloadUrl({
-    token: item.token,
-    sub_sha256: item.sub_sha256,
+    ...item,
+    imdb_id: imdbId.value,
   });
   if (err !== null) {
     SystemMessage.error(err.message);
