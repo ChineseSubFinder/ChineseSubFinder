@@ -24,7 +24,14 @@
 
       <q-tab-panels v-model="tab" animated keep-alive>
         <q-tab-panel name="csf">
-          <search-panel-csf-api :path="path" :imdb-id="imdbId" :is-movie="isMovie" :search-package="searchPackage" />
+          <search-panel-csf-api
+            :path="path"
+            :imdb-id="imdbId"
+            :is-movie="isMovie"
+            :season="season"
+            :episode="episode"
+            :search-package="searchPackage"
+          />
         </q-tab-panel>
 
         <q-tab-panel name="manual">
