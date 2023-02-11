@@ -114,7 +114,14 @@
                 </q-item-section>
 
                 <q-item-section side>
-                  <btn-dialog-search-subtitle size="md" round :path="item.video_f_path" />
+                  <btn-dialog-search-subtitle
+                    size="md"
+                    round
+                    :path="item.video_f_path"
+                    :imdb-id="data.imdb_id"
+                    :season="item.season"
+                    :episode="item.episode"
+                  />
                 </q-item-section>
 
                 <q-item-section side>

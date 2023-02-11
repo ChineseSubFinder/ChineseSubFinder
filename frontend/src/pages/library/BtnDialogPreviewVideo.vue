@@ -1,5 +1,5 @@
 <template>
-  <q-btn color="primary" icon="smart_display" flat dense v-bind="$attrs" @click="visible = true" title="预览" />
+  <q-btn color="primary" icon="smart_display" flat dense v-bind="$attrs" @click="handleBtnClick" title="预览" />
 
   <q-dialog
     v-model="visible"
@@ -53,16 +53,30 @@ const $q = useQuasar();
 
 const props = defineProps({
   path: String,
+  onBtnClick: Function,
   subList: {
     type: Array,
     default: () => [],
   },
+  subtitleType: String,
 });
 
 const visible = ref(false);
 const artInstance = ref(null);
 const selectedSub = ref(null);
 const checkResult = ref(null);
+
+const handleBtnClick = async () => {
+  if (props.onBtnClick) {
+    props.onBtnClick((flag) => {
+      if (flag) {
+        visible.value = true;
+      }
+    });
+  } else {
+    visible.value = true;
+  }
+};
 
 const handleGetArtInstance = (instance) => {
   artInstance.value = instance;
@@ -90,7 +104,8 @@ const artOption = computed(() => ({
   autoSize: true,
   url: `${config.BACKEND_URL}/v1/preview/playlist/${encode(encodeURIComponent(props.path))}`,
   subtitle: {
-    url: getUrl(selectedSub.value),
+    url: selectedSub.value.startsWith('blob') ? selectedSub.value : getUrl(selectedSub.value),
+    type: props.subtitleType,
   },
   type: 'm3u8',
   customType: {

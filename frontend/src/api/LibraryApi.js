@@ -8,6 +8,8 @@ class LibraryApi extends BaseApi {
 
   getList = () => this.http('/v1/video/list/video_main_list');
 
+  getImdbId = (data) => this.http('/v1/preview/video_f_path_2_imdb_info', data, 'POST');
+
   downloadSubtitle = (data) => this.http(`/v1/video/list/add`, data, 'POST');
 
   getMoviePoster = (data) => this.http(`/v1/video/list/movie_poster`, data, 'POST');

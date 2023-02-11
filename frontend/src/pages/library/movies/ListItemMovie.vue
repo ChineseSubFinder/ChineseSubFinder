@@ -47,7 +47,7 @@
         <q-btn v-else color="grey" size="sm" round flat dense icon="closed_caption" @click.stop title="没有字幕" />
       </div>
 
-      <btn-dialog-search-subtitle :path="props.data.video_f_path" is-movie />
+      <btn-dialog-search-subtitle :path="props.data.video_f_path" :imdb-id="data.imdb_id" is-movie />
       <q-space />
 
       <btn-upload-subtitle :path="data.video_f_path" dense size="sm" />
