@@ -147,9 +147,9 @@ func TVNfo(l *logrus.Logger, dir string) ([]string, error) {
 				continue
 			} else {
 
-				if filter.SkipFileInfo(l, curFile, fullPath) == true {
-					continue
-				}
+				//if filter.SkipFileInfo(l, curFile, fullPath) == true {
+				//	continue
+				//}
 				fileFullPathList = append(fileFullPathList, fullPath)
 			}
 		}
