@@ -22,7 +22,7 @@
   "dependencies": {
     "@quasar/extras": "^1.0.0",
     "core-js": "^3.6.5",
-    "quasar": "^2.6.0",
+    "quasar": "^2.11.5",
     "vue-router": "^4.0.0",
     "@vueuse/core": "^4.11.2",
     "artplayer": "^4.5.9",
