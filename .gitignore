@@ -1,0 +1,16 @@
+/.idea
+/sub_supplier/subhd/result.png
+/common/result.png
+/result.png
+/Logs
+/debugThings
+/tmpthings
+/model/result.png
+/sub_supplier/xunlei/Logs/*.log
+/config.yaml
+/ChineseSubFinder.exe
+/*.zip
+/*.rar
+/sub_supplier/subhd/Logs
+/model/config.yaml
+/sub_supplier/zimuku/Logs
