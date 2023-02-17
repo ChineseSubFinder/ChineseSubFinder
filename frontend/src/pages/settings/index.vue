@@ -76,7 +76,7 @@ import BasicSettings from 'pages/settings/SettingsPanelBasic';
 import AdvancedSettings from 'pages/settings/SettingsPanelAdvanced';
 import EmbySettings from 'pages/settings/SettingsPanelEmby';
 import DevelopmentSettings from 'pages/settings/SettingsPanelDevelopment';
-import { settingsState, submitAll, useSettings } from 'pages/settings/use-settings';
+import { formModel, submitAll, useSettings } from 'pages/settings/use-settings';
 import { isJobRunning } from 'src/store/systemState';
 import ExperimentSettings from 'pages/settings/SettingsPanelExperiment';
 import FormSubmitArea from 'pages/settings/FormSubmitArea';
@@ -84,7 +84,7 @@ import SubSourceSettings from 'pages/settings/SettingsPanelSubSource';
 
 const tab = ref('basic');
 
-const isSettingsLoaded = computed(() => Object.keys(settingsState.data ?? {}).length);
+const isSettingsLoaded = computed(() => Object.keys(formModel).length);
 
 useSettings();
 </script>
