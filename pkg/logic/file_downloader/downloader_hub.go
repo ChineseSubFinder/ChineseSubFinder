@@ -185,31 +185,3 @@ func (f *FileDownloader) GetEx(supplierName string, browser *rod.Browser, subDow
 		return subInfo, nil
 	}
 }
-
-// GetCSF subtitle.best 使用这个
-func (f *FileDownloader) GetCSF(subSha256 string) (bool, *supplier.SubInfo, error) {
-
-	found, subInfo, err := f.CacheCenter.DownloadFileGet(subSha256)
-	if err != nil {
-		return false, nil, err
-	}
-
-	if found == false {
-		// 没有找到就是缓存进去
-		return false, nil, nil
-	} else {
-		// 缓存中有
-		return true, subInfo, nil
-	}
-}
-
-// AddCSF subtitle.best 使用这个
-func (f FileDownloader) AddCSF(inSubInfo *supplier.SubInfo) error {
-
-	inSubInfo.SetFileUrlSha256(inSubInfo.FileUrl)
-	err := f.CacheCenter.DownloadFileAdd(inSubInfo)
-	if err != nil {
-		return err
-	}
-	return nil
-}

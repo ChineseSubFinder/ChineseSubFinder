@@ -13,7 +13,6 @@ import (
 
 	subSupplier "github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/csf"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
 
@@ -77,11 +76,6 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 		settings.Get().SubtitleSources.AssrtSettings.Token != "" {
 		// 如果开启了 ASSRt 字幕源，则需要测试 ASSRt 的代理
 		subSupplierHub.AddSubSupplier(assrt.NewSupplier(cb.fileDownloader))
-	}
-
-	if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
-		// 如果开启了分享字幕功能，那么就可以开启这个功能
-		subSupplierHub.AddSubSupplier(csf.NewSupplier(cb.fileDownloader))
 	}
 
 	outStatus := subSupplierHub.CheckSubSiteStatus()

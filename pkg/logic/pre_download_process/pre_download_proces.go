@@ -14,7 +14,6 @@ import (
 	subSupplier "github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/a4k"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/assrt"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/csf"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/shooter"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/xunlei"
 
@@ -110,11 +109,6 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 			shooter.NewSupplier(p.fileDownloader),
 			a4k.NewSupplier(p.fileDownloader),
 		)
-
-		if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
-			// 如果开启了分享字幕功能，那么就可以开启这个功能
-			p.SubSupplierHub.AddSubSupplier(csf.NewSupplier(p.fileDownloader))
-		}
 
 		if settings.Get().SubtitleSources.AssrtSettings.Enabled == true &&
 			settings.Get().SubtitleSources.AssrtSettings.Token != "" {
