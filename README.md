@@ -1,25 +1,14 @@
 # ChineseSubFinder
 
-本项目的初衷仅仅是想自动化搞定**限定条件**下 **中文** 字幕下载。
+本项目的初衷仅仅是想自动化搞定**限定条件**下 **中文** 字幕，在**第三方**的网站或者接口的下载。
 
 > CSF 使用交流目前只有一个 telegram 小组，https://t.me/chinesesubfinder 。
 >
 > 个人建议是以使用和讨论为主，bug 的反馈最好去 issue 按模板反馈和提出问题，也好有一个地方追溯。
 
-
-> 暂时下线 subhd、zimuku 的字幕下载支持，再次上线时间不定，请更新到 v0.33 版本及其以上，新增的 a4k 和 csf 字幕源（在“实验室”界面开启“共享字幕”才会使用）也许可以暂时缓解下载需求。
-
 ## 前言
 
-后续会长期支持两个方向的 Docker 镜像，差异见 [Docker 部署教程](docker/readme.md)
-
-1. 全功能版本 `ChineseSubFinder/ChineseSubFinder:latest`
-2. 轻量化版本 `ChineseSubFinder/ChineseSubFinder:latest-lite`
-
-如果使用了国内 Docker 镜像源，可能 latest 无法正确拉取到最新，那么请指定具体的 tag 去拉取，举例：
-
-1. `ChineseSubFinder/ChineseSubFinder:v0.33.0`
-2. `ChineseSubFinder/ChineseSubFinder:v0.33.0-lite`
+移除全功能版本，以后都是轻量级，tag 继续保留，实则都有是一个。
 
 最新的版本可以查看 [Docker Hub](https://hub.docker.com/repository/docker/ChineseSubFinder/ChineseSubFinder) ，如果不在 telegram 群内，没有特殊的需求请不要选择 **Beta** 版本使用。
 
@@ -70,9 +59,9 @@
 
 ## 如何编译此项目
 
-首选需要编译 Web 部分，见 frontend/README.md
+* 首选需要编译 Web 部分，见 frontend/README.md
 
-然后才能编译可执行程序部分
+* 然后才能编译可执行程序部分
 
 > 如果是 Windows，那么可以从这里下载 [MinGW-w64 - for 32 and 64 bit Windows - Browse /Toolchains targetting Win64 at SourceForge.net](https://sourceforge.net/projects/mingw-w64/files/Toolchains targetting Win64/)
 >
@@ -97,16 +86,6 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 
 跨平台是没有问题的，作者现在就是 Windows 开发的。因为手头没得 Mac OS ，也懒得整虚拟机去试，应该也是可以直接玩起来的。
 
-## 如何参与开发
-
-建议看 [关于中文字幕下载器的中长期规划讨论、求助](https://github.com/ChineseSubFinder/ChineseSubFinder/issues/20)，里面提及了后续的规划，需要大家的讨论。
-
-目前阶段参与开发可以会遇到项目大范围重构，导致合并代码困难的问题。
-
-可以协助规划和设计 Web 设置页面的需求，比如 api 接口设计什么的。
-
-正式版本发布后，参与开发可以更加容易一些。
-
 ## 版本
 
 请务必使用最新版本，这里忘记（懒得）写更新记录的话，可以去 [Releases](https://github.com/ChineseSubFinder/ChineseSubFinder/releases) 查看最新到什么版本了。
@@ -116,12 +95,6 @@ go mod tidy ，然后需要设置 CGO=1 ，找到 cmd\chinesesubfinder\main.go �
 - v0.42.x 新增，支持手动上传字幕，以及在 Web 界面即可预览字幕效果，重写“库”的刷新逻辑。 -- 2022年10月31日
 - ···
 - 完成初版，仅仅支持电影的字幕下载 -- 2021 年 6 月 13 日
-
-## TODO
-
-见 [ChineseSubProject](https://github.com/users/allanpk716/projects/2)
-
-> 业余时间有限，没空更新这个 TODO，有什么想要的直接提 issues，或者加 TG 咨询。
 
 ## 感谢
 
