@@ -23,6 +23,8 @@
     </div>
     <q-inner-loading :showing="loading">
       <q-spinner size="50px" color="primary" />
+      <div>{{ loadingMsg }}</div>
+      <div v-if="countdownLoading">预计 {{ nextRequestCountdownSecond }} 秒后取得数据</div>
     </q-inner-loading>
   </div>
 </template>
@@ -36,6 +38,7 @@ import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo.vue';
 import { getSubtitleUploadList } from 'pages/library/use-library';
 import eventBus from 'vue3-eventbus';
 import { LocalStorage } from 'quasar';
+import useInterval from 'src/composables/use-interval';
 
 const props = defineProps({
   path: String,
@@ -59,28 +62,17 @@ const props = defineProps({
 let lastRequestApiTime = LocalStorage.getItem('lastRequestApiTime') || 0;
 // 最小请求间隔
 const minRequestApiInterval = 15 * 1000;
+// 下次请求倒数时间
+const nextRequestCountdownSecond = ref(0);
 
-const checkOk = () => {
-  const now = Date.now();
-  if (now - lastRequestApiTime < minRequestApiInterval) {
-    return false;
-  }
-  lastRequestApiTime = now;
-  LocalStorage.set('lastRequestApiTime', now);
-  return true;
-};
-
-const waitRequestReady = async () => {
-  // 每100ms检查一次，直到请求间隔大于最小请求间隔
-  while (!checkOk()) {
-    // eslint-disable-next-line no-await-in-loop
-    await new Promise((resolve) => {
-      setTimeout(resolve, 100);
-    });
-  }
-};
+useInterval(() => {
+  const v = Math.ceil((lastRequestApiTime + minRequestApiInterval - Date.now()) / 1000);
+  nextRequestCountdownSecond.value = v > 0 ? v : 0;
+}, 100);
 
 const loading = ref(false);
+const countdownLoading = ref(false);
+const loadingMsg = ref('');
 const csfSearchResult = ref(null);
 const selectedSubBlob = ref(null);
 const selectedItem = ref(null);
@@ -95,8 +87,31 @@ const selectedSubUrl = computed(() => {
   return null;
 });
 
+const checkOk = () => {
+  const now = Date.now();
+  if (now - lastRequestApiTime < minRequestApiInterval) {
+    return false;
+  }
+  lastRequestApiTime = now;
+  LocalStorage.set('lastRequestApiTime', now);
+  return true;
+};
+
+const waitRequestReady = async () => {
+  countdownLoading.value = true;
+  // 每100ms检查一次，直到请求间隔大于最小请求间隔
+  while (!checkOk()) {
+    // eslint-disable-next-line no-await-in-loop
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100);
+    });
+  }
+  countdownLoading.value = false;
+};
+
 const searchCsf = async () => {
   loading.value = true;
+  loadingMsg.value = '正在获取字幕列表...';
   const [d, e] = await LibraryApi.getImdbId({
     is_movie: props.isMovie,
     video_f_path: props.path,
@@ -131,6 +146,7 @@ const searchCsf = async () => {
   } else {
     // TODO: search package
   }
+  loadingMsg.value = '';
   loading.value = false;
 };
 
@@ -142,8 +158,10 @@ const fetchSubtitleBlob = async (item) => {
   }
   selectedSubBlob.value = null;
   loading.value = true;
+  loadingMsg.value = '正在获取下载地址...';
   await waitRequestReady();
 
+  loadingMsg.value = '正在下载字幕...';
   const [data, err] = await CsfSubtitlesApi.getDownloadUrl({
     ...item,
     imdb_id: imdbId.value,
@@ -157,6 +175,7 @@ const fetchSubtitleBlob = async (item) => {
     cacheBlob.set(item.sub_sha256, blob);
     selectedSubBlob.value = blob;
   }
+  loadingMsg.value = '';
   loading.value = false;
 };
 
