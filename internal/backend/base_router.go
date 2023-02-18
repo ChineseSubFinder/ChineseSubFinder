@@ -138,7 +138,6 @@ func InitRouter(
 		GroupV1.GET("/preview/segments/:resolution/:segment/:videofpathbase64", cbV1.HlsSegment)
 		GroupV1.POST("/preview/search_other_web", cbV1.PreviewSearchOtherWeb)
 		GroupV1.POST("/preview/video_f_path_2_imdb_info", cbV1.PreviewVideoFPath2IMDBInfo)
-
 	}
 
 	GroupAPIV1 := router.Group("/api/v1")
