@@ -49,9 +49,9 @@ require (
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/ysmood/gson v0.7.2 // indirect
 	golang.org/x/crypto v0.5.0
-	golang.org/x/net v0.5.0
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/text v0.6.0
+	golang.org/x/net v0.7.0
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0
 	gonum.org/v1/gonum v0.9.3
 	gopkg.in/errgo.v2 v2.1.0
 	gopkg.in/ini.v1 v1.67.0 // indirect
