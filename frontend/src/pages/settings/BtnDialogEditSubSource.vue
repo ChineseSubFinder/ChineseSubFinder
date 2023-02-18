@@ -11,14 +11,6 @@
         <q-btn dense flat label="重置" color="primary" title="重置成默认url" @click="resetUrl" />
       </template>
     </q-input>
-    <q-input
-      v-model.number="form.dailyLimit"
-      type="number"
-      label="每日下载次数下载"
-      placeholder="0为禁用字幕源，-1为不限制次数。最高建议100"
-      :rules="[(val) => val !== '' || '不能为空']"
-      outlined
-    />
   </common-form-dialog>
 </template>
 
@@ -35,7 +27,6 @@ const emit = defineEmits(['update']);
 
 const form = reactive({
   url: '',
-  dailyLimit: -1,
 });
 
 const visible = ref(false);
@@ -49,7 +40,6 @@ const handleSubmit = () => {
 
 const handleBeforeShow = () => {
   form.url = props.data?.root_url;
-  form.dailyLimit = props.data?.daily_download_limit;
 };
 
 const resetUrl = () => {
