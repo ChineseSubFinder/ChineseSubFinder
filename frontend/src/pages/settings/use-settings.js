@@ -5,12 +5,9 @@ import { deepCopy } from 'src/utils/common';
 import { useAppStatusLoading } from 'src/composables/use-app-status-loading';
 import { isRunningInDocker } from 'src/store/systemState';
 import { Dialog } from 'quasar';
+import { settingsState } from 'src/store/settingsState';
 
 const { startLoading } = useAppStatusLoading();
-
-export const settingsState = reactive({
-  data: null,
-});
 
 export const formModel = reactive({});
 
@@ -26,8 +23,8 @@ const updateFolderMap = () => {
       return r;
     }, {});
 
-  const commonSettings = settingsState.data?.common_settings;
-  const embySettings = settingsState.data.emby_settings;
+  const commonSettings = settingsState.settings?.common_settings;
+  const embySettings = settingsState.settings.emby_settings;
 
   embySettings.movie_paths_mapping = getFolderMap(commonSettings.movie_paths, embySettings.movie_paths_mapping || {});
   embySettings.series_paths_mapping = getFolderMap(
@@ -37,15 +34,15 @@ const updateFolderMap = () => {
 };
 
 watch(
-  () => settingsState.data,
+  () => settingsState.settings,
   () => {
     updateFolderMap();
-    Object.assign(formModel, deepCopy(settingsState.data));
+    Object.assign(formModel, deepCopy(settingsState.settings));
   }
 );
 
 export const resetForm = () => {
-  Object.assign(formModel, deepCopy(settingsState.data));
+  Object.assign(formModel, deepCopy(settingsState.settings));
 };
 
 const getSettings = async () => {
@@ -54,7 +51,7 @@ const getSettings = async () => {
     SystemMessage.error(err.message);
     return;
   }
-  settingsState.data = res;
+  settingsState.settings = res;
 };
 
 export const useSettings = () => {
@@ -88,7 +85,7 @@ export const submitAll = async () => {
     SystemMessage.error(err.message);
     return;
   }
-  settingsState.data = { ...settingsState.data, ...deepCopy(formModel) };
+  settingsState.settings = { ...settingsState.settings, ...deepCopy(formModel) };
   SystemMessage.success('保存成功');
   startLoading();
 };
@@ -99,7 +96,7 @@ export const submitAll = async () => {
  * @returns {any}
  */
 export const getExportSettings = (includeSensitive = false) => {
-  const data = deepCopy(settingsState.data);
+  const data = deepCopy(settingsState.settings);
   if (!includeSensitive) {
     delete data.user_info;
     delete data.advanced_settings.proxy_settings;

@@ -175,6 +175,9 @@
               <q-item-label :lines="1">
                 {{ item.root_url }}
               </q-item-label>
+              <q-item-label v-if="item.name !== 'csf'" style="font-size: 90%">
+                每日下载次数限制：{{ item.daily_download_limit }}
+              </q-item-label>
             </q-item-section>
             <q-item-section side>
               <edit-sub-source-btn-dialog :data="item" @update="(data) => handleSubSourceUpdate(item, data)" />
@@ -394,5 +397,6 @@ const { advanced_settings: form } = toRefs(formModel);
 
 const handleSubSourceUpdate = (item, data) => {
   formModel.advanced_settings.suppliers_settings[item.name].root_url = data.url;
+  formModel.advanced_settings.suppliers_settings[item.name].daily_download_limit = data.dailyLimit;
 };
 </script>

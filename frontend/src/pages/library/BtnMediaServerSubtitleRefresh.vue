@@ -12,11 +12,11 @@ import { useQuasar } from 'quasar';
 import LibraryApi from 'src/api/LibraryApi';
 import { SystemMessage } from 'src/utils/message';
 import { computed } from 'vue';
-import { settingsState } from 'pages/settings/use-settings';
+import { settingsState } from 'src/store/settingsState';
 
 const $q = useQuasar();
 
-const show = computed(() => settingsState.data?.emby_settings.enable);
+const show = computed(() => settingsState.settings?.emby_settings.enable);
 
 const confirm = () => {
   $q.dialog({

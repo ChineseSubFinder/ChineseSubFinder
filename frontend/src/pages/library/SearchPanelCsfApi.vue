@@ -1,10 +1,24 @@
 <template>
   <div style="min-height: 300px">
+    <q-banner
+      v-if="apiLimitInfo"
+      dense
+      class="bg-grey-3"
+      :class="{
+        // 使用超过4/5时，显示黄色警告
+        'bg-negative': apiLimitInfo.dailyCount >= apiLimitInfo.dayliLimit,
+        'bg-warning': apiLimitInfo.dailyCount / apiLimitInfo.dayliLimit > 4 / 5,
+      }"
+    >
+      <div class="text-bold">
+        每日限制：{{ apiLimitInfo.dailyCount }} / {{ apiLimitInfo.dailyLimit }}，ApiKey 过期时间：{{
+          dayjs.unix(apiLimitInfo.expireTime).format('YYYY-MM-DD HH:mm:ss')
+        }}
+      </div>
+    </q-banner>
     <q-list v-if="csfSearchResult?.length" separator>
-      <q-item v-for="item in csfSearchResult" :key="item.sub_sha256">
-        <q-item-section>
-          {{ item.title }}
-        </q-item-section>
+      <q-item v-for="(item, index) in csfSearchResult" :key="item.sub_sha256">
+        <q-item-section> {{ index + 1 }}. {{ item.title }} </q-item-section>
         <q-item-section side>
           <div class="row">
             <btn-dialog-preview-video
@@ -19,7 +33,8 @@
       </q-item>
     </q-list>
     <div v-else-if="!loading" class="text-grey">
-      未搜索到数据，<q-btn flat label="重试" color="primary" dense @click="searchCsf" />
+      <div>未搜索到数据，<q-btn flat label="重试" color="primary" dense @click="searchCsf" /></div>
+      <div>如果报错信息提示没有 ApiKey，请到<b>配置中心-字幕源设置</b>，填写SubtitleBest的ApiKey</div>
     </div>
     <q-inner-loading :showing="loading">
       <q-spinner size="50px" color="primary" />
@@ -39,6 +54,8 @@ import { getSubtitleUploadList } from 'pages/library/use-library';
 import eventBus from 'vue3-eventbus';
 import { LocalStorage } from 'quasar';
 import useInterval from 'src/composables/use-interval';
+import useEventBus from 'src/composables/use-event-bus';
+import dayjs from 'dayjs';
 
 const props = defineProps({
   path: String,
@@ -64,6 +81,11 @@ let lastRequestApiTime = LocalStorage.getItem('lastRequestApiTime') || 0;
 const minRequestApiInterval = 15 * 1000;
 // 下次请求倒数时间
 const nextRequestCountdownSecond = ref(0);
+// api限制信息
+const apiLimitInfo = ref(null);
+useEventBus('subtitle-best-api-limit-info', (info) => {
+  apiLimitInfo.value = info;
+});
 
 useInterval(() => {
   const v = Math.ceil((lastRequestApiTime + minRequestApiInterval - Date.now()) / 1000);
