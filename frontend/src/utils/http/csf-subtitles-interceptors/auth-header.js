@@ -4,7 +4,7 @@ import { settingsState } from 'src/store/settingsState';
 export default {
   onRequestFullFilled: (req) => {
     // 设置api key
-    const apiKey = settingsState.settings?.subtitle_sources?.subtitle_best_settings?.token;
+    const apiKey = settingsState.settings?.subtitle_sources?.subtitle_best_settings?.api_key;
     if (['get', 'delete'].includes(req.method)) {
       req.params = req.params || {};
       req.params.api_key = apiKey;

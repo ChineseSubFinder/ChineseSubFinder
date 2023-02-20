@@ -41,7 +41,7 @@
               <div>注册：用telegramBot注册，httpps://t.me/SubtitleBestBot，使用 /help 指令会有提示</div>
               <ul class="q-pl-md">
                 <li>一般用户是 50次/天 的 API 请求限制</li>
-                <li>建议设置完 Token 后，重启程序或者容器！</li>
+                <li>建议设置完 ApiKey 后，重启程序或者容器！</li>
               </ul>
             </q-item-label>
           </q-item-section>
@@ -54,9 +54,9 @@
           <q-item-section>
             <q-input
               :disable="!form.subtitle_best_settings.enabled"
-              v-model="form.subtitle_best_settings.token"
-              placeholder="填写你的API Token"
-              label="SubtitleBest API Token"
+              v-model="form.subtitle_best_settings.api_key"
+              placeholder="填写你的ApiKey"
+              label="SubtitleBest ApiKey"
               standout
               dense
               :rules="[(val) => !!val || '不能为空']"
