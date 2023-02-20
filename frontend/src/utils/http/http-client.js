@@ -58,7 +58,7 @@ class HttpClient {
       this.axiosInstance
         .request(axiosConfig)
         // 分别处理直接返回的数据源和{result: 1, message: '', data: {}|[]}形式的数据源
-        .then((response) => [response.data, null])
+        .then((response) => [response.data, null, response])
         .catch((error) => [null, error])
     );
   }

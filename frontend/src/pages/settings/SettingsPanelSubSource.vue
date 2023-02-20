@@ -25,13 +25,45 @@
             :disable="!form.assrt_settings.enabled"
             v-model="form.assrt_settings.token"
             placeholder="填写你的API Token"
-            label="API Token"
+            label="Assrt API Token"
             standout
             dense
             :rules="[(val) => !!val || '不能为空']"
           />
         </q-item-section>
       </q-item>
+
+      <template v-if="form.subtitle_best_settings">
+        <q-item tag="label">
+          <q-item-section>
+            <q-item-label>SubtitleBest</q-item-label>
+            <q-item-label caption>
+              <div>注册：用telegramBot注册，httpps://t.me/SubtitleBestBot，使用 /help 指令会有提示</div>
+              <ul class="q-pl-md">
+                <li>一般用户是 50次/天 的 API 请求限制</li>
+                <li>建议设置完 Token 后，重启程序或者容器！</li>
+              </ul>
+            </q-item-label>
+          </q-item-section>
+          <q-item-section avatar top>
+            <q-toggle v-model="form.subtitle_best_settings.enabled" />
+          </q-item-section>
+        </q-item>
+
+        <q-item class="q-mt-sm">
+          <q-item-section>
+            <q-input
+              :disable="!form.subtitle_best_settings.enabled"
+              v-model="form.subtitle_best_settings.token"
+              placeholder="填写你的API Token"
+              label="SubtitleBest API Token"
+              standout
+              dense
+              :rules="[(val) => !!val || '不能为空']"
+            />
+          </q-item-section>
+        </q-item>
+      </template>
     </q-list>
   </div>
 </template>
