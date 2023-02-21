@@ -18,7 +18,18 @@
     </q-banner>
     <q-list v-if="csfSearchResult?.length" separator>
       <q-item v-for="(item, index) in csfSearchResult" :key="item.sub_sha256">
-        <q-item-section> {{ index + 1 }}. {{ item.title }} </q-item-section>
+        <q-item-section>
+          <div class="row items-center q-gutter-sm">
+            <div>{{ index + 1 }}. {{ item.title }}</div>
+            <q-badge color="primary">{{ LANGUAGES[item.language] }}</q-badge>
+            <q-badge
+              v-if="cacheBlob[item.sub_sha256]"
+              color="grey"
+              title="已缓存到浏览器，再次预览和下载不消耗次数，关闭窗口后失效"
+              >已缓存</q-badge
+            >
+          </div>
+        </q-item-section>
         <q-item-section side>
           <div class="row">
             <btn-dialog-preview-video
@@ -52,10 +63,12 @@ import CsfSubtitlesApi from 'src/api/CsfSubtitlesApi';
 import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo.vue';
 import { getSubtitleUploadList } from 'pages/library/use-library';
 import eventBus from 'vue3-eventbus';
-import { LocalStorage } from 'quasar';
+import { LocalStorage, useQuasar } from 'quasar';
 import useInterval from 'src/composables/use-interval';
 import useEventBus from 'src/composables/use-event-bus';
 import dayjs from 'dayjs';
+import { LANGUAGES } from 'src/constants/LibraryConstants';
+import { VIDEO_TYPE_MOVIE, VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
 
 const props = defineProps({
   path: String,
@@ -74,6 +87,8 @@ const props = defineProps({
     type: Number,
   },
 });
+
+const $q = useQuasar();
 
 // 上次请求时间
 let lastRequestApiTime = LocalStorage.getItem('lastRequestApiTime') || 0;
@@ -101,13 +116,31 @@ const selectedItem = ref(null);
 const imdbId = ref(null);
 
 // blob缓存
-const cacheBlob = new Map();
+const cacheBlob = ref({});
 const selectedSubUrl = computed(() => {
   if (selectedSubBlob.value) {
     return URL.createObjectURL(selectedSubBlob.value);
   }
   return null;
 });
+
+const setLock = async () => {
+  const [, err] = await LibraryApi.setSkipInfo({
+    video_skip_infos: [
+      {
+        video_type: props.isMovie ? VIDEO_TYPE_MOVIE : VIDEO_TYPE_TV,
+        physical_video_file_full_path: props.path,
+        is_bluray: false,
+        is_skip: true,
+      },
+    ],
+  });
+  if (err !== null) {
+    SystemMessage.error(err.message);
+  } else {
+    SystemMessage.success('操作成功');
+  }
+};
 
 const checkOk = () => {
   const now = Date.now();
@@ -174,8 +207,8 @@ const searchCsf = async () => {
 
 const fetchSubtitleBlob = async (item) => {
   selectedItem.value = item;
-  if (cacheBlob.has(item.sub_sha256)) {
-    selectedSubBlob.value = cacheBlob.get(item.sub_sha256);
+  if (cacheBlob.value[item.sub_sha256]) {
+    selectedSubBlob.value = cacheBlob.value[item.sub_sha256];
     return;
   }
   selectedSubBlob.value = null;
@@ -194,7 +227,10 @@ const fetchSubtitleBlob = async (item) => {
     // fetch资源，获取blob url
     const res = await fetch(data.download_link);
     const blob = await res.blob();
-    cacheBlob.set(item.sub_sha256, blob);
+    cacheBlob.value = {
+      ...cacheBlob.value,
+      [item.sub_sha256]: blob,
+    };
     selectedSubBlob.value = blob;
   }
   loadingMsg.value = '';
@@ -215,6 +251,16 @@ const handleDownloadCsfSub = async (item) => {
   await LibraryApi.uploadSubtitle(formData);
   await getSubtitleUploadList();
   eventBus.emit('subtitle-uploaded');
+
+  $q.dialog({
+    title: '操作确认',
+    message: `已下载到库中，是否锁定该视频，无需再次自动下载字幕？`,
+    cancel: true,
+    persistent: true,
+    focus: 'none',
+  }).onOk(async () => {
+    setLock();
+  });
 
   SystemMessage.success('已下载到库中');
 };
