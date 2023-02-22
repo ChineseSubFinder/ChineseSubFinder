@@ -138,6 +138,8 @@ const setLock = async () => {
   if (err !== null) {
     SystemMessage.error(err.message);
   } else {
+    // 通知列表页锁定成功
+    eventBus.emit(`refresh-skip-status-${props.path}`, true);
     SystemMessage.success('操作成功');
   }
 };
