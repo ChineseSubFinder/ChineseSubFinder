@@ -40,7 +40,11 @@
             <q-item-label caption>
               <div>注册：用telegramBot注册，httpps://t.me/SubtitleBestBot，使用 /help 指令会有提示</div>
               <ul class="q-pl-md">
-                <li>一般用户是 50次/天 的 API 请求限制</li>
+                <li>
+                  此接口依赖于 IMDB ID 进行搜索，会依赖于公用的信息查询接口（获取 TMDB 、IMDB
+                  等信息，如果使用人数过多，请配置自己的 TMDB API 使用）。
+                </li>
+                <li>一般用户是每天 50 次下载限制。</li>
                 <li>建议设置完 ApiKey 后，重启程序或者容器！</li>
               </ul>
             </q-item-label>
