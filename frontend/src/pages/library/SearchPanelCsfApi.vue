@@ -69,6 +69,7 @@ import useEventBus from 'src/composables/use-event-bus';
 import dayjs from 'dayjs';
 import { LANGUAGES } from 'src/constants/LibraryConstants';
 import { VIDEO_TYPE_MOVIE, VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
+import { settingsState } from 'src/store/settingsState';
 
 const props = defineProps({
   path: String,
@@ -168,16 +169,24 @@ const waitRequestReady = async () => {
 
 const searchCsf = async () => {
   loading.value = true;
-  loadingMsg.value = '正在获取字幕列表...';
+  loadingMsg.value = '正在从TMDB获取视频详细信息...';
   const [d, e] = await LibraryApi.getImdbId({
     is_movie: props.isMovie,
     video_f_path: props.path,
   });
   if (e) {
-    SystemMessage.error(e.message);
+    if (settingsState.settings.advanced_settings.tmdb_api_settings.enable) {
+      SystemMessage.error('从TMDB获取数据失败，可能是查询次数太多，请检查进阶设置-TMDB API中设置的ApiKey是否有效');
+    } else {
+      SystemMessage.error(
+        '从TMDB获取数据失败，可能是公共查询接口使用人数过多，重试无效可以尝试在进阶设置里使用自己的启用TMDB ApiKey'
+      );
+    }
     loading.value = false;
+    loadingMsg.value = '';
     return;
   }
+  loadingMsg.value = '正在获取字幕列表...';
   imdbId.value = d?.ImdbId;
   await waitRequestReady();
   if (props.isMovie) {
