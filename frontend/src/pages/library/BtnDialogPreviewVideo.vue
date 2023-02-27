@@ -99,55 +99,60 @@ const showSelectSubtitleDialog = () => {
   });
 };
 
-const artOption = computed(() => ({
-  autoplay: true,
-  autoSize: true,
-  url: `${config.BACKEND_URL}/v1/preview/playlist/${encode(encodeURIComponent(props.path))}`,
-  subtitle: {
-    url: selectedSub.value.startsWith('blob') ? selectedSub.value : getUrl(selectedSub.value),
-    type: props.subtitleType,
-  },
-  type: 'm3u8',
-  customType: {
-    m3u8(video, url) {
-      if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.config.xhrSetup = (xhr) => {
-          const { accessToken } = userState;
-          xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
-        };
-        hls.loadSource(url);
-        hls.attachMedia(video);
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-      } else {
-        // art.notice.show = '不支持播放格式：m3u8';
-      }
+const artOption = computed(() => {
+  const options = {
+    autoplay: true,
+    autoSize: true,
+    url: `${config.BACKEND_URL}/v1/preview/playlist/${encode(encodeURIComponent(props.path))}`,
+    subtitle: {
+      url: selectedSub.value.startsWith('blob') ? selectedSub.value : getUrl(selectedSub.value),
     },
-  },
-  controls:
-    props.subList.length === 0
-      ? []
-      : [
-          {
-            disable: false,
-            name: 'button',
-            index: 10,
-            position: 'right',
-            html: '选择字幕',
-            tooltip: '选择字幕',
-            style: {
-              color: 'red',
+    type: 'm3u8',
+    customType: {
+      m3u8(video, url) {
+        if (Hls.isSupported()) {
+          const hls = new Hls();
+          hls.config.xhrSetup = (xhr) => {
+            const { accessToken } = userState;
+            xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+          };
+          hls.loadSource(url);
+          hls.attachMedia(video);
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = url;
+        } else {
+          // art.notice.show = '不支持播放格式：m3u8';
+        }
+      },
+    },
+    controls:
+      props.subList.length === 0
+        ? []
+        : [
+            {
+              disable: false,
+              name: 'button',
+              index: 10,
+              position: 'right',
+              html: '选择字幕',
+              tooltip: '选择字幕',
+              style: {
+                color: 'red',
+              },
+              click() {
+                showSelectSubtitleDialog();
+              },
+              mounted() {
+                // console.log('自定义按钮挂载完成1');
+              },
             },
-            click() {
-              showSelectSubtitleDialog();
-            },
-            mounted() {
-              // console.log('自定义按钮挂载完成1');
-            },
-          },
-        ],
-}));
+          ],
+  };
+  if (props.subtitleType) {
+    options.subtitle.type = props.subtitleType;
+  }
+  return options;
+});
 
 const handleBeforeShow = async () => {
   selectedSub.value = props.subList?.[0];
