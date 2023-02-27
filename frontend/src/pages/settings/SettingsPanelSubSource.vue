@@ -38,7 +38,7 @@
           <q-item-section>
             <q-item-label>SubtitleBest</q-item-label>
             <q-item-label caption>
-              <div>注册：用telegramBot注册，httpps://t.me/SubtitleBestBot，使用 /help 指令会有提示</div>
+              <div>注册：用telegramBot注册，https://t.me/SubtitleBestBot，使用 /help 指令会有提示</div>
               <ul class="q-pl-md">
                 <li>
                   此接口依赖于 IMDB ID 进行搜索，会依赖于公用的信息查询接口（获取 TMDB 、IMDB
