@@ -1,6 +1,8 @@
 package cron_helper
 
 import (
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/dao"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
 	//"github.com/ChineseSubFinder/ChineseSubFinder/internal/logic/pre_job"
 	"sync"
@@ -29,6 +31,7 @@ type CronHelper struct {
 	entryIDScanVideoProcess   cron.EntryID                                             // 建立视频缓存，扫描有那些视频需要进行字幕下载的定时器的 ID
 	entryIDSupplierCheck      cron.EntryID                                             // 检查字幕源有效性的定时器的 ID
 	entryIDQueueDownloader    cron.EntryID                                             // 下载队列的定时器的 ID
+	entryIDFeedBack           cron.EntryID                                             // 信息反馈
 	//entryIDScanPlayedVideoSubInfo cron.EntryID
 	//entryIDUploadPlayedVideoSub cron.EntryID
 }
@@ -133,11 +136,11 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	if err != nil {
 		ch.Logger.Panicln("CronHelper QueueDownloader, QueueDownloader Cron entryID:", ch.entryIDQueueDownloader, "Error:", err)
 	}
-	// 这个可以由 ch.scanPlayedVideoSubInfo.Cancel() 取消执行
-	//ch.entryIDScanPlayedVideoSubInfo, err = ch.c.AddFunc("@every 24h", ch.scanPlayedVideoSub)
-	//if err != nil {
-	//	ch.Logger.Panicln("CronHelper QueueDownloader, scanPlayedVideoSub Cron entryID:", ch.entryIDScanPlayedVideoSubInfo, "Error:", err)
-	//}
+	// FeedBack
+	ch.entryIDFeedBack, err = ch.c.AddFunc("@every 24h", ch.feedBack)
+	if err != nil {
+		ch.Logger.Panicln("CronHelper QueueDownloader, feedBack Cron entryID:", ch.entryIDFeedBack, "Error:", err)
+	}
 	// 字幕的上传逻辑
 	if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
 		// 取消上传字幕的逻辑，目前评估的第一阶段已经完成，后续的逻辑需要重新评估
@@ -238,6 +241,19 @@ func (ch *CronHelper) Stop() {
 	ch.cronLock.Unlock()
 
 	ch.Logger.Infoln("CronHelper.Stop() Done.")
+}
+
+func (ch *CronHelper) feedBack() {
+	ch.Logger.Infoln("Update Info...")
+	nowInfo := dao.UpdateInfo(pkg.AppVersion(), settings.Get())
+	_, err := ch.FileDownloader.MediaInfoDealers.SubtitleBestApi.FeedBack(
+		nowInfo.Id,
+		nowInfo.Version, nowInfo.MediaServer,
+		nowInfo.EnableShare, nowInfo.EnableApiKey)
+	if err != nil {
+		ch.Logger.Errorln("FeedBack Error:", err)
+		return
+	}
 }
 
 //func (ch *CronHelper) scanPlayedVideoSub() {
