@@ -44,8 +44,14 @@
       </q-item>
     </q-list>
     <div v-else-if="!loading" class="text-grey">
-      <div>未搜索到数据，<q-btn flat label="重试" color="primary" dense @click="searchCsf" /></div>
-      <div>如果报错信息提示没有 ApiKey，请到<b>配置中心-字幕源设置</b>，填写SubtitleBest的ApiKey</div>
+      <template v-if="tmdbErrorMsg">
+        <div class="text-negative">{{ tmdbErrorMsg }}</div>
+        <div><q-btn flat label="重试" color="primary" dense @click="searchCsf" /></div>
+      </template>
+      <template v-else>
+        <div>未搜索到数据，<q-btn flat label="重试" color="primary" dense @click="searchCsf" /></div>
+        <div>如果报错信息提示没有 ApiKey，请到<b>配置中心-字幕源设置</b>，填写SubtitleBest的ApiKey</div>
+      </template>
     </div>
     <q-inner-loading :showing="loading">
       <q-spinner size="50px" color="primary" />
@@ -94,11 +100,13 @@ const $q = useQuasar();
 // 上次请求时间
 let lastRequestApiTime = LocalStorage.getItem('lastRequestApiTime') || 0;
 // 最小请求间隔
-const minRequestApiInterval = 15 * 1000;
+const minRequestApiInterval = 0 * 1000;
 // 下次请求倒数时间
 const nextRequestCountdownSecond = ref(0);
 // api限制信息
 const apiLimitInfo = ref(null);
+const tmdbErrorMsg = ref('');
+
 useEventBus('subtitle-best-api-limit-info', (info) => {
   apiLimitInfo.value = info;
 });
@@ -176,16 +184,17 @@ const searchCsf = async () => {
   });
   if (e) {
     if (settingsState.settings.advanced_settings.tmdb_api_settings.enable) {
-      SystemMessage.error('从TMDB获取数据失败，可能是查询次数太多，请检查进阶设置-TMDB API中设置的ApiKey是否有效');
+      tmdbErrorMsg.value =
+        '从 TMDB 获取数据失败，检测到你当前正在使用自己的 TMDB ApiKey ，请检查进阶设置-TMDB API中设置的ApiKey是否有效。';
     } else {
-      SystemMessage.error(
-        '从TMDB获取数据失败，可能是公共查询接口使用人数过多，重试无效可以尝试在进阶设置里使用自己的启用TMDB ApiKey'
-      );
+      tmdbErrorMsg.value =
+        '从 TMDB 获取数据失败，检测到你正在使用公共查询接口，可能是使用人数过多导致查询失败，可以尝试在进阶设置里启用 TMDB API，填写自己的 ApiKey。';
     }
     loading.value = false;
     loadingMsg.value = '';
     return;
   }
+  tmdbErrorMsg.value = '';
   loadingMsg.value = '正在获取字幕列表...';
   imdbId.value = d?.ImdbId;
   await waitRequestReady();
