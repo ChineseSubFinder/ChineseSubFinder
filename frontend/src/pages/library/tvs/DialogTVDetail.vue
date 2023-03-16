@@ -61,6 +61,12 @@
 
           <q-space />
 
+          <btn-dialog-search-subtitle
+            search-package
+            :package-episodes="currentTabEpisodes"
+            label="搜索本季字幕包"
+            size="md"
+          />
           <btn-upload-multiple-for-tv :items="currentTabEpisodes" />
         </div>
 
@@ -118,7 +124,6 @@
                     size="md"
                     round
                     :path="item.video_f_path"
-                    :imdb-id="data.imdb_id"
                     :season="item.season"
                     :episode="item.episode"
                   />

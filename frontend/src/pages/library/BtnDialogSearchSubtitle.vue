@@ -9,35 +9,33 @@
 
       <q-separator />
 
-      <q-tabs
-        v-model="tab"
-        dense
-        active-color="primary"
-        indicator-color="primary"
-        align="justify"
-        narrow-indicator
-        style="max-width: 300px"
-      >
-        <q-tab name="csf" label="Subtitle.Best API" />
-        <q-tab name="manual" label="手动搜索" />
-      </q-tabs>
+      <template v-if="!searchPackage">
+        <q-tabs
+          v-model="tab"
+          dense
+          active-color="primary"
+          indicator-color="primary"
+          align="justify"
+          narrow-indicator
+          style="max-width: 300px"
+        >
+          <q-tab name="csf" label="Subtitle.Best API" />
+          <q-tab name="manual" label="手动搜索" />
+        </q-tabs>
 
-      <q-tab-panels v-model="tab" animated keep-alive>
-        <q-tab-panel name="csf">
-          <search-panel-csf-api
-            :path="path"
-            :imdb-id="imdbId"
-            :is-movie="isMovie"
-            :season="season"
-            :episode="episode"
-            :search-package="searchPackage"
-          />
-        </q-tab-panel>
+        <q-tab-panels v-model="tab" animated keep-alive>
+          <q-tab-panel name="csf">
+            <search-panel-csf-api :path="path" :is-movie="isMovie" :season="season" :episode="episode" />
+          </q-tab-panel>
 
-        <q-tab-panel name="manual">
-          <search-panel-manual :is-movie="isMovie" :path="path" />
-        </q-tab-panel>
-      </q-tab-panels>
+          <q-tab-panel name="manual">
+            <search-panel-manual :is-movie="isMovie" :path="path" />
+          </q-tab-panel>
+        </q-tab-panels>
+      </template>
+      <template v-else>
+        <search-panel-csf-api-tv-package :episodes="packageEpisodes" />
+      </template>
     </q-card>
   </q-dialog>
 </template>
@@ -46,10 +44,10 @@
 import { ref } from 'vue';
 import SearchPanelManual from 'pages/library/SearchPanelManual.vue';
 import SearchPanelCsfApi from 'pages/library/SearchPanelCsfApi.vue';
+import SearchPanelCsfApiTvPackage from 'pages/library/SearchPanelCsfApiTvPackage.vue';
 
 defineProps({
   path: String,
-  imdbId: String,
   isMovie: {
     type: Boolean,
     default: false,
@@ -63,6 +61,9 @@ defineProps({
   },
   episode: {
     type: Number,
+  },
+  packageEpisodes: {
+    type: Array,
   },
 });
 
