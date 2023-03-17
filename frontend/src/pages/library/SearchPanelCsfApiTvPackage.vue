@@ -150,22 +150,20 @@ const selectedSubUrl = computed(() => {
   return null;
 });
 
-const setLock = async (path) => {
+const setLock = async (paths) => {
   const [, err] = await LibraryApi.setSkipInfo({
-    video_skip_infos: [
-      {
-        video_type: VIDEO_TYPE_TV,
-        physical_video_file_full_path: path,
-        is_bluray: false,
-        is_skip: true,
-      },
-    ],
+    video_skip_infos: paths.map((path) => ({
+      video_type: VIDEO_TYPE_TV,
+      physical_video_file_full_path: path,
+      is_bluray: false,
+      is_skip: true,
+    })),
   });
   if (err !== null) {
     SystemMessage.error(err.message);
   } else {
     // 通知列表页锁定成功
-    eventBus.emit(`refresh-skip-status-${path}`, true);
+    paths.forEach((path) => eventBus.emit(`refresh-skip-status-${path}`, true));
     SystemMessage.success('操作成功');
   }
 };
@@ -289,7 +287,7 @@ const handleDownloadCsfSub = async (item, isConfirmLock = false, showMessage = f
       persistent: true,
       focus: 'none',
     }).onOk(async () => {
-      setLock(videoFilePath);
+      setLock([videoFilePath]);
     });
   }
 
@@ -323,7 +321,15 @@ const downloadAll = async () => {
         await handleDownloadCsfSub(item, false, false);
       }
     }
-    SystemMessage.success('已全部下载到库中');
+    $q.dialog({
+      title: '操作确认',
+      message: `已下载到库中，是否锁定本季视频，无需再次自动下载字幕？`,
+      cancel: true,
+      persistent: true,
+      focus: 'none',
+    }).onOk(async () => {
+      setLock(props.episodes.map((e) => e.video_f_path));
+    });
   } catch (e) {
     SystemMessage.error(e);
   }
