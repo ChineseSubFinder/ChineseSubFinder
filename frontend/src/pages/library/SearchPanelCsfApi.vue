@@ -1,7 +1,6 @@
 <template>
   <div style="min-height: 300px">
     <subtitle-best-api-limit-banner />
-
     <q-list v-if="csfSearchResult?.length" separator>
       <q-item v-for="(item, index) in csfSearchResult" :key="item.sub_sha256">
         <q-item-section>
@@ -30,6 +29,7 @@
       </q-item>
     </q-list>
     <div v-else-if="!loading" class="text-grey">
+      <div>ImdbId: {{ imdbId || '-' }}</div>
       <template v-if="tmdbErrorMsg">
         <div class="text-negative">{{ tmdbErrorMsg }}</div>
         <div><q-btn flat label="重试" color="primary" dense @click="searchCsf" /></div>
