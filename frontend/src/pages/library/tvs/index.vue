@@ -20,7 +20,7 @@
     <q-separator class="q-my-md" />
 
     <div v-if="tvs.length" class="row q-gutter-x-md q-gutter-y-lg">
-      <q-intersection v-for="item in filteredTvs" :key="item.name" style="width: 160px; height: 280px" once>
+      <q-intersection v-for="item in filteredTvs" :key="item.root_dir_path" style="width: 160px; height: 280px" once>
         <div
           class="item-wrapper cursor-pointer"
           @click="toggleSelection(item)"

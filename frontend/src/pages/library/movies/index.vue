@@ -16,7 +16,7 @@
     <q-separator class="q-my-md" />
 
     <div v-if="movies.length" class="row q-gutter-x-md q-gutter-y-lg">
-      <q-intersection v-for="item in filteredMovies" once :key="item.name" style="width: 160px; height: 280px">
+      <q-intersection v-for="item in filteredMovies" once :key="item.video_f_path" style="width: 160px; height: 280px">
         <list-item-movie :data="item" />
       </q-intersection>
     </div>
