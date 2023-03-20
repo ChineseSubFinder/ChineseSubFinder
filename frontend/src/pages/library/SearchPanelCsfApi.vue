@@ -79,7 +79,7 @@ const props = defineProps({
 const $q = useQuasar();
 const { nextRequestCountdownSecond, countdownLoading, waitRequestReady } = useApiLimit(
   'lastSubtitleBestRequestTime',
-  15 * 1000
+  5 * 1000
 );
 
 const tmdbErrorMsg = ref('');
