@@ -22,7 +22,7 @@ func NewSuppliersSettings() *SuppliersSettings {
 		A4k:          NewOneSupplierSettings(common.SubSiteA4K, common.SubA4kRootUrlDef, common.SubA4kSearchUrl, -1),
 		SubHD:        NewOneSupplierSettings(common.SubSiteSubHd, common.SubSubHDRootUrlDef, common.SubSubHDSearchUrl, 20),
 		Zimuku:       NewOneSupplierSettings(common.SubSiteZiMuKu, common.SubZiMuKuRootUrlDef, common.SubZiMuKuSearchFormatUrl, 20),
-		SubtitleBest: NewOneSupplierSettings(common.SubSiteSubtitleBest, common.SubSubtitleBestRootUrlDef, common.SubSubtitleBestSearchFormatUrl, 20),
+		SubtitleBest: NewOneSupplierSettings(common.SubSiteSubtitleBest, common.SubSubtitleBestRootUrlDef, common.SubSubtitleBestSearchMovieUrl, 20),
 	}
 }
 
