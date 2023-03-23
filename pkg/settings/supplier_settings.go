@@ -5,22 +5,24 @@ import (
 )
 
 type SuppliersSettings struct {
-	Xunlei  *OneSupplierSettings `json:"xunlei"`
-	Shooter *OneSupplierSettings `json:"shooter"`
-	Assrt   *OneSupplierSettings `json:"assrt"`
-	A4k     *OneSupplierSettings `json:"a4k"`
-	SubHD   *OneSupplierSettings `json:"subhd"`
-	Zimuku  *OneSupplierSettings `json:"zimuku"`
+	Xunlei       *OneSupplierSettings `json:"xunlei"`
+	Shooter      *OneSupplierSettings `json:"shooter"`
+	Assrt        *OneSupplierSettings `json:"assrt"`
+	A4k          *OneSupplierSettings `json:"a4k"`
+	SubHD        *OneSupplierSettings `json:"subhd"`
+	Zimuku       *OneSupplierSettings `json:"zimuku"`
+	SubtitleBest *OneSupplierSettings `json:"subtitle_best"`
 }
 
 func NewSuppliersSettings() *SuppliersSettings {
 	return &SuppliersSettings{
-		Xunlei:  NewOneSupplierSettings(common.SubSiteXunLei, common.SubXunLeiRootUrlDef, "", -1),
-		Shooter: NewOneSupplierSettings(common.SubSiteShooter, common.SubShooterRootUrlDef, "", -1),
-		Assrt:   NewOneSupplierSettings(common.SubSiteAssrt, common.SubAssrtRootUrlDef, "", -1),
-		A4k:     NewOneSupplierSettings(common.SubSiteA4K, common.SubA4kRootUrlDef, common.SubA4kSearchUrl, -1),
-		SubHD:   NewOneSupplierSettings(common.SubSiteSubHd, common.SubSubHDRootUrlDef, common.SubSubHDSearchUrl, 20),
-		Zimuku:  NewOneSupplierSettings(common.SubSiteZiMuKu, common.SubZiMuKuRootUrlDef, common.SubZiMuKuSearchFormatUrl, 20),
+		Xunlei:       NewOneSupplierSettings(common.SubSiteXunLei, common.SubXunLeiRootUrlDef, "", -1),
+		Shooter:      NewOneSupplierSettings(common.SubSiteShooter, common.SubShooterRootUrlDef, "", -1),
+		Assrt:        NewOneSupplierSettings(common.SubSiteAssrt, common.SubAssrtRootUrlDef, "", -1),
+		A4k:          NewOneSupplierSettings(common.SubSiteA4K, common.SubA4kRootUrlDef, common.SubA4kSearchUrl, -1),
+		SubHD:        NewOneSupplierSettings(common.SubSiteSubHd, common.SubSubHDRootUrlDef, common.SubSubHDSearchUrl, 20),
+		Zimuku:       NewOneSupplierSettings(common.SubSiteZiMuKu, common.SubZiMuKuRootUrlDef, common.SubZiMuKuSearchFormatUrl, 20),
+		SubtitleBest: NewOneSupplierSettings(common.SubSiteSubtitleBest, common.SubSubtitleBestRootUrlDef, common.SubSubtitleBestSearchFormatUrl, 20),
 	}
 }
 

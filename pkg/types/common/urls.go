@@ -14,4 +14,7 @@ const (
 
 	SubA4kRootUrlDef = "https://www.a4k.net"
 	SubA4kSearchUrl  = "/search?term="
+
+	SubSubtitleBestRootUrlDef      = "https://api.subtitle.best"
+	SubSubtitleBestSearchFormatUrl = "/share-sub/v1/search-movie"
 )
