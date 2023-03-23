@@ -1,10 +1,5 @@
 <template>
-  <span
-    v-if="
-      latestVersion?.tag_name && systemState.systemInfo && latestVersion.tag_name !== systemState.systemInfo?.version
-    "
-    @click="visible = true"
-  >
+  <span v-if="hasNewVersion" @click="visible = true">
     <slot v-if="$slots.default"></slot>
     <q-badge v-else class="cursor-pointer" label="new" title="有新的版本更新" />
   </span>
@@ -71,7 +66,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import Markdown from 'components/Markdown';
 import { systemState } from 'src/store/systemState';
 import { LocalStorage } from 'quasar';
@@ -79,6 +74,11 @@ import { LocalStorage } from 'quasar';
 const latestVersion = ref(LocalStorage.getItem('latestVersion') ?? null);
 const visible = ref(false);
 const tab = ref('log');
+
+const hasNewVersion = computed(() => {
+  const v = systemState.systemInfo?.version.replace(/\s+(L|l)ite$/, '');
+  return latestVersion.value?.tag_name && v && latestVersion.value.tag_name !== v;
+});
 
 const getLatestVersion = async () => {
   try {

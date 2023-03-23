@@ -77,6 +77,7 @@
       </template>
     </q-splitter>
     <div v-else-if="!loading" class="text-grey">
+      <div>ImdbId: {{ imdbId || '-' }}</div>
       <template v-if="tmdbErrorMsg">
         <div class="text-negative">{{ tmdbErrorMsg }}</div>
         <div><q-btn flat label="重试" color="primary" dense @click="searchPackages" /></div>
@@ -117,7 +118,7 @@ const props = defineProps({
 const $q = useQuasar();
 const { nextRequestCountdownSecond, countdownLoading, waitRequestReady } = useApiLimit(
   'lastSubtitleBestRequestTime',
-  15 * 1000
+  5 * 1000
 );
 
 const splitterModel = ref(300);
