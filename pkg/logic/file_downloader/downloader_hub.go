@@ -185,3 +185,43 @@ func (f *FileDownloader) GetEx(supplierName string, browser *rod.Browser, subDow
 		return subInfo, nil
 	}
 }
+
+// GetSubtitleBest supplierName 这个参数一定得是字幕源的名称，通过 s.GetSupplierName() 获取，否则后续的字幕源今日下载量将不能正确统计和判断
+func (f *FileDownloader) GetSubtitleBest(supplierName string, topN int64, season, eps int,
+	title, ext, subSha256, fileDownloadUrl string) (*supplier.SubInfo, error) {
+
+	found, subInfo, err := f.CacheCenter.DownloadFileGet(subSha256)
+	if err != nil {
+		return nil, err
+	}
+	// 如果不存在那么就先下载，然后再存入缓存中
+	if found == false {
+
+		fileData, _, err := pkg.DownFile(f.Log, fileDownloadUrl)
+		if err != nil {
+			return nil, err
+		}
+		// 下载成功需要统计到今天的次数中
+		_, err = f.CacheCenter.DailyDownloadCountAdd(supplierName,
+			pkg.GetPublicIP(f.Log, settings.Get().AdvancedSettings.TaskQueue))
+		if err != nil {
+			f.Log.Warningln(supplierName, "FileDownloader.Get.DailyDownloadCountAdd", err)
+		}
+		// 默认存入都是简体中文的语言类型，后续取出来的时候需要再次调用 SubParser 进行解析
+		inSubInfo := supplier.NewSubInfo(supplierName, topN, title, language.ChineseSimple, fileDownloadUrl, 0, 0, ext, fileData)
+		inSubInfo.Season = season
+		inSubInfo.Episode = eps
+		inSubInfo.SetFileUrlSha256(subSha256)
+		inSubInfo.GetUID()
+
+		err = f.CacheCenter.DownloadFileAdd(inSubInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		return inSubInfo, nil
+	} else {
+		// 如果已经存在缓存中，那么就直接返回
+		return subInfo, nil
+	}
+}
