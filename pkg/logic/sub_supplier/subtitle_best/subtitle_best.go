@@ -78,7 +78,8 @@ func (s *Supplier) OverDailyDownloadLimit() bool {
 	if settings.Get().SubtitleSources.SubtitleBestSettings.ApiKey == "" {
 		return true
 	}
-	if s.dailyDownloadCount >= s.dailyDownloadLimit {
+	// 留 5 个下载次数的余量
+	if s.dailyDownloadCount >= s.dailyDownloadLimit-5 {
 		return true
 	}
 
@@ -212,26 +213,37 @@ func (s *Supplier) getSubListFromFile(videoFPath string, isMovie bool, season, e
 
 	for index, subInfo := range subtitle.Subtitles {
 
+		var found bool
+		var dSubInfo *supplier.SubInfo
 		// 获取具体的下载地址
-		var downloadUrl *GetUrlResponse
-		downloadUrl, limitInfo, err = s.api.GetDownloadUrl(client, subInfo.SubSha256, mediaInfo.ImdbId,
-			subInfo.IsMovie, subInfo.Season, subInfo.Episode,
-			"", subInfo.Language, subInfo.Token)
+		// 这里需要先从本地的缓存判断是否已经下载过了
+		found, dSubInfo, err = s.fileDownloader.CacheCenter.DownloadFileGet(subInfo.SubSha256)
 		if err != nil {
-			return nil, err
+			s.log.Errorln(s.GetSupplierName(), "DownloadFileGet", err)
+			continue
 		}
-		s.updateLimitInfo(limitInfo)
+		if found == false {
+			// 本地没有缓存，需要从网络下载
+			var downloadUrl *GetUrlResponse
+			downloadUrl, limitInfo, err = s.api.GetDownloadUrl(client, subInfo.SubSha256, mediaInfo.ImdbId,
+				subInfo.IsMovie, subInfo.Season, subInfo.Episode,
+				"", subInfo.Language, subInfo.Token)
+			if err != nil {
+				return nil, err
+			}
+			s.updateLimitInfo(limitInfo)
 
-		// 下载地址为空
-		if len(downloadUrl.DownloadLink) < 1 {
-			continue
-		}
-		// 这里需要注意的是 SubtitleBest 的下载地址是时效性的，所以不能以下载地址进行唯一性存储
-		dSubInfo, err := s.fileDownloader.GetSubtitleBest(s.GetSupplierName(), int64(index), subInfo.Season, subInfo.Episode,
-			subInfo.Title, subInfo.Ext, subInfo.SubSha256, downloadUrl.DownloadLink)
-		if err != nil {
-			s.log.Error("FileDownloader.Get", err)
-			continue
+			// 下载地址为空
+			if len(downloadUrl.DownloadLink) < 1 {
+				continue
+			}
+			// 这里需要注意的是 SubtitleBest 的下载地址是时效性的，所以不能以下载地址进行唯一性存储
+			dSubInfo, err = s.fileDownloader.GetSubtitleBest(s.GetSupplierName(), int64(index), subInfo.Season, subInfo.Episode,
+				subInfo.Title, subInfo.Ext, subInfo.SubSha256, downloadUrl.DownloadLink)
+			if err != nil {
+				s.log.Error("FileDownloader.Get", err)
+				continue
+			}
 		}
 
 		outSubInfoList = append(outSubInfoList, *dSubInfo)
