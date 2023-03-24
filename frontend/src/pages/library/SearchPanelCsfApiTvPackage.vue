@@ -186,6 +186,7 @@ const searchPackages = async () => {
     }
     loading.value = false;
     loadingMsg.value = '';
+    SystemMessage.error(e.message);
     return;
   }
   tmdbErrorMsg.value = '';

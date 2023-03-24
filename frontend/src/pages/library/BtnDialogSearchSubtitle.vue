@@ -3,11 +3,13 @@
 
   <q-dialog v-model="visible" transition-show="slide-up" transition-hide="slide-down" persistent>
     <q-card style="min-width: 70vw">
-      <q-card-section class="row justify-between items-center">
-        <div class="text-h6 text-grey-8">字幕搜索</div>
-        <q-btn icon="close" flat round dense @click="visible = false" />
+      <q-card-section>
+        <div class="row justify-between items-center">
+          <div class="text-h6 text-grey-8">字幕搜索</div>
+          <q-btn icon="close" flat round dense @click="visible = false" />
+        </div>
+        <div class="text-warning">* 下载字幕包是在浏览器端进行处理的，下载过程中请不要关闭页面</div>
       </q-card-section>
-
       <q-separator />
 
       <template v-if="!searchPackage">
