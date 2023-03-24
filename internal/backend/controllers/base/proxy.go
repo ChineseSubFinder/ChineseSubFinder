@@ -1,6 +1,7 @@
 package base
 
 import (
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/subtitle_best"
 	"net/http"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/local_http_proxy_server"
@@ -76,6 +77,12 @@ func (cb *ControllerBase) CheckProxyHandler(c *gin.Context) {
 		settings.Get().SubtitleSources.AssrtSettings.Token != "" {
 		// 如果开启了 ASSRt 字幕源，则需要测试 ASSRt 的代理
 		subSupplierHub.AddSubSupplier(assrt.NewSupplier(cb.fileDownloader))
+	}
+
+	if settings.Get().SubtitleSources.SubtitleBestSettings.Enabled == true &&
+		settings.Get().SubtitleSources.SubtitleBestSettings.ApiKey != "" {
+		// 如果开启了 SubtitleBest 字幕源，则需要测试 ASSRt 的代理
+		subSupplierHub.AddSubSupplier(subtitle_best.NewSupplier(cb.fileDownloader))
 	}
 
 	outStatus := subSupplierHub.CheckSubSiteStatus()

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/local_http_proxy_server"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_supplier/subtitle_best"
 	"time"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
@@ -114,6 +115,12 @@ func (p *PreDownloadProcess) Init() *PreDownloadProcess {
 			settings.Get().SubtitleSources.AssrtSettings.Token != "" {
 			// 如果开启了 ASSRt 字幕源，则需要新增
 			p.SubSupplierHub.AddSubSupplier(assrt.NewSupplier(p.fileDownloader))
+		}
+
+		if settings.Get().SubtitleSources.SubtitleBestSettings.Enabled == true &&
+			settings.Get().SubtitleSources.SubtitleBestSettings.ApiKey != "" {
+			// 如果开启了 SubtitleBest 字幕源，则需要新增
+			p.SubSupplierHub.AddSubSupplier(subtitle_best.NewSupplier(p.fileDownloader))
 		}
 
 		if pkg.LiteMode() == false {
