@@ -40,6 +40,22 @@
                 <q-item-section class="overflow-hidden ellipsis" :title="item.split`(/\/|\\/)`.pop()">
                   <a class="text-primary" :href="getUrl(item)" target="_blank">{{ item.split(/\/|\\/).pop() }}</a>
                 </q-item-section>
+                <q-item-section side>
+                  <q-btn
+                    color="primary"
+                    round
+                    flat
+                    dense
+                    icon="construction"
+                    :title="`字幕时间轴校准${
+                      !formModel.advanced_settings.fix_time_line
+                        ? '（此功能需要在进阶设置里开启自动校正字幕时间轴，检测到你当前尚未开启此选项）'
+                        : ''
+                    }`"
+                    @click="doFixSubtitleTimeline(item)"
+                    :disable="!formModel.advanced_settings.fix_time_line"
+                  ></q-btn>
+                </q-item-section>
               </q-item>
             </q-list>
           </q-popup-proxy>
@@ -77,11 +93,12 @@ import LibraryApi from 'src/api/LibraryApi';
 import { SystemMessage } from 'src/utils/message';
 import { VIDEO_TYPE_MOVIE } from 'src/constants/SettingConstants';
 import { useQuasar } from 'quasar';
-import { getUrl, subtitleUploadList } from 'pages/library/use-library';
+import { doFixSubtitleTimeline, getUrl, subtitleUploadList } from 'pages/library/use-library';
 import BtnIgnoreVideo from 'pages/library/BtnIgnoreVideo';
 import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
 import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo';
 import BtnDialogSearchSubtitle from 'pages/library/BtnDialogSearchSubtitle';
+import { formModel } from 'pages/settings/use-settings';
 
 const props = defineProps({
   data: Object,

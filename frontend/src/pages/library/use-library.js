@@ -99,3 +99,23 @@ export const useLibrary = () => {
     refreshCacheLoading,
   };
 };
+
+export const doFixSubtitleTimeline = async (path) => {
+  const formData = new FormData();
+  formData.append('video_f_path', path);
+  const subtitleUrl = getUrl(path);
+  // 先下载字幕到内存，生成file文件
+  const res = await fetch(subtitleUrl);
+  if (!res.ok) {
+    SystemMessage.error('获取字幕文件失败');
+    return;
+  }
+  const blob = await res.blob();
+  const file = new File([blob], path.split(/\/|\\/).pop());
+  formData.append('file', file);
+  await LibraryApi.uploadSubtitle(formData);
+  SystemMessage.success('已提交时间轴校准', {
+    timeout: 3000,
+  });
+  await getSubtitleUploadList();
+};

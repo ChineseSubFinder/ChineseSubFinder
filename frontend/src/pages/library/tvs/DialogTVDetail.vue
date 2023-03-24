@@ -104,13 +104,29 @@
                   >
                     <q-popup-proxy anchor="top right">
                       <q-list dense>
-                        <q-item v-for="(item1, index) in item.sub_f_path_list" :key="item1">
+                        <q-item v-for="(item1, index) in item.sub_url_list" :key="item1">
                           <q-item-section side>{{ index + 1 }}.</q-item-section>
 
                           <q-item-section class="overflow-hidden ellipsis" :title="item1.split(/\/|\\/).pop()">
                             <a class="text-primary" :href="getUrl(item1)" target="_blank">{{
                               item1.split(/\/|\\/).pop()
                             }}</a>
+                          </q-item-section>
+                          <q-item-section side>
+                            <q-btn
+                              color="primary"
+                              round
+                              flat
+                              dense
+                              icon="construction"
+                              :title="`字幕时间轴校准${
+                                !formModel.advanced_settings.fix_time_line
+                                  ? '（此功能需要在进阶设置里开启自动校正字幕时间轴，检测到你当前尚未开启此选项）'
+                                  : ''
+                              }`"
+                              @click="doFixSubtitleTimeline(item1)"
+                              :disable="!formModel.advanced_settings.fix_time_line"
+                            ></q-btn>
                           </q-item-section>
                         </q-item>
                       </q-list>
@@ -164,6 +180,8 @@ import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
 import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo';
 import BtnDialogSearchSubtitle from 'pages/library/BtnDialogSearchSubtitle';
 import BtnUploadMultipleForTv from 'pages/library/tvs/BtnUploadMultipleForTv';
+import { doFixSubtitleTimeline } from 'pages/library/use-library';
+import { formModel } from 'pages/settings/use-settings';
 
 const props = defineProps({
   data: Object,
