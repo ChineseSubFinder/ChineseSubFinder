@@ -8,3 +8,18 @@ type DownloadFileCache struct {
 func NewDownloadFileCache() *DownloadFileCache {
 	return &DownloadFileCache{TTL: 4320, Unit: "hour"}
 }
+
+func (d DownloadFileCache) Check() {
+	if d.Unit == "second" {
+		// 半年的秒数
+		if d.TTL < 259200 || d.TTL > 525600 {
+			d.TTL = 259200
+		}
+	}
+	if d.Unit == "hour" {
+		// 半年的小时数
+		if d.TTL < 4320 || d.TTL > 8760 {
+			d.TTL = 4320
+		}
+	}
+}

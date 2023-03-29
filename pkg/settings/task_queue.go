@@ -21,3 +21,24 @@ func NewTaskQueue() *TaskQueue {
 		CheckPublicIPTargetSite: "",
 	}
 }
+
+func (t *TaskQueue) Check() {
+	if t.MaxRetryTimes < 1 || t.MaxRetryTimes > 5 {
+		t.MaxRetryTimes = 3
+	}
+	if t.OneJobTimeOut < 300 || t.OneJobTimeOut > 600 {
+		t.OneJobTimeOut = 300
+	}
+	if t.Interval < 10 || t.Interval > 60 {
+		t.Interval = 10
+	}
+	if t.ExpirationTime < 1 || t.ExpirationTime > 180 {
+		t.ExpirationTime = 90
+	}
+	if t.DownloadSubDuringXDays < 1 || t.DownloadSubDuringXDays > 30 {
+		t.DownloadSubDuringXDays = 7
+	}
+	if t.OneSubDownloadInterval < 12 || t.OneSubDownloadInterval > 48 {
+		t.OneSubDownloadInterval = 12
+	}
+}
