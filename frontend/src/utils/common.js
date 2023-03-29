@@ -5,3 +5,9 @@ export const gotoGithubIssuePage = () => {
   searchParams.append('template', '----bug----.md');
   window.open(`https://github.com/ChineseSubFinder/ChineseSubFinder/issues/new?${searchParams.toString()}`, '_blank');
 };
+
+export const isImdbId = (str) => {
+  if (!str) return false;
+  if (str === 'tt00000') return false;
+  return str.startsWith('tt') && str.length === 9;
+};

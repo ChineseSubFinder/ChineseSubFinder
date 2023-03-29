@@ -77,9 +77,16 @@
       </template>
     </q-splitter>
     <div v-else-if="!loading" class="text-grey">
-      <div>ImdbId: {{ imdbId || '-' }}</div>
+      <div>
+        <span>ImdbId: {{ imdbId || '-' }}</span>
+        <span v-if="imdbId && !isImdbId(imdbId)" class="q-ml-md text-negative">这是个无效的ImdbId</span>
+      </div>
       <template v-if="tmdbErrorMsg">
         <div class="text-negative">{{ tmdbErrorMsg }}</div>
+        <div><q-btn flat label="重试" color="primary" dense @click="searchPackages" /></div>
+      </template>
+      <template v-else-if="subtitleBestApiErrorMsg">
+        <div class="text-negative">获取字幕列表失败，错误信息：{{ subtitleBestApiErrorMsg }}</div>
         <div><q-btn flat label="重试" color="primary" dense @click="searchPackages" /></div>
       </template>
       <template v-else>
@@ -110,6 +117,7 @@ import { VIDEO_TYPE_TV } from 'src/constants/SettingConstants';
 import { settingsState } from 'src/store/settingsState';
 import SubtitleBestApiLimitBanner from 'components/SubtitleBestApiLimitBanner.vue';
 import { useApiLimit } from 'src/composables/use-api-limit';
+import { isImdbId } from 'src/utils/common';
 
 const props = defineProps({
   episodes: Array,
@@ -123,6 +131,7 @@ const { nextRequestCountdownSecond, countdownLoading, waitRequestReady } = useAp
 
 const splitterModel = ref(300);
 const tmdbErrorMsg = ref('');
+const subtitleBestApiErrorMsg = ref('');
 const packages = ref([]);
 const selectedPackage = ref(null);
 
@@ -171,6 +180,7 @@ const setLock = async (paths) => {
 
 const searchPackages = async () => {
   loading.value = true;
+  subtitleBestApiErrorMsg.value = '';
   loadingMsg.value = '正在从TMDB获取视频详细信息...';
   const [d, e] = await LibraryApi.getImdbId({
     is_movie: false,
@@ -192,12 +202,20 @@ const searchPackages = async () => {
   tmdbErrorMsg.value = '';
   loadingMsg.value = '正在获取字幕包列表...';
   imdbId.value = d?.ImdbId;
+
+  if (!isImdbId(imdbId.value)) {
+    loadingMsg.value = '';
+    loading.value = false;
+    return;
+  }
+
   const [data, err] = await CsfSubtitlesApi.searchTvSeasonPackage({
     imdb_id: imdbId.value,
     season: currentSeason.value,
   });
   if (err !== null) {
     SystemMessage.error(err.message);
+    subtitleBestApiErrorMsg.value = err.message;
   } else {
     packages.value = data.season_package_ids;
   }
