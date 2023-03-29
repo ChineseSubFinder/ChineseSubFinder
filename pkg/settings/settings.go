@@ -165,6 +165,25 @@ func (s *Settings) Check() {
 			s.CommonSettings.Threads = 6
 		}
 	}
+	// 这里需要做一次 Default 的检查，因为有设置会被改写低于预期，至少要在 Default 之上
+	if s.AdvancedSettings.TaskQueue.MaxRetryTimes < 1 || s.AdvancedSettings.TaskQueue.MaxRetryTimes > 5 {
+		s.AdvancedSettings.TaskQueue.MaxRetryTimes = 3
+	}
+	if s.AdvancedSettings.TaskQueue.OneJobTimeOut < 300 || s.AdvancedSettings.TaskQueue.OneJobTimeOut > 600 {
+		s.AdvancedSettings.TaskQueue.OneJobTimeOut = 300
+	}
+	if s.AdvancedSettings.TaskQueue.Interval < 10 || s.AdvancedSettings.TaskQueue.Interval > 60 {
+		s.AdvancedSettings.TaskQueue.Interval = 10
+	}
+	if s.AdvancedSettings.TaskQueue.ExpirationTime < 1 || s.AdvancedSettings.TaskQueue.ExpirationTime > 180 {
+		s.AdvancedSettings.TaskQueue.ExpirationTime = 90
+	}
+	if s.AdvancedSettings.TaskQueue.DownloadSubDuringXDays < 1 || s.AdvancedSettings.TaskQueue.DownloadSubDuringXDays > 30 {
+		s.AdvancedSettings.TaskQueue.DownloadSubDuringXDays = 7
+	}
+	if s.AdvancedSettings.TaskQueue.OneSubDownloadInterval < 12 || s.AdvancedSettings.TaskQueue.OneSubDownloadInterval > 48 {
+		s.AdvancedSettings.TaskQueue.OneSubDownloadInterval = 12
+	}
 }
 
 // isDir 存在且是文件夹
