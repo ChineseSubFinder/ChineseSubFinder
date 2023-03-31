@@ -54,7 +54,7 @@ const $q = useQuasar();
 const props = defineProps({
   path: String,
   onBtnClick: Function,
-  subList: {
+  subtitleUrlList: {
     type: Array,
     default: () => [],
   },
@@ -89,7 +89,7 @@ const showSelectSubtitleDialog = () => {
     options: {
       type: 'radio',
       model: selectedSub.value,
-      items: props.subList.map((e) => ({ label: e, value: e })),
+      items: props.subtitleUrlList.map((e) => ({ label: e, value: e })),
     },
     cancel: true,
     persistent: true,
@@ -126,7 +126,7 @@ const artOption = computed(() => {
       },
     },
     controls:
-      props.subList.length === 0
+      props.subtitleUrlList.length === 0
         ? []
         : [
             {
@@ -155,7 +155,7 @@ const artOption = computed(() => {
 });
 
 const handleBeforeShow = async () => {
-  selectedSub.value = props.subList?.[0];
+  selectedSub.value = props.subtitleUrlList?.[0];
   const [res, err] = await LibraryApi.getVideoM3u8(props.path);
   checkResult.value = res || err;
 };

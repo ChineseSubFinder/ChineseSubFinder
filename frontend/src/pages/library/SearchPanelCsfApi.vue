@@ -19,7 +19,7 @@
           <div class="row">
             <btn-dialog-preview-video
               :path="path"
-              :sub-list="[selectedSubUrl]"
+              :subtitle-url-list="[selectedSubUrl]"
               :on-btn-click="(callback) => handlePreviewClick(item, callback)"
               :subtitle-type="selectedItem?.ext.replace('.', '')"
             />

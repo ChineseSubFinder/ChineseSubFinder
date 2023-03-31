@@ -16,7 +16,7 @@
       <btn-dialog-preview-video
         v-if="hasSubtitle"
         size="sm"
-        :sub-list="detialInfo?.sub_url_list"
+        :subtitle-url-list="detialInfo?.sub_url_list"
         :path="data.video_f_path"
       />
 

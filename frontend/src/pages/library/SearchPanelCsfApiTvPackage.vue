@@ -55,7 +55,7 @@
                   <btn-dialog-preview-video
                     :disable="!getVideoFilePathOfSubtitle(item)"
                     :path="getVideoFilePathOfSubtitle(item)"
-                    :sub-list="[selectedSubUrl]"
+                    :subtitle-url-list="[selectedSubUrl]"
                     :on-btn-click="(callback) => handlePreviewClick(item, callback)"
                     :subtitle-type="selectedItem?.ext.replace('.', '')"
                   />
