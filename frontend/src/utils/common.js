@@ -9,5 +9,5 @@ export const gotoGithubIssuePage = () => {
 export const isImdbId = (str) => {
   if (!str) return false;
   if (str === 'tt00000') return false;
-  return str.startsWith('tt') && str.length === 9;
+  return /^tt\d{7,8}$/.test(str);
 };
