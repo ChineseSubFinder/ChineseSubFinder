@@ -14,13 +14,13 @@ fi
 ## 重设权限
 chown -R "${PUID}:${PGID}" /config /root
 if [[ ${PERMS} == true ]]; then
-    echo "已设置 PERMS=true，重设 '/media' 目录权限为 ${PUID}:${PGID} 所有..."
+    echo "已设置 PERMS=true，重设 '/media' 目录权限为 ${PUID}:${PGID} 所有（媒体文件多，花的时间也多，耐心等）..."
     chown -R ${PUID}:${PGID} /media
 fi
 
 ## 兼容旧的缓存目录
 if [[ -d /app/cache ]]; then
-    echo "检测到映射了 '/app/cache'，创建软连接 '/config/cache' -> '/app/cache'"
+    echo "检测到映射了 '/app/cache'，创建软连接 '/config/cache' -> '/app/cache'（如果原有缓存多，花的时间也多，耐心等）"
     chown -R ${PUID}:${PGID} /app
     if [[ -L /config/cache && $(readlink -f /config/cache) != /app/cache ]]; then
         rm -rf /config/cache &>/dev/null
