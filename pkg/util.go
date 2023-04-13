@@ -244,7 +244,7 @@ func IsWantedVideoExtDef(fileName string) bool {
 		_wantedExtMap[common.VideoExtIso] = common.VideoExtIso
 		_wantedExtMap[common.VideoExtM2ts] = common.VideoExtM2ts
 
-		for _, videoExt := range _customVideoExts {
+		for _, videoExt := range settings.Get().AdvancedSettings.CustomVideoExts {
 			_wantedExtMap[videoExt] = videoExt
 		}
 	}
@@ -732,5 +732,4 @@ func GetMaxSizeFile(path string) string {
 var (
 	_wantedExtMap    = make(map[string]string) // 人工确认的需要监控的视频后缀名
 	_defExtMap       = make(map[string]string) // 内置支持的视频后缀名列表
-	_customVideoExts = make([]string, 0)       // 用户额外自定义的视频后缀名列表
 )
