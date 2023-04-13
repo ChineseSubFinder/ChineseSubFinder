@@ -228,6 +228,12 @@ func FileNameIsBDMV(id_bdmv_fileFPath string) (bool, string) {
 	return false, ""
 }
 
+// ResetWantedVideoExt 重置视频后缀名
+func ResetWantedVideoExt() {
+	_wantedExtMap = make(map[string]string)
+	_defExtMap = make(map[string]string)
+}
+
 // IsWantedVideoExtDef 后缀名是否符合规则
 func IsWantedVideoExtDef(fileName string) bool {
 
@@ -730,6 +736,6 @@ func GetMaxSizeFile(path string) string {
 }
 
 var (
-	_wantedExtMap    = make(map[string]string) // 人工确认的需要监控的视频后缀名
-	_defExtMap       = make(map[string]string) // 内置支持的视频后缀名列表
+	_wantedExtMap = make(map[string]string) // 人工确认的需要监控的视频后缀名
+	_defExtMap    = make(map[string]string) // 内置支持的视频后缀名列表
 )

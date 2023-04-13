@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 	"net/http"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
@@ -38,6 +39,7 @@ func (cb *ControllerBase) SettingsHandler(c *gin.Context) {
 			if err != nil {
 				return
 			}
+			pkg.ResetWantedVideoExt()
 			// ----------------------------------------
 			// 设置接口的 API TOKEN
 			if settings.Get().ExperimentalFunction.ApiKeySettings.Enabled == true {
