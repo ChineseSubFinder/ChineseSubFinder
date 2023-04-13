@@ -3,10 +3,7 @@ package v1
 import (
 	"fmt"
 	"net/http"
-	"path/filepath"
 	"time"
-
-	PTN "github.com/middelink/go-parse-torrent-name"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
 
@@ -297,14 +294,7 @@ func (cb *ControllerBase) ScanSkipInfo(c *gin.Context) {
 					skipInfo = models.NewSkipScanInfoByMovie(videoSkipInfo.PhysicalVideoFileFullPath, videoSkipInfo.IsSkip)
 				} else {
 					// 电视剧
-					var parse *PTN.TorrentInfo
-					parse, err = PTN.Parse(videoSkipInfo.PhysicalVideoFileFullPath)
-					if err != nil {
-						cb.log.Errorln("SetScanSkipInfo.PTN.Parse", err)
-						return
-					}
-					dirFPath := filepath.Dir(filepath.Dir(videoSkipInfo.PhysicalVideoFileFullPath))
-					skipInfo = models.NewSkipScanInfoBySeries(dirFPath, parse.Season, parse.Episode, videoSkipInfo.IsSkip)
+					skipInfo = models.NewSkipScanInfoBySeriesEx(videoSkipInfo.PhysicalVideoFileFullPath, videoSkipInfo.IsSkip)
 				}
 
 				cb.cronHelper.Downloader.ScanLogic.Set(skipInfo)

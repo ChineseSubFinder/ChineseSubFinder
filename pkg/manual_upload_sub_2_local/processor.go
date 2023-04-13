@@ -1,13 +1,10 @@
 package manual_upload_sub_2_local
 
 import (
-	"path/filepath"
 	"sync"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/scan_logic"
-	PTN "github.com/middelink/go-parse-torrent-name"
-
 	"github.com/pkg/errors"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/save_sub_helper"
@@ -220,14 +217,7 @@ func (m *ManualUploadSub2Local) processSub(job *Job) error {
 			return err
 		}
 		// 默认设置这个视频“跳过”（跳过扫描和下载字幕）属性
-		var parse *PTN.TorrentInfo
-		parse, err = PTN.Parse(job.VideoFPath)
-		if err != nil {
-			err = errors.New("processSub.PTN.Parse:" + err.Error())
-			return err
-		}
-		dirFPath := filepath.Dir(filepath.Dir(job.VideoFPath))
-		skipInfo = models.NewSkipScanInfoBySeries(dirFPath, parse.Season, parse.Episode, true)
+		skipInfo = models.NewSkipScanInfoBySeriesEx(job.VideoFPath, true)
 	}
 
 	m.scanLogic.Set(skipInfo)

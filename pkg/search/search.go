@@ -1,6 +1,7 @@
 package search
 
 import (
+	"github.com/ChineseSubFinder/ChineseSubFinder/internal/models"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -10,8 +11,6 @@ import (
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/backend"
-
-	PTN "github.com/middelink/go-parse-torrent-name"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
 
@@ -219,16 +218,20 @@ func SeriesAllEpsAndSubtitles(l *logrus.Logger, dir string) (*backend.SeasonInfo
 		for _, oneVideo := range videos {
 
 			videoName := strings.ReplaceAll(filepath.Base(oneVideo), filepath.Ext(oneVideo), "")
-			parse, err := PTN.Parse(oneVideo)
-			if err != nil {
-				l.Errorln("SeriesAllEpsAndSubtitles.PTN.Parse", err)
+
+			skipInfo := models.NewSkipScanInfoBySeriesEx(oneVideo, true)
+
+			if skipInfo.Season() == -1 || skipInfo.Eps() == -1 {
+				// 无法解析的视频，跳过
+				l.Errorln("SeriesAllEpsAndSubtitles, Skip UnParse Video:", oneVideo)
 				continue
 			}
+
 			nowOneVideoInfo := backend.OneVideoInfo{
 				Name:         filepath.Base(oneVideo),
 				VideoFPath:   oneVideo,
-				Season:       parse.Season,
-				Episode:      parse.Episode,
+				Season:       skipInfo.Season(),
+				Episode:      skipInfo.Eps(),
 				SubFPathList: make([]string, 0),
 				SubUrlList:   make([]string, 0),
 			}
