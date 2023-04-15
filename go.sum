@@ -324,6 +324,8 @@ github.com/creack/pty v1.1.7/go.mod h1:lj5s0c3V2DBrqTV7llrYr5NG6My20zk30Fl46Y7Do
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/cyruzin/golang-tmdb v1.4.5 h1:NiOrT8WFHAF97Ti0Ahn0ubgDvDE5G0uSADbyW0iR0qU=
 github.com/cyruzin/golang-tmdb v1.4.5/go.mod h1:ZSryJLCcY+9TiKU+LbouXKns++YBrM8Tizannr05c+I=
+github.com/cyruzin/golang-tmdb v1.5.0 h1:a8KT9gfTDCwVjfOg+oSGSjtZbZe/VgOEz5ri4s7RLOU=
+github.com/cyruzin/golang-tmdb v1.5.0/go.mod h1:ZSryJLCcY+9TiKU+LbouXKns++YBrM8Tizannr05c+I=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

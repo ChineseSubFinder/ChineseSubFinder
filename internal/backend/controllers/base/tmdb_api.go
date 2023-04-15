@@ -49,7 +49,8 @@ func (cb *ControllerBase) CheckTmdbApiHandler(c *gin.Context) {
 	// 开始测试 tmdb api
 	tmdbApi, err := tmdb_api.NewTmdbHelper(
 		cb.fileDownloader.Log,
-		req.ApiKey)
+		req.ApiKey,
+		req.UseAlternateBaseURL)
 	if err != nil {
 		cb.fileDownloader.Log.Errorln("NewTmdbHelper", err)
 		return

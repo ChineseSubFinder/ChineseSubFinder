@@ -30,7 +30,7 @@ func InitRouter(
 	if settings.Get().AdvancedSettings.TmdbApiSettings.Enable == true &&
 		settings.Get().AdvancedSettings.TmdbApiSettings.ApiKey != "" {
 
-		tmdbApi, err = tmdb_api.NewTmdbHelper(cronHelper.Logger, settings.Get().AdvancedSettings.TmdbApiSettings.ApiKey)
+		tmdbApi, err = tmdb_api.NewTmdbHelper(cronHelper.Logger, settings.Get().AdvancedSettings.TmdbApiSettings.ApiKey, settings.Get().AdvancedSettings.TmdbApiSettings.UseAlternateBaseURL)
 		if err != nil {
 			cronHelper.Logger.Panicln("NewTmdbHelper", err)
 		}

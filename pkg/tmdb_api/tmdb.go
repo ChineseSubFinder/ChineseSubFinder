@@ -18,14 +18,16 @@ type TmdbApi struct {
 	tmdbClient *tmdb.Client
 }
 
-func NewTmdbHelper(l *logrus.Logger, apiKey string) (*TmdbApi, error) {
+func NewTmdbHelper(l *logrus.Logger, apiKey string, useAlternateBaseURL bool) (*TmdbApi, error) {
 
 	tmdbClient, err := tmdb.Init(apiKey)
 	if err != nil {
 		err = fmt.Errorf("error initializing tmdb client: %s", err)
 		return nil, err
 	}
-
+	if useAlternateBaseURL == true {
+		tmdbClient.SetAlternateBaseURL()
+	}
 	t := TmdbApi{
 		l:          l,
 		apiKey:     apiKey,
@@ -220,6 +222,7 @@ type ConvertIdResult struct {
 }
 
 type Req struct {
-	ProxySettings settings.ProxySettings `json:"proxy_settings"  binding:"required"`
-	ApiKey        string                 `json:"api_key"`
+	ProxySettings       settings.ProxySettings `json:"proxy_settings"  binding:"required"`
+	ApiKey              string                 `json:"api_key"`
+	UseAlternateBaseURL bool                   `json:"use_alternate_base_url"`
 }
