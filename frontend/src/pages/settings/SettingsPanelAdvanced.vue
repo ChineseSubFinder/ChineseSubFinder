@@ -340,7 +340,7 @@
 
       <template v-if="form.tmdb_api_settings.enable">
         <q-item>
-          <div class="text-warning">* 国内访问TMDB API可能需要代理</div>
+          <div class="text-warning">* 国内访问 TMDB API 可能需要代理</div>
         </q-item>
         <q-item class="q-mt-md" dense>
           <q-item-section>
@@ -348,8 +348,17 @@
               v-model="form.tmdb_api_settings.api_key"
               standout
               dense
-              label="填写TMDB ApiKey"
+              label="填写 TMDB ApiKey"
               :rules="[(val) => (form.tmdb_api_settings.enable && !!val) || '不能为空']"
+            />
+          </q-item-section>
+        </q-item>
+        <q-item dense>
+          <q-item-section>
+            <q-checkbox
+              v-model="form.tmdb_api_settings.use_alternate_base_url"
+              label="使用备用的 TMDB API 地址"
+              title="如果连接不上 TMDB API，可以尝试勾选这个选项"
             />
           </q-item-section>
         </q-item>

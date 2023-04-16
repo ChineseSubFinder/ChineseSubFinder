@@ -1,5 +1,5 @@
 <template>
-  <q-btn label="检测TMDB API" color="secondary" :loading="loading" @click="check" />
+  <q-btn label="检测 TMDB API" color="secondary" :loading="loading" @click="check" />
 </template>
 
 <script setup>
@@ -15,6 +15,7 @@ const check = async () => {
   const [res, err] = await CommonApi.checkTmdbApiKey({
     proxy_settings: formModel.advanced_settings.proxy_settings,
     api_key: formModel.advanced_settings.tmdb_api_settings.api_key,
+    use_alternate_base_url: formModel.advanced_settings.tmdb_api_settings.use_alternate_base_url,
   });
   if (err !== null) {
     SystemMessage.error(err.message);
