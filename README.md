@@ -10,7 +10,7 @@
 
 移除全功能版本，以后都是轻量级，tag 继续保留，实则都有是一个。
 
-最新的版本可以查看 [Docker Hub](https://hub.docker.com/repository/docker/ChineseSubFinder/ChineseSubFinder) ，如果不在 telegram 群内，没有特殊的需求请不要选择 **Beta** 版本使用。
+最新的版本可以查看 [Docker Hub](https://hub.docker.com/repository/docker/allanpk716/chinesesubfinder) ，如果不在 telegram 群内，没有特殊的需求请不要选择 **Beta** 版本使用。
 
 ## 前置要求
 
