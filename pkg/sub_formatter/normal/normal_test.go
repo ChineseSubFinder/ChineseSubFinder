@@ -1,6 +1,7 @@
 package normal
 
 import (
+	"github.com/WQGroup/logger"
 	"path/filepath"
 	"testing"
 
@@ -11,7 +12,7 @@ import (
 )
 
 func TestFormatter_GetFormatterName(t *testing.T) {
-	f := NewFormatter()
+	f := NewFormatter(logger.GetLogger())
 	if f.GetFormatterName() != subCommon.FormatterNameString_Normal {
 		t.Errorf("GetFormatterName error")
 	}

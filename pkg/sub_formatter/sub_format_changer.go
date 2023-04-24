@@ -3,6 +3,7 @@ package sub_formatter
 import (
 	"errors"
 	"fmt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter/same_as_video_name"
 	"os"
 	"path/filepath"
 	"strings"
@@ -47,6 +48,9 @@ func NewSubFormatChanger(log *logrus.Logger, movieRootDirs []string, seriesRootD
 	// emby
 	embyM := emby.NewFormatter()
 	formatter.formatter[embyM.GetFormatterName()] = embyM
+	// same as video name
+	savnM := same_as_video_name.NewFormatter(log)
+	formatter.formatter[savnM.GetFormatterName()] = savnM
 	return &formatter
 }
 
@@ -66,19 +70,19 @@ func (s *SubFormatChanger) AutoDetectThenChangeTo(desFormatter common.FormatterN
 			return RenameResults{}, err
 		}
 
-		s.log.Infoln("AutoDetectThenChangeTo Movie Index", i, dir, "Start")
+		s.log.Infoln("AutoDetectThenChangeTo Movie Index", i, dir, "End")
 	}
 
 	for i, dir := range s.seriesRootDirs {
 		s.log.Infoln("AutoDetectThenChangeTo Series Index", i, dir, "Start")
 
-		err := s.autoDetectMovieThenChangeTo(&outStruct, desFormatter, dir)
+		err := s.autoDetectMSeriesThenChangeTo(&outStruct, desFormatter, dir)
 		if err != nil {
 			s.log.Infoln("AutoDetectThenChangeTo Series Index", i, dir, "End")
 			return RenameResults{}, err
 		}
 
-		s.log.Infoln("AutoDetectThenChangeTo Series Index", i, dir, "Start")
+		s.log.Infoln("AutoDetectThenChangeTo Series Index", i, dir, "End")
 	}
 
 	return outStruct, nil
@@ -235,6 +239,10 @@ func GetSubFormatter(log *logrus.Logger, subNameFormatter int) ifaces.ISubFormat
 		{
 			subFormatter = normal.NewFormatter(log)
 			break
+		}
+	case int(common.SampleAsVideoName):
+		{
+			subFormatter = same_as_video_name.NewFormatter(log)
 		}
 	default:
 		{
