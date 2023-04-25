@@ -1,11 +1,11 @@
 ## 更新说明
-- v0.49.x 自动下载对接 SubtitleBest 字幕源，请在“字幕源设置”中按照提示申请 API Key 后使用，默认保留 5 个下载次数用于手动搜索；
-- v0.50.x 新增在 WebUI 选择一个字幕手动提交进行时间轴的矫正（需要先开启对应设置）
 - v0.51.x TMDB API 支持选择备用地址（根据你的网络环境自己测试）
+- v0.52.x 新增一种字幕保存命名，与视频文件同名（不增加字幕语言类型后缀）
 
 ## 变更说明
 - 原有的 CSF 内置的“共享字幕”功能，将于 2023年5月1日 正式下线，不在维护，请至少更新到 v0.47.x 及其以上版本；
 - CSF 不再维护本地字幕爬虫，全功能版本已经取消支持，所有镜像都指向到 lite 版本；
+- 请开启 SubtitleBest 字幕源设置，缓解字幕下载的问题；
 
 ## 初次使用
 - 第一次使用，请务必阅读：[电影和连续剧目录结构示例](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/电影和连续剧目录结构示例.md)、[连续剧目录结构要求](https://github.com/ChineseSubFinder/ChineseSubFinder/blob/docs/DesignFile/连续剧目录结构要求.md)，按要求填写电影和连续剧的目录；
