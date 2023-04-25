@@ -10,10 +10,12 @@ export const SUB_TYPE_PRIORITY_NAME_MAP = {
 
 export const SUB_NAME_FORMAT_EMBY = 0;
 export const SUB_NAME_FORMAT_NORMAL = 1;
+export const SUB_NAME_VIDEO = 2;
 
 export const SUB_NAME_FORMAT_NAME_MAP = {
   [SUB_NAME_FORMAT_EMBY]: 'Emby格式',
   [SUB_NAME_FORMAT_NORMAL]: '常规格式',
+  [SUB_NAME_VIDEO]: '与视频名称一致',
 };
 
 export const DESC_ENCODE_TYPE_UTF8 = 0;
@@ -38,7 +40,7 @@ export const DEFAULT_SUB_SOURCE_URL_MAP = {
   subhd: 'https://subhd.tv',
   zimuku: 'https://zimuku.org',
   assrt: 'https://api.assrt.net/v1',
-  a4k: 'https://www.a4k.net'
+  a4k: 'https://www.a4k.net',
 };
 
 export const PROXY_TYPE_HTTP = 'http';

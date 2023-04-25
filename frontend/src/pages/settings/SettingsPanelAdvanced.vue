@@ -377,6 +377,7 @@ import {
   SUB_NAME_FORMAT_NAME_MAP,
   SUB_TYPE_PRIORITY_NAME_MAP,
   PROXY_TYPE_NAME_MAP,
+  SUB_NAME_VIDEO,
 } from 'src/constants/SettingConstants';
 import { formModel } from 'pages/settings/use-settings';
 import { toRefs } from '@vueuse/core';
@@ -387,6 +388,7 @@ import BtnCheckTmdbApi from 'pages/settings/BtnCheckTmdbApi';
 const subNameFormatDescMap = {
   [SUB_NAME_FORMAT_NORMAL]: '兼容性更好，AAA.zh.ass or AAA.zh.default.ass。',
   [SUB_NAME_FORMAT_EMBY]: 'AAA.chinese(简英,subhd).ass or AAA.chinese(简英,xunlei).default.ass。',
+  [SUB_NAME_VIDEO]: '无语言描述后缀，AAA.ass or AAA.srt',
 };
 
 const { advanced_settings: form } = toRefs(formModel);
