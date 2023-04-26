@@ -97,6 +97,8 @@ var (
 
 func defInstance() {
 
+	settings.SetConfigRootPath(pkg.ConfigRootDirFPath())
+
 	pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester())
 
 	authKey := random_auth_key.AuthKey{
