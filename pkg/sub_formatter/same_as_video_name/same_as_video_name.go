@@ -1,6 +1,7 @@
 package same_as_video_name
 
 import (
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/ass"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/srt"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter/common"
@@ -27,7 +28,7 @@ func (f Formatter) GetFormatterName() string {
 }
 
 func (f Formatter) GetFormatterFormatterName() int {
-	return int(common.SampleAsVideoName)
+	return int(common.SameAsVideoName)
 }
 
 // IsMatchThisFormat 是否满足当前实现接口的字幕命名格式 - 是否符合规则、fileNameWithOutExt string, subExt string, subLang types.MyLanguage, extraSubPreName string
@@ -50,6 +51,16 @@ func (f Formatter) IsMatchThisFormat(subName string) (bool, string, string, lang
 	// 获取文件的后缀名
 	subExt := filepath.Ext(subNameBase)
 	fileNameWithOutExt := strings.ReplaceAll(subNameBase, subExt, "")
+
+	if pkg.IsFile(subName) == true {
+		bok, fInfo, err := f.subParser.DetermineFileTypeFromFile(subName)
+		if err != nil {
+			return false, "", "", language2.Unknown, ""
+		}
+		if bok == true {
+			return true, filepath.Join(subNameDir, fileNameWithOutExt), subExt, fInfo.Lang, ""
+		}
+	}
 
 	return true, filepath.Join(subNameDir, fileNameWithOutExt), subExt, language2.Unknown, ""
 }

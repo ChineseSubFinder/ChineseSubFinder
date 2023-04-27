@@ -1,6 +1,9 @@
 package sub_formatter
 
 import (
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
 	"path/filepath"
 	"testing"
 
@@ -11,6 +14,8 @@ import (
 )
 
 func TestSubFormatChanger_AutoDetectThenChangeTo(t *testing.T) {
+
+	settings.SetConfigRootPath(pkg.ConfigRootDirFPath())
 
 	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_format_changer"}, 4, true)
 	movie_name := "AAA"
@@ -80,7 +85,7 @@ func TestSubFormatChanger_AutoDetectThenChangeTo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			s := NewSubFormatChanger([]string{tt.fields.movieRootDir}, []string{tt.fields.seriesRootDir})
+			s := NewSubFormatChanger(log_helper.GetLogger4Tester(), []string{tt.fields.movieRootDir}, []string{tt.fields.seriesRootDir})
 
 			got, err := s.AutoDetectThenChangeTo(tt.args.desFormatter)
 			if (err != nil) != tt.wantErr {
@@ -114,13 +119,15 @@ func TestSubFormatChanger_AutoDetectThenChangeTo(t *testing.T) {
 
 func TestSubFormatChangerProcess(t *testing.T) {
 
+	settings.SetConfigRootPath(pkg.ConfigRootDirFPath())
+
 	// 先删除 db
 	err := dao.DeleteDbFile()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_format_changer"}, 4, true)
+	testRootDir := unit_test_helper.GetTestDataResourceRootPath([]string{"sub_format_changer"}, 3, true)
 	movie_name := "AAA"
 	series_name := "Loki"
 
@@ -134,6 +141,11 @@ func TestSubFormatChangerProcess(t *testing.T) {
 	seriesDir_org_normal := filepath.Join(testRootDir, "series_org_normal")
 	movieOneDir_org_normal := filepath.Join(movieDir_org_normal, movie_name)
 	seriesOneDir_org_normal := filepath.Join(seriesDir_org_normal, series_name, "Season 1")
+	// same 的信息
+	movieDir_org_same := filepath.Join(testRootDir, "movie_org_same")
+	seriesDir_org_same := filepath.Join(testRootDir, "series_org_same")
+	movieOneDir_org_same := filepath.Join(movieDir_org_same, movie_name)
+	seriesOneDir_org_same := filepath.Join(seriesDir_org_same, series_name, "Season 1")
 	// emby 转 emby 理论上不应该改文件
 	movieDir_emby_2_emby := filepath.Join(testRootDir, "movie_emby_2_emby")
 	seriesDir_emby_2_emby := filepath.Join(testRootDir, "series_emby_2_emby")
@@ -149,7 +161,7 @@ func TestSubFormatChangerProcess(t *testing.T) {
 		want    RenameResults
 		wantErr bool
 	}{
-		// 先从 emby 2 normal
+		// 轮次 0：先从 emby 2 normal
 		{name: "emby 2 normal",
 			args: args{movieRootDir: movieDir_org_emby, seriesRootDir: seriesDir_org_emby, nowDesFormatter: common.Normal},
 			want: RenameResults{
@@ -162,7 +174,7 @@ func TestSubFormatChangerProcess(t *testing.T) {
 					filepath.Join(seriesOneDir_org_emby, "Loki - S01E01.zh.srt"):         1,
 				},
 			}, wantErr: false},
-		// 然后从上面一个测试用例的文件夹中，继续，转 normal 2 emby
+		// 轮次 1：然后从上面一个测试用例的文件夹中，继续，转 normal 2 emby
 		{name: "normal 2 emby",
 			args: args{movieRootDir: movieDir_org_emby, seriesRootDir: movieDir_org_emby, nowDesFormatter: common.Emby},
 			want: RenameResults{
@@ -175,13 +187,13 @@ func TestSubFormatChangerProcess(t *testing.T) {
 					filepath.Join(seriesOneDir_org_emby, "Loki - S01E01.chinese(简英).srt"):         1,
 				},
 			}, wantErr: false},
-
+		// 轮次 2：
 		{name: "emby 2 emby",
 			args:    args{movieRootDir: movieDir_emby_2_emby, seriesRootDir: seriesDir_emby_2_emby, nowDesFormatter: common.Emby},
 			want:    RenameResults{},
 			wantErr: false},
 
-		// 重新评估 normal 2 emby ，需要清理数据库
+		// 轮次 3：重新评估 normal 2 emby ，需要清理数据库
 		{name: "normal 2 emby new",
 			args: args{movieRootDir: movieDir_org_normal, seriesRootDir: seriesDir_org_normal, nowDesFormatter: common.Emby},
 			want: RenameResults{
@@ -194,7 +206,7 @@ func TestSubFormatChangerProcess(t *testing.T) {
 					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.chinese(简英).srt"):         1,
 				},
 			}, wantErr: false},
-		// 然后从上面一个测试用例的文件夹中，继续，转 emby 2 normal
+		// 轮次 4：然后从上面一个测试用例的文件夹中，继续，转 emby 2 normal
 		{name: "emby 2 normal new",
 			args: args{movieRootDir: movieDir_org_normal, seriesRootDir: seriesDir_org_normal, nowDesFormatter: common.Normal},
 			want: RenameResults{
@@ -207,11 +219,55 @@ func TestSubFormatChangerProcess(t *testing.T) {
 					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.zh.srt"):         1,
 				},
 			}, wantErr: false},
+		// 轮次 5：
+		{name: "normal 2 same",
+			args: args{movieRootDir: movieDir_org_normal, seriesRootDir: seriesDir_org_normal, nowDesFormatter: common.SameAsVideoName},
+			want: RenameResults{
+				RenamedFiles: map[string]int{
+					filepath.Join(movieOneDir_org_normal, "AAA.ass"):            2,
+					filepath.Join(movieOneDir_org_normal, "AAA.srt"):            1,
+					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.ass"): 2,
+					filepath.Join(seriesOneDir_org_normal, "Loki - S01E01.srt"): 1,
+				},
+			}, wantErr: false},
+		// 轮次 6：
+		{name: "same 2 emby",
+			args: args{movieRootDir: movieDir_org_same, seriesRootDir: seriesDir_org_same, nowDesFormatter: common.Emby},
+			want: RenameResults{
+				RenamedFiles: map[string]int{
+					filepath.Join(movieOneDir_org_same, "AAA.chinese(简英).ass"):            1,
+					filepath.Join(movieOneDir_org_same, "AAA.chinese(简英).srt"):            1,
+					filepath.Join(seriesOneDir_org_same, "Loki - S01E01.chinese(繁英).ass"): 1,
+					filepath.Join(seriesOneDir_org_same, "Loki - S01E01.chinese(简英).srt"): 1,
+				},
+			}, wantErr: false},
+		// 轮次 7：
+		{name: "emby 2 sample",
+			args: args{movieRootDir: movieDir_org_emby, seriesRootDir: seriesDir_org_emby, nowDesFormatter: common.SameAsVideoName},
+			want: RenameResults{
+				RenamedFiles: map[string]int{
+					filepath.Join(movieOneDir_org_emby, "AAA.ass"):            3,
+					filepath.Join(movieOneDir_org_emby, "AAA.srt"):            1,
+					filepath.Join(seriesOneDir_org_emby, "Loki - S01E01.ass"): 6,
+					filepath.Join(seriesOneDir_org_emby, "Loki - S01E01.srt"): 1,
+				},
+			}, wantErr: false},
+		// 轮次 8：
+		{name: "same 2 normal",
+			args: args{movieRootDir: movieDir_org_same, seriesRootDir: seriesDir_org_same, nowDesFormatter: common.Normal},
+			want: RenameResults{
+				RenamedFiles: map[string]int{
+					filepath.Join(movieOneDir_org_same, "AAA.zh.ass"):            1,
+					filepath.Join(movieOneDir_org_same, "AAA.zh.srt"):            1,
+					filepath.Join(seriesOneDir_org_same, "Loki - S01E01.zh.ass"): 1,
+					filepath.Join(seriesOneDir_org_same, "Loki - S01E01.zh.srt"): 1,
+				},
+			}, wantErr: false},
 	}
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			if i == 0 || i == 2 || i == 3 {
+			if i == 0 || i == 2 || i == 3 || i == 5 || i == 6 || i == 7 || i == 8 {
 				// 0 - 1 轮次，测试的是 先从 emby 2 normal
 				// 然后从上面一个测试用例的文件夹中，继续，转 normal 2 emby
 				// 先删除 db
@@ -225,7 +281,7 @@ func TestSubFormatChangerProcess(t *testing.T) {
 				}
 			}
 
-			got, err := SubFormatChangerProcess([]string{tt.args.movieRootDir}, []string{tt.args.seriesRootDir}, tt.args.nowDesFormatter)
+			got, err := SubFormatChangerProcess(log_helper.GetLogger4Tester(), []string{tt.args.movieRootDir}, []string{tt.args.seriesRootDir}, tt.args.nowDesFormatter)
 			if err != nil != tt.wantErr {
 				t.Errorf("SubFormatChangerProcess() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -244,10 +300,12 @@ func TestSubFormatChangerProcess(t *testing.T) {
 			}
 
 			for fileName, counter := range got.RenamedFiles {
-				if tt.want.RenamedFiles[filepath.FromSlash(fileName)] != counter {
+
+				nowName := filepath.FromSlash(fileName)
+				if tt.want.RenamedFiles[nowName] != counter {
 					//println(fileName)
 					//println(filepath.FromSlash(fileName))
-					t.Errorf("SubFormatChangerProcess() RenamedFiles %v got = %v, want %v", fileName, counter, tt.want.RenamedFiles[fileName])
+					t.Errorf("SubFormatChangerProcess() RenamedFiles %v got = %v, want %v", fileName, counter, tt.want.RenamedFiles[nowName])
 					return
 				}
 			}
@@ -284,6 +342,42 @@ func TestSubFormatChangerProcess(t *testing.T) {
 				dao.GetDb().First(&subFormatRec)
 				if subFormatRec.FormatName != int(common.Normal) || subFormatRec.Done == false {
 					t.Fatal(tt.name, "i == 4 check db result")
+				}
+			}
+
+			if i == 5 {
+				// 这里需要校验一次数据库的赋值是否正确
+				var subFormatRec models.SubFormatRec
+				dao.GetDb().First(&subFormatRec)
+				if subFormatRec.FormatName != int(common.SameAsVideoName) || subFormatRec.Done == false {
+					t.Fatal(tt.name, "i == 5 check db result")
+				}
+			}
+
+			if i == 6 {
+				// 这里需要校验一次数据库的赋值是否正确
+				var subFormatRec models.SubFormatRec
+				dao.GetDb().First(&subFormatRec)
+				if subFormatRec.FormatName != int(common.Emby) || subFormatRec.Done == false {
+					t.Fatal(tt.name, "i == 6 check db result")
+				}
+			}
+
+			if i == 7 {
+				// 这里需要校验一次数据库的赋值是否正确
+				var subFormatRec models.SubFormatRec
+				dao.GetDb().First(&subFormatRec)
+				if subFormatRec.FormatName != int(common.SameAsVideoName) || subFormatRec.Done == false {
+					t.Fatal(tt.name, "i == 6 check db result")
+				}
+			}
+
+			if i == 8 {
+				// 这里需要校验一次数据库的赋值是否正确
+				var subFormatRec models.SubFormatRec
+				dao.GetDb().First(&subFormatRec)
+				if subFormatRec.FormatName != int(common.Normal) || subFormatRec.Done == false {
+					t.Fatal(tt.name, "i == 6 check db result")
 				}
 			}
 		})

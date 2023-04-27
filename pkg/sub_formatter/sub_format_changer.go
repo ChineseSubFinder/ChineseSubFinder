@@ -240,7 +240,7 @@ func GetSubFormatter(log *logrus.Logger, subNameFormatter int) ifaces.ISubFormat
 			subFormatter = normal.NewFormatter(log)
 			break
 		}
-	case int(common.SampleAsVideoName):
+	case int(common.SameAsVideoName):
 		{
 			subFormatter = same_as_video_name.NewFormatter(log)
 		}
