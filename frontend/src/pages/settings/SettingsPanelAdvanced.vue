@@ -116,6 +116,7 @@
               </q-item-label>
             </q-item-section>
           </q-item>
+          <div class="text-negative">* 修改此选项后需要重启容器，启动阶段会对所有字幕的做格式调整，耗时可能较长</div>
         </q-item-section>
       </q-item>
 
