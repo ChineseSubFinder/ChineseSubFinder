@@ -735,6 +735,23 @@ func GetMaxSizeFile(path string) string {
 	return filepath.Join(path, maxFile.Name())
 }
 
+func Sha256File(fileFPath string) (string, int, error) {
+	fp, err := os.Open(fileFPath)
+	if err != nil {
+		return "", 0, err
+	}
+	defer func() {
+		_ = fp.Close()
+	}()
+
+	partAll, err := io.ReadAll(fp)
+	if err != nil {
+		return "", 0, err
+	}
+
+	return fmt.Sprintf("%x", sha256.Sum256(partAll)), len(partAll), nil
+}
+
 var (
 	_wantedExtMap = make(map[string]string) // 人工确认的需要监控的视频后缀名
 	_defExtMap    = make(map[string]string) // 内置支持的视频后缀名列表
