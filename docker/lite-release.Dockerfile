@@ -20,4 +20,5 @@ COPY go/out/${TARGETARCH}/chinesesubfinder /usr/bin/chinesesubfinder
 COPY lite-entrypoint.sh /usr/bin/entrypoint.sh
 VOLUME ["/config", "/media"]
 WORKDIR /config
+EXPOSE 19035
 ENTRYPOINT ["tini", "entrypoint.sh"]

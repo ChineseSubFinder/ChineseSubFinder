@@ -15,7 +15,8 @@ RUN cd /tmp \
     && chmod +x /usr/local/bin/chinesesubfinder \
     && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
     && echo "${TZ}" > /etc/timezone \
-    && rm -rf /tmp/*
+    && rm -rf /tmp/* \
+EXPOSE 19035
 COPY full-rootfs /
 ENTRYPOINT ["/init"]
 WORKDIR /config
