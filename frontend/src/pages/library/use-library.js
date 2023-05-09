@@ -119,3 +119,15 @@ export const doFixSubtitleTimeline = async (path) => {
   });
   await getSubtitleUploadList();
 };
+
+/**
+ * 检查一个视频是否锁定
+ * @param videoInfo {video_type, physical_video_file_full_path, is_bluray, is_skip}
+ * @returns {Promise<boolean>}
+ */
+export const checkIsVideoLocked = async (videoInfo) => {
+  const [res] = await LibraryApi.getSkipInfo({
+    video_skip_infos: [videoInfo],
+  });
+  return !!res.is_skips?.[0];
+};

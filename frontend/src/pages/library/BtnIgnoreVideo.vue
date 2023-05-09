@@ -31,6 +31,7 @@ import { SystemMessage } from 'src/utils/message';
 import { useQuasar } from 'quasar';
 import { onMounted, ref } from 'vue';
 import useEventBus from 'src/composables/use-event-bus';
+import { checkIsVideoLocked } from 'pages/library/use-library';
 
 const props = defineProps({
   path: String,
@@ -42,17 +43,12 @@ const $q = useQuasar();
 const isSkipped = ref(null);
 
 const getIsSkipped = async () => {
-  const [res] = await LibraryApi.getSkipInfo({
-    video_skip_infos: [
-      {
-        video_type: props.videoType,
-        physical_video_file_full_path: props.path,
-        is_bluray: false,
-        is_skip: true,
-      },
-    ],
+  isSkipped.value = await checkIsVideoLocked({
+    video_type: props.videoType,
+    physical_video_file_full_path: props.path,
+    is_bluray: false,
+    is_skip: true,
   });
-  isSkipped.value = res.is_skips?.[0];
 };
 
 const skip = async () => {

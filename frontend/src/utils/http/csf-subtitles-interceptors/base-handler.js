@@ -20,7 +20,7 @@ export default {
   onResponseFullFilled: (response) => {
     const { data } = response;
     // 正常返回但是code是错误码的情况也需要异常处理
-    if (data?.message !== 'ok' || (data?.code && data?.code > 300)) {
+    if ((data?.message && data?.message !== 'ok') || (data?.code && data?.code > 300)) {
       return handleError(response);
     }
     return response;
