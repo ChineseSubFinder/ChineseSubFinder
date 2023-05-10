@@ -45,7 +45,7 @@ func NewSubTimelineFixerHelperEx(log *logrus.Logger, fixerConfig settings.Timeli
 }
 
 // Check 是否安装了 ffmpeg 和 ffprobe
-func (s *SubTimelineFixerHelperEx) Check() bool {
+func (s SubTimelineFixerHelperEx) Check() bool {
 	version, err := s.ffmpegHelper.Version()
 	if err != nil {
 		s.needDownloadFFMPeg = false
