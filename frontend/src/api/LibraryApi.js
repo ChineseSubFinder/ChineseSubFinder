@@ -52,5 +52,7 @@ class LibraryApi extends BaseApi {
   cleanAllPreviewJobData = () => this.http(`/v1/preview/clean_up`, {}, 'POST');
 
   getVideoM3u8 = (videoPath) => this.http(`/v1/preview/playlist/${encode(encodeURIComponent(videoPath))}`);
+
+  getUploadInfo = (data) => this.http(`/v1/subtitles/get_generate_upload_url_info`, data, 'POST');
 }
 export default new LibraryApi();

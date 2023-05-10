@@ -1,13 +1,13 @@
 <template>
   <q-card flat square>
     <div class="area-cover q-mb-sm relative-position">
-      <div v-if="!posterInfo?.url" style="width: 160px; height: 200px"></div>
+      <div v-if="!posterInfo?.url" :style="{ width, height: coverHeight }"></div>
       <q-img
         v-else
         :src="getUrl(posterInfo.url)"
         class="content-width bg-grey-2"
         no-spinner
-        style="width: 160px; height: 200px"
+        :style="{ width, height: coverHeight }"
         fit="cover"
       />
     </div>
@@ -66,6 +66,16 @@
       <btn-dialog-search-subtitle :path="props.data.video_f_path" is-movie />
       <q-space />
 
+      <btn-dialog-share-subtitle
+        :media-data="{
+          video_f_path: props.data.video_f_path,
+          sub_url_list: detialInfo?.sub_url_list,
+          sub_f_path_list: detialInfo?.sub_f_path_list,
+        }"
+        dense
+        size="sm"
+      />
+
       <btn-upload-subtitle :path="data.video_f_path" dense size="sm" />
 
       <q-btn
@@ -75,7 +85,7 @@
         flat
         dense
         icon="download_for_offline"
-        title="下载字幕"
+        title="添加到下载队列"
         @click="downloadSubtitle"
         size="sm"
       ></q-btn>
@@ -99,9 +109,18 @@ import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
 import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo';
 import BtnDialogSearchSubtitle from 'pages/library/BtnDialogSearchSubtitle';
 import { formModel } from 'pages/settings/use-settings';
+import BtnDialogShareSubtitle from 'pages/library/BtnDialogShareSubtitle.vue';
 
 const props = defineProps({
   data: Object,
+  width: {
+    type: String,
+    default: '160px',
+  },
+  coverHeight: {
+    type: String,
+    default: '200px',
+  },
 });
 
 const $q = useQuasar();
@@ -179,7 +198,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .content-width {
-  width: 160px;
+  width: v-bind(width);
 }
 .text-ellipsis-line-2 {
   height: 40px;
