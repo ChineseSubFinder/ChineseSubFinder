@@ -62,6 +62,7 @@ require (
 )
 
 require (
+	github.com/ChineseSubFinder/csf-supplier-base v0.0.42
 	github.com/WQGroup/logger v0.0.6
 	github.com/allanpk716/is_running_in_docker v0.0.1
 	github.com/allanpk716/rod_helper v0.0.78
@@ -77,7 +78,6 @@ require (
 )
 
 require (
-	github.com/ChineseSubFinder/csf-supplier-base v0.0.41 // indirect
 	github.com/EDDYCJY/fake-useragent v0.2.0 // indirect
 	github.com/Microsoft/go-winio v0.4.16 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
@@ -149,5 +149,5 @@ require (
 replace (
 	github.com/go-creed/sat => github.com/allanpk716/sat v1.0.4
 	github.com/longbridgeapp/opencc => github.com/allanpk716/opencc v0.1.8
-	github.com/middelink/go-parse-torrent-name => github.com/allanpk716/go-parse-torrent-name v0.0.1
+	github.com/middelink/go-parse-torrent-name => github.com/allanpk716/go-parse-torrent-name v0.0.2
 )
