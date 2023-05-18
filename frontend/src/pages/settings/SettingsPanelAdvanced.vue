@@ -341,7 +341,9 @@
 
       <template v-if="form.tmdb_api_settings.enable">
         <q-item>
-          <div class="text-warning">* 国内访问 TMDB API 可能需要代理</div>
+          <div class="text-warning">
+            * 国内访问 TMDB API 可能需要代理。目前程序对接的是 TMDB v3 的接口，请使用 v3 的 ApiKey，否则会出问题。
+          </div>
         </q-item>
         <q-item class="q-mt-md" dense>
           <q-item-section>
