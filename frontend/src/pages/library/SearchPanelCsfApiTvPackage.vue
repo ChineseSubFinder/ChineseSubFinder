@@ -1,14 +1,8 @@
 <template>
   <div :key="currentVideoFilePath" style="min-height: 300px">
-    <subtitle-best-api-limit-banner />
+    <subtitle-best-api-limit-banner v-if="!hideLimit" />
 
-    <q-splitter
-      v-if="packages.length"
-      class="q-mt-md overflow-hidden"
-      v-model="splitterModel"
-      unit="px"
-      style="height: calc(100vh - 250px)"
-    >
+    <q-splitter v-if="packages.length" class="q-mt-md overflow-hidden" v-model="splitterModel" unit="px">
       <template v-slot:before>
         <div class="q-px-md text-bold">字幕包列表</div>
         <q-list>
@@ -28,7 +22,7 @@
         <template v-if="csfSearchResult?.length">
           <div class="q-px-md row justify-between">
             <div class="text-bold">字幕列表</div>
-            <q-btn label="下载全部" color="primary" icon="download" flat @click="downloadAll" />
+            <q-btn v-if="!hideDownload" label="下载全部" color="primary" icon="download" flat @click="downloadAll" />
           </div>
           <q-list separator>
             <q-item v-for="(item, index) in csfSearchResult" :key="item.sub_sha256">
@@ -60,6 +54,7 @@
                     :subtitle-type="selectedItem?.ext.replace('.', '')"
                   />
                   <q-btn
+                    v-if="!hideDownload"
                     color="primary"
                     icon="download"
                     flat
@@ -118,10 +113,28 @@ import { settingsState } from 'src/store/settingsState';
 import SubtitleBestApiLimitBanner from 'components/SubtitleBestApiLimitBanner.vue';
 import { useApiLimit } from 'src/composables/use-api-limit';
 import { isImdbId } from 'src/utils/common';
+import CsfSubtitlesShareApi from 'src/api/CsfSubtitlesShareApi';
 
 const props = defineProps({
   episodes: Array,
+  // 隐藏下载按钮
+  hideDownload: {
+    type: Boolean,
+    default: false,
+  },
+  // 隐藏额度
+  hideLimit: {
+    type: Boolean,
+    default: false,
+  },
+  // 使用用户共享的字幕API替换默认API
+  useUserShareApi: {
+    type: Boolean,
+    default: false,
+  },
 });
+
+const emit = defineEmits(['getResult']);
 
 const $q = useQuasar();
 const { nextRequestCountdownSecond, countdownLoading, waitRequestReady } = useApiLimit(
@@ -142,6 +155,8 @@ const csfSearchResult = ref(null);
 const selectedSubBlob = ref(null);
 const selectedItem = ref(null);
 const imdbId = ref(null);
+
+const subtitleApi = computed(() => (props.useUserShareApi ? CsfSubtitlesShareApi : CsfSubtitlesApi));
 
 const currentVideoFilePath = computed(() => props.episodes[0]?.video_f_path);
 const currentSeason = computed(() => props.episodes[0]?.season);
@@ -200,7 +215,7 @@ const searchPackages = async () => {
     return;
   }
   tmdbErrorMsg.value = '';
-  loadingMsg.value = '正在获取字幕包列表...';
+  loadingMsg.value = '正在从 SubtitleBest 获取字幕包列表...';
   imdbId.value = d?.ImdbId;
 
   if (!isImdbId(imdbId.value)) {
@@ -209,7 +224,7 @@ const searchPackages = async () => {
     return;
   }
 
-  const [data, err] = await CsfSubtitlesApi.searchTvSeasonPackage({
+  const [data, err] = await subtitleApi.value.searchTvSeasonPackage({
     imdb_id: imdbId.value,
     season: currentSeason.value,
   });
@@ -221,12 +236,13 @@ const searchPackages = async () => {
   }
   loadingMsg.value = '';
   loading.value = false;
+  emit('getResult', packages.value);
 };
 
 const searchPackageSubtitles = async (packageId) => {
   loading.value = true;
   loadingMsg.value = '正在获取字幕列表...';
-  const [data, err] = await CsfSubtitlesApi.searchTvSeasonPackageId({
+  const [data, err] = await subtitleApi.value.searchTvSeasonPackageId({
     imdb_id: imdbId.value,
     season_package_id: packageId,
   });
@@ -260,7 +276,7 @@ const fetchSubtitleBlob = async (item) => {
   await waitRequestReady();
 
   loadingMsg.value = '正在下载字幕...';
-  const [data, err] = await CsfSubtitlesApi.getDownloadUrl({
+  const [data, err] = await subtitleApi.value.getDownloadUrl({
     ...item,
     imdb_id: imdbId.value,
   });

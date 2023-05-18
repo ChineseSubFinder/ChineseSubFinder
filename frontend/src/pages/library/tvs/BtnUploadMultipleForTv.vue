@@ -4,7 +4,7 @@
     flat
     icon="upload"
     v-bind="$attrs"
-    :label="dense ? '' : '上传整季字幕'"
+    :label="dense ? '' : '本地上传整季字幕'"
     @click="handleUploadClick"
     title="选择多个字幕上传"
   />

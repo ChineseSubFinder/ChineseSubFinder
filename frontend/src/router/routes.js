@@ -65,7 +65,7 @@ const routes = [
 
   {
     path: '/test',
-    component: () => import('components/ShareSubtitle/index.vue'),
+    component: () => import('components/ShareSubtitle/ShareSubtitlePanel.test.vue'),
   },
 
   // Always leave this as last one,

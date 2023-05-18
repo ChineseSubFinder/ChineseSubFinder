@@ -74,6 +74,7 @@
         }"
         dense
         size="sm"
+        is-movie
       />
 
       <btn-upload-subtitle :path="data.video_f_path" dense size="sm" />

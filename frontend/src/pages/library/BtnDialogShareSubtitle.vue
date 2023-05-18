@@ -13,7 +13,7 @@
       <q-separator />
 
       <q-card-section class="q-pa-none col overflow-auto">
-        <share-subtitle-panel :media-data="mediaData" is-movie />
+        <share-subtitle-panel :media-data="mediaData" :is-movie="isMovie" />
       </q-card-section>
     </q-card>
   </q-dialog>
@@ -28,6 +28,10 @@ import { VIDEO_TYPE_MOVIE } from 'src/constants/SettingConstants';
 
 const props = defineProps({
   path: String,
+  isMovie: {
+    type: Boolean,
+    default: false,
+  },
   dense: {
     type: Boolean,
     default: false,
@@ -38,19 +42,21 @@ const props = defineProps({
 const visible = ref(false);
 
 const handleBtnClick = async () => {
-  if (!props.mediaData.sub_url_list?.length) {
-    SystemMessage.warn('当前视频没有字幕，无法共享');
-    return;
-  }
+  if (props.isMovie) {
+    if (!props.mediaData.sub_url_list?.length) {
+      SystemMessage.warn('当前视频没有字幕，无法共享');
+      return;
+    }
 
-  const isLock = await checkIsVideoLocked({
-    video_type: VIDEO_TYPE_MOVIE,
-    physical_video_file_full_path: props.mediaData.video_f_path,
-  });
+    const isLock = await checkIsVideoLocked({
+      video_type: VIDEO_TYPE_MOVIE,
+      physical_video_file_full_path: props.mediaData.video_f_path,
+    });
 
-  if (!isLock) {
-    SystemMessage.warn('请先锁定视频，再进行字幕共享');
-    return;
+    if (!isLock) {
+      SystemMessage.warn('请先锁定视频，再进行字幕共享');
+      return;
+    }
   }
   visible.value = true;
 };

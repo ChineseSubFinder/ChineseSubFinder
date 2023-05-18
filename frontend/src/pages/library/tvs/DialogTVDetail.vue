@@ -4,7 +4,7 @@
   </span>
 
   <q-dialog v-model="visible">
-    <q-card style="width: 800px; max-width: 800px">
+    <q-card style="width: 900px; max-width: 900px">
       <q-card-section>
         <div class="text-h6">{{ data.name }} 剧集列表</div>
       </q-card-section>
@@ -68,6 +68,7 @@
             size="md"
           />
           <btn-upload-multiple-for-tv :items="currentTabEpisodes" />
+          <btn-dialog-share-subtitle :media-data="currentTabEpisodes" size="md" label="共享本季字幕" />
         </div>
 
         <q-tab-panels v-model="tab" animated>
@@ -182,6 +183,7 @@ import BtnDialogSearchSubtitle from 'pages/library/BtnDialogSearchSubtitle';
 import BtnUploadMultipleForTv from 'pages/library/tvs/BtnUploadMultipleForTv';
 import { doFixSubtitleTimeline } from 'pages/library/use-library';
 import { formModel } from 'pages/settings/use-settings';
+import BtnDialogShareSubtitle from 'pages/library/BtnDialogShareSubtitle.vue';
 
 const props = defineProps({
   data: Object,

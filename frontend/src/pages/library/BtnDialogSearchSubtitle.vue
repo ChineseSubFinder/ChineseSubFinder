@@ -20,9 +20,10 @@
           indicator-color="primary"
           align="justify"
           narrow-indicator
-          style="max-width: 300px"
+          style="display: inline-block"
         >
           <q-tab name="csf" label="Subtitle.Best API" />
+          <q-tab name="csf-share" label="Subtitle.Best 用户共享字幕" />
           <q-tab name="manual" label="手动搜索" />
         </q-tabs>
 
@@ -31,13 +32,44 @@
             <search-panel-csf-api :path="path" :is-movie="isMovie" :season="season" :episode="episode" />
           </q-tab-panel>
 
+          <q-tab-panel name="csf-share">
+            <search-panel-csf-api
+              :path="path"
+              :is-movie="isMovie"
+              :season="season"
+              :episode="episode"
+              use-user-share-api
+            />
+          </q-tab-panel>
+
           <q-tab-panel name="manual">
             <search-panel-manual :is-movie="isMovie" :path="path" />
           </q-tab-panel>
         </q-tab-panels>
       </template>
       <template v-else>
-        <search-panel-csf-api-tv-package :episodes="packageEpisodes" />
+        <q-tabs
+          v-model="tab"
+          dense
+          active-color="primary"
+          indicator-color="primary"
+          align="justify"
+          narrow-indicator
+          style="display: inline-block"
+        >
+          <q-tab name="csf" label="Subtitle.Best API" />
+          <q-tab name="csf-share" label="Subtitle.Best 用户共享字幕" />
+        </q-tabs>
+
+        <q-tab-panels v-model="tab" animated keep-alive>
+          <q-tab-panel name="csf">
+            <search-panel-csf-api-tv-package :episodes="packageEpisodes" />
+          </q-tab-panel>
+
+          <q-tab-panel name="csf-share">
+            <search-panel-csf-api-tv-package :episodes="packageEpisodes" use-user-share-api />
+          </q-tab-panel>
+        </q-tab-panels>
       </template>
     </q-card>
   </q-dialog>

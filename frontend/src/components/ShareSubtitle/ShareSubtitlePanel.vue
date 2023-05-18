@@ -24,6 +24,10 @@
           <q-td>{{ tmdbInfo?.TitleCn }}</q-td>
         </q-tr>
         <q-tr>
+          <q-td>季</q-td>
+          <q-td>第{{ mediaData?.[0]?.season }}季</q-td>
+        </q-tr>
+        <q-tr>
           <q-td>英文标题</q-td>
           <q-td>{{ tmdbInfo?.TitleEn }}</q-td>
         </q-tr>
@@ -37,10 +41,18 @@
 
     <section class="q-mt-md">
       <div class="text-bold">2. 确认 SubtitleBest 中该视频已存在的字幕</div>
-      <div class="relative-position q-card--bordered" style="height: 120px; overflow: auto">
+      <div class="relative-position q-card--bordered" style="height: 320px; overflow: auto">
         <search-panel-csf-api
-          :is-movie="isMovie"
+          v-if="isMovie"
+          is-movie
           :path="mediaData.video_f_path"
+          hide-download
+          hide-limit
+          @get-result="handleGetResult"
+        />
+        <search-panel-csf-api-tv-package
+          v-else
+          :episodes="mediaData"
           hide-download
           hide-limit
           @get-result="handleGetResult"
@@ -52,6 +64,13 @@
       <div class="text-bold">3. 选择要上传的字幕</div>
       <q-list style="max-height: 600px">
         <q-item v-for="(item, index) in uploadListForm" :key="index">
+          <q-item-section v-if="!isMovie" side style="width: 80px">
+            <div class="row items-center q-gutter-xs">
+              <q-spinner v-if="submitting && index === uploadFinishedCount" />
+              <q-icon v-if="uploadFinishedCount > index" name="check_circle" color="positive" title="上传完成" />
+              <div>第{{ item.episode }}集</div>
+            </div>
+          </q-item-section>
           <q-item-section>
             <q-select v-model="item.selected" :options="item.list" option-label="name" option-value="id" filled dense />
           </q-item-section>
@@ -105,7 +124,7 @@
 
     <section>
       <div class="q-mt-md row items-center q-gutter-md">
-        <q-btn color="primary" label="提交" :disable="isSubmitDisabled" @click="handleUpload" />
+        <q-btn color="primary" label="提交" :disable="isSubmitDisabled" :loading="submitting" @click="handleUpload" />
         <div v-if="isSubmitDisabled" class="text-negative">
           <template v-if="form.ratting === 1 || form.ratting === 2">
             不能上传字幕质量为"不匹配"或者"差"的字幕
@@ -118,6 +137,7 @@
 </template>
 
 <script setup>
+/* eslint-disable no-await-in-loop */
 import { computed, onMounted, reactive, ref } from 'vue';
 import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo.vue';
 import LibraryApi from 'src/api/LibraryApi';
@@ -125,6 +145,7 @@ import { SystemMessage } from 'src/utils/message';
 import SearchPanelCsfApi from 'pages/library/SearchPanelCsfApi.vue';
 import { getUrl } from 'pages/library/use-library';
 import CsfSubtitlesShareApi from 'src/api/CsfSubtitlesShareApi';
+import SearchPanelCsfApiTvPackage from 'pages/library/SearchPanelCsfApiTvPackage.vue';
 
 const props = defineProps({
   isMovie: {
@@ -138,6 +159,8 @@ const props = defineProps({
 
 const tmdbInfo = ref(null);
 const loading = ref(false);
+const submitting = ref(false);
+const uploadFinishedCount = ref(0);
 const isSubtitleBestHasResult = ref(false);
 
 const form = reactive({
@@ -172,7 +195,25 @@ const getUploadListForm = () => {
       },
     ];
   }
-  return null;
+
+  // 连续剧
+  const result = props.mediaData
+    .map((e) => {
+      const list = e.sub_url_list.map((subUrl, index) => ({
+        name: subUrl.split(/[/\\]/).pop(),
+        path: e.video_f_path,
+        subUrl,
+        subPath: e.sub_f_path_list[index],
+      }));
+      return {
+        episode: e.episode,
+        video_f_path: e.video_f_path,
+        selected: list[0],
+        list,
+      };
+    })
+    .sort((a, b) => a.episode - b.episode);
+  return result;
 };
 
 const uploadListForm = reactive(getUploadListForm());
@@ -197,39 +238,76 @@ const handleGetResult = (result) => {
 };
 
 const handleUpload = async () => {
-  const [res, err] = await LibraryApi.getUploadInfo({
-    is_movie: props.isMovie,
-    video_f_path: props.mediaData.video_f_path,
-    sub_f_path: uploadListForm[0].selected.subPath,
-    season: null,
-    episode: null,
-  });
-  if (err !== null) {
-    SystemMessage.error(err.message);
-    return;
+  submitting.value = true;
+  uploadFinishedCount.value = 0;
+  const tokens = [];
+
+  for (let i = 0; i < uploadListForm.length; i += 1) {
+    const uploadListFormI = uploadListForm[i];
+
+    // 获取上传信息
+    const [res, err] = await LibraryApi.getUploadInfo({
+      is_movie: props.isMovie,
+      video_f_path: props.isMovie ? props.mediaData.video_f_path : uploadListFormI.video_f_path,
+      sub_f_path: uploadListFormI.selected.subPath,
+      season: props.mediaData?.[0]?.season,
+      episode: uploadListFormI.episode,
+    });
+    if (err !== null) {
+      SystemMessage.error(err.message);
+      submitting.value = false;
+      return;
+    }
+
+    // 获取上传地址
+    const [res2, err2] = await CsfSubtitlesShareApi.getUploadUrl({
+      ...res,
+      score: form.ratting,
+      mark_type: form.markType,
+    });
+    if (err2 !== null) {
+      SystemMessage.error(err2.message);
+      submitting.value = false;
+      return;
+    }
+
+    const { subUrl } = uploadListFormI.selected;
+    // 下载字幕，并将其存储为File对象
+    const res3 = await fetch(getUrl(subUrl));
+    const blob = await res3.blob();
+    const file = new File([blob], subUrl.split(/[/\\]/).pop(), { type: 'text/plain' });
+    // 上传字幕
+    await fetch(res2.upload_url, {
+      method: 'PUT',
+      body: file,
+    });
+
+    // 通知单个视频上传完成
+    const [res4, err4] = await CsfSubtitlesShareApi.setUploadSuccess({
+      token: res2.token,
+    });
+    if (err4 !== null) {
+      SystemMessage.error(err4.message);
+      submitting.value = false;
+      return;
+    }
+    tokens.push(res4.token);
+    uploadFinishedCount.value += 1;
   }
-  const [res2, err2] = await CsfSubtitlesShareApi.getUploadUrl({
-    ...res,
-    score: form.ratting,
-    mark_type: form.markType,
-  });
-  if (err2 !== null) {
-    SystemMessage.error(err2.message);
-    return;
+
+  // 如果是电视剧，通知所有视频上传完成
+  if (!props.isMovie) {
+    const [, err] = await CsfSubtitlesShareApi.setUploadSuccessForTv({
+      tokens,
+    });
+    if (err !== null) {
+      SystemMessage.error(err.message);
+      submitting.value = false;
+      return;
+    }
   }
-  const { subUrl } = uploadListForm[0].selected;
-  // 下载字幕，并将其存储为File对象
-  const res3 = await fetch(getUrl(subUrl));
-  const blob = await res3.blob();
-  const file = new File([blob], subUrl.split(/[/\\]/).pop(), { type: 'text/plain' });
-  // 上传字幕
-  await fetch(res2.upload_url, {
-    method: 'PUT',
-    body: file,
-  });
-  await CsfSubtitlesShareApi.setUploadSuccess({
-    token: res2.token,
-  });
+  submitting.value = false;
+  SystemMessage.success('上传成功');
 };
 
 onMounted(() => {
