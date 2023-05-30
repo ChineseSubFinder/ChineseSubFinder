@@ -61,14 +61,7 @@
 
           <q-space />
 
-          <btn-dialog-search-subtitle
-            search-package
-            :package-episodes="currentTabEpisodes"
-            label="搜索本季字幕包"
-            size="md"
-          />
           <btn-upload-multiple-for-tv :items="currentTabEpisodes" />
-          <btn-dialog-share-subtitle :media-data="currentTabEpisodes" size="md" label="共享本季字幕" />
         </div>
 
         <q-tab-panels v-model="tab" animated>
@@ -183,7 +176,6 @@ import BtnDialogSearchSubtitle from 'pages/library/BtnDialogSearchSubtitle';
 import BtnUploadMultipleForTv from 'pages/library/tvs/BtnUploadMultipleForTv';
 import { doFixSubtitleTimeline } from 'pages/library/use-library';
 import { formModel } from 'pages/settings/use-settings';
-import BtnDialogShareSubtitle from 'pages/library/BtnDialogShareSubtitle.vue';
 
 const props = defineProps({
   data: Object,

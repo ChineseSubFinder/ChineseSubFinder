@@ -66,17 +66,6 @@
       <btn-dialog-search-subtitle :path="props.data.video_f_path" is-movie />
       <q-space />
 
-      <btn-dialog-share-subtitle
-        :media-data="{
-          video_f_path: props.data.video_f_path,
-          sub_url_list: detialInfo?.sub_url_list,
-          sub_f_path_list: detialInfo?.sub_f_path_list,
-        }"
-        dense
-        size="sm"
-        is-movie
-      />
-
       <btn-upload-subtitle :path="data.video_f_path" dense size="sm" />
 
       <q-btn
@@ -110,7 +99,6 @@ import BtnUploadSubtitle from 'pages/library/BtnUploadSubtitle';
 import BtnDialogPreviewVideo from 'pages/library/BtnDialogPreviewVideo';
 import BtnDialogSearchSubtitle from 'pages/library/BtnDialogSearchSubtitle';
 import { formModel } from 'pages/settings/use-settings';
-import BtnDialogShareSubtitle from 'pages/library/BtnDialogShareSubtitle.vue';
 
 const props = defineProps({
   data: Object,
