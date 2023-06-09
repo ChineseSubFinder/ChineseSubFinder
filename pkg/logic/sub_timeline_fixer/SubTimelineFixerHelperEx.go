@@ -45,7 +45,7 @@ func NewSubTimelineFixerHelperEx(log *logrus.Logger, fixerConfig settings.Timeli
 }
 
 // Check 是否安装了 ffmpeg 和 ffprobe
-func (s SubTimelineFixerHelperEx) Check() bool {
+func (s *SubTimelineFixerHelperEx) Check() bool {
 	version, err := s.ffmpegHelper.Version()
 	if err != nil {
 		s.needDownloadFFMPeg = false
@@ -57,7 +57,7 @@ func (s SubTimelineFixerHelperEx) Check() bool {
 	return true
 }
 
-func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string) error {
+func (s *SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string) error {
 
 	if s.needDownloadFFMPeg == false {
 		s.log.Errorln("Need Install ffmpeg and ffprobe, Can't Do TimeLine Fix")
@@ -153,7 +153,7 @@ func (s SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string)
 	return nil
 }
 
-func (s SubTimelineFixerHelperEx) ProcessBySubFileInfo(infoBase *subparser.FileInfo, infoSrc *subparser.FileInfo) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
+func (s *SubTimelineFixerHelperEx) ProcessBySubFileInfo(infoBase *subparser.FileInfo, infoSrc *subparser.FileInfo) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
 
 	// ---------------------------------------------------------------------------------------
 	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTime(infoBase, infoSrc, nil, false)
@@ -164,7 +164,7 @@ func (s SubTimelineFixerHelperEx) ProcessBySubFileInfo(infoBase *subparser.FileI
 	return true, infoSrc, pipeResult, nil
 }
 
-func (s SubTimelineFixerHelperEx) ProcessBySubFile(baseSubFileFPath, srcSubFileFPath string) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
+func (s *SubTimelineFixerHelperEx) ProcessBySubFile(baseSubFileFPath, srcSubFileFPath string) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
 
 	bFind, infoBase, err := s.subParserHub.DetermineFileTypeFromFile(baseSubFileFPath)
 	if err != nil {
@@ -187,7 +187,7 @@ func (s SubTimelineFixerHelperEx) ProcessBySubFile(baseSubFileFPath, srcSubFileF
 	return s.ProcessBySubFileInfo(infoBase, infoSrc)
 }
 
-func (s SubTimelineFixerHelperEx) ProcessByAudioVAD(audioVADInfos []vad.VADInfo, infoSrc *subparser.FileInfo) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
+func (s *SubTimelineFixerHelperEx) ProcessByAudioVAD(audioVADInfos []vad.VADInfo, infoSrc *subparser.FileInfo) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
 
 	// ---------------------------------------------------------------------------------------
 	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTime(nil, infoSrc, audioVADInfos, false)
@@ -198,7 +198,7 @@ func (s SubTimelineFixerHelperEx) ProcessByAudioVAD(audioVADInfos []vad.VADInfo,
 	return true, infoSrc, pipeResult, nil
 }
 
-func (s SubTimelineFixerHelperEx) ProcessByAudioFile(baseAudioFileFPath, srcSubFileFPath string) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
+func (s *SubTimelineFixerHelperEx) ProcessByAudioFile(baseAudioFileFPath, srcSubFileFPath string) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
 
 	audioVADInfos, err := vad.GetVADInfoFromAudio(vad.AudioInfo{
 		FileFullPath: baseAudioFileFPath,
@@ -221,7 +221,7 @@ func (s SubTimelineFixerHelperEx) ProcessByAudioFile(baseAudioFileFPath, srcSubF
 	return s.ProcessByAudioVAD(audioVADInfos, infoSrc)
 }
 
-func (s SubTimelineFixerHelperEx) IsVideoCanExportSubtitleAndAudio(videoFileFullPath string) (bool, *ffmpeg_helper.FFMPEGInfo, []vad.VADInfo, *subparser.FileInfo, error) {
+func (s *SubTimelineFixerHelperEx) IsVideoCanExportSubtitleAndAudio(videoFileFullPath string) (bool, *ffmpeg_helper.FFMPEGInfo, []vad.VADInfo, *subparser.FileInfo, error) {
 
 	// 先尝试获取内置字幕的信息
 	bok, ffmpegInfo, err := s.ffmpegHelper.ExportFFMPEGInfo(videoFileFullPath, ffmpeg_helper.SubtitleAndAudio)
@@ -275,7 +275,7 @@ func (s SubTimelineFixerHelperEx) IsVideoCanExportSubtitleAndAudio(videoFileFull
 	return true, ffmpegInfo, audioVADInfos, infoBase, nil
 }
 
-func (s SubTimelineFixerHelperEx) IsMatchBySubFile(ffmpegInfo *ffmpeg_helper.FFMPEGInfo, audioVADInfos []vad.VADInfo, infoBase *subparser.FileInfo, srcSubFileFPath string, config CompareConfig) (bool, *MatchResult, error) {
+func (s *SubTimelineFixerHelperEx) IsMatchBySubFile(ffmpegInfo *ffmpeg_helper.FFMPEGInfo, audioVADInfos []vad.VADInfo, infoBase *subparser.FileInfo, srcSubFileFPath string, config CompareConfig) (bool, *MatchResult, error) {
 
 	bFind, srcBase, err := s.subParserHub.DetermineFileTypeFromFile(srcSubFileFPath)
 	if err != nil {
@@ -337,7 +337,7 @@ func (s SubTimelineFixerHelperEx) IsMatchBySubFile(ffmpegInfo *ffmpeg_helper.FFM
 	return true, matchResult, nil
 }
 
-func (s SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileInfo, pipeResult sub_timeline_fixer.PipeResult, desSubSaveFPath string) error {
+func (s *SubTimelineFixerHelperEx) changeTimeLineAndSave(infoSrc *subparser.FileInfo, pipeResult sub_timeline_fixer.PipeResult, desSubSaveFPath string) error {
 	/*
 		修复的字幕先存放到缓存目录，然后需要把原有的字幕进行“备份”，改名，然后再替换过来
 	*/
