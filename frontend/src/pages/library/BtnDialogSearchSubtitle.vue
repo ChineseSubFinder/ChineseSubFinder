@@ -1,87 +1,96 @@
 <template>
   <q-btn color="primary" icon="search" size="sm" flat dense v-bind="$attrs" @click="visible = true" title="字幕搜索" />
 
-  <q-dialog v-model="visible" transition-show="slide-up" transition-hide="slide-down" @before-show="handleBeforeShow">
+  <q-dialog v-model="visible" transition-show="slide-up" transition-hide="slide-down" persistent>
     <q-card style="min-width: 70vw">
       <q-card-section>
-        <div class="text-h6 text-grey-8">字幕搜索</div>
-        <div class="text-grey">点击关键字跳转到网站搜索</div>
+        <div class="row justify-between items-center">
+          <div class="text-h6 text-grey-8">字幕搜索</div>
+          <q-btn icon="close" flat round dense @click="visible = false" />
+        </div>
+        <div class="text-warning">* 下载字幕包是在浏览器端进行处理的，下载过程中请不要关闭页面</div>
       </q-card-section>
-
       <q-separator />
 
-      <q-card-section v-if="searchInfo">
-        <q-list separator>
-          <q-item v-for="url in searchInfo?.search_url" :key="url">
-            <q-item-section top side style="width: 200px" class="text-bold text-black">
-              {{ getDomain(url) }}
-            </q-item-section>
-            <q-item-section>
-              <div class="row q-gutter-sm">
-                <a
-                  v-for="item in searchInfo?.key_words"
-                  :key="item"
-                  :href="getSearchUrl(url, item)"
-                  target="_blank"
-                  style="text-decoration: none"
-                >
-                  <q-badge class="cursor-pointer" color="secondary" title="点击跳转到网站搜索">{{ item }}</q-badge>
-                </a>
-              </div>
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-card-section>
-      <q-card-section v-else>
-        <div class="row items-center justify-center" style="height: 200px">
-          <q-spinner size="30px" />
-        </div>
-      </q-card-section>
+      <template v-if="!searchPackage">
+        <q-tabs
+          v-model="tab"
+          dense
+          active-color="primary"
+          indicator-color="primary"
+          align="justify"
+          narrow-indicator
+          style="display: inline-block"
+        >
+          <q-tab name="csf" label="Subtitle.Best API" />
+          <q-tab name="manual" label="手动搜索" />
+        </q-tabs>
+
+        <q-tab-panels v-model="tab" animated keep-alive>
+          <q-tab-panel name="csf">
+            <search-panel-csf-api :path="path" :is-movie="isMovie" :season="season" :episode="episode" />
+          </q-tab-panel>
+
+          <q-tab-panel name="manual">
+            <search-panel-manual :is-movie="isMovie" :path="path" />
+          </q-tab-panel>
+        </q-tab-panels>
+      </template>
+      <template v-else>
+        <q-tabs
+          v-model="tab"
+          dense
+          active-color="primary"
+          indicator-color="primary"
+          align="justify"
+          narrow-indicator
+          style="display: inline-block"
+        >
+          <q-tab name="csf" label="Subtitle.Best API" />
+          <q-tab name="csf-share" label="Subtitle.Best 用户共享字幕" />
+        </q-tabs>
+
+        <q-tab-panels v-model="tab" animated keep-alive>
+          <q-tab-panel name="csf">
+            <search-panel-csf-api-tv-package :episodes="packageEpisodes" />
+          </q-tab-panel>
+
+          <q-tab-panel name="csf-share">
+            <search-panel-csf-api-tv-package :episodes="packageEpisodes" use-user-share-api />
+          </q-tab-panel>
+        </q-tab-panels>
+      </template>
     </q-card>
   </q-dialog>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import LibraryApi from 'src/api/LibraryApi';
-import { SystemMessage } from 'src/utils/message';
+import SearchPanelManual from 'pages/library/SearchPanelManual.vue';
+import SearchPanelCsfApi from 'pages/library/SearchPanelCsfApi.vue';
+import SearchPanelCsfApiTvPackage from 'pages/library/SearchPanelCsfApiTvPackage.vue';
 
-const props = defineProps({
+defineProps({
   path: String,
   isMovie: {
     type: Boolean,
     default: false,
   },
+  searchPackage: {
+    type: Boolean,
+    default: false,
+  },
+  season: {
+    type: Number,
+  },
+  episode: {
+    type: Number,
+  },
+  packageEpisodes: {
+    type: Array,
+  },
 });
 
 const visible = ref(false);
-const searchInfo = ref(null);
-
-const getSearchInfo = async () => {
-  const [data, err] = await LibraryApi.getSearchSubtitleInfo({
-    video_f_path: props.path,
-    is_movie: props.isMovie,
-  });
-  if (err !== null) {
-    SystemMessage.error(err.message);
-  }
-  searchInfo.value = data;
-};
-
-const getDomain = (url) => {
-  const reg = /https?:\/\/([^/]+)/;
-  const result = reg.exec(url);
-  return result[1];
-};
-
-const getSearchUrl = (url, keyword) => {
-  if (url.includes('%s')) {
-    return url.replace('%s', encodeURIComponent(keyword));
-  }
-  return url + encodeURIComponent(keyword);
-};
-
-const handleBeforeShow = () => {
-  getSearchInfo();
-};
+const tab = ref('csf');
 </script>
