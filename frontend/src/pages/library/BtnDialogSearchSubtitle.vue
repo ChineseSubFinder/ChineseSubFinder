@@ -47,7 +47,6 @@
           style="display: inline-block"
         >
           <q-tab name="csf" label="Subtitle.Best API" />
-          <q-tab name="csf-share" label="Subtitle.Best 用户共享字幕" />
         </q-tabs>
 
         <q-tab-panels v-model="tab" animated keep-alive>

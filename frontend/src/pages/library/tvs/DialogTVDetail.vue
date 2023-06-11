@@ -61,6 +61,12 @@
 
           <q-space />
 
+          <btn-dialog-search-subtitle
+            search-package
+            :package-episodes="currentTabEpisodes"
+            label="搜索本季字幕包"
+            size="md"
+          />
           <btn-upload-multiple-for-tv :items="currentTabEpisodes" />
         </div>
 
