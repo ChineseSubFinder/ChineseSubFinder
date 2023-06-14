@@ -62,7 +62,7 @@ require (
 )
 
 require (
-	github.com/ChineseSubFinder/csf-supplier-base v0.0.42
+	github.com/ChineseSubFinder/csf-supplier-base v0.0.49
 	github.com/WQGroup/logger v0.0.6
 	github.com/allanpk716/is_running_in_docker v0.0.1
 	github.com/allanpk716/rod_helper v0.0.78

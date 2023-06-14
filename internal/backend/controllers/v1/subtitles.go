@@ -2,8 +2,6 @@ package v1
 
 import (
 	"fmt"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/decode"
-	"github.com/ChineseSubFinder/csf-supplier-base/pkg/api_hub"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -136,80 +134,80 @@ func (cb *ControllerBase) ManualUploadSubtitleResult(c *gin.Context) {
 
 // GetGenerateUploadURLHandle 获取申请临时上传字幕地址信息结构
 func (cb *ControllerBase) GetGenerateUploadURLHandle(c *gin.Context) {
-	var err error
-	defer func() {
-		// 统一的异常处理
-		cb.ErrorProcess(c, "GetGenerateUploadURLHandle", err)
-	}()
-
-	job := api_hub.GetGenerateUploadURLReq{}
-	err = c.ShouldBindJSON(&job)
-	if err != nil {
-		return
-	}
-
-	if pkg.IsFile(job.VideoFPath) == false {
-		err = fmt.Errorf("video file not exist")
-		return
-	}
-
-	if pkg.IsFile(job.SubFPath) == false {
-		err = fmt.Errorf("sub file not exist")
-		return
-	}
-
-	bok, fileInfo, err := cb.cronHelper.FileDownloader.SubParserHub.DetermineFileTypeFromFile(job.SubFPath)
-	if err != nil {
-		return
-	}
-
-	if bok == false {
-		err = fmt.Errorf("sub file type not support")
-		return
-	}
-
-	req := api_hub.GenerateUploadURLReq{}
-	if job.IsMovie == true {
-		// 电影
-		videoNfoInfo, err := decode.GetVideoNfoInfo4Movie(job.VideoFPath)
-		if err != nil {
-			return
-		}
-		if videoNfoInfo.ImdbId == "" {
-			err = fmt.Errorf("imdb id not exist")
-			return
-		}
-		req.ImdbId = videoNfoInfo.ImdbId
-		req.Title = videoNfoInfo.Title
-		req.IsMovie = true
-		req.Season = -1
-		req.Episode = -1
-	} else {
-		// 电视剧
-		videoNfoInfo, err := decode.GetVideoNfoInfoFromEpisode(job.VideoFPath)
-		if err != nil {
-			return
-		}
-		if videoNfoInfo.ImdbId == "" {
-			err = fmt.Errorf("imdb id not exist")
-			return
-		}
-		req.ImdbId = videoNfoInfo.ImdbId
-		req.Title = videoNfoInfo.Title
-		req.IsMovie = false
-		req.Season = job.Season
-		req.Episode = job.Episode
-	}
-
-	sha256File, fileSize, err := pkg.Sha256File(job.SubFPath)
-	if err != nil {
-		return
-	}
-	req.SubSha256 = sha256File
-	req.Language = int(fileInfo.Lang)
-	req.Ext = filepath.Ext(job.SubFPath)
-	req.FileSize = fileSize
-
-	c.JSON(http.StatusOK, req)
-	return
+	//var err error
+	//defer func() {
+	//	// 统一的异常处理
+	//	cb.ErrorProcess(c, "GetGenerateUploadURLHandle", err)
+	//}()
+	//
+	//job := api_hub.GetGenerateUploadURLReq{}
+	//err = c.ShouldBindJSON(&job)
+	//if err != nil {
+	//	return
+	//}
+	//
+	//if pkg.IsFile(job.VideoFPath) == false {
+	//	err = fmt.Errorf("video file not exist")
+	//	return
+	//}
+	//
+	//if pkg.IsFile(job.SubFPath) == false {
+	//	err = fmt.Errorf("sub file not exist")
+	//	return
+	//}
+	//
+	//bok, fileInfo, err := cb.cronHelper.FileDownloader.SubParserHub.DetermineFileTypeFromFile(job.SubFPath)
+	//if err != nil {
+	//	return
+	//}
+	//
+	//if bok == false {
+	//	err = fmt.Errorf("sub file type not support")
+	//	return
+	//}
+	//
+	//req := api_hub.GenerateUploadURLReq{}
+	//if job.IsMovie == true {
+	//	// 电影
+	//	videoNfoInfo, err := decode.GetVideoNfoInfo4Movie(job.VideoFPath)
+	//	if err != nil {
+	//		return
+	//	}
+	//	if videoNfoInfo.ImdbId == "" {
+	//		err = fmt.Errorf("imdb id not exist")
+	//		return
+	//	}
+	//	req.ImdbId = videoNfoInfo.ImdbId
+	//	req.Title = videoNfoInfo.Title
+	//	req.IsMovie = true
+	//	req.Season = -1
+	//	req.Episode = -1
+	//} else {
+	//	// 电视剧
+	//	videoNfoInfo, err := decode.GetVideoNfoInfoFromEpisode(job.VideoFPath)
+	//	if err != nil {
+	//		return
+	//	}
+	//	if videoNfoInfo.ImdbId == "" {
+	//		err = fmt.Errorf("imdb id not exist")
+	//		return
+	//	}
+	//	req.ImdbId = videoNfoInfo.ImdbId
+	//	req.Title = videoNfoInfo.Title
+	//	req.IsMovie = false
+	//	req.Season = job.Season
+	//	req.Episode = job.Episode
+	//}
+	//
+	//sha256File, fileSize, err := pkg.Sha256File(job.SubFPath)
+	//if err != nil {
+	//	return
+	//}
+	//req.SubSha256 = sha256File
+	//req.Language = int(fileInfo.Lang)
+	//req.Ext = filepath.Ext(job.SubFPath)
+	//req.FileSize = fileSize
+	//
+	//c.JSON(http.StatusOK, req)
+	//return
 }

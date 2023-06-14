@@ -54,6 +54,8 @@ func Get(reloadSettings ...bool) *Settings {
 				if err != nil {
 					panic("Can't Read Config File:" + configName + " Error: " + err.Error())
 				}
+				// 因为 SuppliersSettings 中每个网站的 searchUrl 参数没有开放更改，所以如果有变动，需要重新设置
+				_settings.AdvancedSettings.SuppliersSettings.ReSetSearchUrl()
 			}
 		})
 		// 是否需要重新读取配置信息，这个可能在每次保存配置文件后需要操作

@@ -27,6 +27,14 @@ func NewSuppliersSettings() *SuppliersSettings {
 	}
 }
 
+// ReSetSearchUrl 因为 SuppliersSettings 中每个网站的 searchUrl 参数没有开放更改，所以如果有变动，需要重新设置
+func (s *SuppliersSettings) ReSetSearchUrl() {
+	s.A4k.SearchUrl = common.SubA4kSearchUrl
+	s.SubtitleBest.SearchUrl = common.SubSubtitleBestSearchMovieUrl
+	s.SubHD.SearchUrl = common.SubSubHDSearchUrl
+	s.Zimuku.SearchUrl = common.SubZiMuKuSearchFormatUrl
+}
+
 type OneSupplierSettings struct {
 	Name               string `json:"name"`
 	RootUrl            string `json:"root_url"`
