@@ -8,7 +8,7 @@
 
 ## 前言
 
-移除全功能版本，以后都是轻量级，tag 继续保留，实则都有是一个。
+移除全功能版本，以后都是轻量级（Lite），tag 继续保留，实则都有是一个。不再直接支持某些字幕网站的下载（人多了，对方服务器扛不住），请使用第三方的字幕下载服务，subtitle best，具体请进入程序后去设置界面，会有引导。
 
 最新的版本可以查看 [Docker Hub](https://hub.docker.com/repository/docker/allanpk716/chinesesubfinder) ，如果不在 telegram 群内，没有特殊的需求请不要选择 **Beta** 版本使用。
 
