@@ -17,11 +17,12 @@ import (
 type PreJob struct {
 	stageName string
 	gError    error
+	isDone    bool
 	log       *logrus.Logger
 }
 
 func NewPreJob(log *logrus.Logger) *PreJob {
-	return &PreJob{log: log}
+	return &PreJob{log: log, isDone: false}
 }
 
 func (p *PreJob) HotFix() *PreJob {
@@ -98,6 +99,14 @@ func (p *PreJob) Wait() error {
 	} else {
 		return nil
 	}
+}
+
+func (p *PreJob) GetStageName() string {
+	return p.stageName
+}
+
+func (p *PreJob) IsDone() bool {
+	return p.isDone
 }
 
 const (

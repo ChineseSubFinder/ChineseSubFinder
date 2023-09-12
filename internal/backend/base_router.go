@@ -2,6 +2,7 @@ package backend
 
 import (
 	"fmt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/pre_job"
 	"net/http"
 
 	"github.com/arl/statsviz"
@@ -21,6 +22,7 @@ func InitRouter(
 	router *gin.Engine,
 	cronHelper *cron_helper.CronHelper,
 	restartSignal chan interface{},
+	preJob *pre_job.PreJob,
 ) (*base.ControllerBase, *v1.ControllerBase) {
 
 	// ----------------------------------------------
@@ -42,7 +44,7 @@ func InitRouter(
 	}
 	cronHelper.FileDownloader.MediaInfoDealers.SetTmdbHelperInstance(tmdbApi)
 	// ----------------------------------------------
-	cbBase := base.NewControllerBase(cronHelper.FileDownloader, restartSignal)
+	cbBase := base.NewControllerBase(cronHelper.FileDownloader, restartSignal, preJob)
 	cbV1 := v1.NewControllerBase(cronHelper, restartSignal)
 	// --------------------------------------------------
 	// 静态文件服务器
@@ -75,6 +77,8 @@ func InitRouter(
 	// --------------------------------------------------
 	// 基础的路由
 	router.GET("/system-status", cbBase.SystemStatusHandler)
+
+	router.POST("/pre-job", cbBase.PreJobHandler)
 
 	router.POST("/setup", cbBase.SetupHandler)
 

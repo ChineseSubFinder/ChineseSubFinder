@@ -3,6 +3,7 @@ package backend
 import (
 	"context"
 	"fmt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/pre_job"
 	"io/ioutil"
 	"net/http"
 	"sync"
@@ -30,10 +31,22 @@ type BackEnd struct {
 	srv           *http.Server
 	locker        sync.Mutex
 	restartSignal chan interface{}
+	preJob        *pre_job.PreJob
 }
 
-func NewBackEnd(logger *logrus.Logger, cronHelper *cron_helper.CronHelper, httpPort int, restartSignal chan interface{}) *BackEnd {
-	return &BackEnd{logger: logger, cronHelper: cronHelper, httpPort: httpPort, restartSignal: restartSignal}
+func NewBackEnd(
+	logger *logrus.Logger,
+	cronHelper *cron_helper.CronHelper,
+	httpPort int,
+	restartSignal chan interface{}) *BackEnd {
+
+	return &BackEnd{
+		logger:        logger,
+		cronHelper:    cronHelper,
+		httpPort:      httpPort,
+		restartSignal: restartSignal,
+		preJob:        pre_job.NewPreJob(logger),
+	}
 }
 
 func (b *BackEnd) start() {
@@ -54,13 +67,16 @@ func (b *BackEnd) start() {
 		return
 	}
 	// -----------------------------------------
+	// 设置跨域
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = ioutil.Discard
 	engine := gin.Default()
 	// 默认所有都通过
 	engine.Use(cors.Default())
-	cbBase, v1Router := InitRouter(engine, b.cronHelper, b.restartSignal)
-
+	// 初始化路由
+	cbBase, v1Router := InitRouter(engine, b.cronHelper, b.restartSignal, b.preJob)
+	// -----------------------------------------
+	// 静态文件服务器
 	engine.GET("/", func(c *gin.Context) {
 		c.Header("content-type", "text/html;charset=utf-8")
 		c.String(http.StatusOK, string(dist.SpaIndexHtml))
@@ -70,6 +86,7 @@ func (b *BackEnd) start() {
 	engine.StaticFS(dist.SpaFolderFonts, dist.Assets(dist.SpaFolderName+dist.SpaFolderFonts, dist.SpaFonts))
 	engine.StaticFS(dist.SpaFolderIcons, dist.Assets(dist.SpaFolderName+dist.SpaFolderIcons, dist.SpaIcons))
 	engine.StaticFS(dist.SpaFolderImages, dist.Assets(dist.SpaFolderName+dist.SpaFolderImages, dist.SpaImages))
+	// -----------------------------------------
 	// 用于预览视频和字幕的静态文件服务
 	previewCacheFolder, err := pkg.GetVideoAndSubPreviewCacheFolder()
 	if err != nil {
@@ -77,16 +94,21 @@ func (b *BackEnd) start() {
 		return
 	}
 	engine.StaticFS("/static/preview", http.Dir(previewCacheFolder))
-
+	// -----------------------------------------
+	// api 服务
 	engine.Any("/api", func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/")
 	})
-
 	// listen and serve on 0.0.0.0:8080(default)
 	b.srv = &http.Server{
 		Addr:    fmt.Sprintf(":%d", b.httpPort),
 		Handler: engine,
 	}
+	go func() {
+		b.doPreJob()
+		b.doCornJob()
+	}()
+	// 启动 http server
 	go func() {
 		b.logger.Infoln("Try Start Http Server At Port", b.httpPort)
 		if err := b.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -140,5 +162,38 @@ func (b *BackEnd) Restart() {
 				b.start()
 			}
 		}
+	}
+}
+
+// doPreJob 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
+func (b *BackEnd) doPreJob() {
+	// 启动程序只会执行一次，用 Once 控制
+	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
+	if settings.Get().SpeedDevMode == true {
+		return
+	}
+	if pkg.LiteMode() == false {
+		return
+	}
+	// 不启用 Chrome 相关操作
+	err := b.preJob.HotFix().ChangeSubNameFormat().Wait()
+	if err != nil {
+		b.logger.Errorln("pre_job", err)
+	}
+}
+
+// doCornJob 定时任务
+func (b *BackEnd) doCornJob() {
+	// 需要使用 go 来执行，因为这个函数是阻塞的
+	// 启动定时任务
+	if settings.Get().UserInfo.Username == "" || settings.Get().UserInfo.Password == "" {
+		// 如果没有完成，那么就不开启
+		b.logger.Infoln("Need do Setup")
+	} else {
+		// 是否完成了 Setup，如果完成了，那么就开启第一次的扫描
+		go func() {
+			b.logger.Infoln("Setup is Done")
+			b.cronHelper.Start(settings.Get().CommonSettings.RunScanAtStartUp)
+		}()
 	}
 }

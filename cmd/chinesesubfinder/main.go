@@ -12,8 +12,6 @@ import (
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/cron_helper"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/pre_job"
-
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/internal/backend"
@@ -92,64 +90,55 @@ func main() {
 
 	// ------------------------------------------------------------------------
 	// 如果是 Debug 模式，那么就需要写入特殊文件
-	if settings.Get().AdvancedSettings.DebugMode == true {
-		err := log_helper.WriteDebugFile()
-		if err != nil {
-			loggerBase.Errorln("log_helper.WriteDebugFile " + err.Error())
-		}
-		loggerBase = newLog()
-		loggerBase.Infoln("Reload Log Settings, level = Debug")
-	} else {
-		err := log_helper.DeleteDebugFile()
-		if err != nil {
-			loggerBase.Errorln("log_helper.DeleteDebugFile " + err.Error())
-		}
-		loggerBase = newLog()
-		loggerBase.Infoln("Reload Log Settings, level = Info")
-	}
-	if pkg.LinuxConfigPathInSelfPath() != "" {
-
-		loggerBase.Infoln("SetLinuxConfigPathInSelfPath:", pkg.LinuxConfigPathInSelfPath())
-
-		if pkg.IsDir(pkg.LinuxConfigPathInSelfPath()) == false {
-			// 如果设置了这个路径，但是不存在则会崩溃
-			loggerBase.Panicln("LinuxConfigPathInSelfPath", pkg.LinuxConfigPathInSelfPath(), "is not dir")
-		}
-	}
-
-	// ------------------------------------------------------------------------
-	// 设置接口的 API TOKEN
-	if settings.Get().ExperimentalFunction.ApiKeySettings.Enabled == true {
-		common.SetApiToken(settings.Get().ExperimentalFunction.ApiKeySettings.Key)
-	} else {
-		common.SetApiToken("")
-	}
-	// 是否开启开发模式，跳过某些流程
-	settings.Get().SpeedDevMode = false
-	err := settings.Get().Save()
-	if err != nil {
-		loggerBase.Panicln("settings.Get().Save() err:", err)
-	}
-	if settings.Get().SpeedDevMode == true {
-		loggerBase.Infoln("Speed Dev Mode is On")
-		pkg.SetLiteMode(true)
-	} else {
-		loggerBase.Infoln("Speed Dev Mode is Off")
-	}
-	// ------------------------------------------------------------------------
-	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
-	if settings.Get().SpeedDevMode == false {
-		pj := pre_job.NewPreJob(loggerBase)
-
-		if pkg.LiteMode() == true {
-			// 不启用 Chrome 相关操作
-			err := pj.HotFix().ChangeSubNameFormat().Wait()
+	{
+		if settings.Get().AdvancedSettings.DebugMode == true {
+			err := log_helper.WriteDebugFile()
 			if err != nil {
-				loggerBase.Panicln("pre_job", err)
+				loggerBase.Errorln("log_helper.WriteDebugFile " + err.Error())
+			}
+			loggerBase = newLog()
+			loggerBase.Infoln("Reload Log Settings, level = Debug")
+		} else {
+			err := log_helper.DeleteDebugFile()
+			if err != nil {
+				loggerBase.Errorln("log_helper.DeleteDebugFile " + err.Error())
+			}
+			loggerBase = newLog()
+			loggerBase.Infoln("Reload Log Settings, level = Info")
+		}
+		if pkg.LinuxConfigPathInSelfPath() != "" {
+
+			loggerBase.Infoln("SetLinuxConfigPathInSelfPath:", pkg.LinuxConfigPathInSelfPath())
+
+			if pkg.IsDir(pkg.LinuxConfigPathInSelfPath()) == false {
+				// 如果设置了这个路径，但是不存在则会崩溃
+				loggerBase.Panicln("LinuxConfigPathInSelfPath", pkg.LinuxConfigPathInSelfPath(), "is not dir")
 			}
 		}
 	}
-	// ----------------------------------------------
+	// ------------------------------------------------------------------------
+	// 设置接口的 API TOKEN
+	{
+		if settings.Get().ExperimentalFunction.ApiKeySettings.Enabled == true {
+			common.SetApiToken(settings.Get().ExperimentalFunction.ApiKeySettings.Key)
+		} else {
+			common.SetApiToken("")
+		}
+		// 是否开启开发模式，跳过某些流程
+		settings.Get().SpeedDevMode = false
+		err := settings.Get().Save()
+		if err != nil {
+			loggerBase.Panicln("settings.Get().Save() err:", err)
+		}
+		if settings.Get().SpeedDevMode == true {
+			loggerBase.Infoln("Speed Dev Mode is On")
+			pkg.SetLiteMode(true)
+		} else {
+			loggerBase.Infoln("Speed Dev Mode is Off")
+		}
+	}
+	// ------------------------------------------------------------------------
+	// 改进为优先启动 http server，这样后面的初始化操作的进度，就不会跟之前一样，无法把进度呈现到 Web 前端给用户看
 	fileDownloader := file_downloader.NewFileDownloader(
 		cache_center.NewCacheCenter("local_task_queue", loggerBase),
 		random_auth_key.AuthKey{
@@ -158,20 +147,11 @@ func main() {
 			AESIv16:  pkg.AESIv16(),
 		})
 	// ----------------------------------------------
+	// 定时任务实例
 	cronHelper := cron_helper.NewCronHelper(fileDownloader)
-	if settings.Get().UserInfo.Username == "" || settings.Get().UserInfo.Password == "" {
-		// 如果没有完成，那么就不开启
-		loggerBase.Infoln("Need do Setup")
-	} else {
-		// 是否完成了 Setup，如果完成了，那么就开启第一次的扫描
-		go func() {
-			loggerBase.Infoln("Setup is Done")
-			cronHelper.Start(settings.Get().CommonSettings.RunScanAtStartUp)
-		}()
-	}
-
-	nowPort := pkg.ReadCustomPortFile(loggerBase)
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
+	nowPort := pkg.ReadCustomPortFile(loggerBase)
+	// 重启的信号
 	restartSignal := make(chan interface{}, 1)
 	defer close(restartSignal)
 	bend := backend.NewBackEnd(loggerBase, cronHelper, nowPort, restartSignal)
