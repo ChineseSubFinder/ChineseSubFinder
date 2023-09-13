@@ -45,7 +45,6 @@ func NewBackEnd(
 		cronHelper:    cronHelper,
 		httpPort:      httpPort,
 		restartSignal: restartSignal,
-		preJob:        pre_job.NewPreJob(logger),
 	}
 }
 
@@ -74,6 +73,7 @@ func (b *BackEnd) start() {
 	// 默认所有都通过
 	engine.Use(cors.Default())
 	// 初始化路由
+	b.preJob = pre_job.NewPreJob(b.logger)
 	cbBase, v1Router := InitRouter(engine, b.cronHelper, b.restartSignal, b.preJob)
 	// -----------------------------------------
 	// 静态文件服务器
@@ -167,18 +167,24 @@ func (b *BackEnd) Restart() {
 
 // doPreJob 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
 func (b *BackEnd) doPreJob() {
-	// 启动程序只会执行一次，用 Once 控制
-	// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
-	if settings.Get().SpeedDevMode == true {
-		return
-	}
-	if pkg.LiteMode() == false {
-		return
-	}
-	// 不启用 Chrome 相关操作
-	err := b.preJob.HotFix().ChangeSubNameFormat().Wait()
-	if err != nil {
-		b.logger.Errorln("pre_job", err)
+
+	if settings.Get().UserInfo.Username == "" || settings.Get().UserInfo.Password == "" {
+		// 如果没有完成，那么就不执行初始化
+		b.logger.Infoln("Need do Setup, then do PreJob")
+	} else {
+		// 启动程序只会执行一次，用 Once 控制
+		// 前置的任务，热修复、字幕修改文件名格式、提前下载好浏览器
+		if settings.Get().SpeedDevMode == true {
+			return
+		}
+		if pkg.LiteMode() == false {
+			return
+		}
+		// 不启用 Chrome 相关操作
+		err := b.preJob.HotFix().ChangeSubNameFormat().Wait()
+		if err != nil {
+			b.logger.Errorln("pre_job", err)
+		}
 	}
 }
 
@@ -188,7 +194,7 @@ func (b *BackEnd) doCornJob() {
 	// 启动定时任务
 	if settings.Get().UserInfo.Username == "" || settings.Get().UserInfo.Password == "" {
 		// 如果没有完成，那么就不开启
-		b.logger.Infoln("Need do Setup")
+		b.logger.Infoln("Need do Setup, then do CornJob")
 	} else {
 		// 是否完成了 Setup，如果完成了，那么就开启第一次的扫描
 		go func() {

@@ -15,10 +15,11 @@ import (
 )
 
 type PreJob struct {
-	stageName string
-	gError    error
-	isDone    bool
-	log       *logrus.Logger
+	stageName     string
+	gError        error
+	isDone        bool
+	log           *logrus.Logger
+	renameResults sub_formatter.RenameResults
 }
 
 func NewPreJob(log *logrus.Logger) *PreJob {
@@ -71,12 +72,13 @@ func (p *PreJob) ChangeSubNameFormat() *PreJob {
 		然后需要在数据库中记录本次的转换结果
 	*/
 	p.log.Infoln(common2.NotifyStringTellUserWait)
-	renameResults, err := sub_formatter.SubFormatChangerProcess(p.log,
+	var err error
+	p.renameResults, err = sub_formatter.SubFormatChangerProcess(p.log,
 		settings.Get().CommonSettings.MoviePaths,
 		settings.Get().CommonSettings.SeriesPaths,
 		common.FormatterName(settings.Get().AdvancedSettings.SubNameFormatter))
 	// 出错的文件有哪一些
-	for s, i := range renameResults.ErrFiles {
+	for s, i := range p.renameResults.ErrFiles {
 		p.log.Errorln("reformat ErrFile:"+s, i)
 	}
 	if err != nil {
@@ -90,6 +92,7 @@ func (p *PreJob) ChangeSubNameFormat() *PreJob {
 
 func (p *PreJob) Wait() error {
 	defer func() {
+		p.isDone = true
 		p.log.Infoln("PreJob.Wait() Done.")
 	}()
 	if p.gError != nil {
@@ -107,6 +110,14 @@ func (p *PreJob) GetStageName() string {
 
 func (p *PreJob) IsDone() bool {
 	return p.isDone
+}
+
+func (p *PreJob) GetRenameResults() sub_formatter.RenameResults {
+	return p.renameResults
+}
+
+func (p *PreJob) GetGError() error {
+	return p.gError
 }
 
 const (

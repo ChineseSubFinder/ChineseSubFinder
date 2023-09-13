@@ -3,6 +3,7 @@ package sub_formatter
 import (
 	"errors"
 	"fmt"
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_and_notifi"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_formatter/same_as_video_name"
 	"os"
 	"path/filepath"
@@ -62,27 +63,27 @@ func (s *SubFormatChanger) AutoDetectThenChangeTo(desFormatter common.FormatterN
 	outStruct.ErrFiles = make(map[string]int)
 
 	for i, dir := range s.movieRootDirs {
-		s.log.Infoln("AutoDetectThenChangeTo Movie Index", i, dir, "Start")
+		log_and_notifi.Infoln(s.log, "AutoDetectThenChangeTo Movie Index", i, dir, "Start")
 
 		err := s.autoDetectMovieThenChangeTo(&outStruct, desFormatter, dir)
 		if err != nil {
-			s.log.Infoln("AutoDetectThenChangeTo Movie Index", i, dir, "End")
+			log_and_notifi.Infoln(s.log, "AutoDetectThenChangeTo Movie Index", i, dir, "End")
 			return RenameResults{}, err
 		}
 
-		s.log.Infoln("AutoDetectThenChangeTo Movie Index", i, dir, "End")
+		log_and_notifi.Infoln(s.log, "AutoDetectThenChangeTo Movie Index", i, dir, "End")
 	}
 
 	for i, dir := range s.seriesRootDirs {
-		s.log.Infoln("AutoDetectThenChangeTo Series Index", i, dir, "Start")
+		log_and_notifi.Infoln(s.log, "AutoDetectThenChangeTo Series Index", i, dir, "Start")
 
 		err := s.autoDetectMSeriesThenChangeTo(&outStruct, desFormatter, dir)
 		if err != nil {
-			s.log.Infoln("AutoDetectThenChangeTo Series Index", i, dir, "End")
+			log_and_notifi.Infoln(s.log, "AutoDetectThenChangeTo Series Index", i, dir, "End")
 			return RenameResults{}, err
 		}
 
-		s.log.Infoln("AutoDetectThenChangeTo Series Index", i, dir, "End")
+		log_and_notifi.Infoln(s.log, "AutoDetectThenChangeTo Series Index", i, dir, "End")
 	}
 
 	return outStruct, nil
@@ -106,7 +107,7 @@ func (s *SubFormatChanger) autoDetectMovieThenChangeTo(outStruct *RenameResults,
 
 		// 需要判断这个视频根目录是否有 .ignore 文件，有也跳过
 		if pkg.IsFile(filepath.Join(filepath.Dir(one), interCommon.Ignore)) == true {
-			s.log.Infoln("Found", interCommon.Ignore, "Skip", one)
+			log_and_notifi.Infoln(s.log, "Found", interCommon.Ignore, "Skip", one)
 			// 跳过下载字幕
 			continue
 		}
@@ -143,7 +144,7 @@ func (s *SubFormatChanger) autoDetectMSeriesThenChangeTo(outStruct *RenameResult
 
 		// 需要判断这个视频根目录是否有 .ignore 文件，有也跳过
 		if pkg.IsFile(filepath.Join(oneSeriesDir, interCommon.Ignore)) == true {
-			s.log.Infoln("Found", interCommon.Ignore, "Skip", oneSeriesDir)
+			log_and_notifi.Infoln(s.log, "Found", interCommon.Ignore, "Skip", oneSeriesDir)
 			// 跳过下载字幕
 			continue
 		}
@@ -222,8 +223,8 @@ func (s *SubFormatChanger) autoDetectAndChange(outStruct *RenameResults, fitSubN
 }
 
 type RenameResults struct {
-	RenamedFiles map[string]int
-	ErrFiles     map[string]int
+	RenamedFiles map[string]int `json:"renamed_files"`
+	ErrFiles     map[string]int `json:"err_files"`
 }
 
 // GetSubFormatter 选择字幕命名格式化的实例
