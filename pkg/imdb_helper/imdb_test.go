@@ -55,6 +55,10 @@ func TestIsChineseVideo(t *testing.T) {
 			imdbID: "tt1471140", isMovie: false,
 		}, want: true, wantErr: false,
 		},
+		{name: "Only Murders in the Building", args: args{
+			imdbID: "tt12851524", isMovie: false,
+		}, want: false, wantErr: false,
+		},
 	}
 
 	defInstance()
@@ -95,7 +99,7 @@ func defInstance() {
 	dealers = media_info_dealers.NewDealers(log_helper.GetLogger4Tester(),
 		subtitle_best_api.NewSubtitleBestApi(log_helper.GetLogger4Tester(), authKey))
 
-	tmdbApi, err := tmdb_api.NewTmdbHelper(log_helper.GetLogger4Tester(), settings.Get().AdvancedSettings.TmdbApiSettings.ApiKey)
+	tmdbApi, err := tmdb_api.NewTmdbHelper(log_helper.GetLogger4Tester(), settings.Get().AdvancedSettings.TmdbApiSettings.ApiKey, true)
 	if err != nil {
 		panic(err)
 	}

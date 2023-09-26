@@ -22,7 +22,12 @@ func (cb *ControllerBase) PreJobHandler(c *gin.Context) {
 	}
 	if cb.preJob.IsDone() == true {
 		// 如果完成了，那么就附加对应的消息
-		outInfo.GErrorInfo = cb.preJob.GetGError().Error()
+		gErr := cb.preJob.GetGError()
+		if gErr != nil {
+			outInfo.GErrorInfo = gErr.Error()
+		} else {
+			outInfo.GErrorInfo = ""
+		}
 		errFiles := cb.preJob.GetRenameResults().ErrFiles
 		// 将 errFiles 转为 []string
 		outInfo.RenameErrResults = make([]string, 0)
