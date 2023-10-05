@@ -103,7 +103,7 @@ func (s *Supplier) GetSubListFromFile4Movie(filePath string) ([]supplier.SubInfo
 	}
 
 	if settings.Get().SubtitleSources.SubtitleBestSettings.ApiKey == "" {
-		return nil, errors.New("Token is empty")
+		return nil, errors.New(s.GetSupplierName() + " Token is empty")
 	}
 
 	return s.getSubListFromFile(filePath, true, 0, 0)
@@ -117,7 +117,7 @@ func (s *Supplier) GetSubListFromFile4Series(seriesInfo *series.SeriesInfo) ([]s
 	}
 
 	if settings.Get().SubtitleSources.SubtitleBestSettings.ApiKey == "" {
-		return nil, errors.New("Token is empty")
+		return nil, errors.New(s.GetSupplierName() + " Token is empty")
 	}
 
 	return s.downloadSub4Series(seriesInfo)
@@ -131,7 +131,7 @@ func (s *Supplier) GetSubListFromFile4Anime(seriesInfo *series.SeriesInfo) ([]su
 	}
 
 	if settings.Get().SubtitleSources.SubtitleBestSettings.ApiKey == "" {
-		return nil, errors.New("Token is empty")
+		return nil, errors.New(s.GetSupplierName() + " Token is empty")
 	}
 
 	return s.downloadSub4Series(seriesInfo)
