@@ -2,6 +2,7 @@ package backend
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/pre_job"
 	"io/ioutil"
@@ -111,7 +112,7 @@ func (b *BackEnd) start() {
 	// 启动 http server
 	go func() {
 		b.logger.Infoln("Try Start Http Server At Port", b.httpPort)
-		if err := b.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := b.srv.ListenAndServe(); err != nil && errors.Is(err, http.ErrServerClosed) == false {
 			b.logger.Errorln("Start Server Error:", err)
 		}
 		defer func() {
@@ -180,6 +181,8 @@ func (b *BackEnd) doPreJob() {
 		if pkg.LiteMode() == false {
 			return
 		}
+		b.logger.Infoln("Setup is Done")
+		b.logger.Infoln("PreJob Will Start...")
 		// 不启用 Chrome 相关操作
 		err := b.preJob.HotFix().ChangeSubNameFormat().Wait()
 		if err != nil {

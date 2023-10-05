@@ -263,7 +263,7 @@ func SubFormatChangerProcess(log *logrus.Logger, movieRootDirs []string, seriesR
 		return RenameResults{}, errors.New(fmt.Sprintf("SubFormatChangerProcess dao.GetDb().First return nil"))
 	}
 	if re.Error != nil {
-		if re.Error != gorm.ErrRecordNotFound {
+		if errors.Is(re.Error, gorm.ErrRecordNotFound) == false {
 			return RenameResults{}, errors.New(fmt.Sprintf("SubFormatChangerProcess dao.GetDb().First, %v", re.Error))
 		}
 	}
