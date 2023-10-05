@@ -37,7 +37,7 @@ jobs:
           # either 'goreleaser' (default) or 'goreleaser-pro'
           distribution: goreleaser
           version: latest
-          args: release -f .goreleaser-ChineseSubFinder.yml --rm-dist
+          args: release -f .goreleaser-ChineseSubFinder.yml --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN  }}
           BASEKEY: ${{ secrets.BASEKEY }}
