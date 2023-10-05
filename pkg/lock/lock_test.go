@@ -1,8 +1,11 @@
 package lock
 
-import "sync"
+import (
+	"sync"
+	"testing"
+)
 
-func ExampleNewLock() {
+func TestNewLock(t *testing.T) {
 	var l = NewLock()
 	var wg sync.WaitGroup
 	var counter int

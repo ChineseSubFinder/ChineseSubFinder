@@ -1,34 +1,34 @@
 package lock
 
+import "sync"
+
 // Lock try lock
 type Lock struct {
-	c chan struct{}
+	isLocked bool
+	ll       sync.Mutex
 }
 
 // NewLock generate a try lock
-func NewLock() Lock {
+func NewLock() *Lock {
 	var l Lock
-	l.c = make(chan struct{}, 1)
-	l.c <- struct{}{}
-	return l
+	l.isLocked = false
+	return &l
 }
 
 // Lock try lock, return lock result
-func (l Lock) Lock() bool {
-	lockResult := false
-	select {
-	case <-l.c:
-		lockResult = true
-	default:
+func (l *Lock) Lock() bool {
+	l.ll.Lock()
+	defer l.ll.Unlock()
+	if l.isLocked {
+		return false
 	}
-	return lockResult
+	l.isLocked = true
+	return true
 }
 
 // Unlock , Unlock the try lock
-func (l Lock) Unlock() {
-	l.c <- struct{}{}
-}
-
-func (l Lock) Close() {
-	close(l.c)
+func (l *Lock) Unlock() {
+	l.ll.Lock()
+	defer l.ll.Unlock()
+	l.isLocked = false
 }

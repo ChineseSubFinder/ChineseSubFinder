@@ -26,7 +26,7 @@ type ControllerBase struct {
 	videoListHelper                     *video_list_helper.VideoListHelper
 	hslCenter                           *hls_center.Center
 	videoScanAndRefreshHelperIsRunning  bool
-	videoScanAndRefreshHelperLocker     lock.Lock
+	videoScanAndRefreshHelperLocker     *lock.Lock
 	videoScanAndRefreshHelperErrMessage string
 	restartSignal                       chan interface{}
 }
@@ -61,7 +61,6 @@ func (cb *ControllerBase) GetPathUrlMap() map[string]string {
 func (cb *ControllerBase) Close() {
 	cb.cronHelper.Stop()
 	cb.videoScanAndRefreshHelper.Cancel()
-	cb.videoScanAndRefreshHelperLocker.Close()
 }
 
 func (cb *ControllerBase) GetVersion() string {

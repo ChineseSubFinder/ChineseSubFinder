@@ -14,7 +14,7 @@ import (
 
 type ControllerBase struct {
 	fileDownloader   *file_downloader.FileDownloader
-	proxyCheckLocker lock.Lock
+	proxyCheckLocker *lock.Lock
 	restartSignal    chan interface{}
 	preJob           *pre_job.PreJob
 }
@@ -40,5 +40,5 @@ func (cb *ControllerBase) ErrorProcess(c *gin.Context, funcName string, err erro
 }
 
 func (cb *ControllerBase) Close() {
-	cb.proxyCheckLocker.Close()
+
 }
