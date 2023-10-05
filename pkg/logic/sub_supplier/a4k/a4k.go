@@ -39,7 +39,7 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 	sup := Supplier{}
 	sup.log = fileDownloader.Log
 	sup.fileDownloader = fileDownloader
-	sup.isAlive = true // 默认是可以使用的，如果 check 后，再调整状态
+	sup.isAlive = false // 默认是可以使用的，如果 check 后，再调整状态
 
 	if settings.Get().AdvancedSettings.Topic != common2.DownloadSubsPerSite {
 		settings.Get().AdvancedSettings.Topic = common2.DownloadSubsPerSite
@@ -50,6 +50,8 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 
 func (s *Supplier) CheckAlive() (bool, int64) {
 
+	// 进入检测，默认就是无效的
+	s.isAlive = false
 	// 计算当前时间
 	startT := time.Now()
 	httpClient, err := pkg.NewHttpClient()

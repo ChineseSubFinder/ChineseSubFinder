@@ -48,6 +48,8 @@ func NewSupplier(fileDownloader *file_downloader.FileDownloader) *Supplier {
 
 func (s *Supplier) CheckAlive() (bool, int64) {
 
+	// 进入检测，默认就是无效的
+	s.isAlive = false
 	// 计算当前时间
 	startT := time.Now()
 	jsonList, err := s.getSubInfos(checkFileName, checkCID)

@@ -192,7 +192,7 @@ func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 
 	// 测试提供字幕的网站是有效的
 	d.log.Infoln("Check Sub Supplier Start...")
-	for _, supplier := range d.Suppliers {
+	for i, _ := range d.Suppliers {
 		wg.Add(1)
 		go func(supplier ifaces.ISupplier) {
 			defer wg.Done()
@@ -210,7 +210,7 @@ func (d *SubSupplierHub) CheckSubSiteStatus() backend.ReplyCheckStatus {
 				Speed: speed,
 			})
 			d.locker.Unlock()
-		}(supplier)
+		}(d.Suppliers[i])
 	}
 	// 等待所有的检测完成
 	wg.Wait()
