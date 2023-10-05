@@ -62,14 +62,14 @@ body:
   - type: textarea
     id: logs
     attributes:
-      label: 发生问题时系统日志和配置文件和Docker配置信息
+      label: 发生问题时系统日志
       description: |
         问题出现时，程序运行日志请复制到这里，日志在程序的 Logs 目录。
       render: bash
   - type: textarea
     id: config
     attributes:
-      label: 发生问题时系统日志和配置文件和Docker配置信息
+      label: 发生问题时配置文件和Docker配置信息
       description: |
         1. 配置文件在 `/volume1/docker/chinesesubfinder/config:/config` 下，ChineseSubFinderSettings.json，记得把你的用户名、密码、Emby API 敏感信息删除。
            可以复制上面的配置，使用类似在线 json 格式化的工具进行一次处理，方便阅读，[JSON 在线解析及格式化验证 - JSON.cn](https://www.json.cn/#)
