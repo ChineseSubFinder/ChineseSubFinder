@@ -1,0 +1,77 @@
+name: 问题反馈
+description: 请尽可能填写模板中的信息，有助于定位问题
+title: "[错误报告]: 请在此处简单描述你的问题"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请确认以下信息：
+        1. 请按此模板提交issues，不按模板提交的问题将直接关闭。
+        2. 如果你的问题可以直接在以往 issue 中找到，那么你的 issue 将会被直接关闭。
+        3. 提交问题务必描述清楚、附上日志，描述不清导致无法理解和分析的问题会被直接关闭。
+  - type: checkboxes
+    id: ensure
+    attributes:
+      label: 确认
+      description: 在提交 issue 之前，请确认你已经阅读并确认以下内容
+      options:
+        - label: 我的版本是最新版本，我的版本号与 [version](https://github.com/ChineseSubFinder/ChineseSubFinder/releases/latest) 相同。
+          required: true
+        - label: 我已经 [issue](https://github.com/ChineseSubFinder/ChineseSubFinder/issues) 中搜索过，确认我的问题没有被提出过。
+          required: true
+        - label: 我已经修改标题，将标题中的 描述 替换为我遇到的问题。
+          required: true
+  - type: input
+    id: version
+    attributes:
+      label: 当前程序版本
+      description: 遇到问题时程序所在的版本号
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: 运行环境
+      description: 您运行程序的环境
+      options:
+        - Docker
+        - Windows
+        - Linux
+        - MacOS
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 问题描述
+      description: 请详细描述你碰到的问题
+      placeholder: "问题描述"
+    validations:
+      required: true
+  - type: dropdown
+    id: reappear
+    attributes:
+      label: 问题复现
+      description: 您的问题是否能够重现？
+      options:
+        - 是
+        - 否
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 发生问题时系统日志和配置文件和Docker配置信息
+      description: |
+        1. 问题出现时，程序运行日志请复制到这里，日志在程序的 Logs 目录。
+        2. 配置文件在 `/volume1/docker/chinesesubfinder/config:/config` 下，ChineseSubFinderSettings.json，记得把你的用户名、密码、Emby API 敏感信息删除。
+           可以复制上面的配置，使用类似在线 json 格式化的工具进行一次处理，方便阅读，[JSON 在线解析及格式化验证 - JSON.cn](https://www.json.cn/#)
+        3. 如果是使用 Docker 部署，请给出对应的 docker-compose 或 docker-cli 信息，如果是其他方式使用忽略。
+      render: bash
+  - type: textarea
+    id: result
+    attributes:
+      label: 你期望的结果
+      description: 你期望的结果
+      placeholder: "你期望的结果"
