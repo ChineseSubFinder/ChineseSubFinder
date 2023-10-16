@@ -81,7 +81,10 @@
         <div><q-btn flat label="重试" color="primary" dense @click="searchPackages" /></div>
       </template>
       <template v-else-if="subtitleBestApiErrorMsg">
-        <div class="text-negative">获取字幕列表失败，错误信息：{{ subtitleBestApiErrorMsg }}</div>
+        <div class="text-negative">
+          <div>从 SubtitleBest 获取字幕列表失败，错误信息：{{ subtitleBestApiErrorMsg }}</div>
+          <div>若提示 api key 相关错误，请检查 SubtitleBest 的 apiKey 是否正确，以及是否过期</div>
+        </div>
         <div><q-btn flat label="重试" color="primary" dense @click="searchPackages" /></div>
       </template>
       <template v-else>
