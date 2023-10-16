@@ -4,14 +4,25 @@
  * @returns {null|number}
  */
 export const getEpisode = (filename) => {
-  const episode = filename.match(/s\d+e(\d+)/i);
+  let episode = filename.match(/s\d+e(\d+)/i);
   if (episode) {
     return parseInt(episode[1], 10);
   }
   // 第x集
-  const episode2 = filename.match(/第(\d+)集/i);
-  if (episode2) {
-    return parseInt(episode2[1], 10);
+  episode = filename.match(/第(\d+)(集|话|話)/i);
+  if (episode) {
+    return parseInt(episode[1], 10);
   }
+
+  // [xx] 【xx】 匹配一些动画字幕组
+  episode = filename.match(/\[(\d+)\]/i);
+  if (episode) {
+    return parseInt(episode[1], 10);
+  }
+  episode = filename.match(/【(\d+)】/i);
+  if (episode) {
+    return parseInt(episode[1], 10);
+  }
+
   return null;
 };
