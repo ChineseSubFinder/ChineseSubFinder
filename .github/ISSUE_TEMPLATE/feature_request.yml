@@ -1,0 +1,42 @@
+name: 功能改进
+description: 看看你要新增或者改进什么功能
+title: "[Feature Request]: "
+labels: ["feature request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请说明你希望添加的功能。
+  - type: input
+    id: version
+    attributes:
+      label: 当前程序版本
+      description: 遇到问题时程序所在的版本号
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: 运行环境
+      description: 您运行程序的环境
+      options:
+        - Docker
+        - Windows
+        - Linux
+        - MacOS
+    validations:
+      required: true
+  - type: textarea
+    id: feature-request
+    attributes:
+      label: 功能改进
+      description: 请详细描述需要改进或者添加的功能。
+      placeholder: "功能改进"
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: 参考资料
+      description: 可以列举一些参考资料
+      placeholder: "参考资料"

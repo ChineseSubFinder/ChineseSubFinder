@@ -47,7 +47,18 @@
           <q-btn color="primary" label="选择文件" dense flat @click="() => qFile.$el.click()" />
         </div>
         <template v-else>
-          <q-btn color="primary" label="添加字幕文件" @click="() => qFile.$el.click()" class="q-mb-sm" />
+          <div class="row items-center q-gutter-x-md">
+            <q-btn color="primary" label="添加字幕文件" @click="() => qFile.$el.click()" class="q-mb-sm" />
+            <q-btn
+              color="primary"
+              outline
+              icon="low_priority"
+              label="按字幕文件名排序映射"
+              @click="resetMapByFilenameOrder"
+              title="不使用自动匹配，而是按照字幕文件名排序，从第一集往下开始映射"
+              class="q-mb-sm"
+            />
+          </div>
           <q-list separator>
             <q-item v-for="item in uploadFiles" :key="item.name">
               <q-item-section>{{ item.name }}</q-item-section>
@@ -164,7 +175,7 @@ const addMapForm = (file) => {
 };
 
 const handleNewFileAdded = (file) => {
-  if (/\.srt|\.ass|\.ssa|\.sbv|\.webvtt/.test(file.name)) {
+  if (/\.srt$|\.ass$|\.ssa$|\.sbv$|\.webvtt$/.test(file.name)) {
     if (!uploadFiles.value.some((f) => f.name === file.name)) {
       uploadFiles.value.push(file);
       addMapForm(file);
@@ -172,10 +183,11 @@ const handleNewFileAdded = (file) => {
   }
 };
 
-const handleFileChange = (val) => {
-  [].forEach.call(val, (file) => {
+const handleFileChange = (files) => {
+  [].forEach.call(files, (file) => {
     handleNewFileAdded(file);
   });
+  uploadFiles.value = uploadFiles.value.sort((a, b) => a.name.localeCompare(b.name));
 };
 
 const handleDragenter = (e) => {
@@ -190,9 +202,6 @@ const handleDragleave = (e) => {
 const handleDrop = (e) => {
   e.preventDefault();
   const { files } = e.dataTransfer;
-  [].forEach.call(files, (file) => {
-    handleNewFileAdded(file);
-  });
   handleFileChange(files);
   isDragover.value = false;
 };
@@ -200,6 +209,13 @@ const handleDrop = (e) => {
 const handleRemoveFile = (file) => {
   uploadFiles.value = uploadFiles.value.filter((f) => f.name !== file.name);
   delete mapForm[file.name];
+};
+
+const resetMapByFilenameOrder = () => {
+  uploadFiles.value.forEach((file, index) => {
+    const item = props.items.find((i) => i.episode === index + 1);
+    mapForm[file.name] = item;
+  });
 };
 
 const handleBeforeShow = () => {
