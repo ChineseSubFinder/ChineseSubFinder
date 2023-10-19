@@ -231,7 +231,7 @@ func getVideoNfoInfo(nfoFilePath string, rootKey string) (types.VideoNfoInfo, er
 
 // GetVideoNfoInfo4Movie 从电影视频文件获取 IMDB info，只能确定拿到 IMDB ID 是靠谱的
 func GetVideoNfoInfo4Movie(movieFileFullPath string) (types.VideoNfoInfo, error) {
-	videoNfoInfo := types.VideoNfoInfo{}
+
 	// movie 当前的目录
 	dirPth := filepath.Dir(movieFileFullPath)
 	// 与 movie 文件名一致的 nfo 文件名称
@@ -245,7 +245,7 @@ func GetVideoNfoInfo4Movie(movieFileFullPath string) (types.VideoNfoInfo, error)
 	nfoFilePath := ""
 	dir, err := os.ReadDir(dirPth)
 	if err != nil {
-		return videoNfoInfo, err
+		return types.VideoNfoInfo{}, err
 	}
 	for _, fi := range dir {
 		if fi.IsDir() == true {
@@ -270,39 +270,61 @@ func GetVideoNfoInfo4Movie(movieFileFullPath string) (types.VideoNfoInfo, error)
 	}
 	// 根据找到的开始解析
 	if movieNameNfoFPath == "" && movieXmlFPath == "" && nfoFilePath == "" {
-		return videoNfoInfo, common.NoMetadataFile
+		return types.VideoNfoInfo{}, common.NoMetadataFile
 	}
+	/*
+		这里之前有一个bug，如果有2个文件都找到了，但是第一个解析的文件无法解析出 IMDB 和 TMDB id
+		第二个文件是可以解析出来的，但是之前的逻辑会在第一个文件就返回了，导致出现故障
+	*/
+	movieNameNfo := types.VideoNfoInfo{}
+	nfoInfoNfo := types.VideoNfoInfo{}
+	nfoInfoMovieXml := types.VideoNfoInfo{}
 	// 优先分析 movieName.nfo 文件
 	if movieNameNfoFPath != "" {
-		videoNfoInfo, err = getVideoNfoInfo(movieNameNfoFPath, "movie")
+		movieNameNfo, err = getVideoNfoInfo(movieNameNfoFPath, "movie")
+		movieNameNfo.IsMovie = true
 		if err != nil {
-			return videoNfoInfo, err
+			return movieNameNfo, err
 		}
-		videoNfoInfo.IsMovie = true
-		return videoNfoInfo, nil
+		if movieNameNfo.ImdbId != "" && movieNameNfo.TmdbId != "" {
+			return movieNameNfo, nil
+		}
 	}
 
 	if nfoFilePath != "" {
-		videoNfoInfo, err = getVideoNfoInfo(nfoFilePath, "movie")
-		videoNfoInfo.IsMovie = true
+		nfoInfoNfo, err = getVideoNfoInfo(nfoFilePath, "movie")
+		nfoInfoNfo.IsMovie = true
 		if err != nil {
-			return videoNfoInfo, err
-		} else {
-			return videoNfoInfo, nil
+			return nfoInfoNfo, err
+		}
+		if nfoInfoNfo.ImdbId != "" && nfoInfoNfo.TmdbId != "" {
+			return nfoInfoNfo, nil
 		}
 	}
 
 	if movieXmlFPath != "" {
-		videoNfoInfo, err = getVideoNfoInfoFromMovieXml(movieXmlFPath)
-		videoNfoInfo.IsMovie = true
+		nfoInfoMovieXml, err = getVideoNfoInfoFromMovieXml(movieXmlFPath)
+		nfoInfoMovieXml.IsMovie = true
 		if err != nil {
-		} else {
-			return videoNfoInfo, nil
+			return nfoInfoMovieXml, err
+		}
+		if nfoInfoMovieXml.ImdbId != "" && nfoInfoMovieXml.TmdbId != "" {
+			return nfoInfoMovieXml, nil
 		}
 	}
+	// 如果上面都没能返回，说明没有一个文件是带有两个 ID 信息的
+	if movieNameNfo.ImdbId != "" || movieNameNfo.TmdbId != "" {
+		return movieNameNfo, nil
+	}
+	if nfoInfoNfo.ImdbId != "" || nfoInfoNfo.TmdbId != "" {
+		return nfoInfoNfo, nil
+	}
+	if nfoInfoMovieXml.ImdbId != "" || nfoInfoMovieXml.TmdbId != "" {
+		return nfoInfoMovieXml, nil
+	}
 
-	videoNfoInfo.IsMovie = true
-	return videoNfoInfo, common.NoMetadataFile
+	// 返回异常
+	return types.VideoNfoInfo{}, common.NoMetadataFile
 }
 
 // GetVideoNfoInfo4SeriesDir 从一个连续剧的根目录获取 IMDB info
