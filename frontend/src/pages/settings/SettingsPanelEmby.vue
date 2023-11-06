@@ -22,7 +22,7 @@
               dense
               :rules="[
                 (val) => (form.enable && !!val) || '不能为空',
-                (val) => val.match(/^https?:\/\/\w+(\.\w+)*(:[0-9]+)?\/?(\/[.\w]*)*$/) || '请输入正确的URL',
+                (val) => val.match(/^https?:\/\/.+/) || 'Emby的URL必须以http或https开头',
               ]"
             />
           </q-item-section>
