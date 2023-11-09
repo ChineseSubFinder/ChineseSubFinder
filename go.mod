@@ -34,7 +34,7 @@ require (
 	github.com/middelink/go-parse-torrent-name v0.0.0-20190301154245-3ff4efacd4c4
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nzlov/chardet v0.0.0-20190815145004-022cbcf483f9
-	github.com/panjf2000/ants/v2 v2.6.0
+	github.com/panjf2000/ants/v2 v2.8.2
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d
