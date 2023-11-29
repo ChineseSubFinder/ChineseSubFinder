@@ -149,12 +149,14 @@ func main() {
 	// ----------------------------------------------
 	// 定时任务实例
 	cronHelper := cron_helper.NewCronHelper(fileDownloader)
+	// 绑定的Host
+	nowHost := settings.Get().AdvancedSettings.HostSetting
 	// 支持在外部配置特殊的端口号，以防止本地本占用了无法使用
 	nowPort := pkg.ReadCustomPortFile(loggerBase)
 	// 重启的信号
 	restartSignal := make(chan interface{}, 1)
 	defer close(restartSignal)
-	bend := backend.NewBackEnd(loggerBase, cronHelper, nowPort, restartSignal)
+	bend := backend.NewBackEnd(loggerBase, cronHelper, nowHost, nowPort, restartSignal)
 	go bend.Restart()
 	restartSignal <- 1
 	// 阻塞
