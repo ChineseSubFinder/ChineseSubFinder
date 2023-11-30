@@ -90,7 +90,16 @@ func GetVADInfoFromAudio(audioInfo AudioInfo, insert bool) ([]VADInfo, error) {
 }
 
 // GetFloatSlice 返回 1 -1 归一化的数组
-func GetFloatSlice(inVADs []VADInfo) []float64 {
+func GetFloatSlice(inVADs []VADInfo, skipFrontAndEndPerBase float64) []float64 {
+
+	skipLen := int(float64(len(inVADs)) * skipFrontAndEndPerBase)
+	skipStartIndex := skipLen
+	skipEndIndex := len(inVADs) - skipLen
+	if skipStartIndex <= 0 {
+		skipStartIndex = 0
+		skipEndIndex = len(inVADs)
+	}
+
 	outVADFloats := make([]float64, len(inVADs))
 	for i, vad := range inVADs {
 		if vad.Active == true {
@@ -100,7 +109,7 @@ func GetFloatSlice(inVADs []VADInfo) []float64 {
 		}
 	}
 
-	return outVADFloats
+	return outVADFloats[skipStartIndex:skipEndIndex]
 }
 
 // GetAudioIndex2Time 从 Audio 的 OffsetIndex 推算出它所在的时间，返回 float64 的秒

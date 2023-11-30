@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
+	"github.com/panjf2000/ants/v2"
 	"os"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/subparser"
@@ -29,21 +31,20 @@ func NewPipeline(maxOffsetSeconds int) *Pipeline {
 	}
 }
 
-func (p Pipeline) CalcOffsetTime(infoBase, infoSrc *subparser.FileInfo, audioVadList []vad.VADInfo, useGSS bool) (PipeResult, error) {
+func (p *Pipeline) CalcOffsetTime(infoBase, infoSrc *subparser.FileInfo, audioVadList []vad.VADInfo, useGSS bool, skipFrontAndEndPerBase float64) (PipeResult, error) {
 
+	// 传入的字幕需要在外面先进行排序
 	baseVADInfo := make([]float64, 0)
 	useSubtitleOrAudioAsBase := false
-	// 排序
-	infoSrc.SortDialogues()
+
 	if infoBase == nil && audioVadList != nil {
-		baseVADInfo = vad.GetFloatSlice(audioVadList)
+		baseVADInfo = vad.GetFloatSlice(audioVadList, skipFrontAndEndPerBase)
 		useSubtitleOrAudioAsBase = true
 	} else if infoBase != nil {
 		useSubtitleOrAudioAsBase = false
-		// 排序
-		infoBase.SortDialogues()
+
 		// 解析处 VAD 信息
-		baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, 0)
+		baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoBase, skipFrontAndEndPerBase)
 		if err != nil {
 			return PipeResult{}, err
 		}
@@ -106,7 +107,7 @@ func (p Pipeline) CalcOffsetTime(infoBase, infoSrc *subparser.FileInfo, audioVad
 			tmpInfoSrc = clone.Clone(infoSrc).(*subparser.FileInfo)
 		}
 		// 3. speech_extract	从字幕转换为 VAD 的语音检测信息
-		tmpSrcInfoUnit, err := sub_helper.GetVADInfoFeatureFromSubNew(tmpInfoSrc, 0)
+		tmpSrcInfoUnit, err := sub_helper.GetVADInfoFeatureFromSubNew(tmpInfoSrc, skipFrontAndEndPerBase)
 		if err != nil {
 			return PipeResult{}, err
 		}
@@ -135,7 +136,7 @@ func (p Pipeline) CalcOffsetTime(infoBase, infoSrc *subparser.FileInfo, audioVad
 				tmpInfoSrc = clone.Clone(infoSrc).(*subparser.FileInfo)
 			}
 			// 3. speech_extract	从字幕转换为 VAD 的语音检测信息
-			tmpSrcInfoUnit, err := sub_helper.GetVADInfoFeatureFromSubNew(tmpInfoSrc, 0)
+			tmpSrcInfoUnit, err := sub_helper.GetVADInfoFeatureFromSubNew(tmpInfoSrc, skipFrontAndEndPerBase)
 			if err != nil {
 				return 0
 			}
@@ -171,13 +172,68 @@ func (p Pipeline) CalcOffsetTime(infoBase, infoSrc *subparser.FileInfo, audioVad
 	// 从得到的结果里面找到分数最高的
 	sort.Sort(PipeResults(filterPipeResults))
 	maxPipeResult := filterPipeResults[len(filterPipeResults)-1]
+	maxPipeResult.SkipPerBase = skipFrontAndEndPerBase
+
+	return maxPipeResult, nil
+}
+
+// CalcOffsetTimeEx 进行并发计算获取最佳的偏移位置
+func (p *Pipeline) CalcOffsetTimeEx(infoBase, infoSrc *subparser.FileInfo, audioVadList []vad.VADInfo, useGSS bool, threadCount int) (PipeResult, error) {
+
+	locker := sync.Mutex{}
+	pipeResults := make([]PipeResult, 0)
+	// 并发处理
+	pool, err := ants.NewPoolWithFunc(threadCount, func(inData interface{}) {
+		data := inData.(CalcOffsetTimeData)
+		defer data.Wg.Done()
+
+		pipeResult, err := p.CalcOffsetTime(infoBase, infoSrc, audioVadList, useGSS, data.PerValue)
+		if err != nil {
+			return
+		}
+
+		locker.Lock()
+		pipeResults = append(pipeResults, pipeResult)
+		locker.Unlock()
+	})
+	if err != nil {
+		return PipeResult{}, err
+	}
+	defer pool.Release()
+
+	wg := sync.WaitGroup{}
+	maxPer := 0.20
+	nowPer := 0.0
+	for {
+
+		if nowPer > maxPer {
+			break
+		}
+
+		wg.Add(1)
+		err = pool.Invoke(CalcOffsetTimeData{PerValue: nowPer, Wg: &wg})
+		if err != nil {
+			return PipeResult{}, err
+		}
+
+		nowPer += 0.05
+	}
+	wg.Wait()
+
+	// 从得到的结果里面找到分数最高的
+	sort.Sort(PipeResults(pipeResults))
+	maxPipeResult := pipeResults[len(pipeResults)-1]
+
+	for i, result := range pipeResults {
+		println(fmt.Sprintf("index %d, score %.0f (offset %d) for ratio %.3f skipPer %0.3f", i, result.Score, result.BestOffset, result.ScaleFactor, result.SkipPerBase))
+	}
 
 	return maxPipeResult, nil
 }
 
 // FixSubFileTimeline 这里传入的 scaledInfoSrc 是从 pipeResults 筛选出来的最大分数的 FileInfo
 // infoSrc 是从源文件读取出来的，这样才能正确匹配 Content 中的时间戳
-func (p Pipeline) FixSubFileTimeline(infoSrc, scaledInfoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) (string, error) {
+func (p *Pipeline) FixSubFileTimeline(infoSrc, scaledInfoSrc *subparser.FileInfo, inOffsetTime float64, desSaveSubFileFullPath string) (string, error) {
 
 	/*
 		从解析的实例中，正常来说是可以匹配出所有的 Dialogue 对话的 Start 和 End time 的信息
@@ -286,6 +342,7 @@ type PipeResult struct {
 	BestOffset     int
 	ScaleFactor    float64
 	ScaledFileInfo *subparser.FileInfo
+	SkipPerBase    float64
 }
 
 // GetOffsetTime 从偏移得到偏移时间
@@ -306,4 +363,9 @@ func (d PipeResults) Swap(i, j int) {
 func (d PipeResults) Less(i, j int) bool {
 
 	return d[i].Score < d[j].Score
+}
+
+type CalcOffsetTimeData struct {
+	PerValue float64
+	Wg       *sync.WaitGroup // 并发锁
 }

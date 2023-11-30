@@ -97,7 +97,7 @@ func TestPipeline_FitGSS(t *testing.T) {
 			}
 			// ---------------------------------------------------------------------------------------
 			p := NewPipeline(DefaultMaxOffsetSeconds)
-			pipeResult, err := p.CalcOffsetTime(infoBase, infoSrc, nil, false)
+			pipeResult, err := p.CalcOffsetTime(infoBase, infoSrc, nil, false, 0)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FitGSS() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -183,7 +183,7 @@ func TestPipeline_FitGSSByAudio(t *testing.T) {
 			}
 			// ---------------------------------------------------------------------------------------
 			p := NewPipeline(DefaultMaxOffsetSeconds)
-			pipeResult, err := p.CalcOffsetTime(nil, infoSrc, audioVADInfos, false)
+			pipeResult, err := p.CalcOffsetTime(nil, infoSrc, audioVADInfos, false, 0)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FitGSS() error = %v, wantErr %v", err, tt.wantErr)
 				return

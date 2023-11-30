@@ -57,7 +57,7 @@ func (s *SubTimelineFixerHelperEx) Check() bool {
 	return true
 }
 
-func (s *SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string) error {
+func (s *SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string, processType ProcessType) error {
 
 	if s.needDownloadFFMPeg == false {
 		s.log.Errorln("Need Install ffmpeg and ffprobe, Can't Do TimeLine Fix")
@@ -70,71 +70,86 @@ func (s *SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string
 	bok := false
 	var ffmpegInfo *ffmpeg_helper.FFMPEGInfo
 	var err error
-	// 先尝试获取内置字幕的信息
-	bok, ffmpegInfo, err = s.ffmpegHelper.ExportFFMPEGInfo(videoFileFullPath, ffmpeg_helper.Subtitle)
-	if err != nil {
-		return err
-	}
-	if bok == false {
-		return errors.New("SubTimelineFixerHelperEx.Process.ExportFFMPEGInfo = false Subtitle -- " + videoFileFullPath)
-	}
-
-	// 这个需要提前考虑，如果只有一个内置的字幕，且这个字幕的大小小于 2kb，那么认为这个字幕是有问题的，就直接切换到 audio 校正
 	oneSubAndIsError := false
-	if len(ffmpegInfo.SubtitleInfoList) == 1 {
-		fi, err := os.Stat(ffmpegInfo.SubtitleInfoList[0].FullPath)
-		if err != nil {
-			oneSubAndIsError = true
-		} else {
-			if fi.Size() <= 2048 {
-				oneSubAndIsError = true
-			}
-		}
-	}
-	// 内置的字幕，这里只列举一种格式出来，其实会有一个字幕的 srt 和 ass 两种格式都导出存在
-	if ffmpegInfo.SubtitleInfoList == nil || len(ffmpegInfo.SubtitleInfoList) <= 0 || oneSubAndIsError == true {
 
-		if ffmpegInfo.AudioInfoList == nil || len(ffmpegInfo.AudioInfoList) == 0 {
-			return errors.New("SubTimelineFixerHelperEx.Process.ExportFFMPEGInfo Can`t Find SubTitle And Audio To Export -- " + videoFileFullPath)
-		}
-
-		// 如果内置字幕没有，那么就需要尝试获取音频信息
-		bok, ffmpegInfo, err = s.ffmpegHelper.ExportFFMPEGInfo(videoFileFullPath, ffmpeg_helper.Audio)
+	if processType == ProcessTypeAuto || processType == ProcessTypeBySubFile {
+		// 自动 || 字幕
+		// 先尝试获取内置字幕的信息
+		bok, ffmpegInfo, err = s.ffmpegHelper.ExportFFMPEGInfo(videoFileFullPath, ffmpeg_helper.Subtitle)
 		if err != nil {
 			return err
 		}
 		if bok == false {
-			return errors.New("SubTimelineFixerHelperEx.Process.ExportFFMPEGInfo = false Audio -- " + videoFileFullPath)
+			return errors.New("SubTimelineFixerHelperEx.Process.ExportFFMPEGInfo = false Subtitle -- " + videoFileFullPath)
 		}
-
-		// 使用音频进行时间轴的校正
-		if len(ffmpegInfo.AudioInfoList) <= 0 {
-			s.log.Warnln("Can`t find audio info, skip time fix --", videoFileFullPath)
-			return nil
-		}
-		bProcess, infoSrc, pipeResultMax, err = s.ProcessByAudioFile(ffmpegInfo.AudioInfoList[0].FullPath, srcSubFPath)
-		if err != nil {
-			return err
-		}
-	} else {
-		// 使用内置的字幕进行时间轴的校正，这里需要考虑一个问题，内置的字幕可能是有问题的（先考虑一种，就是字幕的长度不对，是一小段的）
-		// 那么就可以比较多个内置字幕的大小选择大的去使用
-		// 如果有多个内置的字幕，还是要判断下的，选体积最大的那个吧
-		fileSizes := treemap.NewWith(utils.Int64Comparator)
-		for index, info := range ffmpegInfo.SubtitleInfoList {
-			fi, err := os.Stat(info.FullPath)
+		// 这个需要提前考虑，如果只有一个内置的字幕，且这个字幕的大小小于 2kb，那么认为这个字幕是有问题的，就直接切换到 audio 校正
+		if len(ffmpegInfo.SubtitleInfoList) == 1 {
+			fi, err := os.Stat(ffmpegInfo.SubtitleInfoList[0].FullPath)
 			if err != nil {
-				fileSizes.Put(0, index)
+				oneSubAndIsError = true
 			} else {
-				fileSizes.Put(fi.Size(), index)
+				if fi.Size() <= 2048 {
+					oneSubAndIsError = true
+				}
 			}
 		}
-		_, index := fileSizes.Max()
-		baseSubFPath := ffmpegInfo.SubtitleInfoList[index.(int)].FullPath
-		bProcess, infoSrc, pipeResultMax, err = s.ProcessBySubFile(baseSubFPath, srcSubFPath)
-		if err != nil {
-			return err
+		if processType == ProcessTypeBySubFile && oneSubAndIsError == true {
+			// 如果是字幕，那么就需要判断下字幕的大小，如果字幕的大小小于 2kb，那么认为这个字幕是有问题的，且是指定用内置字幕矫正，那么就直接错误
+			return errors.New("SubTimelineFixerHelperEx.Process.ExportFFMPEGInfo Subtitle == 1 and size <= 2048 -- " + videoFileFullPath)
 		}
+		if processType == ProcessTypeBySubFile {
+			// 使用内置的字幕进行时间轴的校正，这里需要考虑一个问题，内置的字幕可能是有问题的（先考虑一种，就是字幕的长度不对，是一小段的）
+			// 那么就可以比较多个内置字幕的大小选择大的去使用
+			// 如果有多个内置的字幕，还是要判断下的，选体积最大的那个吧
+			fileSizes := treemap.NewWith(utils.Int64Comparator)
+			for index, info := range ffmpegInfo.SubtitleInfoList {
+				fi, err := os.Stat(info.FullPath)
+				if err != nil {
+					fileSizes.Put(0, index)
+				} else {
+					fileSizes.Put(fi.Size(), index)
+				}
+			}
+			_, index := fileSizes.Max()
+			baseSubFPath := ffmpegInfo.SubtitleInfoList[index.(int)].FullPath
+			bProcess, infoSrc, pipeResultMax, err = s.ProcessBySubFile(baseSubFPath, srcSubFPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if processType == ProcessTypeAuto || processType == ProcessTypeByAudioFile {
+		// 自动 || 音频
+		if processType == ProcessTypeAuto && oneSubAndIsError == false {
+			// 如果是自动，且没有这个问题，那么就不需要再次获取了
+		} else {
+			// 如果内置字幕没有，那么就需要尝试获取音频信息
+			bok, ffmpegInfo, err = s.ffmpegHelper.ExportFFMPEGInfo(videoFileFullPath, ffmpeg_helper.Audio)
+			if err != nil {
+				return err
+			}
+			if bok == false {
+				return errors.New("SubTimelineFixerHelperEx.Process.ExportFFMPEGInfo = false Audio -- " + videoFileFullPath)
+			}
+			// 使用音频进行时间轴的校正
+			if len(ffmpegInfo.AudioInfoList) <= 0 {
+				s.log.Warnln("Can`t find audio info, skip time fix --", videoFileFullPath)
+				return nil
+			}
+			bProcess, infoSrc, pipeResultMax, err = s.ProcessByAudioFile(ffmpegInfo.AudioInfoList[0].FullPath, srcSubFPath)
+			if err != nil {
+				return err
+			}
+		}
+	} else if processType == ProcessTypeBySubFile {
+		// 字幕
+	} else {
+		return errors.New("SubTimelineFixerHelperEx.Process processType is error")
+	}
+
+	// 内置的字幕，这里只列举一种格式出来，其实会有一个字幕的 srt 和 ass 两种格式都导出存在
+	if (ffmpegInfo.SubtitleInfoList == nil || len(ffmpegInfo.SubtitleInfoList) <= 0) && (ffmpegInfo.AudioInfoList == nil || len(ffmpegInfo.AudioInfoList) == 0) {
+		return errors.New("SubTimelineFixerHelperEx.Process.ExportFFMPEGInfo Can`t Find SubTitle And Audio To Export -- " + videoFileFullPath)
 	}
 
 	// 开始调整字幕时间轴
@@ -142,12 +157,13 @@ func (s *SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string
 		s.log.Infoln("Skip TimeLine Fix -- OffsetTime:", pipeResultMax.GetOffsetTime(), srcSubFPath)
 		return nil
 	}
+	s.log.Infoln("TimeLine Fix -- Score:", pipeResultMax.Score, srcSubFPath)
+	s.log.Infoln("Fix Offset:", pipeResultMax.GetOffsetTime(), srcSubFPath)
+
 	err = s.changeTimeLineAndSave(infoSrc, pipeResultMax, srcSubFPath)
 	if err != nil {
 		return err
 	}
-	s.log.Infoln("TimeLine Fix -- Score:", pipeResultMax.Score, srcSubFPath)
-	s.log.Infoln("Fix Offset:", pipeResultMax.GetOffsetTime(), srcSubFPath)
 	s.log.Infoln("BackUp Org SubFile:", pipeResultMax.GetOffsetTime(), srcSubFPath+sub_timeline_fixer.BackUpExt)
 
 	return nil
@@ -156,7 +172,10 @@ func (s *SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string
 func (s *SubTimelineFixerHelperEx) ProcessBySubFileInfo(infoBase *subparser.FileInfo, infoSrc *subparser.FileInfo) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
 
 	// ---------------------------------------------------------------------------------------
-	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTime(infoBase, infoSrc, nil, false)
+	// 先在外面排序
+	infoBase.SortDialogues()
+	infoSrc.SortDialogues()
+	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTime(infoBase, infoSrc, nil, false, 0.1)
 	if err != nil {
 		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
@@ -190,7 +209,9 @@ func (s *SubTimelineFixerHelperEx) ProcessBySubFile(baseSubFileFPath, srcSubFile
 func (s *SubTimelineFixerHelperEx) ProcessByAudioVAD(audioVADInfos []vad.VADInfo, infoSrc *subparser.FileInfo) (bool, *subparser.FileInfo, sub_timeline_fixer.PipeResult, error) {
 
 	// ---------------------------------------------------------------------------------------
-	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTime(nil, infoSrc, audioVADInfos, false)
+	// 先在外面排序
+	infoSrc.SortDialogues()
+	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTimeEx(nil, infoSrc, audioVADInfos, true, 4)
 	if err != nil {
 		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
@@ -388,3 +409,12 @@ type MatchResult struct {
 	SubCompareOffsetTime   float64 // 字幕的对比偏移量
 
 }
+
+// ProcessType 定义一个处理的参数为枚举类型
+type ProcessType int
+
+const (
+	ProcessTypeBySubFile ProcessType = iota + 1
+	ProcessTypeByAudioFile
+	ProcessTypeAuto
+)
