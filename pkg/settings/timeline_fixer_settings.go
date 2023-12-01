@@ -10,7 +10,7 @@ func NewTimelineFixerSettings() *TimelineFixerSettings {
 	return &TimelineFixerSettings{
 		MaxOffsetTime: 700,
 		MinOffset:     0.2,
-		ThreadCount:   4,
+		ThreadCount:   5,
 	}
 }
 
@@ -19,11 +19,11 @@ func (t *TimelineFixerSettings) Check() {
 		t.MaxOffsetTime = 700 // 60s
 	}
 
-	if t.MinOffset <= 0 || t.MinOffset > 1 {
+	if t.MinOffset <= 0 || t.MinOffset > 5 {
 		t.MinOffset = 0.2 // 100ms
 	}
 
 	if t.ThreadCount <= 0 || t.ThreadCount > 8 {
-		t.ThreadCount = 4
+		t.ThreadCount = 5
 	}
 }

@@ -113,7 +113,7 @@ func TestPipeline_FitGSS(t *testing.T) {
 
 			println(fmt.Sprintf("Offset: %f, Score: %f, Scale:%f",
 				pipeResult.GetOffsetTime(),
-				pipeResult.Score,
+				pipeResult.Score(),
 				pipeResult.ScaleFactor))
 		})
 	}
@@ -199,7 +199,7 @@ func TestPipeline_FitGSSByAudio(t *testing.T) {
 
 			println(fmt.Sprintf("Offset: %f, Score: %f, Scale:%f",
 				pipeResult.GetOffsetTime(),
-				pipeResult.Score,
+				pipeResult.Score(),
 				pipeResult.ScaleFactor))
 		})
 	}

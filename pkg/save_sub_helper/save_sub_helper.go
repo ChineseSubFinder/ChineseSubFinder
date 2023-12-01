@@ -58,7 +58,7 @@ func (s *SaveSubHelper) WriteSubFile2VideoPath(videoFileFullPath string, finalSu
 
 	// 然后还需要判断是否需要校正字幕的时间轴
 	if settings.Get().AdvancedSettings.FixTimeLine == true {
-		err = s.subTimelineFixerHelperEx.Process(videoFileFullPath, desSubFullPath)
+		err = s.subTimelineFixerHelperEx.Process(videoFileFullPath, desSubFullPath, sub_timeline_fixer.ProcessTypeByAudioFile)
 		if err != nil {
 			return err
 		}

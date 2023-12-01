@@ -113,7 +113,7 @@ func (p *Pipeline) CalcOffsetTime(infoBase, infoSrc *subparser.FileInfo, audioVa
 		}
 		bestOffset, score := fffAligner.Fit(baseVADInfo, tmpSrcInfoUnit.GetVADFloatSlice())
 		pipeResult := PipeResult{
-			Score:          score,
+			score:          score,
 			BestOffset:     bestOffset,
 			ScaleFactor:    framerateRatio,
 			ScaledFileInfo: tmpInfoSrc,
@@ -146,7 +146,7 @@ func (p *Pipeline) CalcOffsetTime(infoBase, infoSrc *subparser.FileInfo, audioVa
 			// 放到外部的存储中
 			if isLastIter == true {
 				pipeResult := PipeResult{
-					Score:          score,
+					score:          score,
 					BestOffset:     bestOffset,
 					ScaleFactor:    framerateRatio,
 					ScaledFileInfo: tmpInfoSrc,
@@ -203,7 +203,7 @@ func (p *Pipeline) CalcOffsetTimeEx(infoBase, infoSrc *subparser.FileInfo, audio
 
 	wg := sync.WaitGroup{}
 	maxPer := 0.20
-	nowPer := 0.0
+	nowPer := 0.00
 	for {
 
 		if nowPer > maxPer {
@@ -216,7 +216,7 @@ func (p *Pipeline) CalcOffsetTimeEx(infoBase, infoSrc *subparser.FileInfo, audio
 			return PipeResult{}, err
 		}
 
-		nowPer += 0.05
+		nowPer += 0.01
 	}
 	wg.Wait()
 
@@ -225,7 +225,7 @@ func (p *Pipeline) CalcOffsetTimeEx(infoBase, infoSrc *subparser.FileInfo, audio
 	maxPipeResult := pipeResults[len(pipeResults)-1]
 
 	for i, result := range pipeResults {
-		println(fmt.Sprintf("index %d, score %.0f (offset %d) for ratio %.3f skipPer %0.3f", i, result.Score, result.BestOffset, result.ScaleFactor, result.SkipPerBase))
+		println(fmt.Sprintf("index %d, score %.0f (offset %d) for ratio %.3f skipPer %0.3f", i, result.Score(), result.BestOffset, result.ScaleFactor, result.SkipPerBase))
 	}
 
 	return maxPipeResult, nil
@@ -338,7 +338,7 @@ const DefaultMaxOffsetSeconds = 120
 const SampleRate = 100
 
 type PipeResult struct {
-	Score          float64
+	score          float64
 	BestOffset     int
 	ScaleFactor    float64
 	ScaledFileInfo *subparser.FileInfo
@@ -348,6 +348,15 @@ type PipeResult struct {
 // GetOffsetTime 从偏移得到偏移时间
 func (p PipeResult) GetOffsetTime() float64 {
 	return float64(p.BestOffset) / 100.0
+}
+
+func (p PipeResult) Score() float64 {
+	if p.SkipPerBase > 0 {
+		// 需要还原到 100% 没有跳过的情况的分数
+		return p.score / (1 - p.SkipPerBase)
+	} else {
+		return p.score
+	}
 }
 
 type PipeResults []PipeResult
@@ -362,7 +371,7 @@ func (d PipeResults) Swap(i, j int) {
 
 func (d PipeResults) Less(i, j int) bool {
 
-	return d[i].Score < d[j].Score
+	return d[i].Score() < d[j].Score()
 }
 
 type CalcOffsetTimeData struct {

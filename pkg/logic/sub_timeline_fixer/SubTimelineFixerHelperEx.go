@@ -154,10 +154,10 @@ func (s *SubTimelineFixerHelperEx) Process(videoFileFullPath, srcSubFPath string
 
 	// 开始调整字幕时间轴
 	if bProcess == false || math.Abs(pipeResultMax.GetOffsetTime()) < s.fixerConfig.MinOffset {
-		s.log.Infoln("Skip TimeLine Fix -- OffsetTime:", pipeResultMax.GetOffsetTime(), srcSubFPath)
+		s.log.Infoln("Skip TimeLine Fix, MinOffset:", s.fixerConfig.MinOffset, " -- NowOffsetTime:", pipeResultMax.GetOffsetTime(), srcSubFPath)
 		return nil
 	}
-	s.log.Infoln("TimeLine Fix -- Score:", pipeResultMax.Score, srcSubFPath)
+	s.log.Infoln("TimeLine Fix -- Score:", pipeResultMax.Score(), srcSubFPath)
 	s.log.Infoln("Fix Offset:", pipeResultMax.GetOffsetTime(), srcSubFPath)
 
 	err = s.changeTimeLineAndSave(infoSrc, pipeResultMax, srcSubFPath)
@@ -175,7 +175,7 @@ func (s *SubTimelineFixerHelperEx) ProcessBySubFileInfo(infoBase *subparser.File
 	// 先在外面排序
 	infoBase.SortDialogues()
 	infoSrc.SortDialogues()
-	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTime(infoBase, infoSrc, nil, false, 0.1)
+	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTimeEx(infoBase, infoSrc, nil, false, s.fixerConfig.ThreadCount)
 	if err != nil {
 		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
@@ -211,7 +211,7 @@ func (s *SubTimelineFixerHelperEx) ProcessByAudioVAD(audioVADInfos []vad.VADInfo
 	// ---------------------------------------------------------------------------------------
 	// 先在外面排序
 	infoSrc.SortDialogues()
-	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTimeEx(nil, infoSrc, audioVADInfos, true, 4)
+	pipeResult, err := s.timelineFixPipeLine.CalcOffsetTimeEx(nil, infoSrc, audioVADInfos, false, s.fixerConfig.ThreadCount)
 	if err != nil {
 		return false, nil, sub_timeline_fixer.PipeResult{}, err
 	}
@@ -330,14 +330,14 @@ func (s *SubTimelineFixerHelperEx) IsMatchBySubFile(ffmpegInfo *ffmpeg_helper.FF
 	matchResult := &MatchResult{
 		VideoDuration:          ffmpegInfo.Duration,
 		TargetSubEndTime:       targetSubEndTime,
-		AudioCompareScore:      pipeResultMaxAudio.Score,
+		AudioCompareScore:      pipeResultMaxAudio.Score(),
 		AudioCompareOffsetTime: pipeResultMaxAudio.GetOffsetTime(),
-		SubCompareScore:        pipeResultMaxSub.Score,
+		SubCompareScore:        pipeResultMaxSub.Score(),
 		SubCompareOffsetTime:   pipeResultMaxSub.GetOffsetTime(),
 	}
 	// ---------------------------------------------------------------------------------------
 	// 分数需要大于某个值
-	if pipeResultMaxAudio.Score < config.MinScore || pipeResultMaxSub.Score < config.MinScore {
+	if pipeResultMaxAudio.Score() < config.MinScore || pipeResultMaxSub.Score() < config.MinScore {
 		return false, matchResult, nil
 	}
 	// 两种方式获取到的时间轴的偏移量，差值需要在一定范围内
