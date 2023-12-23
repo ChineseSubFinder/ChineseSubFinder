@@ -39,6 +39,21 @@ func (p *Pipeline) CalcOffsetTime(infoBase, infoSrc *subparser.FileInfo, audioVa
 
 	if infoBase == nil && audioVadList != nil {
 		baseVADInfo = vad.GetFloatSlice(audioVadList, skipFrontAndEndPerBase)
+		//
+		//err := vad.WriteVADSlice2File(baseVADInfo, "D:\\tmp\\audio.txt")
+		//if err != nil {
+		//	return PipeResult{}, err
+		//}
+		//baseUnitNew, err := sub_helper.GetVADInfoFeatureFromSubNew(infoSrc, skipFrontAndEndPerBase)
+		//if err != nil {
+		//	return PipeResult{}, err
+		//}
+		//baseVADInfo = baseUnitNew.GetVADFloatSlice()
+		//err = vad.WriteVADSlice2File(baseVADInfo, "D:\\tmp\\subtitle.txt")
+		//if err != nil {
+		//	return PipeResult{}, err
+		//}
+		//
 		useSubtitleOrAudioAsBase = true
 	} else if infoBase != nil {
 		useSubtitleOrAudioAsBase = false

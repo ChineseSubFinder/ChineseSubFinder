@@ -112,6 +112,23 @@ func GetFloatSlice(inVADs []VADInfo, skipFrontAndEndPerBase float64) []float64 {
 	return outVADFloats[skipStartIndex:skipEndIndex]
 }
 
+func WriteVADSlice2File(vadSliceFloat []float64, fileFullPath string) error {
+	f, err := os.Create(fileFullPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	for _, v := range vadSliceFloat {
+		_, err = f.WriteString(fmt.Sprintf("%v\n", v))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // GetAudioIndex2Time 从 Audio 的 OffsetIndex 推算出它所在的时间，返回 float64 的秒
 func GetAudioIndex2Time(index int) float64 {
 	return float64(index*FrameDuration) / 1000.0
