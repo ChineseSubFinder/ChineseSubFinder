@@ -1,13 +1,12 @@
 package settings
 
 import (
+	"github.com/ChineseSubFinder/csf-supplier-base/pkg/struct_json"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/strcut_json"
 )
 
 type Settings struct {
@@ -109,7 +108,7 @@ func NewSettings(configRootDirFPath string) *Settings {
 
 func (s *Settings) read() error {
 
-	err := strcut_json.ToStruct(s.configFPath, s)
+	err := struct_json.ToStruct(s.configFPath, s)
 	if err != nil {
 		return err
 	}
@@ -134,7 +133,7 @@ func (s *Settings) Save() error {
 	}
 	s.EmbySettings.AddressUrl = newEmbyAddressUrl
 
-	return strcut_json.ToFile(s.configFPath, s)
+	return struct_json.ToFile(s.configFPath, s)
 }
 
 func (s *Settings) GetNoPasswordSettings() *Settings {

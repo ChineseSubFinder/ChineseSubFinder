@@ -18,9 +18,8 @@ import (
 )
 
 type CronHelper struct {
-	stopping          bool // 正在停止
-	cronHelperRunning bool // 这个是定时器启动的状态，它为true，不代表核心函数在执行
-	//scanPlayedVideoSubInfo    *scan_played_video_subinfo.ScanPlayedVideoSubInfo        // 扫描已经播放过的视频的字幕信息
+	stopping                  bool                                                     // 正在停止
+	cronHelperRunning         bool                                                     // 这个是定时器启动的状态，它为true，不代表核心函数在执行
 	FileDownloader            *file_downloader.FileDownloader                          // 文件下载器
 	DownloadQueue             *task_queue.TaskQueue                                    // 需要下载的视频的队列
 	Downloader                *downloader.Downloader                                   // 下载者线程
@@ -32,8 +31,6 @@ type CronHelper struct {
 	entryIDSupplierCheck      cron.EntryID                                             // 检查字幕源有效性的定时器的 ID
 	entryIDQueueDownloader    cron.EntryID                                             // 下载队列的定时器的 ID
 	entryIDFeedBack           cron.EntryID                                             // 信息反馈
-	//entryIDScanPlayedVideoSubInfo cron.EntryID
-	//entryIDUploadPlayedVideoSub cron.EntryID
 }
 
 func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
@@ -44,14 +41,6 @@ func NewCronHelper(fileDownloader *file_downloader.FileDownloader) *CronHelper {
 		// 实例化下载队列
 		DownloadQueue: task_queue.NewTaskQueue(fileDownloader.CacheCenter),
 	}
-
-	//var err error
-	// ----------------------------------------------
-	// 扫描已播放
-	//ch.scanPlayedVideoSubInfo, err = scan_played_video_subinfo.NewScanPlayedVideoSubInfo(ch.Logger, fileDownloader)
-	//if err != nil {
-	//	ch.Logger.Panicln(err)
-	//}
 	// ----------------------------------------------
 	// 字幕扫描器
 	ch.videoScanAndRefreshHelper = video_scan_and_refresh_helper.NewVideoScanAndRefreshHelper(
@@ -141,19 +130,6 @@ func (ch *CronHelper) Start(runImmediately bool) {
 	if err != nil {
 		ch.Logger.Panicln("CronHelper QueueDownloader, feedBack Cron entryID:", ch.entryIDFeedBack, "Error:", err)
 	}
-	// 字幕的上传逻辑
-	if settings.Get().ExperimentalFunction.ShareSubSettings.ShareSubEnabled == true {
-		// 取消上传字幕的逻辑，目前评估的第一阶段已经完成，后续的逻辑需要重新评估
-		//intervalNowTask := "@every 10s"
-		//if settings.Get().SpeedDevMode == true {
-		//	intervalNowTask = "@every 1s"
-		//}
-		//ch.entryIDUploadPlayedVideoSub, err = ch.c.AddFunc(intervalNowTask, ch.uploadVideoSub)
-		//if err != nil {
-		//	ch.Logger.Panicln("CronHelper QueueDownloader, uploadVideoSub Cron entryID:", ch.entryIDUploadPlayedVideoSub, "Error:", err)
-		//}
-	}
-
 	// ----------------------------------------------
 	if runImmediately == true {
 		// 是否在定时器开启前先执行一次视频扫描任务
@@ -255,39 +231,6 @@ func (ch *CronHelper) feedBack() {
 		return
 	}
 }
-
-//func (ch *CronHelper) scanPlayedVideoSub() {
-//
-//	ch.Logger.Infoln("Update Info...")
-//	nowInfo := dao.UpdateInfo(pkg.AppVersion(), settings.Get())
-//	_, err := ch.FileDownloader.MediaInfoDealers.SubtitleBestApi.FeedBack(
-//		nowInfo.Id,
-//		nowInfo.Version, nowInfo.MediaServer,
-//		nowInfo.EnableShare, nowInfo.EnableApiKey)
-//	if err != nil {
-//		ch.Logger.Errorln("FeedBack Error:", err)
-//		return
-//	}
-//
-//	ch.Logger.Infoln("------------------------------------------------------")
-//	ch.Logger.Infoln("scanPlayedVideoSub Start")
-//	startT := time.Now()
-//	defer func() {
-//		ch.Logger.Infoln("scanPlayedVideoSub End, Cost:", time.Since(startT).Minutes(), "min")
-//		ch.Logger.Infoln("------------------------------------------------------")
-//	}()
-//	bok, err := ch.scanPlayedVideoSubInfo.GetPlayedItemsSubtitle(settings.Get().EmbySettings, common.EmbyApiGetItemsLimitMax)
-//	if err != nil {
-//		ch.Logger.Errorln(err)
-//	}
-//	if bok == true {
-//		ch.scanPlayedVideoSubInfo.Clear()
-//		err = ch.scanPlayedVideoSubInfo.Scan()
-//		if err != nil {
-//			ch.Logger.Errorln(err)
-//		}
-//	}
-//}
 
 func (ch *CronHelper) CronHelperRunning() bool {
 

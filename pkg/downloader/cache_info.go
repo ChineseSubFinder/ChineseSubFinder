@@ -9,8 +9,8 @@ import (
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/task_queue"
 	vsh "github.com/ChineseSubFinder/ChineseSubFinder/pkg/video_scan_and_refresh_helper"
 
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/strcut_json"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_helper"
+	"github.com/ChineseSubFinder/csf-supplier-base/pkg/struct_json"
 )
 
 func (d *Downloader) SetMovieAndSeasonInfo(movieInfos []backend2.MovieInfo, seasonInfos []backend2.SeasonInfo) {
@@ -204,14 +204,14 @@ func (d *Downloader) saveVideoListCache(movieInfos []backend2.MovieInfo, seasonI
 	seasonInfosFileName := filepath.Join(cacheCenterFolder, "season_infos.json")
 
 	if movieInfos != nil && len(movieInfos) > 0 {
-		err = strcut_json.ToFile(movieInfosFileName, movieInfos)
+		err = struct_json.ToFile(movieInfosFileName, movieInfos)
 		if err != nil {
 			return err
 		}
 	}
 
 	if seasonInfos != nil && len(seasonInfos) > 0 {
-		err = strcut_json.ToFile(seasonInfosFileName, seasonInfos)
+		err = struct_json.ToFile(seasonInfosFileName, seasonInfos)
 		if err != nil {
 			return err
 		}
@@ -235,14 +235,14 @@ func (d *Downloader) loadVideoListCache() error {
 	seasonInfos := make([]backend2.SeasonInfo, 0)
 
 	if pkg.IsFile(movieInfosFileName) == true {
-		err = strcut_json.ToStruct(movieInfosFileName, &movieInfos)
+		err = struct_json.ToStruct(movieInfosFileName, &movieInfos)
 		if err != nil {
 			return err
 		}
 	}
 
 	if pkg.IsFile(seasonInfosFileName) == true {
-		err = strcut_json.ToStruct(seasonInfosFileName, &seasonInfos)
+		err = struct_json.ToStruct(seasonInfosFileName, &seasonInfos)
 		if err != nil {
 			return err
 		}
@@ -284,7 +284,7 @@ func (d *Downloader) SetMovieAndSeasonInfoV2(mainList *vsh.NormalScanVideoResult
 			return false
 		})
 
-		err = strcut_json.ToFile(movieInfosFileName, movieInfos)
+		err = struct_json.ToFile(movieInfosFileName, movieInfos)
 		if err != nil {
 			return err
 		}
@@ -305,7 +305,7 @@ func (d *Downloader) SetMovieAndSeasonInfoV2(mainList *vsh.NormalScanVideoResult
 			return false
 		})
 
-		err = strcut_json.ToFile(seasonInfosFileName, seasonInfos)
+		err = struct_json.ToFile(seasonInfosFileName, seasonInfos)
 		if err != nil {
 			return err
 		}
@@ -333,14 +333,14 @@ func (d *Downloader) GetMovieInfoAndSeasonInfoV2() ([]backend2.MovieInfoV2, []ba
 	seasonInfos := make([]backend2.SeasonInfoV2, 0)
 
 	if pkg.IsFile(movieInfosFileName) == true {
-		err = strcut_json.ToStruct(movieInfosFileName, &movieInfos)
+		err = struct_json.ToStruct(movieInfosFileName, &movieInfos)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
 	if pkg.IsFile(seasonInfosFileName) == true {
-		err = strcut_json.ToStruct(seasonInfosFileName, &seasonInfos)
+		err = struct_json.ToStruct(seasonInfosFileName, &seasonInfos)
 		if err != nil {
 			return nil, nil, err
 		}

@@ -2,6 +2,7 @@ package sub_helper
 
 import (
 	"errors"
+	"github.com/ChineseSubFinder/csf-supplier-base/pkg/archive_helper"
 	"math"
 	"os"
 	"path/filepath"
@@ -15,7 +16,6 @@ import (
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/subparser"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/supplier"
 
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/archive_helper"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/decode"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/filter"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/language"
@@ -73,7 +73,7 @@ func OrganizeDlSubFiles(log *logrus.Logger, tmpFolderName string, subInfos []sup
 			if err != nil {
 				return nil, err
 			}
-			err = archive_helper.UnArchiveFileEx(nowFileSaveFullPath, unzipTmpFolder)
+			err = archive_helper.UnArchiveFileEx(nowFileSaveFullPath, unzipTmpFolder, false, false)
 			// 解压完成后，遍历受支持的字幕列表，加入缓存列表
 			if err != nil {
 				log.Errorln("archiver.UnArchive", subInfos[i].FromWhere, subInfos[i].Name, subInfos[i].TopN, err)

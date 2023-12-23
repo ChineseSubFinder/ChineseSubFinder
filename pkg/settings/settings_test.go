@@ -1,12 +1,11 @@
 package settings
 
 import (
+	"github.com/ChineseSubFinder/csf-supplier-base/pkg/struct_json"
 	"reflect"
 	"testing"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
-
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/strcut_json"
 )
 
 func TestNewSettings(t *testing.T) {
@@ -50,13 +49,13 @@ func TestNewSettings(t *testing.T) {
 		},
 	}
 
-	err := strcut_json.ToFile(fileName, inSettings)
+	err := struct_json.ToFile(fileName, inSettings)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	outSettings := NewSettings(pkg.ConfigRootDirFPath())
-	err = strcut_json.ToStruct(fileName, &outSettings)
+	err = struct_json.ToStruct(fileName, &outSettings)
 	if err != nil {
 		t.Fatal(err)
 	}

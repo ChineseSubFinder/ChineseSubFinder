@@ -1,6 +1,6 @@
 module github.com/ChineseSubFinder/ChineseSubFinder
 
-go 1.17
+go 1.18
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
@@ -10,7 +10,7 @@ require (
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
 	github.com/baabaaox/go-webrtcvad v1.0.1
 	github.com/beevik/etree v1.1.0
-	github.com/bodgit/sevenzip v1.4.0
+	github.com/bodgit/sevenzip v1.4.0 // indirect
 	github.com/emirpasic/gods v1.18.1
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gin-contrib/cors v1.4.0
@@ -30,7 +30,7 @@ require (
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.6 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
-	github.com/mholt/archiver/v3 v3.5.1
+	github.com/mholt/archiver/v3 v3.5.1 // indirect
 	github.com/middelink/go-parse-torrent-name v0.0.0-20190301154245-3ff4efacd4c4
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nzlov/chardet v0.0.0-20190815145004-022cbcf483f9
@@ -62,9 +62,10 @@ require (
 )
 
 require (
+	github.com/ChineseSubFinder/csf-supplier-base v1.0.0
 	github.com/WQGroup/logger v0.0.6
 	github.com/allanpk716/is_running_in_docker v0.0.1
-	github.com/allanpk716/rod_helper v0.0.78
+	github.com/allanpk716/rod_helper v0.0.90
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/arl/statsviz v0.5.1
 	github.com/cyruzin/golang-tmdb v1.5.0
@@ -107,12 +108,10 @@ require (
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jonboulle/clockwork v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
-	github.com/kr/pretty v0.3.1 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/liuzl/cedar-go v0.0.0-20170805034717-80a9c64b256d // indirect
 	github.com/liuzl/da v0.0.0-20180704015230-14771aad5b1d // indirect
@@ -129,6 +128,7 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.1 // indirect
+	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
