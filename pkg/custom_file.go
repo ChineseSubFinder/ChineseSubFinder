@@ -1,12 +1,36 @@
 package pkg
 
 import (
+	"net"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/sirupsen/logrus"
 )
+
+func ReadCustomHostFile(log *logrus.Logger) string {
+	if IsFile(customHost) == false {
+		return defHost
+	} else {
+		bytes, err := os.ReadFile(customHost)
+		if err != nil {
+			log.Errorln("ReadFile customHost Error", err)
+			log.Infoln("Use DerHost '0.0.0.0'")
+			return defHost
+		}
+		nowContent := string(bytes)
+		host := net.ParseIP(nowContent)
+		if host == nil || host.To4() == nil {
+			log.Errorln("ParseIP customHost (Invalid IPv4) Error", err)
+			log.Infoln("Use DerHost '0.0.0.0'")
+			return defHost
+		} else {
+			log.Infoln("Use CustomHost", nowContent)
+			return nowContent
+		}
+	}
+}
 
 func ReadCustomPortFile(log *logrus.Logger) int {
 	if IsFile(customPort) == false {
@@ -59,6 +83,8 @@ func ReadCustomAuthFile(log *logrus.Logger) bool {
 
 const (
 	defPort    = 19035
+	defHost    = "0.0.0.0"
 	customPort = "CustomPort"
+	customHost = "CustomHost"
 	customAuth = "CustomAuth"
 )
