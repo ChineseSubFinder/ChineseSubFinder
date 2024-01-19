@@ -32,7 +32,7 @@ func (cb *ControllerBase) ChangePwdHandler(c *gin.Context) {
 
 	if settings.Get().UserInfo.Password != changePwd.OrgPwd {
 		// 原始的密码不对
-		c.JSON(http.StatusNoContent, backend2.ReplyCommon{Message: "Org Password Error"})
+		c.JSON(http.StatusBadRequest, backend2.ReplyCommon{Message: "Org Password Error"})
 	} else {
 		// 同意修改密码
 		settings.Get().UserInfo.Password = changePwd.NewPwd

@@ -22,6 +22,9 @@
         <BugReportItem />
         <q-btn-dropdown :label="userState.username" icon="account_circle" flat>
           <q-list dense style="min-width: 100px">
+            <q-item clickable v-close-popup to="/profile/change-pwd">
+              <q-item-section>修改密码</q-item-section>
+            </q-item>
             <q-item clickable v-close-popup>
               <q-item-section @click="logout">退出登录</q-item-section>
             </q-item>

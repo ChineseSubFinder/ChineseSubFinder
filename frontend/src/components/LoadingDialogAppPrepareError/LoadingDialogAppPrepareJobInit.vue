@@ -34,7 +34,7 @@
 
 <script setup>
 import { useDialogPluginComponent } from 'quasar';
-import { computed, watch } from 'vue';
+import { computed, watchEffect } from 'vue';
 import { systemState } from 'src/store/systemState';
 
 const { dialogRef } = useDialogPluginComponent();
@@ -46,8 +46,8 @@ const hasError = computed(
 );
 const showCloseButton = computed(() => hasError.value);
 
-watch(isDone, (val) => {
-  if (val && !showCloseButton.value) {
+watchEffect(() => {
+  if (isDone.value && !showCloseButton.value) {
     dialogRef.value?.hide();
   }
 });

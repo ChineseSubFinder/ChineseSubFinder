@@ -44,6 +44,17 @@ const routes = [
         component: () => import('pages/settings/index.vue'),
         meta: { title: '配置中心', icon: 'settings' },
       },
+
+      {
+        path: '/profile',
+        component: RouterPlaceholder,
+        children: [
+          {
+            path: 'change-pwd',
+            component: () => import('pages/profile/change-pwd/index.vue'),
+          },
+        ],
+      },
     ],
   },
 
