@@ -95,7 +95,7 @@ docker run -d \
 version: "3"
 services:
   chinesesubfinder:
-    image: allanpk716/ChineseSubFinder:latest
+    image: allanpk716/chinesesubfinder:latest
     volumes:
       - ./config:/config  # 冒号左边请修改为你想在主机上保存配置、日志等文件的路径
       - ./media:/media    # 请修改为你的媒体目录，冒号右边可以改成你方便记忆的目录，多个媒体目录需要分别映射进来
