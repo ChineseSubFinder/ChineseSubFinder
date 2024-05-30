@@ -27,6 +27,7 @@ import (
 type BackEnd struct {
 	logger        *logrus.Logger
 	cronHelper    *cron_helper.CronHelper
+	host          string
 	httpPort      int
 	running       bool
 	srv           *http.Server
@@ -38,12 +39,14 @@ type BackEnd struct {
 func NewBackEnd(
 	logger *logrus.Logger,
 	cronHelper *cron_helper.CronHelper,
+	host string,
 	httpPort int,
 	restartSignal chan interface{}) *BackEnd {
 
 	return &BackEnd{
 		logger:        logger,
 		cronHelper:    cronHelper,
+		host:          host,
 		httpPort:      httpPort,
 		restartSignal: restartSignal,
 	}
@@ -100,9 +103,9 @@ func (b *BackEnd) start() {
 	engine.Any("/api", func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/")
 	})
-	// listen and serve on 0.0.0.0:8080(default)
+	// listen and serve on the configured address
 	b.srv = &http.Server{
-		Addr:    fmt.Sprintf(":%d", b.httpPort),
+		Addr:    fmt.Sprintf("%s:%d", b.host, b.httpPort),
 		Handler: engine,
 	}
 	go func() {
@@ -111,7 +114,7 @@ func (b *BackEnd) start() {
 	}()
 	// 启动 http server
 	go func() {
-		b.logger.Infoln("Try Start Http Server At Port", b.httpPort)
+        b.logger.Infoln(fmt.Sprintf("Try Start Http Server At %s:%d", b.host, b.httpPort))
 		if err := b.srv.ListenAndServe(); err != nil && errors.Is(err, http.ErrServerClosed) == false {
 			b.logger.Errorln("Start Server Error:", err)
 		}
