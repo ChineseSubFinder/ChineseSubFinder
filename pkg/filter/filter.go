@@ -48,6 +48,9 @@ func SkipFileInfo(l *logrus.Logger, curFile os.DirEntry, fileFullPath string) bo
 			//if err == nil {
 			//	fmt.Println("Path:", realPath)
 			//}
+		} else if filepath.Ext(curFile.Name()) == ".strm" {
+			// strm问题 #714
+			l.Debugln("curFile is strm file,", fileFullPath)
 		} else {
 			l.Debugln("curFile.Size() < 1000:", curFile.Name())
 			return true
