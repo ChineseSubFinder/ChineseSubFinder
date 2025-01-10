@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/log_hub"
 )
 
@@ -12,4 +13,5 @@ func NewReplyRunningLog() *ReplyRunningLog {
 	return &ReplyRunningLog{
 		RecentLogs: make([]log_hub.OnceLog, 0),
 	}
+	pkg.RandomSecondDuration()
 }

@@ -8,17 +8,13 @@ import (
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
-
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/extend_log"
-
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/sirupsen/logrus"
 
 	easy "github.com/t-tomalak/logrus-easy-formatter"
 )
 
-func NewLogHelper(appName string, logStorePath string, level logrus.Level, maxAge time.Duration, rotationTime time.Duration, extendLog ...settings.ExtendLog) *logrus.Logger {
+func NewLogHelper(appName string, logStorePath string, level logrus.Level, maxAge time.Duration, rotationTime time.Duration) *logrus.Logger {
 
 	Logger := logrus.New()
 	Logger.Formatter = &easy.Formatter{
@@ -38,14 +34,6 @@ func NewLogHelper(appName string, logStorePath string, level logrus.Level, maxAg
 	Logger.SetLevel(level)
 	Logger.SetOutput(io.MultiWriter(os.Stderr, writer))
 
-	if len(extendLog) > 0 {
-		exLog := extend_log.ExtendLogEx{}
-		exLog.AddHook(Logger, extendLog[0])
-	}
-	// 可以输出函数调用还文件位置
-	//if level == logrus.DebugLevel {
-	//	Logger.SetReportCaller(true)
-	//}
 	return Logger
 }
 

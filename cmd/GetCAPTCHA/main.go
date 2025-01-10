@@ -31,7 +31,6 @@ func newLog() *logrus.Logger {
 	logger := log_helper.NewLogHelper(log_helper.LogNameGetCAPTCHA,
 		pkg.ConfigRootDirFPath(),
 		level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
-	logger.AddHook(log_helper.NewLoggerHub())
 
 	return logger
 }

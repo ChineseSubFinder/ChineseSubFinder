@@ -35,9 +35,7 @@ func newLog() *logrus.Logger {
 	logger := log_helper.NewLogHelper(
 		log_helper.LogNameChineseSubFinder,
 		pkg.ConfigRootDirFPath(),
-		level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour,
-		settings.Get().ExperimentalFunction.ExtendLog)
-	logger.AddHook(log_helper.NewLoggerHub())
+		level, time.Duration(7*24)*time.Hour, time.Duration(24)*time.Hour)
 
 	return logger
 }
@@ -49,8 +47,7 @@ func init() {
 	pkg.SetLinuxConfigPathInSelfPath(*setLinuxConfigPathInSelfPathFlag)
 	// 需要进行 settings 的初始化，指定初始化的目录
 	settings.SetConfigRootPath(pkg.ConfigRootDirFPath())
-	// 第一次运行需要清理、读取一次
-	log_helper.CleanAndLoadOnceLogs()
+	// --------------------------------------------------
 	loggerBase = newLog()
 	// --------------------------------------------------
 	if strings.ToLower(LiteMode) == "true" || *setLiteModeFlag == true {

@@ -8,7 +8,6 @@ type ExperimentalFunction struct {
 	ApiKeySettings       ApiKeySettings       `json:"api_key_settings"`
 	LocalChromeSettings  LocalChromeSettings  `json:"local_chrome_settings"`
 	ShareSubSettings     ShareSubSettings     `json:"share_sub_settings"`
-	ExtendLog            ExtendLog            `json:"extend_log"`
 }
 
 func NewExperimentalFunction() *ExperimentalFunction {
