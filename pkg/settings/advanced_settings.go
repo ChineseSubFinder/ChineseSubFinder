@@ -6,6 +6,7 @@ import (
 )
 
 type AdvancedSettings struct {
+	HostSetting                string             `json:"host_setting"`                   // 监听的地址
 	ProxySettings              *ProxySettings     `json:"proxy_settings"`
 	TmdbApiSettings            TmdbApiSettings    `json:"tmdb_api_settings"`
 	DebugMode                  bool               `json:"debug_mode"`                     // 是否开启调试模式，这个是写入一个特殊的文件来开启日志的 Debug 输出
@@ -24,6 +25,7 @@ type AdvancedSettings struct {
 
 func NewAdvancedSettings() *AdvancedSettings {
 	return &AdvancedSettings{
+		HostSetting:       "0.0.0.0",
 		ProxySettings:     NewProxySettings(false, "http", local_http_proxy_server.LocalHttpProxyPort, "127.0.0.1", "10809", "", ""),
 		TmdbApiSettings:   *NewTmdbApiSettings(false, "", false),
 		CustomVideoExts:   make([]string, 0),

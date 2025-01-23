@@ -3,6 +3,23 @@
     <q-list dense style="max-width: 600px">
       <q-item tag="label" v-ripple>
         <q-item-section>
+          <q-item-label>监听地址</q-item-label>
+          <q-input
+            v-model="form.host_setting"
+            label="需要重启生效"
+            standout
+            dense
+            placeholder="0.0.0.0"
+            :rules="[(val) => /^(\d{1,3}\.){3}\d{1,3}$/.test(val) || '无效的ip4地址']"
+          >
+          </q-input>
+        </q-item-section>
+      </q-item>
+
+      <q-separator spaced inset></q-separator>
+
+      <q-item tag="label" v-ripple>
+        <q-item-section>
           <q-item-label>是否使用代理</q-item-label>
           <q-item-label caption>支持HTTP代理</q-item-label>
         </q-item-section>
