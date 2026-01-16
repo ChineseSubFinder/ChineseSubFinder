@@ -5,8 +5,6 @@ import (
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/media_info_dealers"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/subtitle_best_api"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
@@ -108,17 +106,10 @@ func defInstance() {
 	settings.SetConfigRootPath(pkg.ConfigRootDirFPath())
 	pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester())
 
-	authKey := random_auth_key.AuthKey{
-		BaseKey:  pkg.BaseKey(),
-		AESKey16: pkg.AESKey16(),
-		AESIv16:  pkg.AESIv16(),
-	}
-
 	nowSettings := settings.Get()
 	nowSettings.ExperimentalFunction.ShareSubSettings.ShareSubEnabled = true
 
-	dealers = media_info_dealers.NewDealers(log_helper.GetLogger4Tester(),
-		subtitle_best_api.NewSubtitleBestApi(log_helper.GetLogger4Tester(), authKey))
+	dealers = media_info_dealers.NewDealers(log_helper.GetLogger4Tester())
 }
 
 var (

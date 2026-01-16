@@ -11,7 +11,6 @@ import (
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/cache_center"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/unit_test_helper"
 )
 
@@ -59,12 +58,6 @@ func defInstance() {
 
 	pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester())
 
-	authKey := random_auth_key.AuthKey{
-		BaseKey:  pkg.BaseKey(),
-		AESKey16: pkg.AESKey16(),
-		AESIv16:  pkg.AESIv16(),
-	}
-
 	xunleiInstance = NewSupplier(file_downloader.NewFileDownloader(
-		cache_center.NewCacheCenter("test", log_helper.GetLogger4Tester()), authKey))
+		cache_center.NewCacheCenter("test", log_helper.GetLogger4Tester())))
 }

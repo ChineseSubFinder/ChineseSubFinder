@@ -166,7 +166,7 @@ func (p Pipeline) CalcOffsetTime(infoBase, infoSrc *subparser.FileInfo, audioVad
 	}
 	if len(filterPipeResults) <= 0 {
 		return PipeResult{}, errors.New(fmt.Sprintf("AutoFixTimeline failed; you can set 'MaxOffSetTime' > %d", p.MaxOffsetSeconds) +
-			fmt.Sprintf(" Or this two subtiles are not fited to this video!"))
+			fmt.Sprintf(" Or these two subtitles are not fitted to this video!"))
 	}
 	// 从得到的结果里面找到分数最高的
 	sort.Sort(PipeResults(filterPipeResults))

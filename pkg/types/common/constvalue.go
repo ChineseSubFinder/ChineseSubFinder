@@ -21,7 +21,6 @@ const (
 	SubSiteXunLei           = "xunlei"
 	SubSiteAssrt            = "assrt"
 	SubSiteA4K              = "a4k"
-	SubSiteSubtitleBest     = "subtitle_best"
 )
 
 const (

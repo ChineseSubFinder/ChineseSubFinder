@@ -9,19 +9,12 @@ import (
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/cache_center"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/unit_test_helper"
 )
 
 func TestNewSupplier(t *testing.T) {
 
 	pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester())
-	authKey := random_auth_key.AuthKey{
-		BaseKey:  pkg.BaseKey(),
-		AESKey16: pkg.AESKey16(),
-		AESIv16:  pkg.AESIv16(),
-	}
-
 	//movie1 := "X:\\电影\\The Devil All the Time (2020)\\The Devil All the Time (2020) WEBDL-1080p.mkv"
 	//movie1 := "X:\\电影\\龙猫 (1988)\\龙猫 (1988) 1080p DTS.mkv"
 	//movie1 := "X:\\电影\\消失爱人 (2016)\\消失爱人 (2016) 720p AAC.rmvb"
@@ -39,7 +32,7 @@ func TestNewSupplier(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shooter := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", log_helper.GetLogger4Tester()), authKey))
+	shooter := NewSupplier(file_downloader.NewFileDownloader(cache_center.NewCacheCenter("test", log_helper.GetLogger4Tester())))
 	outList, err := shooter.getSubListFromFile(gVideoFPath)
 	if err != nil {
 		t.Error(err)

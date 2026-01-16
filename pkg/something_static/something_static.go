@@ -3,16 +3,12 @@ package something_static
 import (
 	b64 "encoding/base64"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types/common"
-
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
 
 	"github.com/sirupsen/logrus"
 )
@@ -81,17 +77,6 @@ func writeFile(saveFileFPath, enString, nowTime string) error {
 	}
 
 	return nil
-}
-
-func GetCodeFromWeb(l *logrus.Logger, nowTimeFileNamePrix string, fileDownloader *file_downloader.FileDownloader) (string, string, error) {
-
-	getCode, err := fileDownloader.MediaInfoDealers.SubtitleBestApi.GetCode()
-	if err != nil {
-		l.Errorln("SubtitleBestApi.GetCode", err)
-		return "", "", errors.New(fmt.Sprintf("get code from web failed, %v \n", err.Error()))
-	}
-	nowTT := time.Now().Format("2006-01-02")
-	return nowTT, getCode, nil
 }
 
 func getCodeFromWeb(l *logrus.Logger, desUrl string) (string, string, error) {

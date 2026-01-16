@@ -63,7 +63,7 @@ func GetMediaInfoAndSave(dealers *media_info_dealers.Dealers, imdbInfo *models.I
 	}
 	if mediaInfo == nil {
 		// 超过 9次 30s 等待都没有查询到，返回错误
-		return nil, errors.New("can't get media info from subtitle.best api")
+		return nil, errors.New("can't get media info from tmdb api")
 	}
 	// 更新 ID
 	imdbInfo.TmdbId = mediaInfo.TmdbId

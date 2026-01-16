@@ -16,11 +16,8 @@ import (
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/sub_parser/srt"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/sub_parser_hub"
 
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
-
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/cache_center"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/subtitle_best_api"
 	"github.com/go-rod/rod"
 	"github.com/sirupsen/logrus"
 )
@@ -32,13 +29,13 @@ type FileDownloader struct {
 	MediaInfoDealers *media_info_dealers.Dealers
 }
 
-func NewFileDownloader(cacheCenter *cache_center.CacheCenter, authKey random_auth_key.AuthKey) *FileDownloader {
+func NewFileDownloader(cacheCenter *cache_center.CacheCenter) *FileDownloader {
 
 	f := FileDownloader{
 		Log:              cacheCenter.Log,
 		CacheCenter:      cacheCenter,
 		SubParserHub:     sub_parser_hub.NewSubParserHub(cacheCenter.Log, ass.NewParser(cacheCenter.Log), srt.NewParser(cacheCenter.Log)),
-		MediaInfoDealers: media_info_dealers.NewDealers(cacheCenter.Log, subtitle_best_api.NewSubtitleBestApi(cacheCenter.Log, authKey)),
+		MediaInfoDealers: media_info_dealers.NewDealers(cacheCenter.Log),
 	}
 	return &f
 }
@@ -180,46 +177,6 @@ func (f *FileDownloader) GetEx(supplierName string, browser *rod.Browser, subDow
 		}
 
 		return subInfo, nil
-	} else {
-		// 如果已经存在缓存中，那么就直接返回
-		return subInfo, nil
-	}
-}
-
-// GetSubtitleBest supplierName 这个参数一定得是字幕源的名称，通过 s.GetSupplierName() 获取，否则后续的字幕源今日下载量将不能正确统计和判断
-func (f *FileDownloader) GetSubtitleBest(supplierName string, topN int64, season, eps int,
-	title, ext, subSha256, fileDownloadUrl string) (*supplier.SubInfo, error) {
-
-	found, subInfo, err := f.CacheCenter.DownloadFileGet(subSha256)
-	if err != nil {
-		return nil, err
-	}
-	// 如果不存在那么就先下载，然后再存入缓存中
-	if found == false {
-
-		fileData, _, err := pkg.DownFile(f.Log, fileDownloadUrl)
-		if err != nil {
-			return nil, err
-		}
-		// 下载成功需要统计到今天的次数中
-		_, err = f.CacheCenter.DailyDownloadCountAdd(supplierName,
-			pkg.GetPublicIP(f.Log, settings.Get().AdvancedSettings.TaskQueue))
-		if err != nil {
-			f.Log.Warningln(supplierName, "FileDownloader.Get.DailyDownloadCountAdd", err)
-		}
-		// 默认存入都是简体中文的语言类型，后续取出来的时候需要再次调用 SubParser 进行解析
-		inSubInfo := supplier.NewSubInfo(supplierName, topN, title, language.ChineseSimple, fileDownloadUrl, 0, 0, ext, fileData)
-		inSubInfo.Season = season
-		inSubInfo.Episode = eps
-		inSubInfo.SetFileUrlSha256(subSha256)
-		inSubInfo.GetUID()
-
-		err = f.CacheCenter.DownloadFileAdd(inSubInfo)
-		if err != nil {
-			return nil, err
-		}
-
-		return inSubInfo, nil
 	} else {
 		// 如果已经存在缓存中，那么就直接返回
 		return subInfo, nil

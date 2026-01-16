@@ -74,7 +74,6 @@ func NewDownloader(inSubFormatter ifaces.ISubFormatter, fileDownloader *file_dow
 
 	var sitesSequence = make([]string, 0)
 	// TODO 这里写固定了抉择字幕的顺序
-	sitesSequence = append(sitesSequence, common2.SubSiteSubtitleBest)
 	sitesSequence = append(sitesSequence, common2.SubSiteAssrt)
 	sitesSequence = append(sitesSequence, common2.SubSiteA4K)
 	sitesSequence = append(sitesSequence, common2.SubSiteShooter)

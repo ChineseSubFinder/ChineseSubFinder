@@ -17,7 +17,6 @@ func (d *Downloader) queueDownloaderCloud() {
 
 	// 查询云端是否有任务
 	//nowInfo := dao.UpdateInfo(global_value.AppVersion(), settings.Get())
-	//askDownloadTaskReply, err := d.fileDownloader.SubtitleBestApi.AskDownloadTask(nowInfo.Id)
 	//if err != nil {
 	//	d.log.Errorf("queueDownloaderCloud AskDownloadTask error: %v", err)
 	//	return

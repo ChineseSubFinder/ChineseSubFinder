@@ -5,9 +5,7 @@ import (
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/local_http_proxy_server"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/media_info_dealers"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/settings"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/subtitle_best_api"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/tmdb_api"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/types"
 	"testing"
@@ -86,18 +84,11 @@ func defInstance() {
 	settings.SetConfigRootPath(".")
 	pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester())
 
-	authKey := random_auth_key.AuthKey{
-		BaseKey:  pkg.BaseKey(),
-		AESKey16: pkg.AESKey16(),
-		AESIv16:  pkg.AESIv16(),
-	}
-
 	err := local_http_proxy_server.SetProxyInfo(settings.Get().AdvancedSettings.ProxySettings.GetInfos())
 	if err != nil {
 		panic(err)
 	}
-	dealers = media_info_dealers.NewDealers(log_helper.GetLogger4Tester(),
-		subtitle_best_api.NewSubtitleBestApi(log_helper.GetLogger4Tester(), authKey))
+	dealers = media_info_dealers.NewDealers(log_helper.GetLogger4Tester())
 
 	tmdbApi, err := tmdb_api.NewTmdbHelper(log_helper.GetLogger4Tester(), settings.Get().AdvancedSettings.TmdbApiSettings.ApiKey, true)
 	if err != nil {

@@ -13,51 +13,10 @@
       <q-separator />
 
       <template v-if="!searchPackage">
-        <q-tabs
-          v-model="tab"
-          dense
-          active-color="primary"
-          indicator-color="primary"
-          align="justify"
-          narrow-indicator
-          style="display: inline-block"
-        >
-          <q-tab name="csf" label="Subtitle.Best API" />
-          <q-tab name="manual" label="手动搜索" />
-        </q-tabs>
-
-        <q-tab-panels v-model="tab" animated keep-alive>
-          <q-tab-panel name="csf">
-            <search-panel-csf-api :path="path" :is-movie="isMovie" :season="season" :episode="episode" />
-          </q-tab-panel>
-
-          <q-tab-panel name="manual">
-            <search-panel-manual :is-movie="isMovie" :path="path" />
-          </q-tab-panel>
-        </q-tab-panels>
+        <search-panel-manual :is-movie="isMovie" :path="path" />
       </template>
       <template v-else>
-        <q-tabs
-          v-model="tab"
-          dense
-          active-color="primary"
-          indicator-color="primary"
-          align="justify"
-          narrow-indicator
-          style="display: inline-block"
-        >
-          <q-tab name="csf" label="Subtitle.Best API" />
-        </q-tabs>
-
-        <q-tab-panels v-model="tab" animated keep-alive>
-          <q-tab-panel name="csf">
-            <search-panel-csf-api-tv-package :episodes="packageEpisodes" />
-          </q-tab-panel>
-
-          <q-tab-panel name="csf-share">
-            <search-panel-csf-api-tv-package :episodes="packageEpisodes" use-user-share-api />
-          </q-tab-panel>
-        </q-tab-panels>
+        <div class="q-pa-md text-grey">字幕包搜索已下线，请改用手动搜索。</div>
       </template>
     </q-card>
   </q-dialog>
@@ -66,8 +25,6 @@
 <script setup>
 import { ref } from 'vue';
 import SearchPanelManual from 'pages/library/SearchPanelManual.vue';
-import SearchPanelCsfApi from 'pages/library/SearchPanelCsfApi.vue';
-import SearchPanelCsfApiTvPackage from 'pages/library/SearchPanelCsfApiTvPackage.vue';
 
 defineProps({
   path: String,
@@ -91,5 +48,4 @@ defineProps({
 });
 
 const visible = ref(false);
-const tab = ref('csf');
 </script>

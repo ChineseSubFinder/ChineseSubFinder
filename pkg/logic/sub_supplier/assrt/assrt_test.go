@@ -9,7 +9,6 @@ import (
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/cache_center"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/log_helper"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
 )
 
 var assrtInstance *Supplier
@@ -18,14 +17,8 @@ func defInstance() {
 
 	pkg.ReadCustomAuthFile(log_helper.GetLogger4Tester())
 
-	authKey := random_auth_key.AuthKey{
-		BaseKey:  pkg.BaseKey(),
-		AESKey16: pkg.AESKey16(),
-		AESIv16:  pkg.AESIv16(),
-	}
-
 	assrtInstance = NewSupplier(file_downloader.NewFileDownloader(
-		cache_center.NewCacheCenter("test", log_helper.GetLogger4Tester()), authKey))
+		cache_center.NewCacheCenter("test", log_helper.GetLogger4Tester())))
 }
 
 func TestSupplier_getSubListFromFile(t *testing.T) {

@@ -12,7 +12,6 @@ import (
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/cron_helper"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/logic/file_downloader"
-	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/random_auth_key"
 
 	"github.com/ChineseSubFinder/ChineseSubFinder/internal/backend"
 	"github.com/ChineseSubFinder/ChineseSubFinder/pkg/cache_center"
@@ -140,12 +139,7 @@ func main() {
 	// ------------------------------------------------------------------------
 	// 改进为优先启动 http server，这样后面的初始化操作的进度，就不会跟之前一样，无法把进度呈现到 Web 前端给用户看
 	fileDownloader := file_downloader.NewFileDownloader(
-		cache_center.NewCacheCenter("local_task_queue", loggerBase),
-		random_auth_key.AuthKey{
-			BaseKey:  pkg.BaseKey(),
-			AESKey16: pkg.AESKey16(),
-			AESIv16:  pkg.AESIv16(),
-		})
+		cache_center.NewCacheCenter("local_task_queue", loggerBase))
 	// ----------------------------------------------
 	// 定时任务实例
 	cronHelper := cron_helper.NewCronHelper(fileDownloader)
@@ -162,7 +156,7 @@ func main() {
 }
 
 /*
-	使用 git tag 来做版本描述，然后在编译的时候传入版本号信息到这个变量上
+使用 git tag 来做版本描述，然后在编译的时候传入版本号信息到这个变量上
 */
 var AppVersion = "unknow"
 

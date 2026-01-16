@@ -86,7 +86,7 @@ func (f *FileInfo) SetTranslatedStrings(translatedString string) error {
 	return nil
 }
 
-// SortDialogues 排序对话，时间递减
+// SortDialogues 排序对话，时间递增
 func (f *FileInfo) SortDialogues() {
 	sort.Sort(OneDialogueByStartTime(f.Dialogues))
 	sort.Sort(OneDialogueByStartTime(f.DialoguesFilter))

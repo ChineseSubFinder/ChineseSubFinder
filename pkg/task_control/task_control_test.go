@@ -253,13 +253,18 @@ func TestTaskControl_Invoke(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			successList, _, _, err := process(tt.name, tt.args.timeTester)
+			successList, noExecuteList, errorList, err := process(tt.name, tt.args.timeTester)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			if tt.successProcessCount != len(successList) {
 				t.Fatal("want successProcessCount =", tt.successProcessCount, "now =", len(successList))
+			}
+
+			totalCount := len(successList) + len(noExecuteList) + len(errorList)
+			if totalCount != tt.args.timeTester.JobCount {
+				t.Fatalf("want total task count %d, got %d", tt.args.timeTester.JobCount, totalCount)
 			}
 		})
 	}

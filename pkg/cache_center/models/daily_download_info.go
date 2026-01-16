@@ -8,5 +8,5 @@ type DailyDownloadInfo struct {
 	SupplierName string `gorm:"column:supplier_name;type:varchar(255);not null" json:"supplier_name"`
 	PublicIP     string `gorm:"column:public_ip;type:varchar(255);not null" json:"public_ip"`
 	WhichDay     string `gorm:"column:which_day;type:varchar(255);not null" json:"which_day"`
-	Count        int    `gor:"column:count;type:int;not null;default:0" json:"count"`
+	Count        int    `gorm:"column:count;type:int;not null;default:0" json:"count"`
 }
